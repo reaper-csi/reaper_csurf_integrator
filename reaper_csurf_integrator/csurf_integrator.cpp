@@ -147,7 +147,6 @@ static void parseParms(const char *str, int parms[5])
 
 static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    /*
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -185,10 +184,10 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetDlgItemInt(hwndDlg,IDC_EDIT2,parms[1],FALSE);
             
      
-            if (parms[4]&CONFIG_FLAG_FADER_TOUCH_MODE)
-                CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-            if (parms[4]&CONFIG_FLAG_MAPF1F8TOMARKERS)
-                CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
+            //if (parms[4]&CONFIG_FLAG_FADER_TOUCH_MODE)
+                //CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
+            //if (parms[4]&CONFIG_FLAG_MAPF1F8TOMARKERS)
+                //CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
      
         }
             break;
@@ -216,13 +215,13 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 int cflags=0;
                 
      
-                if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-                    cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
+                //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
+                    //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
                 
-                if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
-                {
-                    cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
-                }		
+                //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
+                //{
+                    //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
+                //}
      
                 sprintf(tmp,"%d %d %d %d %d",offs,size,indev,outdev,cflags);
                 lstrcpyn((char *)lParam, tmp,wParam);
@@ -230,22 +229,16 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             }
             break;
     }
-*/
+
     return 0;
 }
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
     return 0;
-    //return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_INTEGRATOR1),parent,dlgProc,//(LPARAM)initConfigString);
+    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_INTEGRATOR1),parent,dlgProc,(LPARAM)initConfigString);
 }
 
-/*
-static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
-{
-    return 0;
-}
-*/
 reaper_csurf_reg_t csurf_integrator_reg =
 {
     "CSI",
