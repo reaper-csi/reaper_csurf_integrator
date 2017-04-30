@@ -2,8 +2,8 @@
 // Microsoft Developer Studio generated include file.
 // Used by res.rc
 //
-#define IDD_SURFACEEDIT_INTEGRATOR      264
-#define IDD_SURFACEEDIT_INTEGRATOR1     265
+#define IDD_SURFACEEDIT_MCU      264
+#define IDD_SURFACEEDIT_MCU1     265
 #define IDC_CHECK1                      1000
 #define IDC_COMBO2                      1001
 #define IDC_COMBO3                      1002
