@@ -46,14 +46,9 @@ CSurf_Integrator::~CSurf_Integrator()
 
 void CSurf_Integrator::Run()
 {
-    
     if (m_midiin0)
     {
-        timeb tb;
-        ftime( &tb );
-        int nCount = tb.millitm + (tb.time & 0xfffff) * 1000;
-        
-        m_midiin0->SwapBufs(nCount);
+        m_midiin0->SwapBufs(timeGetTime());
         int l=0;
         MIDI_eventlist *list=m_midiin0->GetReadBuf();
         MIDI_event_t *evts;
@@ -62,11 +57,7 @@ void CSurf_Integrator::Run()
     
     if (m_midiin1)
     {
-        timeb tb;
-        ftime( &tb );
-        int nCount = tb.millitm + (tb.time & 0xfffff) * 1000;
-        
-        m_midiin1->SwapBufs(nCount);
+        m_midiin1->SwapBufs(timeGetTime());
         int l=0;
         MIDI_eventlist *list=m_midiin1->GetReadBuf();
         MIDI_event_t *evts;
@@ -75,11 +66,7 @@ void CSurf_Integrator::Run()
     
     if (m_midiin2)
     {
-        timeb tb;
-        ftime( &tb );
-        int nCount = tb.millitm + (tb.time & 0xfffff) * 1000;
-        
-        m_midiin2->SwapBufs(nCount);
+        m_midiin2->SwapBufs(timeGetTime());
         int l=0;
         MIDI_eventlist *list=m_midiin2->GetReadBuf();
         MIDI_event_t *evts;
@@ -235,8 +222,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    return 0;
-    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_INTEGRATOR1),parent,dlgProc,(LPARAM)initConfigString);
+    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =
