@@ -38,7 +38,7 @@ public:
     
     id del = [NSApp delegate];
     if (del && [del respondsToSelector:@selector(swellGetAPPAPIFunc)])
-      *(void **)&SWELLAPI_GetFunc = (void *)objc_msgSend(del,@selector(swellGetAPPAPIFunc));
+      *(void **)&SWELLAPI_GetFunc = (__bridge void *)objc_msgSend(del,@selector(swellGetAPPAPIFunc));
       
     if (SWELLAPI_GetFunc && SWELLAPI_GetFunc(NULL)!=(void*)0x100) SWELLAPI_GetFunc=0;
       
