@@ -10,6 +10,9 @@
 #include "reaper_plugin_functions.h"
 #include "csurf_integrator.h"
 
+extern REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs
+extern HWND g_hwnd;
+
 CSurf_Integrator::CSurf_Integrator()
 {
     m_midiin0 = CreateMIDIInput(0);

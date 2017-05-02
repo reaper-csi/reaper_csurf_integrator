@@ -14,6 +14,7 @@
 		0310E4D11EB5403C00040D1A /* reaper_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CA1EB5403C00040D1A /* reaper_plugin.h */; };
 		0310E4D21EB5403C00040D1A /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CB1EB5403C00040D1A /* resource.h */; };
 		0310E4D41EB5405900040D1A /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0310E4D31EB5405900040D1A /* swell-modstub.mm */; };
+		037FB6771EB8C96C0012F4C1 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 037FB6761EB8C96C0012F4C1 /* Carbon.framework */; };
 		03C7D8BB1EB78AF500DBBD98 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +28,7 @@
 		0310E4CC1EB5403C00040D1A /* WDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WDL; sourceTree = "<group>"; };
 		0310E4D31EB5405900040D1A /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "WDL/swell/swell-modstub.mm"; sourceTree = "<group>"; };
 		03464AE01EB53E7A00EAD095 /* reaper_csurf_integrator.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_csurf_integrator.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		037FB6761EB8C96C0012F4C1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -35,6 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				037FB6771EB8C96C0012F4C1 /* Carbon.framework in Frameworks */,
 				03C7D8BB1EB78AF500DBBD98 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,6 +80,7 @@
 		03ECFF841EB61A8B0034E98E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				037FB6761EB8C96C0012F4C1 /* Carbon.framework */,
 				03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */,
 			);
 			name = Frameworks;
