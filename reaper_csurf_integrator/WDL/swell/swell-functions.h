@@ -1018,7 +1018,7 @@ SWELL_API_DEFINE(int, SWELL_GetScaling256, (void))
 SWELL_API_DEFINE(void, SWELL_SetDefaultIniFile, (const char*)) // deprecated in favor of SWELL_ExtendedAPI("INIFILE")
 #endif
 
-SWELL_API_DEFINE(void*, SWELL_ExtendedAPI, (const char *key, void *v))
+//SWELL_API_DEFINE(void*, SWELL_ExtendedAPI, (const char *key, void *v))
 
 SWELL_API_DEFINE(int, GetSysColor,(int idx))
 SWELL_API_DEFINE(HBITMAP, CreateBitmap,(int width, int height, int numplanes, int bitsperpixel, unsigned char* bits))
