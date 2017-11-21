@@ -1,109 +1,82 @@
 //
-//  csurf_integrator.cpp
+//  control_surface_integrator_ui.cpp
 //  reaper_csurf_integrator
 //
-//  Created by Geoff Waddington on 2017-04-28.
 //
 
-#include <sys/timeb.h>
+#include "control_surface_integrator_ui.h"
 
-#include "reaper_plugin_functions.h"
-#include "csurf_integrator.h"
-
-extern REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs
-extern HWND g_hwnd;
-
-CSurf_Integrator::CSurf_Integrator()
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CSurfIntegrator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+CSurfIntegrator::CSurfIntegrator()
 {
-    m_midiin0 = CreateMIDIInput(0);
-    if (m_midiin0)
-        m_midiin0->start();
-    
-    m_midiin1 = CreateMIDIInput(1);
-    if (m_midiin1)
-        m_midiin1->start();
-    
-    m_midiin2 = CreateMIDIInput(2);
-    if (m_midiin2)
-        m_midiin2->start();
-    
-    m_midiout0 = CreateMIDIOutput(0,false,NULL);
-    m_midiout1 = CreateMIDIOutput(1,false,NULL);
-    m_midiout2 = CreateMIDIOutput(2,false,NULL);
-
-    
-    
+    manager_ = new CSurfManager();
 }
 
-CSurf_Integrator::~CSurf_Integrator()
+CSurfIntegrator::~CSurfIntegrator()
 {
-    delete m_midiin0;
-    delete m_midiin1;
-    delete m_midiin2;
-    
-    delete m_midiout0;
-    delete m_midiout1;
-    delete m_midiout2;
-    
+    delete manager_;
 }
 
-void CSurf_Integrator::Run()
+void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
 {
-    if (m_midiin0)
+    manager_->OnTrackSelection(trackid);
+}
+
+int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
+{
+    if(call == CSURF_EXT_SUPPORTS_EXTENDED_TOUCH)
     {
-        m_midiin0->SwapBufs(timeGetTime());
-        int l=0;
-        MIDI_eventlist *list=m_midiin0->GetReadBuf();
-        MIDI_event_t *evts;
-        while ((evts=list->EnumItems(&l))) OnMIDIEvent0(evts);
+        return 1;
     }
     
-    if (m_midiin1)
+    if(call == CSURF_EXT_RESET)
     {
-        m_midiin1->SwapBufs(timeGetTime());
-        int l=0;
-        MIDI_eventlist *list=m_midiin1->GetReadBuf();
-        MIDI_event_t *evts;
-        while ((evts=list->EnumItems(&l))) OnMIDIEvent1(evts);
+        //ClearAllTouchStates();
+        //InitializeEuCon();
     }
     
-    if (m_midiin2)
+    if(call == CSURF_EXT_SETFXCHANGE)
     {
-        m_midiin2->SwapBufs(timeGetTime());
-        int l=0;
-        MIDI_eventlist *list=m_midiin2->GetReadBuf();
-        MIDI_event_t *evts;
-        while ((evts=list->EnumItems(&l))) OnMIDIEvent2(evts);
+        // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
+        manager_->TrackFXListChanged((MediaTrack*)parm1);
     }
+
+    return 1;
 }
 
-void CSurf_Integrator::OnMIDIEvent0(MIDI_event_t *evt)
+bool CSurfIntegrator::GetTouchState(MediaTrack *trackid, int touchedControl)
 {
-    m_midiout0->SendMsg(evt, 0);
+  
+    //return IsChannelParamBeingTouched(CSurf_TrackToID(trackid, true), (tTouchedChannelParam)touchedControl);
+    
+    return true;
 }
 
-void CSurf_Integrator::OnMIDIEvent1(MIDI_event_t *evt)
+void CSurfIntegrator::Run()
 {
-    m_midiout1->SendMsg(evt, 0);
+    manager_->Run();
 }
 
-void CSurf_Integrator::OnMIDIEvent2(MIDI_event_t *evt)
+void CSurfIntegrator::SetTrackListChange()
 {
-    m_midiout2->SendMsg(evt, 0);
+    manager_->TrackListChanged();
 }
 
-const char *CSurf_Integrator::GetTypeString()
+
+const char *CSurfIntegrator::GetTypeString()
 {
     return "CSI";
 }
 
-const char *CSurf_Integrator::GetDescString()
+const char *CSurfIntegrator::GetDescString()
 {
     descspace.Set("Control Surface Integrator");
     return descspace.Get();
 }
 
-const char *CSurf_Integrator::GetConfigString() // string of configuration data
+const char *CSurfIntegrator::GetConfigString() // string of configuration data
 {
     sprintf(configtmp,"0 0");
     return configtmp;
@@ -111,7 +84,7 @@ const char *CSurf_Integrator::GetConfigString() // string of configuration data
 
 static IReaperControlSurface *createFunc(const char *type_string, const char *configString, int *errStats)
 {
-    return new CSurf_Integrator();
+    return new CSurfIntegrator();
 }
 
 static void parseParms(const char *str, int parms[5])
@@ -132,7 +105,7 @@ static void parseParms(const char *str, int parms[5])
             parms[x++]=atoi(p);
             while (*p && *p != ' ') p++;
         }
-    }  
+    }
 }
 
 static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -173,12 +146,12 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             SetDlgItemInt(hwndDlg,IDC_EDIT1,parms[0],TRUE);
             SetDlgItemInt(hwndDlg,IDC_EDIT2,parms[1],FALSE);
             
-     
+            
             //if (parms[4]&CONFIG_FLAG_FADER_TOUCH_MODE)
-                //CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
+            //CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
             //if (parms[4]&CONFIG_FLAG_MAPF1F8TOMARKERS)
-                //CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
-     
+            //CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
+            
         }
             break;
         case WM_USER+1024:
@@ -204,28 +177,38 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 }
                 int cflags=0;
                 
-     
+                
                 //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-                    //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
+                //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
                 
                 //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
                 //{
-                    //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
+                //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
                 //}
-     
+                
                 sprintf(tmp,"%d %d %d %d %d",offs,size,indev,outdev,cflags);
                 lstrcpyn((char *)lParam, tmp,wParam);
                 
             }
             break;
     }
-
+    
     return 0;
 }
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
+    //ShowMessageBox("Here ya go", "This Title", 0);
+    
+    MessageBox(parent, "Here ya go", "New Title", 0);
+    
+    return 0;
+    
+    
+    //return CreateDialogParam(g_hInst,0,parent,dlgProc,(LPARAM)initConfigString);
+    
+    
+    //return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =
