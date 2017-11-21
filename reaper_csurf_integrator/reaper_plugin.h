@@ -192,7 +192,7 @@ public:
 **** MIDI event definition and abstract list
 ***************************************************************************************/
 
-typedef struct
+typedef struct MIDI_event_t
 {
   int frame_offset;
   int size; // bytes used by midi_message, can be >3, but should never be <3, even if a short 1 or 2 byte msg
