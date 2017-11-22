@@ -18,8 +18,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->ToggleFlipped(GetName());
+        GetManager()->GetCurrentLogicalSurface()->ToggleFlipped(GetName());
     }
 };
 
@@ -33,8 +32,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetShift(value);
+        GetManager()->GetCurrentLogicalSurface()->SetShift(value);
     }
 };
 
@@ -48,8 +46,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetOption(value);
+        GetManager()->GetCurrentLogicalSurface()->SetOption(value);
     }
 };
 
@@ -63,8 +60,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetControl(value);
+        GetManager()->GetCurrentLogicalSurface()->SetControl(value);
     }
 };
 
@@ -78,8 +74,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetAlt(value);
+        GetManager()->GetCurrentLogicalSurface()->SetAlt(value);
     }
 };
 
@@ -101,16 +96,14 @@ public:
         {
             lastPressed_ = clock();
             SetValue(value);
-            // GAW TBD
-            //GetSurface()->SetWidgetValue("", GetName(), value);
+            GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(value);
-                // GAW TBD
-                //GetSurface()->SetWidgetValue("", GetName(), value);
+                GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
             }
         }
     }
@@ -126,8 +119,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetZoom(value);
+        GetManager()->GetCurrentLogicalSurface()->SetZoom(value);
     }
 };
 
@@ -141,8 +133,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        // GAW TBD
-        //GetSurface()->SetScrub(value);
+        GetManager()->GetCurrentLogicalSurface()->SetScrub(value);
     }
 };
 
@@ -173,8 +164,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->AdjustTrackBank(stride_);
+        GetManager()->GetCurrentLogicalSurface()->AdjustTrackBank(stride_);
     }
 };
 
@@ -188,8 +178,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->ImmobilizeSelectedTracks();
+        GetManager()->GetCurrentLogicalSurface()->ImmobilizeSelectedTracks();
     }
 };
 
@@ -203,8 +192,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetSurface()->MobilizeSelectedTracks();
+        GetManager()->GetCurrentLogicalSurface()->MobilizeSelectedTracks();
     }
 };
 
