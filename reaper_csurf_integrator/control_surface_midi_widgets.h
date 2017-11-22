@@ -14,9 +14,8 @@
 class PushButton_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     int reverseSense_ = 0;
-    int actOnRelease_ = 0;
     
 public:
     PushButton_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release)  {}
@@ -30,14 +29,30 @@ public:
     
     virtual void SetValueToZero() override
     {
-        SetValue(0);
+        SetValue(reverseSense_ ? 1 : 0);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
             GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
-        else if(actOnRelease_ && GetMidiReleaseMessage()->IsEqualTo(midiMessage))
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PushButtonWithRelease_MidiWidget : public PushButton_MidiWidget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PushButtonWithRelease_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, surface, channel, GUID, press, release)  {}
+    
+    PushButtonWithRelease_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, surface, channel, GUID, reverseSense, press, release) {}
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(GetMidiPressMessage()->IsEqualTo(midiMessage))
+            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+        else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
             GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
