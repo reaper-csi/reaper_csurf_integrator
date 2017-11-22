@@ -48,7 +48,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CyclicAction : public Action
+class CycledAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -56,7 +56,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    CyclicAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
+    CycledAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
