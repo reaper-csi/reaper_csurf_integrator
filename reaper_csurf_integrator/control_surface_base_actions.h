@@ -10,15 +10,15 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor_DoubleAction : public Interactor_Action
+class DoubleAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     double currentValue_ = 999999.99;
     
-    Interactor_DoubleAction(string name, CSurfManager* manager, Interactor* interactor) : Interactor_Action(name, manager, interactor)  {}
+    DoubleAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor)  {}
     
-    Interactor_DoubleAction(string name, CSurfManager* manager, Interactor* interactor, double initialValue) : Interactor_Action(name, manager, interactor), currentValue_(initialValue)  {}
+    DoubleAction(string name, CSurfManager* manager, Interactor* interactor, double initialValue) : Action(name, manager, interactor), currentValue_(initialValue)  {}
 
     virtual double GetValue() { return 0.0; }
     
@@ -47,46 +47,8 @@ public:
     }
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalCSurf_DoubleAction : public LogicalCSurf_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    double currentValue_ = 999999.99;
-    
-    LogicalCSurf_DoubleAction(string name, CSurfManager* manager, LogicalSurface* logicalSurface) : LogicalCSurf_Action(name, manager, logicalSurface)  {}
-
-    LogicalCSurf_DoubleAction(string name, CSurfManager* manager, LogicalSurface* logicalSurface, double initialValue) : LogicalCSurf_Action(name, manager, logicalSurface), currentValue_(initialValue)  {}
-
-    virtual double GetValue() { return 0.0; }
-    
-    virtual void SetWidgetValue(double value) override
-    {
-        GetManager()->SetWidgetValue("", GetName(), value);
-    }
-    
-public:
-    virtual double GetCurrentNormalizedValue() override
-    {
-        return currentValue_;
-    }
-
-    virtual void Update() override
-    {
-        double newValue = GetValue();
-        
-        if(currentValue_ != newValue)
-            SetWidgetValue(currentValue_ = newValue);
-    }
-    
-    virtual void ForceUpdate() override
-    {
-        SetWidgetValue(currentValue_);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor_CycleAction : public Interactor_Action
+class CyclicAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -94,7 +56,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    Interactor_CycleAction(string name, CSurfManager* manager, Interactor* interactor) : Interactor_Action(name, manager, interactor) {}
+    CyclicAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -129,7 +91,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor_StringDisplayAction : public Interactor_Action
+class StringDisplayAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -143,7 +105,7 @@ protected:
     }
     
 public:
-    Interactor_StringDisplayAction(string name, CSurfManager* manager, Interactor* interactor) : Interactor_Action(name, manager, interactor) {}
+    StringDisplayAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
     
     virtual void Update() override
     {
