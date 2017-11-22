@@ -194,9 +194,6 @@ private:
     LogicalSurface* surface_ = nullptr;
     const string name_ = "";
     const int numChannels_ = 0;
-    
-protected:
-    vector<CSurfWidget*> widgets_;
     vector<CSurfChannel*> channels_;
 
 public:
@@ -221,11 +218,6 @@ public:
     virtual void OnTrackSelection(MediaTrack *trackid);
     
     virtual void RunAndUpdate() {}
-  
-    virtual void AddWidget(CSurfWidget*  widget)
-    {
-        widgets_.push_back(widget);
-    }
     
     virtual void AddChannel(CSurfChannel*  channel)
     {
@@ -248,15 +240,15 @@ class Action
 private:
     CSurfManager* manager_ = nullptr;
     string name_ = "";
+    Interactor* interactor_ = nullptr;
 
 protected:
-    virtual Interactor* GetInteractor() { return nullptr; }
-    virtual LogicalSurface* GetSurface() { return nullptr; }
+    Interactor* GetInteractor() { return interactor_; }
     virtual void SetWidgetValue(double value) {}
     virtual void SetWidgetValue(string value) {}
 
-    Action(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
-
+    Action(string name, CSurfManager* manager, Interactor* interactor) : name_(name), manager_(manager), interactor_(interactor) {}
+    
 public:
     virtual ~Action() {}
 
@@ -278,32 +270,6 @@ public:
     virtual void ForceUpdate() {}
     virtual void RunAction(double value) {}
     virtual void Cycle() {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalCSurf_Action : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    LogicalSurface* surface_ = nullptr;
-    
-protected:
-    LogicalCSurf_Action(string name, CSurfManager* manager, LogicalSurface* surface) : Action (name, manager), surface_(surface) {}
-
-    LogicalSurface* GetSurface() override { return surface_; }    
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor_Action : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Interactor* interactor_ = nullptr;
-    
-protected:
-    Interactor_Action(string name, CSurfManager* manager, Interactor* interactor) : Action (name, manager), interactor_(interactor) {}
-    
-    Interactor* GetInteractor() override { return interactor_; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

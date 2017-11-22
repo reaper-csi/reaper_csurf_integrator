@@ -282,62 +282,62 @@ void LogicalSurface::InitializeLogicalCSurfInteractors()
 {
     Interactor* interactor = new Interactor(GetManager(), LogicalCSurf);
     
-    interactor->AddAction(new TrackBank_Action(ChannelLeft, GetManager(), this, -1));
-    interactor->AddAction(new TrackBank_Action(ChannelRight, GetManager(), this, 1));
-    interactor->AddAction(new TrackBank_Action(BankLeft, GetManager(), this, -20));
-    interactor->AddAction(new TrackBank_Action(BankRight, GetManager(), this, 20));
+    interactor->AddAction(new TrackBank_Action(ChannelLeft, GetManager(), interactor, -1));
+    interactor->AddAction(new TrackBank_Action(ChannelRight, GetManager(), interactor, 1));
+    interactor->AddAction(new TrackBank_Action(BankLeft, GetManager(), interactor, -20));
+    interactor->AddAction(new TrackBank_Action(BankRight, GetManager(), interactor, 20));
     
-    interactor->AddAction(new Flip_Action(Flip, GetManager(), this));
+    interactor->AddAction(new Flip_Action(Flip, GetManager(), interactor));
     
-    interactor->AddAction(new NextMap_Action(NextMap, GetManager(), this));
-    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, GetManager(), this));
-    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, GetManager(), this));
+    interactor->AddAction(new NextMap_Action(NextMap, GetManager(), interactor));
+    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, GetManager(), interactor));
+    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, GetManager(), interactor));
     
-    interactor->AddAction(new Shift_Action(Shift, GetManager(), this));
-    interactor->AddAction(new Option_Action(Option, GetManager(), this));
-    interactor->AddAction(new Control_Action(Control, GetManager(), this));
-    interactor->AddAction(new Alt_Action(Alt, GetManager(), this));
+    interactor->AddAction(new Shift_Action(Shift, GetManager(), interactor));
+    interactor->AddAction(new Option_Action(Option, GetManager(), interactor));
+    interactor->AddAction(new Control_Action(Control, GetManager(), interactor));
+    interactor->AddAction(new Alt_Action(Alt, GetManager(), interactor));
     
-    interactor->AddAction(new TrackAutoMode_Action(Read, GetManager(), this, 1));
-    interactor->AddAction(new TrackAutoMode_Action(Write, GetManager(), this, 3));
-    interactor->AddAction(new TrackAutoMode_Action(Trim, GetManager(), this, 0));
-    interactor->AddAction(new TrackAutoMode_Action(Touch, GetManager(), this, 2));
-    interactor->AddAction(new TrackAutoMode_Action(Latch, GetManager(), this, 4));
-    interactor->AddAction(new TrackAutoMode_Action(Group, GetManager(), this, 5));
+    interactor->AddAction(new TrackAutoMode_Action(Read, GetManager(), interactor, 1));
+    interactor->AddAction(new TrackAutoMode_Action(Write, GetManager(), interactor, 3));
+    interactor->AddAction(new TrackAutoMode_Action(Trim, GetManager(), interactor, 0));
+    interactor->AddAction(new TrackAutoMode_Action(Touch, GetManager(), interactor, 2));
+    interactor->AddAction(new TrackAutoMode_Action(Latch, GetManager(), interactor, 4));
+    interactor->AddAction(new TrackAutoMode_Action(Group, GetManager(), interactor, 5));
 
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, GetManager(), this, 1));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, GetManager(), this, 3));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, GetManager(), this, 0));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, GetManager(), this, 2));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, GetManager(), this, 4));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, GetManager(), this, 5));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, GetManager(), interactor, 1));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, GetManager(), interactor, 3));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, GetManager(), interactor, 0));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, GetManager(), interactor, 2));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, GetManager(), interactor, 4));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, GetManager(), interactor, 5));
     
-    interactor->AddAction(new Save_Action(Save, GetManager(), this));
-    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, GetManager(), this));
-    interactor->AddAction(new Undo_Action(Undo, GetManager(), this));
-    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, GetManager(), this));
+    interactor->AddAction(new Save_Action(Save, GetManager(), interactor));
+    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, GetManager(), interactor));
+    interactor->AddAction(new Undo_Action(Undo, GetManager(), interactor));
+    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, GetManager(), interactor));
     //AddAction(new Enter_Action(Enter, Manager(), this));
     //AddAction(new Cancel_Action(Cancel, Manager(), this));
 
-    interactor->AddAction(new PreviousMarker_Action(Marker, GetManager(), this));
-    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, GetManager(), this));
-    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, GetManager(), this));
-    interactor->AddAction(new NextMarker_Action(Nudge, GetManager(), this));
-    interactor->AddAction(new CycleTimeline_Action(Cycle, GetManager(), this));
-    interactor->AddAction(new Metronome_Action(Click, GetManager(), this));
+    interactor->AddAction(new PreviousMarker_Action(Marker, GetManager(), interactor));
+    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, GetManager(), interactor));
+    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, GetManager(), interactor));
+    interactor->AddAction(new NextMarker_Action(Nudge, GetManager(), interactor));
+    interactor->AddAction(new CycleTimeline_Action(Cycle, GetManager(), interactor));
+    interactor->AddAction(new Metronome_Action(Click, GetManager(), interactor));
 
-    interactor->AddAction(new Rewind_Action(Rewind, GetManager(), this));
-    interactor->AddAction(new FastForward_Action(FastForward, GetManager(), this));
-    interactor->AddAction(new Stop_Action(Stop, GetManager(), this));
-    interactor->AddAction(new Play_Action(Play, GetManager(), this));
-    interactor->AddAction(new Record_Action(Record, GetManager(), this));
+    interactor->AddAction(new Rewind_Action(Rewind, GetManager(), interactor));
+    interactor->AddAction(new FastForward_Action(FastForward, GetManager(), interactor));
+    interactor->AddAction(new Stop_Action(Stop, GetManager(), interactor));
+    interactor->AddAction(new Play_Action(Play, GetManager(), interactor));
+    interactor->AddAction(new Record_Action(Record, GetManager(), interactor));
     
-    interactor->AddAction(new RepeatingArrow_Action(Up,  GetManager(), this, 0, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Down,  GetManager(), this, 1, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Left,  GetManager(), this, 2, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Right,  GetManager(), this, 3, 0.3));
-    interactor->AddAction(new LatchedZoom_Action(Zoom,  GetManager(), this));
-    interactor->AddAction(new LatchedScrub_Action(Scrub,  GetManager(), this));
+    interactor->AddAction(new RepeatingArrow_Action(Up,  GetManager(), interactor, 0, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Down,  GetManager(), interactor, 1, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Left,  GetManager(), interactor, 2, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Right,  GetManager(), interactor, 3, 0.3));
+    interactor->AddAction(new LatchedZoom_Action(Zoom,  GetManager(), interactor));
+    interactor->AddAction(new LatchedScrub_Action(Scrub,  GetManager(), interactor));
     
     AddInteractor(interactor);
 }
@@ -358,10 +358,10 @@ void LogicalSurface::BuildTrackInteractors()
 
         interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
         
-        Interactor_CycleAction* cycleAction = new Interactor_CycleAction(TrackPan, GetManager(), interactor);
-        cycleAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
-        cycleAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
-        interactor->AddAction(cycleAction);
+        CyclicAction* cyclicAction = new CyclicAction(TrackPan, GetManager(), interactor);
+        cyclicAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
+        cyclicAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
+        interactor->AddAction(cyclicAction);
         
         interactor->AddAction(new TrackUniqueSelect_Action(TrackSelect, GetManager(), interactor));
         interactor->AddAction(new TrackSelectionSelect_Action(Shift + Delimiter  + TrackSelect, GetManager(), interactor));
@@ -404,7 +404,7 @@ void LogicalSurface::BuildTrackInteractors2()
         
         interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
         
-        Interactor_CycleAction* cycleAction = new Interactor_CycleAction(TrackPan, GetManager(), interactor);
+        CyclicAction* cycleAction = new CyclicAction(TrackPan, GetManager(), interactor);
         cycleAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
         cycleAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
         interactor->AddAction(cycleAction);
@@ -617,11 +617,11 @@ void LogicalSurface::BuildCSurfWidgets()
             surface->AddWidget(new PushButton_CSurfWidget(Marker, surface,              new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget(Nudge, surface,               new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
 */
-            surface->AddWidget(new PushButton_CSurfWidget(Rewind, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(FastForward, surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Stop, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Play, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Record, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+            channel->AddWidget(new PushButton_CSurfWidget(Rewind, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
+            channel->AddWidget(new PushButton_CSurfWidget(FastForward, surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
+            channel->AddWidget(new PushButton_CSurfWidget(Stop, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
+            channel->AddWidget(new PushButton_CSurfWidget(Play, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
+            channel->AddWidget(new PushButton_CSurfWidget(Record, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
 
             
             surface->AddChannel(channel);
@@ -824,14 +824,10 @@ void LogicalSurface::ForceUpdate(string GUID, string name)
 void LogicalSurface::RunAction(string GUID, string name, double value)
 {
     string flipName = FlipNameFor(name);
-    /*
-    if(GUID == "")
-        for(auto & action : actions_[ModifiedNameFor(flipName)])
-            action->RunAction(value);
-    else */
-        for(auto & interactor : interactors_)
-            if(interactor->GetGUID() == GUID)
-                interactor->RunAction(ModifiedNameFor(flipName), value);
+
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->RunAction(ModifiedNameFor(flipName), value);
 }
 
 void LogicalSurface::CycleAction(string GUID, string name)
@@ -1168,18 +1164,12 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RealCSurf::Update()
 {
-    for(auto & widget : widgets_)
-        widget->Update();
-    
     for(auto & channel : channels_)
         channel->Update();
 }
 
 void RealCSurf::ForceUpdate()
 {
-    for(auto & widget : widgets_)
-        widget->ForceUpdate();
-    
     for(auto & channel : channels_)
         channel->ForceUpdate();
 }
@@ -1192,30 +1182,18 @@ void RealCSurf::OnTrackSelection(MediaTrack *trackid)
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value)
 {
-    for(auto & widget : widgets_)
-        if(widget->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value);
-    
     for(auto & channel : channels_)
         channel->SetWidgetValue(GUID, name, value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
 {
-    for(auto & widget : widgets_)
-        if(widget->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value, mode);
-    
     for(auto & channel : channels_)
         channel->SetWidgetValue(GUID, name, value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, string value)
 {
-    for(auto & widget : widgets_)
-        if(widget->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value);
-    
     for(auto & channel : channels_)
         channel->SetWidgetValue(GUID, name, value);
 }
