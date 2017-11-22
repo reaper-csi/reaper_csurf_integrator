@@ -617,9 +617,9 @@ void LogicalSurface::BuildCSurfWidgets()
             {
                 string trackGUID = GetManager()->GetDAW()->GetTrackGUIDAsString(currentChannel++);
                 
-                channel = new CSurfChannel(surface, i, trackGUID);
+                channel = new CSurfChannel(surface, trackGUID);
             
-                channel->AddWidget(new Display_CSurfWidget(TrackDisplay, surface, channel, trackGUID));
+                channel->AddWidget(new Display_CSurfWidget(TrackDisplay, surface, channel, i, trackGUID));
             
                 channel->AddWidget(new Fader14Bit_CSurfWidget(TrackVolume, surface, channel, trackGUID, -72.0, 12.0,   new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
                 channel->AddWidget(new PushButton_CSurfWidget(TrackTouched, surface, channel, trackGUID,        new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));

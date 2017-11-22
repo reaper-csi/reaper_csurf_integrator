@@ -119,7 +119,6 @@ class CSurfChannel
 {
 private:
     RealCSurf* surface_= nullptr;
-    int channelNumber_ = 0;
     string GUID_ = "";
     vector<CSurfWidget*> widgets_;
     
@@ -135,13 +134,11 @@ private:
 public:
     virtual ~CSurfChannel() {}
     
-    CSurfChannel(RealCSurf* surface, int channelNumber, string GUID) : surface_(surface), channelNumber_(channelNumber), GUID_(GUID) {}
+    CSurfChannel(RealCSurf* surface, string GUID) : surface_(surface), GUID_(GUID) {}
     
     RealCSurf* GetSurface() { return surface_; }
     
     DAW* GetDAW();
-    
-    int GetNumber() { return channelNumber_; }
     
     string GetGUID() { return GUID_; }
     
@@ -180,7 +177,7 @@ private:
 public:
     virtual ~UniquelySelectedCSurfChannel() {}
     
-    UniquelySelectedCSurfChannel(RealCSurf* surface, int channelNumber, string trackGUID) :CSurfChannel(surface, channelNumber, trackGUID) {}
+    UniquelySelectedCSurfChannel(RealCSurf* surface, int channelNumber, string trackGUID) :CSurfChannel(surface, trackGUID) {}
     
     virtual void OnTrackSelection(MediaTrack *trackid) override;
 };
