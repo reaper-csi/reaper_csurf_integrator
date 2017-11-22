@@ -11,7 +11,7 @@
 #include "handy_reaper_functions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButton_CSurfWidget : public CSurfWidget
+class PushButton_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -19,9 +19,9 @@ private:
     int actOnRelease_ = 0;
     
 public:
-    PushButton_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release)  {}
+    PushButton_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release)  {}
     
-    PushButton_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
@@ -43,7 +43,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader14Bit_CSurfWidget : public CSurfWidget
+class Fader14Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -51,7 +51,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
 
@@ -123,11 +123,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader8Bit_CSurfWidget : public CSurfWidget
+class Fader8Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader8Bit_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release) {}
+    Fader8Bit_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release) {}
     
     virtual void SetValue(double value) override
     {
@@ -152,11 +152,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Encoder_CSurfWidget : public CSurfWidget
+class Encoder_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release) {}
+    Encoder_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release) {}
     
     virtual void SetValue(double pan, int displayMode) override
     {
@@ -189,26 +189,26 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EncoderCycledAction_CSurfWidget : public Encoder_CSurfWidget
+class EncoderCycledAction_MidiWidget : public Encoder_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     MIDI_event_ex_t* cycle_;
     
 public:
-    EncoderCycledAction_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_CSurfWidget(name, surface, channel, GUID, press, release), cycle_(cycle) {}
+    EncoderCycledAction_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(name, surface, channel, GUID, press, release), cycle_(cycle) {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
             GetSurface()->GetManager()->CycleAction(GetGUID(), GetName());
         
-        Encoder_CSurfWidget::ProcessMidiMessage(midiMessage);
+        Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class VUMeter_CSurfWidget : public CSurfWidget
+class VUMeter_MidifWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -216,7 +216,7 @@ private:
     double maxDB_ = 0.0;
 
 public:
-    VUMeter_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidifWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     
@@ -245,13 +245,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Display_CSurfWidget : public CSurfWidget
+class Display_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     int slotIndex_ = 0;
     
 public:
-    Display_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, int slotIndex, string GUID) : CSurfWidget(name, surface, channel, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    Display_MidiWidget(string name, RealCSurf* surface, CSurfChannel* channel, int slotIndex, string GUID) : MidiWidget(name, surface, channel, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
