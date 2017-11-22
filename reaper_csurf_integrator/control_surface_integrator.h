@@ -65,7 +65,7 @@ public:
 class RealCSurf;
 class CSurfChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSurfWidget
+class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -81,9 +81,9 @@ protected:
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
 public:
-    virtual ~CSurfWidget() {};
+    virtual ~MidiWidget() {};
     
-    CSurfWidget(string name, RealCSurf* surface,  CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string name, RealCSurf* surface,  CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
     RealCSurf* GetSurface() { return surface_; }
     
@@ -120,7 +120,7 @@ class CSurfChannel
 private:
     RealCSurf* surface_= nullptr;
     string GUID_ = "";
-    vector<CSurfWidget*> widgets_;
+    vector<MidiWidget*> widgets_;
     
     void SetWidgetsToGUID(string GUID)
     {
@@ -142,11 +142,11 @@ public:
     
     string GetGUID() { return GUID_; }
     
-    vector<CSurfWidget*> GetWidgets() { return widgets_; }
+    vector<MidiWidget*> GetWidgets() { return widgets_; }
     
     virtual void OnTrackSelection(MediaTrack *trackid) {};
     
-    void AddWidget(CSurfWidget* widget)
+    void AddWidget(MidiWidget* widget)
     {
         widgets_.push_back(widget);
     }
