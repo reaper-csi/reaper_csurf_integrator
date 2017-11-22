@@ -2,8 +2,6 @@
 //  control_surface_integrator_Reaper.h
 //  reaper_csurf_integrator
 //
-//  Created by Geoff Waddington on 2017-10-12.
-//  Copyright © 2017 Geoff Waddington. All rights reserved.
 //
 
 #ifndef control_surface_integrator_Reaper_h
@@ -56,6 +54,7 @@ public:
         midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
 #endif
     }
+    
     DWORD GetPrivateProfileString(const char *appname, const char *keyname, const char *def, char *ret, int retsize, const char *fn) { return ::GetPrivateProfileString(appname, keyname, def, ret, retsize, fn); }
 
     const char* GetResourcePath() { return ::GetResourcePath(); }
