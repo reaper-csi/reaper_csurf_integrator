@@ -19,9 +19,9 @@ private:
     int actOnRelease_ = 0;
     
 public:
-    PushButton_CSurfWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release) {}
+    //PushButton_CSurfWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release) {}
     
-    PushButton_CSurfWidget(string name, RealCSurf* surface, int actOnRelease, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release), actOnRelease_(actOnRelease) {}
+    //PushButton_CSurfWidget(string name, RealCSurf* surface, int actOnRelease, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release), actOnRelease_(actOnRelease) {}
 
     PushButton_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release)  {}
     

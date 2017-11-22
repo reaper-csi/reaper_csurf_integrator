@@ -15,6 +15,8 @@ using namespace std;
 
 #include "control_surface_integrator_Reaper.h"
 
+const string LogicalCSurf = "LogicalCSurf";
+
 const string TrackVolume = "TrackVolume";
 const string TrackPan = "TrackPan";
 
@@ -70,7 +72,7 @@ private:
     RealCSurf* surface_ = nullptr;
     string name_= "";
     string GUID_ = "";
-    CSurfChannel* channel_ = nullptr; // ONLY Channel based widgets (e.g Fader_CSurfWidget) get a channel assigned to them
+    CSurfChannel* channel_ = nullptr;
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
@@ -80,8 +82,6 @@ protected:
     
 public:
     virtual ~CSurfWidget() {};
-    
-    CSurfWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
     CSurfWidget(string name, RealCSurf* surface,  CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
@@ -360,7 +360,6 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
-    map<string, vector<Action*>> actions_;
     vector<Interactor*> interactors_;
     vector<string> immovableTrackGUIDs_;
     bool isSynchronized_ = false;
@@ -375,8 +374,8 @@ private:
     bool zoom_ = false;
     bool scrub_ = false;
 
-    void BuildInteractors();
-    void BuildInteractors2();
+    void BuildTrackInteractors();
+    void BuildTrackInteractors2();
     void BuildCSurfWidgets();
 
     // There is an immovable GUID slot for each channel, so by definition immovableTrackGUIDs_.size is number of channels
@@ -488,15 +487,10 @@ private:
         surfaces_.push_back(surface);
     }
     
-    void AddAction(Action* action)
-    {
-        actions_[action->GetName()].push_back(action);
-    }
-
     void RebuildInteractors()
     {
         interactors_.clear();
-        BuildInteractors();
+        BuildTrackInteractors();
         RefreshLayout();
     }
     
@@ -523,10 +517,6 @@ public:
 
     void RunAndUpdate()
     {
-        for(auto & association : actions_)
-            for( auto action : association.second)
-                action->Update();
-        
         for(auto & surface : surfaces_)
             surface->RunAndUpdate();
     }
@@ -548,7 +538,7 @@ public:
     void Initialize2();
     void InitializeFXMaps();
     void InitializeSurfaces();
-    void InitializeActions();
+    void InitializeLogicalCSurfInteractors();
     
     double GetCurrentNormalizedValue(string trackGUID, string name);
     
