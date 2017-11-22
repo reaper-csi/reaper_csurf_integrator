@@ -10,83 +10,88 @@
 #include "control_surface_base_actions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Flip_Action : public LogicalCSurf_DoubleAction
+class Flip_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Flip_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Flip_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->ToggleFlipped(GetName());
+        // GAW TBD
+        //GetSurface()->ToggleFlipped(GetName());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Shift_Action : public LogicalCSurf_DoubleAction
+class Shift_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    Shift_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Shift_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->SetShift(value);
+        // GAW TBD
+        //GetSurface()->SetShift(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Option_Action : public LogicalCSurf_DoubleAction
+class Option_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    Option_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Option_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->SetOption(value);
+        // GAW TBD
+        //GetSurface()->SetOption(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Control_Action : public LogicalCSurf_DoubleAction
+class Control_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    Control_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Control_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->SetControl(value);
+        // GAW TBD
+        //GetSurface()->SetControl(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Alt_Action : public LogicalCSurf_DoubleAction
+class Alt_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    Alt_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Alt_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->SetAlt(value);
+        // GAW TBD
+        //GetSurface()->SetAlt(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Latched_Action : public LogicalCSurf_DoubleAction
+class Latched_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     clock_t lastPressed_ = clock();
 public:
     
-    Latched_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    Latched_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void SetValue(double value) {}
     
@@ -96,14 +101,16 @@ public:
         {
             lastPressed_ = clock();
             SetValue(value);
-            GetSurface()->SetWidgetValue("", GetName(), value);
+            // GAW TBD
+            //GetSurface()->SetWidgetValue("", GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(value);
-                GetSurface()->SetWidgetValue("", GetName(), value);
+                // GAW TBD
+                //GetSurface()->SetWidgetValue("", GetName(), value);
             }
         }
     }
@@ -115,11 +122,12 @@ class LatchedZoom_Action : public Latched_Action
 {
 public:
     
-    LatchedZoom_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : Latched_Action(name, manager, logicalCSurf)  {}
+    LatchedZoom_Action(string name, CSurfManager* manager, Interactor* interactor) : Latched_Action(name, manager, interactor)  {}
     
     virtual void SetValue(double value) override
     {
-        GetSurface()->SetZoom(value);
+        // GAW TBD
+        //GetSurface()->SetZoom(value);
     }
 };
 
@@ -129,21 +137,22 @@ class LatchedScrub_Action : public Latched_Action
 {
 public:
     
-    LatchedScrub_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : Latched_Action(name, manager, logicalCSurf)  {}
+    LatchedScrub_Action(string name, CSurfManager* manager, Interactor* interactor) : Latched_Action(name, manager, interactor)  {}
     
     virtual void SetValue(double value) override
     {
-        GetSurface()->SetScrub(value);
+        // GAW TBD
+        //GetSurface()->SetScrub(value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NextMap_Action : public LogicalCSurf_DoubleAction
+class NextMap_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    NextMap_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    NextMap_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
@@ -152,7 +161,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackBank_Action : public LogicalCSurf_DoubleAction
+class TrackBank_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -160,39 +169,42 @@ private:
 
 public:
     
-    TrackBank_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf, int stride) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf), stride_(stride)   {}
+    TrackBank_Action(string name, CSurfManager* manager, Interactor* interactor, int stride) : DoubleAction(name, manager, interactor), stride_(stride)   {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->AdjustTrackBank(stride_);
+        // GAW TBD
+        //GetSurface()->AdjustTrackBank(stride_);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ImmobilizeSelectedTracks_Action : public LogicalCSurf_DoubleAction
+class ImmobilizeSelectedTracks_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    ImmobilizeSelectedTracks_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    ImmobilizeSelectedTracks_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->ImmobilizeSelectedTracks();
+        // GAW TBD
+        //GetSurface()->ImmobilizeSelectedTracks();
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MobilizeSelectedTracks_Action : public LogicalCSurf_DoubleAction
+class MobilizeSelectedTracks_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
-    MobilizeSelectedTracks_Action(string name, CSurfManager* manager, LogicalSurface* logicalCSurf) : LogicalCSurf_DoubleAction(name, manager, logicalCSurf)  {}
+    MobilizeSelectedTracks_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetSurface()->MobilizeSelectedTracks();
+        // GAW TBD
+        //GetSurface()->MobilizeSelectedTracks();
     }
 };
 

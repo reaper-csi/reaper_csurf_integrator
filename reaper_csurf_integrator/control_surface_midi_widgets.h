@@ -19,10 +19,6 @@ private:
     int actOnRelease_ = 0;
     
 public:
-    //PushButton_CSurfWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release) {}
-    
-    //PushButton_CSurfWidget(string name, RealCSurf* surface, int actOnRelease, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, press, release), actOnRelease_(actOnRelease) {}
-
     PushButton_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release)  {}
     
     PushButton_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : CSurfWidget(name, surface, channel, GUID, press, release), reverseSense_(reverseSense) {}
@@ -331,10 +327,7 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
-        for(auto & widget : widgets_)
-            widget->ProcessMidiMessage(evt);
-        
-        for(auto & channel : channels_)
+        for(auto & channel : GetChannels())
             channel->ProcessMidiMessage(evt);
         
         if(midiInMonitor_)
