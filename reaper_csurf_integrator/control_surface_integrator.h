@@ -591,6 +591,8 @@ public:
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
 
+    LogicalSurface* GetCurrentLogicalSurface() { return surfaces_[currentSurfaceIndex_]; }
+    
     double GetFaderMaxDB()
     {
         return GetPrivateProfileDouble("slidermaxv");

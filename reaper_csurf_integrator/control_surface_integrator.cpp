@@ -358,7 +358,7 @@ void LogicalSurface::BuildTrackInteractors()
 
         interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
         
-        CyclicAction* cyclicAction = new CyclicAction(TrackPan, GetManager(), interactor);
+        CycledAction* cyclicAction = new CycledAction(TrackPan, GetManager(), interactor);
         cyclicAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
         cyclicAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
         interactor->AddAction(cyclicAction);
@@ -404,7 +404,7 @@ void LogicalSurface::BuildTrackInteractors2()
         
         interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
         
-        CyclicAction* cycleAction = new CyclicAction(TrackPan, GetManager(), interactor);
+        CycledAction* cycleAction = new CycledAction(TrackPan, GetManager(), interactor);
         cycleAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
         cycleAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
         interactor->AddAction(cycleAction);

@@ -284,15 +284,13 @@ public:
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            // GAW TBD
-            //GetDAW()->CSurf_OnArrow(direction_, GetSurface()->IsZoom());
+            GetDAW()->CSurf_OnArrow(direction_, GetManager()->GetCurrentLogicalSurface()->IsZoom());
         }
     }
     
     virtual void RunAction(double value) override
     {
-        // GAW TBD
-        //GetDAW()->CSurf_OnArrow(direction_, GetSurface()->IsZoom());
+        GetDAW()->CSurf_OnArrow(direction_, GetManager()->GetCurrentLogicalSurface()->IsZoom());
         pressed_ = value;
     }
 };
