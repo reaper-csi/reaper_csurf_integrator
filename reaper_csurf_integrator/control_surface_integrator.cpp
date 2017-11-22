@@ -128,8 +128,8 @@ void LogicalSurface::Initialize()
     InitializeFXMaps();
     
     InitializeSurfaces();
-    InitializeActions();
-    BuildInteractors();
+    InitializeLogicalCSurfInteractors();
+    BuildTrackInteractors();
     BuildCSurfWidgets();
 }
 
@@ -139,8 +139,8 @@ void LogicalSurface::Initialize2()
     InitializeFXMaps();
 
     InitializeSurfaces();
-    InitializeActions();
-    BuildInteractors2();
+    InitializeLogicalCSurfInteractors();
+    BuildTrackInteractors2();
     BuildCSurfWidgets();
 }
 
@@ -278,67 +278,71 @@ void LogicalSurface::InitializeFXMaps()
     
 }
 
-void LogicalSurface::InitializeActions()
+void LogicalSurface::InitializeLogicalCSurfInteractors()
 {
-    AddAction(new TrackBank_Action(ChannelLeft, GetManager(), this, -1));
-    AddAction(new TrackBank_Action(ChannelRight, GetManager(), this, 1));
-    AddAction(new TrackBank_Action(BankLeft, GetManager(), this, -20));
-    AddAction(new TrackBank_Action(BankRight, GetManager(), this, 20));
+    Interactor* interactor = new Interactor(GetManager(), LogicalCSurf);
     
-    AddAction(new Flip_Action(Flip, GetManager(), this));
+    interactor->AddAction(new TrackBank_Action(ChannelLeft, GetManager(), this, -1));
+    interactor->AddAction(new TrackBank_Action(ChannelRight, GetManager(), this, 1));
+    interactor->AddAction(new TrackBank_Action(BankLeft, GetManager(), this, -20));
+    interactor->AddAction(new TrackBank_Action(BankRight, GetManager(), this, 20));
     
-    AddAction(new NextMap_Action(NextMap, GetManager(), this));
-    AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, GetManager(), this));
-    AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, GetManager(), this));
+    interactor->AddAction(new Flip_Action(Flip, GetManager(), this));
     
-    AddAction(new Shift_Action(Shift, GetManager(), this));
-    AddAction(new Option_Action(Option, GetManager(), this));
-    AddAction(new Control_Action(Control, GetManager(), this));
-    AddAction(new Alt_Action(Alt, GetManager(), this));
+    interactor->AddAction(new NextMap_Action(NextMap, GetManager(), this));
+    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, GetManager(), this));
+    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, GetManager(), this));
     
-    AddAction(new TrackAutoMode_Action(Read, GetManager(), this, 1));
-    AddAction(new TrackAutoMode_Action(Write, GetManager(), this, 3));
-    AddAction(new TrackAutoMode_Action(Trim, GetManager(), this, 0));
-    AddAction(new TrackAutoMode_Action(Touch, GetManager(), this, 2));
-    AddAction(new TrackAutoMode_Action(Latch, GetManager(), this, 4));
-    AddAction(new TrackAutoMode_Action(Group, GetManager(), this, 5));
+    interactor->AddAction(new Shift_Action(Shift, GetManager(), this));
+    interactor->AddAction(new Option_Action(Option, GetManager(), this));
+    interactor->AddAction(new Control_Action(Control, GetManager(), this));
+    interactor->AddAction(new Alt_Action(Alt, GetManager(), this));
+    
+    interactor->AddAction(new TrackAutoMode_Action(Read, GetManager(), this, 1));
+    interactor->AddAction(new TrackAutoMode_Action(Write, GetManager(), this, 3));
+    interactor->AddAction(new TrackAutoMode_Action(Trim, GetManager(), this, 0));
+    interactor->AddAction(new TrackAutoMode_Action(Touch, GetManager(), this, 2));
+    interactor->AddAction(new TrackAutoMode_Action(Latch, GetManager(), this, 4));
+    interactor->AddAction(new TrackAutoMode_Action(Group, GetManager(), this, 5));
 
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, GetManager(), this, 1));
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, GetManager(), this, 3));
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, GetManager(), this, 0));
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, GetManager(), this, 2));
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, GetManager(), this, 4));
-    AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, GetManager(), this, 5));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, GetManager(), this, 1));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, GetManager(), this, 3));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, GetManager(), this, 0));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, GetManager(), this, 2));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, GetManager(), this, 4));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, GetManager(), this, 5));
     
-    AddAction(new Save_Action(Save, GetManager(), this));
-    AddAction(new SaveAs_Action( Shift + Delimiter + Save, GetManager(), this));
-    AddAction(new Undo_Action(Undo, GetManager(), this));
-    AddAction(new Redo_Action(Shift + Delimiter + Undo, GetManager(), this));
+    interactor->AddAction(new Save_Action(Save, GetManager(), this));
+    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, GetManager(), this));
+    interactor->AddAction(new Undo_Action(Undo, GetManager(), this));
+    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, GetManager(), this));
     //AddAction(new Enter_Action(Enter, Manager(), this));
     //AddAction(new Cancel_Action(Cancel, Manager(), this));
 
-    AddAction(new PreviousMarker_Action(Marker, GetManager(), this));
-    AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, GetManager(), this));
-    AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, GetManager(), this));
-    AddAction(new NextMarker_Action(Nudge, GetManager(), this));
-    AddAction(new CycleTimeline_Action(Cycle, GetManager(), this));
-    AddAction(new Metronome_Action(Click, GetManager(), this));
+    interactor->AddAction(new PreviousMarker_Action(Marker, GetManager(), this));
+    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, GetManager(), this));
+    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, GetManager(), this));
+    interactor->AddAction(new NextMarker_Action(Nudge, GetManager(), this));
+    interactor->AddAction(new CycleTimeline_Action(Cycle, GetManager(), this));
+    interactor->AddAction(new Metronome_Action(Click, GetManager(), this));
 
-    AddAction(new Rewind_Action(Rewind, GetManager(), this));
-    AddAction(new FastForward_Action(FastForward, GetManager(), this));
-    AddAction(new Stop_Action(Stop, GetManager(), this));
-    AddAction(new Play_Action(Play, GetManager(), this));
-    AddAction(new Record_Action(Record, GetManager(), this));
+    interactor->AddAction(new Rewind_Action(Rewind, GetManager(), this));
+    interactor->AddAction(new FastForward_Action(FastForward, GetManager(), this));
+    interactor->AddAction(new Stop_Action(Stop, GetManager(), this));
+    interactor->AddAction(new Play_Action(Play, GetManager(), this));
+    interactor->AddAction(new Record_Action(Record, GetManager(), this));
     
-    AddAction(new RepeatingArrow_Action(Up,  GetManager(), this, 0, 0.3));
-    AddAction(new RepeatingArrow_Action(Down,  GetManager(), this, 1, 0.3));
-    AddAction(new RepeatingArrow_Action(Left,  GetManager(), this, 2, 0.3));
-    AddAction(new RepeatingArrow_Action(Right,  GetManager(), this, 3, 0.3));
-    AddAction(new LatchedZoom_Action(Zoom,  GetManager(), this));
-    AddAction(new LatchedScrub_Action(Scrub,  GetManager(), this));    
+    interactor->AddAction(new RepeatingArrow_Action(Up,  GetManager(), this, 0, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Down,  GetManager(), this, 1, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Left,  GetManager(), this, 2, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Right,  GetManager(), this, 3, 0.3));
+    interactor->AddAction(new LatchedZoom_Action(Zoom,  GetManager(), this));
+    interactor->AddAction(new LatchedScrub_Action(Scrub,  GetManager(), this));
+    
+    AddInteractor(interactor);
 }
 
-void LogicalSurface::BuildInteractors()
+void LogicalSurface::BuildTrackInteractors()
 {
     Interactor* interactor = nullptr;
     
@@ -384,7 +388,7 @@ void LogicalSurface::BuildInteractors()
 }
 
 // GAW TBD Temp BS for second map, just for illustrating map switching
-void LogicalSurface::BuildInteractors2()
+void LogicalSurface::BuildTrackInteractors2()
 {
     Interactor* interactor = nullptr;
     
@@ -439,6 +443,7 @@ void LogicalSurface::BuildCSurfWidgets()
         
         if(surface->GetName() == "Console1")
         {
+            /*
             surface->AddWidget(new PushButton_CSurfWidget("PagePlus", surface,   new MIDI_event_ex_t(0xb0, 0x60, 0x7f), new MIDI_event_ex_t(0xb0, 0x60, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("PageMinus", surface,  new MIDI_event_ex_t(0xb0, 0x61, 0x7f), new MIDI_event_ex_t(0xb0, 0x61, 0x00)));
             
@@ -465,12 +470,13 @@ void LogicalSurface::BuildCSurfWidgets()
 
             surface->AddWidget(new PushButton_CSurfWidget("TrackGroup", surface, new MIDI_event_ex_t(0xb0, 0x7b, 0x7f), new MIDI_event_ex_t(0xb0, 0x7b, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("TrackCopy", surface,  new MIDI_event_ex_t(0xb0, 0x78, 0x7f), new MIDI_event_ex_t(0xb0, 0x78, 0x00)));
-
-     
-            channel = new UniquelySelectedCSurfChannel(surface, 0, "");
-
+ 
             surface->AddWidget(new PushButton_CSurfWidget(DisplayFX, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget(SendsMode, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x68, 0x7f), new MIDI_event_ex_t(0xb0, 0x68, 0x00)));
+*/
+            
+            
+            channel = new UniquelySelectedCSurfChannel(surface, 0, "");
 
             
             channel->AddWidget(new PushButton_CSurfWidget("Order", surface, channel, "",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -548,6 +554,10 @@ void LogicalSurface::BuildCSurfWidgets()
         }
         else
         {
+            
+            channel = new CSurfChannel(surface, LogicalCSurf);
+            
+            /*
             surface->AddWidget(new PushButton_CSurfWidget("Track", surface,      new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("Send", surface,       new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("Pan", surface,        new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
@@ -606,13 +616,17 @@ void LogicalSurface::BuildCSurfWidgets()
 
             surface->AddWidget(new PushButton_CSurfWidget(Marker, surface,              new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget(Nudge, surface,               new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
-            
-            surface->AddWidget(new PushButton_CSurfWidget(Rewind, surface,              new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(FastForward, surface,         new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Stop, surface,                new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Play, surface,                new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-            surface->AddWidget(new PushButton_CSurfWidget(Record, surface,              new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+*/
+            surface->AddWidget(new PushButton_CSurfWidget(Rewind, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
+            surface->AddWidget(new PushButton_CSurfWidget(FastForward, surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
+            surface->AddWidget(new PushButton_CSurfWidget(Stop, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
+            surface->AddWidget(new PushButton_CSurfWidget(Play, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
+            surface->AddWidget(new PushButton_CSurfWidget(Record, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
 
+            
+            surface->AddChannel(channel);
+            
+            
             for(int i = 0; i < surface->GetNumChannels(); ++i)
             {
                 string trackGUID = GetManager()->GetDAW()->GetTrackGUIDAsString(currentChannel++);
@@ -810,11 +824,11 @@ void LogicalSurface::ForceUpdate(string GUID, string name)
 void LogicalSurface::RunAction(string GUID, string name, double value)
 {
     string flipName = FlipNameFor(name);
-    
+    /*
     if(GUID == "")
         for(auto & action : actions_[ModifiedNameFor(flipName)])
             action->RunAction(value);
-    else
+    else */
         for(auto & interactor : interactors_)
             if(interactor->GetGUID() == GUID)
                 interactor->RunAction(ModifiedNameFor(flipName), value);
@@ -888,7 +902,7 @@ void LogicalSurface::MobilizeSelectedTracks()
 }
 
 void LogicalSurface::RefreshLayout()
-{
+{/*
     auto currentOffset = trackOffset_;
     
     for(int i = 0; i < NumChannels(); i++)
@@ -903,7 +917,7 @@ void LogicalSurface::RefreshLayout()
             Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
         else while(isInImmovableTrackGUIDS(GetDAW()->GetTrackGUIDAsString(currentOffset++)) && currentOffset < GetDAW()->GetNumTracks())
             Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
-    }
+    }*/
 }
 
 bool LogicalSurface::DidTrackListChange()
