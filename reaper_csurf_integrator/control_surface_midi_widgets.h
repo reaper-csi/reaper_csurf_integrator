@@ -252,10 +252,10 @@ public:
 class Display_CSurfWidget : public CSurfWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    int channelIndex = 0;
+    int slotIndex_ = 0;
     
 public:
-    Display_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, string GUID) : CSurfWidget(name, surface, channel, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
+    Display_CSurfWidget(string name, RealCSurf* surface, CSurfChannel* channel, int slotIndex, string GUID) : CSurfWidget(name, surface, channel, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
@@ -281,7 +281,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = GetChannel()->GetNumber() * 7;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
         
         int l = strlen(text);
         if (pad < l)
