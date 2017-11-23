@@ -35,7 +35,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -51,9 +51,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -132,7 +132,7 @@ public:
                  */
             }
             
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), volume);
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), volume);
         }
     }
 };
@@ -162,7 +162,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -196,9 +196,9 @@ public:
             if (midiMessage->midi_message[2] & 0x40)
                 value = -value;
             
-            value += GetSurface()->GetManager()->GetCurrentNormalizedValue(GetGUID(), GetName());
+            value += GetSurface()->GetLogicalSurface()->GetManager()->GetCurrentNormalizedValue(GetGUID(), GetName());
             
-            GetSurface()->GetManager()->RunAction(GetGUID(), GetName(), value);
+            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), value);
         }
     }
 };
@@ -216,7 +216,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
-            GetSurface()->GetManager()->CycleAction(GetGUID(), GetName());
+            GetSurface()->GetLogicalSurface()->GetManager()->CycleAction(GetGUID(), GetName());
         
         Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
@@ -239,7 +239,7 @@ public:
     
     virtual void SetValueToZero() override
     {
-        SetValue(GetSurface()->GetManager()->GetVUMinDB());
+        SetValue(GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
     void SetValue(double value) override
@@ -248,8 +248,8 @@ public:
         //output = output_start + slope * (input - input_start)
         
         // First, map Reaper VU range to surface VU range
-        double slope = (GetMaxDB() - GetMinDB()) / (GetSurface()->GetManager()->GetVUMaxDB() - GetSurface()->GetManager()->GetVUMinDB());
-        double output = GetMinDB() + slope * (value - GetSurface()->GetManager()->GetVUMinDB());
+        double slope = (GetMaxDB() - GetMinDB()) / (GetSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double output = GetMinDB() + slope * (value - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
 
         // Now map surface VU range to widget range
         slope = 127.0 / (GetMaxDB() - GetMinDB());
@@ -331,7 +331,7 @@ private:
     {
         if(midiInput_)
         {
-            GetManager()->GetDAW()->SwapBufsPrecise(midiInput_);
+            GetLogicalSurface()->GetManager()->GetDAW()->SwapBufsPrecise(midiInput_);
             MIDI_eventlist* list = midiInput_->GetReadBuf();
             int bpos = 0;
             MIDI_event_t* evt;
@@ -349,7 +349,7 @@ private:
         {
             char buffer[250];
             sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
-            GetManager()->GetDAW()->ShowConsoleMsg(buffer);
+            GetLogicalSurface()->GetManager()->GetDAW()->ShowConsoleMsg(buffer);
         }
     }
     
@@ -378,7 +378,7 @@ public:
         {
             char buffer[250];
             sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
-            GetManager()->GetDAW()->ShowConsoleMsg(buffer);
+            GetLogicalSurface()->GetManager()->GetDAW()->ShowConsoleMsg(buffer);
         }
     }
     

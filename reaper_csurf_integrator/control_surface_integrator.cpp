@@ -117,12 +117,12 @@ RealCSurf* MidiWidget::GetSurface()
 
 void MidiWidget::Update()
 {
-    GetSurface()->GetManager()->Update(GetGUID(), GetName());
+    GetSurface()->GetLogicalSurface()->GetManager()->Update(GetGUID(), GetName());
 }
 
 void MidiWidget::ForceUpdate()
 {
-    GetSurface()->GetManager()->ForceUpdate(GetGUID(), GetName());
+    GetSurface()->GetLogicalSurface()->GetManager()->ForceUpdate(GetGUID(), GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ void LogicalSurface::InitializeFXMaps()
 
 void LogicalSurface::InitializeLogicalCSurfInteractors()
 {
-    Interactor* interactor = new Interactor(GetManager(), LogicalCSurf);
+    Interactor* interactor = new Interactor(LogicalCSurf, this);
     
     interactor->AddAction(new TrackBank_Action(ChannelLeft, GetManager(), interactor, -1));
     interactor->AddAction(new TrackBank_Action(ChannelRight, GetManager(), interactor, 1));
@@ -353,7 +353,7 @@ void LogicalSurface::BuildTrackInteractors()
     
     for(int i = 0; i < GetDAW()->GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
     {
-        interactor = new Interactor(GetManager(), GetDAW()->GetTrackGUIDAsString(i));
+        interactor = new Interactor(GetDAW()->GetTrackGUIDAsString(i), this);
         
         interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, GetManager(), interactor));
         
@@ -399,7 +399,7 @@ void LogicalSurface::BuildTrackInteractors2()
     
     for(int i = 0; i < GetManager()->GetDAW()->GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
     {
-        interactor = new Interactor(GetManager(), GetManager()->GetDAW()->GetTrackGUIDAsString(i));
+        interactor = new Interactor(GetManager()->GetDAW()->GetTrackGUIDAsString(i), this);
         
         interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, GetManager(), interactor));
 
@@ -964,7 +964,7 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
             // First, dump any existing interactors for this FX GUID
 
             
-            Interactor* interactor = new Interactor(GetManager(), fxGUID, trackGUID, i);
+            Interactor* interactor = new Interactor(fxGUID, this, trackGUID, i);
          
             numParameters = TrackFX_GetNumParams(track, i);
 
@@ -1098,7 +1098,7 @@ void CSurfChannel::SetWidgetValue(string GUID, string name, string value)
 
 DAW* CSurfChannel::GetDAW()
 {
-    return GetSurface()->GetManager()->GetDAW();
+    return GetSurface()->GetLogicalSurface()->GetManager()->GetDAW();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1166,11 +1166,6 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealCSurf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-CSurfManager* RealCSurf::GetManager()
-{
-    return GetLogicalSurface()->GetManager();
-}
-
 void RealCSurf::Update()
 {
     for(auto & channel : GetChannels())
@@ -1244,10 +1239,10 @@ void Interactor::CycleAction(string name)
 
 MediaTrack* Interactor::GetTrack()
 {
-    return GetManager()->GetDAW()->GetTrackFromGUID(trackGUID_);
+    return GetLogicalSurface()->GetManager()->GetDAW()->GetTrackFromGUID(trackGUID_);
 }
 
 DAW* Interactor::GetDAW()
 {
-    return GetManager()->GetDAW();
+    return GetLogicalSurface()->GetManager()->GetDAW();
 }
