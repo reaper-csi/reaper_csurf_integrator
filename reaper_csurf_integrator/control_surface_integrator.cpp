@@ -110,19 +110,14 @@ string MidiWidget::GetName()
     return name_;
 }
 
-RealCSurf* MidiWidget::GetSurface()
-{
-    return GetChannel()->GetSurface();
-}
-
 void MidiWidget::Update()
 {
-    GetSurface()->GetLogicalSurface()->GetManager()->Update(GetGUID(), GetName());
+    GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->Update(GetGUID(), GetName());
 }
 
 void MidiWidget::ForceUpdate()
 {
-    GetSurface()->GetLogicalSurface()->GetManager()->ForceUpdate(GetGUID(), GetName());
+    GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->ForceUpdate(GetGUID(), GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
