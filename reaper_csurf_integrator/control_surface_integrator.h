@@ -74,7 +74,6 @@ class MidiWidget
 {
 private:
     string name_= "";
-    string GUID_ = "";
     CSurfChannel* channel_ = nullptr;
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
@@ -86,23 +85,15 @@ protected:
 public:
     virtual ~MidiWidget() {};
     
-    MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
-    virtual CSurfChannel* GetChannel() { return channel_; }
+    CSurfChannel* GetChannel() { return channel_; }
 
     virtual double GetMinDB() { return 0.0; }
     
     virtual double GetMaxDB() { return 1.0; }
     
     string GetName();
-
-    void SetGUID(string GUID)
-    {
-        GUID_ = GUID;
-        ForceUpdate();
-    }
-    
-    string GetGUID() { return GUID_; }
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 
@@ -128,7 +119,6 @@ private:
         for(auto & widget : widgets_)
         {
             widget->SetValueToZero(); // We're not sure what the new mappings are, based on the GUID change, so zero everything to avoid spurious lights left on, etc.
-            widget->SetGUID(GUID);
         }
     }
     
