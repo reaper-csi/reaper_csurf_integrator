@@ -119,8 +119,8 @@ class CSurfChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    RealCSurf* surface_= nullptr;
     string GUID_ = "";
+    RealCSurf* surface_= nullptr;
     vector<MidiWidget*> widgets_;
     
     void SetWidgetsToGUID(string GUID)
@@ -186,8 +186,8 @@ class RealCSurf
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    LogicalSurface* logicalSurface_ = nullptr;
     const string name_ = "";
+    LogicalSurface* logicalSurface_ = nullptr;
     const int numChannels_ = 0;
     vector<CSurfChannel*> channels_;
 
@@ -264,9 +264,9 @@ class Interactor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    string GUID_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
     map <string, vector<Action*>> actions_;
-    string GUID_ = "";
     string trackGUID_ = "";
     int index_ = 0;
 
