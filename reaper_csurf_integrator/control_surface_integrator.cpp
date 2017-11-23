@@ -99,7 +99,7 @@ const string Character = "Character";
 
 DAW* Action::GetDAW()
 {
-    return GetManager()->GetDAW();
+    return GetInteractor()->GetLogicalSurface()->GetManager()->GetDAW();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,62 +287,62 @@ void LogicalSurface::InitializeLogicalCSurfInteractors()
 {
     Interactor* interactor = new Interactor(LogicalCSurf, this);
     
-    interactor->AddAction(new TrackBank_Action(ChannelLeft, GetManager(), interactor, -1));
-    interactor->AddAction(new TrackBank_Action(ChannelRight, GetManager(), interactor, 1));
-    interactor->AddAction(new TrackBank_Action(BankLeft, GetManager(), interactor, -20));
-    interactor->AddAction(new TrackBank_Action(BankRight, GetManager(), interactor, 20));
+    interactor->AddAction(new TrackBank_Action(ChannelLeft, interactor, -1));
+    interactor->AddAction(new TrackBank_Action(ChannelRight, interactor, 1));
+    interactor->AddAction(new TrackBank_Action(BankLeft, interactor, -20));
+    interactor->AddAction(new TrackBank_Action(BankRight, interactor, 20));
     
-    interactor->AddAction(new Flip_Action(Flip, GetManager(), interactor));
+    interactor->AddAction(new Flip_Action(Flip, interactor));
     
-    interactor->AddAction(new NextMap_Action(NextMap, GetManager(), interactor));
-    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, GetManager(), interactor));
-    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, GetManager(), interactor));
+    interactor->AddAction(new NextMap_Action(NextMap, interactor));
+    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, interactor));
+    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, interactor));
     
-    interactor->AddAction(new Shift_Action(Shift, GetManager(), interactor));
-    interactor->AddAction(new Option_Action(Option, GetManager(), interactor));
-    interactor->AddAction(new Control_Action(Control, GetManager(), interactor));
-    interactor->AddAction(new Alt_Action(Alt, GetManager(), interactor));
+    interactor->AddAction(new Shift_Action(Shift, interactor));
+    interactor->AddAction(new Option_Action(Option, interactor));
+    interactor->AddAction(new Control_Action(Control,  interactor));
+    interactor->AddAction(new Alt_Action(Alt, interactor));
     
-    interactor->AddAction(new TrackAutoMode_Action(Read, GetManager(), interactor, 1));
-    interactor->AddAction(new TrackAutoMode_Action(Write, GetManager(), interactor, 3));
-    interactor->AddAction(new TrackAutoMode_Action(Trim, GetManager(), interactor, 0));
-    interactor->AddAction(new TrackAutoMode_Action(Touch, GetManager(), interactor, 2));
-    interactor->AddAction(new TrackAutoMode_Action(Latch, GetManager(), interactor, 4));
-    interactor->AddAction(new TrackAutoMode_Action(Group, GetManager(), interactor, 5));
+    interactor->AddAction(new TrackAutoMode_Action(Read, interactor, 1));
+    interactor->AddAction(new TrackAutoMode_Action(Write, interactor, 3));
+    interactor->AddAction(new TrackAutoMode_Action(Trim, interactor, 0));
+    interactor->AddAction(new TrackAutoMode_Action(Touch, interactor, 2));
+    interactor->AddAction(new TrackAutoMode_Action(Latch, interactor, 4));
+    interactor->AddAction(new TrackAutoMode_Action(Group, interactor, 5));
 
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, GetManager(), interactor, 1));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, GetManager(), interactor, 3));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, GetManager(), interactor, 0));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, GetManager(), interactor, 2));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, GetManager(), interactor, 4));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, GetManager(), interactor, 5));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, interactor, 1));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, interactor, 3));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, interactor, 0));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, interactor, 2));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, interactor, 4));
+    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, interactor, 5));
     
-    interactor->AddAction(new Save_Action(Save, GetManager(), interactor));
-    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, GetManager(), interactor));
-    interactor->AddAction(new Undo_Action(Undo, GetManager(), interactor));
-    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, GetManager(), interactor));
+    interactor->AddAction(new Save_Action(Save, interactor));
+    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, interactor));
+    interactor->AddAction(new Undo_Action(Undo, interactor));
+    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, interactor));
     //AddAction(new Enter_Action(Enter, Manager(), this));
     //AddAction(new Cancel_Action(Cancel, Manager(), this));
 
-    interactor->AddAction(new PreviousMarker_Action(Marker, GetManager(), interactor));
-    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, GetManager(), interactor));
-    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, GetManager(), interactor));
-    interactor->AddAction(new NextMarker_Action(Nudge, GetManager(), interactor));
-    interactor->AddAction(new CycleTimeline_Action(Cycle, GetManager(), interactor));
-    interactor->AddAction(new Metronome_Action(Click, GetManager(), interactor));
+    interactor->AddAction(new PreviousMarker_Action(Marker, interactor));
+    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, interactor));
+    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, interactor));
+    interactor->AddAction(new NextMarker_Action(Nudge, interactor));
+    interactor->AddAction(new CycleTimeline_Action(Cycle, interactor));
+    interactor->AddAction(new Metronome_Action(Click, interactor));
 
-    interactor->AddAction(new Rewind_Action(Rewind, GetManager(), interactor));
-    interactor->AddAction(new FastForward_Action(FastForward, GetManager(), interactor));
-    interactor->AddAction(new Stop_Action(Stop, GetManager(), interactor));
-    interactor->AddAction(new Play_Action(Play, GetManager(), interactor));
-    interactor->AddAction(new Record_Action(Record, GetManager(), interactor));
+    interactor->AddAction(new Rewind_Action(Rewind, interactor));
+    interactor->AddAction(new FastForward_Action(FastForward, interactor));
+    interactor->AddAction(new Stop_Action(Stop, interactor));
+    interactor->AddAction(new Play_Action(Play, interactor));
+    interactor->AddAction(new Record_Action(Record, interactor));
     
-    interactor->AddAction(new RepeatingArrow_Action(Up,  GetManager(), interactor, 0, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Down,  GetManager(), interactor, 1, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Left,  GetManager(), interactor, 2, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Right,  GetManager(), interactor, 3, 0.3));
-    interactor->AddAction(new LatchedZoom_Action(Zoom,  GetManager(), interactor));
-    interactor->AddAction(new LatchedScrub_Action(Scrub,  GetManager(), interactor));
+    interactor->AddAction(new RepeatingArrow_Action(Up,  interactor, 0, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Down,  interactor, 1, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Left,  interactor, 2, 0.3));
+    interactor->AddAction(new RepeatingArrow_Action(Right, interactor, 3, 0.3));
+    interactor->AddAction(new LatchedZoom_Action(Zoom,  interactor));
+    interactor->AddAction(new LatchedScrub_Action(Scrub,  interactor));
     
     AddInteractor(interactor);
 }
@@ -355,27 +355,27 @@ void LogicalSurface::BuildTrackInteractors()
     {
         interactor = new Interactor(GetDAW()->GetTrackGUIDAsString(i), this);
         
-        interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, GetManager(), interactor));
+        interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, interactor));
         
-        Action* faderTouchStateControlledAction = new TouchStateControlled_Action(TrackTouched, GetManager(), interactor, new TrackVolume_DisplayAction(TrackDisplay, GetManager(), interactor));
+        Action* faderTouchStateControlledAction = new TouchStateControlled_Action(TrackTouched, interactor, new TrackVolume_DisplayAction(TrackDisplay, interactor));
         interactor->AddAction(faderTouchStateControlledAction);
         interactor->AddAliasedAction(faderTouchStateControlledAction);
 
-        interactor->AddAction(new TrackVolume_Action(Volume, GetManager(), interactor));
+        interactor->AddAction(new TrackVolume_Action(Volume, interactor));
         
-        CycledAction* cyclicAction = new CycledAction(Pan, GetManager(), interactor);
-        cyclicAction->AddAction(new TrackPan_Action(Pan, GetManager(), interactor, 0x00));
-        cyclicAction->AddAction(new TrackPanWidth_Action(Pan, GetManager(), interactor, 0x30));
+        CycledAction* cyclicAction = new CycledAction(Pan, interactor);
+        cyclicAction->AddAction(new TrackPan_Action(Pan, interactor, 0x00));
+        cyclicAction->AddAction(new TrackPanWidth_Action(Pan, interactor, 0x30));
         interactor->AddAction(cyclicAction);
         
-        interactor->AddAction(new TrackUniqueSelect_Action(Select, GetManager(), interactor));
-        interactor->AddAction(new TrackSelectionSelect_Action(Shift + Delimiter  + Select, GetManager(), interactor));
-        interactor->AddAction(new TrackSelect_Action(Control + Delimiter  + Select, GetManager(), interactor));
+        interactor->AddAction(new TrackUniqueSelect_Action(Select, interactor));
+        interactor->AddAction(new TrackSelectionSelect_Action(Shift + Delimiter  + Select, interactor));
+        interactor->AddAction(new TrackSelect_Action(Control + Delimiter  + Select, interactor));
         
-        interactor->AddAction(new VUMeter_Action(TrackOutMeterLeft, GetManager(), interactor, 0));
-        interactor->AddAction(new VUMeter_Action(TrackOutMeterRight, GetManager(), interactor, 1));
+        interactor->AddAction(new VUMeter_Action(TrackOutMeterLeft, interactor, 0));
+        interactor->AddAction(new VUMeter_Action(TrackOutMeterRight, interactor, 1));
         
-        interactor->AddAction(new GainReductionMeter_Action(CompressorMeter, GetManager(), interactor));
+        interactor->AddAction(new GainReductionMeter_Action(CompressorMeter, interactor));
 
         if(i == 0)
         {
@@ -383,9 +383,9 @@ void LogicalSurface::BuildTrackInteractors()
         }
         else
         {
-            interactor->AddAction(new TrackRecordArm_Action(RecordArm, GetManager(), interactor));
-            interactor->AddAction(new TrackMute_Action(Mute, GetManager(), interactor));
-            interactor->AddAction(new TrackSolo_Action(Solo, GetManager(), interactor));
+            interactor->AddAction(new TrackRecordArm_Action(RecordArm, interactor));
+            interactor->AddAction(new TrackMute_Action(Mute, interactor));
+            interactor->AddAction(new TrackSolo_Action(Solo, interactor));
         }
         
         AddInteractor(interactor);
@@ -401,20 +401,20 @@ void LogicalSurface::BuildTrackInteractors2()
     {
         interactor = new Interactor(GetManager()->GetDAW()->GetTrackGUIDAsString(i), this);
         
-        interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, GetManager(), interactor));
+        interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, interactor));
 
-        Action* faderTouchStateControlledAction = new TouchStateControlled_Action(TrackTouched, GetManager(), interactor, new TrackVolume_DisplayAction(TrackDisplay, GetManager(), interactor));
+        Action* faderTouchStateControlledAction = new TouchStateControlled_Action(TrackTouched, interactor, new TrackVolume_DisplayAction(TrackDisplay, interactor));
         interactor->AddAction(faderTouchStateControlledAction);
         interactor->AddAliasedAction(faderTouchStateControlledAction);
         
-        interactor->AddAction(new TrackVolume_Action(Volume, GetManager(), interactor));
+        interactor->AddAction(new TrackVolume_Action(Volume, interactor));
         
-        CycledAction* cycleAction = new CycledAction(Pan, GetManager(), interactor);
-        cycleAction->AddAction(new TrackPan_Action(Pan, GetManager(), interactor, 0x00));
-        cycleAction->AddAction(new TrackPanWidth_Action(Pan, GetManager(), interactor, 0x30));
+        CycledAction* cycleAction = new CycledAction(Pan, interactor);
+        cycleAction->AddAction(new TrackPan_Action(Pan, interactor, 0x00));
+        cycleAction->AddAction(new TrackPanWidth_Action(Pan, interactor, 0x30));
         interactor->AddAction(cycleAction);
         
-        interactor->AddAction(new TrackSelect_Action(Select, GetManager(), interactor));
+        interactor->AddAction(new TrackSelect_Action(Select, interactor));
 
         if(i == 0)
         {
@@ -426,8 +426,8 @@ void LogicalSurface::BuildTrackInteractors2()
             // interactor->AddAction(new TrackRecordArm_Action(TrackRecordArm, GetManager(), interactor));
 
             
-            interactor->AddAction(new TrackMute_Action(Mute, GetManager(), interactor));
-            interactor->AddAction(new TrackSolo_Action(Solo, GetManager(), interactor));
+            interactor->AddAction(new TrackMute_Action(Mute, interactor));
+            interactor->AddAction(new TrackSolo_Action(Solo, interactor));
         }
         
         AddInteractor(interactor);
@@ -977,7 +977,7 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
                 
                 for(auto map : map->GetMapEntries())
                     if(map.param == fxParamName)
-                        interactor->AddAction(new TrackFX_Action(map.widget, GetManager(), interactor, fxParamName, j));
+                        interactor->AddAction(new TrackFX_Action(map.widget, interactor, fxParamName, j));
             }
             
             AddInteractor(interactor);
