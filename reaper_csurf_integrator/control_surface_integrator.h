@@ -233,21 +233,19 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfManager* manager_ = nullptr;
     string name_ = "";
     Interactor* interactor_ = nullptr;
 
 protected:
-    Interactor* GetInteractor() { return interactor_; }
     virtual void SetWidgetValue(double value) {}
     virtual void SetWidgetValue(string value) {}
 
-    Action(string name, CSurfManager* manager, Interactor* interactor) : name_(name), manager_(manager), interactor_(interactor) {}
+    Action(string name, Interactor* interactor) : name_(name), interactor_(interactor) {}
     
 public:
     virtual ~Action() {}
 
-    CSurfManager* GetManager() { return manager_; }
+    Interactor* GetInteractor() { return interactor_; }
     
     DAW* GetDAW();
     

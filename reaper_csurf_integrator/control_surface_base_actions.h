@@ -16,15 +16,15 @@ class DoubleAction : public Action
 protected:
     double currentValue_ = 999999.99;
     
-    DoubleAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor)  {}
+    DoubleAction(string name, Interactor* interactor) : Action(name, interactor)  {}
     
-    DoubleAction(string name, CSurfManager* manager, Interactor* interactor, double initialValue) : Action(name, manager, interactor), currentValue_(initialValue)  {}
+    DoubleAction(string name, Interactor* interactor, double initialValue) : Action(name, interactor), currentValue_(initialValue)  {}
 
     virtual double GetValue() { return 0.0; }
     
     virtual void SetWidgetValue(double value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
 public:
@@ -56,7 +56,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    CycledAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
+    CycledAction(string name, Interactor* interactor) : Action(name, interactor) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -101,11 +101,11 @@ protected:
     
     virtual void SetWidgetValue(string value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
 public:
-    StringDisplayAction(string name, CSurfManager* manager, Interactor* interactor) : Action(name, manager, interactor) {}
+    StringDisplayAction(string name, Interactor* interactor) : Action(name, interactor) {}
     
     virtual void Update() override
     {
