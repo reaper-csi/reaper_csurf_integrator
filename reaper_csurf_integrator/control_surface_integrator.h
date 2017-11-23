@@ -17,8 +17,8 @@ using namespace std;
 
 const string LogicalCSurf = "LogicalCSurf";
 
-const string TrackVolume = "TrackVolume";
-const string TrackPan = "TrackPan";
+const string Volume = "Volume";
+const string Pan = "Pan";
 
 const string Shift = "Shift";
 const string Option = "Option";
@@ -367,10 +367,10 @@ private:
     
     string FlipNameFor(string name)
     {
-        if(name == TrackVolume && isFlipped_)
-            return TrackPan;
-        else if(name == TrackPan && isFlipped_)
-            return TrackVolume;
+        if(name == Volume && isFlipped_)
+            return Pan;
+        else if(name == Pan && isFlipped_)
+            return Volume;
         else
             return name;
     }

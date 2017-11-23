@@ -18,10 +18,10 @@ const string Flip = "Flip";
 
 const string TrackDisplay = "TrackDisplay";
 const string TrackTouched = "TrackTouched";
-const string TrackSolo = "TrackSolo";
-const string TrackRecordArm = "TrackRecordArm";
-const string TrackSelect = "TrackSelect";
-const string TrackMute = "TrackMute";
+const string Solo = "Solo";
+const string RecordArm = "RecordArm";
+const string Select = "Select";
+const string Mute = "Mute";
 
 const string NextMap = "NextMap";
 const string LockTracks = "LockTracks";
@@ -356,16 +356,16 @@ void LogicalSurface::BuildTrackInteractors()
         interactor->AddAction(faderTouchStateControlledAction);
         interactor->AddAliasedAction(faderTouchStateControlledAction);
 
-        interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
+        interactor->AddAction(new TrackVolume_Action(Volume, GetManager(), interactor));
         
-        CycledAction* cyclicAction = new CycledAction(TrackPan, GetManager(), interactor);
-        cyclicAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
-        cyclicAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
+        CycledAction* cyclicAction = new CycledAction(Pan, GetManager(), interactor);
+        cyclicAction->AddAction(new TrackPan_Action(Pan, GetManager(), interactor, 0x00));
+        cyclicAction->AddAction(new TrackPanWidth_Action(Pan, GetManager(), interactor, 0x30));
         interactor->AddAction(cyclicAction);
         
-        interactor->AddAction(new TrackUniqueSelect_Action(TrackSelect, GetManager(), interactor));
-        interactor->AddAction(new TrackSelectionSelect_Action(Shift + Delimiter  + TrackSelect, GetManager(), interactor));
-        interactor->AddAction(new TrackSelect_Action(Control + Delimiter  + TrackSelect, GetManager(), interactor));
+        interactor->AddAction(new TrackUniqueSelect_Action(Select, GetManager(), interactor));
+        interactor->AddAction(new TrackSelectionSelect_Action(Shift + Delimiter  + Select, GetManager(), interactor));
+        interactor->AddAction(new TrackSelect_Action(Control + Delimiter  + Select, GetManager(), interactor));
         
         interactor->AddAction(new VUMeter_Action(TrackOutMeterLeft, GetManager(), interactor, 0));
         interactor->AddAction(new VUMeter_Action(TrackOutMeterRight, GetManager(), interactor, 1));
@@ -378,9 +378,9 @@ void LogicalSurface::BuildTrackInteractors()
         }
         else
         {
-            interactor->AddAction(new TrackRecordArm_Action(TrackRecordArm, GetManager(), interactor));
-            interactor->AddAction(new TrackMute_Action(TrackMute, GetManager(), interactor));
-            interactor->AddAction(new TrackSolo_Action(TrackSolo, GetManager(), interactor));
+            interactor->AddAction(new TrackRecordArm_Action(RecordArm, GetManager(), interactor));
+            interactor->AddAction(new TrackMute_Action(Mute, GetManager(), interactor));
+            interactor->AddAction(new TrackSolo_Action(Solo, GetManager(), interactor));
         }
         
         AddInteractor(interactor);
@@ -402,14 +402,14 @@ void LogicalSurface::BuildTrackInteractors2()
         interactor->AddAction(faderTouchStateControlledAction);
         interactor->AddAliasedAction(faderTouchStateControlledAction);
         
-        interactor->AddAction(new TrackVolume_Action(TrackVolume, GetManager(), interactor));
+        interactor->AddAction(new TrackVolume_Action(Volume, GetManager(), interactor));
         
-        CycledAction* cycleAction = new CycledAction(TrackPan, GetManager(), interactor);
-        cycleAction->AddAction(new TrackPan_Action(TrackPan, GetManager(), interactor, 0x00));
-        cycleAction->AddAction(new TrackPanWidth_Action(TrackPan, GetManager(), interactor, 0x30));
+        CycledAction* cycleAction = new CycledAction(Pan, GetManager(), interactor);
+        cycleAction->AddAction(new TrackPan_Action(Pan, GetManager(), interactor, 0x00));
+        cycleAction->AddAction(new TrackPanWidth_Action(Pan, GetManager(), interactor, 0x30));
         interactor->AddAction(cycleAction);
         
-        interactor->AddAction(new TrackSelect_Action(TrackSelect, GetManager(), interactor));
+        interactor->AddAction(new TrackSelect_Action(Select, GetManager(), interactor));
 
         if(i == 0)
         {
@@ -421,8 +421,8 @@ void LogicalSurface::BuildTrackInteractors2()
             // interactor->AddAction(new TrackRecordArm_Action(TrackRecordArm, GetManager(), interactor));
 
             
-            interactor->AddAction(new TrackMute_Action(TrackMute, GetManager(), interactor));
-            interactor->AddAction(new TrackSolo_Action(TrackSolo, GetManager(), interactor));
+            interactor->AddAction(new TrackMute_Action(Mute, GetManager(), interactor));
+            interactor->AddAction(new TrackSolo_Action(Solo, GetManager(), interactor));
         }
         
         AddInteractor(interactor);
@@ -541,11 +541,11 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new Fader8Bit_MidiWidget(Character, surface, channel, "",        new MIDI_event_ex_t(0xb0, 0x12, 0x7f), new MIDI_event_ex_t(0xb0, 0x12, 0x00)));
             
             // Output
-            channel->AddWidget(new PushButton_MidiWidget(TrackSolo, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0d, 0x7f), new MIDI_event_ex_t(0xb0, 0x0d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(TrackMute, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0c, 0x7f), new MIDI_event_ex_t(0xb0, 0x0c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Solo, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0d, 0x7f), new MIDI_event_ex_t(0xb0, 0x0d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Mute, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0c, 0x7f), new MIDI_event_ex_t(0xb0, 0x0c, 0x00)));
 
-            channel->AddWidget(new Fader8Bit_MidiWidget(TrackVolume, surface, channel, "",      new MIDI_event_ex_t(0xb0, 0x07, 0x7f),  new MIDI_event_ex_t(0xb0, 0x07, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(TrackPan, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x0a, 0x7f), new MIDI_event_ex_t(0xb0, 0x0a, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Volume, surface, channel, "",      new MIDI_event_ex_t(0xb0, 0x07, 0x7f),  new MIDI_event_ex_t(0xb0, 0x07, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Pan, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x0a, 0x7f), new MIDI_event_ex_t(0xb0, 0x0a, 0x00)));
             
             channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterLeft, surface, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
             channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterRight, surface, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
@@ -634,14 +634,14 @@ void LogicalSurface::BuildCSurfWidgets()
             
                 channel->AddWidget(new Display_MidiWidget(TrackDisplay, surface, channel, i, trackGUID));
             
-                channel->AddWidget(new Fader14Bit_MidiWidget(TrackVolume, surface, channel, trackGUID, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
+                channel->AddWidget(new Fader14Bit_MidiWidget(Volume, surface, channel, trackGUID, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
                 channel->AddWidget(new PushButton_MidiWidget(TrackTouched, surface, channel, trackGUID,             new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
-                channel->AddWidget(new EncoderCycledAction_MidiWidget(TrackPan, surface, channel, trackGUID,        new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
+                channel->AddWidget(new EncoderCycledAction_MidiWidget(Pan, surface, channel, trackGUID,        new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
 
-                channel->AddWidget(new PushButton_MidiWidget(TrackRecordArm, surface, channel, trackGUID,  new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(TrackSolo, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(TrackMute, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(TrackSelect, surface, channel, trackGUID,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(RecordArm, surface, channel, trackGUID,  new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Solo, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Mute, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Select, surface, channel, trackGUID,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
             
                 surface->AddChannel(channel);
             }
