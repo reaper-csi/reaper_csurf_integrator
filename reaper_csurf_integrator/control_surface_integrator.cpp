@@ -94,15 +94,6 @@ const string Drive = "Drive";
 const string Character = "Character";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Action
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-DAW* Action::GetDAW()
-{
-    return GetInteractor()->GetLogicalSurface()->GetManager()->GetDAW();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 string MidiWidget::GetName()
@@ -346,9 +337,9 @@ void LogicalSurface::BuildTrackInteractors()
 {
     Interactor* interactor = nullptr;
     
-    for(int i = 0; i < GetDAW()->GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
+    for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
     {
-        interactor = new Interactor(GetDAW()->GetTrackGUIDAsString(i), this);
+        interactor = new Interactor(DAW::GetTrackGUIDAsString(i), this);
         
         interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, interactor));
         
@@ -392,9 +383,9 @@ void LogicalSurface::BuildTrackInteractors2()
 {
     Interactor* interactor = nullptr;
     
-    for(int i = 0; i < GetManager()->GetDAW()->GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
+    for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
     {
-        interactor = new Interactor(GetManager()->GetDAW()->GetTrackGUIDAsString(i), this);
+        interactor = new Interactor(DAW::GetTrackGUIDAsString(i), this);
         
         interactor->AddAction(new TrackName_DisplayAction(TrackDisplay, interactor));
 
@@ -628,7 +619,7 @@ void LogicalSurface::BuildCSurfWidgets()
             
             for(int i = 0; i < surface->GetNumChannels(); ++i)
             {
-                string trackGUID = GetManager()->GetDAW()->GetTrackGUIDAsString(currentChannel++);
+                string trackGUID = DAW::GetTrackGUIDAsString(currentChannel++);
                 
                 channel = new CSurfChannel(trackGUID, surface);
             
@@ -660,7 +651,7 @@ void LogicalSurface::InitializeSurfaces()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     
-    const char *ptr = GetManager()->GetDAW()->GetResourcePath();
+    const char *ptr = DAW::GetResourcePath();
     char localBuf[4096];
     
     strcpy( localBuf, ptr );
@@ -676,7 +667,7 @@ void LogicalSurface::InitializeSurfaces()
         char errorBuf[4096];
         strcpy(errorBuf, "Can't locate ");
         strcpy(&errorBuf[13], localBuf);
-        GetManager()->GetDAW()->ShowConsoleMsg(errorBuf);
+        DAW::ShowConsoleMsg(errorBuf);
         return;
     }
     
@@ -866,8 +857,8 @@ void LogicalSurface::AdjustTrackBank(int stride)
     if(trackOffset_ < 1 - NumChannels())
         trackOffset_ = 1 - NumChannels();
     
-    if(trackOffset_ > GetDAW()->GetNumTracks())
-        trackOffset_ = GetDAW()->GetNumTracks();
+    if(trackOffset_ > DAW::GetNumTracks())
+        trackOffset_ = DAW::GetNumTracks();
     
     if(trackOffset_ != previousTrackOffset)
         RefreshLayout();
@@ -879,7 +870,7 @@ void LogicalSurface::AdjustTrackBank(int stride)
 void LogicalSurface::ImmobilizeSelectedTracks()
 {
     for(int i = 0; i < NumChannels(); i++)
-        if(GetDAW()->GetMediaTrackInfo_Value(GetDAW()->GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
+        if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
             immovableTrackGUIDs_[i] = Channel(i)->GetGUID();
     
     if(isSynchronized_)
@@ -889,7 +880,7 @@ void LogicalSurface::ImmobilizeSelectedTracks()
 void LogicalSurface::MobilizeSelectedTracks()
 {
     for(int i = 0; i < NumChannels(); i++)
-        if(GetDAW()->GetMediaTrackInfo_Value(GetDAW()->GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
+        if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
             immovableTrackGUIDs_[i] = "";
     
     if(isSynchronized_)
@@ -920,11 +911,11 @@ bool LogicalSurface::DidTrackListChange()
     if(interactors_.size() == 0)
         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
     
-    if(interactors_.size() != GetDAW()->GetNumTracks() + 1) // + 1 is for Master
+    if(interactors_.size() != DAW::GetNumTracks() + 1) // + 1 is for Master
         return true;    // list sizes disagree
     
     for(int i = 1; i < interactors_.size(); i++)                    // Start with 1 since Master is always in position 0, it doesn't move
-        if(interactors_[i]->GetGUID() != GetDAW()->GetTrackGUIDAsString(i))
+        if(interactors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
             return true;
     
     return false;
@@ -939,7 +930,7 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
     
     int trackFXCount = TrackFX_GetCount(track);
     
-    string trackGUID = GetDAW()->GetTrackGUIDAsString(GetDAW()->CSurf_TrackToID(track, false));
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
     for(int i = 0; i < trackFXCount; i++)
     {
@@ -994,11 +985,6 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
              */
         }
     }
-}
-
-DAW* LogicalSurface::GetDAW()
-{
-    return GetManager()->GetDAW();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1091,19 +1077,14 @@ void CSurfChannel::SetWidgetValue(string GUID, string name, string value)
             widget->SetValue(value);
 }
 
-DAW* CSurfChannel::GetDAW()
-{
-    return GetSurface()->GetLogicalSurface()->GetManager()->GetDAW();
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UniquelySelectedCSurfChannel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void UniquelySelectedCSurfChannel::OnTrackSelection(MediaTrack *track)
 {
-    if(GetDAW()->CountSelectedTracks(nullptr) == 1)
+    if(DAW::CountSelectedTracks(nullptr) == 1)
     {
-        SetGUID(GetDAW()->GetTrackGUIDAsString(GetDAW()->CSurf_TrackToID(track, false)));
+        SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
         MapFX(track);
     }
     else
@@ -1112,7 +1093,7 @@ void UniquelySelectedCSurfChannel::OnTrackSelection(MediaTrack *track)
 
 void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
 {
-    GetDAW()->SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
+    DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
 
     
     
@@ -1123,7 +1104,7 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
     
     int trackFXCount = TrackFX_GetCount(track);
     
-    string trackGUID = GetDAW()->GetTrackGUIDAsString(GetDAW()->CSurf_TrackToID(track, false));
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
     for(int i = 0; i < trackFXCount; i++)
     {
@@ -1234,10 +1215,6 @@ void Interactor::CycleAction(string name)
 
 MediaTrack* Interactor::GetTrack()
 {
-    return GetLogicalSurface()->GetManager()->GetDAW()->GetTrackFromGUID(trackGUID_);
+    return DAW::GetTrackFromGUID(trackGUID_);
 }
 
-DAW* Interactor::GetDAW()
-{
-    return GetLogicalSurface()->GetManager()->GetDAW();
-}
