@@ -110,6 +110,11 @@ string MidiWidget::GetName()
     return name_;
 }
 
+RealCSurf* MidiWidget::GetSurface()
+{
+    return GetChannel()->GetSurface();
+}
+
 void MidiWidget::Update()
 {
     GetSurface()->GetManager()->Update(GetGUID(), GetName());
@@ -479,13 +484,13 @@ void LogicalSurface::BuildCSurfWidgets()
             channel = new UniquelySelectedCSurfChannel(surface, 0, "");
 
             
-            channel->AddWidget(new PushButton_MidiWidget("Order", surface, channel, "",                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("ExternalSidechain", surface, channel, "",     new MIDI_event_ex_t(0xb0, 0x11, 0x7f), new MIDI_event_ex_t(0xb0, 0x11, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Order", channel, "",                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("ExternalSidechain", channel, "",     new MIDI_event_ex_t(0xb0, 0x11, 0x7f), new MIDI_event_ex_t(0xb0, 0x11, 0x00)));
 
             // Input
-            channel->AddWidget(new PushButton_MidiWidget("FiltersToCompressor", surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x3d, 0x7f), new MIDI_event_ex_t(0xb0, 0x3d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("PhaseInvert", surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x6c, 0x7f), new MIDI_event_ex_t(0xb0, 0x6c, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Preset", surface, channel, "",                new MIDI_event_ex_t(0xb0, 0x3a, 0x7f), new MIDI_event_ex_t(0xb0, 0x3a, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("FiltersToCompressor", channel, "",   new MIDI_event_ex_t(0xb0, 0x3d, 0x7f), new MIDI_event_ex_t(0xb0, 0x3d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("PhaseInvert", channel, "",           new MIDI_event_ex_t(0xb0, 0x6c, 0x7f), new MIDI_event_ex_t(0xb0, 0x6c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Preset", channel, "",                new MIDI_event_ex_t(0xb0, 0x3a, 0x7f), new MIDI_event_ex_t(0xb0, 0x3a, 0x00)));
 
             //channel->AddWidget(new Fader8Bit_CSurfWidget("InputGain", surface, channel,  new MIDI_event_ex_t(0xb0, 0x6b, 0x7f)));
             //channel->AddWidget(new Fader8Bit_CSurfWidget("HiCut", surface, channel,      new MIDI_event_ex_t(0xb0, 0x69, 0x7f)));
@@ -495,8 +500,8 @@ void LogicalSurface::BuildCSurfWidgets()
             //channel->AddWidget(new VUMeter_CSurfWidget(TrackInMeterRight, surface, channel, new  MIDI_event_ex_t(0xb0, 0x6f, 0x7f)));
 
             // Shape
-            channel->AddWidget(new PushButton_MidiWidget("Shape", surface, channel, "",     new MIDI_event_ex_t(0xb0, 0x35, 0x7f), new MIDI_event_ex_t(0xb0, 0x35, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("HardGate", surface, channel, "",  new MIDI_event_ex_t(0xb0, 0x3b, 0x7f), new MIDI_event_ex_t(0xb0, 0x3b, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Shape", channel, "",     new MIDI_event_ex_t(0xb0, 0x35, 0x7f), new MIDI_event_ex_t(0xb0, 0x35, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("HardGate", channel, "",  new MIDI_event_ex_t(0xb0, 0x3b, 0x7f), new MIDI_event_ex_t(0xb0, 0x3b, 0x00)));
 
             //channel->AddWidget(new Fader8Bit_CSurfWidget("Gate", surface, channel,           new MIDI_event_ex_t(0xb0, 0x36, 0x7f)));
             //channel->AddWidget(new Fader8Bit_CSurfWidget("GateRelease", surface, channel,    new MIDI_event_ex_t(0xb0, 0x38, 0x7f)));
@@ -506,49 +511,49 @@ void LogicalSurface::BuildCSurfWidgets()
             //channel->AddWidget(new VUMeter_CSurfWidget(GateMeter, surface, channel, new  MIDI_event_ex_t(0xb0, 0x72, 0x7f)));
             
             // EQ
-            channel->AddWidget(new PushButton_MidiWidget(Equalizer, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x50, 0x7f), new MIDI_event_ex_t(0xb0, 0x50, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(LoCurve, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x5d, 0x7f), new MIDI_event_ex_t(0xb0, 0x5d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(HiCurve, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x41, 0x7f), new MIDI_event_ex_t(0xb0, 0x41, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Equalizer, channel, "",       new MIDI_event_ex_t(0xb0, 0x50, 0x7f), new MIDI_event_ex_t(0xb0, 0x50, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(LoCurve, channel, "",         new MIDI_event_ex_t(0xb0, 0x5d, 0x7f), new MIDI_event_ex_t(0xb0, 0x5d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(HiCurve, channel, "",         new MIDI_event_ex_t(0xb0, 0x41, 0x7f), new MIDI_event_ex_t(0xb0, 0x41, 0x00)));
 
-            channel->AddWidget(new Fader8Bit_MidiWidget(HiGain, surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x52, 0x7f), new MIDI_event_ex_t(0xb0, 0x52, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(HiFrequency, surface, channel, "",      new MIDI_event_ex_t(0xb0, 0x53, 0x7f), new MIDI_event_ex_t(0xb0, 0x53, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(HiGain, channel, "",           new MIDI_event_ex_t(0xb0, 0x52, 0x7f), new MIDI_event_ex_t(0xb0, 0x52, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(HiFrequency, channel, "",      new MIDI_event_ex_t(0xb0, 0x53, 0x7f), new MIDI_event_ex_t(0xb0, 0x53, 0x00)));
             
-            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidGain, surface, channel, "",        new MIDI_event_ex_t(0xb0, 0x55, 0x7f), new MIDI_event_ex_t(0xb0, 0x55, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidFrequency, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x56, 0x7f), new MIDI_event_ex_t(0xb0, 0x56, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidQ, surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x57, 0x7f), new MIDI_event_ex_t(0xb0, 0x57, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidGain, channel, "",        new MIDI_event_ex_t(0xb0, 0x55, 0x7f), new MIDI_event_ex_t(0xb0, 0x55, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidFrequency, channel, "",   new MIDI_event_ex_t(0xb0, 0x56, 0x7f), new MIDI_event_ex_t(0xb0, 0x56, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(HiMidQ, channel, "",           new MIDI_event_ex_t(0xb0, 0x57, 0x7f), new MIDI_event_ex_t(0xb0, 0x57, 0x00)));
             
-            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidGain, surface, channel, "",        new MIDI_event_ex_t(0xb0, 0x58, 0x7f), new MIDI_event_ex_t(0xb0, 0x58, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidFrequency, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x59, 0x7f), new MIDI_event_ex_t(0xb0, 0x59, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidQ, surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x5a, 0x7f), new MIDI_event_ex_t(0xb0, 0x5a, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidGain, channel, "",        new MIDI_event_ex_t(0xb0, 0x58, 0x7f), new MIDI_event_ex_t(0xb0, 0x58, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidFrequency, channel, "",   new MIDI_event_ex_t(0xb0, 0x59, 0x7f), new MIDI_event_ex_t(0xb0, 0x59, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(LoMidQ, channel, "",           new MIDI_event_ex_t(0xb0, 0x5a, 0x7f), new MIDI_event_ex_t(0xb0, 0x5a, 0x00)));
             
-            channel->AddWidget(new Fader8Bit_MidiWidget(LoGain, surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x5b, 0x7f), new MIDI_event_ex_t(0xb0, 0x5b, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(LoFrequency, surface, channel, "",      new MIDI_event_ex_t(0xb0, 0x5c, 0x7f), new MIDI_event_ex_t(0xb0, 0x5c, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(LoGain, channel, "",           new MIDI_event_ex_t(0xb0, 0x5b, 0x7f), new MIDI_event_ex_t(0xb0, 0x5b, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(LoFrequency, channel, "",      new MIDI_event_ex_t(0xb0, 0x5c, 0x7f), new MIDI_event_ex_t(0xb0, 0x5c, 0x00)));
 
             // Compressor
-            channel->AddWidget(new PushButton_MidiWidget(Compressor, surface, channel, "", 1,   new MIDI_event_ex_t(0xb0, 0x2e, 0x7f), new MIDI_event_ex_t(0xb0, 0x2e, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Compressor, channel, "", 1,   new MIDI_event_ex_t(0xb0, 0x2e, 0x7f), new MIDI_event_ex_t(0xb0, 0x2e, 0x00)));
 
-            channel->AddWidget(new Fader8Bit_MidiWidget(Threshold, surface, channel, "",        new MIDI_event_ex_t(0xb0, 0x2f, 0x7f), new MIDI_event_ex_t(0xb0, 0x2f, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Release, surface, channel, "",          new MIDI_event_ex_t(0xb0, 0x30, 0x7f), new MIDI_event_ex_t(0xb0, 0x30, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Ratio, surface, channel, "",            new MIDI_event_ex_t(0xb0, 0x31, 0x7f), new MIDI_event_ex_t(0xb0, 0x31, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Parallel, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x32, 0x7f), new MIDI_event_ex_t(0xb0, 0x32, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Attack, surface, channel, "",           new MIDI_event_ex_t(0xb0, 0x33, 0x7f), new MIDI_event_ex_t(0xb0, 0x33, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Threshold, channel, "",        new MIDI_event_ex_t(0xb0, 0x2f, 0x7f), new MIDI_event_ex_t(0xb0, 0x2f, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Release, channel, "",          new MIDI_event_ex_t(0xb0, 0x30, 0x7f), new MIDI_event_ex_t(0xb0, 0x30, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Ratio, channel, "",            new MIDI_event_ex_t(0xb0, 0x31, 0x7f), new MIDI_event_ex_t(0xb0, 0x31, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Parallel, channel, "",         new MIDI_event_ex_t(0xb0, 0x32, 0x7f), new MIDI_event_ex_t(0xb0, 0x32, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Attack, channel, "",           new MIDI_event_ex_t(0xb0, 0x33, 0x7f), new MIDI_event_ex_t(0xb0, 0x33, 0x00)));
             
-            channel->AddWidget(new VUMeter_MidifWidget(CompressorMeter, surface, channel, "", 0.0, -20.0, new  MIDI_event_ex_t(0xb0, 0x73, 0x7f), new  MIDI_event_ex_t(0xb0, 0x73, 0x00)));
+            channel->AddWidget(new VUMeter_MidifWidget(CompressorMeter, channel, "", 0.0, -20.0, new  MIDI_event_ex_t(0xb0, 0x73, 0x7f), new  MIDI_event_ex_t(0xb0, 0x73, 0x00)));
 
             // Output but re-purposed for compressor
 
-            channel->AddWidget(new Fader8Bit_MidiWidget(Drive, surface, channel, "",            new MIDI_event_ex_t(0xb0, 0x0f, 0x7f), new MIDI_event_ex_t(0xb0, 0x0f, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Character, surface, channel, "",        new MIDI_event_ex_t(0xb0, 0x12, 0x7f), new MIDI_event_ex_t(0xb0, 0x12, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Drive, channel, "",            new MIDI_event_ex_t(0xb0, 0x0f, 0x7f), new MIDI_event_ex_t(0xb0, 0x0f, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Character, channel, "",        new MIDI_event_ex_t(0xb0, 0x12, 0x7f), new MIDI_event_ex_t(0xb0, 0x12, 0x00)));
             
             // Output
-            channel->AddWidget(new PushButton_MidiWidget(Solo, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0d, 0x7f), new MIDI_event_ex_t(0xb0, 0x0d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Mute, surface, channel, "",       new MIDI_event_ex_t(0xb0, 0x0c, 0x7f), new MIDI_event_ex_t(0xb0, 0x0c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Solo, channel, "",       new MIDI_event_ex_t(0xb0, 0x0d, 0x7f), new MIDI_event_ex_t(0xb0, 0x0d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Mute, channel, "",       new MIDI_event_ex_t(0xb0, 0x0c, 0x7f), new MIDI_event_ex_t(0xb0, 0x0c, 0x00)));
 
-            channel->AddWidget(new Fader8Bit_MidiWidget(Volume, surface, channel, "",      new MIDI_event_ex_t(0xb0, 0x07, 0x7f),  new MIDI_event_ex_t(0xb0, 0x07, 0x00)));
-            channel->AddWidget(new Fader8Bit_MidiWidget(Pan, surface, channel, "",         new MIDI_event_ex_t(0xb0, 0x0a, 0x7f), new MIDI_event_ex_t(0xb0, 0x0a, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Volume, channel, "",      new MIDI_event_ex_t(0xb0, 0x07, 0x7f),  new MIDI_event_ex_t(0xb0, 0x07, 0x00)));
+            channel->AddWidget(new Fader8Bit_MidiWidget(Pan, channel, "",         new MIDI_event_ex_t(0xb0, 0x0a, 0x7f), new MIDI_event_ex_t(0xb0, 0x0a, 0x00)));
             
-            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterLeft, surface, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
-            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterRight, surface, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
+            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterLeft, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
+            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterRight, channel, "", -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
             
             surface->AddChannel(channel);
         }
@@ -557,70 +562,70 @@ void LogicalSurface::BuildCSurfWidgets()
             
             channel = new CSurfChannel(surface, LogicalCSurf);
 
-            channel->AddWidget(new PushButton_MidiWidget("Track", surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Send", surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Pan", surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Plugin", surface, channel, LogicalCSurf,      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("EQ", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Instrument", surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Track", channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Send", channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Pan", channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Plugin", channel, LogicalCSurf,      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("EQ", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Instrument", channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
 
-            channel->AddWidget(new PushButton_MidiWidget("nameValue", surface, channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("smpteBeats", surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("nameValue", channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("smpteBeats", channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
                 
-            channel->AddWidget(new PushButton_MidiWidget(NextMap, surface, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("F2", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("F3", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("F4", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("F5", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("F6", surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(UnlockTracks, surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(LockTracks, surface, channel, LogicalCSurf,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(NextMap, channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("F2", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("F3", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("F4", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("F5", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("F6", channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(UnlockTracks, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(LockTracks, channel, LogicalCSurf,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
 
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Shift, surface, channel, LogicalCSurf, 1,      new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Option, surface, channel, LogicalCSurf,  1,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Control, surface, channel, LogicalCSurf, 1,    new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Alt, surface, channel, LogicalCSurf, 1,        new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Shift, channel, LogicalCSurf, 1,      new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Option, channel, LogicalCSurf,  1,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Control, channel, LogicalCSurf, 1,    new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Alt, channel, LogicalCSurf, 1,        new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
                 
-            channel->AddWidget(new PushButton_MidiWidget(Read, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Write, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Trim, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Touch, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Latch, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Group, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Read, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Write, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Trim, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Touch, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Latch, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Group, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
                 
-            channel->AddWidget(new PushButton_MidiWidget(Save, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Undo, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Cancel, surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Enter, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Save, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Undo, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Cancel, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Enter, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
                 
-            channel->AddWidget(new PushButton_MidiWidget(Cycle, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Drop", surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Replace", surface, channel, LogicalCSurf,     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Click, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget("Solo", surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Cycle, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Drop", channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Replace", channel, LogicalCSurf,     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Click, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget("Solo", channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
 
-            channel->AddWidget(new PushButton_MidiWidget(Up, surface, channel, LogicalCSurf,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Down, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Left, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Right, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Zoom, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Scrub, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Up, channel, LogicalCSurf,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Down, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Left, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Right, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Zoom, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Scrub, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
             
-            channel->AddWidget(new PushButton_MidiWidget(Flip, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x32, 0x7f), new MIDI_event_ex_t(0x90, 0x32, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Flip, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x32, 0x7f), new MIDI_event_ex_t(0x90, 0x32, 0x00)));
 
-            channel->AddWidget(new PushButton_MidiWidget(BankLeft, surface, channel, LogicalCSurf,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(BankRight, surface, channel, LogicalCSurf,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(ChannelLeft, surface, channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(ChannelRight, surface, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(BankLeft, channel, LogicalCSurf,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(BankRight, channel, LogicalCSurf,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(ChannelLeft, channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(ChannelRight, channel, LogicalCSurf,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
 
-            channel->AddWidget(new PushButton_MidiWidget(Marker, surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Nudge, surface, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Marker, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Nudge, channel, LogicalCSurf,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
 
-            channel->AddWidget(new PushButton_MidiWidget(Rewind, surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(FastForward, surface, channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Stop, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Play, surface, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(Record, surface, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Rewind, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(FastForward, channel, LogicalCSurf,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Stop, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Play, channel, LogicalCSurf,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
+            channel->AddWidget(new PushButton_MidiWidget(Record, channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
 
             
             surface->AddChannel(channel);
@@ -632,16 +637,16 @@ void LogicalSurface::BuildCSurfWidgets()
                 
                 channel = new CSurfChannel(surface, trackGUID);
             
-                channel->AddWidget(new Display_MidiWidget(TrackDisplay, surface, channel, i, trackGUID));
+                channel->AddWidget(new Display_MidiWidget(TrackDisplay, channel, i, trackGUID));
             
-                channel->AddWidget(new Fader14Bit_MidiWidget(Volume, surface, channel, trackGUID, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(TrackTouched, surface, channel, trackGUID,             new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
-                channel->AddWidget(new EncoderCycledAction_MidiWidget(Pan, surface, channel, trackGUID,        new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
+                channel->AddWidget(new Fader14Bit_MidiWidget(Volume, channel, trackGUID, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(TrackTouched, channel, trackGUID,             new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
+                channel->AddWidget(new EncoderCycledAction_MidiWidget(Pan, channel, trackGUID,        new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
 
-                channel->AddWidget(new PushButton_MidiWidget(RecordArm, surface, channel, trackGUID,  new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(Solo, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(Mute, surface, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
-                channel->AddWidget(new PushButton_MidiWidget(Select, surface, channel, trackGUID,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(RecordArm, channel, trackGUID,  new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Solo, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Mute, channel, trackGUID,       new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
+                channel->AddWidget(new PushButton_MidiWidget(Select, channel, trackGUID,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
             
                 surface->AddChannel(channel);
             }
@@ -1163,42 +1168,42 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 CSurfManager* RealCSurf::GetManager()
 {
-    return logicalSurface_->GetManager();
+    return GetLogicalSurface()->GetManager();
 }
 
 void RealCSurf::Update()
 {
-    for(auto & channel : channels_)
+    for(auto & channel : GetChannels())
         channel->Update();
 }
 
 void RealCSurf::ForceUpdate()
 {
-    for(auto & channel : channels_)
+    for(auto & channel : GetChannels())
         channel->ForceUpdate();
 }
 
 void RealCSurf::OnTrackSelection(MediaTrack *trackid)
 {
-    for(auto& channel : channels_)
+    for(auto& channel : GetChannels())
         channel->OnTrackSelection(trackid);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value)
 {
-    for(auto & channel : channels_)
+    for(auto & channel : GetChannels())
         channel->SetWidgetValue(GUID, name, value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
 {
-    for(auto & channel : channels_)
+    for(auto & channel : GetChannels())
         channel->SetWidgetValue(GUID, name, value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, string value)
 {
-    for(auto & channel : channels_)
+    for(auto & channel : GetChannels())
         channel->SetWidgetValue(GUID, name, value);
 }
 
