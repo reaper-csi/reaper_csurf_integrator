@@ -200,8 +200,6 @@ public:
     
     RealCSurf(const string name, LogicalSurface* logicalSurface,  const int numChannels) : name_(name), logicalSurface_(logicalSurface),  numChannels_(numChannels) {}
     
-    CSurfManager* GetManager();
-    
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     vector<CSurfChannel*> & GetChannels() { return channels_; }
@@ -274,22 +272,22 @@ class Interactor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfManager* manager_ = nullptr;
+    LogicalSurface* logicalSurface_ = nullptr;
     map <string, vector<Action*>> actions_;
     string GUID_ = "";
     string trackGUID_ = "";
     int index_ = 0;
 
 public:
-    Interactor(CSurfManager* manager, string GUID) : manager_(manager), GUID_(GUID), trackGUID_(GUID) {}
+    Interactor(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface), trackGUID_(GUID) {}
     
-    Interactor(CSurfManager* manager, string GUID, string trackGUID, int index) : manager_(manager), GUID_(GUID), trackGUID_(trackGUID), index_(index) {}
+    Interactor(string GUID, LogicalSurface* logicalSurface, string trackGUID, int index) : GUID_(GUID), logicalSurface_(logicalSurface), trackGUID_(trackGUID), index_(index) {}
     
-    CSurfManager* GetManager() { return manager_; }
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     string GetGUID() { return GUID_; }
     
-    string GetTrackGUID() { return trackGUID_; }
+    string GetTrackGUID();
 
     MediaTrack* GetTrack();
     
