@@ -14,11 +14,11 @@ class Flip_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Flip_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Flip_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->ToggleFlipped(GetName());
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->ToggleFlipped(GetName());
     }
 };
 
@@ -28,11 +28,11 @@ class Shift_Action : public DoubleAction
 {
 public:
     
-    Shift_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Shift_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetShift(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetShift(value);
     }
 };
 
@@ -42,11 +42,11 @@ class Option_Action : public DoubleAction
 {
 public:
     
-    Option_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Option_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetOption(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetOption(value);
     }
 };
 
@@ -56,11 +56,11 @@ class Control_Action : public DoubleAction
 {
 public:
     
-    Control_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Control_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetControl(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetControl(value);
     }
 };
 
@@ -70,11 +70,11 @@ class Alt_Action : public DoubleAction
 {
 public:
     
-    Alt_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Alt_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetAlt(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetAlt(value);
     }
 };
 
@@ -86,7 +86,7 @@ private:
     clock_t lastPressed_ = clock();
 public:
     
-    Latched_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Latched_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void SetValue(double value) {}
     
@@ -96,14 +96,14 @@ public:
         {
             lastPressed_ = clock();
             SetValue(value);
-            GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
+            GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(value);
-                GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
+                GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
             }
         }
     }
@@ -115,11 +115,11 @@ class LatchedZoom_Action : public Latched_Action
 {
 public:
     
-    LatchedZoom_Action(string name, CSurfManager* manager, Interactor* interactor) : Latched_Action(name, manager, interactor)  {}
+    LatchedZoom_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
     virtual void SetValue(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetZoom(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetZoom(value);
     }
 };
 
@@ -129,11 +129,11 @@ class LatchedScrub_Action : public Latched_Action
 {
 public:
     
-    LatchedScrub_Action(string name, CSurfManager* manager, Interactor* interactor) : Latched_Action(name, manager, interactor)  {}
+    LatchedScrub_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
     virtual void SetValue(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->SetScrub(value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetScrub(value);
     }
 };
 
@@ -143,11 +143,11 @@ class NextMap_Action : public DoubleAction
 {
 public:
     
-    NextMap_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    NextMap_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->NextLogicalSurface();
+        GetInteractor()->GetLogicalSurface()->GetManager()->NextLogicalSurface();
     }
 };
 
@@ -160,11 +160,11 @@ private:
 
 public:
     
-    TrackBank_Action(string name, CSurfManager* manager, Interactor* interactor, int stride) : DoubleAction(name, manager, interactor), stride_(stride)   {}
+    TrackBank_Action(string name, Interactor* interactor, int stride) : DoubleAction(name, interactor), stride_(stride)   {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->AdjustTrackBank(stride_);
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->AdjustTrackBank(stride_);
     }
 };
 
@@ -174,11 +174,11 @@ class ImmobilizeSelectedTracks_Action : public DoubleAction
 {
 public:
     
-    ImmobilizeSelectedTracks_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    ImmobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->ImmobilizeSelectedTracks();
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->ImmobilizeSelectedTracks();
     }
 };
 
@@ -188,11 +188,11 @@ class MobilizeSelectedTracks_Action : public DoubleAction
 {
 public:
     
-    MobilizeSelectedTracks_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    MobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override
     {
-        GetManager()->GetCurrentLogicalSurface()->MobilizeSelectedTracks();
+        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->MobilizeSelectedTracks();
     }
 };
 

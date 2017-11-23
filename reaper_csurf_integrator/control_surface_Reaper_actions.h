@@ -35,7 +35,7 @@ private:
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(string name, CSurfManager* manager, Interactor* interactor, string paramName, int paramIndex) : DoubleAction(name, manager, interactor), paramName_(paramName), paramIndex_(paramIndex) {}
+    TrackFX_Action(string name, Interactor* interactor, string paramName, int paramIndex) : DoubleAction(name, interactor), paramName_(paramName), paramIndex_(paramIndex) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -44,7 +44,7 @@ public:
     
     virtual void SetWidgetValue(double value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
     virtual double GetValue() override
@@ -65,7 +65,7 @@ class TrackVolume_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackVolume_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -74,7 +74,7 @@ public:
 
     virtual void SetWidgetValue(double value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), volToNormalized(value));
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), volToNormalized(value));
     }
 
     virtual double GetValue() override
@@ -98,11 +98,11 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
-    TrackPan_Action(string name, CSurfManager* manager, Interactor* interactor, int displayMode) : DoubleAction(name, manager, interactor), displayMode_(displayMode) {}
+    TrackPan_Action(string name, Interactor* interactor, int displayMode) : DoubleAction(name, interactor), displayMode_(displayMode) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -130,11 +130,11 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
-    TrackPanWidth_Action(string name, CSurfManager* manager, Interactor* interactor, int displayMode) : DoubleAction(name, manager, interactor), displayMode_(displayMode) {}
+    TrackPanWidth_Action(string name, Interactor* interactor, int displayMode) : DoubleAction(name, interactor), displayMode_(displayMode) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -157,7 +157,7 @@ class TrackName_DisplayAction : public StringDisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackName_DisplayAction(string name, CSurfManager* manager, Interactor* interactor) : StringDisplayAction(name, manager, interactor) {}
+    TrackName_DisplayAction(string name, Interactor* interactor) : StringDisplayAction(name, interactor) {}
     
     virtual string GetValue() override
     {
@@ -173,7 +173,7 @@ class TrackVolume_DisplayAction : public StringDisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_DisplayAction(string name, CSurfManager* manager, Interactor* interactor) : StringDisplayAction(name, manager, interactor) {}
+    TrackVolume_DisplayAction(string name, Interactor* interactor) : StringDisplayAction(name, interactor) {}
     
     virtual string GetValue() override
     {
@@ -192,7 +192,7 @@ class Rewind_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Rewind_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->CSurf_OnRew(1); }
 };
@@ -202,7 +202,7 @@ class FastForward_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    FastForward_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual void RunAction(double value) override { GetDAW()->CSurf_OnFwd(1); }
 };
@@ -212,7 +212,7 @@ class Play_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    Play_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual void RunAction(double value) override { GetDAW()->CSurf_OnPlay(); }
     
@@ -231,7 +231,7 @@ class Stop_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    Stop_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual void RunAction(double value) override { GetDAW()->CSurf_OnStop(); }
     
@@ -251,7 +251,7 @@ class Record_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    Record_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual void RunAction(double value) override { GetDAW()->CSurf_OnRecord(); }
     
@@ -277,20 +277,20 @@ private:
     bool pressed_ = false;
     
 public:
-    RepeatingArrow_Action(string name, CSurfManager* manager, Interactor* interactor, int direction, double repeatRate) : DoubleAction(name, manager, interactor), direction_(direction), repeatRate_(repeatRate) {}
+    RepeatingArrow_Action(string name, Interactor* interactor, int direction, double repeatRate) : DoubleAction(name, interactor), direction_(direction), repeatRate_(repeatRate) {}
 
     virtual void Update() override
     {
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            GetDAW()->CSurf_OnArrow(direction_, GetManager()->GetCurrentLogicalSurface()->IsZoom());
+            GetDAW()->CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->IsZoom());
         }
     }
     
     virtual void RunAction(double value) override
     {
-        GetDAW()->CSurf_OnArrow(direction_, GetManager()->GetCurrentLogicalSurface()->IsZoom());
+        GetDAW()->CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->IsZoom());
         pressed_ = value;
     }
 };
@@ -300,7 +300,7 @@ class TrackSelect_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
@@ -310,7 +310,7 @@ public:
     virtual void RunAction(double value) override
     {
         GetDAW()->CSurf_SetSurfaceSelected(GetInteractor()->GetTrack(), GetDAW()->CSurf_OnSelectedChange(GetInteractor()->GetTrack(), ! GetDAW()->GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SELECTED")), NULL);
-        GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
+        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
     }
 };
 
@@ -319,7 +319,7 @@ class TrackUniqueSelect_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackUniqueSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
@@ -329,7 +329,7 @@ public:
     virtual void RunAction(double value) override
     {
         GetDAW()->SetOnlyTrackSelected(GetInteractor()->GetTrack());
-        GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
+        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
     }
 };
 
@@ -338,7 +338,7 @@ class TrackSelectionSelect_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelectionSelect_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackSelectionSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
@@ -362,7 +362,7 @@ public:
             for(int i = lowerBound; i <= upperBound; i++)
             {
                 GetDAW()->CSurf_SetSurfaceSelected(GetInteractor()->GetTrack(), GetDAW()->CSurf_OnSelectedChange(GetDAW()->CSurf_TrackFromID(i, false), 1), NULL);
-                GetManager()->OnTrackSelection(GetDAW()->CSurf_TrackFromID(i, false));
+                GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(GetDAW()->CSurf_TrackFromID(i, false));
             }
         }
     }
@@ -373,7 +373,7 @@ class TrackRecordArm_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackRecordArm_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
    
     virtual double GetValue() override
     {
@@ -391,7 +391,7 @@ class TrackMute_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackMute_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
@@ -409,7 +409,7 @@ class TrackSolo_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    TrackSolo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
@@ -432,7 +432,7 @@ private:
     bool lastTouched_ = true;
     
 public:
-    TouchStateControlled_Action(string name, CSurfManager* manager, Interactor* interactor, Action* controlledAction) : DoubleAction(name, manager, interactor), controlledAction_(controlledAction) {}
+    TouchStateControlled_Action(string name, Interactor* interactor, Action* controlledAction) : DoubleAction(name, interactor), controlledAction_(controlledAction) {}
     
     virtual string GetAlias() override { return controlledAction_->GetName(); }
 
@@ -463,7 +463,7 @@ protected:
     int autoMode_ = 0;
     
 public:
-    GlobalAutoMode_Action(string name, CSurfManager* manager, Interactor* interactor, int autoMode) : DoubleAction(name, manager, interactor), autoMode_(autoMode) {}
+    GlobalAutoMode_Action(string name, Interactor* interactor, int autoMode) : DoubleAction(name, interactor), autoMode_(autoMode) {}
     
     virtual double GetValue () override { return GetDAW()->GetGlobalAutomationOverride(); }
     
@@ -493,7 +493,7 @@ class TrackAutoMode_Action : public GlobalAutoMode_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackAutoMode_Action(string name, CSurfManager* manager, Interactor* interactor, int autoMode) : GlobalAutoMode_Action(name, manager, interactor, autoMode) {}
+    TrackAutoMode_Action(string name, Interactor* interactor, int autoMode) : GlobalAutoMode_Action(name, interactor, autoMode) {}
     
     virtual void RunAction(double value) override { GetDAW()->SetAutomationMode(autoMode_, true); }
 
@@ -516,7 +516,7 @@ class PreviousMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PreviousMarker_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    PreviousMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_MARKER_PREV, 0); }
     
@@ -527,7 +527,7 @@ class NextMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NextMarker_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    NextMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_MARKER_NEXT, 0); }
 };
@@ -537,7 +537,7 @@ class InsertMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    InsertMarker_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    InsertMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_INSERT_MARKER, 0); }
 };
@@ -547,7 +547,7 @@ class InsertMarkerRegion_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    InsertMarkerRegion_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    InsertMarkerRegion_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_INSERT_MARKERRGN, 0); }
 };
@@ -557,11 +557,11 @@ class CycleTimeline_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    CycleTimeline_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override { return GetDAW()->GetSetRepeatEx(nullptr, -1); }
     
-    virtual void RunAction(double value) override { GetDAW()->GetSetRepeatEx(nullptr, ! GetManager()->GetDAW()->GetSetRepeatEx(nullptr, -1)); }
+    virtual void RunAction(double value) override {GetDAW()->GetSetRepeatEx(nullptr, ! GetInteractor()->GetLogicalSurface()->GetManager()->GetDAW()->GetSetRepeatEx(nullptr, -1)); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -569,9 +569,9 @@ class Metronome_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Metronome_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Metronome_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
 
-    virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_METRONOME, 0); }
+    virtual void RunAction(double value) override { GetInteractor()->GetLogicalSurface()->GetDAW()->SendMessage(WM_COMMAND, ID_METRONOME, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -579,7 +579,7 @@ class Save_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Save_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Save_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_FILE_SAVEPROJECT, 0); }
 };
@@ -589,7 +589,7 @@ class SaveAs_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SaveAs_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    SaveAs_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, ID_FILE_SAVEAS, 0); }
 };
@@ -599,7 +599,7 @@ class Undo_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Undo_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Undo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, IDC_EDIT_UNDO, 0); }
 };
@@ -609,7 +609,7 @@ class Redo_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Redo_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Redo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void RunAction(double value) override { GetDAW()->SendMessage(WM_COMMAND, IDC_EDIT_REDO, 0); }
 };
@@ -619,7 +619,7 @@ class Cancel_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Cancel_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Cancel_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     // GAW TBD
 };
@@ -629,7 +629,7 @@ class Enter_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Enter_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor)  {}
+    Enter_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
 
     // GAW TBD
 };
@@ -645,13 +645,13 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(GetDAW()->GetPlayState() & 0x01) // if playing
-            GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
         else
-            GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), GetManager()->GetVUMinDB());
+            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
 public:
-    VUMeter_Action(string name, CSurfManager* manager, Interactor* interactor, int channel) : DoubleAction(name, manager, interactor), channel_(channel) {}
+    VUMeter_Action(string name, Interactor* interactor, int channel) : DoubleAction(name, interactor), channel_(channel) {}
     
     virtual double GetValue() override
     {
@@ -667,13 +667,13 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(GetDAW()->GetPlayState() & 0x01) // if playing
-            GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
         else
-            GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), 0.0);
+            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), 0.0);
     }
     
 public:
-    GainReductionMeter_Action(string name, CSurfManager* manager, Interactor* interactor) : DoubleAction(name, manager, interactor) {}
+    GainReductionMeter_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
     
     virtual double GetValue() override
     {
