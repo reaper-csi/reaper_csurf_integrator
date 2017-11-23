@@ -135,7 +135,7 @@ private:
 public:
     virtual ~CSurfChannel() {}
     
-    CSurfChannel(RealCSurf* surface, string GUID) : surface_(surface), GUID_(GUID) {}
+    CSurfChannel(string GUID, RealCSurf* surface) : GUID_(GUID), surface_(surface) {}
     
     RealCSurf* GetSurface() { return surface_; }
     
@@ -178,7 +178,7 @@ private:
 public:
     virtual ~UniquelySelectedCSurfChannel() {}
     
-    UniquelySelectedCSurfChannel(RealCSurf* surface, int channelNumber, string trackGUID) :CSurfChannel(surface, trackGUID) {}
+    UniquelySelectedCSurfChannel(string trackGUID, RealCSurf* surface, int channelNumber) :CSurfChannel(trackGUID, surface) {}
     
     virtual void OnTrackSelection(MediaTrack *trackid) override;
 };
