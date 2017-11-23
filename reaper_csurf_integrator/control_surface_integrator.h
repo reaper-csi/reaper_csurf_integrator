@@ -88,8 +88,6 @@ public:
     
     MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
-    RealCSurf* GetSurface();
-    
     virtual CSurfChannel* GetChannel() { return channel_; }
 
     virtual double GetMinDB() { return 0.0; }

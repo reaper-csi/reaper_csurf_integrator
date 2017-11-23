@@ -24,7 +24,7 @@ public:
     
     void SetValue(double value) override
     {
-        GetSurface()->SendMidiMessage(value == reverseSense_ ? GetMidiReleaseMessage() : GetMidiPressMessage());
+        GetChannel()->GetSurface()->SendMidiMessage(value == reverseSense_ ? GetMidiReleaseMessage() : GetMidiPressMessage());
     }
     
     virtual void SetValueToZero() override
@@ -35,7 +35,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -51,9 +51,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -92,7 +92,7 @@ public:
             volint = normalizedToInt14(output);
         }
 */
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
+        GetChannel()->GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
     
     virtual void SetValue(double volume, int displayMode) override
@@ -111,7 +111,7 @@ public:
         {
             double volume = int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]);
             
-            if( ! GetSurface()->GetLogicalSurface()->IsFlipped())
+            if( ! GetChannel()->GetSurface()->GetLogicalSurface()->IsFlipped())
             {
                 
                 //volume *= (GetMaxDB() - GetMinDB()) / (Surface()->Manager()->GetFaderMaxDB() - Surface()->Manager()->GetFaderMinDB());
@@ -132,7 +132,7 @@ public:
                  */
             }
             
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), volume);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), volume);
         }
     }
 };
@@ -146,7 +146,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], normalizedToUchar(value));
+        GetChannel()->GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], normalizedToUchar(value));
     }
     
     virtual void SetValue(double value, int displayMode) override
@@ -162,7 +162,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -179,7 +179,7 @@ public:
         
         int val = (1+((panch*11)>>7)) | displayMode; // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
         
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1] + 0x20, val);
+        GetChannel()->GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1] + 0x20, val);
     }
     
     virtual void SetValueToZero() override
@@ -196,9 +196,9 @@ public:
             if (midiMessage->midi_message[2] & 0x40)
                 value = -value;
             
-            value += GetSurface()->GetLogicalSurface()->GetManager()->GetCurrentNormalizedValue(GetGUID(), GetName());
+            value += GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetCurrentNormalizedValue(GetGUID(), GetName());
             
-            GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), value);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), value);
         }
     }
 };
@@ -216,7 +216,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
-            GetSurface()->GetLogicalSurface()->GetManager()->CycleAction(GetGUID(), GetName());
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->CycleAction(GetGUID(), GetName());
         
         Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
@@ -239,7 +239,7 @@ public:
     
     virtual void SetValueToZero() override
     {
-        SetValue(GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        SetValue(GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
     void SetValue(double value) override
@@ -248,14 +248,14 @@ public:
         //output = output_start + slope * (input - input_start)
         
         // First, map Reaper VU range to surface VU range
-        double slope = (GetMaxDB() - GetMinDB()) / (GetSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        double output = GetMinDB() + slope * (value - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double slope = (GetMaxDB() - GetMinDB()) / (GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double output = GetMinDB() + slope * (value - GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
 
         // Now map surface VU range to widget range
         slope = 127.0 / (GetMaxDB() - GetMinDB());
         output = slope * (output - GetMinDB());
         
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], output);
+        GetChannel()->GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], output);
     }
 };
 
@@ -312,7 +312,7 @@ public:
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
-        GetSurface()->SendMidiMessage(&midiSysExData.evt);
+        GetChannel()->GetSurface()->SendMidiMessage(&midiSysExData.evt);
     }
 };
 
