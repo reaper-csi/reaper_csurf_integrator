@@ -18,9 +18,9 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButton_MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release)  {}
+    PushButton_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release)  {}
     
-    PushButton_MidiWidget(string name, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(string name, CSurfChannel* channel, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
@@ -35,7 +35,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -44,16 +44,16 @@ class PushButtonWithRelease_MidiWidget : public PushButton_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, channel, GUID, press, release)  {}
+    PushButtonWithRelease_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, channel, press, release)  {}
     
-    PushButtonWithRelease_MidiWidget(string name, CSurfChannel* channel, string GUID, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, channel, GUID, reverseSense, press, release) {}
+    PushButtonWithRelease_MidiWidget(string name, CSurfChannel* channel, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(name, channel, reverseSense, press, release) {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -66,7 +66,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_MidiWidget(string name, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_MidiWidget(string name, CSurfChannel* channel, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
 
@@ -132,7 +132,7 @@ public:
                  */
             }
             
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), volume);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), volume);
         }
     }
 };
@@ -142,7 +142,7 @@ class Fader8Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader8Bit_MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release) {}
+    Fader8Bit_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release) {}
     
     virtual void SetValue(double value) override
     {
@@ -162,7 +162,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -171,7 +171,7 @@ class Encoder_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release) {}
+    Encoder_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release) {}
     
     virtual void SetValue(double pan, int displayMode) override
     {
@@ -196,9 +196,9 @@ public:
             if (midiMessage->midi_message[2] & 0x40)
                 value = -value;
             
-            value += GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetCurrentNormalizedValue(GetGUID(), GetName());
+            value += GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->GetCurrentNormalizedValue(GetChannel()->GetGUID(), GetName());
             
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetGUID(), GetName(), value);
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->RunAction(GetChannel()->GetGUID(), GetName(), value);
         }
     }
 };
@@ -211,12 +211,12 @@ private:
     MIDI_event_ex_t* cycle_;
     
 public:
-    EncoderCycledAction_MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(name, channel, GUID, press, release), cycle_(cycle) {}
+    EncoderCycledAction_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(name, channel, press, release), cycle_(cycle) {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
-            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->CycleAction(GetGUID(), GetName());
+            GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->CycleAction(GetChannel()->GetGUID(), GetName());
         
         Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
@@ -231,7 +231,7 @@ private:
     double maxDB_ = 0.0;
 
 public:
-    VUMeter_MidifWidget(string name, CSurfChannel* channel, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, GUID, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidifWidget(string name, CSurfChannel* channel, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     
@@ -266,7 +266,7 @@ class Display_MidiWidget : public MidiWidget
     int slotIndex_ = 0;
     
 public:
-    Display_MidiWidget(string name, CSurfChannel* channel, int slotIndex, string GUID) : MidiWidget(name, channel, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    Display_MidiWidget(string name, CSurfChannel* channel, int slotIndex) : MidiWidget(name, channel, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
