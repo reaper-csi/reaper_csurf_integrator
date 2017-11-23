@@ -785,7 +785,7 @@ void LogicalSurface::InitializeSurfaces()
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        AddSurface(new MidiCSurf(manager_, this, name, numFaders, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+        AddSurface(new MidiCSurf(this, name, numFaders, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
     fclose ( filePtr );
@@ -1161,6 +1161,11 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealCSurf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+CSurfManager* RealCSurf::GetManager()
+{
+    return logicalSurface_->GetManager();
+}
+
 void RealCSurf::Update()
 {
     for(auto & channel : channels_)

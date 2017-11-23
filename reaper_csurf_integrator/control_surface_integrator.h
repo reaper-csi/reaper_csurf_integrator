@@ -62,6 +62,10 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CSurfManager;
+class LogicalSurface;
+class Interactor;
+class Action;
 class RealCSurf;
 class CSurfChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,15 +187,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSurfManager;
-class LogicalSurface;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealCSurf
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfManager* manager_ = nullptr;
-    LogicalSurface* surface_ = nullptr;
+    LogicalSurface* logicalSurface_ = nullptr;
     const string name_ = "";
     const int numChannels_ = 0;
     vector<CSurfChannel*> channels_;
@@ -199,11 +199,11 @@ private:
 public:
     virtual ~RealCSurf() {};
     
-    RealCSurf(CSurfManager* manager, LogicalSurface* surface,  const string name, const int numChannels) : manager_(manager), surface_(surface),  name_(name), numChannels_(numChannels) {}
+    RealCSurf(LogicalSurface* logicalSurface,  const string name, const int numChannels) : logicalSurface_(logicalSurface),  name_(name), numChannels_(numChannels) {}
     
-    CSurfManager* GetManager() { return manager_; }
+    CSurfManager* GetManager();
     
-    LogicalSurface* GetLogicalSurface() { return surface_; }
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     vector<CSurfChannel*> & GetChannels() { return channels_; }
     
@@ -231,8 +231,6 @@ public:
     void SetWidgetValue(string trackGUID, string name, string value);
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -758,8 +756,8 @@ class OSCCSurf : public RealCSurf
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(CSurfManager* manager, LogicalSurface* surface, const string name, const int numChannels)
-    : RealCSurf(manager, surface, name, numChannels) {}
+    OSCCSurf(LogicalSurface* surface, const string name, const int numChannels)
+    : RealCSurf(surface, name, numChannels) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -769,8 +767,8 @@ class WebCSurf : public RealCSurf
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(CSurfManager* manager, LogicalSurface* surface, const string name, const int numChannels)
-    : RealCSurf(manager, surface, name, numChannels) {};
+    WebCSurf(LogicalSurface* surface, const string name, const int numChannels)
+    : RealCSurf(surface, name, numChannels) {};
 };
 
 #endif /* control_surface_integrator.h */
