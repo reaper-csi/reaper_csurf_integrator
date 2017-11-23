@@ -331,7 +331,7 @@ private:
     {
         if(midiInput_)
         {
-            GetLogicalSurface()->GetManager()->GetDAW()->SwapBufsPrecise(midiInput_);
+            DAW::SwapBufsPrecise(midiInput_);
             MIDI_eventlist* list = midiInput_->GetReadBuf();
             int bpos = 0;
             MIDI_event_t* evt;
@@ -349,7 +349,7 @@ private:
         {
             char buffer[250];
             sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
-            GetLogicalSurface()->GetManager()->GetDAW()->ShowConsoleMsg(buffer);
+            DAW::ShowConsoleMsg(buffer);
         }
     }
     
@@ -378,7 +378,7 @@ public:
         {
             char buffer[250];
             sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
-            GetLogicalSurface()->GetManager()->GetDAW()->ShowConsoleMsg(buffer);
+            DAW::ShowConsoleMsg(buffer);
         }
     }
     

@@ -139,8 +139,6 @@ public:
     
     RealCSurf* GetSurface() { return surface_; }
     
-    DAW* GetDAW();
-    
     string GetGUID() { return GUID_; }
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
@@ -245,8 +243,6 @@ public:
 
     Interactor* GetInteractor() { return interactor_; }
     
-    DAW* GetDAW();
-    
     string GetName() { return name_; }
     
     virtual string GetAlias() { return name_; }
@@ -288,8 +284,6 @@ public:
     MediaTrack* GetTrack();
     
     int GetIndex() { return index_; }
-    
-    DAW* GetDAW();
     
     double GetCurrentNormalizedValue(string name);
     
@@ -456,8 +450,6 @@ public:
 
     CSurfManager* GetManager() { return manager_; }
     
-    DAW* GetDAW();
-    
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
     
     bool IsZoom() { return zoom_; }
@@ -532,8 +524,6 @@ class CSurfManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    DAW* daw_ = new DAW();
-    
     MidiIOManager* midiIOManager_ = nullptr;
     
     vector <LogicalSurface*> surfaces_;
@@ -567,7 +557,7 @@ private:
         char tmp[512];
         memset(tmp, 0, sizeof(tmp));
         
-        GetDAW()->GetPrivateProfileString("REAPER", key.c_str() , "", tmp, sizeof(tmp), get_ini_file());
+        DAW::GetPrivateProfileString("REAPER", key.c_str() , "", tmp, sizeof(tmp), get_ini_file());
 
         return strtod (tmp, NULL);
     }
@@ -577,8 +567,6 @@ public:
     virtual ~CSurfManager() { };
     
     CSurfManager();
-
-    DAW* GetDAW() { return daw_; }
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
 
@@ -712,7 +700,7 @@ public:
             if(input.channel_ == inputChannel)
                 return input.midiInput_;
         
-        midi_Input* newInput = GetManager()->GetDAW()->CreateMIDIInput(inputChannel);
+        midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
         
         if(newInput)
         {
@@ -730,7 +718,7 @@ public:
             if(output.channel_ == outputChannel)
                 return output.midiOutput_;
         
-        midi_Output* newOutput = GetManager()->GetDAW()->CreateMIDIOutput(outputChannel, false, NULL );
+        midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
         
         if(newOutput)
         {
