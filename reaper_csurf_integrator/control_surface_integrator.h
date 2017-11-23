@@ -198,7 +198,7 @@ private:
 public:
     virtual ~RealCSurf() {};
     
-    RealCSurf(LogicalSurface* logicalSurface,  const string name, const int numChannels) : logicalSurface_(logicalSurface),  name_(name), numChannels_(numChannels) {}
+    RealCSurf(const string name, LogicalSurface* logicalSurface,  const int numChannels) : name_(name), logicalSurface_(logicalSurface),  numChannels_(numChannels) {}
     
     CSurfManager* GetManager();
     
@@ -756,7 +756,7 @@ public:
     virtual ~OSCCSurf() {};
     
     OSCCSurf(LogicalSurface* surface, const string name, const int numChannels)
-    : RealCSurf(surface, name, numChannels) {}
+    : RealCSurf(name, surface, numChannels) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -767,7 +767,7 @@ public:
     virtual ~WebCSurf() {};
     
     WebCSurf(LogicalSurface* surface, const string name, const int numChannels)
-    : RealCSurf(surface, name, numChannels) {};
+    : RealCSurf(name, surface, numChannels) {};
 };
 
 #endif /* control_surface_integrator.h */

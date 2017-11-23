@@ -790,7 +790,7 @@ void LogicalSurface::InitializeSurfaces()
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        AddSurface(new MidiCSurf(this, name, numFaders, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+        AddSurface(new MidiCSurf(name, this, numFaders, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
     fclose ( filePtr );
