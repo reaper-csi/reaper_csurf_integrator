@@ -73,7 +73,6 @@ class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    RealCSurf* surface_ = nullptr;
     string name_= "";
     string GUID_ = "";
     CSurfChannel* channel_ = nullptr;
@@ -87,9 +86,9 @@ protected:
 public:
     virtual ~MidiWidget() {};
     
-    MidiWidget(string name, RealCSurf* surface,  CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string name, CSurfChannel* channel, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), GUID_(GUID), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
-    RealCSurf* GetSurface() { return surface_; }
+    RealCSurf* GetSurface();
     
     virtual CSurfChannel* GetChannel() { return channel_; }
 
