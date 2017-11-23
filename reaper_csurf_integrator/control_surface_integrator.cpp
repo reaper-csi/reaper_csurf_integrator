@@ -476,7 +476,7 @@ void LogicalSurface::BuildCSurfWidgets()
 */
             
             
-            channel = new UniquelySelectedCSurfChannel(surface, 0, "");
+            channel = new UniquelySelectedCSurfChannel( "", surface, 0);
 
             
             channel->AddWidget(new PushButton_MidiWidget("Order", channel, "",                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -555,7 +555,7 @@ void LogicalSurface::BuildCSurfWidgets()
         else
         {
             
-            channel = new CSurfChannel(surface, LogicalCSurf);
+            channel = new CSurfChannel(LogicalCSurf, surface);
 
             channel->AddWidget(new PushButton_MidiWidget("Track", channel, LogicalCSurf,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("Send", channel, LogicalCSurf,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
@@ -630,7 +630,7 @@ void LogicalSurface::BuildCSurfWidgets()
             {
                 string trackGUID = GetManager()->GetDAW()->GetTrackGUIDAsString(currentChannel++);
                 
-                channel = new CSurfChannel(surface, trackGUID);
+                channel = new CSurfChannel(trackGUID, surface);
             
                 channel->AddWidget(new Display_MidiWidget(TrackDisplay, channel, i, trackGUID));
             
