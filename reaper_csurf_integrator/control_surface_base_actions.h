@@ -24,7 +24,7 @@ protected:
     
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
 public:
@@ -101,7 +101,7 @@ protected:
     
     virtual void SetWidgetValue(string value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
 public:

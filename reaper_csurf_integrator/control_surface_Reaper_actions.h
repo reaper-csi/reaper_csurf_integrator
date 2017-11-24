@@ -44,7 +44,7 @@ public:
     
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
     }
     
     virtual double GetValue() override
@@ -74,7 +74,7 @@ public:
 
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), volToNormalized(value));
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), volToNormalized(value));
     }
 
     virtual double GetValue() override
@@ -98,7 +98,7 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
@@ -130,7 +130,7 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
@@ -645,9 +645,9 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
         else
-            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
 public:
@@ -667,9 +667,9 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
         else
-            GetInteractor()->GetLogicalSurface()->GetManager()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), 0.0);
+            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), 0.0);
     }
     
 public:
