@@ -1149,6 +1149,11 @@ double Interactor::GetCurrentNormalizedValue(string name)
         return 0.0;
 }
 
+MediaTrack* Interactor::GetTrack()
+{
+    return DAW::GetTrackFromGUID(trackGUID_);
+}
+
 void Interactor::Update(string name)
 {
     for(auto action : actions_[name])
@@ -1173,8 +1178,18 @@ void Interactor::CycleAction(string name)
         action->Cycle();
 }
 
-MediaTrack* Interactor::GetTrack()
+void Interactor::SetWidgetValue(string name, double value)
 {
-    return DAW::GetTrackFromGUID(trackGUID_);
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), name, value);
+}
+
+void Interactor::SetWidgetValue(string name, double value, int mode)
+{
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), name, value, mode);
+}
+
+void Interactor::SetWidgetValue(string name, string value)
+{
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), name, value);
 }
 
