@@ -141,6 +141,10 @@ public:
     
     virtual void Update();
     virtual void ForceUpdate();
+    
+    void RunAction(string name, double value);
+    void CycleAction(string name);
+    
     void SetWidgetValue(string trackGUID, string name, double value);
     void SetWidgetValue(string trackGUID, string name, double value, int mode);
     void SetWidgetValue(string trackGUID, string name, string value);

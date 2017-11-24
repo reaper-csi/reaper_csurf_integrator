@@ -35,7 +35,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->RunAction(GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -51,9 +51,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetChannel()->RunAction(GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), reverseSense_ ? 1 : 0);
+            GetChannel()->RunAction(GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -132,7 +132,7 @@ public:
                  */
             }
             
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), volume);
+            GetChannel()->RunAction(GetName(), volume);
         }
     }
 };
@@ -162,7 +162,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+            GetChannel()->RunAction(GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -198,7 +198,7 @@ public:
             
             value += GetChannel()->GetSurface()->GetLogicalSurface()->GetCurrentNormalizedValue(GetChannel()->GetGUID(), GetName());
             
-            GetChannel()->GetSurface()->GetLogicalSurface()->RunAction(GetChannel()->GetGUID(), GetName(), value);
+            GetChannel()->RunAction(GetName(), value);
         }
     }
 };
@@ -216,7 +216,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
-            GetChannel()->GetSurface()->GetLogicalSurface()->CycleAction(GetChannel()->GetGUID(), GetName());
+            GetChannel()->CycleAction(GetName());
         
         Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
