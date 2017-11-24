@@ -113,11 +113,17 @@ private:
     string GUID_ = "";
     RealCSurf* surface_= nullptr;
     vector<MidiWidget*> widgets_;
+    int shouldMapSubChannels_ = 0;
     
+protected:
+    void MapFX(MediaTrack *trackid);
+
 public:
     virtual ~CSurfChannel() {}
     
     CSurfChannel(string GUID, RealCSurf* surface) : GUID_(GUID), surface_(surface) {}
+    
+    CSurfChannel(string GUID, RealCSurf* surface, int shouldMapSubChannels) : GUID_(GUID), surface_(surface), shouldMapSubChannels_(shouldMapSubChannels) {}
     
     RealCSurf* GetSurface() { return surface_; }
     
@@ -125,7 +131,7 @@ public:
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
     
-    virtual void OnTrackSelection(MediaTrack *trackid) {};
+    virtual void OnTrackSelection(MediaTrack *trackid);
     
     void AddWidget(MidiWidget* widget)
     {
@@ -152,21 +158,6 @@ public:
     void SetWidgetValue(string GUID, string subGUID, string name, double value);
     void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
     void SetWidgetValue(string GUID, string subGUID, string name, string value);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class UniquelySelectedCSurfChannel : public CSurfChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    void MapFX(MediaTrack *trackid);
-    
-public:
-    virtual ~UniquelySelectedCSurfChannel() {}
-    
-    UniquelySelectedCSurfChannel(string trackGUID, RealCSurf* surface, int channelNumber) :CSurfChannel(trackGUID, surface) {}
-    
-    virtual void OnTrackSelection(MediaTrack *trackid) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
