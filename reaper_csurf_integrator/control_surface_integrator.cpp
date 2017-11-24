@@ -950,7 +950,7 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
             // First, dump any existing interactors for this FX GUID
 
             
-            Interactor* interactor = new Interactor(fxGUID, this, trackGUID, i);
+            Interactor* interactor = new Interactor(fxGUID, this);
          
             numParameters = TrackFX_GetNumParams(track, i);
 
@@ -1157,11 +1157,6 @@ double Interactor::GetCurrentNormalizedValue(string name)
         return (actions_[name])[0]->GetCurrentNormalizedValue();
     else
         return 0.0;
-}
-
-MediaTrack* Interactor::GetTrack()
-{
-    return DAW::GetTrackFromGUID(trackGUID_);
 }
 
 void Interactor::Update(string name)
