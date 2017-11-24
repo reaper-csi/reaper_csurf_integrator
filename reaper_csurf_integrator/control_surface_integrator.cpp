@@ -1016,6 +1016,16 @@ void CSurfChannel::ForceUpdate()
         widget->ForceUpdate();
 }
 
+void CSurfChannel::RunAction(string name, double value)
+{
+    GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), name, value);
+}
+
+void CSurfChannel::CycleAction(string name)
+{
+    GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), name);
+}
+
 void CSurfChannel::SetWidgetValue(string GUID, string name, double value)
 {
     for(auto & widget : widgets_)
