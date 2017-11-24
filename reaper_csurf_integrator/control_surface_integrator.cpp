@@ -467,7 +467,7 @@ void LogicalSurface::BuildCSurfWidgets()
 */
             
             
-            channel = new UniquelySelectedCSurfChannel( "", surface, 0);
+            channel = new CSurfChannel( "", surface, 1);
 
             
             channel->AddWidget(new PushButton_MidiWidget("Order", channel,                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -1094,26 +1094,17 @@ void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, stri
             widget->SetValue(value);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// UniquelySelectedCSurfChannel
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void UniquelySelectedCSurfChannel::OnTrackSelection(MediaTrack *track)
+void CSurfChannel::OnTrackSelection(MediaTrack *track)
 {
-    if(DAW::CountSelectedTracks(nullptr) == 1)
-    {
-        SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
+    if(shouldMapSubChannels_ && DAW::CountSelectedTracks(nullptr) == 1)
         MapFX(track);
-    }
-    else
-        SetGUID("");
 }
 
-void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
+void CSurfChannel::MapFX(MediaTrack *track)
 {
     DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
 
-    
-    
+    SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
     
     char trackFXName[256];
     char trackFXParameterName[256];
@@ -1121,7 +1112,6 @@ void UniquelySelectedCSurfChannel::MapFX(MediaTrack *track)
     
     int trackFXCount = TrackFX_GetCount(track);
     
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
     for(int i = 0; i < trackFXCount; i++)
     {
