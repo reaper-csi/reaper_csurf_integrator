@@ -145,9 +145,13 @@ public:
     void RunAction(string name, double value);
     void CycleAction(string name);
     
-    void SetWidgetValue(string trackGUID, string name, double value);
-    void SetWidgetValue(string trackGUID, string name, double value, int mode);
-    void SetWidgetValue(string trackGUID, string name, string value);
+    virtual void SetWidgetValue(string GUID, string name, double value);
+    virtual void SetWidgetValue(string GUID, string name, double value, int mode);
+    virtual void SetWidgetValue(string GUID, string name, string value);
+    
+    void SetWidgetValue(string GUID, string subGUID, string name, double value);
+    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
+    void SetWidgetValue(string GUID, string subGUID, string name, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,9 +207,14 @@ public:
     
     virtual void Update();
     virtual void ForceUpdate();
-    void SetWidgetValue(string trackGUID, string name, double value);
-    void SetWidgetValue(string trackGUID, string name, double value, int mode);
-    void SetWidgetValue(string trackGUID, string name, string value);
+    
+    void SetWidgetValue(string GUID, string name, double value);
+    void SetWidgetValue(string GUID, string name, double value, int mode);
+    void SetWidgetValue(string GUID, string name, string value);
+    
+    void SetWidgetValue(string GUID, string subGUID, string name, double value);
+    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
+    void SetWidgetValue(string GUID, string subGUID, string name, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,18 +253,23 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SubInteractor;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Interactor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     string GUID_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
     map <string, vector<Action*>> actions_;
-
+    vector<SubInteractor*> subInteractors_;
+    
 public:
+    virtual ~Interactor() {}
+    
     Interactor(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
 
-    string GetGUID() { return GUID_; }
+    virtual string GetGUID() { return GUID_; }
 
     virtual LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
@@ -263,7 +277,13 @@ public:
     
     virtual int GetIndex() { return 0; }
     
-    double GetCurrentNormalizedValue(string name);
+    double GetCurrentNormalizedValue(string name)
+    {
+        if(actions_[name].size() > 0)
+            return (actions_[name])[0]->GetCurrentNormalizedValue();
+        else
+            return 0.0;
+    }
     
     void AddAction(Action* action)
     {
@@ -275,14 +295,52 @@ public:
         actions_[action->GetAlias()].push_back(action);
     }
     
+    void AddSubInteractor(SubInteractor* subInteractor)
+    {
+        subInteractors_.push_back(subInteractor);
+    }
+    
     void Update(string name);
     void ForceUpdate(string name);
     void RunAction(string name, double value);
     void CycleAction(string name);
     
-    void SetWidgetValue(string name, double value);
-    void SetWidgetValue(string name, double value, int mode);
-    void SetWidgetValue(string name, string value);
+    virtual void SetWidgetValue(string name, double value);
+    virtual void SetWidgetValue(string name, double value, int mode);
+    virtual void SetWidgetValue(string name, string value);
+    
+    void SetWidgetValue(string SubGUID, string name, double value);
+    void SetWidgetValue(string SubGUID, string name, double value, int mode);
+    void SetWidgetValue(string SubGUID, string name, string value);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SubInteractor : public Interactor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string subGUID_ = "";
+    int index_ = 0;
+    Interactor* interactor_ = nullptr;
+    
+    Interactor* GetInteractor() { return interactor_; }
+    
+public:
+    virtual ~SubInteractor() {}
+
+    SubInteractor(string subGUID, int index, Interactor* interactor) : Interactor(interactor->GetGUID(), interactor->GetLogicalSurface()), subGUID_(subGUID), index_(index), interactor_(interactor) {}
+    
+    virtual string GetGUID() override { return subGUID_; }
+    
+    virtual LogicalSurface* GetLogicalSurface() override { return interactor_->GetLogicalSurface(); }
+    
+    virtual MediaTrack* GetTrack() override { return DAW::GetTrackFromGUID(interactor_->GetGUID()); }
+    
+    virtual int GetIndex() override { return index_; }
+    
+    virtual void SetWidgetValue(string name, double value) override;
+    virtual void SetWidgetValue(string name, double value, int mode) override;
+    virtual void SetWidgetValue(string name, string value) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,15 +540,19 @@ public:
 
     void RefreshLayout();
     
-    void Update(string trackGUID, string name);
+    void Update(string GUID, string name);
     void ForceUpdate();
-    void ForceUpdate(string trackGUID, string name);
-    void RunAction(string trackGUID, string name, double value);
+    void ForceUpdate(string GUID, string name);
+    void RunAction(string GUID, string name, double value);
     void CycleAction(string trackGUID, string name);
     
-    void SetWidgetValue(string trackGUID, string name, double value);
-    void SetWidgetValue(string trackGUID, string name, double value, int mode);
-    void SetWidgetValue(string trackGUID, string name, string value);
+    void SetWidgetValue(string GUID, string name, double value);
+    void SetWidgetValue(string GUID, string name, double value, int mode);
+    void SetWidgetValue(string GUID, string name, string value);
+    
+    void SetWidgetValue(string GUID, string subGUID, string name, double value);
+    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
+    void SetWidgetValue(string GUID, string subGUID, string name, string value);
     
     void AdjustTrackBank(int stride);
     void ImmobilizeSelectedTracks();
