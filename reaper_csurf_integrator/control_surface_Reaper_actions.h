@@ -84,7 +84,8 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfaceVolume(GetInteractor()->GetTrack(), DAW::CSurf_OnVolumeChange(GetInteractor()->GetTrack(), normalizedToVol(value), false), NULL);
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -116,7 +117,8 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfacePan(GetInteractor()->GetTrack(), DAW::CSurf_OnPanChange(GetInteractor()->GetTrack(), normalizedToPan(value), false), NULL);
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
 };
 
@@ -309,8 +311,9 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfaceSelected(GetInteractor()->GetTrack(), DAW::CSurf_OnSelectedChange(GetInteractor()->GetTrack(), ! DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SELECTED")), NULL);
-        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
+        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(track);
     }
 };
 
@@ -328,8 +331,9 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::SetOnlyTrackSelected(GetInteractor()->GetTrack());
-        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(GetInteractor()->GetTrack());
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::SetOnlyTrackSelected(track);
+        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(track);
     }
 };
 
@@ -382,7 +386,8 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfaceRecArm(GetInteractor()->GetTrack(), DAW::CSurf_OnRecArmChange(GetInteractor()->GetTrack(), ! DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_RECARM")), NULL);
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
     }
 };
 
@@ -400,7 +405,8 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfaceMute(GetInteractor()->GetTrack(), DAW::CSurf_OnMuteChange(GetInteractor()->GetTrack(), ! DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "B_MUTE")), NULL);
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
     }
 };
 
@@ -418,7 +424,8 @@ public:
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_SetSurfaceSolo(GetInteractor()->GetTrack(), DAW::CSurf_OnSoloChange(GetInteractor()->GetTrack(), ! DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SOLO")), NULL);
+        MediaTrack* track = GetInteractor()->GetTrack();
+        DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
     }
 };
 

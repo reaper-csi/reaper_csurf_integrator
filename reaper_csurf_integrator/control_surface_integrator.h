@@ -114,14 +114,6 @@ private:
     RealCSurf* surface_= nullptr;
     vector<MidiWidget*> widgets_;
     
-    void SetWidgetsToGUID(string GUID)
-    {
-        for(auto & widget : widgets_)
-        {
-            widget->SetValueToZero(); // We're not sure what the new mappings are, based on the GUID change, so zero everything to avoid spurious lights left on, etc.
-        }
-    }
-    
 public:
     virtual ~CSurfChannel() {}
     
@@ -143,8 +135,6 @@ public:
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
-        
-        SetWidgetsToGUID(GUID);
     }
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
