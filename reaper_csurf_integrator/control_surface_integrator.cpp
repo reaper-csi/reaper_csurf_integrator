@@ -848,6 +848,27 @@ void LogicalSurface::SetWidgetValue(string GUID, string name, string value)
             surface->SetWidgetValue(GUID, FlipNameFor(UnmodifiedNameFor(name)), value);
 }
 
+void LogicalSurface::SetWidgetValue(string GUID, string subGUID, string name, double value)
+{
+    for(auto & surface : surfaces_)
+        if(IsOKToSetWidget(name))
+            surface->SetWidgetValue(GUID, subGUID, FlipNameFor(UnmodifiedNameFor(name)), value);
+}
+
+void LogicalSurface::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
+{
+    for(auto & surface : surfaces_)
+        if(IsOKToSetWidget(name))
+            surface->SetWidgetValue(GUID, subGUID, FlipNameFor(UnmodifiedNameFor(name)), value, mode);
+}
+
+void LogicalSurface::SetWidgetValue(string GUID, string subGUID, string name, string value)
+{
+    for(auto & surface : surfaces_)
+        if(IsOKToSetWidget(name))
+            surface->SetWidgetValue(GUID, subGUID, FlipNameFor(UnmodifiedNameFor(name)), value);
+}
+
 void LogicalSurface::AdjustTrackBank(int stride)
 {
     int previousTrackOffset = trackOffset_;
@@ -1047,6 +1068,32 @@ void CSurfChannel::SetWidgetValue(string GUID, string name, string value)
             widget->SetValue(value);
 }
 
+void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value)
+{
+    // GAW TBD subChannels
+    for(auto & widget : widgets_)
+        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+            widget->SetValue(value);
+}
+
+void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
+{
+    // GAW TBD subChannels
+
+    for(auto & widget : widgets_)
+        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+            widget->SetValue(value, mode);
+}
+
+void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, string value)
+{
+    // GAW TBD subChannels
+
+    for(auto & widget : widgets_)
+        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+            widget->SetValue(value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // UniquelySelectedCSurfChannel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1148,17 +1195,27 @@ void RealCSurf::SetWidgetValue(string GUID, string name, string value)
         channel->SetWidgetValue(GUID, name, value);
 }
 
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value)
+{
+    for(auto & channel : GetChannels())
+        channel->SetWidgetValue(GUID, subGUID, name, value);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
+{
+    for(auto & channel : GetChannels())
+        channel->SetWidgetValue(GUID, subGUID, name, value, mode);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string value)
+{
+    for(auto & channel : GetChannels())
+        channel->SetWidgetValue(GUID, subGUID, name, value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interactor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-double Interactor::GetCurrentNormalizedValue(string name)
-{
-    if(actions_[name].size() > 0)
-        return (actions_[name])[0]->GetCurrentNormalizedValue();
-    else
-        return 0.0;
-}
-
 void Interactor::Update(string name)
 {
     for(auto action : actions_[name])
@@ -1197,4 +1254,42 @@ void Interactor::SetWidgetValue(string name, string value)
 {
     GetLogicalSurface()->SetWidgetValue(GetGUID(), name, value);
 }
+
+void Interactor::SetWidgetValue(string subGUID, string name, double value)
+{
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), subGUID, name, value);
+}
+
+void Interactor::SetWidgetValue(string subGUID, string name, double value, int mode)
+{
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), subGUID, name, value, mode);
+}
+
+void Interactor::SetWidgetValue(string subGUID, string name, string value)
+{
+    GetLogicalSurface()->SetWidgetValue(GetGUID(), subGUID, name, value);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SubInteractor
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void SubInteractor::SetWidgetValue(string name, double value)
+{
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
+}
+
+void SubInteractor::SetWidgetValue(string name, double value, int mode)
+{
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value, mode);
+}
+
+void SubInteractor::SetWidgetValue(string name, string value)
+{
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
+}
+
+
+
+
+
 
