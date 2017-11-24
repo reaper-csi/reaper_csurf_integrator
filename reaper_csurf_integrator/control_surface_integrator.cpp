@@ -103,12 +103,12 @@ string MidiWidget::GetName()
 
 void MidiWidget::Update()
 {
-    GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->Update(GetChannel()->GetGUID(), GetName());
+    GetChannel()->GetSurface()->GetLogicalSurface()->Update(GetChannel()->GetGUID(), GetName());
 }
 
 void MidiWidget::ForceUpdate()
 {
-    GetChannel()->GetSurface()->GetLogicalSurface()->GetManager()->ForceUpdate(GetChannel()->GetGUID(), GetName());
+    GetChannel()->GetSurface()->GetLogicalSurface()->ForceUpdate(GetChannel()->GetGUID(), GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -993,46 +993,6 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
 CSurfManager::CSurfManager()
 {
     midiIOManager_ = new MidiIOManager(this);
-}
-
-double CSurfManager::GetCurrentNormalizedValue(string GUID, string name)
-{
-    return surfaces_[currentSurfaceIndex_]->GetCurrentNormalizedValue(GUID, name);
-}
-
-void CSurfManager::Update(string GUID, string name)
-{
-    surfaces_[currentSurfaceIndex_]->Update(GUID, name);
-}
-
-void  CSurfManager::ForceUpdate(string GUID, string name)
-{
-    surfaces_[currentSurfaceIndex_]->ForceUpdate(GUID, name);
-}
-
-void CSurfManager::RunAction(string GUID, string name, double value)
-{
-    surfaces_[currentSurfaceIndex_]->RunAction(GUID, name, value);
-}
-
-void CSurfManager::CycleAction(string GUID, string name)
-{
-    surfaces_[currentSurfaceIndex_]->CycleAction(GUID, name);
-}
-
-void CSurfManager::SetWidgetValue(string GUID, string name, double value)
-{
-    surfaces_[currentSurfaceIndex_]->SetWidgetValue(GUID, name, value);
-}
-
-void CSurfManager::SetWidgetValue(string GUID, string name, double value, int mode)
-{
-    surfaces_[currentSurfaceIndex_]->SetWidgetValue(GUID, name, value, mode);
-}
-
-void CSurfManager::SetWidgetValue(string GUID, string name, string value)
-{
-    surfaces_[currentSurfaceIndex_]->SetWidgetValue(GUID, name, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
