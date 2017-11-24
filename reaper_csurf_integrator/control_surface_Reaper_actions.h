@@ -685,6 +685,7 @@ public:
     virtual double GetValue() override
     {
         char buffer[256];
+        
 
        if(TrackFX_GetNamedConfigParm(GetInteractor()->GetTrack(), GetInteractor()->GetIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
        {
@@ -694,9 +695,7 @@ public:
        {
             return 0.0;
        }
-        
-       
-        
+
         
          //return VAL2DB(GetDAW()->Track_GetPeakInfo(GetInteractor()->GetTrack(), 0));
     }

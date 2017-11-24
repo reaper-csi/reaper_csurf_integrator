@@ -251,23 +251,17 @@ private:
     string GUID_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
     map <string, vector<Action*>> actions_;
-    string trackGUID_ = "";
-    int index_ = 0;
 
 public:
-    Interactor(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface), trackGUID_(GUID) {}
-    
-    Interactor(string GUID, LogicalSurface* logicalSurface, string trackGUID, int index) : GUID_(GUID), logicalSurface_(logicalSurface), trackGUID_(trackGUID), index_(index) {}
-    
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    string GetGUID() { return GUID_; }
-    
-    string GetTrackGUID();
+    Interactor(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
 
-    MediaTrack* GetTrack();
+    string GetGUID() { return GUID_; }
+
+    virtual LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
-    int GetIndex() { return index_; }
+    virtual MediaTrack* GetTrack() { return DAW::GetTrackFromGUID(GetGUID()); }
+    
+    virtual int GetIndex() { return 0; }
     
     double GetCurrentNormalizedValue(string name);
     
