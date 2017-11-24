@@ -291,6 +291,10 @@ public:
     void ForceUpdate(string name);
     void RunAction(string name, double value);
     void CycleAction(string name);
+    
+    void SetWidgetValue(string name, double value);
+    void SetWidgetValue(string name, double value, int mode);
+    void SetWidgetValue(string name, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -559,8 +563,6 @@ public:
     CSurfManager();
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
-
-    LogicalSurface* GetCurrentLogicalSurface() { return surfaces_[currentSurfaceIndex_]; }
     
     double GetFaderMaxDB()
     {

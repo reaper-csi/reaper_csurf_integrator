@@ -44,7 +44,7 @@ public:
     
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+        GetInteractor()->SetWidgetValue(GetName(), value);
     }
     
     virtual double GetValue() override
@@ -74,7 +74,7 @@ public:
 
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), volToNormalized(value));
+        GetInteractor()->SetWidgetValue(GetName(), volToNormalized(value));
     }
 
     virtual double GetValue() override
@@ -98,7 +98,7 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->SetWidgetValue(GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
@@ -130,7 +130,7 @@ private:
 protected:
     virtual void SetWidgetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), panToNormalized(value), displayMode_);
+        GetInteractor()->SetWidgetValue(GetName(), panToNormalized(value), displayMode_);
     }
     
 public:
@@ -284,13 +284,13 @@ public:
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->IsZoom());
+            DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->IsZoom());
         }
     }
     
     virtual void RunAction(double value) override
     {
-        DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->IsZoom());
+        DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->IsZoom());
         pressed_ = value;
     }
 };
@@ -645,9 +645,9 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->SetWidgetValue(GetName(), value);
         else
-            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+            GetInteractor()->SetWidgetValue(GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
 public:
@@ -667,9 +667,9 @@ protected:
     virtual void SetWidgetValue(double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), value);
+            GetInteractor()->SetWidgetValue(GetName(), value);
         else
-            GetInteractor()->GetLogicalSurface()->SetWidgetValue(GetInteractor()->GetGUID(), GetName(), 0.0);
+            GetInteractor()->SetWidgetValue(GetName(), 0.0);
     }
     
 public:

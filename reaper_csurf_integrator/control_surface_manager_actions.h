@@ -18,7 +18,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->ToggleFlipped(GetName());
+        GetInteractor()->GetLogicalSurface()->ToggleFlipped(GetName());
     }
 };
 
@@ -32,7 +32,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetShift(value);
+        GetInteractor()->GetLogicalSurface()->SetShift(value);
     }
 };
 
@@ -46,7 +46,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetOption(value);
+        GetInteractor()->GetLogicalSurface()->SetOption(value);
     }
 };
 
@@ -60,7 +60,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetControl(value);
+        GetInteractor()->GetLogicalSurface()->SetControl(value);
     }
 };
 
@@ -74,7 +74,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetAlt(value);
+        GetInteractor()->GetLogicalSurface()->SetAlt(value);
     }
 };
 
@@ -96,14 +96,14 @@ public:
         {
             lastPressed_ = clock();
             SetValue(value);
-            GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
+            GetInteractor()->SetWidgetValue(GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(value);
-                GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetWidgetValue("", GetName(), value);
+                GetInteractor()->SetWidgetValue(GetName(), value);
             }
         }
     }
@@ -119,7 +119,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetZoom(value);
+        GetInteractor()->GetLogicalSurface()->SetZoom(value);
     }
 };
 
@@ -133,7 +133,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->SetScrub(value);
+        GetInteractor()->GetLogicalSurface()->SetScrub(value);
     }
 };
 
@@ -164,7 +164,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->AdjustTrackBank(stride_);
+        GetInteractor()->GetLogicalSurface()->AdjustTrackBank(stride_);
     }
 };
 
@@ -178,7 +178,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->ImmobilizeSelectedTracks();
+        GetInteractor()->GetLogicalSurface()->ImmobilizeSelectedTracks();
     }
 };
 
@@ -192,7 +192,7 @@ public:
     
     virtual void RunAction(double value) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->GetCurrentLogicalSurface()->MobilizeSelectedTracks();
+        GetInteractor()->GetLogicalSurface()->MobilizeSelectedTracks();
     }
 };
 
