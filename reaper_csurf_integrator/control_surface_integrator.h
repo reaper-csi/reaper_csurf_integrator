@@ -180,13 +180,13 @@ public:
     void RunAction(string name, double value);
     void CycleAction(string name);
     
-    virtual void SetWidgetValue(string GUID, string name, double value);
-    virtual void SetWidgetValue(string GUID, string name, double value, int mode);
-    virtual void SetWidgetValue(string GUID, string name, string value);
+    virtual void SetWidgetValue(string name, double value);
+    virtual void SetWidgetValue(string name, double value, int mode);
+    virtual void SetWidgetValue(string name, string value);
     
-    void SetWidgetValue(string GUID, string subGUID, string name, double value);
-    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
-    void SetWidgetValue(string GUID, string subGUID, string name, string value);
+    void SetWidgetValue(string subGUID, string name, double value);
+    void SetWidgetValue(string subGUID, string name, double value, int mode);
+    void SetWidgetValue(string subGUID, string name, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
