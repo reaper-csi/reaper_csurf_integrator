@@ -93,6 +93,7 @@ const string Attack = "Attack";
 const string Drive = "Drive";
 const string Character = "Character";
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +101,7 @@ CSurfManager::CSurfManager()
 {
     midiIOManager_ = new MidiIOManager(this);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
@@ -781,17 +783,12 @@ double LogicalSurface::GetCurrentNormalizedValue(string GUID, string name)
     return 0.0;
 }
 
+// to Actions ->
 void LogicalSurface::Update(string GUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
             interactor->Update(ModifiedNameFor(name));
-}
-
-void LogicalSurface::ForceUpdate()
-{
-    for(auto& surface : surfaces_)
-        surface->ForceUpdate();
 }
 
 void LogicalSurface::ForceUpdate(string GUID, string name)
@@ -801,20 +798,57 @@ void LogicalSurface::ForceUpdate(string GUID, string name)
             interactor->ForceUpdate(ModifiedNameFor(name));
 }
 
-void LogicalSurface::RunAction(string GUID, string name, double value)
-{
-    string flipName = FlipNameFor(name);
-
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->RunAction(ModifiedNameFor(flipName), value);
-}
-
 void LogicalSurface::CycleAction(string GUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
             interactor->CycleAction(ModifiedNameFor(name));
+}
+
+void LogicalSurface::RunAction(string GUID, string name, double value)
+{
+    string flipName = FlipNameFor(name);
+    
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->RunAction(ModifiedNameFor(flipName), value);
+}
+
+void LogicalSurface::Update(string GUID, string subGUID, string name)
+{
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->Update(subGUID, ModifiedNameFor(name));
+}
+
+void LogicalSurface::ForceUpdate(string GUID, string subGUID, string name)
+{
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->ForceUpdate(subGUID, ModifiedNameFor(name));
+}
+
+void LogicalSurface::CycleAction(string GUID, string subGUID, string name)
+{
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->CycleAction(subGUID, ModifiedNameFor(name));
+}
+
+void LogicalSurface::RunAction(string GUID, string subGUID, string name, double value)
+{
+    string flipName = FlipNameFor(name);
+    
+    for(auto & interactor : interactors_)
+        if(interactor->GetGUID() == GUID)
+            interactor->RunAction(subGUID, ModifiedNameFor(flipName), value);
+}
+
+// to Widgets ->
+void LogicalSurface::ForceUpdate()
+{
+    for(auto& surface : surfaces_)
+        surface->ForceUpdate();
 }
 
 void LogicalSurface::SetWidgetValue(string GUID, string name, double value)
@@ -998,25 +1032,27 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
     }
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealCSurf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealCSurf::OnTrackSelection(MediaTrack *trackid)
+{
+    for(auto * channel : GetChannels())
+        channel->OnTrackSelection(trackid);
+}
+
 void RealCSurf::Update()
 {
     for(auto * channel : GetChannels())
         channel->Update();
 }
 
+// to Widgets ->
 void RealCSurf::ForceUpdate()
 {
     for(auto * channel : GetChannels())
         channel->ForceUpdate();
-}
-
-void RealCSurf::OnTrackSelection(MediaTrack *trackid)
-{
-    for(auto * channel : GetChannels())
-        channel->OnTrackSelection(trackid);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value)
@@ -1059,6 +1095,7 @@ void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string 
         channel->SetWidgetValue(subGUID, name, value);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfChannel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1080,17 +1117,56 @@ void CSurfChannel::ForceUpdate()
         widget->ForceUpdate();
 }
 
-void CSurfChannel::RunAction(string name, double value)
+void CSurfChannel::Update(string name)
 {
-    // GAW TBD decorate with subGUID as necessary
-    GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), name, value);
+    for(auto * subChannel : GetSubChannels())
+        for(auto widgetName : subChannel->GetWidgetNames())
+            if(widgetName == name)
+            {
+                GetSurface()->GetLogicalSurface()->Update(GetGUID(), subChannel->GetSubGUID(), name);
+                return;
+            }
+    
+    GetSurface()->GetLogicalSurface()->Update(GetGUID(), name);
+}
+
+void CSurfChannel::ForceUpdate(string name)
+{
+    for(auto * subChannel : GetSubChannels())
+        for(auto widgetName : subChannel->GetWidgetNames())
+            if(widgetName == name)
+            {
+                GetSurface()->GetLogicalSurface()->ForceUpdate(GetGUID(), subChannel->GetSubGUID(), name);
+                return;
+            }
+    
+    GetSurface()->GetLogicalSurface()->ForceUpdate(GetGUID(), name);
 }
 
 void CSurfChannel::CycleAction(string name)
 {
-    // GAW TBD decorate with subGUID as necessary
-
+    for(auto * subChannel : GetSubChannels())
+        for(auto widgetName : subChannel->GetWidgetNames())
+            if(widgetName == name)
+            {
+                GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), subChannel->GetSubGUID(), name);
+                return;
+            }
+    
     GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), name);
+}
+
+void CSurfChannel::RunAction(string name, double value)
+{
+    for(auto * subChannel : GetSubChannels())
+        for(auto widgetName : subChannel->GetWidgetNames())
+            if(widgetName == name)
+            {
+                GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), subChannel->GetSubGUID(), name, value);
+                return;
+            }
+    
+    GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), name, value);
 }
 
 void CSurfChannel::SetWidgetValue(string name, double value)
@@ -1209,18 +1285,21 @@ string MidiWidget::GetName()
 
 void MidiWidget::Update()
 {
-    GetChannel()->GetSurface()->GetLogicalSurface()->Update(GetChannel()->GetGUID(), GetName());
+    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
+    GetChannel()->Update(GetName());
 }
 
 void MidiWidget::ForceUpdate()
 {
-    GetChannel()->GetSurface()->GetLogicalSurface()->ForceUpdate(GetChannel()->GetGUID(), GetName());
+    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
+    GetChannel()->ForceUpdate(GetName());
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interactor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// to Actions ->
 void Interactor::Update(string name)
 {
     for(auto action : actions_[name])
@@ -1233,18 +1312,49 @@ void Interactor::ForceUpdate(string name)
         action->ForceUpdate();
 }
 
-void Interactor::RunAction(string name, double value)
-{
-    for(auto action : actions_[name])
-        action->RunAction(value);
-}
-
 void Interactor::CycleAction(string name)
 {
     for(auto action : actions_[name])
         action->Cycle();
 }
 
+void Interactor::RunAction(string name, double value)
+{
+    for(auto action : actions_[name])
+        action->RunAction(value);
+}
+
+void Interactor::Update(string subGUID, string name)
+{
+    for(auto * subInteractor : subInteractors_)
+        if(subInteractor->GetGUID() == subGUID)
+            for(auto action : actions_[name])
+                action->Update();
+}
+
+void Interactor::ForceUpdate(string subGUID, string name)
+{
+    for(auto * subInteractor : subInteractors_)
+        if(subInteractor->GetGUID() == subGUID)
+            for(auto action : actions_[name])
+                action->ForceUpdate();
+}
+
+void Interactor::CycleAction(string subGUID, string name)
+{
+    for(auto * subInteractor : subInteractors_)
+        if(subInteractor->GetGUID() == subGUID)
+            for(auto action : actions_[name])
+                action->Cycle();
+}
+
+void Interactor::RunAction(string subGUID, string name, double value)
+{
+    for(auto action : actions_[name])
+        action->RunAction(value);
+}
+
+// to Widgets ->
 void Interactor::SetWidgetValue(string name, double value)
 {
     GetLogicalSurface()->SetWidgetValue(GetGUID(), name, value);
@@ -1274,6 +1384,7 @@ void Interactor::SetWidgetValue(string subGUID, string name, string value)
 {
     GetLogicalSurface()->SetWidgetValue(GetGUID(), subGUID, name, value);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SubInteractor
