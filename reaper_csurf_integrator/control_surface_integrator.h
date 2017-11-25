@@ -268,8 +268,8 @@ public:
     
     virtual void Update() {}
     virtual void ForceUpdate() {}
-    virtual void RunAction(double value) {}
     virtual void Cycle() {}
+    virtual void RunAction(double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -559,13 +559,13 @@ public:
     void SetScrub(bool value) { scrub_ = value; ForceUpdate(); }
 
     void RefreshLayout();
-    
-    void Update(string GUID, string name);
     void ForceUpdate();
+
+    void Update(string GUID, string name);
     void ForceUpdate(string GUID, string name);
-    void RunAction(string GUID, string name, double value);
     void CycleAction(string trackGUID, string name);
-    
+    void RunAction(string GUID, string name, double value);
+
     void SetWidgetValue(string GUID, string name, double value);
     void SetWidgetValue(string GUID, string name, double value, int mode);
     void SetWidgetValue(string GUID, string name, string value);
