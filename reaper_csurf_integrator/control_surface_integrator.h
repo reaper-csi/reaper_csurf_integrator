@@ -174,11 +174,15 @@ public:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
     
+    // to Actions ->
+    void Update(string name);
+    void ForceUpdate(string name);
+    void CycleAction(string name);
+    void RunAction(string name, double value);
+
+    // to Widgets ->
     virtual void Update();
     virtual void ForceUpdate();
-    
-    void RunAction(string name, double value);
-    void CycleAction(string name);
     
     virtual void SetWidgetValue(string name, double value);
     virtual void SetWidgetValue(string name, double value, int mode);
@@ -225,6 +229,7 @@ public:
         channels_.push_back(channel);
     }
     
+    // to Widgets ->
     virtual void Update();
     virtual void ForceUpdate();
     
@@ -320,11 +325,18 @@ public:
         subInteractors_.push_back(subInteractor);
     }
     
+    // to Actions ->
     void Update(string name);
     void ForceUpdate(string name);
-    void RunAction(string name, double value);
     void CycleAction(string name);
+    void RunAction(string name, double value);
     
+    void Update(string subGUID, string name);
+    void ForceUpdate(string subGUID, string name);
+    void CycleAction(string subGUID, string name);
+    void RunAction(string subGUID, string name, double value);
+    
+    // to Widgets ->
     virtual void SetWidgetValue(string name, double value);
     virtual void SetWidgetValue(string name, double value, int mode);
     virtual void SetWidgetValue(string name, string value);
@@ -559,12 +571,26 @@ public:
     void SetScrub(bool value) { scrub_ = value; ForceUpdate(); }
 
     void RefreshLayout();
-    void ForceUpdate();
 
+    void AdjustTrackBank(int stride);
+    void ImmobilizeSelectedTracks();
+    void MobilizeSelectedTracks();
+    
+    void TrackFXListChanged(MediaTrack* trackid);
+
+    // to Actions ->
     void Update(string GUID, string name);
     void ForceUpdate(string GUID, string name);
     void CycleAction(string trackGUID, string name);
     void RunAction(string GUID, string name, double value);
+    
+    void Update(string GUID, string subGUID, string name);
+    void ForceUpdate(string GUID, string subGUID, string name);
+    void CycleAction(string trackGUID, string subGUID, string name);
+    void RunAction(string GUID, string subGUID, string name, double value);
+    
+    // to Widgets ->
+    void ForceUpdate();
 
     void SetWidgetValue(string GUID, string name, double value);
     void SetWidgetValue(string GUID, string name, double value, int mode);
@@ -574,11 +600,6 @@ public:
     void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
     void SetWidgetValue(string GUID, string subGUID, string name, string value);
     
-    void AdjustTrackBank(int stride);
-    void ImmobilizeSelectedTracks();
-    void MobilizeSelectedTracks();
-    
-    void TrackFXListChanged(MediaTrack* trackid);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
