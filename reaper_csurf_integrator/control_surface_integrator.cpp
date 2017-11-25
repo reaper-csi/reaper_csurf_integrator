@@ -94,21 +94,11 @@ const string Drive = "Drive";
 const string Character = "Character";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MidiWidget
+// CSurfManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-string MidiWidget::GetName()
+CSurfManager::CSurfManager()
 {
-    return name_;
-}
-
-void MidiWidget::Update()
-{
-    GetChannel()->GetSurface()->GetLogicalSurface()->Update(GetChannel()->GetGUID(), GetName());
-}
-
-void MidiWidget::ForceUpdate()
-{
-    GetChannel()->GetSurface()->GetLogicalSurface()->ForceUpdate(GetChannel()->GetGUID(), GetName());
+    midiIOManager_ = new MidiIOManager(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1009,11 +999,64 @@ void LogicalSurface::TrackFXListChanged(MediaTrack* track)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CSurfManager
+// RealCSurf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-CSurfManager::CSurfManager()
+void RealCSurf::Update()
 {
-    midiIOManager_ = new MidiIOManager(this);
+    for(auto * channel : GetChannels())
+        channel->Update();
+}
+
+void RealCSurf::ForceUpdate()
+{
+    for(auto * channel : GetChannels())
+        channel->ForceUpdate();
+}
+
+void RealCSurf::OnTrackSelection(MediaTrack *trackid)
+{
+    for(auto * channel : GetChannels())
+        channel->OnTrackSelection(trackid);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string name, double value)
+{
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
+{
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value, mode);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string name, string value)
+{
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value)
+{
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(subGUID, name, value);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
+{
+    for(auto & channel : GetChannels())
+        channel->SetWidgetValue(subGUID, name, value, mode);
+}
+
+void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string value)
+{
+    for(auto & channel : GetChannels())
+        channel->SetWidgetValue(subGUID, name, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1039,11 +1082,14 @@ void CSurfChannel::ForceUpdate()
 
 void CSurfChannel::RunAction(string name, double value)
 {
+    // GAW TBD decorate with subGUID as necessary
     GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), name, value);
 }
 
 void CSurfChannel::CycleAction(string name)
 {
+    // GAW TBD decorate with subGUID as necessary
+
     GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), name);
 }
 
@@ -1152,66 +1198,25 @@ void CSurfChannel::MapFX(MediaTrack *track)
     }    
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealCSurf
+// MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealCSurf::Update()
+string MidiWidget::GetName()
 {
-    for(auto * channel : GetChannels())
-        channel->Update();
+    return name_;
 }
 
-void RealCSurf::ForceUpdate()
+void MidiWidget::Update()
 {
-    for(auto * channel : GetChannels())
-        channel->ForceUpdate();
+    GetChannel()->GetSurface()->GetLogicalSurface()->Update(GetChannel()->GetGUID(), GetName());
 }
 
-void RealCSurf::OnTrackSelection(MediaTrack *trackid)
+void MidiWidget::ForceUpdate()
 {
-    for(auto * channel : GetChannels())
-        channel->OnTrackSelection(trackid);
+    GetChannel()->GetSurface()->GetLogicalSurface()->ForceUpdate(GetChannel()->GetGUID(), GetName());
 }
 
-void RealCSurf::SetWidgetValue(string GUID, string name, double value)
-{
-    for(auto * channel : GetChannels())
-        if(channel->GetGUID() == GUID)
-            channel->SetWidgetValue(name, value);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
-{
-    for(auto * channel : GetChannels())
-        if(channel->GetGUID() == GUID)
-            channel->SetWidgetValue(name, value, mode);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string name, string value)
-{
-    for(auto * channel : GetChannels())
-        if(channel->GetGUID() == GUID)
-            channel->SetWidgetValue(name, value);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value)
-{
-    for(auto * channel : GetChannels())
-        if(channel->GetGUID() == GUID)
-            channel->SetWidgetValue(subGUID, name, value);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
-{
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(subGUID, name, value, mode);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string value)
-{
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(subGUID, name, value);
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Interactor
