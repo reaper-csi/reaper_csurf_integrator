@@ -1047,55 +1047,52 @@ void CSurfChannel::CycleAction(string name)
     GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), name);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string name, double value)
+void CSurfChannel::SetWidgetValue(string name, double value)
 {
     for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+        if(widget->GetName() == name)
             widget->SetValue(value);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string name, double value, int mode)
+void CSurfChannel::SetWidgetValue(string name, double value, int mode)
 {
     for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+        if(widget->GetName() == name)
             widget->SetValue(value, mode);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string name, string value)
+void CSurfChannel::SetWidgetValue(string name, string value)
 {
     for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
+        if(widget->GetName() == name)
             widget->SetValue(value);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value)
+void CSurfChannel::SetWidgetValue(string subGUID, string name, double value)
 {
-    if(GetGUID() == GUID)
-        for(auto & subChannel : subChannels_)
-            if(subGUID == subChannel->GetSubGUID())
-                for(auto & widget : widgets_)
-                    if(widget->GetName() == name)
-                        widget->SetValue(value);
+    for(auto & subChannel : subChannels_)
+        if(subChannel->GetSubGUID() == subGUID)
+            for(auto & widget : widgets_)
+                if(widget->GetName() == name)
+                    widget->SetValue(value);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
+void CSurfChannel::SetWidgetValue(string subGUID, string name, double value, int mode)
 {
-    if(GetGUID() == GUID)
-        for(auto & subChannel : subChannels_)
-            if(subGUID == subChannel->GetSubGUID())
-                for(auto & widget : widgets_)
-                    if(widget->GetName() == name)
-                        widget->SetValue(value, mode);
+    for(auto & subChannel : subChannels_)
+        if(subChannel->GetSubGUID() == subGUID)
+            for(auto & widget : widgets_)
+                if(widget->GetName() == name)
+                    widget->SetValue(value, mode);
 }
 
-void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, string value)
+void CSurfChannel::SetWidgetValue(string subGUID, string name, string value)
 {
-    if(GetGUID() == GUID)
-        for(auto & subChannel : subChannels_)
-            if(subGUID == subChannel->GetSubGUID())
-                for(auto & widget : widgets_)
-                    if(widget->GetName() == name)
-                        widget->SetValue(value);
+    for(auto & subChannel : subChannels_)
+        if(subChannel->GetSubGUID() == subGUID)
+            for(auto & widget : widgets_)
+                if(widget->GetName() == name)
+                    widget->SetValue(value);
 }
 
 void CSurfChannel::OnTrackSelection(MediaTrack *track)
@@ -1160,56 +1157,60 @@ void CSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RealCSurf::Update()
 {
-    for(auto & channel : GetChannels())
+    for(auto * channel : GetChannels())
         channel->Update();
 }
 
 void RealCSurf::ForceUpdate()
 {
-    for(auto & channel : GetChannels())
+    for(auto * channel : GetChannels())
         channel->ForceUpdate();
 }
 
 void RealCSurf::OnTrackSelection(MediaTrack *trackid)
 {
-    for(auto& channel : GetChannels())
+    for(auto * channel : GetChannels())
         channel->OnTrackSelection(trackid);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value)
 {
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, name, value);
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
 {
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, name, value, mode);
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, string value)
 {
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, name, value);
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(name, value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value)
 {
-    for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, subGUID, name, value);
+    for(auto * channel : GetChannels())
+        if(channel->GetGUID() == GUID)
+            channel->SetWidgetValue(subGUID, name, value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
 {
     for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, subGUID, name, value, mode);
+        channel->SetWidgetValue(subGUID, name, value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string value)
 {
     for(auto & channel : GetChannels())
-        channel->SetWidgetValue(GUID, subGUID, name, value);
+        channel->SetWidgetValue(subGUID, name, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
