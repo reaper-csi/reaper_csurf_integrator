@@ -1070,28 +1070,32 @@ void CSurfChannel::SetWidgetValue(string GUID, string name, string value)
 
 void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value)
 {
-    // GAW TBD subChannels
-    for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value);
+    if(GetGUID() == GUID)
+        for(auto & subChannel : subChannels_)
+            if(subGUID == subChannel->GetSubGUID())
+                for(auto & widget : widgets_)
+                    if(widget->GetName() == name)
+                        widget->SetValue(value);
 }
 
 void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
 {
-    // GAW TBD subChannels
-
-    for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value, mode);
+    if(GetGUID() == GUID)
+        for(auto & subChannel : subChannels_)
+            if(subGUID == subChannel->GetSubGUID())
+                for(auto & widget : widgets_)
+                    if(widget->GetName() == name)
+                        widget->SetValue(value, mode);
 }
 
 void CSurfChannel::SetWidgetValue(string GUID, string subGUID, string name, string value)
 {
-    // GAW TBD subChannels
-
-    for(auto & widget : widgets_)
-        if(widget->GetChannel()->GetGUID() == GUID && widget->GetName() == name)
-            widget->SetValue(value);
+    if(GetGUID() == GUID)
+        for(auto & subChannel : subChannels_)
+            if(subGUID == subChannel->GetSubGUID())
+                for(auto & widget : widgets_)
+                    if(widget->GetName() == name)
+                        widget->SetValue(value);
 }
 
 void CSurfChannel::OnTrackSelection(MediaTrack *track)
@@ -1106,12 +1110,13 @@ void CSurfChannel::MapFX(MediaTrack *track)
 
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
     
+    GetSubChannels().clear();
+    
     char trackFXName[256];
     char trackFXParameterName[256];
     int numParameters;
     
     int trackFXCount = TrackFX_GetCount(track);
-    
     
     for(int i = 0; i < trackFXCount; i++)
     {
@@ -1130,6 +1135,10 @@ void CSurfChannel::MapFX(MediaTrack *track)
             guidToString(TrackFX_GetFXGUID(track, i), pBuffer);
             string fxGUID(pBuffer);
            
+            SubChannel* subChannel = new SubChannel(fxGUID);
+            
+            AddSubChannel(subChannel);
+            
             numParameters = TrackFX_GetNumParams(track, i);
            
             for(int j = 0; j < numParameters; j++)
@@ -1140,7 +1149,7 @@ void CSurfChannel::MapFX(MediaTrack *track)
                 for(auto map : map->GetMapEntries())
                     for(auto widget : GetWidgets())
                         if(map.widget == widget->GetName())
-                            widget->GetChannel()->SetGUID(fxGUID);
+                            subChannel->AddWidgetName(widget->GetName());
             }
         }
     }    

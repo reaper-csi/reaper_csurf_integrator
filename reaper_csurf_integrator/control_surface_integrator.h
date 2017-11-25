@@ -106,6 +106,27 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SubChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string subGUID_ = "";
+    vector<string> widgetNames_;
+    
+public:
+    SubChannel(string subGUID) : subGUID_(subGUID) {}
+    
+    string GetSubGUID() { return subGUID_; }
+    
+    vector<string> GetWidgetNames() { return widgetNames_; }
+    
+    void AddWidgetName(string name)
+    {
+        widgetNames_.push_back(name);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -114,6 +135,7 @@ private:
     RealCSurf* surface_= nullptr;
     vector<MidiWidget*> widgets_;
     int shouldMapSubChannels_ = 0;
+    vector<SubChannel*> subChannels_;
     
 protected:
     void MapFX(MediaTrack *trackid);
@@ -131,6 +153,8 @@ public:
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
     
+    vector<SubChannel*> GetSubChannels() { return subChannels_; }
+
     virtual void OnTrackSelection(MediaTrack *trackid);
     
     void AddWidget(MidiWidget* widget)
@@ -138,6 +162,11 @@ public:
         widgets_.push_back(widget);
     }
     
+    void AddSubChannel(SubChannel* subChannel)
+    {
+        subChannels_.push_back(subChannel);
+    }
+
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
