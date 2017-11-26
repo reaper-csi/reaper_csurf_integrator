@@ -155,6 +155,8 @@ public:
     
     vector<SubChannel*> GetSubChannels() { return subChannels_; }
 
+    void ClearSubChannels() {  subChannels_.clear(); }
+    
     virtual void OnTrackSelection(MediaTrack *trackid);
     
     void AddWidget(MidiWidget* widget)

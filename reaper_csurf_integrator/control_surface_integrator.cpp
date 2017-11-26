@@ -1236,13 +1236,13 @@ void CSurfChannel::MapFX(MediaTrack *track)
 {
     DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
     
-    GetSubChannels().clear();
+    ClearSubChannels();
     
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
 
     char trackFXName[256];
     char trackFXGUID[256];
-    char trackFXParameterName[256];
+    char trackFXParamName[256];
     
     for(int i = 0; i < TrackFX_GetCount(track); i++)
     {
@@ -1262,8 +1262,8 @@ void CSurfChannel::MapFX(MediaTrack *track)
             
             for(int j = 0; j < TrackFX_GetNumParams(track, i); j++)
             {
-                TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName(trackFXParameterName);
+                TrackFX_GetParamName(track, i, j, trackFXParamName, sizeof(trackFXParamName));
+                string fxParamName(trackFXParamName);
                 
                 for(auto map : map->GetMapEntries())
                     if(map.param == fxParamName)
