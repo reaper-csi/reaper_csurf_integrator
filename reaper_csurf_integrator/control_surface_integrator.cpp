@@ -991,7 +991,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
             interactor = anInteractor;
 
     // Dump any existing FX subInteractors
-    interactor->GetFXSubInteractors().clear();
+    interactor->ClearFXSubInteractors();
  
     for(int i = 0; i < TrackFX_GetCount(track); i++)
     {
@@ -1229,13 +1229,14 @@ void CSurfChannel::SetWidgetValue(string subGUID, string name, string value)
 void CSurfChannel::OnTrackSelection(MediaTrack *track)
 {
     if(shouldMapSubChannels_ && DAW::CountSelectedTracks(nullptr) == 1)
+    {
+        DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
         MapFX(track);
+    }
 }
 
 void CSurfChannel::MapFX(MediaTrack *track)
 {
-    DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
-    
     ClearSubChannels();
     
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
