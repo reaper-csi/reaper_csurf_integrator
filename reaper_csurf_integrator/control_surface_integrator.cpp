@@ -367,8 +367,7 @@ void LogicalSurface::BuildTrackInteractors()
         }
         
         AddInteractor(interactor);
-        // Must wait for interactor to be added before we call this
-        MapFX(DAW::CSurf_TrackFromID(i, false));
+        MapFX(interactor->GetTrack());
     }
 }
 
@@ -980,11 +979,11 @@ void LogicalSurface::MapFX(MediaTrack* track)
 {
     char trackFXName[256];
     char trackFXParameterName[256];
-    int numParameters;
+    char trackFXParameterGUID[256];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-    // We will always find an interactor for this track, otherwise how could we add FX to it ?
+    // We will always find the interactor for this track, otherwise how could we add FX to it ?
     Interactor* interactor = nullptr;
     
     for(auto * anInteractor : interactors_)
@@ -993,36 +992,29 @@ void LogicalSurface::MapFX(MediaTrack* track)
 
     // Dump any existing FX subInteractors
     interactor->GetFXSubInteractors().clear();
-    
-    int trackFXCount = TrackFX_GetCount(track);
-
-    for(int i = 0; i < trackFXCount; i++)
+ 
+    for(int i = 0; i < TrackFX_GetCount(track); i++)
     {
         TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
-        
         string fxName(trackFXName);
         
         if(fxMaps_.count(trackFXName) > 0)
         {
             FXMap* map = fxMaps_[fxName];
             
-            char pBuffer[256];
-            memset(pBuffer, 0, sizeof(pBuffer));
-            guidToString(TrackFX_GetFXGUID(track, i), pBuffer);
-            string fxGUID(pBuffer);
+            guidToString(TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
+            string fxGUID(trackFXParameterGUID);
 
             SubInteractor* subInteractor = new SubInteractor(fxGUID, i, interactor);
-            
-            numParameters = TrackFX_GetNumParams(track, i);
 
-            for(int j = 0; j < numParameters; j++)
+            for(int j = 0; j < TrackFX_GetNumParams(track, i); j++)
             {
                 TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
                 string fxParamName(trackFXParameterName);
                 
                 for(auto map : map->GetMapEntries())
                     if(map.param == fxParamName)
-                        interactor->AddAction(new TrackFX_Action(map.widget, subInteractor, map.param, j));
+                        subInteractor->AddAction(new TrackFX_Action(map.widget, subInteractor, map.param, j));
             }
             
             interactor->AddFXSubInteractor(subInteractor);
@@ -1249,6 +1241,8 @@ void CSurfChannel::MapFX(MediaTrack *track)
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
 
     char trackFXName[256];
+    char trackFXGUID[256];
+    char trackFXParameterName[256];
     
     for(int i = 0; i < TrackFX_GetCount(track); i++)
     {
@@ -1261,14 +1255,10 @@ void CSurfChannel::MapFX(MediaTrack *track)
             
             FXMap* map = GetSurface()->GetLogicalSurface()->GetFXMaps()[fxName];
             
-            char trackFXGUID[256];
-            memset(trackFXGUID, 0, sizeof(trackFXGUID));
             guidToString(TrackFX_GetFXGUID(track, i), trackFXGUID);
             string fxGUID(trackFXGUID);
            
             SubChannel* subChannel = new SubChannel(fxGUID);
-            
-            char trackFXParameterName[256];
             
             for(int j = 0; j < TrackFX_GetNumParams(track, i); j++)
             {
@@ -1333,53 +1323,101 @@ void Interactor::RunAction(string name, double value)
 void Interactor::Update(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->Update();
+        }
+    }
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->Update();
+        }
+    }
 }
 
 void Interactor::ForceUpdate(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->ForceUpdate();
+        }
+    }
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->ForceUpdate();
+        }
+    }
 }
 
 void Interactor::CycleAction(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->Cycle();
+        }
+    }
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->Cycle();
+        }
+    }
 }
 
 void Interactor::RunAction(string subGUID, string name, double value)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->RunAction(value);
+        }
+    }
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
-            for(auto action : actions_[name])
+    {
+        if(subInteractor->GetSubGUID() == subGUID)
+        {
+            vector<Action*> actions = subInteractor-> GetActions()[name];
+            
+            for(auto action : actions)
                 action->RunAction(value);
+        }
+    }
 }
 
 // to Widgets ->
@@ -1419,17 +1457,17 @@ void Interactor::SetWidgetValue(string subGUID, string name, string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SubInteractor::SetWidgetValue(string name, double value)
 {
-    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
+    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value);
 }
 
 void SubInteractor::SetWidgetValue(string name, double value, int mode)
 {
-    GetInteractor()->SetWidgetValue(GetGUID(), name, value, mode);
+    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value, mode);
 }
 
 void SubInteractor::SetWidgetValue(string name, string value)
 {
-    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
+    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value);
 }
 
 
