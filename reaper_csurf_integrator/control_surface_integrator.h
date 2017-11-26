@@ -367,14 +367,11 @@ public:
 
     SubInteractor(string subGUID, int index, Interactor* interactor) : Interactor(interactor->GetGUID(), interactor->GetLogicalSurface()), subGUID_(subGUID), index_(index), interactor_(interactor) {}
     
-    virtual string GetGUID() override { return subGUID_; }
-    
-    virtual LogicalSurface* GetLogicalSurface() override { return interactor_->GetLogicalSurface(); }
-    
-    virtual MediaTrack* GetTrack() override { return DAW::GetTrackFromGUID(interactor_->GetGUID()); }
-    
+    virtual string GetSubGUID() { return subGUID_; }
     virtual int GetIndex() override { return index_; }
     
+    virtual map <string, vector<Action*>> GetActions() { return actions_; }
+
     virtual void SetWidgetValue(string name, double value) override;
     virtual void SetWidgetValue(string name, double value, int mode) override;
     virtual void SetWidgetValue(string name, string value) override;
