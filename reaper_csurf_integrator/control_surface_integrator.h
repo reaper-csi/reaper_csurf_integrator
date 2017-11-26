@@ -87,14 +87,14 @@ public:
     
     MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
+    string GetName() { return name_; }
+    
     CSurfChannel* GetChannel() { return channel_; }
 
     virtual double GetMinDB() { return 0.0; }
     
     virtual double GetMaxDB() { return 1.0; }
     
-    string GetName();
-
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 
     void Update();
@@ -116,7 +116,7 @@ private:
 public:
     SubChannel(string subGUID) : subGUID_(subGUID) {}
     
-    string GetSubGUID() { return subGUID_; }
+    string GetGUID() { return subGUID_; }
     
     vector<string> GetWidgetNames() { return widgetNames_; }
     
@@ -146,10 +146,10 @@ public:
     CSurfChannel(string GUID, RealCSurf* surface) : GUID_(GUID), surface_(surface) {}
     
     CSurfChannel(string GUID, RealCSurf* surface, int shouldMapSubChannels) : GUID_(GUID), surface_(surface), shouldMapSubChannels_(shouldMapSubChannels) {}
-    
-    RealCSurf* GetSurface() { return surface_; }
-    
+
     string GetGUID() { return GUID_; }
+
+    RealCSurf* GetSurface() { return surface_; }
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
     
@@ -208,19 +208,19 @@ public:
     
     RealCSurf(const string name, LogicalSurface* logicalSurface,  const int numChannels) : name_(name), logicalSurface_(logicalSurface),  numChannels_(numChannels) {}
     
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    vector<CSurfChannel*> & GetChannels() { return channels_; }
-    
     const string GetName() const { return name_; }
-    
+
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+
     const int GetNumChannels() const { return numChannels_; }
 
+    vector<CSurfChannel*> & GetChannels() { return channels_; }
+    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     
     virtual void SendMidiMessage(int first, int second, int third) {}
 
-    virtual void OnTrackSelection(MediaTrack *trackid);
+    virtual void OnTrackSelection(MediaTrack *track);
     
     virtual void RunAndUpdate() {}
     
@@ -258,10 +258,10 @@ protected:
     
 public:
     virtual ~Action() {}
-
-    Interactor* GetInteractor() { return interactor_; }
     
     string GetName() { return name_; }
+
+    Interactor* GetInteractor() { return interactor_; }
     
     virtual string GetAlias() { return name_; }
     
@@ -287,8 +287,9 @@ protected:
     string GUID_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
     map <string, vector<Action*>> actions_;
-    vector<SubInteractor*> subInteractors_;
-    
+    vector<SubInteractor*> fxSubInteractors_;
+    vector<SubInteractor*> sendSubInteractors_;
+
 public:
     virtual ~Interactor() {}
     
@@ -300,6 +301,10 @@ public:
     
     virtual MediaTrack* GetTrack() { return DAW::GetTrackFromGUID(GetGUID()); }
     
+    vector<SubInteractor*> GetFXSubInteractors() { return fxSubInteractors_; }
+    
+    vector<SubInteractor*> GetSendSubInteractors() { return sendSubInteractors_; }
+
     virtual int GetIndex() { return 0; }
     
     double GetCurrentNormalizedValue(string name)
@@ -320,9 +325,9 @@ public:
         actions_[action->GetAlias()].push_back(action);
     }
     
-    void AddSubInteractor(SubInteractor* subInteractor)
+    void AddFXSubInteractor(SubInteractor* subInteractor)
     {
-        subInteractors_.push_back(subInteractor);
+        fxSubInteractors_.push_back(subInteractor);
     }
     
     // to Actions ->
@@ -530,10 +535,10 @@ public:
     
     bool IsFlipped() { return isFlipped_; }
     
-    void OnTrackSelection(MediaTrack* trackid)
+    void OnTrackSelection(MediaTrack* track)
     {
         for(auto& surface : surfaces_)
-            surface->OnTrackSelection(trackid);
+            surface->OnTrackSelection(track);
     }
 
     void RunAndUpdate()
@@ -576,7 +581,8 @@ public:
     void ImmobilizeSelectedTracks();
     void MobilizeSelectedTracks();
     
-    void TrackFXListChanged(MediaTrack* trackid);
+    void TrackFXListChanged(MediaTrack* track);
+    void MapFX(MediaTrack* track);
 
     // to Actions ->
     void Update(string GUID, string name);
