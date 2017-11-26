@@ -136,9 +136,6 @@ private:
     vector<MidiWidget*> widgets_;
     int shouldMapSubChannels_ = 0;
     vector<SubChannel*> subChannels_;
-    
-protected:
-    void MapFX(MediaTrack *trackid);
 
 public:
     virtual ~CSurfChannel() {}
@@ -174,6 +171,8 @@ public:
         GUID_ = GUID;
     }
     
+    void MapFX(MediaTrack *trackid);
+
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
     
     // to Actions ->
@@ -305,8 +304,12 @@ public:
     
     vector<SubInteractor*> GetFXSubInteractors() { return fxSubInteractors_; }
     
+    void ClearFXSubInteractors() { fxSubInteractors_.clear(); }
+    
     vector<SubInteractor*> GetSendSubInteractors() { return sendSubInteractors_; }
 
+    void ClearSendSubInteractors() { sendSubInteractors_.clear(); }
+    
     virtual int GetIndex() { return 0; }
     
     double GetCurrentNormalizedValue(string name)
