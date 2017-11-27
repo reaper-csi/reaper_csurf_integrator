@@ -267,8 +267,8 @@ void LogicalSurface::InitializeLogicalCSurfInteractors()
     
     interactor->AddAction(new TrackBank_Action(ChannelLeft, interactor, -1));
     interactor->AddAction(new TrackBank_Action(ChannelRight, interactor, 1));
-    interactor->AddAction(new TrackBank_Action(BankLeft, interactor, -20));
-    interactor->AddAction(new TrackBank_Action(BankRight, interactor, 20));
+    interactor->AddAction(new TrackBank_Action(BankLeft, interactor, -8));
+    interactor->AddAction(new TrackBank_Action(BankRight, interactor, 8));
     
     interactor->AddAction(new Flip_Action(Flip, interactor));
     
@@ -462,7 +462,7 @@ void LogicalSurface::BuildCSurfWidgets()
 */
             
             
-            channel = new CSurfChannel( "", surface, 1);
+            channel = new CSurfChannel( "", surface, false, 1);
 
             
             channel->AddWidget(new PushButton_MidiWidget("Order", channel,                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -519,7 +519,7 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new Fader8Bit_MidiWidget(Parallel, channel,         new MIDI_event_ex_t(0xb0, 0x32, 0x7f), new MIDI_event_ex_t(0xb0, 0x32, 0x00)));
             channel->AddWidget(new Fader8Bit_MidiWidget(Attack, channel,           new MIDI_event_ex_t(0xb0, 0x33, 0x7f), new MIDI_event_ex_t(0xb0, 0x33, 0x00)));
             
-            channel->AddWidget(new VUMeter_MidifWidget(CompressorMeter, channel, 0.0, -20.0, new  MIDI_event_ex_t(0xb0, 0x73, 0x7f), new  MIDI_event_ex_t(0xb0, 0x73, 0x00)));
+            channel->AddWidget(new VUMeter_MidiWidget(CompressorMeter, channel, 0.0, -20.0, new  MIDI_event_ex_t(0xb0, 0x73, 0x7f), new  MIDI_event_ex_t(0xb0, 0x73, 0x00)));
 
             // Output but re-purposed for compressor
 
@@ -533,15 +533,15 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new Fader8Bit_MidiWidget(Volume, channel,      new MIDI_event_ex_t(0xb0, 0x07, 0x7f),  new MIDI_event_ex_t(0xb0, 0x07, 0x00)));
             channel->AddWidget(new Fader8Bit_MidiWidget(Pan, channel,         new MIDI_event_ex_t(0xb0, 0x0a, 0x7f), new MIDI_event_ex_t(0xb0, 0x0a, 0x00)));
             
-            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterLeft, channel, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
-            channel->AddWidget(new VUMeter_MidifWidget(TrackOutMeterRight, channel, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
+            channel->AddWidget(new VUMeter_MidiWidget(TrackOutMeterLeft, channel, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
+            channel->AddWidget(new VUMeter_MidiWidget(TrackOutMeterRight, channel, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
             
             surface->AddChannel(channel);
         }
         else
         {
             
-            channel = new CSurfChannel(LogicalCSurf, surface);
+            channel = new CSurfChannel(LogicalCSurf, surface, false);
 
             channel->AddWidget(new PushButton_MidiWidget("Track", channel,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("Send", channel,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
@@ -634,9 +634,7 @@ void LogicalSurface::BuildCSurfWidgets()
         }
     }
     
-    immovableTrackGUIDs_.resize(totalNumChannels);
-    for(auto & trackGUID : immovableTrackGUIDs_)
-        trackGUID = "";
+    numChannels_ = totalNumChannels;
 }
 
 void LogicalSurface::InitializeSurfaces()
@@ -805,7 +803,7 @@ void LogicalSurface::CycleAction(string GUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->CycleAction(ModifiedNameFor(name));
+            interactor->Cycle(ModifiedNameFor(name));
 }
 
 void LogicalSurface::RunAction(string GUID, string name, double value)
@@ -835,7 +833,7 @@ void LogicalSurface::CycleAction(string GUID, string subGUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->CycleAction(subGUID, ModifiedNameFor(name));
+            interactor->Cycle(subGUID, ModifiedNameFor(name));
 }
 
 void LogicalSurface::RunAction(string GUID, string subGUID, string name, double value)
@@ -896,7 +894,6 @@ void LogicalSurface::SetWidgetValue(string GUID, string subGUID, string name, st
             surface->SetWidgetValue(GUID, subGUID, FlipNameFor(UnmodifiedNameFor(name)), value);
 }
 
-
 void LogicalSurface::AdjustTrackBank(int stride)
 {
     int previousTrackOffset = trackOffset_;
@@ -920,7 +917,7 @@ void LogicalSurface::ImmobilizeSelectedTracks()
 {
     for(int i = 0; i < NumChannels(); i++)
         if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
-            immovableTrackGUIDs_[i] = Channel(i)->GetGUID();
+            Channel(i)->SetIsMovable(false);
     
     if(isSynchronized_)
         GetManager()->ImmobilizeSelectedTracks(this);
@@ -930,20 +927,46 @@ void LogicalSurface::MobilizeSelectedTracks()
 {
     for(int i = 0; i < NumChannels(); i++)
         if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
-            immovableTrackGUIDs_[i] = "";
-    
+            Channel(i)->SetIsMovable(true);
+
     if(isSynchronized_)
         GetManager()->MobilizeSelectedTracks(this);
 }
 
 void LogicalSurface::RefreshLayout()
-{/*
+{
     auto currentOffset = trackOffset_;
+
+    vector<string> immovableTracks;
     
     for(int i = 0; i < NumChannels(); i++)
+        if(Channel(i)->GetIsMovable() == false)
+            immovableTracks.push_back(Channel(i)->GetGUID());
+
+    for(int i = 0; i < NumChannels();)
     {
-        Channel(i)->SetGUID("");
-        
+        if(currentOffset < 0)
+        {
+            Channel(i++)->SetGUID("");
+            currentOffset++;
+        }
+        else if(currentOffset >= DAW::GetNumTracks())
+        {
+            Channel(i++)->SetGUID("");
+        }
+        //else if(Channel(i)->GetIsMovable() && find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
+        else if(Channel(i)->GetIsMovable())
+        {
+            Channel(i++)->SetGUID(DAW::GetTrackGUIDAsString(currentOffset++));
+        }
+        else
+        {
+            currentOffset++;
+        }
+    }
+    
+    ForceUpdate();
+        /*
         if(currentOffset < 0 && immovableTrackGUIDs_[i] == "")
             currentOffset++;
         else if(immovableTrackGUIDs_[i] != "")
@@ -952,7 +975,8 @@ void LogicalSurface::RefreshLayout()
             Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
         else while(isInImmovableTrackGUIDS(GetDAW()->GetTrackGUIDAsString(currentOffset++)) && currentOffset < GetDAW()->GetNumTracks())
             Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
-    }*/
+         */
+
 }
 
 bool LogicalSurface::DidTrackListChange()
@@ -1118,7 +1142,7 @@ void CSurfChannel::Update(string name)
         for(auto widgetName : subChannel->GetWidgetNames())
             if(widgetName == name)
             {
-                GetSurface()->GetLogicalSurface()->Update(GetGUID(), subChannel->GetGUID(), name);
+                GetSurface()->GetLogicalSurface()->Update(GetGUID(), subChannel->GetSubGUID(), name);
                 return;
             }
     
@@ -1131,7 +1155,7 @@ void CSurfChannel::ForceUpdate(string name)
         for(auto widgetName : subChannel->GetWidgetNames())
             if(widgetName == name)
             {
-                GetSurface()->GetLogicalSurface()->ForceUpdate(GetGUID(), subChannel->GetGUID(), name);
+                GetSurface()->GetLogicalSurface()->ForceUpdate(GetGUID(), subChannel->GetSubGUID(), name);
                 return;
             }
     
@@ -1144,7 +1168,7 @@ void CSurfChannel::CycleAction(string name)
         for(auto widgetName : subChannel->GetWidgetNames())
             if(widgetName == name)
             {
-                GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), subChannel->GetGUID(), name);
+                GetSurface()->GetLogicalSurface()->CycleAction(GetGUID(), subChannel->GetSubGUID(), name);
                 return;
             }
     
@@ -1157,7 +1181,7 @@ void CSurfChannel::RunAction(string name, double value)
         for(auto widgetName : subChannel->GetWidgetNames())
             if(widgetName == name)
             {
-                GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), subChannel->GetGUID(), name, value);
+                GetSurface()->GetLogicalSurface()->RunAction(GetGUID(), subChannel->GetSubGUID(), name, value);
                 return;
             }
     
@@ -1202,7 +1226,7 @@ void CSurfChannel::SetWidgetValue(string name, string value)
 void CSurfChannel::SetWidgetValue(string subGUID, string name, double value)
 {
     for(auto & subChannel : subChannels_)
-        if(subChannel->GetGUID() == subGUID)
+        if(subChannel->GetSubGUID() == subGUID)
             for(auto & widget : widgets_)
                 if(widget->GetName() == name)
                     widget->SetValue(value);
@@ -1211,7 +1235,7 @@ void CSurfChannel::SetWidgetValue(string subGUID, string name, double value)
 void CSurfChannel::SetWidgetValue(string subGUID, string name, double value, int mode)
 {
     for(auto & subChannel : subChannels_)
-        if(subChannel->GetGUID() == subGUID)
+        if(subChannel->GetSubGUID() == subGUID)
             for(auto & widget : widgets_)
                 if(widget->GetName() == name)
                     widget->SetValue(value, mode);
@@ -1220,7 +1244,7 @@ void CSurfChannel::SetWidgetValue(string subGUID, string name, double value, int
 void CSurfChannel::SetWidgetValue(string subGUID, string name, string value)
 {
     for(auto & subChannel : subChannels_)
-        if(subChannel->GetGUID() == subGUID)
+        if(subChannel->GetSubGUID() == subGUID)
             for(auto & widget : widgets_)
                 if(widget->GetName() == name)
                     widget->SetValue(value);
@@ -1239,7 +1263,9 @@ void CSurfChannel::MapFX(MediaTrack *track)
 {
     ClearSubChannels();
     
+    SetIsMovable(true);
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
+    SetIsMovable(false);
 
     char trackFXName[256];
     char trackFXGUID[256];
@@ -1309,7 +1335,7 @@ void Interactor::ForceUpdate(string name)
         action->ForceUpdate();
 }
 
-void Interactor::CycleAction(string name)
+void Interactor::Cycle(string name)
 {
     for(auto action : actions_[name])
         action->Cycle();
@@ -1324,101 +1350,45 @@ void Interactor::RunAction(string name, double value)
 void Interactor::Update(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->Update();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->Update(name);
     
     for(auto * subInteractor : sendSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->Update();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->Update(name);
 }
 
 void Interactor::ForceUpdate(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->ForceUpdate();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->ForceUpdate(name);
     
     for(auto * subInteractor : sendSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->ForceUpdate();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->ForceUpdate(name);
 }
 
-void Interactor::CycleAction(string subGUID, string name)
+void Interactor::Cycle(string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->Cycle();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->Cycle(name);
     
     for(auto * subInteractor : sendSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->Cycle();
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->Cycle(name);
 }
 
 void Interactor::RunAction(string subGUID, string name, double value)
 {
     for(auto * subInteractor : fxSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->RunAction(value);
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->RunAction(name, value);
     
     for(auto * subInteractor : sendSubInteractors_)
-    {
-        if(subInteractor->GetSubGUID() == subGUID)
-        {
-            vector<Action*> actions = subInteractor-> GetActions()[name];
-            
-            for(auto action : actions)
-                action->RunAction(value);
-        }
-    }
+        if(subInteractor->GetGUID() == subGUID)
+            subInteractor->RunAction(name, value);
 }
 
 // to Widgets ->
@@ -1458,17 +1428,17 @@ void Interactor::SetWidgetValue(string subGUID, string name, string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SubInteractor::SetWidgetValue(string name, double value)
 {
-    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value);
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
 }
 
 void SubInteractor::SetWidgetValue(string name, double value, int mode)
 {
-    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value, mode);
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value, mode);
 }
 
 void SubInteractor::SetWidgetValue(string name, string value)
 {
-    GetInteractor()->SetWidgetValue(GetSubGUID(), name, value);
+    GetInteractor()->SetWidgetValue(GetGUID(), name, value);
 }
 
 
