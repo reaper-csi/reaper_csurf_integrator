@@ -943,6 +943,8 @@ void LogicalSurface::RefreshLayout()
         if(Channel(i)->GetIsMovable() == false)
             immovableTracks.push_back(Channel(i)->GetGUID());
 
+    int chan = NumChannels();
+    
     for(int i = 0; i < NumChannels();)
     {
         if(currentOffset < 0)
@@ -954,10 +956,13 @@ void LogicalSurface::RefreshLayout()
         {
             Channel(i++)->SetGUID("");
         }
-        //else if(Channel(i)->GetIsMovable() && find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
-        else if(Channel(i)->GetIsMovable())
+        else if(Channel(i)->GetIsMovable() && find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
         {
             Channel(i++)->SetGUID(DAW::GetTrackGUIDAsString(currentOffset++));
+        }
+        else if( ! Channel(i)->GetIsMovable())
+        {
+            i++;
         }
         else
         {
