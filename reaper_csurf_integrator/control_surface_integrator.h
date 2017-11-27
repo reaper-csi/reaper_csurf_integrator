@@ -116,7 +116,7 @@ private:
 public:
     SubChannel(string subGUID) : subGUID_(subGUID) {}
     
-    string GetGUID() { return subGUID_; }
+    string GetSubGUID() { return subGUID_; }
     
     vector<string> GetWidgetNames() { return widgetNames_; }
     
@@ -133,6 +133,7 @@ class CSurfChannel
 private:
     string GUID_ = "";
     RealCSurf* surface_= nullptr;
+    bool isMovable_ = true;
     vector<MidiWidget*> widgets_;
     int shouldMapSubChannels_ = 0;
     vector<SubChannel*> subChannels_;
@@ -142,16 +143,22 @@ public:
     
     CSurfChannel(string GUID, RealCSurf* surface) : GUID_(GUID), surface_(surface) {}
     
-    CSurfChannel(string GUID, RealCSurf* surface, int shouldMapSubChannels) : GUID_(GUID), surface_(surface), shouldMapSubChannels_(shouldMapSubChannels) {}
-
+    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable) : GUID_(GUID), surface_(surface), isMovable_(isMovable) {}
+    
+    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable, int shouldMapSubChannels) : GUID_(GUID), surface_(surface), isMovable_(isMovable), shouldMapSubChannels_(shouldMapSubChannels) {}
+    
     string GetGUID() { return GUID_; }
 
     RealCSurf* GetSurface() { return surface_; }
+    
+    bool GetIsMovable() { return isMovable_; }
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
     
     vector<SubChannel*> GetSubChannels() { return subChannels_; }
 
+    void SetIsMovable(bool isMovable) { isMovable_ = isMovable; }
+    
     void ClearSubChannels() {  subChannels_.clear(); }
     
     virtual void OnTrackSelection(MediaTrack *trackid);
@@ -168,7 +175,8 @@ public:
 
     void SetGUID(string GUID)
     {
-        GUID_ = GUID;
+        if(isMovable_)
+            GUID_ = GUID;
     }
     
     void MapFX(MediaTrack *trackid);
@@ -335,15 +343,20 @@ public:
         fxSubInteractors_.push_back(subInteractor);
     }
     
+    void AddSendSubInteractor(SubInteractor* subInteractor)
+    {
+        sendSubInteractors_.push_back(subInteractor);
+    }
+    
     // to Actions ->
     void Update(string name);
     void ForceUpdate(string name);
-    void CycleAction(string name);
+    void Cycle(string name);
     void RunAction(string name, double value);
     
     void Update(string subGUID, string name);
     void ForceUpdate(string subGUID, string name);
-    void CycleAction(string subGUID, string name);
+    void Cycle(string subGUID, string name);
     void RunAction(string subGUID, string name, double value);
     
     // to Widgets ->
@@ -372,11 +385,9 @@ public:
 
     SubInteractor(string subGUID, int index, Interactor* interactor) : Interactor(interactor->GetGUID(), interactor->GetLogicalSurface()), subGUID_(subGUID), index_(index), interactor_(interactor) {}
     
-    virtual string GetSubGUID() { return subGUID_; }
+    virtual string GetGUID() { return subGUID_; }
     virtual int GetIndex() override { return index_; }
     
-    virtual map <string, vector<Action*>> GetActions() { return actions_; }
-
     virtual void SetWidgetValue(string name, double value) override;
     virtual void SetWidgetValue(string name, double value, int mode) override;
     virtual void SetWidgetValue(string name, string value) override;
@@ -391,9 +402,9 @@ private:
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
     vector<Interactor*> interactors_;
-    vector<string> immovableTrackGUIDs_;
     bool isSynchronized_ = false;
     bool isFlipped_ = false;
+    int numChannels_ = 0;
     int trackOffset_ = 0;
     
     bool shift_ = false;
@@ -408,8 +419,7 @@ private:
     void BuildTrackInteractors2();
     void BuildCSurfWidgets();
 
-    // There is an immovable GUID slot for each channel, so by definition immovableTrackGUIDs_.size is number of channels
-    int NumChannels() { return (int)immovableTrackGUIDs_.size(); }
+    int NumChannels() { return numChannels_; }
     
     bool DidTrackListChange();
 
@@ -486,15 +496,6 @@ private:
         }
         
         return nullptr;
-    }
-    
-    bool isInImmovableTrackGUIDS(string trackGUID)
-    {
-        for(auto & immovableTrackGUID : immovableTrackGUIDs_)
-            if(immovableTrackGUID == trackGUID)
-                return true;
-        
-        return false;
     }
     
     void SetSynchronized(bool isSynchronized)

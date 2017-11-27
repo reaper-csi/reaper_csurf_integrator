@@ -223,7 +223,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class VUMeter_MidifWidget : public MidiWidget
+class VUMeter_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -231,7 +231,7 @@ private:
     double maxDB_ = 0.0;
 
 public:
-    VUMeter_MidifWidget(string name, CSurfChannel* channel, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidiWidget(string name, CSurfChannel* channel, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     
