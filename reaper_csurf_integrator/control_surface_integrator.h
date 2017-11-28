@@ -133,9 +133,10 @@ class CSurfChannel
 private:
     string GUID_ = "";
     RealCSurf* surface_= nullptr;
+    bool isBankable_ = true;
     bool isMovable_ = true;
     vector<MidiWidget*> widgets_;
-    int shouldMapSubChannels_ = 0;
+    bool shouldMapSubChannels_ = false;
     vector<SubChannel*> subChannels_;
 
 public:
@@ -143,15 +144,17 @@ public:
     
     CSurfChannel(string GUID, RealCSurf* surface) : GUID_(GUID), surface_(surface) {}
     
-    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable) : GUID_(GUID), surface_(surface), isMovable_(isMovable) {}
+    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable, bool isBankable) : GUID_(GUID), surface_(surface), isMovable_(isMovable), isBankable_(isBankable) {}
     
-    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable, int shouldMapSubChannels) : GUID_(GUID), surface_(surface), isMovable_(isMovable), shouldMapSubChannels_(shouldMapSubChannels) {}
+    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable, bool isBankable, bool shouldMapSubChannels) : GUID_(GUID), surface_(surface), isMovable_(isMovable), isBankable_(isBankable), shouldMapSubChannels_(shouldMapSubChannels) {}
     
     string GetGUID() { return GUID_; }
 
     RealCSurf* GetSurface() { return surface_; }
     
     bool GetIsMovable() { return isMovable_; }
+    
+    bool GetIsBankable() { return isBankable_; }
     
     vector<MidiWidget*> GetWidgets() { return widgets_; }
     
@@ -176,7 +179,13 @@ public:
     void SetGUID(string GUID)
     {
         if(isMovable_)
+        {
             GUID_ = GUID;
+         
+            // GAW TBD causes exception currently
+            //if(shouldMapSubChannels_ && DAW::GetTrackFromGUID(GUID) != nullptr)
+                //MapFX(DAW::GetTrackFromGUID(GUID));
+        }
     }
     
     void MapFX(MediaTrack *trackid);
@@ -238,6 +247,17 @@ public:
         channels_.push_back(channel);
     }
     
+    // to Actions ->
+    void Update(string GUID, string name);
+    void ForceUpdate(string GUID, string name);
+    void CycleAction(string trackGUID, string name);
+    void RunAction(string GUID, string name, double value);
+    
+    void Update(string GUID, string subGUID, string name);
+    void ForceUpdate(string GUID, string subGUID, string name);
+    void CycleAction(string trackGUID, string subGUID, string name);
+    void RunAction(string GUID, string subGUID, string name, double value);
+
     // to Widgets ->
     virtual void Update();
     virtual void ForceUpdate();
@@ -588,15 +608,15 @@ public:
     void MapFX(MediaTrack* track);
 
     // to Actions ->
-    void Update(string GUID, string name);
-    void ForceUpdate(string GUID, string name);
-    void CycleAction(string trackGUID, string name);
-    void RunAction(string GUID, string name, double value);
+    void Update(string surfaceName, string GUID, string name);
+    void ForceUpdate(string surfaceName, string GUID, string name);
+    void CycleAction(string surfaceName, string trackGUID, string name);
+    void RunAction(string surfaceName, string GUID, string name, double value);
     
-    void Update(string GUID, string subGUID, string name);
-    void ForceUpdate(string GUID, string subGUID, string name);
-    void CycleAction(string trackGUID, string subGUID, string name);
-    void RunAction(string GUID, string subGUID, string name, double value);
+    void Update(string surfaceName, string GUID, string subGUID, string name);
+    void ForceUpdate(string surfaceName, string GUID, string subGUID, string name);
+    void CycleAction(string surfaceName, string trackGUID, string subGUID, string name);
+    void RunAction(string surfaceName, string GUID, string subGUID, string name, double value);
     
     // to Widgets ->
     void ForceUpdate();
