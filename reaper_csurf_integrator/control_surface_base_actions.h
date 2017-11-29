@@ -22,9 +22,9 @@ protected:
 
     virtual double GetValue() { return 0.0; }
     
-    virtual void SetWidgetValue(double value) override
+    virtual void SetWidgetValue(string surfaceName, double value) override
     {
-        GetInteractor()->SetWidgetValue(GetName(), value);
+        GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
     }
     
 public:
@@ -33,17 +33,17 @@ public:
         return currentValue_;
     }
     
-    virtual void Update() override
+    virtual void UpdateAction(string surfaceName) override
     {
         double newValue = GetValue();
         
         if(currentValue_ != newValue)
-            SetWidgetValue(currentValue_ = newValue);
+            SetWidgetValue(surfaceName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate() override
+    virtual void ForceUpdateAction(string surfaceName) override
     {
-        SetWidgetValue(currentValue_);
+        SetWidgetValue(surfaceName, currentValue_);
     }
 };
 
@@ -68,25 +68,25 @@ public:
         actions_.push_back(action);
     }
    
-    virtual void Update() override
+    virtual void UpdateAction(string surfaceName) override
     {
-        actions_[currentIndex_]->Update();
+        actions_[currentIndex_]->UpdateAction(surfaceName);
     }
     
-    virtual void ForceUpdate() override
+    virtual void ForceUpdateAction(string surfaceName) override
     {
-        actions_[currentIndex_]->ForceUpdate();
+        actions_[currentIndex_]->ForceUpdateAction(surfaceName);
     }
     
-    virtual void Cycle() override
+    virtual void CycleAction(string surfaceName) override
     {
         currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
-        actions_[currentIndex_]->ForceUpdate();
+        actions_[currentIndex_]->CycleAction(surfaceName);
     }
     
-    virtual void RunAction(double adjustment) override
+    virtual void RunAction(string surfaceName, double adjustment) override
     {
-        actions_[currentIndex_]->RunAction(adjustment);
+        actions_[currentIndex_]->RunAction(surfaceName, adjustment);
     }
 };
 
@@ -99,25 +99,25 @@ protected:
     
     virtual string GetValue() { return ""; }
     
-    virtual void SetWidgetValue(string value) override
+    virtual void SetWidgetValue(string surfaceName, string value) override
     {
-        GetInteractor()->SetWidgetValue(GetName(), value);
+        GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
     }
     
 public:
     StringDisplayAction(string name, Interactor* interactor) : Action(name, interactor) {}
     
-    virtual void Update() override
+    virtual void UpdateAction(string surfaceName) override
     {
         string newValue = GetValue();
         
         if(currentValue_ != newValue)
-            SetWidgetValue(currentValue_ = newValue);
+            SetWidgetValue(surfaceName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate() override
+    virtual void ForceUpdateAction(string surfaceName) override
     {
-        SetWidgetValue(currentValue_);
+        SetWidgetValue(surfaceName, currentValue_);
     }
 };
 

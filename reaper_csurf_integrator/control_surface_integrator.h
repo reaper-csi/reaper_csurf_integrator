@@ -192,16 +192,17 @@ public:
 
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
     
+    // to Widgets ->
+    virtual void UpdateWidgets();
+    virtual void ForceUpdateWidgets();
+    
     // to Actions ->
-    void Update(string name);
-    void ForceUpdate(string name);
+    void UpdateAction(string name);
+    void ForceUpdateAction(string name);
     void CycleAction(string name);
     void RunAction(string name, double value);
 
     // to Widgets ->
-    virtual void Update();
-    virtual void ForceUpdate();
-    
     virtual void SetWidgetValue(string name, double value);
     virtual void SetWidgetValue(string name, double value, int mode);
     virtual void SetWidgetValue(string name, string value);
@@ -247,21 +248,23 @@ public:
         channels_.push_back(channel);
     }
     
+    
+    // to Widgets ->
+    virtual void UpdateWidgets();
+    virtual void ForceUpdateWidgets();
+
     // to Actions ->
-    void Update(string GUID, string name);
-    void ForceUpdate(string GUID, string name);
+    void UpdateAction(string GUID, string name);
+    void ForceUpdateAction(string GUID, string name);
     void CycleAction(string trackGUID, string name);
     void RunAction(string GUID, string name, double value);
     
-    void Update(string GUID, string subGUID, string name);
-    void ForceUpdate(string GUID, string subGUID, string name);
+    void UpdateAction(string GUID, string subGUID, string name);
+    void ForceUpdateAction(string GUID, string subGUID, string name);
     void CycleAction(string trackGUID, string subGUID, string name);
     void RunAction(string GUID, string subGUID, string name, double value);
 
     // to Widgets ->
-    virtual void Update();
-    virtual void ForceUpdate();
-    
     void SetWidgetValue(string GUID, string name, double value);
     void SetWidgetValue(string GUID, string name, double value, int mode);
     void SetWidgetValue(string GUID, string name, string value);
@@ -280,8 +283,8 @@ private:
     Interactor* interactor_ = nullptr;
 
 protected:
-    virtual void SetWidgetValue(double value) {}
-    virtual void SetWidgetValue(string value) {}
+    virtual void SetWidgetValue(string surfaceName, double value) {}
+    virtual void SetWidgetValue(string surfaceName, string value) {}
 
     Action(string name, Interactor* interactor) : name_(name), interactor_(interactor) {}
     
@@ -300,10 +303,10 @@ public:
 
     virtual void AddAction(Action* action) {}
     
-    virtual void Update() {}
-    virtual void ForceUpdate() {}
-    virtual void Cycle() {}
-    virtual void RunAction(double value) {}
+    virtual void UpdateAction(string surfaceName) {}
+    virtual void ForceUpdateAction(string surfaceName) {}
+    virtual void CycleAction(string surfaceName) {}
+    virtual void RunAction(string surfaceName, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -369,24 +372,24 @@ public:
     }
     
     // to Actions ->
-    void Update(string name);
-    void ForceUpdate(string name);
-    void Cycle(string name);
-    void RunAction(string name, double value);
+    void UpdateAction(string surfaceName, string name);
+    void ForceUpdateAction(string surfaceName, string name);
+    void CycleAction(string surfaceName, string name);
+    void RunAction(string surfaceName, string name, double value);
     
-    void Update(string subGUID, string name);
-    void ForceUpdate(string subGUID, string name);
-    void Cycle(string subGUID, string name);
-    void RunAction(string subGUID, string name, double value);
+    void UpdateAction(string surfaceName, string subGUID, string name);
+    void ForceUpdateAction(string surfaceName, string subGUID, string name);
+    void CycleAction(string surfaceName, string subGUID, string name);
+    void RunAction(string surfaceName, string subGUID, string name, double value);
     
     // to Widgets ->
-    virtual void SetWidgetValue(string name, double value);
-    virtual void SetWidgetValue(string name, double value, int mode);
-    virtual void SetWidgetValue(string name, string value);
+    virtual void SetWidgetValue(string surfaceName, string name, double value);
+    virtual void SetWidgetValue(string surfaceName, string name, double value, int mode);
+    virtual void SetWidgetValue(string surfaceName, string name, string value);
     
-    void SetWidgetValue(string SubGUID, string name, double value);
-    void SetWidgetValue(string SubGUID, string name, double value, int mode);
-    void SetWidgetValue(string SubGUID, string name, string value);
+    void SetWidgetValue(string surfaceName, string SubGUID, string name, double value);
+    void SetWidgetValue(string surfaceName, string SubGUID, string name, double value, int mode);
+    void SetWidgetValue(string surfaceName, string SubGUID, string name, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -405,12 +408,12 @@ public:
 
     SubInteractor(string subGUID, int index, Interactor* interactor) : Interactor(interactor->GetGUID(), interactor->GetLogicalSurface()), subGUID_(subGUID), index_(index), interactor_(interactor) {}
     
-    virtual string GetGUID() { return subGUID_; }
+    virtual string GetSubGUID() { return subGUID_; }
     virtual int GetIndex() override { return index_; }
     
-    virtual void SetWidgetValue(string name, double value) override;
-    virtual void SetWidgetValue(string name, double value, int mode) override;
-    virtual void SetWidgetValue(string name, string value) override;
+    virtual void SetWidgetValue(string surfaceName, string name, double value) override;
+    virtual void SetWidgetValue(string surfaceName, string name, double value, int mode) override;
+    virtual void SetWidgetValue(string surfaceName, string name, string value) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -580,7 +583,8 @@ public:
     {
         isFlipped_ = ! isFlipped_;
         
-        SetWidgetValue("", name, isFlipped_);
+        // GAW TBD
+        //SetWidgetValue("", name, isFlipped_);
     }
 
     void Initialize();
@@ -597,7 +601,7 @@ public:
     void SetAlt(bool value) { alt_ = value; ForceUpdate(); }
     void SetZoom(bool value) { zoom_ = value; ForceUpdate(); }
     void SetScrub(bool value) { scrub_ = value; ForceUpdate(); }
-
+    
     void RefreshLayout();
 
     void AdjustTrackBank(int stride);
@@ -607,27 +611,28 @@ public:
     void TrackFXListChanged(MediaTrack* track);
     void MapFX(MediaTrack* track);
 
+    // to Widgets ->
+    void ForceUpdate();
+    
     // to Actions ->
-    void Update(string surfaceName, string GUID, string name);
-    void ForceUpdate(string surfaceName, string GUID, string name);
+    void UpdateAction(string surfaceName, string GUID, string name);
+    void ForceUpdateAction(string surfaceName, string GUID, string name);
     void CycleAction(string surfaceName, string trackGUID, string name);
     void RunAction(string surfaceName, string GUID, string name, double value);
     
-    void Update(string surfaceName, string GUID, string subGUID, string name);
-    void ForceUpdate(string surfaceName, string GUID, string subGUID, string name);
+    void UpdateAction(string surfaceName, string GUID, string subGUID, string name);
+    void ForceUpdateAction(string surfaceName, string GUID, string subGUID, string name);
     void CycleAction(string surfaceName, string trackGUID, string subGUID, string name);
     void RunAction(string surfaceName, string GUID, string subGUID, string name, double value);
     
     // to Widgets ->
-    void ForceUpdate();
-
-    void SetWidgetValue(string GUID, string name, double value);
-    void SetWidgetValue(string GUID, string name, double value, int mode);
-    void SetWidgetValue(string GUID, string name, string value);
+    void SetWidgetValue(string surfaceName, string GUID, string name, double value);
+    void SetWidgetValue(string surfaceName, string GUID, string name, double value, int mode);
+    void SetWidgetValue(string surfaceName, string GUID, string name, string value);
     
-    void SetWidgetValue(string GUID, string subGUID, string name, double value);
-    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
-    void SetWidgetValue(string GUID, string subGUID, string name, string value);
+    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, double value);
+    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, double value, int mode);
+    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, string value);
     
 };
 
