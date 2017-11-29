@@ -1396,44 +1396,44 @@ void Interactor::RunAction(string surfaceName, string name, double value)
 void Interactor::UpdateAction(string surfaceName, string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->UpdateAction(surfaceName, name);
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->UpdateAction(surfaceName, name);
 }
 
 void Interactor::ForceUpdateAction(string surfaceName, string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->ForceUpdateAction(surfaceName, name);
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->ForceUpdateAction(surfaceName, name);
 }
 
 void Interactor::CycleAction(string surfaceName, string subGUID, string name)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->CycleAction(surfaceName, name);
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->CycleAction(surfaceName, name);
 }
 
 void Interactor::RunAction(string surfaceName, string subGUID, string name, double value)
 {
     for(auto * subInteractor : fxSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->RunAction(surfaceName, name, value);
     
     for(auto * subInteractor : sendSubInteractors_)
-        if(subInteractor->GetGUID() == subGUID)
+        if(subInteractor->GetSubGUID() == subGUID)
             subInteractor->RunAction(surfaceName, name, value);
 }
 
