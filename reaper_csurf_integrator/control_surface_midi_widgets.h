@@ -385,7 +385,7 @@ public:
     virtual void RunAndUpdate() override
     {
         HandleMidiInput();
-        RealCSurf::Update();
+        RealCSurf::UpdateWidgets();
     }
 };
 

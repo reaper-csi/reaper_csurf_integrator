@@ -16,7 +16,7 @@ class Flip_Action : public DoubleAction
 public:
     Flip_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->ToggleFlipped(GetName());
     }
@@ -30,7 +30,7 @@ public:
     
     Shift_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetShift(value);
     }
@@ -44,7 +44,7 @@ public:
     
     Option_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetOption(value);
     }
@@ -58,7 +58,7 @@ public:
     
     Control_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetControl(value);
     }
@@ -72,7 +72,7 @@ public:
     
     Alt_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetAlt(value);
     }
@@ -90,20 +90,20 @@ public:
     
     virtual void SetValue(double value) {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         if(value != 0)
         {
             lastPressed_ = clock();
             SetValue(value);
-            GetInteractor()->SetWidgetValue(GetName(), value);
+            GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(value);
-                GetInteractor()->SetWidgetValue(GetName(), value);
+                GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
             }
         }
     }
@@ -145,7 +145,7 @@ public:
     
     NextMap_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->GetManager()->NextLogicalSurface();
     }
@@ -162,7 +162,7 @@ public:
     
     TrackBank_Action(string name, Interactor* interactor, int stride) : DoubleAction(name, interactor), stride_(stride)   {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->AdjustTrackBank(stride_);
     }
@@ -176,7 +176,7 @@ public:
     
     ImmobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->ImmobilizeSelectedTracks();
     }
@@ -190,7 +190,7 @@ public:
     
     MobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(double value) override
+    virtual void RunAction(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->MobilizeSelectedTracks();
     }
