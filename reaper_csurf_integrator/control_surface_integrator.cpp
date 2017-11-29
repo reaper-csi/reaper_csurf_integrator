@@ -826,21 +826,21 @@ void LogicalSurface::UpdateAction(string surfaceName, string GUID, string subGUI
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->UpdateAction(subGUID, ModifiedNameFor(name));
+            interactor->UpdateAction(surfaceName, subGUID, ModifiedNameFor(name));
 }
 
 void LogicalSurface::ForceUpdateAction(string surfaceName, string GUID, string subGUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->ForceUpdateAction(subGUID, ModifiedNameFor(name));
+            interactor->ForceUpdateAction(surfaceName, subGUID, ModifiedNameFor(name));
 }
 
 void LogicalSurface::CycleAction(string surfaceName, string GUID, string subGUID, string name)
 {
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->CycleAction(subGUID, ModifiedNameFor(name));
+            interactor->CycleAction(surfaceName, subGUID, ModifiedNameFor(name));
 }
 
 void LogicalSurface::RunAction(string surfaceName, string GUID, string subGUID, string name, double value)
@@ -849,7 +849,7 @@ void LogicalSurface::RunAction(string surfaceName, string GUID, string subGUID, 
     
     for(auto & interactor : interactors_)
         if(interactor->GetGUID() == GUID)
-            interactor->RunAction(subGUID, ModifiedNameFor(flipName), value);
+            interactor->RunAction(surfaceName, subGUID, ModifiedNameFor(flipName), value);
 }
 
 // to Widgets ->
