@@ -18,7 +18,7 @@ public:
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->ToggleFlipped(GetName());
+        GetInteractor()->GetLogicalSurface()->ToggleFlipped(surfaceName, GetName());
     }
 };
 
@@ -32,7 +32,7 @@ public:
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetShift(value);
+        GetInteractor()->GetLogicalSurface()->SetShift(surfaceName, value);
     }
 };
 
@@ -46,7 +46,7 @@ public:
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetOption(value);
+        GetInteractor()->GetLogicalSurface()->SetOption(surfaceName, value);
     }
 };
 
@@ -60,7 +60,7 @@ public:
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetControl(value);
+        GetInteractor()->GetLogicalSurface()->SetControl(surfaceName, value);
     }
 };
 
@@ -74,7 +74,7 @@ public:
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetAlt(value);
+        GetInteractor()->GetLogicalSurface()->SetAlt(surfaceName, value);
     }
 };
 
@@ -88,21 +88,21 @@ public:
     
     Latched_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void SetValue(double value) {}
+    virtual void SetValue(string surfaceName, double value) {}
     
     virtual void RunAction(string surfaceName, double value) override
     {
         if(value != 0)
         {
             lastPressed_ = clock();
-            SetValue(value);
+            SetValue(surfaceName, value);
             GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
-                SetValue(value);
+                SetValue(surfaceName, value);
                 GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
             }
         }
@@ -117,9 +117,9 @@ public:
     
     LatchedZoom_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
-    virtual void SetValue(double value) override
+    virtual void SetValue(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetZoom(value);
+        GetInteractor()->GetLogicalSurface()->SetZoom(surfaceName, value);
     }
 };
 
@@ -131,9 +131,9 @@ public:
     
     LatchedScrub_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
-    virtual void SetValue(double value) override
+    virtual void SetValue(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetScrub(value);
+        GetInteractor()->GetLogicalSurface()->SetScrub(surfaceName, value);
     }
 };
 

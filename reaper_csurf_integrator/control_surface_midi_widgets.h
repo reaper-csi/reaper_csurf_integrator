@@ -111,7 +111,7 @@ public:
         {
             double volume = int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]);
             
-            if( ! GetChannel()->GetSurface()->GetLogicalSurface()->IsFlipped())
+            if( ! GetChannel()->GetSurface()->IsFlipped())
             {
                 
                 //volume *= (GetMaxDB() - GetMinDB()) / (Surface()->Manager()->GetFaderMaxDB() - Surface()->Manager()->GetFaderMinDB());
