@@ -508,7 +508,7 @@ private:
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
     vector<Interactor*> interactors_;
-    int numBankableChannels_ = 0;
+    int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
 
@@ -516,7 +516,7 @@ private:
     void BuildTrackInteractors2();
     void BuildCSurfWidgets();
 
-    int GetNumBankableChannels() { return numBankableChannels_; }
+    int GetNumLogicalChannels() { return numLogicalChannels_; }
     
     bool DidTrackListChange();
     
