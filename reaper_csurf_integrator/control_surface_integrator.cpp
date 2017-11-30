@@ -733,8 +733,6 @@ void LogicalSurface::InitializeSurfaces()
                 
             }
         }
-
-    
     
     while (fgets(localBuf, sizeof(localBuf), filePtr))
     {
@@ -786,8 +784,10 @@ void LogicalSurface::InitializeSurfaces()
         if(name != string("Console1"))
             bankGroup = "Avid";
         
-        AddSurface(new MidiCSurf(name, this, bankGroup, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor, VSTMonitor));
+        AddSurface(new MidiCSurf(name, this, bankGroup, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
+    
+    VSTMonitor_ = VSTMonitor;
     
     fclose ( filePtr );
 }
@@ -1091,12 +1091,11 @@ void LogicalSurface::MapFX(MediaTrack* track)
             
             interactor->AddFXSubInteractor(subInteractor);
         }
-        else
+        else if(GetVSTMonitor())
         {
-            /*
             ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
 
-            numParameters = TrackFX_GetNumParams(track, i);
+            int numParameters = TrackFX_GetNumParams(track, i);
 
             for(int j = 0; j < numParameters; j++)
             {
@@ -1105,7 +1104,6 @@ void LogicalSurface::MapFX(MediaTrack* track)
                 
                 ShowConsoleMsg((fxParamName + "\n").c_str());
             }
-             */
         }
     }
 }
