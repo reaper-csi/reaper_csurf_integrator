@@ -624,7 +624,7 @@ void LogicalSurface::BuildCSurfWidgets()
                 channel->AddWidget(new PushButton_MidiWidget(Select, channel,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
             
                 surface->AddChannel(channel);
-                numBankableChannels_++;
+                numLogicalChannels_++;
             }
         }
     }
@@ -950,8 +950,8 @@ void LogicalSurface::AdjustTrackBank(int stride)
     
     trackOffset_ += stride;
     
-    if(trackOffset_ < 1 - GetNumBankableChannels())
-        trackOffset_ = 1 - GetNumBankableChannels();
+    if(trackOffset_ < 1 - GetNumLogicalChannels())
+        trackOffset_ = 1 - GetNumLogicalChannels();
     
     if(trackOffset_ > DAW::GetNumTracks())
         trackOffset_ = DAW::GetNumTracks();
