@@ -215,7 +215,6 @@ private:
     string bankGroup_ = "";
     int numBankableChannels_ = 0;
     vector<CSurfChannel*> channels_;
-    bool VSTMonitor_ = false;
     
     bool isFlipped_ = false;
 
@@ -289,7 +288,7 @@ private:
 public:
     virtual ~RealCSurf() {};
     
-    RealCSurf(const string name, LogicalSurface* logicalSurface, string bankGroup, int numBankableChannels, bool VSTMonitor) : name_(name), logicalSurface_(logicalSurface), bankGroup_(bankGroup), numBankableChannels_(numBankableChannels), VSTMonitor_(VSTMonitor) {}
+    RealCSurf(const string name, LogicalSurface* logicalSurface, string bankGroup, int numBankableChannels) : name_(name), logicalSurface_(logicalSurface), bankGroup_(bankGroup), numBankableChannels_(numBankableChannels) {}
     
     const string GetName() const { return name_; }
 
@@ -300,8 +299,6 @@ public:
     int GetNumBankableChannels() { return numBankableChannels_; }
     
     double GetCurrentNormalizedValue(string GUID, string name);
-
-    bool GetVSTMonitor() { return VSTMonitor_; }
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     
@@ -513,6 +510,7 @@ private:
     vector<Interactor*> interactors_;
     int numBankableChannels_ = 0;
     int trackOffset_ = 0;
+    bool VSTMonitor_ = false;
 
     void BuildTrackInteractors();
     void BuildTrackInteractors2();
@@ -551,6 +549,8 @@ public:
     
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
     
+    bool GetVSTMonitor() { return VSTMonitor_; }
+
     RealCSurf* GetSurface(string name)
     {
         for(auto* surface : surfaces_)
@@ -836,8 +836,8 @@ class OSCCSurf : public RealCSurf
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(LogicalSurface* surface, const string name, bool VSTMonitor)
-    : RealCSurf(name, surface, "OSC", 8, VSTMonitor) {}
+    OSCCSurf(LogicalSurface* surface, const string name)
+    : RealCSurf(name, surface, "OSC", 8) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -847,8 +847,8 @@ class WebCSurf : public RealCSurf
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(LogicalSurface* surface, const string name, bool VSTMonitor)
-    : RealCSurf(name, surface, "Web", 8, VSTMonitor) {};
+    WebCSurf(LogicalSurface* surface, const string name)
+    : RealCSurf(name, surface, "Web", 8) {};
 };
 
 #endif /* control_surface_integrator.h */
