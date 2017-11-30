@@ -221,7 +221,76 @@ private:
     LogicalSurface* logicalSurface_ = nullptr;
     const int numChannels_ = 0;
     vector<CSurfChannel*> channels_;
+    
+    bool isFlipped_ = false;
 
+    bool shift_ = false;
+    bool option_ = false;
+    bool control_ = false;
+    bool alt_ = false;
+    bool zoom_ = false;
+    bool scrub_ = false;
+    
+    string CurrentModifers()
+    {
+        string modifiers = "";
+        
+        if(shift_)
+            modifiers += Shift;
+        if(option_)
+            modifiers += Option;
+        if(control_)
+            modifiers +=  Control;
+        if(alt_)
+            modifiers += Alt;
+        
+        return modifiers;
+    }
+    
+    string FlipNameFor(string name)
+    {
+        if(name == Volume && isFlipped_)
+            return Pan;
+        else if(name == Pan && isFlipped_)
+            return Volume;
+        else
+            return name;
+    }
+    
+    string ModifiedNameFor(string name)
+    {
+        if(name == Shift || name == Option || name == Control || name == Alt)
+            return name;
+        
+        if(CurrentModifers() != "")
+            return CurrentModifers() + "#" + name;
+        else return name;
+    }
+    
+    string UnmodifiedNameFor(string name)
+    {
+        vector<string> tokens;
+        
+        SplitString(name, tokens, '#');
+        
+        if(tokens.size() == 1)
+            return name;
+        else
+            return tokens[1];
+    }
+    
+    bool IsOKToSetWidget(string name)
+    {
+        vector<string> tokens;
+        
+        SplitString(name, tokens, '#');
+        
+        if((tokens.size() == 1 && CurrentModifers() == "") || (tokens.size() > 0 && tokens[0] == CurrentModifers()))
+            return true;
+        else
+            return false;
+    }
+    
 public:
     virtual ~RealCSurf() {};
     
@@ -234,6 +303,8 @@ public:
     const int GetNumChannels() const { return numChannels_; }
 
     vector<CSurfChannel*> & GetChannels() { return channels_; }
+
+    double GetCurrentNormalizedValue(string GUID, string name);
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     
@@ -248,7 +319,25 @@ public:
         channels_.push_back(channel);
     }
     
+    void ToggleFlipped(string name)
+    {
+        isFlipped_ = ! isFlipped_;
+        
+        // GAW TBD
+        //SetWidgetValue("", name, isFlipped_);
+    }
     
+    void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
+    void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
+    void SetControl(bool value) { control_ = value; ForceUpdateWidgets(); }
+    void SetAlt(bool value) { alt_ = value; ForceUpdateWidgets(); }
+    void SetZoom(bool value) { zoom_ = value; ForceUpdateWidgets(); }
+    void SetScrub(bool value) { scrub_ = value; ForceUpdateWidgets(); }
+    
+    bool IsZoom() { return zoom_; }
+    bool IsScrub() { return scrub_; }
+    bool IsFlipped() { return isFlipped_; }
+
     // to Widgets ->
     virtual void UpdateWidgets();
     virtual void ForceUpdateWidgets();
@@ -425,18 +514,8 @@ private:
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
     vector<Interactor*> interactors_;
-    bool isSynchronized_ = false;
-    bool isFlipped_ = false;
     int numChannels_ = 0;
     int trackOffset_ = 0;
-    
-    bool shift_ = false;
-    bool option_ = false;
-    bool control_ = false;
-    bool alt_ = false;
-    
-    bool zoom_ = false;
-    bool scrub_ = false;
 
     void BuildTrackInteractors();
     void BuildTrackInteractors2();
@@ -445,65 +524,10 @@ private:
     int NumChannels() { return numChannels_; }
     
     bool DidTrackListChange();
-
-    string CurrentModifers()
-    {
-        string modifiers = "";
-        
-        if(shift_)
-            modifiers += Shift;
-        if(option_)
-            modifiers += Option;
-        if(control_)
-            modifiers +=  Control;
-        if(alt_)
-            modifiers += Alt;
-        
-        return modifiers;
-    }
     
-    string FlipNameFor(string name)
+    void AddFXMap(FXMap* fxMap)
     {
-        if(name == Volume && isFlipped_)
-            return Pan;
-        else if(name == Pan && isFlipped_)
-            return Volume;
-        else
-            return name;
-    }
-    
-    string ModifiedNameFor(string name)
-    {
-        if(name == Shift || name == Option || name == Control || name == Alt)
-            return name;
-        
-        if(CurrentModifers() != "")
-            return CurrentModifers() + "#" + name;
-        else return name;
-    }
-    
-    string UnmodifiedNameFor(string name)
-    {
-        vector<string> tokens;
-        
-        SplitString(name, tokens, '#');
-        
-        if(tokens.size() == 1)
-            return name;
-        else
-            return tokens[1];
-    }
-    
-    bool IsOKToSetWidget(string name)
-    {
-        vector<string> tokens;
-        
-        SplitString(name, tokens, '#');
-        
-        if((tokens.size() == 1 && CurrentModifers() == "") || (tokens.size() > 0 && tokens[0] == CurrentModifers()))
-            return true;
-        else
-            return false;
+        fxMaps_[fxMap->GetName()] = fxMap;
     }
     
     CSurfChannel* Channel(int wantChannel)
@@ -519,16 +543,6 @@ private:
         }
         
         return nullptr;
-    }
-    
-    void SetSynchronized(bool isSynchronized)
-    {
-        isSynchronized_ = isSynchronized;
-    }
-    
-    void AddFXMap(FXMap* fxMap)
-    {
-        fxMaps_[fxMap->GetName()] = fxMap;
     }
     
     void AddInteractor(Interactor* interactor)
@@ -555,11 +569,14 @@ public:
     
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
     
-    bool IsZoom() { return zoom_; }
-    
-    bool IsScrub() { return scrub_; }
-    
-    bool IsFlipped() { return isFlipped_; }
+    RealCSurf* GetSurface(string name)
+    {
+        for(auto* surface : surfaces_)
+            if(surface->GetName() == name)
+                return surface;
+        
+        return nullptr;
+    }
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -578,14 +595,6 @@ public:
         if(DidTrackListChange())
             RebuildInteractors();
     }
-    
-    void ToggleFlipped(string name)
-    {
-        isFlipped_ = ! isFlipped_;
-        
-        // GAW TBD
-        //SetWidgetValue("", name, isFlipped_);
-    }
 
     void Initialize();
     void Initialize2();
@@ -593,17 +602,16 @@ public:
     void InitializeSurfaces();
     void InitializeLogicalCSurfInteractors();
     
-    double GetCurrentNormalizedValue(string trackGUID, string name);
-    
-    void SetShift(bool value) { shift_ = value; ForceUpdate(); }
-    void SetOption(bool value) { option_ = value; ForceUpdate(); }
-    void SetControl(bool value) { control_ = value; ForceUpdate(); }
-    void SetAlt(bool value) { alt_ = value; ForceUpdate(); }
-    void SetZoom(bool value) { zoom_ = value; ForceUpdate(); }
-    void SetScrub(bool value) { scrub_ = value; ForceUpdate(); }
-    
     void RefreshLayout();
 
+    void ToggleFlipped(string surfaceName, string name);
+    void SetShift(string surfaceName, bool value);
+    void SetOption(string surfaceName, bool value);
+    void SetControl(string surfaceName, bool value);
+    void SetAlt(string surfaceName, bool value);
+    void SetZoom(string surfaceName, bool value);
+    void SetScrub(string surfaceName, bool value);
+    
     void AdjustTrackBank(int stride);
     void ImmobilizeSelectedTracks();
     void MobilizeSelectedTracks();
@@ -615,6 +623,8 @@ public:
     void ForceUpdate();
     
     // to Actions ->
+    double GetCurrentNormalizedValue(string trackGUID, string name);
+
     void UpdateAction(string surfaceName, string GUID, string name);
     void ForceUpdateAction(string surfaceName, string GUID, string name);
     void CycleAction(string surfaceName, string trackGUID, string name);
