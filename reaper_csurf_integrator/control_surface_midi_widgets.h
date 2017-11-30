@@ -327,6 +327,7 @@ private:
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
 
+
     void HandleMidiInput()
     {
         if(midiInput_)
@@ -360,8 +361,8 @@ public:
         if(midiOutput_) delete midiOutput_;
     }
     
-    MidiCSurf(const string name, LogicalSurface* logicalSurface, const int numSurfaceChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealCSurf(name, logicalSurface, numSurfaceChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    MidiCSurf(const string name, LogicalSurface* logicalSurface, string bankGroup, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool VSTMonitor)
+    : RealCSurf(name, logicalSurface, bankGroup, numChannels, VSTMonitor), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
