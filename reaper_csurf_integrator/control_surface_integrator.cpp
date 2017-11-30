@@ -421,12 +421,8 @@ void LogicalSurface::BuildCSurfWidgets()
     
     int currentChannel = 0;
     
-    int totalNumChannels = 0;
-    
     for(auto & surface : surfaces_)
     {
-        totalNumChannels += surface->GetNumChannels();
-        
         if(surface->GetName() == "Console1")
         {
             /*
@@ -462,7 +458,7 @@ void LogicalSurface::BuildCSurfWidgets()
 */
             
             
-            channel = new CSurfChannel( "", surface, false, false, true);
+            channel = new CSurfChannel( "", surface, true, true);
 
             
             channel->AddWidget(new PushButton_MidiWidget("Order", channel,                 new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -608,15 +604,13 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new PushButton_MidiWidget(Play, channel,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(Record, channel,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
 
-            
             surface->AddChannel(channel);
             
-            
-            for(int i = 0; i < surface->GetNumChannels(); ++i)
+            for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
             {
                 string trackGUID = DAW::GetTrackGUIDAsString(currentChannel++);
                 
-                channel = new CSurfChannel(trackGUID, surface);
+                channel = new CSurfChannel(trackGUID, surface, true, false);
             
                 channel->AddWidget(new Display_MidiWidget(TrackDisplay, channel, i));
             
@@ -630,11 +624,10 @@ void LogicalSurface::BuildCSurfWidgets()
                 channel->AddWidget(new PushButton_MidiWidget(Select, channel,     new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
             
                 surface->AddChannel(channel);
+                numBankableChannels_++;
             }
         }
     }
-    
-    numChannels_ = totalNumChannels;
 }
 
 void LogicalSurface::InitializeSurfaces()
@@ -720,8 +713,27 @@ void LogicalSurface::InitializeSurfaces()
             }
         }
     
-    // Midi monitoring //////////////////////////
+    // VST monitoring //////////////////////////
+    bool VSTMonitor = false;
     
+    p = strtok (localBuf,"=");
+    
+    strcpy( optionName, p );
+    
+    if(!strcmp(optionName, "VSTMonitor"))
+        if(p != NULL)
+        {
+            p = strtok(NULL, "=");
+            
+            if(p != NULL)
+            {
+                strcpy( optionValue, p );
+                if(!strcmp(optionValue, "On\n"))
+                    VSTMonitor = true;
+                
+            }
+        }
+
     
     
     while (fgets(localBuf, sizeof(localBuf), filePtr))
@@ -731,7 +743,7 @@ void LogicalSurface::InitializeSurfaces()
         
         int index = 0;
         char name[512];
-        char numFadersString[512];
+        char numBankableChannelsString[512];
         char channelInString[512];
         char channelOutString[512];
       
@@ -746,7 +758,7 @@ void LogicalSurface::InitializeSurfaces()
             
             if( p != NULL && index == 1)
             {
-                strcpy(numFadersString, p);
+                strcpy(numBankableChannelsString, p);
                 index++;
             }
             else if(p != NULL && index == 2)
@@ -761,15 +773,20 @@ void LogicalSurface::InitializeSurfaces()
             }
         }
         
-        int numFaders = atoi(numFadersString);
-        
+        int numBankableChannels = atoi(numBankableChannelsString);
+
         int channelIn = atoi(channelInString);
         channelIn--; // MIDI channels are 0  based
         
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        AddSurface(new MidiCSurf(name, this, numFaders, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+        string bankGroup = "";
+        
+        if(name != string("Console1"))
+            bankGroup = "Avid";
+        
+        AddSurface(new MidiCSurf(name, this, bankGroup, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor, VSTMonitor));
     }
     
     fclose ( filePtr );
@@ -933,8 +950,8 @@ void LogicalSurface::AdjustTrackBank(int stride)
     
     trackOffset_ += stride;
     
-    if(trackOffset_ < 1 - NumChannels())
-        trackOffset_ = 1 - NumChannels();
+    if(trackOffset_ < 1 - GetNumBankableChannels())
+        trackOffset_ = 1 - GetNumBankableChannels();
     
     if(trackOffset_ > DAW::GetNumTracks())
         trackOffset_ = DAW::GetNumTracks();
@@ -945,22 +962,26 @@ void LogicalSurface::AdjustTrackBank(int stride)
 
 void LogicalSurface::ImmobilizeSelectedTracks()
 {
+    /*
     for(int i = 0; i < NumChannels(); i++)
         if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
             Channel(i)->SetIsMovable(false);
+     */
 }
 
 void LogicalSurface::MobilizeSelectedTracks()
 {
+    /*
     for(int i = 0; i < NumChannels(); i++)
         if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
             Channel(i)->SetIsMovable(true);
+     */
 }
 
 void LogicalSurface::RefreshLayout()
 {
     auto currentOffset = trackOffset_;
-
+/*
     vector<string> immovableTracks;
     
     for(int i = 0; i < NumChannels(); i++)
