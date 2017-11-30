@@ -37,11 +37,6 @@ private:
 public:
     TrackFX_Action(string name, Interactor* interactor, string paramName, int paramIndex) : DoubleAction(name, interactor), paramName_(paramName), paramIndex_(paramIndex) {}
     
-    virtual double GetCurrentNormalizedValue() override
-    {
-        return currentValue_;
-    }
-    
     virtual void SetWidgetValue(string surfaceName, double value) override
     {
         GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
@@ -286,13 +281,13 @@ public:
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->IsZoom());
+            DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetSurface(surfaceName)->IsZoom());
         }
     }
     
     virtual void RunAction(string surfaceName, double value) override
     {
-        DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->IsZoom());
+        DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetSurface(surfaceName)->IsZoom());
         pressed_ = value;
     }
 };
