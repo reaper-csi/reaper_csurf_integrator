@@ -966,20 +966,20 @@ void LogicalSurface::AdjustTrackBank(int stride)
 
 void LogicalSurface::ImmobilizeSelectedTracks()
 {
-    /*
-    for(int i = 0; i < NumChannels(); i++)
-        if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
-            Channel(i)->SetIsMovable(false);
-     */
+    for(auto * surface : surfaces_)
+        for(auto * channel : surface->GetChannels())
+            if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                int i = 1;
+                //channel->SetIsMovable(false);
 }
 
 void LogicalSurface::MobilizeSelectedTracks()
 {
-    /*
-    for(int i = 0; i < NumChannels(); i++)
-        if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(Channel(i)->GetGUID()), "I_SELECTED"))
-            Channel(i)->SetIsMovable(true);
-     */
+    for(auto * surface : surfaces_)
+        for(auto * channel : surface->GetChannels())
+            if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                int i = 1;
+                //channel->SetIsMovable(true);
 }
 
 void LogicalSurface::RefreshLayout()
@@ -1060,23 +1060,23 @@ void LogicalSurface::MapFX(MediaTrack* track)
     // Dump any existing FX subInteractors
     interactor->ClearFXSubInteractors();
  
-    for(int i = 0; i < TrackFX_GetCount(track); i++)
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
-        TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
+        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
         string fxName(trackFXName);
         
         if(fxMaps_.count(trackFXName) > 0)
         {
             FXMap* map = fxMaps_[fxName];
             
-            guidToString(TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
             string fxGUID(trackFXParameterGUID);
 
             SubInteractor* subInteractor = new SubInteractor(fxGUID, i, interactor);
 
-            for(int j = 0; j < TrackFX_GetNumParams(track, i); j++)
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
             {
-                TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
                 string fxParamName(trackFXParameterName);
                 
                 for(auto map : map->GetMapEntries())
@@ -1088,16 +1088,16 @@ void LogicalSurface::MapFX(MediaTrack* track)
         }
         else if(GetVSTMonitor())
         {
-            ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
+            DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
 
-            int numParameters = TrackFX_GetNumParams(track, i);
+            int numParameters = DAW::TrackFX_GetNumParams(track, i);
 
             for(int j = 0; j < numParameters; j++)
             {
-                TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
                 string fxParamName(trackFXParameterName);
                 
-                ShowConsoleMsg((fxParamName + "\n").c_str());
+                DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
             }
         }
     }
@@ -1349,7 +1349,7 @@ void CSurfChannel::OnTrackSelection(MediaTrack *track)
     if(shouldMapSubChannels_ && DAW::CountSelectedTracks(nullptr) == 1)
     {
         DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
-        MapFX(track);
+        //MapFX(track);
     }
 }
 
@@ -1365,9 +1365,9 @@ void CSurfChannel::MapFX(MediaTrack *track)
     char trackFXGUID[256];
     char trackFXParamName[256];
     
-    for(int i = 0; i < TrackFX_GetCount(track); i++)
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
-        TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
+        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
         string fxName(trackFXName);
         
         if(GetSurface()->GetLogicalSurface()->GetFXMaps().count(fxName) > 0)
@@ -1376,14 +1376,14 @@ void CSurfChannel::MapFX(MediaTrack *track)
             
             FXMap* map = GetSurface()->GetLogicalSurface()->GetFXMaps()[fxName];
             
-            guidToString(TrackFX_GetFXGUID(track, i), trackFXGUID);
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXGUID);
             string fxGUID(trackFXGUID);
            
             SubChannel* subChannel = new SubChannel(fxGUID);
             
-            for(int j = 0; j < TrackFX_GetNumParams(track, i); j++)
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
             {
-                TrackFX_GetParamName(track, i, j, trackFXParamName, sizeof(trackFXParamName));
+                DAW::TrackFX_GetParamName(track, i, j, trackFXParamName, sizeof(trackFXParamName));
                 string fxParamName(trackFXParamName);
                 
                 for(auto map : map->GetMapEntries())
