@@ -628,6 +628,8 @@ void LogicalSurface::BuildCSurfWidgets()
             }
         }
     }
+    
+   numLogicalChannels_++; // add one for Master
 }
 
 void LogicalSurface::InitializeSurfaces()
@@ -953,8 +955,8 @@ void LogicalSurface::AdjustTrackBank(int stride)
     if(trackOffset_ < 1 - GetNumLogicalChannels())
         trackOffset_ = 1 - GetNumLogicalChannels();
     
-    if(trackOffset_ > DAW::GetNumTracks())
-        trackOffset_ = DAW::GetNumTracks();
+    if(trackOffset_ > DAW::GetNumTracks() - 1)
+        trackOffset_ = DAW::GetNumTracks() - 1;
     
     if(trackOffset_ != previousTrackOffset)
         RefreshLayout();
@@ -981,50 +983,41 @@ void LogicalSurface::MobilizeSelectedTracks()
 void LogicalSurface::RefreshLayout()
 {
     auto currentOffset = trackOffset_;
-/*
+
     vector<string> immovableTracks;
     
-    for(int i = 0; i < NumChannels(); i++)
-        if(Channel(i)->GetIsMovable() == false)
-            immovableTracks.push_back(Channel(i)->GetGUID());
+    for(auto* surface : surfaces_)
+        for(auto* channel : surface->GetChannels())
+            if(channel->GetIsMovable() == false)
+                immovableTracks.push_back(channel->GetGUID());
     
-    for(int i = 0; i < NumChannels();)
+    vector<string> movableTracks;
+    
+    for(int i = 0; i < GetNumLogicalChannels(); i++)
     {
         if(currentOffset < 0)
         {
-            Channel(i++)->SetGUID("");
+            movableTracks.push_back("");
             currentOffset++;
         }
         else if(currentOffset >= DAW::GetNumTracks())
         {
-            Channel(i++)->SetGUID("");
+            movableTracks.push_back("");
         }
-        else if(Channel(i)->GetIsMovable() && find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
+        else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
         {
-            Channel(i++)->SetGUID(DAW::GetTrackGUIDAsString(currentOffset++));
-        }
-        else if( ! Channel(i)->GetIsMovable())
-        {
-            i++;
-        }
-        else
-        {
-            currentOffset++;
+            movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
         }
     }
     
+    currentOffset = 0;
+    
+    for(auto* surface : surfaces_)
+        for(auto* channel : surface->GetChannels())
+            if(channel->GetIsMovable() == true)
+                channel->SetGUID(movableTracks[currentOffset++]);
+    
     ForceUpdate();
-        /*
-        if(currentOffset < 0 && immovableTrackGUIDs_[i] == "")
-            currentOffset++;
-        else if(immovableTrackGUIDs_[i] != "")
-            Channel(i)->SetGUID(immovableTrackGUIDs_[i]);
-        else if( ! isInImmovableTrackGUIDS(GetDAW()->GetTrackGUIDAsString(currentOffset)))
-            Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
-        else while(isInImmovableTrackGUIDS(GetDAW()->GetTrackGUIDAsString(currentOffset++)) && currentOffset < GetDAW()->GetNumTracks())
-            Channel(i)->SetGUID(GetDAW()->GetTrackGUIDAsString(currentOffset++));
-         */
-
 }
 
 bool LogicalSurface::DidTrackListChange()

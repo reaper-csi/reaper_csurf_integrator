@@ -175,6 +175,9 @@ public:
         {
             GUID_ = GUID;
          
+            for(auto* widget : widgets_)
+                widget->SetValueToZero();
+            
             // GAW TBD causes exception currently
             //if(shouldMapSubChannels_ && DAW::GetTrackFromGUID(GUID) != nullptr)
                 //MapFX(DAW::GetTrackFromGUID(GUID));
