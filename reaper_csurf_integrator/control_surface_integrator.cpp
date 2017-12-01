@@ -715,7 +715,9 @@ void LogicalSurface::InitializeSurfaces()
             }
         }
     
-    // VST monitoring //////////////////////////
+    // VST monitoring //////////////////////////    
+    fgets(localBuf, sizeof(localBuf), filePtr);
+
     bool VSTMonitor = false;
     
     p = strtok (localBuf,"=");
