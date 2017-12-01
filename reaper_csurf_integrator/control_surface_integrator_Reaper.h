@@ -67,6 +67,12 @@ public:
     static int GetGlobalAutomationOverride() { return ::GetGlobalAutomationOverride(); }
 
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
+
+    static int TrackFX_GetCount(MediaTrack* track) { return ::TrackFX_GetCount(track); }
+    
+    static GUID* TrackFX_GetFXGUID(MediaTrack* track, int fx) { return ::TrackFX_GetFXGUID(track, fx);  }
+    
+    static bool TrackFX_GetFXName(MediaTrack* track, int fx, char* buf, int buf_sz) { return ::TrackFX_GetFXName(track, fx, buf, buf_sz); }
     
     static int TrackFX_GetNumParams(MediaTrack* track, int fx) { return ::TrackFX_GetNumParams(track, fx); }
     
@@ -138,6 +144,8 @@ public:
     
     static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView);}
 
+    static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
+    
     static string GetTrackGUIDAsString(int trackNumber)
     {
         if(trackNumber < 0 || trackNumber > GetNumTracks())

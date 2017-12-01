@@ -721,27 +721,6 @@ public:
 
         surfaces_[currentSurfaceIndex_]->RefreshLayout();
     }
-    
-    void ImmobilizeSelectedTracks(LogicalSurface* logicalCSurf)
-    {
-        for(auto & surface : surfaces_)
-            if(surface != logicalCSurf)
-                surface->ImmobilizeSelectedTracks();
-    }
-    
-   void  MobilizeSelectedTracks(LogicalSurface* logicalCSurf)
-    {
-        for(auto & surface : surfaces_)
-            if(surface != logicalCSurf)
-                surface->MobilizeSelectedTracks();
-    }
-    
-    void AdjustTrackBank(LogicalSurface* logicalCSurf, int stride)
-    {
-        for(auto & surface : surfaces_)
-            if(surface != logicalCSurf)
-                surface->AdjustTrackBank(stride);
-    }
 
     void TrackListChanged() // tell current map
     {
@@ -749,7 +728,7 @@ public:
             for(auto & surface : surfaces_)
                 surface->TrackListChanged();
     }
-    
+
     void TrackFXListChanged(MediaTrack* trackid)
     {
         if(surfaces_.size() != 0) // seems we need to protect against prematurely early calls
@@ -801,8 +780,9 @@ public:
     {
         for(auto input : inputs_)
             if(input.channel_ == inputChannel)
-                return input.midiInput_;
+                return input.midiInput_; // return existing
         
+        // make new
         midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
         
         if(newInput)
@@ -819,8 +799,9 @@ public:
     {
         for(auto output : outputs_)
             if(output.channel_ == outputChannel)
-                return output.midiOutput_;
+                return output.midiOutput_; // return existing
         
+        // make new
         midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
         
         if(newOutput)
@@ -840,7 +821,7 @@ class OSCCSurf : public RealCSurf
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(LogicalSurface* surface, const string name)
+    OSCCSurf(const string name, LogicalSurface* surface)
     : RealCSurf(name, surface, "OSC", 8) {}
 };
 
@@ -851,7 +832,7 @@ class WebCSurf : public RealCSurf
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(LogicalSurface* surface, const string name)
+    WebCSurf(const string name, LogicalSurface* surface)
     : RealCSurf(name, surface, "Web", 8) {};
 };
 
