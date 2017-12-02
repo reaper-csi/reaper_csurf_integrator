@@ -138,11 +138,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader8Bit_MidiWidget : public MidiWidget
+class Fader7Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader8Bit_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release) {}
+    Fader7Bit_MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, channel, press, release) {}
     
     virtual void SetValue(double value) override
     {
