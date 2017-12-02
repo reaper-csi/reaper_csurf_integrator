@@ -969,8 +969,7 @@ void LogicalSurface::ImmobilizeSelectedTracks()
     for(auto * surface : surfaces_)
         for(auto * channel : surface->GetChannels())
             if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                int i = 1;
-                //channel->SetIsMovable(false);
+                channel->SetIsMovable(false);
 }
 
 void LogicalSurface::MobilizeSelectedTracks()
@@ -978,8 +977,7 @@ void LogicalSurface::MobilizeSelectedTracks()
     for(auto * surface : surfaces_)
         for(auto * channel : surface->GetChannels())
             if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                int i = 1;
-                //channel->SetIsMovable(true);
+                channel->SetIsMovable(true);
 }
 
 void LogicalSurface::RefreshLayout()
