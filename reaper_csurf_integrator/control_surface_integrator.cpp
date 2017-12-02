@@ -1351,7 +1351,7 @@ void CSurfChannel::OnTrackSelection(MediaTrack *track)
     if(shouldMapSubChannels_ && DAW::CountSelectedTracks(nullptr) == 1)
     {
         DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
-        //MapFX(track);
+        MapFX(track);
     }
 }
 
@@ -1359,9 +1359,7 @@ void CSurfChannel::MapFX(MediaTrack *track)
 {
     ClearSubChannels();
     
-    SetIsMovable(true);
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
-    SetIsMovable(false);
 
     char trackFXName[256];
     char trackFXGUID[256];
