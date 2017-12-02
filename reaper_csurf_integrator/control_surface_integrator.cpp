@@ -1008,6 +1008,10 @@ void LogicalSurface::RefreshLayout()
         {
             movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
         }
+        else
+        {
+            currentOffset++;
+        }
     }
     
     currentOffset = 0;
