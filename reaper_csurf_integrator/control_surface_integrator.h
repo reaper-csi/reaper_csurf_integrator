@@ -171,18 +171,19 @@ public:
 
     void SetGUID(string GUID)
     {
-        if(isMovable_)
+        GUID_ = GUID;
+    
+        if(GUID_ == "")
         {
-            GUID_ = GUID;
-         
-            if(GUID_ == "")
-                for(auto* widget : widgets_)
-                    widget->SetValueToZero();
-            
-            // GAW TBD causes exception currently
-            //if(shouldMapSubChannels_ && DAW::GetTrackFromGUID(GUID) != nullptr)
-                //MapFX(DAW::GetTrackFromGUID(GUID));
+           for(auto* widget : widgets_)
+                widget->SetValueToZero();
         }
+        /* GAW TBD Don't know if this is necessary
+        else if(shouldMapSubChannels_ && DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(GetGUID()), "I_SELECTED") && DAW::CountSelectedTracks(nullptr) == 1  )
+        {
+            MapFX(DAW::GetTrackFromGUID(GUID));
+        }
+         */
     }
     
     void MapFX(MediaTrack *trackid);
