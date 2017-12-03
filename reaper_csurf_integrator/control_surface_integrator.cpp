@@ -537,7 +537,7 @@ void LogicalSurface::BuildCSurfWidgets()
         else
         {
             
-            channel = new CSurfChannel(LogicalCSurf, surface, false, false);
+            channel = new CSurfChannel(CSurf, surface, false, false);
 
             channel->AddWidget(new PushButton_MidiWidget("Track", channel,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("Send", channel,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
@@ -1372,7 +1372,7 @@ void CSurfChannel::MapFX(MediaTrack *track)
         
         if(GetSurface()->GetLogicalSurface()->GetFXMaps().count(fxName) > 0)
         {
-            TrackFX_Show(track, i, 3);
+            DAW::TrackFX_Show(track, i, 3);
             
             FXMap* map = GetSurface()->GetLogicalSurface()->GetFXMaps()[fxName];
             
