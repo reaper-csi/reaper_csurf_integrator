@@ -537,7 +537,7 @@ void LogicalSurface::BuildCSurfWidgets()
         else
         {
             
-            channel = new CSurfChannel(CSurf, surface, false, false);
+            channel = new CSurfChannel(LogicalCSurf, surface, false, false);
 
             channel->AddWidget(new PushButton_MidiWidget("Track", channel,       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("Send", channel,        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
