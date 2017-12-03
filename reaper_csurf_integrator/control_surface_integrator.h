@@ -16,6 +16,7 @@ using namespace std;
 #include "control_surface_integrator_Reaper.h"
 
 const string LogicalCSurf = "LogicalCSurf";
+const string CSurf = "CSurf";
 
 const string Volume = "Volume";
 const string Pan = "Pan";
