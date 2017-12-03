@@ -67,7 +67,7 @@ typedef double ReaSample;
 /* 
 ** Endian-tools and defines (currently only __ppc__ and BIG_ENDIAN is recognized, for OS X -- all other platforms are assumed to be LE)
 */
-
+/*
 static int REAPER_BSWAPINT(int x)
 {
   return ((((x))&0xff)<<24)|((((x))&0xff00)<<8)|((((x))&0xff0000)>>8)|(((x)>>24)&0xff);
@@ -86,7 +86,7 @@ static void REAPER_BSWAPINTMEM8(void *buf)
   tmp=p[2]; p[2]=p[5]; p[5]=tmp;
   tmp=p[3]; p[3]=p[4]; p[4]=tmp;
 }
-
+*/
 #if defined(__ppc__)
 
 #define REAPER_BIG_ENDIAN
