@@ -68,6 +68,8 @@ public:
 
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
 
+    static void TrackFX_Show(MediaTrack* track, int index, int showFlag) { ::TrackFX_Show(track, index, showFlag); }
+
     static int TrackFX_GetCount(MediaTrack* track) { return ::TrackFX_GetCount(track); }
     
     static GUID* TrackFX_GetFXGUID(MediaTrack* track, int fx) { return ::TrackFX_GetFXGUID(track, fx);  }
