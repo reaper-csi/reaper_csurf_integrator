@@ -200,15 +200,15 @@ static HWND configFunc(const char *type_string, HWND parent, const char *initCon
 {
     //ShowMessageBox("Here ya go", "This Title", 0);
     
-    MessageBox(parent, "Here ya go", "New Title", 0);
+    //MessageBox(parent, "Here ya go", "New Title", 0);
     
-    return 0;
+   // return 0;
     
     
     //return CreateDialogParam(g_hInst,0,parent,dlgProc,(LPARAM)initConfigString);
     
     
-    //return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
+    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =

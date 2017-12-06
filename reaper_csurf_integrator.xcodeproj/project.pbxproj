@@ -33,6 +33,8 @@
 		0310E4D31EB5405900040D1A /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "WDL/swell/swell-modstub.mm"; sourceTree = "<group>"; };
 		03464AE01EB53E7A00EAD095 /* reaper_csurf_integrator.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_csurf_integrator.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0355636A1F814C0600583062 /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reaper_plugin_functions.h; sourceTree = "<group>"; };
+		0362B03B1FD80DD500E37C2F /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc_mac_menu; sourceTree = "<group>"; };
+		0362B03D1FD80DD500E37C2F /* res.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc_mac_dlg; sourceTree = "<group>"; };
 		03644D1C1F8FAA61001F9ED9 /* control_surface_integrator_ui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_integrator_ui.h; sourceTree = "<group>"; };
 		03644D1D1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = control_surface_integrator_ui.cpp; sourceTree = "<group>"; };
 		03719C611F8FC43E009C8F2E /* control_surface_integrator_Reaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_integrator_Reaper.h; sourceTree = "<group>"; };
@@ -74,6 +76,8 @@
 		03464AE21EB53E7A00EAD095 /* reaper_csurf_integrator */ = {
 			isa = PBXGroup;
 			children = (
+				0362B03D1FD80DD500E37C2F /* res.rc_mac_dlg */,
+				0362B03B1FD80DD500E37C2F /* res.rc_mac_menu */,
 				0310E4D31EB5405900040D1A /* swell-modstub.mm */,
 				03719C611F8FC43E009C8F2E /* control_surface_integrator_Reaper.h */,
 				0310E4C61EB5403C00040D1A /* control_surface_integrator.cpp */,

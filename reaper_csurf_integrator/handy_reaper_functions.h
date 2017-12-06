@@ -2,8 +2,6 @@
 //  handy_reaper_functions.h
 //  reaper_csurf_integrator
 //
-//  Created by Geoff Waddington on 2017-09-22.
-//  Copyright © 2017 Geoff Waddington. All rights reserved.
 //
 
 #ifndef handy_reaper_functions_h
