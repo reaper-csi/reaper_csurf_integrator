@@ -280,6 +280,8 @@ private:
     
     bool IsOKToSetWidget(string name)
     {
+        // GAW TBD is this really necessary, we really shouldn't get an update for the wrong thing
+        
         vector<string> tokens;
         
         SplitString(name, tokens, '#');
