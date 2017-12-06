@@ -2,6 +2,7 @@
 #define REAPERAPI_DECL
 
 #include "reaper_plugin_functions.h"
+#include "resource.h"
 
 extern reaper_csurf_reg_t csurf_integrator_reg;
 
@@ -43,6 +44,12 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
     return 0;
   }
 }
+    
+#ifndef _WIN32 // import the resources. Note: if you do not have these files, run "php ../mac_resgen.php sample_project.rc" from this directory
+#include "./WDL/swell/swell-dlggen.h"
+#include "res.rc_mac_dlg"
+#endif
+
 
     
     
