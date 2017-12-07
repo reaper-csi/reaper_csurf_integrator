@@ -32,6 +32,7 @@
 		0310E4CC1EB5403C00040D1A /* WDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WDL; sourceTree = "<group>"; };
 		0310E4D31EB5405900040D1A /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "WDL/swell/swell-modstub.mm"; sourceTree = "<group>"; };
 		03464AE01EB53E7A00EAD095 /* reaper_csurf_integrator.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_csurf_integrator.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		0352CFFE1FD95CDE002AE18C /* res.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc; sourceTree = "<group>"; };
 		0355636A1F814C0600583062 /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reaper_plugin_functions.h; sourceTree = "<group>"; };
 		0362B03B1FD80DD500E37C2F /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc_mac_menu; sourceTree = "<group>"; };
 		0362B03D1FD80DD500E37C2F /* res.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc_mac_dlg; sourceTree = "<group>"; };
@@ -76,6 +77,7 @@
 		03464AE21EB53E7A00EAD095 /* reaper_csurf_integrator */ = {
 			isa = PBXGroup;
 			children = (
+				0352CFFE1FD95CDE002AE18C /* res.rc */,
 				0362B03D1FD80DD500E37C2F /* res.rc_mac_dlg */,
 				0362B03B1FD80DD500E37C2F /* res.rc_mac_menu */,
 				0310E4D31EB5405900040D1A /* swell-modstub.mm */,
