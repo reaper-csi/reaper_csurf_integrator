@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -7,19 +7,17 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "WinResrc.h"
+#include "afxres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -27,18 +25,13 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
-BEGIN
-    "#include ""WinResrc.h""\r\n"
-    "\0"
-END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -52,46 +45,58 @@ END
 // Dialog
 //
 
-IDD_SURFACEEDIT_MCU DIALOG DISCARDABLE  0, 0, 268, 77
-STYLE DS_CENTER | WS_CHILD
-FONT 8, "MS Shell Dlg"
+IDD_SURFACEEDIT_MCU DIALOGEX 0, 0, 397, 173
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     RTEXT           "MIDI input:",IDC_STATIC,23,6,56,8
-    COMBOBOX        IDC_COMBO2,81,4,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO2,81,4,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     RTEXT           "MIDI output:",IDC_STATIC,23,23,56,8
-    COMBOBOX        IDC_COMBO3,81,21,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
+    COMBOBOX        IDC_COMBO3,81,21,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     RTEXT           "Surface offset (tracks):",IDC_EDIT1_LBL,4,42,72,8
     EDITTEXT        IDC_EDIT1,81,41,24,12,ES_AUTOHSCROLL
     RTEXT           "Size tweak:",IDC_EDIT2_LBL,30,58,47,8
     EDITTEXT        IDC_EDIT2,80,55,24,12,ES_AUTOHSCROLL
-    LTEXT           "(leave at 9 unless you know what you're doing)",
-                    IDC_EDIT2_LBL2,108,58,148,8
+    LTEXT           "(leave at 9 unless you know what you're doing)",IDC_EDIT2_LBL2,108,58,148,8
 END
 
-IDD_SURFACEEDIT_MCU1 DIALOG DISCARDABLE  0, 0, 268, 95
-STYLE DS_CENTER | WS_CHILD
-FONT 8, "MS Shell Dlg"
+IDD_SURFACEEDIT_MCU1 DIALOGEX 0, 0, 527, 385
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CENTER | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    RTEXT           "MIDI input:",IDC_STATIC,23,6,56,8
-    COMBOBOX        IDC_COMBO2,81,4,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    RTEXT           "MIDI output:",IDC_STATIC,23,23,56,8
-    COMBOBOX        IDC_COMBO3,81,21,181,105,CBS_DROPDOWNLIST | WS_VSCROLL | 
-                    WS_TABSTOP
-    RTEXT           "Surface offset (tracks):",IDC_EDIT1_LBL,4,37,72,8
-    EDITTEXT        IDC_EDIT1,81,36,24,12,ES_AUTOHSCROLL
-    RTEXT           "Size tweak:",IDC_EDIT2_LBL,30,53,47,8
-    EDITTEXT        IDC_EDIT2,80,50,24,12,ES_AUTOHSCROLL
-    LTEXT           "(leave at 9 unless you know what you're doing)",
-                    IDC_EDIT2_LBL2,108,52,148,8
-    CONTROL         "Ignore fader moves when fader is not being touched",
-                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,4,67,
-                    177,10
-    CONTROL         "Map F1-F8 to go to markers",IDC_CHECK2,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,4,78,102,10
+    CONTROL         "MIDI Input Mon",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,4,4,67,10
+    CONTROL         "VST Param Mon",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,196,4,62,10
+    CONTROL         "MIDI Output Mon",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | BS_CENTER | WS_TABSTOP,98,4,71,10
+    COMBOBOX        IDC_COMBO2,168,20,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT2,154,20,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT1,97,20,57,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO1,6,20,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO4,168,36,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT3,97,36,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT4,154,36,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO3,6,36,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO6,168,52,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT5,97,52,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT6,154,52,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO5,6,52,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO8,168,68,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT7,97,68,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT8,154,68,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO7,6,68,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO10,168,84,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT9,97,84,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT10,154,84,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO9,6,84,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO12,168,100,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT11,97,100,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT12,154,100,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO11,6,100,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO14,168,116,90,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_EDIT13,97,116,57,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT14,154,116,14,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    COMBOBOX        IDC_COMBO13,6,116,91,105,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -99,27 +104,44 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_SURFACEEDIT_MCU, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 264
+        RIGHTMARGIN, 393
         TOPMARGIN, 4
-        BOTTOMMARGIN, 73
+        BOTTOMMARGIN, 169
     END
 
     IDD_SURFACEEDIT_MCU1, DIALOG
     BEGIN
         LEFTMARGIN, 4
-        RIGHTMARGIN, 264
+        RIGHTMARGIN, 258
         TOPMARGIN, 4
-        BOTTOMMARGIN, 91
+        BOTTOMMARGIN, 381
+        HORZGUIDE, 134
     END
 END
 #endif    // APSTUDIO_INVOKED
 
-#endif    // English (U.S.) resources
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_SURFACEEDIT_MCU AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SURFACEEDIT_MCU1 AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

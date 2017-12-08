@@ -315,12 +315,13 @@ void LogicalSurface::InitializeLogicalCSurfInteractors()
     interactor->AddAction(new Play_Action(Play, interactor));
     interactor->AddAction(new Record_Action(Record, interactor));
     
-    interactor->AddAction(new RepeatingArrow_Action(Up,  interactor, 0, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Down,  interactor, 1, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Left,  interactor, 2, 0.3));
-    interactor->AddAction(new RepeatingArrow_Action(Right, interactor, 3, 0.3));
-    
     // GAW TBD -- timers need to be cross platform
+
+    //interactor->AddAction(new RepeatingArrow_Action(Up,  interactor, 0, 0.3));
+    //interactor->AddAction(new RepeatingArrow_Action(Down,  interactor, 1, 0.3));
+    //interactor->AddAction(new RepeatingArrow_Action(Left,  interactor, 2, 0.3));
+    //interactor->AddAction(new RepeatingArrow_Action(Right, interactor, 3, 0.3));
+    
     //interactor->AddAction(new LatchedZoom_Action(Zoom,  interactor));
     //interactor->AddAction(new LatchedScrub_Action(Scrub,  interactor));
     
