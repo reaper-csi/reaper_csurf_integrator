@@ -551,10 +551,10 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new PushButton_MidiWidget(UnlockTracks, channel,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(LockTracks, channel,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
 
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Shift, channel, 1,      new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Option, channel,  1,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Control, channel, 1,    new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Alt, channel, 1,        new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Shift, channel,     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Option, channel,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Control, channel,   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
+            channel->AddWidget(new PushButtonWithRelease_MidiWidget(Alt, channel,       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
                 
             channel->AddWidget(new PushButton_MidiWidget(Read, channel,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(Write, channel,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
