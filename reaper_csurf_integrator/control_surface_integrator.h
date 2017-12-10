@@ -636,7 +636,79 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiIOManager;
+class MidiIOManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MidiChannelInput // inner struct
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+        int channel_ = 0;
+        midi_Input* midiInput_ = nullptr;
+        
+        MidiChannelInput(int channel, midi_Input* midiInput)
+        : channel_(channel), midiInput_(midiInput) {}
+    };
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MidiChannelOutput // inner struct
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+        int channel_ = 0;
+        midi_Output* midiOutput_ = nullptr;
+        
+        MidiChannelOutput(int channel, midi_Output* midiOutput)
+        : channel_(channel), midiOutput_(midiOutput) {}
+    };
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // class MidiIOManager starts here
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+private:
+    vector<MidiChannelInput> inputs_;
+    vector<MidiChannelOutput> outputs_;
+    
+public:
+    MidiIOManager() {}
+    
+    midi_Input* GetMidiInputForChannel(int inputChannel)
+    {
+        for(auto input : inputs_)
+            if(input.channel_ == inputChannel)
+                return input.midiInput_; // return existing
+        
+        // make new
+        midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
+        
+        if(newInput)
+        {
+            newInput->start();
+            inputs_.push_back(MidiChannelInput(inputChannel, newInput));
+            return newInput;
+        }
+        
+        return nullptr;
+    }
+    
+    midi_Output* GetMidiOutputForChannel(int outputChannel)
+    {
+        for(auto output : outputs_)
+            if(output.channel_ == outputChannel)
+                return output.midiOutput_; // return existing
+        
+        // make new
+        midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
+        
+        if(newOutput)
+        {
+            outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
+            return newOutput;
+        }
+        
+        return nullptr;
+    }
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -682,9 +754,9 @@ private:
 
     
 public:
-    virtual ~CSurfManager() { };
+    virtual ~CSurfManager() {};
     
-    CSurfManager();
+    CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
     
@@ -737,83 +809,6 @@ public:
         if(surfaces_.size() != 0) // seems we need to protect against prematurely early calls
             for(auto & surface : surfaces_)
                 surface->TrackFXListChanged(trackid);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiIOManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    struct MidiChannelInput // inner struct
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    {
-        int channel_ = 0;
-        midi_Input* midiInput_ = nullptr;
-        
-        MidiChannelInput(int channel, midi_Input* midiInput)
-        : channel_(channel), midiInput_(midiInput) {}
-    };
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    struct MidiChannelOutput // inner struct
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    {
-        int channel_ = 0;
-        midi_Output* midiOutput_ = nullptr;
-        
-        MidiChannelOutput(int channel, midi_Output* midiOutput)
-        : channel_(channel), midiOutput_(midiOutput) {}
-    };
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // class MidiIOManager starts here
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-private:
-    CSurfManager* manager_ = nullptr;
-    vector<MidiChannelInput> inputs_;
-    vector<MidiChannelOutput> outputs_;
-    
-public:
-    MidiIOManager(CSurfManager* manager) : manager_(manager) {}
-    
-    CSurfManager* GetManager() { return  manager_; }
-    
-    midi_Input* GetMidiInputForChannel(int inputChannel)
-    {
-        for(auto input : inputs_)
-            if(input.channel_ == inputChannel)
-                return input.midiInput_; // return existing
-        
-        // make new
-        midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
-        
-        if(newInput)
-        {
-            newInput->start();
-            inputs_.push_back(MidiChannelInput(inputChannel, newInput));
-            return newInput;
-        }
-        
-        return nullptr;
-    }
-    
-    midi_Output* GetMidiOutputForChannel(int outputChannel)
-    {
-        for(auto output : outputs_)
-            if(output.channel_ == outputChannel)
-                return output.midiOutput_; // return existing
-        
-        // make new
-        midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
-        
-        if(newOutput)
-        {
-            outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
-            return newOutput;
-        }
-        
-        return nullptr;
     }
 };
 
