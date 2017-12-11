@@ -514,7 +514,8 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
-    vector<Interactor*> interactors_;
+    vector<Interactor*> trackInteractors_;
+    Interactor* logicalSurfaceInteractor_ = nullptr;
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
@@ -532,9 +533,9 @@ private:
         fxMaps_[fxMap->GetName()] = fxMap;
     }
     
-    void AddInteractor(Interactor* interactor)
+    void AddTrackInteractor(Interactor* interactor)
     {
-        interactors_.push_back(interactor);
+        trackInteractors_.push_back(interactor);
     }
     
     void AddSurface(RealCSurf* surface)
@@ -542,9 +543,9 @@ private:
         surfaces_.push_back(surface);
     }
     
-    void RebuildInteractors()
+    void RebuildTrackInteractors()
     {
-        interactors_.clear();
+        trackInteractors_.clear();
         BuildTrackInteractors();
         RefreshLayout();
     }
@@ -582,14 +583,14 @@ public:
     void TrackListChanged()
     {
         if(DidTrackListChange())
-            RebuildInteractors();
+            RebuildTrackInteractors();
     }
 
     void Initialize();
     void Initialize2();
     void InitializeFXMaps();
     void InitializeSurfaces();
-    void InitializeLogicalCSurfInteractors();
+    void InitializeLogicalCSurfInteractor();
     
     void RefreshLayout();
 
