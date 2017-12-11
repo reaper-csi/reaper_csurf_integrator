@@ -101,7 +101,7 @@ void LogicalSurface::Initialize()
     InitializeFXMaps();
     
     InitializeSurfaces();
-    InitializeLogicalCSurfInteractors();
+    InitializeLogicalCSurfInteractor();
     BuildTrackInteractors();
     BuildCSurfWidgets();
 }
@@ -112,7 +112,7 @@ void LogicalSurface::Initialize2()
     InitializeFXMaps();
 
     InitializeSurfaces();
-    InitializeLogicalCSurfInteractors();
+    InitializeLogicalCSurfInteractor();
     BuildTrackInteractors2();
     BuildCSurfWidgets();
 }
@@ -251,71 +251,71 @@ void LogicalSurface::InitializeFXMaps()
     
 }
 
-void LogicalSurface::InitializeLogicalCSurfInteractors()
+void LogicalSurface::InitializeLogicalCSurfInteractor()
 {
-    Interactor* interactor = new Interactor(LogicalCSurf, this);
+    logicalSurfaceInteractor_ = new Interactor(LogicalCSurf, this);
     
-    interactor->AddAction(new TrackBank_Action(ChannelLeft, interactor, -1));
-    interactor->AddAction(new TrackBank_Action(ChannelRight, interactor, 1));
-    interactor->AddAction(new TrackBank_Action(BankLeft, interactor, -8));
-    interactor->AddAction(new TrackBank_Action(BankRight, interactor, 8));
+    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(ChannelLeft, logicalSurfaceInteractor_, -1));
+    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(ChannelRight, logicalSurfaceInteractor_, 1));
+    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankLeft, logicalSurfaceInteractor_, -8));
+    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankRight, logicalSurfaceInteractor_, 8));
     
-    interactor->AddAction(new Flip_Action(Flip, interactor));
+    logicalSurfaceInteractor_->AddAction(new Flip_Action(Flip, logicalSurfaceInteractor_));
     
-    interactor->AddAction(new NextMap_Action(NextMap, interactor));
-    interactor->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, interactor));
-    interactor->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, interactor));
+    logicalSurfaceInteractor_->AddAction(new NextMap_Action(NextMap, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, logicalSurfaceInteractor_));
     
-    interactor->AddAction(new Shift_Action(Shift, interactor));
-    interactor->AddAction(new Option_Action(Option, interactor));
-    interactor->AddAction(new Control_Action(Control,  interactor));
-    interactor->AddAction(new Alt_Action(Alt, interactor));
+    logicalSurfaceInteractor_->AddAction(new Shift_Action(Shift, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Option_Action(Option, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Control_Action(Control,  logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Alt_Action(Alt, logicalSurfaceInteractor_));
     
-    interactor->AddAction(new TrackAutoMode_Action(Read, interactor, 1));
-    interactor->AddAction(new TrackAutoMode_Action(Write, interactor, 3));
-    interactor->AddAction(new TrackAutoMode_Action(Trim, interactor, 0));
-    interactor->AddAction(new TrackAutoMode_Action(Touch, interactor, 2));
-    interactor->AddAction(new TrackAutoMode_Action(Latch, interactor, 4));
-    interactor->AddAction(new TrackAutoMode_Action(Group, interactor, 5));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Read, logicalSurfaceInteractor_, 1));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Write, logicalSurfaceInteractor_, 3));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Trim, logicalSurfaceInteractor_, 0));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Touch, logicalSurfaceInteractor_, 2));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Latch, logicalSurfaceInteractor_, 4));
+    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Group, logicalSurfaceInteractor_, 5));
 
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, interactor, 1));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, interactor, 3));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, interactor, 0));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, interactor, 2));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, interactor, 4));
-    interactor->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, interactor, 5));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Read, logicalSurfaceInteractor_, 1));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Write, logicalSurfaceInteractor_, 3));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Trim, logicalSurfaceInteractor_, 0));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Touch, logicalSurfaceInteractor_, 2));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Latch, logicalSurfaceInteractor_, 4));
+    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Delimiter + Group, logicalSurfaceInteractor_, 5));
     
-    interactor->AddAction(new Save_Action(Save, interactor));
-    interactor->AddAction(new SaveAs_Action( Shift + Delimiter + Save, interactor));
-    interactor->AddAction(new Undo_Action(Undo, interactor));
-    interactor->AddAction(new Redo_Action(Shift + Delimiter + Undo, interactor));
-    //AddAction(new Enter_Action(Enter, Manager(), this));
-    //AddAction(new Cancel_Action(Cancel, Manager(), this));
+    logicalSurfaceInteractor_->AddAction(new Save_Action(Save, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new SaveAs_Action( Shift + Delimiter + Save, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Undo_Action(Undo, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Redo_Action(Shift + Delimiter + Undo, logicalSurfaceInteractor_));
+    
+    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
+    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
 
-    interactor->AddAction(new PreviousMarker_Action(Marker, interactor));
-    interactor->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, interactor));
-    interactor->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, interactor));
-    interactor->AddAction(new NextMarker_Action(Nudge, interactor));
-    interactor->AddAction(new CycleTimeline_Action(Cycle, interactor));
-    interactor->AddAction(new Metronome_Action(Click, interactor));
+    logicalSurfaceInteractor_->AddAction(new PreviousMarker_Action(Marker, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new InsertMarker_Action(Shift + Delimiter + Marker, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new InsertMarkerRegion_Action(Option + Delimiter + Marker, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new NextMarker_Action(Nudge, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new CycleTimeline_Action(Cycle, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Metronome_Action(Click, logicalSurfaceInteractor_));
 
-    interactor->AddAction(new Rewind_Action(Rewind, interactor));
-    interactor->AddAction(new FastForward_Action(FastForward, interactor));
-    interactor->AddAction(new Stop_Action(Stop, interactor));
-    interactor->AddAction(new Play_Action(Play, interactor));
-    interactor->AddAction(new Record_Action(Record, interactor));
+    logicalSurfaceInteractor_->AddAction(new Rewind_Action(Rewind, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new FastForward_Action(FastForward, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Stop_Action(Stop, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Play_Action(Play, logicalSurfaceInteractor_));
+    logicalSurfaceInteractor_->AddAction(new Record_Action(Record, logicalSurfaceInteractor_));
     
     // GAW TBD -- timers need to be cross platform
 
-    //interactor->AddAction(new RepeatingArrow_Action(Up,  interactor, 0, 0.3));
-    //interactor->AddAction(new RepeatingArrow_Action(Down,  interactor, 1, 0.3));
-    //interactor->AddAction(new RepeatingArrow_Action(Left,  interactor, 2, 0.3));
-    //interactor->AddAction(new RepeatingArrow_Action(Right, interactor, 3, 0.3));
+    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Up,  logicalSurfaceInteractor_, 0, 0.3));
+    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Down,  logicalSurfaceInteractor_, 1, 0.3));
+    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Left,  logicalSurfaceInteractor_, 2, 0.3));
+    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Right, logicalSurfaceInteractor_, 3, 0.3));
     
-    //interactor->AddAction(new LatchedZoom_Action(Zoom,  interactor));
-    //interactor->AddAction(new LatchedScrub_Action(Scrub,  interactor));
-    
-    AddInteractor(interactor);
+    //logicalSurfaceInteractor_->AddAction(new LatchedZoom_Action(Zoom,  logicalSurfaceInteractor_));
+    //logicalSurfaceInteractor_->AddAction(new LatchedScrub_Action(Scrub,  logicalSurfaceInteractor_));
+
 }
 
 void LogicalSurface::BuildTrackInteractors()
@@ -359,7 +359,7 @@ void LogicalSurface::BuildTrackInteractors()
             interactor->AddAction(new TrackSolo_Action(Solo, interactor));
         }
         
-        AddInteractor(interactor);
+        AddTrackInteractor(interactor);
         MapFX(interactor->GetTrack());
     }
 }
@@ -402,7 +402,7 @@ void LogicalSurface::BuildTrackInteractors2()
             interactor->AddAction(new TrackSolo_Action(Solo, interactor));
         }
         
-        AddInteractor(interactor);
+        AddTrackInteractor(interactor);
         // Must wait for interactor to be added before we call this
         MapFX(DAW::CSurf_TrackFromID(i, false));
     }
@@ -841,67 +841,94 @@ void LogicalSurface::ForceUpdate()
 // to Actions ->
 double LogicalSurface::GetCurrentNormalizedValue(string GUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            return interactor->GetCurrentNormalizedValue(name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        return logicalSurfaceInteractor_->GetCurrentNormalizedValue(name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                return interactor->GetCurrentNormalizedValue(name);
     
     return 0.0;
 }
 
 void LogicalSurface::UpdateAction(string surfaceName, string GUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->UpdateAction(surfaceName, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->UpdateAction(surfaceName, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->UpdateAction(surfaceName, name);
 }
 
 void LogicalSurface::ForceUpdateAction(string surfaceName, string GUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->ForceUpdateAction(surfaceName, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->ForceUpdateAction(surfaceName, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->ForceUpdateAction(surfaceName, name);
 }
 
 void LogicalSurface::CycleAction(string surfaceName, string GUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->CycleAction(surfaceName, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->CycleAction(surfaceName, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->CycleAction(surfaceName, name);
 }
 
 void LogicalSurface::RunAction(string surfaceName, string GUID, string name, double value)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->RunAction(surfaceName, name, value);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->RunAction(surfaceName, name, value);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->RunAction(surfaceName, name, value);
 }
 
 void LogicalSurface::UpdateAction(string surfaceName, string GUID, string subGUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->UpdateAction(surfaceName, subGUID, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->UpdateAction(surfaceName, subGUID, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->UpdateAction(surfaceName, subGUID, name);
 }
 
 void LogicalSurface::ForceUpdateAction(string surfaceName, string GUID, string subGUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->ForceUpdateAction(surfaceName, subGUID, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->ForceUpdateAction(surfaceName, subGUID, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->ForceUpdateAction(surfaceName, subGUID, name);
 }
 
 void LogicalSurface::CycleAction(string surfaceName, string GUID, string subGUID, string name)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->CycleAction(surfaceName, subGUID, name);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->CycleAction(surfaceName, subGUID, name);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->CycleAction(surfaceName, subGUID, name);
 }
 
 void LogicalSurface::RunAction(string surfaceName, string GUID, string subGUID, string name, double value)
 {
-    for(auto & interactor : interactors_)
-        if(interactor->GetGUID() == GUID)
-            interactor->RunAction(surfaceName, subGUID, name, value);
+    if(logicalSurfaceInteractor_->GetGUID() == GUID)
+        logicalSurfaceInteractor_->RunAction(surfaceName, subGUID, name, value);
+    else
+        for(auto & interactor : trackInteractors_)
+            if(interactor->GetGUID() == GUID)
+                interactor->RunAction(surfaceName, subGUID, name, value);
 }
 
 // to Widgets ->
@@ -1019,14 +1046,14 @@ void LogicalSurface::RefreshLayout()
 
 bool LogicalSurface::DidTrackListChange()
 {
-    if(interactors_.size() == 0)
+    if(trackInteractors_.size() == 0)
         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
     
-    if(interactors_.size() != DAW::GetNumTracks() + 1) // + 1 is for Master
-        return true;    // list sizes disagree
+    if(trackInteractors_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
+        return true; // list sizes disagree
     
-    for(int i = 1; i < interactors_.size(); i++)                    // Start with 1 since Master is always in position 0, it doesn't move
-        if(interactors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
+    for(int i = 0; i < trackInteractors_.size(); i++)                    
+        if(trackInteractors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
             return true;
     
     return false;
@@ -1048,7 +1075,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
     // We will always find the interactor for this track, otherwise how could we add FX to it ?
     Interactor* interactor = nullptr;
     
-    for(auto * anInteractor : interactors_)
+    for(auto * anInteractor : trackInteractors_)
         if(anInteractor->GetGUID() == trackGUID)
             interactor = anInteractor;
 
