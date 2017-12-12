@@ -43,7 +43,7 @@ public:
     
     virtual void ForceUpdateAction(string surfaceName) override
     {
-        SetWidgetValue(surfaceName, currentValue_);
+        SetWidgetValue(surfaceName, GetValue());
     }
 };
 
@@ -97,7 +97,7 @@ class StringDisplayAction : public Action
 protected:
     string currentValue_ = "";
     
-    virtual string GetValue() { return ""; }
+    virtual string GetValue() { return currentValue_; }
     
     virtual void SetWidgetValue(string surfaceName, string value) override
     {
@@ -117,7 +117,7 @@ public:
     
     virtual void ForceUpdateAction(string surfaceName) override
     {
-        SetWidgetValue(surfaceName, currentValue_);
+        SetWidgetValue(surfaceName, GetValue());
     }
 };
 
