@@ -761,6 +761,8 @@ public:
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
     
+    bool GetLazyInitialized() { return lazyInitialized_; }
+    
     double GetFaderMaxDB()
     {
         return GetPrivateProfileDouble("slidermaxv");
