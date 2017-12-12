@@ -1108,7 +1108,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
             
             interactor->AddFXSubInteractor(subInteractor);
         }
-        else if(GetVSTMonitor())
+        else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
         {
             DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
 
