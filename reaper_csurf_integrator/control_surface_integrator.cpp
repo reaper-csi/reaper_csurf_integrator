@@ -14,8 +14,6 @@ const string ChannelRight = "ChannelRight";
 const string BankLeft = "BankLeft";
 const string BankRight = "BankRight";
 
-const string Flip = "Flip";
-
 const string TrackDisplay = "TrackDisplay";
 const string TrackTouched = "TrackTouched";
 const string Solo = "Solo";
@@ -259,8 +257,6 @@ void LogicalSurface::InitializeLogicalCSurfInteractor()
     logicalSurfaceInteractor_->AddAction(new TrackBank_Action(ChannelRight, logicalSurfaceInteractor_, 1));
     logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankLeft, logicalSurfaceInteractor_, -8));
     logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankRight, logicalSurfaceInteractor_, 8));
-    
-    logicalSurfaceInteractor_->AddAction(new Flip_Action(Flip, logicalSurfaceInteractor_));
     
     logicalSurfaceInteractor_->AddAction(new NextMap_Action(NextMap, logicalSurfaceInteractor_));
     logicalSurfaceInteractor_->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, logicalSurfaceInteractor_));
@@ -580,9 +576,7 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new PushButton_MidiWidget(Right, channel,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(Zoom, channel,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(Scrub, channel,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
-            
-            channel->AddWidget(new PushButton_MidiWidget(Flip, channel,          new MIDI_event_ex_t(0x90, 0x32, 0x7f), new MIDI_event_ex_t(0x90, 0x32, 0x00)));
-
+ 
             channel->AddWidget(new PushButton_MidiWidget(BankLeft, channel,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(BankRight, channel,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(ChannelLeft, channel,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
@@ -787,12 +781,6 @@ void LogicalSurface::InitializeSurfaces()
     VSTMonitor_ = VSTMonitor;
     
     fclose ( filePtr );
-}
-
-void LogicalSurface::ToggleFlipped(string surfaceName, string name)
-{
-    for(auto* surface : surfaces_)
-        surface->ToggleFlipped( name);
 }
 
 void LogicalSurface::SetShift(string surfaceName, bool value)
@@ -1151,7 +1139,7 @@ void RealCSurf::ForceUpdateWidgets()
 // to Actions ->
 double RealCSurf::GetCurrentNormalizedValue(string GUID, string name)
 {
-    return GetLogicalSurface()->GetCurrentNormalizedValue(GetName(), ModifiedNameFor(FlipNameFor(name)));
+    return GetLogicalSurface()->GetCurrentNormalizedValue(GetName(), ModifiedNameFor(name));
 }
 
 void RealCSurf::UpdateAction(string GUID, string name)
@@ -1171,7 +1159,7 @@ void RealCSurf::CycleAction(string GUID, string name)
 
 void RealCSurf::RunAction( string GUID, string name, double value)
 {
-    GetLogicalSurface()->RunAction(GetName(), GUID, ModifiedNameFor(FlipNameFor(name)), value);
+    GetLogicalSurface()->RunAction(GetName(), GUID, ModifiedNameFor(name), value);
 }
 
 void RealCSurf::UpdateAction(string GUID, string subGUID, string name)
@@ -1200,7 +1188,7 @@ void RealCSurf::SetWidgetValue(string GUID, string name, double value)
     if(IsOKToSetWidget(name))
         for(auto * channel : GetChannels())
             if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(FlipNameFor(UnmodifiedNameFor(name)), value);
+                channel->SetWidgetValue(UnmodifiedNameFor(name), value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
@@ -1208,7 +1196,7 @@ void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
     if(IsOKToSetWidget(name))
         for(auto * channel : GetChannels())
             if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(FlipNameFor(UnmodifiedNameFor(name)), value, mode);
+                channel->SetWidgetValue(UnmodifiedNameFor(name), value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string name, string value)
@@ -1216,7 +1204,7 @@ void RealCSurf::SetWidgetValue(string GUID, string name, string value)
     if(IsOKToSetWidget(name))
         for(auto * channel : GetChannels())
             if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(FlipNameFor(UnmodifiedNameFor(name)), value);
+                channel->SetWidgetValue(UnmodifiedNameFor(name), value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value)
@@ -1224,21 +1212,21 @@ void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double 
     if(IsOKToSetWidget(name))
         for(auto * channel : GetChannels())
             if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(subGUID, FlipNameFor(UnmodifiedNameFor(name)), value);
+                channel->SetWidgetValue(subGUID, UnmodifiedNameFor(name), value);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, double value, int mode)
 {
     if(IsOKToSetWidget(name))
         for(auto & channel : GetChannels())
-            channel->SetWidgetValue(subGUID, FlipNameFor(UnmodifiedNameFor(name)), value, mode);
+            channel->SetWidgetValue(subGUID, UnmodifiedNameFor(name), value, mode);
 }
 
 void RealCSurf::SetWidgetValue(string GUID, string subGUID, string name, string value)
 {
     if(IsOKToSetWidget(name))
         for(auto & channel : GetChannels())
-            channel->SetWidgetValue(subGUID, FlipNameFor(UnmodifiedNameFor(name)), value);
+            channel->SetWidgetValue(subGUID, UnmodifiedNameFor(name), value);
 }
 
 
