@@ -221,8 +221,6 @@ private:
     int numBankableChannels_ = 0;
     vector<CSurfChannel*> channels_;
     
-    bool isFlipped_ = false;
-
     bool shift_ = false;
     bool option_ = false;
     bool control_ = false;
@@ -244,16 +242,6 @@ private:
             modifiers += Alt;
         
         return modifiers;
-    }
-    
-    string FlipNameFor(string name)
-    {
-        if(name == Volume && isFlipped_)
-            return Pan;
-        else if(name == Pan && isFlipped_)
-            return Volume;
-        else
-            return name;
     }
     
     string ModifiedNameFor(string name)
@@ -319,15 +307,7 @@ public:
     {
         channels_.push_back(channel);
     }
-    
-    void ToggleFlipped(string name)
-    {
-        isFlipped_ = ! isFlipped_;
-        
-        // GAW TBD
-        //SetWidgetValue("", name, isFlipped_);
-    }
-    
+       
     void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
     void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
     void SetControl(bool value) { control_ = value; ForceUpdateWidgets(); }
@@ -337,7 +317,6 @@ public:
     
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
-    bool IsFlipped() { return isFlipped_; }
 
     // to Widgets ->
     virtual void UpdateWidgets();
@@ -594,7 +573,6 @@ public:
     
     void RefreshLayout();
 
-    void ToggleFlipped(string surfaceName, string name);
     void SetShift(string surfaceName, bool value);
     void SetOption(string surfaceName, bool value);
     void SetControl(string surfaceName, bool value);
@@ -717,11 +695,11 @@ class CSurfManager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     
-    vector <LogicalSurface*> surfaces_;
+    vector <LogicalSurface*> logicalSurfaces_;
 
     bool lazyInitialized_ = false;
     
-    int currentSurfaceIndex_ = 0;;
+    int currentLogicalSurfaceIndex_ = 0;;
 
     void RunAndUpdate()
     {
@@ -729,18 +707,18 @@ private:
         {
             // init the maps here
             
-            LogicalSurface* surface = new LogicalSurface(this);
-            surface->Initialize();
-            surfaces_.push_back(surface);
+            LogicalSurface* logicalSurface = new LogicalSurface(this);
+            logicalSurface->Initialize();
+            logicalSurfaces_.push_back(logicalSurface);
             
-            surface = new LogicalSurface(this);
-            surface->Initialize2();
-            surfaces_.push_back(surface);
+            logicalSurface = new LogicalSurface(this);
+            logicalSurface->Initialize2();
+            logicalSurfaces_.push_back(logicalSurface);
             
             lazyInitialized_ = true;
         }
         
-        surfaces_[currentSurfaceIndex_]->RunAndUpdate();
+        logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -785,7 +763,7 @@ public:
     
     void OnTrackSelection(MediaTrack *trackid)
     {
-        surfaces_[currentSurfaceIndex_]->OnTrackSelection(trackid);
+        logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(trackid);
     }
     
     void Run()
@@ -795,22 +773,22 @@ public:
     
     void NextLogicalSurface()
     {
-        currentSurfaceIndex_ = currentSurfaceIndex_ == surfaces_.size() - 1 ? 0 : ++currentSurfaceIndex_;
+        currentLogicalSurfaceIndex_ = currentLogicalSurfaceIndex_ == logicalSurfaces_.size() - 1 ? 0 : ++currentLogicalSurfaceIndex_;
 
-        surfaces_[currentSurfaceIndex_]->RefreshLayout();
+        logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
 
     void TrackListChanged() // tell current map
     {
-        if(surfaces_.size() != 0) // seems we need to protect against prematurely early calls
-            for(auto & surface : surfaces_)
+        if(logicalSurfaces_.size() != 0) // seems we need to protect against prematurely early calls
+            for(auto & surface : logicalSurfaces_)
                 surface->TrackListChanged();
     }
 
     void TrackFXListChanged(MediaTrack* trackid)
     {
-        if(surfaces_.size() != 0) // seems we need to protect against prematurely early calls
-            for(auto & surface : surfaces_)
+        if(logicalSurfaces_.size() != 0) // seems we need to protect against prematurely early calls
+            for(auto & surface : logicalSurfaces_)
                 surface->TrackFXListChanged(trackid);
     }
 };

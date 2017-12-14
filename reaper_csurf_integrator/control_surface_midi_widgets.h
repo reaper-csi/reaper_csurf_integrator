@@ -108,31 +108,8 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0])
-        {
-            double volume = int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]);
-            
-            if( ! GetChannel()->GetSurface()->IsFlipped())
-            {
-                
-                //volume *= (GetMaxDB() - GetMinDB()) / (Surface()->Manager()->GetFaderMaxDB() - Surface()->Manager()->GetFaderMinDB());
-                
-                //volume > 1.0 ? 1.0 : volume;
-
-                /*
-                double volumeDB = volume * (GetMaxDB() - GetMinDB());
-                
-                //slope = (output_end - output_start) / (input_end - input_start)
-                //output = output_start + slope * (input - input_start)
-                
-                // Map Surface Fader range to Reaper Fader range
-                double slope = (Surface()->Manager()->GetFaderMaxDB() - Surface()->Manager()->GetFaderMinDB()) / (GetMaxDB() - GetMinDB());
-                double output = Surface()->Manager()->GetFaderMinDB() + slope * (volumeDB - GetMinDB());
-                
-                volume = volToNormalized(DB2VAL(output));
-                 */
-            }
-            
-            GetChannel()->RunAction(GetName(), volume);
+        {         
+            GetChannel()->RunAction(GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
         }
     }
 };
