@@ -17,7 +17,7 @@ public:
     
     Shift_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetShift(surfaceName, value);
     }
@@ -31,7 +31,7 @@ public:
     
     Option_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetOption(surfaceName, value);
     }
@@ -45,7 +45,7 @@ public:
     
     Control_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetControl(surfaceName, value);
     }
@@ -59,7 +59,7 @@ public:
     
     Alt_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->SetAlt(surfaceName, value);
     }
@@ -132,7 +132,7 @@ public:
     
     NextMap_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->GetManager()->NextLogicalSurface();
     }
@@ -149,7 +149,7 @@ public:
     
     TrackBank_Action(string name, Interactor* interactor, int stride) : DoubleAction(name, interactor), stride_(stride)   {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->AdjustTrackBank(stride_);
     }
@@ -163,7 +163,7 @@ public:
     
     ImmobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->ImmobilizeSelectedTracks();
     }
@@ -177,7 +177,7 @@ public:
     
     MobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Run(string surfaceName, double value) override
     {
         GetInteractor()->GetLogicalSurface()->MobilizeSelectedTracks();
     }

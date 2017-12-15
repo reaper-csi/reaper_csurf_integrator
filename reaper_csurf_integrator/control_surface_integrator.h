@@ -17,45 +17,39 @@ using namespace std;
 
 const string LogicalCSurf = "LogicalCSurf";
 
-const string Volume = "Volume";
-const string Pan = "Pan";
-
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 
-const string Delimiter = "#";
-
-template <class Container>
-static void SplitString(string& str, Container& cont, char delim = ' ')
+struct WidgetAddress
 {
-    stringstream ss(str);
-    string token;
-    while (getline(ss, token, delim))
-        cont.push_back(token);
+    string surfaceName;
+    string widgetName;
+    
+    WidgetAddress(string aSurfaceName, string aWidgetName) : surfaceName(aSurfaceName), widgetName(aWidgetName) {}
 };
 
 struct MapEntry
 {
-    string widget;
-    string param;
+    string widgetName;
+    string paramName;
     
-    MapEntry(string aWidget, string aParam) : widget(aWidget), param(aParam) {}
+    MapEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
 };
 
 struct FXMap
 {
 private:
-    string name_;
+    string name;
     vector<MapEntry> entries_;
     
 public:
-    FXMap(string name) : name_(name) {}
+    FXMap(string aName) : name(aName) {}
     
-    string GetName() { return name_; }
+    string GetName() { return name; }
     
-    void AddEntry(string widget, string param) { entries_.push_back(MapEntry(widget, param));   }
+    void AddEntry(string widgetName, string paramName) { entries_.push_back(MapEntry(widgetName, paramName));   }
     
     vector<MapEntry>& GetMapEntries() { return entries_; }
 };
@@ -74,7 +68,8 @@ class MidiWidget
 {
 private:
     string name_= "";
-    CSurfChannel* channel_ = nullptr;
+    string GUID_ = "";
+    RealCSurf* surface_ = nullptr;
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
@@ -85,15 +80,19 @@ protected:
 public:
     virtual ~MidiWidget() {};
     
-    MidiWidget(string name, CSurfChannel* channel, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), channel_(channel), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
     string GetName() { return name_; }
     
-    CSurfChannel* GetChannel() { return channel_; }
+    string GetGUID() { return GUID_; }
+    
+    RealCSurf* GetSurface() { return surface_; }
 
     virtual double GetMinDB() { return 0.0; }
     
     virtual double GetMaxDB() { return 1.0; }
+    
+    void SetGUID(string GUID) { GUID_ = GUID; }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 
@@ -194,12 +193,6 @@ public:
     virtual void UpdateWidgets();
     virtual void ForceUpdateWidgets();
     
-    // to Actions ->
-    void UpdateAction(string name);
-    void ForceUpdateAction(string name);
-    void CycleAction(string name);
-    void RunAction(string name, double value);
-
     // to Widgets ->
     virtual void SetWidgetValue(string name, double value);
     virtual void SetWidgetValue(string name, double value, int mode);
@@ -225,6 +218,7 @@ private:
     bool option_ = false;
     bool control_ = false;
     bool alt_ = false;
+    
     bool zoom_ = false;
     bool scrub_ = false;
     
@@ -244,7 +238,7 @@ private:
         return modifiers;
     }
     
-    string ModifiedNameFor(string name)
+    string ActionAddressFor(string name)
     {
         if(name == Shift || name == Option || name == Control || name == Alt)
             return name;
@@ -254,30 +248,12 @@ private:
         else return name;
     }
     
-    string UnmodifiedNameFor(string name)
+    string ActionAddressFor(string GUID, string name)
     {
-        vector<string> tokens;
-        
-        SplitString(name, tokens, '#');
-        
-        if(tokens.size() == 1)
+        if(name == Shift || name == Option || name == Control || name == Alt)
             return name;
         else
-            return tokens[1];
-    }
-    
-    bool IsOKToSetWidget(string name)
-    {
-        // GAW TBD is this really necessary, we really shouldn't get an update for the wrong thing
-        
-        vector<string> tokens;
-        
-        SplitString(name, tokens, '#');
-        
-        if((tokens.size() == 1 && CurrentModifers() == "") || (tokens.size() > 0 && tokens[0] == CurrentModifers()))
-            return true;
-        else
-            return false;
+            return GUID + GetName() + CurrentModifers() + name;
     }
     
 public:
@@ -370,12 +346,12 @@ public:
     
     virtual double GetCurrentNormalizedValue () { return 0.0; }
 
-    virtual void AddAction(Action* action) {}
+    virtual void Add(Action* action) {}
     
-    virtual void UpdateAction(string surfaceName) {}
-    virtual void ForceUpdateAction(string surfaceName) {}
-    virtual void CycleAction(string surfaceName) {}
-    virtual void RunAction(string surfaceName, double value) {}
+    virtual void Update(string surfaceName) {}
+    virtual void ForceUpdate(string surfaceName) {}
+    virtual void Cycle(string surfaceName) {}
+    virtual void Run(string surfaceName, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -577,6 +553,7 @@ public:
     void SetOption(string surfaceName, bool value);
     void SetControl(string surfaceName, bool value);
     void SetAlt(string surfaceName, bool value);
+    
     void SetZoom(string surfaceName, bool value);
     void SetScrub(string surfaceName, bool value);
     
@@ -596,12 +573,12 @@ public:
     void UpdateAction(string surfaceName, string GUID, string name);
     void ForceUpdateAction(string surfaceName, string GUID, string name);
     void CycleAction(string surfaceName, string trackGUID, string name);
-    void RunAction(string surfaceName, string GUID, string name, double value);
+    void RunAction(string actionAddress, double value, WidgetAddress widgetAddress);
     
     void UpdateAction(string surfaceName, string GUID, string subGUID, string name);
     void ForceUpdateAction(string surfaceName, string GUID, string subGUID, string name);
     void CycleAction(string surfaceName, string trackGUID, string subGUID, string name);
-    void RunAction(string surfaceName, string GUID, string subGUID, string name, double value);
+    void RunAction(string surfaceName, string trackGUID, string subGUID, string name, double value);
     
     // to Widgets ->
     void SetWidgetValue(string surfaceName, string GUID, string name, double value);
