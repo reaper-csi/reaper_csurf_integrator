@@ -33,7 +33,7 @@ public:
         return currentValue_;
     }
     
-    virtual void UpdateAction(string surfaceName) override
+    virtual void Update(string surfaceName) override
     {
         double newValue = GetValue();
         
@@ -41,7 +41,7 @@ public:
             SetWidgetValue(surfaceName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdateAction(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName) override
     {
         SetWidgetValue(surfaceName, GetValue());
     }
@@ -63,30 +63,30 @@ public:
         return actions_[currentIndex_]->GetCurrentNormalizedValue();
     }
     
-    virtual void AddAction(Action* action) override
+    virtual void Add(Action* action) override
     {
         actions_.push_back(action);
     }
    
-    virtual void UpdateAction(string surfaceName) override
+    virtual void Update(string surfaceName) override
     {
-        actions_[currentIndex_]->UpdateAction(surfaceName);
+        actions_[currentIndex_]->Update(surfaceName);
     }
     
-    virtual void ForceUpdateAction(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName) override
     {
-        actions_[currentIndex_]->ForceUpdateAction(surfaceName);
+        actions_[currentIndex_]->ForceUpdate(surfaceName);
     }
     
-    virtual void CycleAction(string surfaceName) override
+    virtual void Cycle(string surfaceName) override
     {
         currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
-        actions_[currentIndex_]->CycleAction(surfaceName);
+        actions_[currentIndex_]->Cycle(surfaceName);
     }
     
-    virtual void RunAction(string surfaceName, double adjustment) override
+    virtual void Run(string surfaceName, double adjustment) override
     {
-        actions_[currentIndex_]->RunAction(surfaceName, adjustment);
+        actions_[currentIndex_]->Run(surfaceName, adjustment);
     }
 };
 
@@ -107,7 +107,7 @@ protected:
 public:
     StringDisplayAction(string name, Interactor* interactor) : Action(name, interactor) {}
     
-    virtual void UpdateAction(string surfaceName) override
+    virtual void Update(string surfaceName) override
     {
         string newValue = GetValue();
         
@@ -115,7 +115,7 @@ public:
             SetWidgetValue(surfaceName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdateAction(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName) override
     {
         SetWidgetValue(surfaceName, GetValue());
     }
