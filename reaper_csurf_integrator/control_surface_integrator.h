@@ -175,13 +175,13 @@ public:
     // to Widgets ->
     virtual void UpdateWidgets()
     {
-        for( auto const& [key, val] : widgets_ )
+        for(auto const& [key, val] : widgets_ )
             val->Update();
     }
 
     virtual void ForceUpdateWidgets()
     {
-        for( auto const& [key, val] : widgets_ )
+        for(auto const& [key, val] : widgets_ )
             val->ForceUpdate();
     }
 
