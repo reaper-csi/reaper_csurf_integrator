@@ -22,14 +22,6 @@ const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 
-struct WidgetAddress
-{
-    string surfaceName;
-    string widgetName;
-    
-    WidgetAddress(string aSurfaceName, string aWidgetName) : surfaceName(aSurfaceName), widgetName(aWidgetName) {}
-};
-
 struct MapEntry
 {
     string widgetName;
@@ -56,46 +48,34 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSurfManager;
-class LogicalSurface;
-class Interactor;
-class Action;
 class RealCSurf;
-class CSurfChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_= "";
     string GUID_ = "";
     RealCSurf* surface_ = nullptr;
+    string name_= "";
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 protected:
+    string GetGUID() { return GUID_; }
+    RealCSurf* GetSurface() { return surface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
-    
+
 public:
     virtual ~MidiWidget() {};
     
-    MidiWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : name_(name), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), surface_(surface), name_(name), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
+    virtual double GetMinDB() { return -72.0; }
+    virtual double GetMaxDB() { return 12.0; }
     string GetName() { return name_; }
-    
-    string GetGUID() { return GUID_; }
-    
-    RealCSurf* GetSurface() { return surface_; }
-
-    virtual double GetMinDB() { return 0.0; }
-    
-    virtual double GetMaxDB() { return 1.0; }
-    
     void SetGUID(string GUID) { GUID_ = GUID; }
-    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-
     void Update();
     void ForceUpdate();
     virtual void SetValue(double value) {}
@@ -105,104 +85,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SubChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string subGUID_ = "";
-    vector<string> widgetNames_;
-    
-public:
-    SubChannel(string subGUID) : subGUID_(subGUID) {}
-    
-    string GetSubGUID() { return subGUID_; }
-    
-    vector<string> GetWidgetNames() { return widgetNames_; }
-    
-    void AddWidgetName(string name)
-    {
-        widgetNames_.push_back(name);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSurfChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string GUID_ = "";
-    RealCSurf* surface_= nullptr;
-    bool isMovable_ = true;
-    vector<MidiWidget*> widgets_;
-    bool shouldMapSubChannels_ = false;
-    vector<SubChannel*> subChannels_;
-
-public:
-    virtual ~CSurfChannel() {}
-    
-    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable, bool shouldMapSubChannels) : GUID_(GUID), surface_(surface), isMovable_(isMovable), shouldMapSubChannels_(shouldMapSubChannels) {}
-    
-    string GetGUID() { return GUID_; }
-
-    RealCSurf* GetSurface() { return surface_; }
-    
-    bool GetIsMovable() { return isMovable_; }
-    
-    vector<MidiWidget*> GetWidgets() { return widgets_; }
-    
-    vector<SubChannel*> GetSubChannels() { return subChannels_; }
-
-    void SetIsMovable(bool isMovable) { isMovable_ = isMovable; }
-    
-    void ClearSubChannels() {  subChannels_.clear(); }
-    
-    virtual void OnTrackSelection(MediaTrack *trackid);
-    
-    void AddWidget(MidiWidget* widget)
-    {
-        widgets_.push_back(widget);
-    }
-    
-    void AddSubChannel(SubChannel* subChannel)
-    {
-        subChannels_.push_back(subChannel);
-    }
-
-    void SetGUID(string GUID)
-    {
-        GUID_ = GUID;
-    
-        if(GUID_ == "")
-        {
-           for(auto* widget : widgets_)
-                widget->SetValueToZero();
-        }
-        /* GAW TBD Don't know if this is necessary
-        else if(shouldMapSubChannels_ && DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(GetGUID()), "I_SELECTED") && DAW::CountSelectedTracks(nullptr) == 1  )
-        {
-            MapFX(DAW::GetTrackFromGUID(GUID));
-        }
-         */
-    }
-    
-    void MapFX(MediaTrack *trackid);
-
-    void ProcessMidiMessage(const MIDI_event_ex_t* evt);
-    
-    // to Widgets ->
-    virtual void UpdateWidgets();
-    virtual void ForceUpdateWidgets();
-    
-    // to Widgets ->
-    virtual void SetWidgetValue(string name, double value);
-    virtual void SetWidgetValue(string name, double value, int mode);
-    virtual void SetWidgetValue(string name, string value);
-    
-    void SetWidgetValue(string subGUID, string name, double value);
-    void SetWidgetValue(string subGUID, string name, double value, int mode);
-    void SetWidgetValue(string subGUID, string name, string value);
-};
-
+class LogicalSurface;
+class CSurfChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealCSurf
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,6 +97,7 @@ private:
     string bankGroup_ = "";
     int numBankableChannels_ = 0;
     vector<CSurfChannel*> channels_;
+    map<string, MidiWidget*> widgets_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -238,22 +123,9 @@ private:
         return modifiers;
     }
     
-    string ActionAddressFor(string name)
-    {
-        if(name == Shift || name == Option || name == Control || name == Alt)
-            return name;
-        
-        if(CurrentModifers() != "")
-            return CurrentModifers() + "#" + name;
-        else return name;
-    }
-    
     string ActionAddressFor(string GUID, string name)
     {
-        if(name == Shift || name == Option || name == Control || name == Alt)
-            return name;
-        else
-            return GUID + GetName() + CurrentModifers() + name;
+        return GUID + GetName() + CurrentModifers() + name;
     }
     
 public:
@@ -279,11 +151,19 @@ public:
     
     virtual void RunAndUpdate() {}
     
-    virtual void AddChannel(CSurfChannel*  channel)
+    void AddChannel(CSurfChannel*  channel)
     {
         channels_.push_back(channel);
     }
-       
+    
+    void AddWidget(MidiWidget* widget)
+    {
+        widgets_[widget->GetName()] = widget;
+    }
+    
+    void SetWidgetGUID(string widgetName, string GUID) { widgets_[widgetName]->SetGUID(GUID); }
+    void SetWidgetValueToZero(string widgetName) { widgets_[widgetName]->SetValueToZero(); }
+
     void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
     void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
     void SetControl(bool value) { control_ = value; ForceUpdateWidgets(); }
@@ -299,24 +179,59 @@ public:
     virtual void ForceUpdateWidgets();
 
     // to Actions ->
-    void UpdateAction(string GUID, string name);
-    void ForceUpdateAction(string GUID, string name);
-    void CycleAction(string trackGUID, string name);
-    void RunAction(string GUID, string name, double value);
+    void UpdateAction(string surfaceName, string widgetName);
+    void ForceUpdateAction(string surfaceName, string widgetName);
+    void CycleAction(string surfaceName, string widgetName);
+    void RunAction(string surfaceName, string widgetName, double value);
     
-    void UpdateAction(string GUID, string subGUID, string name);
-    void ForceUpdateAction(string GUID, string subGUID, string name);
-    void CycleAction(string trackGUID, string subGUID, string name);
-    void RunAction(string GUID, string subGUID, string name, double value);
-
     // to Widgets ->
-    void SetWidgetValue(string GUID, string name, double value);
-    void SetWidgetValue(string GUID, string name, double value, int mode);
-    void SetWidgetValue(string GUID, string name, string value);
+    void SetWidgetValue(string surfaceName, string widgetName, double value);
+    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode);
+    void SetWidgetValue(string surfaceName, string widgetName, string value);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CSurfChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string GUID_ = "";
+    RealCSurf* surface_= nullptr;
+    bool isMovable_ = true;
+    vector<string> widgetNames_;
+
+public:
+    virtual ~CSurfChannel() {}
     
-    void SetWidgetValue(string GUID, string subGUID, string name, double value);
-    void SetWidgetValue(string GUID, string subGUID, string name, double value, int mode);
-    void SetWidgetValue(string GUID, string subGUID, string name, string value);
+    CSurfChannel(string GUID, RealCSurf* surface, bool isMovable) : GUID_(GUID), surface_(surface), isMovable_(isMovable){}
+    
+    string GetGUID() { return GUID_; }
+    
+    bool GetIsMovable() { return isMovable_; }
+    
+    void OnTrackSelection(MediaTrack *trackid);
+    void MapFX(MediaTrack *trackid);
+    
+    void SetIsMovable(bool isMovable) { isMovable_ = isMovable; }
+    
+    void AddWidget(MidiWidget* widget)
+    {
+        widgetNames_.push_back(widget->GetName());
+        surface_->AddWidget(widget);
+    }
+    
+    void SetGUID(string GUID)
+    {
+        GUID_ = GUID;
+        
+        for (auto widgetName : widgetNames_)
+        {
+            surface_->SetWidgetGUID(widgetName, GUID);
+
+            if(GUID_ == "")
+                surface_->SetWidgetValueToZero(widgetName);
+         }
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -324,23 +239,16 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_ = "";
-    Interactor* interactor_ = nullptr;
+    LogicalSurface* logicalSurface_ = nullptr;
 
 protected:
-    virtual void SetWidgetValue(string surfaceName, double value) {}
-    virtual void SetWidgetValue(string surfaceName, string value) {}
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) {}
+    virtual void SetWidgetValue(string surfaceName, string widgetName, string value) {}
 
-    Action(string name, Interactor* interactor) : name_(name), interactor_(interactor) {}
+    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
     
 public:
     virtual ~Action() {}
-    
-    string GetName() { return name_; }
-
-    Interactor* GetInteractor() { return interactor_; }
-    
-    virtual string GetAlias() { return name_; }
     
     virtual int GetDisplayMode() { return 0; }
     
@@ -348,119 +256,14 @@ public:
 
     virtual void Add(Action* action) {}
     
-    virtual void Update(string surfaceName) {}
-    virtual void ForceUpdate(string surfaceName) {}
-    virtual void Cycle(string surfaceName) {}
-    virtual void Run(string surfaceName, double value) {}
+    virtual void Update(string surfaceName, string widgetName) {}
+    virtual void ForceUpdate(string surfaceName, string widgetName) {}
+    virtual void Cycle(string surfaceName, string widgetName) {}
+    virtual void Run(double value, string surfaceName, string widgetName) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SubInteractor;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Interactor
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    string GUID_ = "";
-    LogicalSurface* logicalSurface_ = nullptr;
-    map <string, vector<Action*>> actions_;
-    vector<SubInteractor*> fxSubInteractors_;
-    vector<SubInteractor*> sendSubInteractors_;
-
-public:
-    virtual ~Interactor() {}
-    
-    Interactor(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
-
-    virtual string GetGUID() { return GUID_; }
-
-    virtual LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    virtual MediaTrack* GetTrack() { return DAW::GetTrackFromGUID(GetGUID()); }
-    
-    vector<SubInteractor*> GetFXSubInteractors() { return fxSubInteractors_; }
-    
-    void ClearFXSubInteractors() { fxSubInteractors_.clear(); }
-    
-    vector<SubInteractor*> GetSendSubInteractors() { return sendSubInteractors_; }
-
-    void ClearSendSubInteractors() { sendSubInteractors_.clear(); }
-    
-    virtual int GetIndex() { return 0; }
-    
-    double GetCurrentNormalizedValue(string name)
-    {
-        if(actions_[name].size() > 0)
-            return (actions_[name])[0]->GetCurrentNormalizedValue();
-        else
-            return 0.0;
-    }
-    
-    void AddAction(Action* action)
-    {
-        actions_[action->GetName()].push_back(action);
-    }
-    
-    void AddAliasedAction(Action* action)
-    {
-        actions_[action->GetAlias()].push_back(action);
-    }
-    
-    void AddFXSubInteractor(SubInteractor* subInteractor)
-    {
-        fxSubInteractors_.push_back(subInteractor);
-    }
-    
-    void AddSendSubInteractor(SubInteractor* subInteractor)
-    {
-        sendSubInteractors_.push_back(subInteractor);
-    }
-    
-    // to Actions ->
-    void UpdateAction(string surfaceName, string name);
-    void ForceUpdateAction(string surfaceName, string name);
-    void CycleAction(string surfaceName, string name);
-    void RunAction(string surfaceName, string name, double value);
-    
-    void UpdateAction(string surfaceName, string subGUID, string name);
-    void ForceUpdateAction(string surfaceName, string subGUID, string name);
-    void CycleAction(string surfaceName, string subGUID, string name);
-    void RunAction(string surfaceName, string subGUID, string name, double value);
-    
-    // to Widgets ->
-    virtual void SetWidgetValue(string surfaceName, string name, double value);
-    virtual void SetWidgetValue(string surfaceName, string name, double value, int mode);
-    virtual void SetWidgetValue(string surfaceName, string name, string value);
-    
-    void SetWidgetValue(string surfaceName, string SubGUID, string name, double value);
-    void SetWidgetValue(string surfaceName, string SubGUID, string name, double value, int mode);
-    void SetWidgetValue(string surfaceName, string SubGUID, string name, string value);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SubInteractor : public Interactor
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string subGUID_ = "";
-    int index_ = 0;
-    Interactor* interactor_ = nullptr;
-    
-    Interactor* GetInteractor() { return interactor_; }
-    
-public:
-    virtual ~SubInteractor() {}
-
-    SubInteractor(string subGUID, int index, Interactor* interactor) : Interactor(interactor->GetGUID(), interactor->GetLogicalSurface()), subGUID_(subGUID), index_(index), interactor_(interactor) {}
-    
-    virtual string GetSubGUID() { return subGUID_; }
-    virtual int GetIndex() override { return index_; }
-    
-    virtual void SetWidgetValue(string surfaceName, string name, double value) override;
-    virtual void SetWidgetValue(string surfaceName, string name, double value, int mode) override;
-    virtual void SetWidgetValue(string surfaceName, string name, string value) override;
-};
-
+class CSurfManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -469,8 +272,8 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealCSurf*> surfaces_;
-    vector<Interactor*> trackInteractors_;
-    Interactor* logicalSurfaceInteractor_ = nullptr;
+    map<string, Action*> actions_;
+    
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
@@ -488,19 +291,19 @@ private:
         fxMaps_[fxMap->GetName()] = fxMap;
     }
     
-    void AddTrackInteractor(Interactor* interactor)
-    {
-        trackInteractors_.push_back(interactor);
-    }
-    
     void AddSurface(RealCSurf* surface)
     {
         surfaces_.push_back(surface);
     }
+ 
+    void AddAction(string actionAddress, Action* action)
+    {
+        actions_[actionAddress] = action;
+    }
     
     void RebuildTrackInteractors()
     {
-        trackInteractors_.clear();
+        //trackInteractors_.clear();
         BuildTrackInteractors();
         RefreshLayout();
     }
@@ -568,27 +371,17 @@ public:
     void ForceUpdate();
     
     // to Actions ->
-    double GetCurrentNormalizedValue(string trackGUID, string name);
+    double GetCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName);
 
-    void UpdateAction(string surfaceName, string GUID, string name);
-    void ForceUpdateAction(string surfaceName, string GUID, string name);
-    void CycleAction(string surfaceName, string trackGUID, string name);
-    void RunAction(string actionAddress, double value, WidgetAddress widgetAddress);
-    
-    void UpdateAction(string surfaceName, string GUID, string subGUID, string name);
-    void ForceUpdateAction(string surfaceName, string GUID, string subGUID, string name);
-    void CycleAction(string surfaceName, string trackGUID, string subGUID, string name);
-    void RunAction(string surfaceName, string trackGUID, string subGUID, string name, double value);
+    void UpdateAction(string actionAddress, string surfaceName, string widgetName);
+    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName);
+    void CycleAction(string actionAddress, string surfaceName, string widgetName);
+    void RunAction(string actionAddress, double value, string surfaceName, string widgetName);
     
     // to Widgets ->
-    void SetWidgetValue(string surfaceName, string GUID, string name, double value);
-    void SetWidgetValue(string surfaceName, string GUID, string name, double value, int mode);
-    void SetWidgetValue(string surfaceName, string GUID, string name, string value);
-    
-    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, double value);
-    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, double value, int mode);
-    void SetWidgetValue(string surfaceName, string GUID, string subGUID, string name, string value);
-    
+    void SetWidgetValue(string surfaceName, string widgetName, double value);
+    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode);
+    void SetWidgetValue(string surfaceName, string widgetName, string value);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
