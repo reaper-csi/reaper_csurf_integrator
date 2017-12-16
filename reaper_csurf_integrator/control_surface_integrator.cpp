@@ -504,7 +504,7 @@ void LogicalSurface::BuildTrackActions()
             interactor->AddAliasedAction(faderTouchStateControlledAction);
              */
             
-            AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackName_DisplayAction(this, track));
+            AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackVolume_Action(this, track));
 
             
             /*

@@ -165,11 +165,6 @@ public:
             widgets_[widgetName]->SetGUID(GUID);
         
     }
-    void SetWidgetValueToZero(string widgetName)
-    {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetValueToZero();
-    }
 
     void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
     void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
@@ -218,6 +213,12 @@ public:
     {
         if(widgets_.count(widgetName) > 0)
             widgets_[widgetName]->SetValue(value);
+    }
+    
+    void SetWidgetValueToZero(string widgetName)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetValueToZero();
     }
 };
 
