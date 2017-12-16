@@ -146,15 +146,6 @@ void RealCSurf::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfChannel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSurfChannel::OnTrackSelection(MediaTrack *track)
-{
-    if(DAW::CountSelectedTracks(nullptr) == 1)
-    {
-        DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
-        MapFX(track);
-    }
-}
-
 void CSurfChannel::MapFX(MediaTrack *track)
 {
     
@@ -205,7 +196,7 @@ void LogicalSurface::Initialize()
     InitializeFXMaps();
     
     InitializeSurfaces();
-    InitializeLogicalCSurfInteractor();
+    InitializeLogicalCSurfActions();
     BuildTrackActions();
     BuildCSurfWidgets();
 }
@@ -216,7 +207,7 @@ void LogicalSurface::Initialize2()
     InitializeFXMaps();
 
     InitializeSurfaces();
-    InitializeLogicalCSurfInteractor();
+    InitializeLogicalCSurfActions();
     BuildTrackActions2();
     BuildCSurfWidgets();
 }
@@ -355,7 +346,7 @@ void LogicalSurface::InitializeFXMaps()
     
 }
 
-void LogicalSurface::InitializeLogicalCSurfInteractor()
+void LogicalSurface::InitializeLogicalCSurfActions()
 {
     for(auto * surface : surfaces_)
     {
@@ -911,230 +902,6 @@ void LogicalSurface::InitializeSurfaces()
     VSTMonitor_ = VSTMonitor;
     
     fclose ( filePtr );
-}
-
-void LogicalSurface::SetShift(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetShift(value);
-}
-
-void LogicalSurface::SetOption(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetOption(value);
-}
-
-void LogicalSurface::SetControl(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetControl(value);
-}
-
-void LogicalSurface::SetAlt(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetAlt(value);
-}
-
-void LogicalSurface::SetZoom(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetZoom(value);
-}
-
-void LogicalSurface::SetScrub(string surfaceName, bool value)
-{
-    for(auto* surface : surfaces_)
-        surface->SetScrub(value);
-}
-
-// to Widgets ->
-void LogicalSurface::ForceUpdate()
-{
-    for(auto& surface : surfaces_)
-        surface->ForceUpdateWidgets();
-}
-
-// to Actions ->
-double LogicalSurface::GetCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
-{
-    /*
-    if(logicalSurfaceInteractor_->GetGUID() == GUID)
-        return logicalSurfaceInteractor_->GetCurrentNormalizedValue(name);
-    else
-        for(auto & interactor : trackInteractors_)
-            if(interactor->GetGUID() == GUID)
-                return interactor->GetCurrentNormalizedValue(name);
-     */
-    
-    return 0.0;
-}
-
-void LogicalSurface::UpdateAction(string actionAddress, string surfaceName, string widgetName)
-{
-    /*
-    if(logicalSurfaceInteractor_->GetGUID() == GUID)
-        logicalSurfaceInteractor_->UpdateAction(surfaceName, name);
-    else
-        for(auto & interactor : trackInteractors_)
-            if(interactor->GetGUID() == GUID)
-                interactor->UpdateAction(surfaceName, name);
-     */
-}
-
-void LogicalSurface::ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
-{
-    /*
-    if(logicalSurfaceInteractor_->GetGUID() == GUID)
-        logicalSurfaceInteractor_->ForceUpdateAction(surfaceName, name);
-    else
-        for(auto & interactor : trackInteractors_)
-            if(interactor->GetGUID() == GUID)
-                interactor->ForceUpdateAction(surfaceName, name);
-     */
-}
-
-void LogicalSurface::CycleAction(string actionAddress, string surfaceName, string widgetName)
-{
-    /*
-    if(logicalSurfaceInteractor_->GetGUID() == GUID)
-        logicalSurfaceInteractor_->CycleAction(surfaceName, name);
-    else
-        for(auto & interactor : trackInteractors_)
-            if(interactor->GetGUID() == GUID)
-                interactor->CycleAction(surfaceName, name);
-     */
-}
-
-void LogicalSurface::RunAction(string actionAddress, double value, string surfaceName, string widgetName)
-{
-    if(actions_.count(actionAddress) > 0)
-        actions_[actionAddress]->Run(value, surfaceName, widgetName);
-    /*
-    if(logicalSurfaceInteractor_->GetGUID() == widgetName)
-        logicalSurfaceInteractor_->RunAction(surfaceName, widgetName, value);
-    else
-        for(auto & interactor : trackInteractors_)
-            if(interactor->GetGUID() == widgetName)
-                interactor->RunAction(surfaceName, widgetName, value);
-     */
-}
-
-// to Widgets ->
-void LogicalSurface::SetWidgetValue(string surfaceName, string name, double value)
-{
-    //for(auto & surface : surfaces_)
-        //surface->SetWidgetValue(GUID, name, value);
-}
-
-void LogicalSurface::SetWidgetValue(string surfaceName, string name, double value, int mode)
-{
-    //for(auto & surface : surfaces_)
-        //surface->SetWidgetValue(GUID, name, value, mode);
-}
-
-void LogicalSurface::SetWidgetValue(string surfaceName, string name, string value)
-{
-    //for(auto & surface : surfaces_)
-        //surface->SetWidgetValue(GUID, name, value);
-}
-
-void LogicalSurface::AdjustTrackBank(int stride)
-{
-    int previousTrackOffset = trackOffset_;
-    
-    trackOffset_ += stride;
-    
-    if(trackOffset_ < 1 - GetNumLogicalChannels())
-        trackOffset_ = 1 - GetNumLogicalChannels();
-    
-    if(trackOffset_ > DAW::GetNumTracks() - 1)
-        trackOffset_ = DAW::GetNumTracks() - 1;
-    
-    if(trackOffset_ != previousTrackOffset)
-        RefreshLayout();
-}
-
-void LogicalSurface::ImmobilizeSelectedTracks()
-{
-    for(auto * surface : surfaces_)
-        for(auto * channel : surface->GetChannels())
-            if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                channel->SetIsMovable(false);
-}
-
-void LogicalSurface::MobilizeSelectedTracks()
-{
-    for(auto * surface : surfaces_)
-        for(auto * channel : surface->GetChannels())
-            if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                channel->SetIsMovable(true);
-}
-
-void LogicalSurface::RefreshLayout()
-{
-    auto currentOffset = trackOffset_;
-
-    vector<string> immovableTracks;
-    
-    for(auto* surface : surfaces_)
-        for(auto* channel : surface->GetChannels())
-            if(channel->GetIsMovable() == false)
-                immovableTracks.push_back(channel->GetGUID());
-    
-    vector<string> movableTracks;
-    
-    for(int i = 0; i < GetNumLogicalChannels(); i++)
-    {
-        if(currentOffset < 0)
-        {
-            movableTracks.push_back("");
-            currentOffset++;
-        }
-        else if(currentOffset >= DAW::GetNumTracks())
-        {
-            movableTracks.push_back("");
-        }
-        else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
-        {
-            movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
-        }
-        else
-        {
-            currentOffset++;
-        }
-    }
-    
-    currentOffset = 0;
-    
-    for(auto* surface : surfaces_)
-        for(auto* channel : surface->GetChannels())
-            if(channel->GetIsMovable() == true)
-                channel->SetGUID(movableTracks[currentOffset++]);
-    
-    ForceUpdate();
-}
-
-bool LogicalSurface::DidTrackListChange()
-{
-    /*
-    if(trackInteractors_.size() == 0)
-        return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
-    
-    if(trackInteractors_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
-        return true; // list sizes disagree
-    
-    for(int i = 0; i < trackInteractors_.size(); i++)                    
-        if(trackInteractors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
-            return true;
-    */
-    return false;
-}
-
-void LogicalSurface::TrackFXListChanged(MediaTrack* track)
-{
-    MapFX(track);
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)
