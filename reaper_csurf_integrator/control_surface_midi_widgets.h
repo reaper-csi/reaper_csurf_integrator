@@ -18,9 +18,9 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButton_MidiWidget(string name, RealCSurf* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, press, release)  {}
+    PushButton_MidiWidget(RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(surface, name, press, release)  {}
     
-    PushButton_MidiWidget(string name, RealCSurf* surface, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(name, surface, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(RealCSurf* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(surface, name, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {

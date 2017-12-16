@@ -16,7 +16,7 @@ class DoubleAction : public Action
 protected:
     double currentValue_ = 999999.99;
     
-    DoubleAction(string name, Interactor* interactor) : Action(name, interactor)  {}
+    DoubleAction(Interactor* interactor) : Action(interactor)  {}
     
     DoubleAction(string name, Interactor* interactor, double initialValue) : Action(name, interactor), currentValue_(initialValue)  {}
 
