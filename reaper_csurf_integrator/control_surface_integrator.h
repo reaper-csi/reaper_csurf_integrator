@@ -193,9 +193,23 @@ public:
     void RunAction(string surfaceName, string widgetName, double value);
     
     // to Widgets ->
-    void SetWidgetValue(string widgetName, double value) { widgets_[widgetName]->SetValue(value); }
-    void SetWidgetValue(string widgetName, double value, int mode) { widgets_[widgetName]->SetValue(value, mode); }
-    void SetWidgetValue(string widgetName, string value) { widgets_[widgetName]->SetValue(value); }
+    void SetWidgetValue(string widgetName, double value)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetValue(value);
+    }
+ 
+    void SetWidgetValue(string widgetName, double value, int mode)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetValue(value, mode);
+    }
+
+    void SetWidgetValue(string widgetName, string value)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetValue(value);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,8 +233,16 @@ public:
     
     bool GetIsMovable() { return isMovable_; }
     
-    void OnTrackSelection(MediaTrack *trackid);
     void MapFX(MediaTrack *trackid);
+
+    void OnTrackSelection(MediaTrack *track)
+    {
+        if(DAW::CountSelectedTracks(nullptr) == 1)
+        {
+            DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
+            MapFX(track);
+        }
+    }
     
     void SetIsMovable(bool isMovable) { isMovable_ = isMovable; }
     
@@ -295,7 +317,21 @@ private:
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
     
-    bool DidTrackListChange();
+    bool DidTrackListChange()
+    {
+        /*
+         if(trackInteractors_.size() == 0)
+         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
+         
+         if(trackInteractors_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
+         return true; // list sizes disagree
+         
+         for(int i = 0; i < trackInteractors_.size(); i++)
+         if(trackInteractors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
+         return true;
+         */
+        return false;
+    }
     
     void AddFXMap(FXMap* fxMap)
     {
@@ -312,9 +348,8 @@ private:
         actions_[actionAddress] = action;
     }
     
-    void RebuildTrackInteractors()
+    void RebuildTrackActions()
     {
-        //trackInteractors_.clear();
         BuildTrackActions();
         RefreshLayout();
     }
@@ -352,48 +387,196 @@ public:
     void TrackListChanged()
     {
         if(DidTrackListChange())
-            RebuildTrackInteractors();
+            RebuildTrackActions();
     }
 
     void Initialize();
     void Initialize2();
     void InitializeFXMaps();
     void InitializeSurfaces();
-    void InitializeLogicalCSurfInteractor();
+    void InitializeLogicalCSurfActions();
     
-    void RefreshLayout();
-
-    void SetShift(string surfaceName, bool value);
-    void SetOption(string surfaceName, bool value);
-    void SetControl(string surfaceName, bool value);
-    void SetAlt(string surfaceName, bool value);
-    
-    void SetZoom(string surfaceName, bool value);
-    void SetScrub(string surfaceName, bool value);
-    
-    void AdjustTrackBank(int stride);
-    void ImmobilizeSelectedTracks();
-    void MobilizeSelectedTracks();
-    
-    void TrackFXListChanged(MediaTrack* track);
     void MapFX(MediaTrack* track);
 
-    // to Widgets ->
-    void ForceUpdate();
     
-    // to Actions ->
-    double GetCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName);
+    void RefreshLayout()
+    {
+        auto currentOffset = trackOffset_;
+        
+        vector<string> immovableTracks;
+        
+        for(auto* surface : surfaces_)
+            for(auto* channel : surface->GetChannels())
+                if(channel->GetIsMovable() == false)
+                    immovableTracks.push_back(channel->GetGUID());
+        
+        vector<string> movableTracks;
+        
+        for(int i = 0; i < GetNumLogicalChannels(); i++)
+        {
+            if(currentOffset < 0)
+            {
+                movableTracks.push_back("");
+                currentOffset++;
+            }
+            else if(currentOffset >= DAW::GetNumTracks())
+            {
+                movableTracks.push_back("");
+            }
+            else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
+            {
+                movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
+            }
+            else
+            {
+                currentOffset++;
+            }
+        }
+        
+        currentOffset = 0;
+        
+        for(auto* surface : surfaces_)
+            for(auto* channel : surface->GetChannels())
+                if(channel->GetIsMovable() == true)
+                    channel->SetGUID(movableTracks[currentOffset++]);
+        
+        ForceUpdate();
+    }
 
-    void UpdateAction(string actionAddress, string surfaceName, string widgetName);
-    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName);
-    void CycleAction(string actionAddress, string surfaceName, string widgetName);
-    void RunAction(string actionAddress, double value, string surfaceName, string widgetName);
+    void SetShift(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetShift(value);
+    }
+    
+    void SetOption(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetOption(value);
+    }
+    
+    void SetControl(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetControl(value);
+    }
+    
+    void SetAlt(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetAlt(value);
+    }
+    
+    void SetZoom(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetZoom(value);
+    }
+    
+    void SetScrub(string surfaceName, bool value)
+    {
+        for(auto* surface : surfaces_)
+            surface->SetScrub(value);
+    }
+    
+    void AdjustTrackBank(int stride)
+    {
+        int previousTrackOffset = trackOffset_;
+        
+        trackOffset_ += stride;
+        
+        if(trackOffset_ < 1 - GetNumLogicalChannels())
+            trackOffset_ = 1 - GetNumLogicalChannels();
+        
+        if(trackOffset_ > DAW::GetNumTracks() - 1)
+            trackOffset_ = DAW::GetNumTracks() - 1;
+        
+        if(trackOffset_ != previousTrackOffset)
+            RefreshLayout();
+    }
+    
+    void ImmobilizeSelectedTracks()
+    {
+        for(auto * surface : surfaces_)
+            for(auto * channel : surface->GetChannels())
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                    channel->SetIsMovable(false);
+    }
+    
+    void MobilizeSelectedTracks()
+    {
+        for(auto * surface : surfaces_)
+            for(auto * channel : surface->GetChannels())
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                    channel->SetIsMovable(true);
+    }
+
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        MapFX(track);
+    }
     
     // to Widgets ->
-    void SetWidgetValue(string surfaceName, string widgetName, double value);
-    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode);
-    void SetWidgetValue(string surfaceName, string widgetName, string value);
-};
+    void ForceUpdate()
+    {
+        for(auto& surface : surfaces_)
+            surface->ForceUpdateWidgets();
+    }
+
+    // to Actions ->
+    double GetCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
+    {
+        if(actions_.count(actionAddress) > 0)
+            return actions_[actionAddress]->GetCurrentNormalizedValue();
+        else
+            return 0.0;
+    }
+
+    void UpdateAction(string actionAddress, string surfaceName, string widgetName)
+    {
+        if(actions_.count(actionAddress) > 0)
+            actions_[actionAddress]->Update(surfaceName, widgetName);
+    }
+    
+    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
+    {
+        if(actions_.count(actionAddress) > 0)
+            actions_[actionAddress]->ForceUpdate(surfaceName, widgetName);
+    }
+
+    void CycleAction(string actionAddress, string surfaceName, string widgetName)
+    {
+        if(actions_.count(actionAddress) > 0)
+            actions_[actionAddress]->Cycle(surfaceName, widgetName);
+    }
+    
+    void RunAction(string actionAddress, double value, string surfaceName, string widgetName)
+    {
+        if(actions_.count(actionAddress) > 0)
+            actions_[actionAddress]->Run(value, surfaceName, widgetName);
+    }
+    
+    // to Widgets ->
+    void SetWidgetValue(string surfaceName, string widgetName, double value)
+    {
+        for(auto & surface : surfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value);
+    }
+    
+    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode)
+    {
+        for(auto & surface : surfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value, mode);
+    }
+    
+    void SetWidgetValue(string surfaceName, string widgetName, string value)
+    {
+        for(auto & surface : surfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value);
+    }};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
