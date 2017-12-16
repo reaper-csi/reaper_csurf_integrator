@@ -15,11 +15,11 @@ class Shift_Action : public DoubleAction
 {
 public:
     
-    Shift_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Shift_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->SetShift(surfaceName, value);
+        GetLogicalSurface()->SetShift(surfaceName, value);
     }
 };
 
@@ -29,11 +29,11 @@ class Option_Action : public DoubleAction
 {
 public:
     
-    Option_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Option_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->SetOption(surfaceName, value);
+        GetLogicalSurface()->SetOption(surfaceName, value);
     }
 };
 
@@ -43,11 +43,11 @@ class Control_Action : public DoubleAction
 {
 public:
     
-    Control_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Control_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->SetControl(surfaceName, value);
+        GetLogicalSurface()->SetControl(surfaceName, value);
     }
 };
 
@@ -57,11 +57,11 @@ class Alt_Action : public DoubleAction
 {
 public:
     
-    Alt_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Alt_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->SetAlt(surfaceName, value);
+        GetLogicalSurface()->SetAlt(surfaceName, value);
     }
 };
 /*
@@ -130,11 +130,11 @@ class NextMap_Action : public DoubleAction
 {
 public:
     
-    NextMap_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    NextMap_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->GetManager()->NextLogicalSurface();
+        GetLogicalSurface()->GetManager()->NextLogicalSurface();
     }
 };
 
@@ -147,11 +147,11 @@ private:
 
 public:
     
-    TrackBank_Action(string name, Interactor* interactor, int stride) : DoubleAction(name, interactor), stride_(stride)   {}
+    TrackBank_Action(LogicalSurface* logicalSurface, int stride) : DoubleAction(logicalSurface), stride_(stride)   {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->AdjustTrackBank(stride_);
+        GetLogicalSurface()->AdjustTrackBank(stride_);
     }
 };
 
@@ -161,11 +161,11 @@ class ImmobilizeSelectedTracks_Action : public DoubleAction
 {
 public:
     
-    ImmobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    ImmobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->ImmobilizeSelectedTracks();
+       GetLogicalSurface()->ImmobilizeSelectedTracks();
     }
 };
 
@@ -175,11 +175,11 @@ class MobilizeSelectedTracks_Action : public DoubleAction
 {
 public:
     
-    MobilizeSelectedTracks_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    MobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        GetInteractor()->GetLogicalSurface()->MobilizeSelectedTracks();
+        GetLogicalSurface()->MobilizeSelectedTracks();
     }
 };
 
