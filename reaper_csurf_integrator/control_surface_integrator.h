@@ -65,11 +65,11 @@ protected:
     RealCSurf* GetSurface() { return surface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
+    
+    MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), surface_(surface), name_(name), midiPressMessage_(press), midiReleaseMessage_(release) {}
 
 public:
     virtual ~MidiWidget() {};
-    
-    MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), surface_(surface), name_(name), midiPressMessage_(press), midiReleaseMessage_(release) {}
     
     virtual double GetMinDB() { return -72.0; }
     virtual double GetMaxDB() { return 12.0; }
