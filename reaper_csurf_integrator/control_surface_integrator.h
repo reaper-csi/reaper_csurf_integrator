@@ -215,6 +215,8 @@ public:
     
     string GetGUID() { return GUID_; }
     
+    RealCSurf* GetSurface() { return surface_; }
+    
     bool GetIsMovable() { return isMovable_; }
     
     void OnTrackSelection(MediaTrack *trackid);
@@ -287,8 +289,8 @@ private:
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
 
-    void BuildTrackInteractors();
-    void BuildTrackInteractors2();
+    void BuildTrackActions();
+    void BuildTrackActions2();
     void BuildCSurfWidgets();
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
@@ -313,7 +315,7 @@ private:
     void RebuildTrackInteractors()
     {
         //trackInteractors_.clear();
-        BuildTrackInteractors();
+        BuildTrackActions();
         RefreshLayout();
     }
     
