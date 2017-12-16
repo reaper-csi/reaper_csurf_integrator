@@ -357,65 +357,69 @@ void LogicalSurface::InitializeFXMaps()
 
 void LogicalSurface::InitializeLogicalCSurfInteractor()
 {
-    AddAction(LogicalCSurf + ChannelLeft, new TrackBank_Action(this, -1));
-    AddAction(LogicalCSurf + ChannelRight, new TrackBank_Action(this, 1));
-    AddAction(LogicalCSurf + BankLeft, new TrackBank_Action(this, -8));
-    AddAction(LogicalCSurf + BankRight, new TrackBank_Action(this, 8));
+    for(auto * surface : surfaces_)
+    {
+        string surfaceName = surface->GetName();
 
-    AddAction(LogicalCSurf + NextMap, new NextMap_Action(this));
-    AddAction(LogicalCSurf + LockTracks, new ImmobilizeSelectedTracks_Action(this));
-    AddAction(LogicalCSurf + UnlockTracks, new MobilizeSelectedTracks_Action(this));
+        AddAction(LogicalCSurf + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
+        AddAction(LogicalCSurf + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
+        AddAction(LogicalCSurf + surfaceName + BankLeft, new TrackBank_Action(this, -8));
+        AddAction(LogicalCSurf + surfaceName + BankRight, new TrackBank_Action(this, 8));
 
-    AddAction(LogicalCSurf + Shift, new Shift_Action(this));
-    AddAction(LogicalCSurf + Option, new Option_Action(this));
-    AddAction(LogicalCSurf + Control, new Control_Action(this));
-    AddAction(LogicalCSurf + Alt, new Alt_Action(this));
+        AddAction(LogicalCSurf + surfaceName + NextMap, new NextMap_Action(this));
+        AddAction(LogicalCSurf + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
+        AddAction(LogicalCSurf + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
 
-    AddAction(LogicalCSurf + Read, new TrackAutoMode_Action(this, 1));
-    AddAction(LogicalCSurf + Write, new TrackAutoMode_Action(this, 3));
-    AddAction(LogicalCSurf + Trim, new TrackAutoMode_Action(this, 0));
-    AddAction(LogicalCSurf + Touch, new TrackAutoMode_Action(this, 2));
-    AddAction(LogicalCSurf + Latch, new TrackAutoMode_Action(this, 4));
-    AddAction(LogicalCSurf + Group, new TrackAutoMode_Action(this, 5));
-    
-    AddAction(LogicalCSurf + Shift + Read, new GlobalAutoMode_Action(this, 1));
-    AddAction(LogicalCSurf + Shift + Write, new GlobalAutoMode_Action(this, 3));
-    AddAction(LogicalCSurf + Shift + Trim, new GlobalAutoMode_Action(this, 0));
-    AddAction(LogicalCSurf + Shift + Touch, new GlobalAutoMode_Action(this, 2));
-    AddAction(LogicalCSurf + Shift + Latch, new GlobalAutoMode_Action(this, 4));
-    AddAction(LogicalCSurf + Shift + Group, new GlobalAutoMode_Action(this, 5));
-  
-    AddAction(LogicalCSurf + Save, new Save_Action(this));
-    AddAction(LogicalCSurf + Shift + Save, new SaveAs_Action(this));
-    AddAction(LogicalCSurf + Undo, new Undo_Action(this));
-    AddAction(LogicalCSurf + Shift + Undo, new Redo_Action(this));
-    
-    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
+        AddAction(LogicalCSurf + surfaceName + Shift, new Shift_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Option, new Option_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Control, new Control_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Alt, new Alt_Action(this));
 
-    AddAction(LogicalCSurf + Marker, new PreviousMarker_Action(this));
-    AddAction(LogicalCSurf + Shift + Marker, new InsertMarker_Action(this));
-    AddAction(LogicalCSurf + Option + Marker, new InsertMarkerRegion_Action(this));
-    AddAction(LogicalCSurf + Nudge, new NextMarker_Action(this));
-    AddAction(LogicalCSurf + Cycle, new CycleTimeline_Action(this));
-    AddAction(LogicalCSurf + Click, new Metronome_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Read, new TrackAutoMode_Action(this, 1));
+        AddAction(LogicalCSurf + surfaceName + Write, new TrackAutoMode_Action(this, 3));
+        AddAction(LogicalCSurf + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
+        AddAction(LogicalCSurf + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
+        AddAction(LogicalCSurf + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
+        AddAction(LogicalCSurf + surfaceName + Group, new TrackAutoMode_Action(this, 5));
+        
+        AddAction(LogicalCSurf + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
+        AddAction(LogicalCSurf + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
+        AddAction(LogicalCSurf + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
+        AddAction(LogicalCSurf + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
+        AddAction(LogicalCSurf + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
+        AddAction(LogicalCSurf + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
+      
+        AddAction(LogicalCSurf + surfaceName + Save, new Save_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Shift + Save, new SaveAs_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Undo, new Undo_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Shift + Undo, new Redo_Action(this));
+        
+        //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
+        //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
 
-    AddAction(LogicalCSurf + Rewind, new Rewind_Action(this));
-    AddAction(LogicalCSurf + FastForward, new FastForward_Action(this));
-    AddAction(LogicalCSurf + Stop, new Stop_Action(this));
-    AddAction(LogicalCSurf + Play, new Play_Action(this));
-    AddAction(LogicalCSurf + Record, new Record_Action(this));
-    
-    // GAW TBD -- timers need to be cross platform
+        AddAction(LogicalCSurf + surfaceName + Marker, new PreviousMarker_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Shift + Marker, new InsertMarker_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Option + Marker, new InsertMarkerRegion_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Nudge, new NextMarker_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Cycle, new CycleTimeline_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Click, new Metronome_Action(this));
 
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Up,  logicalSurfaceInteractor_, 0, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Down,  logicalSurfaceInteractor_, 1, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Left,  logicalSurfaceInteractor_, 2, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Right, logicalSurfaceInteractor_, 3, 0.3));
-    
-    //logicalSurfaceInteractor_->AddAction(new LatchedZoom_Action(Zoom,  logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new LatchedScrub_Action(Scrub,  logicalSurfaceInteractor_));
+        AddAction(LogicalCSurf + surfaceName + Rewind, new Rewind_Action(this));
+        AddAction(LogicalCSurf + surfaceName + FastForward, new FastForward_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Stop, new Stop_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Play, new Play_Action(this));
+        AddAction(LogicalCSurf + surfaceName + Record, new Record_Action(this));
+        
+        // GAW TBD -- timers need to be cross platform
 
+        //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Up,  logicalSurfaceInteractor_, 0, 0.3));
+        //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Down,  logicalSurfaceInteractor_, 1, 0.3));
+        //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Left,  logicalSurfaceInteractor_, 2, 0.3));
+        //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Right, logicalSurfaceInteractor_, 3, 0.3));
+        
+        //logicalSurfaceInteractor_->AddAction(new LatchedZoom_Action(Zoom,  logicalSurfaceInteractor_));
+        //logicalSurfaceInteractor_->AddAction(new LatchedScrub_Action(Scrub,  logicalSurfaceInteractor_));
+    }
 }
 
 void LogicalSurface::BuildTrackActions()
