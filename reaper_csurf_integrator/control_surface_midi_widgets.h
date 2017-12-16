@@ -173,7 +173,7 @@ public:
             if (midiMessage->midi_message[2] & 0x40)
                 value = -value;
             
-            value += GetSurface()->GetLogicalSurface()->GetCurrentNormalizedValue(GetGUID(), GetSurface()->GetName(), GetName());
+            value += GetSurface()->GetCurrentNormalizedValue(GetGUID(), GetName());
             
             GetSurface()->RunAction(GetGUID(), GetName(), value);
         }
