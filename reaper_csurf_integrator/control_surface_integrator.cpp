@@ -191,6 +191,77 @@ void CSurfChannel::MapFX(MediaTrack *track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void LogicalSurface::MapFX(MediaTrack* track)
+{
+    char trackFXName[256];
+    char trackFXParameterName[256];
+    char trackFXParameterGUID[256];
+    
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    /*
+     
+     // We will always find the interactor for this track, otherwise how could we add FX to it ?
+     Interactor* interactor = nullptr;
+     
+     for(auto * anInteractor : trackInteractors_)
+     if(anInteractor->GetGUID() == trackGUID)
+     interactor = anInteractor;
+     
+     // Dump any existing FX subInteractors
+     interactor->ClearFXSubInteractors();
+     
+     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+     {
+     // GAW TBD -- how do we know we should do this ?
+     //AddAction(trackGUID + surfaceName + CompressorMeter + trackNumber, new GainReductionMeter_Action(this, track, i));
+     
+     
+     
+     
+     DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
+     string fxName(trackFXName);
+     
+     if(fxMaps_.count(trackFXName) > 0)
+     {
+     FXMap* map = fxMaps_[fxName];
+     
+     DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
+     string fxGUID(trackFXParameterGUID);
+     
+     SubInteractor* subInteractor = new SubInteractor(fxGUID, i, interactor);
+     
+     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+     {
+     DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+     string fxParamName(trackFXParameterName);
+     
+     for(auto map : map->GetMapEntries())
+     if(map.paramName == fxParamName)
+     subInteractor->AddAction(new TrackFX_Action(map.widgetName, subInteractor, map.paramName, j));
+     }
+     
+     interactor->AddFXSubInteractor(subInteractor);
+     }
+     else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
+     {
+     DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
+     
+     int numParameters = DAW::TrackFX_GetNumParams(track, i);
+     
+     for(int j = 0; j < numParameters; j++)
+     {
+     DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+     string fxParamName(trackFXParameterName);
+     
+     DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
+     }
+     }
+     }
+     */
+}
+
 void LogicalSurface::Initialize()
 {
     InitializeFXMaps();
@@ -903,79 +974,3 @@ void LogicalSurface::InitializeSurfaces()
     
     fclose ( filePtr );
 }
-
-void LogicalSurface::MapFX(MediaTrack* track)
-{
-    char trackFXName[256];
-    char trackFXParameterName[256];
-    char trackFXParameterGUID[256];
-    
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
-    /*
-    
-    // We will always find the interactor for this track, otherwise how could we add FX to it ?
-    Interactor* interactor = nullptr;
-    
-    for(auto * anInteractor : trackInteractors_)
-        if(anInteractor->GetGUID() == trackGUID)
-            interactor = anInteractor;
-
-    // Dump any existing FX subInteractors
-    interactor->ClearFXSubInteractors();
- 
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        // GAW TBD -- how do we know we should do this ?
-        //AddAction(trackGUID + surfaceName + CompressorMeter + trackNumber, new GainReductionMeter_Action(this, track, i));
-
-        
-        
-        
-        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
-        string fxName(trackFXName);
-        
-        if(fxMaps_.count(trackFXName) > 0)
-        {
-            FXMap* map = fxMaps_[fxName];
-            
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
-            string fxGUID(trackFXParameterGUID);
-
-            SubInteractor* subInteractor = new SubInteractor(fxGUID, i, interactor);
-
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-            {
-                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName(trackFXParameterName);
-                
-                for(auto map : map->GetMapEntries())
-                    if(map.paramName == fxParamName)
-                        subInteractor->AddAction(new TrackFX_Action(map.widgetName, subInteractor, map.paramName, j));
-            }
-            
-            interactor->AddFXSubInteractor(subInteractor);
-        }
-        else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
-        {
-            DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
-
-            int numParameters = DAW::TrackFX_GetNumParams(track, i);
-
-            for(int j = 0; j < numParameters; j++)
-            {
-                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName(trackFXParameterName);
-                
-                DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
-            }
-        }
-    }
-     */
-}
-
-
-
-
-
-

@@ -159,8 +159,17 @@ public:
         widgets_[widget->GetName()] = widget;
     }
     
-    void SetWidgetGUID(string widgetName, string GUID) { widgets_[widgetName]->SetGUID(GUID); }
-    void SetWidgetValueToZero(string widgetName) { widgets_[widgetName]->SetValueToZero(); }
+    void SetWidgetGUID(string widgetName, string GUID)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetGUID(GUID);
+        
+    }
+    void SetWidgetValueToZero(string widgetName)
+    {
+        if(widgets_.count(widgetName) > 0)
+            widgets_[widgetName]->SetValueToZero();
+    }
 
     void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
     void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
@@ -363,14 +372,12 @@ public:
     
     bool GetVSTMonitor() { return VSTMonitor_; }
 
-    RealCSurf* GetSurface(string name)
-    {
-        for(auto* surface : surfaces_)
-            if(surface->GetName() == name)
-                return surface;
-        
-        return nullptr;
-    }
+    void Initialize();
+    void Initialize2();
+    void InitializeFXMaps();
+    void InitializeSurfaces();
+    void InitializeLogicalCSurfActions();
+    void MapFX(MediaTrack* track);
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -389,15 +396,6 @@ public:
         if(DidTrackListChange())
             RebuildTrackActions();
     }
-
-    void Initialize();
-    void Initialize2();
-    void InitializeFXMaps();
-    void InitializeSurfaces();
-    void InitializeLogicalCSurfActions();
-    
-    void MapFX(MediaTrack* track);
-
     
     void RefreshLayout()
     {
