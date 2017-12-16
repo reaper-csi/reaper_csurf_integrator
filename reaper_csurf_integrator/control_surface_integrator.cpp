@@ -507,15 +507,12 @@ void LogicalSurface::BuildTrackActions()
              */
             
             AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackVolume_Action(this, track));
-
             
-            /*
-            CycledAction* cyclicAction = new CycledAction(Pan, interactor);
-            cyclicAction->Add(new TrackPan_Action(Pan, interactor, 0x00));
-            cyclicAction->Add(new TrackPanWidth_Action(Pan, interactor, 0x30));
-            interactor->AddAction(cyclicAction);
-            */
-   
+            CycledAction* cyclicAction = new CycledAction(this);
+            cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
+            cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
+            AddAction(trackGUID + surfaceName + Pan + trackNumber, cyclicAction);
+  
             AddAction(trackGUID + surfaceName + Select + trackNumber, new TrackUniqueSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Shift + Select + trackNumber, new TrackSelectionSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Control + Select + trackNumber, new TrackSelect_Action(this, track));
@@ -564,14 +561,11 @@ void LogicalSurface::BuildTrackActions2()
             
             AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackName_DisplayAction(this, track));
             
-            
-            /*
-             CycledAction* cyclicAction = new CycledAction(Pan, interactor);
-             cyclicAction->Add(new TrackPan_Action(Pan, interactor, 0x00));
-             cyclicAction->Add(new TrackPanWidth_Action(Pan, interactor, 0x30));
-             interactor->AddAction(cyclicAction);
-             */
-            
+            CycledAction* cyclicAction = new CycledAction(this);
+            cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
+            cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
+            AddAction(trackGUID + surfaceName + Pan + trackNumber, cyclicAction);
+
             AddAction(trackGUID + surfaceName + Select + trackNumber, new TrackUniqueSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Shift + Select + trackNumber, new TrackSelectionSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Control + Select + trackNumber, new TrackSelect_Action(this, track));
