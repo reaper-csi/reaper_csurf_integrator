@@ -1005,8 +1005,8 @@ void LogicalSurface::CycleAction(string actionAddress, string surfaceName, strin
 
 void LogicalSurface::RunAction(string actionAddress, double value, string surfaceName, string widgetName)
 {
-    
-    
+    if(actions_.count(actionAddress) > 0)
+        actions_[actionAddress]->Run(value, surfaceName, widgetName);
     /*
     if(logicalSurfaceInteractor_->GetGUID() == widgetName)
         logicalSurfaceInteractor_->RunAction(surfaceName, widgetName, value);
