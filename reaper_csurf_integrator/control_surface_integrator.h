@@ -125,7 +125,12 @@ protected:
     
     string ActionAddressFor(string GUID, string widgetName)
     {
-        return GUID + GetName() + CurrentModifers() + widgetName;
+        string currentModifiers = "";
+        
+        if(widgetName != Shift && widgetName != Option && widgetName != Control && widgetName != Alt)
+            currentModifiers = CurrentModifers();
+        
+        return GUID + GetName() + currentModifiers + widgetName;
     }
     
 public:
@@ -163,7 +168,6 @@ public:
     {
         if(widgets_.count(widgetName) > 0)
             widgets_[widgetName]->SetGUID(GUID);
-        
     }
 
     void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
