@@ -91,7 +91,7 @@ class CSurfChannel;
 class RealCSurf
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     const string name_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
     string bankGroup_ = "";
@@ -131,7 +131,7 @@ private:
 public:
     virtual ~RealCSurf() {};
     
-    RealCSurf(const string name, LogicalSurface* logicalSurface, string bankGroup, int numBankableChannels) : name_(name), logicalSurface_(logicalSurface), bankGroup_(bankGroup), numBankableChannels_(numBankableChannels) {}
+    RealCSurf(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
     
     const string GetName() const { return name_; }
 
@@ -141,12 +141,10 @@ public:
 
     int GetNumBankableChannels() { return numBankableChannels_; }
     
-    double GetCurrentNormalizedValue(string GUID, string name);
-    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     
     virtual void SendMidiMessage(int first, int second, int third) {}
-
+    
     virtual void OnTrackSelection(MediaTrack *track);
     
     virtual void RunAndUpdate() {}
@@ -175,19 +173,29 @@ public:
     bool IsScrub() { return scrub_; }
 
     // to Widgets ->
-    virtual void UpdateWidgets();
-    virtual void ForceUpdateWidgets();
+    virtual void UpdateWidgets()
+    {
+        for( auto const& [key, val] : widgets_ )
+            val->Update();
+    }
+
+    virtual void ForceUpdateWidgets()
+    {
+        for( auto const& [key, val] : widgets_ )
+            val->ForceUpdate();
+    }
 
     // to Actions ->
+    double GetCurrentNormalizedValue(string surfaceName, string widgetName);
     void UpdateAction(string surfaceName, string widgetName);
     void ForceUpdateAction(string surfaceName, string widgetName);
     void CycleAction(string surfaceName, string widgetName);
     void RunAction(string surfaceName, string widgetName, double value);
     
     // to Widgets ->
-    void SetWidgetValue(string surfaceName, string widgetName, double value);
-    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode);
-    void SetWidgetValue(string surfaceName, string widgetName, string value);
+    void SetWidgetValue(string widgetName, double value) { widgets_[widgetName]->SetValue(value); }
+    void SetWidgetValue(string widgetName, double value, int mode) { widgets_[widgetName]->SetValue(value, mode); }
+    void SetWidgetValue(string widgetName, string value) { widgets_[widgetName]->SetValue(value); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,15 +246,16 @@ public:
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    LogicalSurface* logicalSurface_ = nullptr;
-
 protected:
+    LogicalSurface* logicalSurface_ = nullptr;
+    
+    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
+    
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) {}
     virtual void SetWidgetValue(string surfaceName, string widgetName, string value) {}
 
-    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
-    
 public:
     virtual ~Action() {}
     
@@ -571,7 +580,7 @@ public:
     virtual ~OSCCSurf() {};
     
     OSCCSurf(const string name, LogicalSurface* surface)
-    : RealCSurf(name, surface, "OSC", 8) {}
+    : RealCSurf(surface, "", "OSC", 8) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -582,7 +591,7 @@ public:
     virtual ~WebCSurf() {};
     
     WebCSurf(const string name, LogicalSurface* surface)
-    : RealCSurf(name, surface, "Web", 8) {};
+    : RealCSurf(surface, "", "Web", 8) {};
 };
 
 #endif /* control_surface_integrator.h */
