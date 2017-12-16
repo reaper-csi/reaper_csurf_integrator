@@ -76,6 +76,8 @@ public:
     
     static bool TrackFX_GetFXName(MediaTrack* track, int fx, char* buf, int buf_sz) { return ::TrackFX_GetFXName(track, fx, buf, buf_sz); }
     
+    static bool TrackFX_GetNamedConfigParm(MediaTrack* track, int fx, const char* parmname, char* bufOut, int bufOut_sz) { return ::TrackFX_GetNamedConfigParm(track, fx, parmname, bufOut, bufOut_sz); }
+
     static int TrackFX_GetNumParams(MediaTrack* track, int fx) { return ::TrackFX_GetNumParams(track, fx); }
     
     static bool TrackFX_GetParamName(MediaTrack* track, int fx, int param, char* buf, int buf_sz) { return ::TrackFX_GetParamName(track, fx, param, buf, buf_sz); }

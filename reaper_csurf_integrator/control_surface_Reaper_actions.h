@@ -27,78 +27,99 @@
 #define ID_SET_MARKER1                  40657
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackFX_Action : public DoubleAction
+class TrackDoubleAction : public DoubleAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    MediaTrack* track_;
+    
+public:
+    TrackDoubleAction(LogicalSurface* logicalSurface, MediaTrack* track) : DoubleAction(logicalSurface), track_(track) {}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackStringDisplayAction : public StringDisplayAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    MediaTrack* track_;
+    
+public:
+    TrackStringDisplayAction(LogicalSurface* logicalSurface, MediaTrack* track) : StringDisplayAction(logicalSurface), track_(track) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackFX_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string paramName_ = "";
+    int fxIndex_ = 0;
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(string name, Interactor* interactor, string paramName, int paramIndex) : DoubleAction(name, interactor), paramName_(paramName), paramIndex_(paramIndex) {}
+    TrackFX_Action(LogicalSurface* logicalSurface, MediaTrack* track, int fxIndex, int paramIndex) : TrackDoubleAction(logicalSurface, track), fxIndex_(fxIndex), paramIndex_(paramIndex) {}
     
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
     virtual double GetValue() override
     {
         double min = 0;
         double max = 0;
-        return DAW::TrackFX_GetParam(GetInteractor()->GetTrack(), GetInteractor()->GetIndex(), paramIndex_, &min, &max);
+        return DAW::TrackFX_GetParam(track_, fxIndex_, paramIndex_, &min, &max);
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        DAW::TrackFX_SetParam(GetInteractor()->GetTrack(), GetInteractor()->GetIndex(), paramIndex_, value);
+        DAW::TrackFX_SetParam(track_, fxIndex_, paramIndex_, value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolume_Action : public DoubleAction
+class TrackVolume_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackVolume_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
         return volToNormalized(currentValue_);
     }
 
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), volToNormalized(value));
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, volToNormalized(value));
     }
 
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "D_VOL");
+        return DAW::GetMediaTrackInfo_Value(track_, "D_VOL");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+         DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPan_Action : public DoubleAction
+class TrackPan_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int displayMode_ = 0;
     
-protected:
-    virtual void SetWidgetValue(string surfaceName, double value) override
+public:
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), panToNormalized(value), displayMode_);
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, panToNormalized(value), displayMode_);
     }
     
-public:
-    TrackPan_Action(string name, Interactor* interactor, int displayMode) : DoubleAction(name, interactor), displayMode_(displayMode) {}
+    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -107,31 +128,30 @@ public:
 
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "D_PAN");
+        return DAW::GetMediaTrackInfo_Value(track_, "D_PAN");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        DAW::CSurf_SetSurfacePan(track_, DAW::CSurf_OnPanChange(track_, normalizedToPan(value), false), NULL);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPanWidth_Action : public DoubleAction
+class TrackPanWidth_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int displayMode_ = 0;
     
 protected:
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), panToNormalized(value), displayMode_);
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, panToNormalized(value), displayMode_);
     }
     
 public:
-    TrackPanWidth_Action(string name, Interactor* interactor, int displayMode) : DoubleAction(name, interactor), displayMode_(displayMode) {}
+    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -140,41 +160,41 @@ public:
 
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "D_WIDTH");
+        return DAW::GetMediaTrackInfo_Value(track_, "D_WIDTH");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_OnWidthChange(GetInteractor()->GetTrack(), normalizedToPan(value), false);
+        DAW::CSurf_OnWidthChange(track_, normalizedToPan(value), false);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackName_DisplayAction : public StringDisplayAction
+class TrackName_DisplayAction : public TrackStringDisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackName_DisplayAction(string name, Interactor* interactor) : StringDisplayAction(name, interactor) {}
+    TrackName_DisplayAction(LogicalSurface* logicalSurface, MediaTrack* track) : TrackStringDisplayAction(logicalSurface, track) {}
     
     virtual string GetValue() override
     {
-        if(DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "IP_TRACKNUMBER") == -1)
+        if(DAW::GetMediaTrackInfo_Value(track_, "IP_TRACKNUMBER") == -1)
             return "Master";
         else
-            return (char *)DAW::GetSetMediaTrackInfo(GetInteractor()->GetTrack(), "P_NAME", NULL);
+            return (char *)DAW::GetSetMediaTrackInfo(track_, "P_NAME", NULL);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolume_DisplayAction : public StringDisplayAction
+class TrackVolume_DisplayAction : public TrackStringDisplayAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_DisplayAction(string name, Interactor* interactor) : StringDisplayAction(name, interactor) {}
+    TrackVolume_DisplayAction(LogicalSurface* logicalSurface, MediaTrack* track) : TrackStringDisplayAction(logicalSurface, track) {}
     
     virtual string GetValue() override
     {
-        double value = DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "D_VOL");
+        double value = DAW::GetMediaTrackInfo_Value(track_, "D_VOL");
             
         double DBValue = VAL2DB(value);
 
@@ -189,9 +209,9 @@ class Rewind_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Rewind_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::CSurf_OnRew(1); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::CSurf_OnRew(1); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,9 +219,9 @@ class FastForward_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    FastForward_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::CSurf_OnFwd(1); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::CSurf_OnFwd(1); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,9 +229,9 @@ class Play_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    Play_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::CSurf_OnPlay(); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::CSurf_OnPlay(); }
     
     virtual double GetValue() override
     {
@@ -228,9 +248,9 @@ class Stop_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    Stop_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::CSurf_OnStop(); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::CSurf_OnStop(); }
     
     virtual double GetValue() override
     {
@@ -248,9 +268,9 @@ class Record_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    Record_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::CSurf_OnRecord(); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::CSurf_OnRecord(); }
     
     virtual double GetValue() override
     {
@@ -295,61 +315,59 @@ public:
  */
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSelect_Action : public DoubleAction
+class TrackSelect_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SELECTED");
+        return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(track);
+        DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED")), NULL);
+        GetLogicalSurface()->GetManager()->OnTrackSelection(track_);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackUniqueSelect_Action : public DoubleAction
+class TrackUniqueSelect_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackUniqueSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SELECTED");
+        return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::SetOnlyTrackSelected(track);
-        GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(track);
+        DAW::SetOnlyTrackSelected(track_);
+        GetLogicalSurface()->GetManager()->OnTrackSelection(track_);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSelectionSelect_Action : public DoubleAction
+class TrackSelectionSelect_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelectionSelect_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackSelectionSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SELECTED");
+        return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
         int selectedTrackNum = 0;
-        int selectionTrackNumber = DAW::CSurf_TrackToID(GetInteractor()->GetTrack(), false);
+        int selectionTrackNumber = DAW::CSurf_TrackToID(track_, false);
         
         if(DAW::CountSelectedTracks(nullptr) == 1)
         {
@@ -362,70 +380,67 @@ public:
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
-                DAW::CSurf_SetSurfaceSelected(GetInteractor()->GetTrack(), DAW::CSurf_OnSelectedChange(DAW::CSurf_TrackFromID(i, false), 1), NULL);
-                GetInteractor()->GetLogicalSurface()->GetManager()->OnTrackSelection(DAW::CSurf_TrackFromID(i, false));
+                DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(DAW::CSurf_TrackFromID(i, false), 1), NULL);
+                GetLogicalSurface()->GetManager()->OnTrackSelection(DAW::CSurf_TrackFromID(i, false));
             }
         }
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackRecordArm_Action : public DoubleAction
+class TrackRecordArm_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackRecordArm_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
    
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_RECARM");
+        return DAW::GetMediaTrackInfo_Value(track_, "I_RECARM");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
+        DAW::CSurf_SetSurfaceRecArm(track_, DAW::CSurf_OnRecArmChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_RECARM")), NULL);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackMute_Action : public DoubleAction
+class TrackMute_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackMute_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "B_MUTE");
+        return DAW::GetMediaTrackInfo_Value(track_, "B_MUTE");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
+         DAW::CSurf_SetSurfaceMute(track_, DAW::CSurf_OnMuteChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "B_MUTE")), NULL);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSolo_Action : public DoubleAction
+class TrackSolo_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    TrackSolo_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue() override
     {
-        return DAW::GetMediaTrackInfo_Value(GetInteractor()->GetTrack(), "I_SOLO");
+        return DAW::GetMediaTrackInfo_Value(track_, "I_SOLO");
     }
     
-    virtual void Run(string surfaceName, double value) override
+    virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        MediaTrack* track = GetInteractor()->GetTrack();
-        DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
+        DAW::CSurf_SetSurfaceSolo(track_, DAW::CSurf_OnSoloChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SOLO")), NULL);
     }
 };
-
+/*
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TouchStateControlled_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -458,7 +473,7 @@ public:
         }
     }
 };
-
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GlobalAutoMode_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -467,19 +482,19 @@ protected:
     int autoMode_ = 0;
     
 public:
-    GlobalAutoMode_Action(string name, Interactor* interactor, int autoMode) : DoubleAction(name, interactor), autoMode_(autoMode) {}
+    GlobalAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : DoubleAction(logicalSurface), autoMode_(autoMode) {}
     
     virtual double GetValue () override { return DAW::GetGlobalAutomationOverride(); }
     
-    virtual void Run(string surfaceName, double value) override {  DAW::SetGlobalAutomationOverride(autoMode_); }
+    virtual void Run(double value, string surfaceName, string widgetName) override {  DAW::SetGlobalAutomationOverride(autoMode_); }
     
-    virtual void ForceUpdate(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
         if(GetValue() == autoMode_)
-            SetWidgetValue(surfaceName, autoMode_);
+            SetWidgetValue(surfaceName, widgetName, autoMode_);
     }
     
-    virtual void Update(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
         double newValue = GetValue();
         
@@ -487,7 +502,7 @@ public:
         {
             currentValue_ = newValue;
             
-            SetWidgetValue(surfaceName, currentValue_ == autoMode_ ? 1 : 0);
+            SetWidgetValue(surfaceName, widgetName, currentValue_ == autoMode_ ? 1 : 0);
         }
     }
 };
@@ -497,9 +512,9 @@ class TrackAutoMode_Action : public GlobalAutoMode_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackAutoMode_Action(string name, Interactor* interactor, int autoMode) : GlobalAutoMode_Action(name, interactor, autoMode) {}
+    TrackAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : GlobalAutoMode_Action(logicalSurface, autoMode) {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SetAutomationMode(autoMode_, true); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SetAutomationMode(autoMode_, true); }
 
     virtual double GetValue () override
     {
@@ -520,9 +535,9 @@ class PreviousMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PreviousMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    PreviousMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_MARKER_PREV, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_MARKER_PREV, 0); }
     
 };
 
@@ -531,9 +546,9 @@ class NextMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NextMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    NextMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_MARKER_NEXT, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_MARKER_NEXT, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -541,9 +556,9 @@ class InsertMarker_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    InsertMarker_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    InsertMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKER, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKER, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -551,9 +566,9 @@ class InsertMarkerRegion_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    InsertMarkerRegion_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    InsertMarkerRegion_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKERRGN, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKERRGN, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,11 +576,11 @@ class CycleTimeline_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    CycleTimeline_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual double GetValue() override { return DAW::GetSetRepeatEx(nullptr, -1); }
     
-    virtual void Run(string surfaceName, double value) override { DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1)); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1)); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -573,9 +588,9 @@ class Metronome_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Metronome_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Metronome_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
 
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_METRONOME, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_METRONOME, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -583,9 +598,9 @@ class Save_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Save_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Save_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEPROJECT, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEPROJECT, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -593,9 +608,9 @@ class SaveAs_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SaveAs_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    SaveAs_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEAS, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEAS, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -603,9 +618,9 @@ class Undo_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Undo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Undo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, IDC_EDIT_UNDO, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, IDC_EDIT_UNDO, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -613,9 +628,9 @@ class Redo_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Redo_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Redo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(string surfaceName, double value) override { DAW::SendMessage(WM_COMMAND, IDC_EDIT_REDO, 0); }
+    virtual void Run(double value, string surfaceName, string widgetName) override { DAW::SendMessage(WM_COMMAND, IDC_EDIT_REDO, 0); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -623,7 +638,7 @@ class Cancel_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Cancel_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Cancel_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     // GAW TBD
 };
@@ -633,58 +648,60 @@ class Enter_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Enter_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
-
+    Enter_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     // GAW TBD
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class VUMeter_Action : public DoubleAction
+class VUMeter_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int channel_ = 0;
     
 protected:
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         else
-            GetInteractor()->SetWidgetValue(surfaceName, GetName(), GetInteractor()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
 public:
-    VUMeter_Action(string name, Interactor* interactor, int channel) : DoubleAction(name, interactor), channel_(channel) {}
+    VUMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDoubleAction(logicalSurface, track), channel_(channel) {}
     
     virtual double GetValue() override
     {
-        return VAL2DB(DAW::Track_GetPeakInfo(GetInteractor()->GetTrack(), channel_));
+        return VAL2DB(DAW::Track_GetPeakInfo(track_, channel_));
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GainReductionMeter_Action : public DoubleAction
+class GainReductionMeter_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    int fxIndex_ = 0;
+    
 protected:
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         else
-            GetInteractor()->SetWidgetValue(surfaceName, GetName(), 0.0);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 0.0);
     }
     
 public:
-    GainReductionMeter_Action(string name, Interactor* interactor) : DoubleAction(name, interactor) {}
+    GainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int fxIndex) : TrackDoubleAction(logicalSurface, track), fxIndex_(fxIndex)  {}
     
     virtual double GetValue() override
     {
         char buffer[256];
         
 
-       if(TrackFX_GetNamedConfigParm(GetInteractor()->GetTrack(), GetInteractor()->GetIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
+        if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
        {
            return atof(buffer) * 3.0;
        }

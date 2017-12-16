@@ -1071,19 +1071,6 @@ void RealCSurf::OnTrackSelection(MediaTrack *track)
         channel->OnTrackSelection(track);
 }
 
-// to Widgets ->
-void RealCSurf::UpdateWidgets()
-{
-    for( auto const& [key, val] : widgets_ )
-        val->Update();
-}
-
-void RealCSurf::ForceUpdateWidgets()
-{
-    for( auto const& [key, val] : widgets_ )
-        val->ForceUpdate();
-}
-
 // to Actions ->
 double RealCSurf::GetCurrentNormalizedValue(string GUID, string widgetName)
 {
@@ -1108,28 +1095,6 @@ void RealCSurf::CycleAction(string GUID, string widgetName)
 void RealCSurf::RunAction(string GUID, string widgetName, double value)
 {
     GetLogicalSurface()->RunAction(ActionAddressFor(GUID, widgetName), value, WidgetAddress(GetName(), widgetName));
-}
-
-// to Widgets ->
-void RealCSurf::SetWidgetValue(string GUID, string name, double value)
-{
-        for(auto * channel : GetChannels())
-            if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(name, value);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string name, double value, int mode)
-{
-        for(auto * channel : GetChannels())
-            if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(name, value, mode);
-}
-
-void RealCSurf::SetWidgetValue(string GUID, string name, string value)
-{
-        for(auto * channel : GetChannels())
-            if(channel->GetGUID() == GUID)
-                channel->SetWidgetValue(name, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
