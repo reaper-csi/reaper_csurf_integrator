@@ -16,15 +16,15 @@ class DoubleAction : public Action
 protected:
     double currentValue_ = 999999.99;
     
-    DoubleAction(Interactor* interactor) : Action(interactor)  {}
+    DoubleAction(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
     
-    DoubleAction(string name, Interactor* interactor, double initialValue) : Action(name, interactor), currentValue_(initialValue)  {}
+    DoubleAction(LogicalSurface* logicalSurface, double initialValue) : Action(logicalSurface), currentValue_(initialValue)  {}
 
     virtual double GetValue() { return 0.0; }
     
-    virtual void SetWidgetValue(string surfaceName, double value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
 public:
@@ -33,17 +33,17 @@ public:
         return currentValue_;
     }
     
-    virtual void Update(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
         double newValue = GetValue();
         
         if(currentValue_ != newValue)
-            SetWidgetValue(surfaceName, currentValue_ = newValue);
+            SetWidgetValue(surfaceName, widgetName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
-        SetWidgetValue(surfaceName, GetValue());
+        SetWidgetValue(surfaceName, widgetName, GetValue());
     }
 };
 
@@ -56,7 +56,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    CycledAction(string name, Interactor* interactor) : Action(name, interactor) {}
+    CycledAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
     virtual double GetCurrentNormalizedValue() override
     {
@@ -68,25 +68,25 @@ public:
         actions_.push_back(action);
     }
    
-    virtual void Update(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->Update(surfaceName);
+        actions_[currentIndex_]->Update(surfaceName, widgetName);
     }
     
-    virtual void ForceUpdate(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->ForceUpdate(surfaceName);
+        actions_[currentIndex_]->ForceUpdate(surfaceName, widgetName);
     }
     
-    virtual void Cycle(string surfaceName) override
+    virtual void Cycle(string surfaceName, string widgetName) override
     {
         currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
-        actions_[currentIndex_]->Cycle(surfaceName);
+        actions_[currentIndex_]->Cycle(surfaceName, widgetName);
     }
     
-    virtual void Run(string surfaceName, double adjustment) override
+    virtual void Run(double adjustment, string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->Run(surfaceName, adjustment);
+        actions_[currentIndex_]->Run(adjustment, surfaceName, widgetName);
     }
 };
 
@@ -99,25 +99,25 @@ protected:
     
     virtual string GetValue() { return currentValue_; }
     
-    virtual void SetWidgetValue(string surfaceName, string value) override
+    virtual void SetWidgetValue(string surfaceName, string widgetName, string value) override
     {
-        GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
 public:
-    StringDisplayAction(string name, Interactor* interactor) : Action(name, interactor) {}
+    StringDisplayAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
-    virtual void Update(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
         string newValue = GetValue();
         
         if(currentValue_ != newValue)
-            SetWidgetValue(surfaceName, currentValue_ = newValue);
+            SetWidgetValue(surfaceName, widgetName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate(string surfaceName) override
+    virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
-        SetWidgetValue(surfaceName, GetValue());
+        SetWidgetValue(surfaceName, widgetName, GetValue());
     }
 };
 
