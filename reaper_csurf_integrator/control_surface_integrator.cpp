@@ -148,7 +148,7 @@ void RealCSurf::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CSurfChannel::MapFX(MediaTrack *track)
 {
-    
+    /*
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
     
     char trackFXName[256];
@@ -169,7 +169,7 @@ void CSurfChannel::MapFX(MediaTrack *track)
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXGUID);
             string fxGUID(trackFXGUID);
             
-           /*
+     
             for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
             {
                 DAW::TrackFX_GetParamName(track, i, j, trackFXParamName, sizeof(trackFXParamName));
@@ -181,11 +181,12 @@ void CSurfChannel::MapFX(MediaTrack *track)
             }
             
             AddSubChannel(subChannel);
-            */
+     
             
             
         }
     }
+     */
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,13 +195,14 @@ void CSurfChannel::MapFX(MediaTrack *track)
 
 void LogicalSurface::MapFX(MediaTrack* track)
 {
+        /*
     char trackFXName[256];
     char trackFXParameterName[256];
     char trackFXParameterGUID[256];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-    /*
+
      
      // We will always find the interactor for this track, otherwise how could we add FX to it ?
      Interactor* interactor = nullptr;
