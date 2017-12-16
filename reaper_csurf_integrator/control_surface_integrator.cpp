@@ -253,56 +253,54 @@ void LogicalSurface::InitializeFXMaps()
 
 void LogicalSurface::InitializeLogicalCSurfInteractor()
 {
-    logicalSurfaceInteractor_ = new Interactor(LogicalCSurf, this);
-    
-    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(ChannelLeft, logicalSurfaceInteractor_, -1));
-    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(ChannelRight, logicalSurfaceInteractor_, 1));
-    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankLeft, logicalSurfaceInteractor_, -8));
-    logicalSurfaceInteractor_->AddAction(new TrackBank_Action(BankRight, logicalSurfaceInteractor_, 8));
-    
-    logicalSurfaceInteractor_->AddAction(new NextMap_Action(NextMap, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new ImmobilizeSelectedTracks_Action(LockTracks, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new MobilizeSelectedTracks_Action(UnlockTracks, logicalSurfaceInteractor_));
-    
-    logicalSurfaceInteractor_->AddAction(new Shift_Action(Shift, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Option_Action(Option, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Control_Action(Control,  logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Alt_Action(Alt, logicalSurfaceInteractor_));
-    
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Read, logicalSurfaceInteractor_, 1));
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Write, logicalSurfaceInteractor_, 3));
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Trim, logicalSurfaceInteractor_, 0));
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Touch, logicalSurfaceInteractor_, 2));
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Latch, logicalSurfaceInteractor_, 4));
-    logicalSurfaceInteractor_->AddAction(new TrackAutoMode_Action(Group, logicalSurfaceInteractor_, 5));
+    AddAction(LogicalCSurf + ChannelLeft, new TrackBank_Action(this, -1));
+    AddAction(LogicalCSurf + ChannelRight, new TrackBank_Action(this, 1));
+    AddAction(LogicalCSurf + BankLeft, new TrackBank_Action(this, -8));
+    AddAction(LogicalCSurf + BankRight, new TrackBank_Action(this, 8));
 
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Read, logicalSurfaceInteractor_, 1));
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Write, logicalSurfaceInteractor_, 3));
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Trim, logicalSurfaceInteractor_, 0));
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Touch, logicalSurfaceInteractor_, 2));
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Latch, logicalSurfaceInteractor_, 4));
-    logicalSurfaceInteractor_->AddAction(new GlobalAutoMode_Action(Shift + Group, logicalSurfaceInteractor_, 5));
+    AddAction(LogicalCSurf + NextMap, new NextMap_Action(this));
+    AddAction(LogicalCSurf + LockTracks, new ImmobilizeSelectedTracks_Action(this));
+    AddAction(LogicalCSurf + UnlockTracks, new MobilizeSelectedTracks_Action(this));
+
+    AddAction(LogicalCSurf + Shift, new Shift_Action(this));
+    AddAction(LogicalCSurf + Option, new Option_Action(this));
+    AddAction(LogicalCSurf + Control, new Control_Action(this));
+    AddAction(LogicalCSurf + Alt, new Alt_Action(this));
+
+    AddAction(LogicalCSurf + Read, new TrackAutoMode_Action(this, 1));
+    AddAction(LogicalCSurf + Write, new TrackAutoMode_Action(this, 3));
+    AddAction(LogicalCSurf + Trim, new TrackAutoMode_Action(this, 0));
+    AddAction(LogicalCSurf + Touch, new TrackAutoMode_Action(this, 2));
+    AddAction(LogicalCSurf + Latch, new TrackAutoMode_Action(this, 4));
+    AddAction(LogicalCSurf + Group, new TrackAutoMode_Action(this, 5));
     
-    logicalSurfaceInteractor_->AddAction(new Save_Action(Save, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new SaveAs_Action( Shift + Save, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Undo_Action(Undo, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Redo_Action(Shift + Undo, logicalSurfaceInteractor_));
+    AddAction(LogicalCSurf + Shift + Read, new GlobalAutoMode_Action(this, 1));
+    AddAction(LogicalCSurf + Shift + Write, new GlobalAutoMode_Action(this, 3));
+    AddAction(LogicalCSurf + Shift + Trim, new GlobalAutoMode_Action(this, 0));
+    AddAction(LogicalCSurf + Shift + Touch, new GlobalAutoMode_Action(this, 2));
+    AddAction(LogicalCSurf + Shift + Latch, new GlobalAutoMode_Action(this, 4));
+    AddAction(LogicalCSurf + Shift + Group, new GlobalAutoMode_Action(this, 5));
+  
+    AddAction(LogicalCSurf + Save, new Save_Action(this));
+    AddAction(LogicalCSurf + Shift + Save, new SaveAs_Action(this));
+    AddAction(LogicalCSurf + Undo, new Undo_Action(this));
+    AddAction(LogicalCSurf + Shift + Undo, new Redo_Action(this));
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
 
-    logicalSurfaceInteractor_->AddAction(new PreviousMarker_Action(Marker, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new InsertMarker_Action(Shift + Marker, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new InsertMarkerRegion_Action(Option + Marker, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new NextMarker_Action(Nudge, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new CycleTimeline_Action(Cycle, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Metronome_Action(Click, logicalSurfaceInteractor_));
+    AddAction(LogicalCSurf + Marker, new PreviousMarker_Action(this));
+    AddAction(LogicalCSurf + Shift + Marker, new InsertMarker_Action(this));
+    AddAction(LogicalCSurf + Option + Marker, new InsertMarkerRegion_Action(this));
+    AddAction(LogicalCSurf + Nudge, new NextMarker_Action(this));
+    AddAction(LogicalCSurf + Cycle, new CycleTimeline_Action(this));
+    AddAction(LogicalCSurf + Click, new Metronome_Action(this));
 
-    logicalSurfaceInteractor_->AddAction(new Rewind_Action(Rewind, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new FastForward_Action(FastForward, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Stop_Action(Stop, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Play_Action(Play, logicalSurfaceInteractor_));
-    logicalSurfaceInteractor_->AddAction(new Record_Action(Record, logicalSurfaceInteractor_));
+    AddAction(LogicalCSurf + Rewind, new Rewind_Action(this));
+    AddAction(LogicalCSurf + FastForward, new FastForward_Action(this));
+    AddAction(LogicalCSurf + Stop, new Stop_Action(this));
+    AddAction(LogicalCSurf + Play, new Play_Action(this));
+    AddAction(LogicalCSurf + Record, new Record_Action(this));
     
     // GAW TBD -- timers need to be cross platform
 
