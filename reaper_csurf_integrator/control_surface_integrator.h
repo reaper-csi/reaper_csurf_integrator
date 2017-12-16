@@ -123,9 +123,9 @@ protected:
         return modifiers;
     }
     
-    string ActionAddressFor(string GUID, string name)
+    string ActionAddressFor(string GUID, string widgetName)
     {
-        return GUID + GetName() + CurrentModifers() + name;
+        return GUID + GetName() + CurrentModifers() + widgetName;
     }
     
 public:
@@ -184,14 +184,14 @@ public:
     // to Widgets ->
     virtual void UpdateWidgets()
     {
-        for(auto const& [key, val] : widgets_ )
-            val->Update();
+        for(auto const& [name, widget] : widgets_ )
+            widget->Update();
     }
 
     virtual void ForceUpdateWidgets()
     {
-        for(auto const& [key, val] : widgets_ )
-            val->ForceUpdate();
+        for(auto const& [name, widget] : widgets_ )
+            widget->ForceUpdate();
     }
 
     // to Actions ->

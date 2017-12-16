@@ -320,8 +320,8 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
-        for( auto const& [key, val] : widgets_ )
-            val->ProcessMidiMessage(evt);
+        for( auto const& [name, widget] : widgets_ )
+            widget->ProcessMidiMessage(evt);
 
         if(midiInMonitor_)
         {
