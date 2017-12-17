@@ -179,7 +179,7 @@ public:
     virtual string GetValue() override
     {
         if(DAW::GetMediaTrackInfo_Value(track_, "IP_TRACKNUMBER") == -1)
-            return "Master";
+            return Master;
         else
             return (char *)DAW::GetSetMediaTrackInfo(track_, "P_NAME", NULL);
     }
@@ -440,40 +440,39 @@ public:
         DAW::CSurf_SetSurfaceSolo(track_, DAW::CSurf_OnSoloChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SOLO")), NULL);
     }
 };
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TouchStateControlled_Action : public DoubleAction
+class TouchStateControlled_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     Action* controlledAction_= nullptr;
+    string controlledActionWidgetName_ = "";
     bool currentlyTouched_ = false;
-    bool lastTouched_ = true;
+    bool lastTouched_ = false;
     
 public:
-    TouchStateControlled_Action(string name, Interactor* interactor, Action* controlledAction) : DoubleAction(name, interactor), controlledAction_(controlledAction) {}
+    TouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionWidgetName, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionWidgetName_(controlledActionWidgetName), controlledAction_(controlledAction) {}
     
-    virtual string GetAlias() override { return controlledAction_->GetName(); }
-
     virtual double GetValue() override { return currentlyTouched_; }
 
-    virtual void Run(string surfaceName, double value) override { currentlyTouched_ =  value == 0 ? false : true; }
+    virtual void Run(double value, string surfaceName, string widgetName) override { currentlyTouched_ =  value == 0 ? false : true; }
 
-    virtual void Update(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
         if(currentlyTouched_)
-            controlledAction_->Update(surfaceName);
+            controlledAction_->Update(surfaceName, controlledActionWidgetName_);
 
         if(lastTouched_ != currentlyTouched_)
         {
             lastTouched_ = currentlyTouched_;
             
             if(currentlyTouched_ == false)
-                GetInteractor()->ForceUpdateAction(surfaceName, GetAlias());
+                controlledAction_->Update(surfaceName, controlledActionWidgetName_);
         }
     }
 };
-*/
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GlobalAutoMode_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -714,38 +713,4 @@ public:
          //return VAL2DB(GetDAW()->Track_GetPeakInfo(GetInteractor()->GetTrack(), 0));
     }
 };
-/*
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class IndicateOver0db_Action : public Interactor_DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    IndicateOver0db_Action(string name, CSurfManager* manager, TrackInteractor* interactor, double initialValue) : Interactor_DoubleAction(name, manager, interactor, initialValue) {}
-    
-    virtual void ForceUpdate() override {}
-    virtual void RunAction(double value) override {}
-    
-    virtual void Update() override
-    {
-        if( ! DAW()->GetMediaTrackInfo_Value(Interactor()->Track(), "B_MUTE"))
-        {
-            MediaTrack* track = Interactor()->Track();
-            
-            int* newValuePtr = (int *)DAW()->GetSetMediaTrackInfo(track, "I_PEAKINFO", NULL);
-            
-            int newValue = *newValuePtr;
-            
-            if(currentValue_ != newValue)
-            {
-                currentValue_ = newValue;
-                
-                if(currentValue_ > 0)
-                    Manager()->SetWidgetValue(Interactor()->TrackGUID(), Name(), 0x7f);
-                else
-                    Manager()->SetWidgetValue(Interactor()->TrackGUID(), Name(), 0x00);
-            }
-        }
-    }
-};
-*/
 #endif /* control_surface_Reaper_actions_h */
