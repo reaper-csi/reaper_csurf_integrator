@@ -18,13 +18,13 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButton_MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release)  {}
+    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release)  {}
     
-    PushButton_MidiWidget(string GUID, RealCSurf* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
-        GetSurface()->SendMidiMessage(value == reverseSense_ ? GetMidiReleaseMessage() : GetMidiPressMessage());
+        GetRealSurface()->SendMidiMessage(value == reverseSense_ ? GetMidiReleaseMessage() : GetMidiPressMessage());
     }
     
     virtual void SetValueToZero() override
@@ -35,7 +35,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetRealSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -44,16 +44,16 @@ class PushButtonWithRelease_MidiWidget : public PushButton_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, press, release)  {}
+    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, press, release)  {}
     
-    PushButtonWithRelease_MidiWidget(string GUID, RealCSurf* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name,  reverseSense, press, release) {}
+    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name,  reverseSense, press, release) {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
+            GetRealSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
+            GetRealSurface()->RunAction(GetGUID(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -66,7 +66,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_MidiWidget(string GUID, RealCSurf* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
 
@@ -92,7 +92,7 @@ public:
             volint = normalizedToInt14(output);
         }
 */
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
     
     virtual void SetValue(double volume, int displayMode) override
@@ -109,7 +109,7 @@ public:
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0])
         {         
-            GetSurface()->RunAction(GetGUID(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+            GetRealSurface()->RunAction(GetGUID(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
         }
     }
 };
@@ -119,11 +119,11 @@ class Fader7Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release) {}
+    Fader7Bit_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release) {}
     
     virtual void SetValue(double value) override
     {
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], normalizedToUchar(value));
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], normalizedToUchar(value));
     }
     
     virtual void SetValue(double value, int displayMode) override
@@ -139,7 +139,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetSurface()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+            GetRealSurface()->RunAction(GetGUID(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -148,7 +148,7 @@ class Encoder_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release) {}
+    Encoder_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release) {}
     
     virtual void SetValue(double pan, int displayMode) override
     {
@@ -156,7 +156,7 @@ public:
         
         int val = (1+((panch*11)>>7)) | displayMode; // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
         
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1] + 0x20, val);
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1] + 0x20, val);
     }
     
     virtual void SetValueToZero() override
@@ -173,9 +173,9 @@ public:
             if (midiMessage->midi_message[2] & 0x40)
                 value = -value;
             
-            value += GetSurface()->GetCurrentNormalizedValue(GetGUID(), GetName());
+            value += GetRealSurface()->GetActionCurrentNormalizedValue(GetGUID(), GetName());
             
-            GetSurface()->RunAction(GetGUID(), GetName(), value);
+            GetRealSurface()->RunAction(GetGUID(), GetName(), value);
         }
     }
 };
@@ -188,12 +188,12 @@ private:
     MIDI_event_ex_t* cycle_;
     
 public:
-    EncoderCycledAction_MidiWidget(string GUID, RealCSurf* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, press, release), cycle_(cycle) {}
+    EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, press, release), cycle_(cycle) {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
-            GetSurface()->CycleAction(GetGUID(), GetName());
+            GetRealSurface()->CycleAction(GetGUID(), GetName());
         
         Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
@@ -208,7 +208,7 @@ private:
     double maxDB_ = 0.0;
 
 public:
-    VUMeter_MidiWidget(string GUID, RealCSurf* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     
@@ -216,7 +216,7 @@ public:
     
     virtual void SetValueToZero() override
     {
-        SetValue(GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        SetValue(GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
     
     void SetValue(double value) override
@@ -225,14 +225,14 @@ public:
         //output = output_start + slope * (input - input_start)
         
         // First, map Reaper VU range to surface VU range
-        double slope = (GetMaxDB() - GetMinDB()) / (GetSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        double output = GetMinDB() + slope * (value - GetSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double output = GetMinDB() + slope * (value - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
 
         // Now map surface VU range to widget range
         slope = 127.0 / (GetMaxDB() - GetMinDB());
         output = slope * (output - GetMinDB());
         
-        GetSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], output);
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], output);
     }
 };
 
@@ -243,7 +243,7 @@ class Display_MidiWidget : public MidiWidget
     int slotIndex_ = 0;
     
 public:
-    Display_MidiWidget(string GUID, RealCSurf* surface, string name, int slotIndex) : MidiWidget(GUID, surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    Display_MidiWidget(string GUID, RealSurface* surface, string name, int slotIndex) : MidiWidget(GUID, surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
@@ -289,12 +289,12 @@ public:
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
-        GetSurface()->SendMidiMessage(&midiSysExData.evt);
+        GetRealSurface()->SendMidiMessage(&midiSysExData.evt);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiCSurf : public RealCSurf
+class MidiCSurf : public RealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -339,7 +339,7 @@ public:
     }
     
     MidiCSurf(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealCSurf(logicalSurface, bankGroup, name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    : RealSurface(logicalSurface, bankGroup, name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
@@ -363,7 +363,7 @@ public:
     virtual void RunAndUpdate() override
     {
         HandleMidiInput();
-        RealCSurf::UpdateWidgets();
+        RealSurface::UpdateWidgets();
     }
 };
 

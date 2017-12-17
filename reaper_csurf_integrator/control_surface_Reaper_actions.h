@@ -709,9 +709,6 @@ public:
        {
             return 0.0;
        }
-
-        
-         //return VAL2DB(GetDAW()->Track_GetPeakInfo(GetInteractor()->GetTrack(), 0));
     }
 };
 #endif /* control_surface_Reaper_actions_h */
