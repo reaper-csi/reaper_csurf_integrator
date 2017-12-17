@@ -17,6 +17,8 @@ using namespace std;
 
 const string LogicalCSurf = "LogicalCSurf";
 
+const string Master = "Master";
+
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
@@ -579,7 +581,8 @@ public:
         for(auto & surface : surfaces_)
             if(surface->GetName() == surfaceName)
                 surface->SetWidgetValue(widgetName, value);
-    }};
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
