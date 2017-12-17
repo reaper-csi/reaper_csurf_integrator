@@ -193,7 +193,7 @@ void RealSurfaceChannel::MapFX(MediaTrack *track)
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void LogicalSurface::MapFX(MediaTrack* track)
+void LogicalSurface::MapFX(MediaTrack* track, LogicalSurfaceTrack* logicalSurfaceTrack)
 {
         /*
     char trackFXName[256];
@@ -498,21 +498,26 @@ void LogicalSurface::BuildTrackActions()
             string trackGUID = DAW::GetTrackGUIDAsString(i);
             MediaTrack* track = DAW::CSurf_TrackFromID(i, false);
         
-            AddAction(trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackName_DisplayAction(this, track));
-            AddAction(trackGUID + surfaceName + TrackTouched + trackNumber, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
-            AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackVolume_Action(this, track));
+            LogicalSurfaceTrack* logicalSurfaceTrack = new LogicalSurfaceTrack(trackGUID, this);
+            AddLogicalSurfaceTrack(logicalSurfaceTrack);
+
+            AddTrackAction(trackGUID + surfaceName + TrackDisplay + trackNumber, logicalSurfaceTrack, new TrackName_DisplayAction(this, track));
             
+            AddTrackAction(trackGUID + surfaceName + TrackTouched + trackNumber, logicalSurfaceTrack, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
+
+            AddTrackAction(trackGUID + surfaceName + Volume + trackNumber, logicalSurfaceTrack, new TrackVolume_Action(this, track));
+
             CycledAction* cyclicAction = new CycledAction(this);
             cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
             cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-            AddAction(trackGUID + surfaceName + Pan + trackNumber, cyclicAction);
-  
-            AddAction(trackGUID + surfaceName + Select + trackNumber, new TrackUniqueSelect_Action(this, track));
-            AddAction(trackGUID + surfaceName + Shift + Select + trackNumber, new TrackSelectionSelect_Action(this, track));
-            AddAction(trackGUID + surfaceName + Control + Select + trackNumber, new TrackSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Pan + trackNumber, logicalSurfaceTrack, cyclicAction);
+            
+            AddTrackAction(trackGUID + surfaceName + Select + trackNumber, logicalSurfaceTrack, new TrackUniqueSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Shift + Select + trackNumber, logicalSurfaceTrack, new TrackSelectionSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Control + Select + trackNumber, logicalSurfaceTrack, new TrackSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + TrackOutMeterLeft + trackNumber, logicalSurfaceTrack, new VUMeter_Action(this, track, 0));
+            AddTrackAction(trackGUID + surfaceName + TrackOutMeterRight + trackNumber, logicalSurfaceTrack, new VUMeter_Action(this, track, 1));
 
-            AddAction(trackGUID + surfaceName + TrackOutMeterLeft + trackNumber, new VUMeter_Action(this, track, 0));
-            AddAction(trackGUID + surfaceName + TrackOutMeterRight + trackNumber, new VUMeter_Action(this, track, 1));
 
             if(i == 0)
             {
@@ -520,12 +525,12 @@ void LogicalSurface::BuildTrackActions()
             }
             else
             {
-                AddAction(trackGUID + surfaceName + RecordArm + trackNumber, new TrackRecordArm_Action(this, track));
-                AddAction(trackGUID + surfaceName + Mute + trackNumber, new TrackMute_Action(this, track));
-                AddAction(trackGUID + surfaceName + Solo + trackNumber, new TrackSolo_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + RecordArm + trackNumber, logicalSurfaceTrack, new TrackRecordArm_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + Mute + trackNumber, logicalSurfaceTrack, new TrackMute_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + Solo + trackNumber, logicalSurfaceTrack, new TrackSolo_Action(this, track));
             }
             
-            MapFX(track);
+            MapFX(track, logicalSurfaceTrack);
         }
     
     }
@@ -544,22 +549,26 @@ void LogicalSurface::BuildTrackActions2()
             string trackGUID = DAW::GetTrackGUIDAsString(i);
             MediaTrack* track = DAW::CSurf_TrackFromID(i, false);
             
-            AddAction(trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackName_DisplayAction(this, track));
-            AddAction(trackGUID + surfaceName + TrackTouched + trackNumber, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
-            AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackName_DisplayAction(this, track));
+            LogicalSurfaceTrack* logicalSurfaceTrack = new LogicalSurfaceTrack(trackGUID, this);
+            AddLogicalSurfaceTrack(logicalSurfaceTrack);
+            
+            AddTrackAction(trackGUID + surfaceName + TrackDisplay + trackNumber, logicalSurfaceTrack, new TrackName_DisplayAction(this, track));
+            
+            AddTrackAction(trackGUID + surfaceName + TrackTouched + trackNumber, logicalSurfaceTrack, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
+            
+            AddTrackAction(trackGUID + surfaceName + Volume + trackNumber, logicalSurfaceTrack, new TrackVolume_Action(this, track));
             
             CycledAction* cyclicAction = new CycledAction(this);
             cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
             cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-            AddAction(trackGUID + surfaceName + Pan + trackNumber, cyclicAction);
-
-            AddAction(trackGUID + surfaceName + Select + trackNumber, new TrackUniqueSelect_Action(this, track));
-            AddAction(trackGUID + surfaceName + Shift + Select + trackNumber, new TrackSelectionSelect_Action(this, track));
-            AddAction(trackGUID + surfaceName + Control + Select + trackNumber, new TrackSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Pan + trackNumber, logicalSurfaceTrack, cyclicAction);
             
+            AddTrackAction(trackGUID + surfaceName + Select + trackNumber, logicalSurfaceTrack, new TrackUniqueSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Shift + Select + trackNumber, logicalSurfaceTrack, new TrackSelectionSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + Control + Select + trackNumber, logicalSurfaceTrack, new TrackSelect_Action(this, track));
+            AddTrackAction(trackGUID + surfaceName + TrackOutMeterLeft + trackNumber, logicalSurfaceTrack, new VUMeter_Action(this, track, 0));
+            AddTrackAction(trackGUID + surfaceName + TrackOutMeterRight + trackNumber, logicalSurfaceTrack, new VUMeter_Action(this, track, 1));
             
-            AddAction(trackGUID + surfaceName + TrackOutMeterLeft + trackNumber, new VUMeter_Action(this, track, 0));
-            AddAction(trackGUID + surfaceName + TrackOutMeterRight + trackNumber, new VUMeter_Action(this, track, 1));
             
             if(i == 0)
             {
@@ -567,12 +576,12 @@ void LogicalSurface::BuildTrackActions2()
             }
             else
             {
-                AddAction(trackGUID + surfaceName + RecordArm + trackNumber, new TrackRecordArm_Action(this, track));
-                AddAction(trackGUID + surfaceName + Mute + trackNumber, new TrackMute_Action(this, track));
-                AddAction(trackGUID + surfaceName + Solo + trackNumber, new TrackSolo_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + RecordArm + trackNumber, logicalSurfaceTrack, new TrackRecordArm_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + Mute + trackNumber, logicalSurfaceTrack, new TrackMute_Action(this, track));
+                AddTrackAction(trackGUID + surfaceName + Solo + trackNumber, logicalSurfaceTrack, new TrackSolo_Action(this, track));
             }
             
-            MapFX(track);
+            MapFX(track, logicalSurfaceTrack);
         }
         
     }
@@ -622,7 +631,7 @@ void LogicalSurface::BuildCSurfWidgets()
             
             
             channel = new RealSurfaceChannel( "", surface, true);
-
+            surface->AddChannel(channel);
             
             channel->AddWidget(new PushButton_MidiWidget("", surface, "Order",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("", surface, "ExternalSidechain", new MIDI_event_ex_t(0xb0, 0x11, 0x7f), new MIDI_event_ex_t(0xb0, 0x11, 0x00)));
@@ -694,14 +703,13 @@ void LogicalSurface::BuildCSurfWidgets()
             
             channel->AddWidget(new VUMeter_MidiWidget("", surface, TrackOutMeterLeft, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
             channel->AddWidget(new VUMeter_MidiWidget("", surface, TrackOutMeterRight, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
-            
-            surface->AddChannel(channel);
         }
         else
         {
             
             channel = new RealSurfaceChannel(LogicalControlSurface, surface, false);
-
+            surface->AddChannel(channel);
+            
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
@@ -764,8 +772,6 @@ void LogicalSurface::BuildCSurfWidgets()
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, Stop,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, Play,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, Record,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
-
-            surface->AddChannel(channel);
             
             for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
             {
@@ -773,20 +779,19 @@ void LogicalSurface::BuildCSurfWidgets()
                 string trackNumber(to_string(i));
 
                 channel = new RealSurfaceChannel(trackGUID, surface, false);
-            
-                channel->AddWidget(new Display_MidiWidget(trackGUID, surface, TrackDisplay + trackNumber, i));
-            
-                channel->AddWidget(new Fader14Bit_MidiWidget(trackGUID, surface, Volume + trackNumber, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
-                channel->AddWidget(new PushButtonWithRelease_MidiWidget(trackGUID, surface, TrackTouched + trackNumber,        new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
-                channel->AddWidget(new EncoderCycledAction_MidiWidget(trackGUID, surface, Pan + trackNumber,        new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
+                surface->AddChannel(channel);
+                numLogicalChannels_++;
+                
+                channel->AddWidget(new PushButtonWithRelease_MidiWidget(trackGUID, surface, TrackTouched + trackNumber, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
+                
+                channel->AddWidget(new EncoderCycledAction_MidiWidget(trackGUID, surface, Pan + trackNumber, new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
 
+                channel->AddWidget(new Display_MidiWidget(trackGUID, surface, TrackDisplay + trackNumber, i));
+                channel->AddWidget(new Fader14Bit_MidiWidget(trackGUID, surface, Volume + trackNumber, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
                 channel->AddWidget(new PushButton_MidiWidget(trackGUID, surface, RecordArm + trackNumber,   new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
                 channel->AddWidget(new PushButton_MidiWidget(trackGUID, surface, Solo + trackNumber,        new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
                 channel->AddWidget(new PushButton_MidiWidget(trackGUID, surface, Mute + trackNumber,        new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
                 channel->AddWidget(new PushButton_MidiWidget(trackGUID, surface, Select + trackNumber,      new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
-            
-                surface->AddChannel(channel);
-                numLogicalChannels_++;
             }
         }
     }
