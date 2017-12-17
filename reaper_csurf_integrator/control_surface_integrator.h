@@ -15,6 +15,7 @@ using namespace std;
 
 #include "control_surface_integrator_Reaper.h"
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
@@ -43,7 +44,7 @@ const string LogicalControlSurface = "LogicalControlSurface";
 //
 // Modifier Order matters !!
 // Please do not modify RealSurface::CurrentModifiers()
-// The following, (if present) in the modifier part of action address:
+// The following, if present in the modifier part of action address:
 // must be contained in the modifier part of the action address
 // must be contained only in the modifier part of the action address
 // in the case of combos, must be in the same order as listed below -- e.g. ShiftOptionControlAlt for the full meal deal
@@ -55,7 +56,6 @@ const string Alt = "Alt";
 //                                                        THE RULES
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 struct MapEntry
@@ -120,6 +120,7 @@ public:
     virtual void SetValueToZero() {}
 };
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface;
 class RealSurfaceChannel;
@@ -177,7 +178,9 @@ public:
     const string GetName() const { return name_; }
 
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-
+    
+    string GetBankGroup() { return bankGroup_; }
+    
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
 
     int GetNumBankableChannels() { return numBankableChannels_; }
@@ -262,24 +265,25 @@ public:
     }
 };
 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurfaceChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string GUID_ = "";
-    RealSurface* surface_= nullptr;
+    RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     vector<string> widgetNames_;
 
 public:
     virtual ~RealSurfaceChannel() {}
     
-    RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), surface_(surface), isMovable_(isMovable) {}
+    RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
     string GetGUID() { return GUID_; }
     
-    RealSurface* GetRealSurface() { return surface_; }
+    RealSurface* GetRealSurface() { return realSurface_; }
     
     bool GetIsMovable() { return isMovable_; }
     
@@ -299,7 +303,7 @@ public:
     void AddWidget(MidiWidget* widget)
     {
         widgetNames_.push_back(widget->GetName());
-        surface_->AddWidget(widget);
+        realSurface_->AddWidget(widget);
     }
     
     void SetGUID(string GUID)
@@ -308,13 +312,14 @@ public:
         
         for (auto widgetName : widgetNames_)
         {
-            surface_->SetWidgetGUID(widgetName, GUID);
+            realSurface_->SetWidgetGUID(widgetName, GUID);
 
             if(GUID_ == "")
-                surface_->SetWidgetValueToZero(widgetName);
+                realSurface_->SetWidgetValueToZero(widgetName);
          }
     }
 };
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
@@ -345,9 +350,45 @@ public:
     virtual void Run(double value, string surfaceName, string widgetName) {}
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class LogicalSurfaceTrack
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string GUID_ = "";
+    LogicalSurface* logicalSurface_= nullptr;
+    
+    vector<string> actionAddresses_;
+    vector<string> FXActionAddresses_;
+    vector<string> sendActionAddresses_;
+    
+public:
+    LogicalSurfaceTrack(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
+    
+    string GetGUID() { return GUID_; }
+    
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    
+    void AddActionAddress(string actionAddress)
+    {
+        actionAddresses_.push_back(actionAddress);
+    }
+    
+    void AddFXActionAddress(string actionAddress)
+    {
+        FXActionAddresses_.push_back(actionAddress);
+    }
+    
+    void AddSendActionAddress(string actionAddress)
+    {
+        sendActionAddresses_.push_back(actionAddress);
+    }
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
-class Track;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +397,7 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
-    vector<Track*> tracks_;
+    vector<LogicalSurfaceTrack*> logicalSurfaceTracks_;
     map<string, Action*> actions_;
     
     int numLogicalChannels_ = 0;
@@ -390,14 +431,14 @@ private:
         fxMaps_[fxMap->GetName()] = fxMap;
     }
     
-    void AddRealSurface(RealSurface* surface)
+    void AddRealSurface(RealSurface* realSurface)
     {
-        realSurfaces_.push_back(surface);
+        realSurfaces_.push_back(realSurface);
     }
  
-    void AddTrack(Track* track)
+    void AddLogicalSurfaceTrack(LogicalSurfaceTrack* logicalSurfaceTrack)
     {
-        tracks_.push_back(track);
+        logicalSurfaceTracks_.push_back(logicalSurfaceTrack);
     }
 
     void AddAction(string actionAddress, Action* action)
@@ -405,8 +446,15 @@ private:
         actions_[actionAddress] = action;
     }
     
+    void AddTrackAction(string actionAddress, LogicalSurfaceTrack* logicalSurfaceTrack, Action* action)
+    {
+        actions_[actionAddress] = action;
+        logicalSurfaceTrack->AddActionAddress(actionAddress);
+    }
+    
     void RebuildTrackActions()
     {
+        actions_.clear();
         BuildTrackActions();
         RefreshLayout();
     }
@@ -425,7 +473,7 @@ public:
     void InitializeFXMaps();
     void InitializeSurfaces();
     void InitializeLogicalControlSurfaceActions();
-    void MapFX(MediaTrack* track);
+    void MapFX(MediaTrack* track, LogicalSurfaceTrack* logicalSurfaceTrack);
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -559,7 +607,8 @@ public:
 
     void TrackFXListChanged(MediaTrack* track)
     {
-        MapFX(track);
+        // GAW TBD
+        //MapFX(track);
     }
     
     // to Widgets ->
@@ -624,43 +673,6 @@ public:
                 surface->SetWidgetValue(widgetName, value);
     }
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Track
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string GUID_ = "";
-    LogicalSurface* logicalSurface_= nullptr;
-
-    vector<string> actionAddresses_;
-    vector<string> FXActionAddresses_;
-    vector<string> sendActionAddresses_;
-
-    
-public:
-    Track(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
-    
-    string GetGUID() { return GUID_; }
-    
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    void AddActionAddress(string actionAddress)
-    {
-        actionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddFXActionAddress(string actionAddress)
-    {
-        FXActionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddSendActionAddress(string actionAddress)
-    {
-        sendActionAddresses_.push_back(actionAddress);
-    }
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
