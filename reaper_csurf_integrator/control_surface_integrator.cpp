@@ -499,7 +499,7 @@ void LogicalSurface::BuildTrackActions()
             MediaTrack* track = DAW::CSurf_TrackFromID(i, false);
         
             AddAction(trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackName_DisplayAction(this, track));
-            AddAction(trackGUID + surfaceName + TrackTouched + trackNumber, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
+            AddAction(trackGUID + surfaceName + TrackTouched + trackNumber, new TouchStateControlled_Action(this, track, TrackDisplay + trackNumber, trackGUID + surfaceName + TrackDisplay + trackNumber, new TrackVolume_DisplayAction(this, track)));
             AddAction(trackGUID + surfaceName + Volume + trackNumber, new TrackVolume_Action(this, track));
             
             CycledAction* cyclicAction = new CycledAction(this);

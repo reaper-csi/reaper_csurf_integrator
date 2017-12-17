@@ -446,13 +446,14 @@ class TouchStateControlled_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Action* controlledAction_= nullptr;
     string controlledActionWidgetName_ = "";
+    string controlledActionAddress_ = "";
+    Action* controlledAction_= nullptr;
     bool currentlyTouched_ = false;
-    bool lastTouched_ = false;
+    bool lastTouched_ = true;
     
 public:
-    TouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionWidgetName, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionWidgetName_(controlledActionWidgetName), controlledAction_(controlledAction) {}
+    TouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionwidgetName, string controlledActionAddress, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionWidgetName_(controlledActionwidgetName), controlledActionAddress_(controlledActionAddress), controlledAction_(controlledAction) {}
     
     virtual double GetValue() override { return currentlyTouched_; }
 
@@ -468,7 +469,7 @@ public:
             lastTouched_ = currentlyTouched_;
             
             if(currentlyTouched_ == false)
-                controlledAction_->Update(surfaceName, controlledActionWidgetName_);
+                GetLogicalSurface()->ForceUpdateAction(controlledActionAddress_, surfaceName, controlledActionWidgetName_);
         }
     }
 };
