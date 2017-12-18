@@ -69,7 +69,6 @@ public:
     Fader14Bit_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
-
     double GetMaxDB() override { return maxDB_; }
 
     virtual void SetValue(double volume) override
@@ -211,7 +210,6 @@ public:
     VUMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
-    
     double GetMaxDB() override { return maxDB_; }
     
     virtual void SetValueToZero() override
@@ -300,10 +298,8 @@ class MidiCSurf : public RealSurface
 private:
     midi_Input* midiInput_ = nullptr;
     midi_Output* midiOutput_ = nullptr;
-    
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
-
 
     void HandleMidiInput()
     {
