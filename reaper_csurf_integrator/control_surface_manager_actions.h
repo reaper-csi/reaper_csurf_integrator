@@ -14,7 +14,6 @@ class Shift_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     Shift_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -28,7 +27,6 @@ class Option_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     Option_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -42,7 +40,6 @@ class Control_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     Control_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -56,7 +53,6 @@ class Alt_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     Alt_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -72,7 +68,6 @@ class Latched_Action : public DoubleAction
 private:
     clock_t lastPressed_ = clock();
 public:
-    
     Latched_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
     
     virtual void SetValue(string surfaceName, double value) {}
@@ -101,7 +96,6 @@ class LatchedZoom_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     LatchedZoom_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
     virtual void SetValue(string surfaceName, double value) override
@@ -115,7 +109,6 @@ class LatchedScrub_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     LatchedScrub_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
     
     virtual void SetValue(string surfaceName, double value) override
@@ -129,7 +122,6 @@ class NextMap_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     NextMap_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -146,7 +138,6 @@ private:
     int stride_ = 0;
 
 public:
-    
     TrackBank_Action(LogicalSurface* logicalSurface, int stride) : DoubleAction(logicalSurface), stride_(stride)   {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -160,7 +151,6 @@ class ImmobilizeSelectedTracks_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     ImmobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
@@ -174,7 +164,6 @@ class MobilizeSelectedTracks_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    
     MobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void Run(double value, string surfaceName, string widgetName) override
