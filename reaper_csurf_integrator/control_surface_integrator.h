@@ -7,6 +7,7 @@
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
+// required to resolve Windows conflict -- this undefines std::byte which was added in C++17, therefore std::byte is unavailable in this implementaion until Windoze gets its act together
 #define _HAS_STD_BYTE 0
 
 #include <sstream>
