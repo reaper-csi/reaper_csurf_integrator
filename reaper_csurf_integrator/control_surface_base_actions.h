@@ -29,7 +29,6 @@ protected:
     virtual double GetCurrentNormalizedValue() override { return currentValue_; }
 
 public:
-    
     virtual void Update(string surfaceName, string widgetName) override
     {
         double newValue = GetValue();
