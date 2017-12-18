@@ -94,11 +94,6 @@ public:
         GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
     
-    virtual void SetValue(double volume, int displayMode) override
-    {
-        SetValue(volume);
-    }
-    
     virtual void SetValueToZero() override
     {
         SetValue(0.0);
