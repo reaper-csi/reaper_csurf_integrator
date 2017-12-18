@@ -180,10 +180,11 @@ protected:
         return GUID + GetName() + currentModifiers + widgetName;
     }
     
+    RealSurface(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
+    
 public:
     virtual ~RealSurface() {};
     
-    RealSurface(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
     
     const string GetName() const { return name_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
@@ -304,13 +305,14 @@ private:
     bool isMovable_ = true;
     vector<string> widgetNames_;
 
+    RealSurface* GetRealSurface() { return realSurface_; }
+
 public:
     virtual ~RealSurfaceChannel() {}
     
     RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
     string GetGUID() { return GUID_; }
-    RealSurface* GetRealSurface() { return realSurface_; }
     bool GetIsMovable() { return isMovable_; }
     
     void MapFX(MediaTrack *trackid);
@@ -332,7 +334,7 @@ public:
     void AddWidget(MidiWidget* widget)
     {
         widgetNames_.push_back(widget->GetName());
-        realSurface_->AddWidget(widget);
+        GetRealSurface()->AddWidget(widget);
     }
     
     void SetGUID(string GUID)
@@ -341,10 +343,10 @@ public:
         
         for (auto widgetName : widgetNames_)
         {
-            realSurface_->SetWidgetGUID(widgetName, GUID);
+            GetRealSurface()->SetWidgetGUID(widgetName, GUID);
 
             if(GUID_ == "")
-                realSurface_->SetWidgetValueToZero(widgetName);
+                GetRealSurface()->SetWidgetValueToZero(widgetName);
          }
     }
 };
@@ -356,12 +358,13 @@ class Action
 {
 protected:
     LogicalSurface* logicalSurface_ = nullptr;
-    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) {}
     virtual void SetWidgetValue(string surfaceName, string widgetName, string value) {}
 
+    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
+    
 public:
     virtual ~Action() {}
     
@@ -826,7 +829,7 @@ public:
         logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
 
-    void TrackListChanged() // tell current map
+    void TrackListChanged()
     {
         if(logicalSurfaces_.size() != 0) // seems we need to protect against prematurely early calls
             for(auto & surface : logicalSurfaces_)
