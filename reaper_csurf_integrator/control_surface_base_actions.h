@@ -24,14 +24,14 @@ protected:
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
-    virtual double GetValue() { return 0.0; }
+    virtual double GetValue(string surfaceName, string widgetName) { return 0.0; }
     
     virtual double GetCurrentNormalizedValue() override { return currentValue_; }
 
 public:
     virtual void Update(string surfaceName, string widgetName) override
     {
-        double newValue = GetValue();
+        double newValue = GetValue(surfaceName, widgetName);
         
         if(currentValue_ != newValue)
             SetWidgetValue(surfaceName, widgetName, currentValue_ = newValue);
@@ -39,7 +39,7 @@ public:
     
     virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
-        SetWidgetValue(surfaceName, widgetName, GetValue());
+        SetWidgetValue(surfaceName, widgetName, GetValue(surfaceName, widgetName));
     }
 };
 
@@ -95,14 +95,14 @@ protected:
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
-    virtual string GetValue() { return currentValue_; }
+    virtual string GetValue(string surfaceName, string widgetName) { return currentValue_; }
     
 public:
     StringDisplayAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
     virtual void Update(string surfaceName, string widgetName) override
     {
-        string newValue = GetValue();
+        string newValue = GetValue(surfaceName, widgetName);
         
         if(currentValue_ != newValue)
             SetWidgetValue(surfaceName, widgetName, currentValue_ = newValue);
@@ -110,7 +110,7 @@ public:
     
     virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
-        SetWidgetValue(surfaceName, widgetName, GetValue());
+        SetWidgetValue(surfaceName, widgetName, GetValue(surfaceName, widgetName));
     }
 };
 
