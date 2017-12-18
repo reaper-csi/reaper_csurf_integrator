@@ -352,43 +352,8 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalSurfaceTrack
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string GUID_ = "";
-    LogicalSurface* logicalSurface_= nullptr;
-    
-    vector<string> actionAddresses_;
-    vector<string> FXActionAddresses_;
-    vector<string> sendActionAddresses_;
-    
-public:
-    LogicalSurfaceTrack(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
-    
-    string GetGUID() { return GUID_; }
-    
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    void AddActionAddress(string actionAddress)
-    {
-        actionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddFXActionAddress(string actionAddress)
-    {
-        FXActionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddSendActionAddress(string actionAddress)
-    {
-        sendActionAddresses_.push_back(actionAddress);
-    }
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
+class LogicalSurfaceTrack;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -446,10 +411,9 @@ private:
         actions_[actionAddress] = action;
     }
     
-    void AddTrackAction(string actionAddress, LogicalSurfaceTrack* logicalSurfaceTrack, Action* action)
+    void AddAction(string actionAddress, LogicalSurfaceTrack* logicalSurfaceTrack, Action* action)
     {
         actions_[actionAddress] = action;
-        logicalSurfaceTrack->AddActionAddress(actionAddress);
     }
     
     void RebuildTrackActions()
@@ -747,6 +711,43 @@ public:
         return nullptr;
     }
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class LogicalSurfaceTrack
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string GUID_ = "";
+    LogicalSurface* logicalSurface_= nullptr;
+    
+    vector<string> actionAddresses_;
+    vector<string> FXActionAddresses_;
+    vector<string> sendActionAddresses_;
+    
+public:
+    LogicalSurfaceTrack(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
+    
+    string GetGUID() { return GUID_; }
+    
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    
+    void AddActionAddress(string actionAddress)
+    {
+        actionAddresses_.push_back(actionAddress);
+    }
+    
+    void AddFXActionAddress(string actionAddress)
+    {
+        FXActionAddresses_.push_back(actionAddress);
+    }
+    
+    void AddSendActionAddress(string actionAddress)
+    {
+        sendActionAddresses_.push_back(actionAddress);
+    }
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager
