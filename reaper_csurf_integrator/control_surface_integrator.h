@@ -7,6 +7,8 @@
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
+#define _HAS_STD_BYTE 0
+
 #include <sstream>
 #include <vector>
 #include <map>
