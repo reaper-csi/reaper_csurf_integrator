@@ -80,10 +80,12 @@ public:
     FXMap(string aName) : name(aName) {}
     
     string GetName() { return name; }
-    
-    void AddEntry(string widgetName, string paramName) { entries_.push_back(MapEntry(widgetName, paramName));   }
-    
     vector<MapEntry>& GetMapEntries() { return entries_; }
+    
+    void AddEntry(string widgetName, string paramName)
+    {
+        entries_.push_back(MapEntry(widgetName, paramName));
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +116,11 @@ public:
     virtual double GetMinDB() { return -72.0; }
     virtual double GetMaxDB() { return 12.0; }
     string GetName() { return name_; }
-    void SetGUID(string GUID) { GUID_ = GUID; }
+    
+    void SetGUID(string GUID)
+    {
+        GUID_ = GUID;
+    }
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     void Update();
     void ForceUpdate();
@@ -666,7 +672,6 @@ public:
     TrackGUIDAssociation(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
     
     string GetGUID() { return GUID_; }
-    
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     void AddFXActionAddress(string actionAddress)

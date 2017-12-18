@@ -19,18 +19,16 @@ protected:
     DoubleAction(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
     DoubleAction(LogicalSurface* logicalSurface, double initialValue) : Action(logicalSurface), currentValue_(initialValue)  {}
 
-    virtual double GetValue() { return 0.0; }
-    
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
     
+    virtual double GetValue() { return 0.0; }
+    
+    virtual double GetCurrentNormalizedValue() override { return currentValue_; }
+
 public:
-    virtual double GetCurrentNormalizedValue() override
-    {
-        return currentValue_;
-    }
     
     virtual void Update(string surfaceName, string widgetName) override
     {
@@ -57,10 +55,7 @@ private:
 public:
     CycledAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
-    virtual double GetCurrentNormalizedValue() override
-    {
-        return actions_[currentIndex_]->GetCurrentNormalizedValue();
-    }
+    virtual double GetCurrentNormalizedValue() override { return actions_[currentIndex_]->GetCurrentNormalizedValue(); }
     
     virtual void Add(Action* action) override
     {
@@ -96,12 +91,12 @@ class StringDisplayAction : public Action
 protected:
     string currentValue_ = "";
     
-    virtual string GetValue() { return currentValue_; }
-    
     virtual void SetWidgetValue(string surfaceName, string widgetName, string value) override
     {
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
+    
+    virtual string GetValue() { return currentValue_; }
     
 public:
     StringDisplayAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
