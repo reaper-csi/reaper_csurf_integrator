@@ -26,7 +26,7 @@ const string Master = "Master";
 const string LogicalControlSurface = "LogicalControlSurface";
 
 //
-//
+// An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader1"
 // ActionAddress format - GUID + realSurfaceName + modifiers + widgetName
 // GUID and/or modifiers can be ""
 // realSurfaceName + widgetName must be present and unique within a given logical surface
@@ -39,15 +39,19 @@ const string LogicalControlSurface = "LogicalControlSurface";
 //
 // Modifier Order matters !!
 // Please do not modify RealSurface::CurrentModifiers()
+//
 // Allowed -- ShiftControl -- OK
 // Disallowed -- ControlShift -- no good
 //
 // Modifier Order matters !!
 // Please do not modify RealSurface::CurrentModifiers()
+//
 // The following, if present in the modifier part of action address:
-// must be contained in the modifier part of the action address
-// must be contained only in the modifier part of the action address
-// in the case of combos, must be in the same order as listed below -- e.g. ShiftOptionControlAlt for the full meal deal
+//  must be contained in the modifier part of the action address
+//  must be contained only in the modifier part of the action address
+//  in the case of combos, must be in the same order as listed below -- e.g. ShiftOptionControlAlt for the full meal deal
+//
+
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
@@ -176,22 +180,18 @@ public:
     RealSurface(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
     
     const string GetName() const { return name_; }
-
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
     string GetBankGroup() { return bankGroup_; }
-    
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
-
     int GetNumBankableChannels() { return numBankableChannels_; }
-    
+    bool IsZoom() { return zoom_; }
+    bool IsScrub() { return scrub_; }
+        
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
-    
     virtual void SendMidiMessage(int first, int second, int third) {}
     
-    virtual void OnTrackSelection(MediaTrack *track);
-    
     virtual void RunAndUpdate() {}
+    virtual void OnTrackSelection(MediaTrack *track);
     
     void AddChannel(RealSurfaceChannel*  channel)
     {
@@ -209,15 +209,37 @@ public:
             widgets_[widgetName]->SetGUID(GUID);
     }
 
-    void SetShift(bool value) { shift_ = value; ForceUpdateWidgets(); }
-    void SetOption(bool value) { option_ = value; ForceUpdateWidgets(); }
-    void SetControl(bool value) { control_ = value; ForceUpdateWidgets(); }
-    void SetAlt(bool value) { alt_ = value; ForceUpdateWidgets(); }
-    void SetZoom(bool value) { zoom_ = value; ForceUpdateWidgets(); }
-    void SetScrub(bool value) { scrub_ = value; ForceUpdateWidgets(); }
+    void SetShift(bool value)
+    {
+        shift_ = value;
+        ForceUpdateWidgets();
+    }
     
-    bool IsZoom() { return zoom_; }
-    bool IsScrub() { return scrub_; }
+    void SetOption(bool value)
+    {
+        option_ = value;
+        ForceUpdateWidgets();
+    }
+    
+    void SetControl(bool value)
+    {
+        control_ = value; ForceUpdateWidgets();
+    }
+    
+    void SetAlt(bool value)
+    {
+        alt_ = value; ForceUpdateWidgets();
+    }
+    
+    void SetZoom(bool value)
+    {
+        zoom_ = value; ForceUpdateWidgets();
+    }
+    
+    void SetScrub(bool value)
+    {
+        scrub_ = value; ForceUpdateWidgets();
+    }
 
     // to Widgets ->
     virtual void UpdateWidgets()
@@ -282,9 +304,7 @@ public:
     RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
     string GetGUID() { return GUID_; }
-    
     RealSurface* GetRealSurface() { return realSurface_; }
-    
     bool GetIsMovable() { return isMovable_; }
     
     void MapFX(MediaTrack *trackid);
@@ -298,7 +318,10 @@ public:
         }
     }
     
-    void SetIsMovable(bool isMovable) { isMovable_ = isMovable; }
+    void SetIsMovable(bool isMovable)
+    {
+        isMovable_ = isMovable;
+    }
     
     void AddWidget(MidiWidget* widget)
     {
@@ -327,9 +350,7 @@ class Action
 {
 protected:
     LogicalSurface* logicalSurface_ = nullptr;
-    
     Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
-    
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) {}
@@ -339,11 +360,9 @@ public:
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
-    
     virtual double GetCurrentNormalizedValue () { return 0.0; }
 
     virtual void Add(Action* action) {}
-    
     virtual void Update(string surfaceName, string widgetName) {}
     virtual void ForceUpdate(string surfaceName, string widgetName) {}
     virtual void Cycle(string surfaceName, string widgetName) {}
@@ -353,7 +372,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
-class LogicalSurfaceTrack;
+class TrackGUIDAssociation;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -362,32 +381,33 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
-    vector<LogicalSurfaceTrack*> logicalSurfaceTracks_;
     map<string, Action*> actions_;
+    vector<TrackGUIDAssociation*> trackGUIDAssociations_;
+    vector<string> trackGUIDs_;
     
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
 
-    void BuildTrackActions();
-    void BuildTrackActions2();
+    void InitializeFXMaps();
+    void InitializeSurfaces();
+    void BuildActions();
     void BuildCSurfWidgets();
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
     
     bool DidTrackListChange()
     {
-        /*
-         if(trackInteractors_.size() == 0)
-         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
-         
-         if(trackInteractors_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
-         return true; // list sizes disagree
-         
-         for(int i = 0; i < trackInteractors_.size(); i++)
-         if(trackInteractors_[i]->GetGUID() != DAW::GetTrackGUIDAsString(i))
-         return true;
-         */
+        if(trackGUIDs_.size() == 0)
+            return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
+        
+        if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
+            return true; // list sizes disagree
+        
+        for(int i = 0; i < trackGUIDs_.size(); i++)
+            if(trackGUIDs_[i] != DAW::GetTrackGUIDAsString(i))
+                return true;
+
         return false;
     }
     
@@ -401,9 +421,9 @@ private:
         realSurfaces_.push_back(realSurface);
     }
  
-    void AddLogicalSurfaceTrack(LogicalSurfaceTrack* logicalSurfaceTrack)
+    void AddTrackGUIDAssociation(TrackGUIDAssociation* trackGUIDAssociation)
     {
-        logicalSurfaceTracks_.push_back(logicalSurfaceTrack);
+        trackGUIDAssociations_.push_back(trackGUIDAssociation);
     }
 
     void AddAction(string actionAddress, Action* action)
@@ -411,33 +431,22 @@ private:
         actions_[actionAddress] = action;
     }
     
-    void AddAction(string actionAddress, LogicalSurfaceTrack* logicalSurfaceTrack, Action* action)
-    {
-        actions_[actionAddress] = action;
-    }
-    
-    void RebuildTrackActions()
-    {
-        actions_.clear();
-        BuildTrackActions();
-        RefreshLayout();
-    }
-    
 public:
     LogicalSurface(CSurfManager* manager) : manager_(manager) {}
 
     CSurfManager* GetManager() { return manager_; }
-    
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
-    
     bool GetVSTMonitor() { return VSTMonitor_; }
 
-    void Initialize();
-    void Initialize2();
-    void InitializeFXMaps();
-    void InitializeSurfaces();
-    void InitializeLogicalControlSurfaceActions();
-    void MapFX(MediaTrack* track, LogicalSurfaceTrack* logicalSurfaceTrack);
+    void MapFX(MediaTrack* track, TrackGUIDAssociation* logicalSurfaceTrack);
+
+    void Initialize()
+    {
+        InitializeFXMaps();
+        InitializeSurfaces();
+        BuildActions();
+        BuildCSurfWidgets();
+    }
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -454,7 +463,7 @@ public:
     void TrackListChanged()
     {
         if(DidTrackListChange())
-            RebuildTrackActions();
+            BuildActions();
     }
     
     void RefreshLayout()
@@ -571,8 +580,12 @@ public:
 
     void TrackFXListChanged(MediaTrack* track)
     {
-        // GAW TBD
-        //MapFX(track);
+        // GAW TBD get the LogicalSurfaceTRack for this track GUID
+        // Then erase anything currently in the LogicalSurfaceTrack FXActionAddresses
+        // Then map below with LogicalSurfaceTrack you have aquired
+        
+        TrackGUIDAssociation* trackGUIDAssociation = nullptr; // get the one for this GUID
+        MapFX(track, trackGUIDAssociation);
     }
     
     // to Widgets ->
@@ -637,6 +650,36 @@ public:
                 surface->SetWidgetValue(widgetName, value);
     }
 };
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackGUIDAssociation
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string GUID_ = "";
+    LogicalSurface* logicalSurface_= nullptr;
+    vector<string> FXActionAddresses_;
+    vector<string> sendActionAddresses_;
+    
+public:
+    TrackGUIDAssociation(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
+    
+    string GetGUID() { return GUID_; }
+    
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    
+    void AddFXActionAddress(string actionAddress)
+    {
+        FXActionAddresses_.push_back(actionAddress);
+    }
+    
+    void AddSendActionAddress(string actionAddress)
+    {
+        sendActionAddresses_.push_back(actionAddress);
+    }
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
@@ -714,52 +757,13 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalSurfaceTrack
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string GUID_ = "";
-    LogicalSurface* logicalSurface_= nullptr;
-    
-    vector<string> actionAddresses_;
-    vector<string> FXActionAddresses_;
-    vector<string> sendActionAddresses_;
-    
-public:
-    LogicalSurfaceTrack(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
-    
-    string GetGUID() { return GUID_; }
-    
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    void AddActionAddress(string actionAddress)
-    {
-        actionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddFXActionAddress(string actionAddress)
-    {
-        FXActionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddSendActionAddress(string actionAddress)
-    {
-        sendActionAddresses_.push_back(actionAddress);
-    }
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     MidiIOManager* midiIOManager_ = nullptr;
-    
     vector <LogicalSurface*> logicalSurfaces_;
-
     bool lazyInitialized_ = false;
-    
     int currentLogicalSurfaceIndex_ = 0;;
 
     void RunAndUpdate()
@@ -770,10 +774,6 @@ private:
             
             LogicalSurface* logicalSurface = new LogicalSurface(this);
             logicalSurface->Initialize();
-            logicalSurfaces_.push_back(logicalSurface);
-            
-            logicalSurface = new LogicalSurface(this);
-            logicalSurface->Initialize2();
             logicalSurfaces_.push_back(logicalSurface);
             
             lazyInitialized_ = true;
@@ -792,35 +792,17 @@ private:
         return strtod (tmp, NULL);
     }
 
-    
 public:
     virtual ~CSurfManager() {};
     
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
-    
     bool GetLazyInitialized() { return lazyInitialized_; }
-    
-    double GetFaderMaxDB()
-    {
-        return GetPrivateProfileDouble("slidermaxv");
-    }
-    
-    double GetFaderMinDB()
-    {
-        return GetPrivateProfileDouble("sliderminv");
-    }
-    
-    double GetVUMaxDB()
-    {
-        return GetPrivateProfileDouble("vumaxvol");
-    }
-    
-    double GetVUMinDB()
-    {
-        return GetPrivateProfileDouble("vuminvol");
-    }
+    double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
+    double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
+    double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
+    double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
     void OnTrackSelection(MediaTrack *trackid)
     {
