@@ -36,7 +36,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     if(call == CSURF_EXT_RESET)
     {
         //ClearAllTouchStates();
-        //InitializeEuCon();
+        //Initialize();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
@@ -50,8 +50,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
 
 bool CSurfIntegrator::GetTouchState(MediaTrack *trackid, int touchedControl)
 {
-  
-    //return IsChannelParamBeingTouched(CSurf_TrackToID(trackid, true), (tTouchedChannelParam)touchedControl);
+    // GAW TBD
     
     return true;
 }
