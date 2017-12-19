@@ -25,6 +25,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const string Master = "Master";
 const string LogicalControlSurface = "LogicalControlSurface";
+const string GainReduction_dB = "GainReduction_dB";
 
 //
 // An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader1"
@@ -830,9 +831,9 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
-    void OnTrackSelection(MediaTrack *trackid)
+    void OnTrackSelection(MediaTrack *track)
     {
-        logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(trackid);
+        logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(track);
     }
     
     void Run()
