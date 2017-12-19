@@ -186,174 +186,169 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 }
 
 
-void LogicalSurface::MapFX(MediaTrack* track, TrackGUIDAssociation* trackGUIDAssociations)
+void LogicalSurface::MapFX(MediaTrack* track)
 {
-        /*
     char trackFXName[256];
     char trackFXParameterName[256];
     char trackFXParameterGUID[256];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-
+    // We will always find the TrackGUIDAssociations for this track, otherwise how could we add FX to it ?
+    TrackGUIDAssociation* trackGUIDAssociation = nullptr;
      
-     // We will always find the interactor for this track, otherwise how could we add FX to it ?
-     Interactor* interactor = nullptr;
+    for(auto * aTrackGUIDAssociation : trackGUIDAssociations_)
+        if(aTrackGUIDAssociation->GetGUID() == trackGUID)
+            trackGUIDAssociation = aTrackGUIDAssociation;
+    
+    trackGUIDAssociation->ClearFXActionAddresses();
      
-     for(auto * anInteractor : trackInteractors_)
-     if(anInteractor->GetGUID() == trackGUID)
-     interactor = anInteractor;
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
+        string fxName = trackFXName;
      
-     // Dump any existing FX subInteractors
-     interactor->ClearFXSubInteractors();
+        if(fxMaps_.count(trackFXName) > 0)
+        {
+            FXMap* map = fxMaps_[fxName];
      
-     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-     {
-     
-     
-     
-     
-     DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
-     string fxName = trackFXName;
-     
-     if(fxMaps_.count(trackFXName) > 0)
-     {
-     FXMap* map = fxMaps_[fxName];
-     
-         // GAW TBD -- how do we know we should do this ?
-         //AddAction(trackGUID + surfaceName + CompressorMeter + trackNumber, new GainReductionMeter_Action(this, track, i));
-         // resumably it's in FXMap somehow, maybe as "GainReductionMeter"
+            // GAW TBD -- how do we know we should do this ?
+            //AddAction(trackGUID + surfaceName + CompressorMeter + trackNumber, new GainReductionMeter_Action(this, track, i));
+            // resumably it's in FXMap somehow, maybe as "GainReductionMeter"
          
-         
-     DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
-     string fxGUID(trackFXParameterGUID);
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
+            string fxGUID = trackFXParameterGUID;
      
-     SubInteractor* subInteractor = new SubInteractor(fxGUID, i, interactor);
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+                string fxParamName(trackFXParameterName);
      
-     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-     {
-     DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-     string fxParamName(trackFXParameterName);
+                for(auto map : map->GetMapEntries())
+                {
+                    if(map.paramName == fxParamName)
+                    {
+                        AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new TrackFX_Action(this, track, i, j));
+                        trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
+                    }
+                }
+            }
+        }
+        else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
+        {
+            DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
      
-     for(auto map : map->GetMapEntries())
-     if(map.paramName == fxParamName)
-     subInteractor->AddAction(new TrackFX_Action(map.widgetName, subInteractor, map.paramName, j));
+            int numParameters = DAW::TrackFX_GetNumParams(track, i);
+     
+            for(int j = 0; j < numParameters; j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+                string fxParamName(trackFXParameterName);
+     
+                DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
+            }
+        }
      }
-     
-     interactor->AddFXSubInteractor(subInteractor);
-     }
-     else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
-     {
-     DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
-     
-     int numParameters = DAW::TrackFX_GetNumParams(track, i);
-     
-     for(int j = 0; j < numParameters; j++)
-     {
-     DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-     string fxParamName(trackFXParameterName);
-     
-     DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
-     }
-     }
-     }
-     */
 }
 
 void LogicalSurface::InitializeFXMaps()
 {
-    FXMap* fxMap = new FXMap("VST: UAD UA 1176LN Rev E (Universal Audio, Inc.)");
+    for(auto* surface : realSurfaces_)
+    {
+        string surfaceName = surface->GetName();
     
-    fxMap->AddEntry(Threshold, "Input");
-    fxMap->AddEntry(Character, "Output");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Attack");
-    fxMap->AddEntry(Release, "Release");
-    fxMap->AddEntry(Ratio, "Ratio");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(Threshold, "Thresh");
-    fxMap->AddEntry(Character, "Output");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Headroom");
-    fxMap->AddEntry(Release, "Input");
-    fxMap->AddEntry(Ratio, "Time Const");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(Threshold, "Peak Reduct");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Emphasis");
-    fxMap->AddEntry(Ratio, "Comp/Limit");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(LoCurve, "LowPeak");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HiGain");
-    fxMap->AddEntry(HiFrequency, "HiFreq");
-    fxMap->AddEntry(HiMidGain, "HiMidGain");
-    fxMap->AddEntry(HiMidFrequency, "HiMidFreq");
-    fxMap->AddEntry(HiMidQ, "LowPass");
-    fxMap->AddEntry(LoMidGain, "LoMidGain");
-    fxMap->AddEntry(LoMidFrequency, "LoMidFreq");
-    fxMap->AddEntry(LoMidQ, "HiPass");
-    fxMap->AddEntry(LoGain, "LowGain");
-    fxMap->AddEntry(LoFrequency, "LowFreq");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
-    
-    //fxMap->AddEntry(LoCurve, "");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HF Atten");
-    fxMap->AddEntry(HiFrequency, "HF Atten Freq");
-    fxMap->AddEntry(HiMidGain, "HF Boost");
-    fxMap->AddEntry(HiMidFrequency, "High Freq");
-    fxMap->AddEntry(HiMidQ, "HF Q");
-    fxMap->AddEntry(LoMidGain, "LF Atten");
-    //fxMap->AddEntry(LoMidFrequency, "");
-    //fxMap->AddEntry(LoMidQ, "");
-    fxMap->AddEntry(LoGain, "LF Boost");
-    fxMap->AddEntry(LoFrequency, "Low Freq");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
-    
-    //fxMap->AddEntry(LoCurve, "");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HM Peak");
-    fxMap->AddEntry(HiFrequency, "HM Freq");
-    fxMap->AddEntry(HiMidGain, "Mid Dip");
-    fxMap->AddEntry(HiMidFrequency, "Mid Freq");
-    //fxMap->AddEntry(HiMidQ, "");
-    fxMap->AddEntry(LoMidGain, "LM Peak");
-    fxMap->AddEntry(LoMidFrequency, "LM Freq");
-    //fxMap->AddEntry(LoMidQ, "");
-    //fxMap->AddEntry(LoGain, "");
-    //fxMap->AddEntry(LoFrequency, "");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-    
+        FXMap* fxMap = new FXMap("VST: UAD UA 1176LN Rev E (Universal Audio, Inc.)");
+        
+        fxMap->AddEntry(surfaceName, Threshold, "Input");
+        fxMap->AddEntry(surfaceName, Character, "Output");
+        fxMap->AddEntry(surfaceName, Drive, "Meter");
+        fxMap->AddEntry(surfaceName, Attack, "Attack");
+        fxMap->AddEntry(surfaceName, Release, "Release");
+        fxMap->AddEntry(surfaceName, Ratio, "Ratio");
+        fxMap->AddEntry(surfaceName, Compressor, "Bypass");
+        fxMap->AddEntry(surfaceName, Parallel, "Wet");
+        
+        AddFXMap(fxMap);
+        
+        fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+        
+        fxMap->AddEntry(surfaceName, Threshold, "Thresh");
+        fxMap->AddEntry(surfaceName, Character, "Output");
+        fxMap->AddEntry(surfaceName, Drive, "Meter");
+        fxMap->AddEntry(surfaceName, Attack, "Headroom");
+        fxMap->AddEntry(surfaceName, Release, "Input");
+        fxMap->AddEntry(surfaceName, Ratio, "Time Const");
+        fxMap->AddEntry(surfaceName, Compressor, "Bypass");
+        fxMap->AddEntry(surfaceName, Parallel, "Wet");
+        
+        AddFXMap(fxMap);
+        
+        fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+        
+        fxMap->AddEntry(surfaceName, Threshold, "Peak Reduct");
+        fxMap->AddEntry(surfaceName, Character, "Gain");
+        fxMap->AddEntry(surfaceName, Drive, "Meter");
+        fxMap->AddEntry(surfaceName, Attack, "Emphasis");
+        fxMap->AddEntry(surfaceName, Ratio, "Comp/Limit");
+        fxMap->AddEntry(surfaceName, Compressor, "Bypass");
+        fxMap->AddEntry(surfaceName, Parallel, "Wet");
+        
+        AddFXMap(fxMap);
+        
+        fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+        
+        fxMap->AddEntry(surfaceName, LoCurve, "LowPeak");
+        //fxMap->AddEntry(HiCurve, "");
+        fxMap->AddEntry(surfaceName, HiGain, "HiGain");
+        fxMap->AddEntry(surfaceName, HiFrequency, "HiFreq");
+        fxMap->AddEntry(surfaceName, HiMidGain, "HiMidGain");
+        fxMap->AddEntry(surfaceName, HiMidFrequency, "HiMidFreq");
+        fxMap->AddEntry(surfaceName, HiMidQ, "LowPass");
+        fxMap->AddEntry(surfaceName, LoMidGain, "LoMidGain");
+        fxMap->AddEntry(surfaceName, LoMidFrequency, "LoMidFreq");
+        fxMap->AddEntry(surfaceName, LoMidQ, "HiPass");
+        fxMap->AddEntry(surfaceName, LoGain, "LowGain");
+        fxMap->AddEntry(surfaceName, LoFrequency, "LowFreq");
+        fxMap->AddEntry(surfaceName, Equalizer, "Bypass");
+        
+        AddFXMap(fxMap);
+        
+        fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+        
+        //fxMap->AddEntry(LoCurve, "");
+        //fxMap->AddEntry(HiCurve, "");
+        fxMap->AddEntry(surfaceName, HiGain, "HF Atten");
+        fxMap->AddEntry(surfaceName, HiFrequency, "HF Atten Freq");
+        fxMap->AddEntry(surfaceName, HiMidGain, "HF Boost");
+        fxMap->AddEntry(surfaceName, HiMidFrequency, "High Freq");
+        fxMap->AddEntry(surfaceName, HiMidQ, "HF Q");
+        fxMap->AddEntry(surfaceName, LoMidGain, "LF Atten");
+        //fxMap->AddEntry(LoMidFrequency, "");
+        //fxMap->AddEntry(LoMidQ, "");
+        fxMap->AddEntry(surfaceName, LoGain, "LF Boost");
+        fxMap->AddEntry(surfaceName, LoFrequency, "Low Freq");
+        fxMap->AddEntry(surfaceName, Equalizer, "Bypass");
+        
+        AddFXMap(fxMap);
+        
+        fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+        
+        //fxMap->AddEntry(LoCurve, "");
+        //fxMap->AddEntry(HiCurve, "");
+        fxMap->AddEntry(surfaceName, HiGain, "HM Peak");
+        fxMap->AddEntry(surfaceName, HiFrequency, "HM Freq");
+        fxMap->AddEntry(surfaceName, HiMidGain, "Mid Dip");
+        fxMap->AddEntry(surfaceName, HiMidFrequency, "Mid Freq");
+        //fxMap->AddEntry(HiMidQ, "");
+        fxMap->AddEntry(surfaceName, LoMidGain, "LM Peak");
+        fxMap->AddEntry(surfaceName, LoMidFrequency, "LM Freq");
+        //fxMap->AddEntry(LoMidQ, "");
+        //fxMap->AddEntry(LoGain, "");
+        //fxMap->AddEntry(LoFrequency, "");
+        fxMap->AddEntry(surfaceName, Equalizer, "Bypass");
+        
+        AddFXMap(fxMap);
+    }
 }
 
 void LogicalSurface::BuildActions()
@@ -460,9 +455,8 @@ void LogicalSurface::BuildActions()
                 AddAction(trackGUID + surfaceName + Solo + trackNumber, new TrackSolo_Action(this, track));
             }
             
-            TrackGUIDAssociation* trackGUIDAssociation = new TrackGUIDAssociation(trackGUID, this);
-            AddTrackGUIDAssociation(trackGUIDAssociation);
-            MapFX(track, trackGUIDAssociation);
+            AddTrackGUIDAssociation(new TrackGUIDAssociation(trackGUID, this));
+            MapFX(track);
         }
     }
     
