@@ -65,10 +65,11 @@ const string Alt = "Alt";
 
 struct MapEntry
 {
+    string surfaceName;
     string widgetName;
     string paramName;
     
-    MapEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
+    MapEntry(string aSurfaceName, string aWidgetName, string aParamName) : surfaceName(aSurfaceName), widgetName(aWidgetName), paramName(aParamName) {}
 };
 
 struct FXMap
@@ -83,9 +84,9 @@ public:
     string GetName() { return name; }
     vector<MapEntry>& GetMapEntries() { return entries_; }
     
-    void AddEntry(string widgetName, string paramName)
+    void AddEntry(string surfaceName, string widgetName, string paramName)
     {
-        entries_.push_back(MapEntry(widgetName, paramName));
+        entries_.push_back(MapEntry(surfaceName, widgetName, paramName));
     }
 };
 
@@ -446,7 +447,7 @@ public:
     bool GetVSTMonitor() { return VSTMonitor_; }
 
     void MapWidgetsToFX(MediaTrack *trackid);
-    void MapFX(MediaTrack* track, TrackGUIDAssociation* logicalSurfaceTrack);
+    void MapFX(MediaTrack* track);
 
     void Initialize()
     {
@@ -456,6 +457,12 @@ public:
         BuildCSurfWidgets();
     }
     
+    void RemoveAction(string actionAddress)
+    {
+        if(actions_.count(actionAddress) > 0)
+            actions_.erase(actionAddress);
+    }
+
     void OnTrackSelection(MediaTrack* track)
     {
         if(DAW::CountSelectedTracks(nullptr) == 1)
@@ -591,12 +598,7 @@ public:
 
     void TrackFXListChanged(MediaTrack* track)
     {
-        // GAW TBD get the LogicalSurfaceTrack for this track GUID
-        // Then erase anything currently in the LogicalSurfaceTrack FXActionAddresses
-        // Then map below with LogicalSurfaceTrack you have acquired
-        
-        TrackGUIDAssociation* trackGUIDAssociation = nullptr; // get the one for this GUID
-        MapFX(track, trackGUIDAssociation);
+        MapFX(track);
     }
     
     // to Widgets ->
@@ -678,15 +680,29 @@ public:
     
     string GetGUID() { return GUID_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+   
+    void ClearSendActionAddresses()
+    {
+        sendActionAddresses_.clear();
+    }
+   
+    void AddSendActionAddress(string actionAddress)
+    {
+        sendActionAddresses_.push_back(actionAddress);
+    }
+    
+    void ClearFXActionAddresses()
+    {
+        // Remove any existing actionAddress entries for this trackGUID
+        for(auto actionAddresss : FXActionAddresses_)
+            GetLogicalSurface()->RemoveAction(actionAddresss);
+        
+        FXActionAddresses_.clear();
+    }
     
     void AddFXActionAddress(string actionAddress)
     {
         FXActionAddresses_.push_back(actionAddress);
-    }
-    
-    void AddSendActionAddress(string actionAddress)
-    {
-        sendActionAddresses_.push_back(actionAddress);
     }
 };
 
@@ -780,7 +796,7 @@ private:
     {
         if(!lazyInitialized_)
         {
-            // init the maps here
+            // init the logical surface maps here
             
             LogicalSurface* logicalSurface = new LogicalSurface(this);
             logicalSurface->Initialize();
