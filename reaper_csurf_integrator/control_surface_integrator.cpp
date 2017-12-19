@@ -478,12 +478,14 @@ void LogicalSurface::BuildActions()
 
 void LogicalSurface::BuildCSurfWidgets()
 {
+    numLogicalChannels_ = 0;
     RealSurfaceChannel* channel = nullptr;
-    
-    int currentChannel = 0;
-    
+
     for(auto & surface : realSurfaces_)
     {
+        surface->ClearChannels();
+        surface->ClearWidgets();
+        
         if(surface->GetName() == "Console1")
         {
             /*
@@ -664,12 +666,11 @@ void LogicalSurface::BuildCSurfWidgets()
             
             for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
             {
-                string trackGUID = DAW::GetTrackGUIDAsString(currentChannel++);
+                string trackGUID = DAW::GetTrackGUIDAsString(numLogicalChannels_++);
                 string channelNumber = to_string(i);
 
                 channel = new RealSurfaceChannel(trackGUID, surface, true);
                 surface->AddChannel(channel);
-                numLogicalChannels_++;
                 
                 channel->AddWidget(new PushButtonWithRelease_MidiWidget(trackGUID, surface, TrackTouched + channelNumber, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
                 
@@ -684,8 +685,6 @@ void LogicalSurface::BuildCSurfWidgets()
             }
         }
     }
-    
-   numLogicalChannels_++; // add one for Master
 }
 
 void LogicalSurface::InitializeSurfaces()

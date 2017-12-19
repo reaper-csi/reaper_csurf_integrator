@@ -9,6 +9,8 @@
 
 #include "reaper_plugin_functions.h"
 
+using namespace std;
+
 extern HWND g_hwnd;
 
 struct MIDI_event_ex_t : MIDI_event_t

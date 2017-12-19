@@ -7,17 +7,15 @@
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
-// required to resolve Windows conflict -- this undefines std::byte which was added in C++17, therefore std::byte is unavailable in this implementaion until Windoze gets its act together
-#define _HAS_STD_BYTE 0
-
 #include <sstream>
 #include <vector>
 #include <map>
 
-using namespace std;
-
 #include "control_surface_integrator_Reaper.h"
 
+// Note for Windows environments
+// for C++17 byte use std::byte
+// for Windows byte use ::byte
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,11 +201,21 @@ public:
     virtual void RunAndUpdate() {}
     virtual void OnTrackSelection(MediaTrack *track);
     
+    void ClearChannels()
+    {
+        channels_.clear();
+    }
+
     void AddChannel(RealSurfaceChannel*  channel)
     {
         channels_.push_back(channel);
     }
     
+    void ClearWidgets()
+    {
+        widgets_.clear();
+    }
+
     void AddWidget(MidiWidget* widget)
     {
         widgets_[widget->GetName()] = widget;
