@@ -185,7 +185,6 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
      */
 }
 
-
 void LogicalSurface::MapFX(MediaTrack* track)
 {
     char trackFXName[256];
@@ -211,44 +210,51 @@ void LogicalSurface::MapFX(MediaTrack* track)
         if(fxMaps_.count(trackFXName) > 0)
         {
             FXMap* map = fxMaps_[fxName];
-     
-            // GAW TBD -- how do we know we should do this ?
-            //AddAction(trackGUID + surfaceName + CompressorMeter + trackNumber, new GainReductionMeter_Action(this, track, i));
-            // resumably it's in FXMap somehow, maybe as "GainReductionMeter"
-         
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
-            string fxGUID = trackFXParameterGUID;
-     
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            
+            for(auto* surface : realSurfaces_)
             {
-                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName(trackFXParameterName);
-     
+                string surfaceName = surface->GetName();
+            
+                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
+                string fxGUID = trackFXParameterGUID;
+         
                 for(auto map : map->GetMapEntries())
                 {
-                    if(map.paramName == fxParamName)
+                    if(map.surfaceName == surfaceName && map.paramName == CompressorMeter)
                     {
-                        AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new TrackFX_Action(this, track, i, j));
+                        AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new GainReductionMeter_Action(this, track, i));
                         trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
+                    }
+                    else
+                    {
+                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                        {
+                            DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
+                            string fxParamName = trackFXParameterName;
+         
+                            if(map.surfaceName == surfaceName && map.paramName == fxParamName)
+                            {
+                                AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new TrackFX_Action(this, track, i, j));
+                                trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
+                            }
+                        }
                     }
                 }
             }
         }
-        else if(GetVSTMonitor() && GetManager()->GetLazyInitialized())
+        else if(GetVSTMonitor() && GetManager()->GetLazyIsInitialized())
         {
             DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
      
-            int numParameters = DAW::TrackFX_GetNumParams(track, i);
-     
-            for(int j = 0; j < numParameters; j++)
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
             {
                 DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName(trackFXParameterName);
+                string fxParamName = trackFXParameterName;
      
                 DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
             }
         }
-     }
+    }
 }
 
 void LogicalSurface::InitializeFXMaps()
