@@ -108,15 +108,10 @@ void MidiWidget::ForceUpdate()
     GetRealSurface()->ForceUpdateAction(GetGUID(), GetName());
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealCSurf
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurface::OnTrackSelection(MediaTrack *track)
-{
-    for(auto * channel : GetChannels())
-        channel->OnTrackSelection(track);
-}
-
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string widgetName)
 {
@@ -143,10 +138,11 @@ void RealSurface::RunAction(string GUID, string widgetName, double value)
     GetLogicalSurface()->RunAction(ActionAddressFor(GUID, widgetName), value, GetName(), widgetName);
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// CSurfChannel
+// LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurfaceChannel::MapFX(MediaTrack *track)
+void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     /*
     SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
@@ -189,9 +185,6 @@ void RealSurfaceChannel::MapFX(MediaTrack *track)
      */
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// LogicalSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void LogicalSurface::MapFX(MediaTrack* track, TrackGUIDAssociation* trackGUIDAssociations)
 {

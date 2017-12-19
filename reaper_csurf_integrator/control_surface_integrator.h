@@ -14,8 +14,8 @@
 #include "control_surface_integrator_Reaper.h"
 
 // Note for Windows environments
-// for C++17 byte use std::byte
-// for Windows byte use ::byte
+// use std::byte for C++17 byte
+// use ::byte for Windows byte
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ const string LogicalControlSurface = "LogicalControlSurface";
 // Modifier Order matters !!
 // Please do not modify RealSurface::CurrentModifiers()
 //
-// The following, if present in the modifier part of action address:
+// The following modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
 //  in the case of combos, must be in the same order as listed below -- e.g. ShiftOptionControlAlt for the full meal deal
@@ -186,7 +186,6 @@ protected:
 public:
     virtual ~RealSurface() {};
     
-    
     const string GetName() const { return name_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     string GetBankGroup() { return bankGroup_; }
@@ -199,7 +198,6 @@ public:
     virtual void SendMidiMessage(int first, int second, int third) {}
     
     virtual void RunAndUpdate() {}
-    virtual void OnTrackSelection(MediaTrack *track);
     
     void ClearChannels()
     {
@@ -326,17 +324,6 @@ public:
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
     
-    void MapFX(MediaTrack *trackid);
-
-    void OnTrackSelection(MediaTrack *track)
-    {
-        if(DAW::CountSelectedTracks(nullptr) == 1)
-        {
-            DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
-            MapFX(track);
-        }
-    }
-    
     void SetIsMovable(bool isMovable)
     {
         isMovable_ = isMovable;
@@ -458,6 +445,7 @@ public:
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
     bool GetVSTMonitor() { return VSTMonitor_; }
 
+    void MapWidgetsToFX(MediaTrack *trackid);
     void MapFX(MediaTrack* track, TrackGUIDAssociation* logicalSurfaceTrack);
 
     void Initialize()
@@ -470,8 +458,11 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
-        for(auto& surface : realSurfaces_)
-            surface->OnTrackSelection(track);
+        if(DAW::CountSelectedTracks(nullptr) == 1)
+        {
+            DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
+            MapWidgetsToFX(track);
+        }  
     }
 
     void RunAndUpdate()
@@ -600,9 +591,9 @@ public:
 
     void TrackFXListChanged(MediaTrack* track)
     {
-        // GAW TBD get the LogicalSurfaceTRack for this track GUID
+        // GAW TBD get the LogicalSurfaceTrack for this track GUID
         // Then erase anything currently in the LogicalSurfaceTrack FXActionAddresses
-        // Then map below with LogicalSurfaceTrack you have aquired
+        // Then map below with LogicalSurfaceTrack you have acquired
         
         TrackGUIDAssociation* trackGUIDAssociation = nullptr; // get the one for this GUID
         MapFX(track, trackGUIDAssociation);
