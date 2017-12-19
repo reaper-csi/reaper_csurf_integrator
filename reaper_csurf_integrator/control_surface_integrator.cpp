@@ -193,7 +193,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-    // We will always find the TrackGUIDAssociations for this track, otherwise how could we add FX to it ?
+    // We will always find the TrackGUIDAssociation for this track
     TrackGUIDAssociation* trackGUIDAssociation = nullptr;
      
     for(auto * aTrackGUIDAssociation : trackGUIDAssociations_)
@@ -220,7 +220,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
          
                 for(auto map : map->GetMapEntries())
                 {
-                    if(map.surfaceName == surfaceName && map.paramName == CompressorMeter)
+                    if(map.surfaceName == surfaceName && map.paramName == GainReduction_dB)
                     {
                         AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new GainReductionMeter_Action(this, track, i));
                         trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
@@ -259,6 +259,9 @@ void LogicalSurface::MapFX(MediaTrack* track)
 
 void LogicalSurface::InitializeFXMaps()
 {
+    // param  = GainReduction_dB
+    // widget = CompressorMeter
+    
     for(auto* surface : realSurfaces_)
     {
         string surfaceName = surface->GetName();
