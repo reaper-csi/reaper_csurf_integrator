@@ -824,7 +824,7 @@ public:
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
-    bool GetLazyInitialized() { return lazyInitialized_; }
+    bool GetLazyIsInitialized() { return lazyInitialized_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
