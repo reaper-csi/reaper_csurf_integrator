@@ -209,8 +209,8 @@ void LogicalSurface::MapFX(MediaTrack* track)
                 {
                     if(map.surfaceName == surface->GetName() && map.paramName == GainReduction_dB)
                     {
-                        AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new GainReductionMeter_Action(this, track, i));
-                        trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
+                        AddAction(trackGUID + fxGUID + map.surfaceName + map.widgetName, new GainReductionMeter_Action(this, track, i));
+                        trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.widgetName);
                     }
                     else
                     {
