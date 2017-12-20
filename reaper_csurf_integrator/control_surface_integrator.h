@@ -428,6 +428,18 @@ private:
         return false;
     }
     
+    void OpenFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
+    }
+    
     void AddFXMap(FXMap* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
@@ -474,6 +486,8 @@ public:
 
     void OnTrackSelection(MediaTrack* track)
     {
+        CloseFXWindows();
+        
         if(DAW::CountSelectedTracks(nullptr) == 1)
             MapWidgetsToFX(track);
     }

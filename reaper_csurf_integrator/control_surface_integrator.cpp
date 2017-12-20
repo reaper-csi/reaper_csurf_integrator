@@ -144,8 +144,6 @@ void RealSurface::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
-    for(auto fxWindow : openFXWindows_)
-       DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
     openFXWindows_.clear();
    
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
@@ -179,6 +177,8 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
             }
         }
     }
+    
+    OpenFXWindows();
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)
@@ -826,9 +826,11 @@ void LogicalSurface::InitializeSurfaces()
 
         string bankGroup = "";
         
-        if(name != string("Console1"))
+        if(name == string("Console1"))
+            bankGroup = "FX";
+        else
             bankGroup = "Avid";
-        
+
         AddRealSurface(new MidiCSurf(this, bankGroup, name, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
