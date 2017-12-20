@@ -155,6 +155,7 @@ protected:
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgets_;
+    vector<FXWindow> openFXWindows_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -163,6 +164,8 @@ protected:
     
     bool zoom_ = false;
     bool scrub_ = false;
+    
+    bool showFXWindows_ = false;
     
     string CurrentModifers()
     {
@@ -202,7 +205,7 @@ public:
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
-        
+    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
     
@@ -248,24 +251,61 @@ public:
     
     void SetControl(bool value)
     {
-        control_ = value; ForceUpdateWidgets();
+        control_ = value;
+        ForceUpdateWidgets();
     }
     
     void SetAlt(bool value)
     {
-        alt_ = value; ForceUpdateWidgets();
+        alt_ = value;
+        ForceUpdateWidgets();
     }
     
     void SetZoom(bool value)
     {
-        zoom_ = value; ForceUpdateWidgets();
+        zoom_ = value;
+        ForceUpdateWidgets();
     }
     
     void SetScrub(bool value)
     {
-        scrub_ = value; ForceUpdateWidgets();
+        scrub_ = value;
+        ForceUpdateWidgets();
     }
-
+    
+    void ClearFXWindows()
+    {
+        openFXWindows_.clear();
+    }
+    
+    void AddFXWindow(FXWindow fxWindow)
+    {
+        openFXWindows_.push_back(fxWindow);
+    }
+    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+    
+    void OpenFXWindows()
+    {
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
+    }
+    
     // to Widgets ->
     virtual void UpdateWidgets()
     {
@@ -400,7 +440,6 @@ private:
     map<string, Action*> actions_;
     vector<TrackGUIDAssociation*> trackGUIDAssociations_;
     vector<string> trackGUIDs_;
-    vector<FXWindow> openFXWindows_;
     
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
@@ -426,18 +465,6 @@ private:
                 return true;
 
         return false;
-    }
-    
-    void OpenFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 3);
-    }
-    
-    void CloseFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
     }
     
     void AddFXMap(FXMap* fxMap)
@@ -486,7 +513,8 @@ public:
 
     void OnTrackSelection(MediaTrack* track)
     {
-        CloseFXWindows();
+        for(auto & surface : realSurfaces_)
+            surface->CloseFXWindows();
         
         if(DAW::CountSelectedTracks(nullptr) == 1)
             MapWidgetsToFX(track);
@@ -582,6 +610,24 @@ public:
     {
         for(auto* surface : realSurfaces_)
             surface->SetScrub(value);
+    }
+    
+    void SetShowOpenFXWindows(string surfaceName, bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetShowFXWindows(value);
+    }
+    
+    void OpenFXWindows(RealSurface* surface)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->OpenFXWindows();
+    }
+    
+    void CloseFXWindows(RealSurface* surface)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->CloseFXWindows();
     }
     
     void AdjustTrackBank(int stride)

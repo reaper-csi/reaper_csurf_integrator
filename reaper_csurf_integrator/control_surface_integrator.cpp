@@ -144,13 +144,14 @@ void RealSurface::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
-    openFXWindows_.clear();
-   
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
     char fxName[256];
     char fxGUID[256];
     char fxParamName[256];
+
+    for(auto* surface : realSurfaces_)
+        surface->ClearFXWindows();
 
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
@@ -172,13 +173,12 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                                 surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
                 }
                 
-                DAW::TrackFX_Show(track, i, 3);
-                openFXWindows_.push_back(FXWindow(track, i));
+                surface->AddFXWindow(FXWindow(track, i));
             }
+            
+            OpenFXWindows(surface);
         }
     }
-    
-    OpenFXWindows();
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)
@@ -422,6 +422,11 @@ void LogicalSurface::BuildActions()
         //logicalSurfaceInteractor_->AddAction(new LatchedZoom_Action(Zoom,  logicalSurfaceInteractor_));
         //logicalSurfaceInteractor_->AddAction(new LatchedScrub_Action(Scrub,  logicalSurfaceInteractor_));
 
+        
+        
+        AddAction(LogicalControlSurface + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
+
+        
         for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
         {
             string trackNumber(to_string(i));
@@ -502,10 +507,9 @@ void LogicalSurface::BuildCSurfWidgets()
             surface->AddWidget(new PushButton_CSurfWidget("TrackGroup", surface, new MIDI_event_ex_t(0xb0, 0x7b, 0x7f), new MIDI_event_ex_t(0xb0, 0x7b, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("TrackCopy", surface,  new MIDI_event_ex_t(0xb0, 0x78, 0x7f), new MIDI_event_ex_t(0xb0, 0x78, 0x00)));
  
-            surface->AddWidget(new PushButton_CSurfWidget(DisplayFX, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget(SendsMode, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x68, 0x7f), new MIDI_event_ex_t(0xb0, 0x68, 0x00)));
 */
-            
+            surface->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
             
             channel = new RealSurfaceChannel( "", surface, true);
             surface->AddChannel(channel);
