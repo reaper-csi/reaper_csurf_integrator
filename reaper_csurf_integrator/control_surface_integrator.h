@@ -452,8 +452,8 @@ public:
 
     void Initialize()
     {
-        InitializeFXMaps();
         InitializeSurfaces();
+        InitializeFXMaps();
         BuildActions();
         BuildCSurfWidgets();
     }
