@@ -205,6 +205,7 @@ public:
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
+    bool IsShowFXWindows() { return showFXWindows_; }
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
@@ -494,6 +495,15 @@ public:
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
     bool GetVSTMonitor() { return VSTMonitor_; }
 
+    bool IsShowFXWindows(string surfaceName)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->IsShowFXWindows();
+        
+        return false;
+    }
+    
     void MapWidgetsToFX(MediaTrack *trackid);
     void MapFX(MediaTrack* track);
 
