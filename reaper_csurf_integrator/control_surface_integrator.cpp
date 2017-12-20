@@ -144,6 +144,10 @@ void RealSurface::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
+    for(auto fxWindow : openFXWindows_)
+       DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
+    openFXWindows_.clear();
+   
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
     char fxName[256];
@@ -170,10 +174,8 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                                 surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
                 }
                 
-                // GAW TBD add this window to list of open FX wundows
-                // Will be used for close when we select another channel
-                
                 DAW::TrackFX_Show(track, i, 3);
+                openFXWindows_.push_back(FXWindow(track, i));
             }
         }
     }
