@@ -63,6 +63,13 @@ const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct FXWindow
+{
+    MediaTrack* track = nullptr;;
+    int index = 0;
+    
+    FXWindow(MediaTrack* aTrack, int anIndex) : track(aTrack), index(anIndex) {}
+};
 
 struct MapEntry
 {
@@ -393,6 +400,7 @@ private:
     map<string, Action*> actions_;
     vector<TrackGUIDAssociation*> trackGUIDAssociations_;
     vector<string> trackGUIDs_;
+    vector<FXWindow> openFXWindows_;
     
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
@@ -467,10 +475,7 @@ public:
     void OnTrackSelection(MediaTrack* track)
     {
         if(DAW::CountSelectedTracks(nullptr) == 1)
-        {
-            DAW::SendMessage(WM_COMMAND, NamedCommandLookup("_S&M_WNCLS3"), 0);
             MapWidgetsToFX(track);
-        }  
     }
 
     void RunAndUpdate()
