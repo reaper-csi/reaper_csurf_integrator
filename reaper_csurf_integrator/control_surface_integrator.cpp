@@ -144,52 +144,43 @@ void RealSurface::RunAction(string GUID, string widgetName, double value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
-    /*
-    SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-    char trackFXName[256];
-    char trackFXGUID[256];
-    char trackFXParamName[256];
-    
+    char fxName[256];
+    char fxGUID[256];
+    char fxParamName[256];
+
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
-        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
-        string fxName = trackFXName;
-        
-        if(GetSurface()->GetLogicalSurface()->GetFXMaps().count(fxName) > 0)
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+
+        for(auto* surface : realSurfaces_)
         {
-            DAW::TrackFX_Show(track, i, 3);
-            
-            FXMap* map = GetSurface()->GetLogicalSurface()->GetFXMaps()[fxName];
-            
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXGUID);
-            string fxGUID = trackFXGUID;
-            
-     
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
-                DAW::TrackFX_GetParamName(track, i, j, trackFXParamName, sizeof(trackFXParamName));
-                string fxParamName = trackFXParamName;
+                FXMap* map = fxMaps_[surface->GetName() + fxName];
                 
-                for(auto map : map->GetMapEntries())
-                    if(map.paramName == fxParamName)
-                        subChannel->AddWidgetName(map.widgetName);
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+
+                        for(auto map : map->GetMapEntries())
+                            if(map.surfaceName == surface->GetName() && map.paramName == fxParamName)
+                                surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
+                }
+                
+                DAW::TrackFX_Show(track, i, 3);
             }
-            
-            AddSubChannel(subChannel);
-     
-            
-            
         }
     }
-     */
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)
 {
-    char trackFXName[256];
-    char trackFXParameterName[256];
-    char trackFXParameterGUID[256];
+    char fxName[256];
+    char fxParamName[256];
+    char fxGUID[256];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
@@ -204,23 +195,19 @@ void LogicalSurface::MapFX(MediaTrack* track)
      
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
-        DAW::TrackFX_GetFXName(track, i, trackFXName, sizeof(trackFXName));
-        string fxName = trackFXName;
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
      
-        if(fxMaps_.count(trackFXName) > 0)
+        for(auto* surface : realSurfaces_)
         {
-            FXMap* map = fxMaps_[fxName];
-            
-            for(auto* surface : realSurfaces_)
+            if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
-                string surfaceName = surface->GetName();
+                FXMap* map = fxMaps_[surface->GetName() + fxName];
             
-                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), trackFXParameterGUID);
-                string fxGUID = trackFXParameterGUID;
+                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
          
                 for(auto map : map->GetMapEntries())
                 {
-                    if(map.surfaceName == surfaceName && map.paramName == GainReduction_dB)
+                    if(map.surfaceName == surface->GetName() && map.paramName == GainReduction_dB)
                     {
                         AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new GainReductionMeter_Action(this, track, i));
                         trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
@@ -229,29 +216,26 @@ void LogicalSurface::MapFX(MediaTrack* track)
                     {
                         for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                         {
-                            DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                            string fxParamName = trackFXParameterName;
+                            DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
          
-                            if(map.surfaceName == surfaceName && map.paramName == fxParamName)
+                            if(map.surfaceName == surface->GetName() && map.paramName == fxParamName)
                             {
-                                AddAction(trackGUID + fxGUID + map.surfaceName + map.paramName, new TrackFX_Action(this, track, i, j));
-                                trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.paramName);
+                                AddAction(trackGUID + fxGUID + map.surfaceName + map.widgetName, new TrackFX_Action(this, track, i, j));
+                                trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + map.surfaceName + map.widgetName);
                             }
                         }
                     }
                 }
             }
-        }
-        else if(GetVSTMonitor() && GetManager()->GetLazyIsInitialized())
-        {
-            DAW::ShowConsoleMsg(("\n\n" + fxName + "\n").c_str());
-     
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            else if(GetVSTMonitor() && GetManager()->GetLazyIsInitialized())
             {
-                DAW::TrackFX_GetParamName(track, i, j, trackFXParameterName, sizeof(trackFXParameterName));
-                string fxParamName = trackFXParameterName;
-     
-                DAW::ShowConsoleMsg((fxParamName + "\n").c_str());
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
             }
         }
     }
@@ -266,7 +250,7 @@ void LogicalSurface::InitializeFXMaps()
     {
         string surfaceName = surface->GetName();
     
-        FXMap* fxMap = new FXMap("VST: UAD UA 1176LN Rev E (Universal Audio, Inc.)");
+        FXMap* fxMap = new FXMap(surfaceName + "VST: UAD UA 1176LN Rev E (Universal Audio, Inc.)");
         
         fxMap->AddEntry(surfaceName, Threshold, "Input");
         fxMap->AddEntry(surfaceName, Character, "Output");
@@ -279,7 +263,7 @@ void LogicalSurface::InitializeFXMaps()
         
         AddFXMap(fxMap);
         
-        fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+        fxMap = new FXMap(surfaceName + "VST: UAD Fairchild 660 (Universal Audio, Inc.)");
         
         fxMap->AddEntry(surfaceName, Threshold, "Thresh");
         fxMap->AddEntry(surfaceName, Character, "Output");
@@ -292,7 +276,7 @@ void LogicalSurface::InitializeFXMaps()
         
         AddFXMap(fxMap);
         
-        fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+        fxMap = new FXMap(surfaceName + "VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
         
         fxMap->AddEntry(surfaceName, Threshold, "Peak Reduct");
         fxMap->AddEntry(surfaceName, Character, "Gain");
@@ -304,7 +288,7 @@ void LogicalSurface::InitializeFXMaps()
         
         AddFXMap(fxMap);
         
-        fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+        fxMap = new FXMap(surfaceName + "VST: UAD Harrison 32C (Universal Audio, Inc.)");
         
         fxMap->AddEntry(surfaceName, LoCurve, "LowPeak");
         //fxMap->AddEntry(HiCurve, "");
@@ -322,7 +306,7 @@ void LogicalSurface::InitializeFXMaps()
         
         AddFXMap(fxMap);
         
-        fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+        fxMap = new FXMap(surfaceName + "VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
         
         //fxMap->AddEntry(LoCurve, "");
         //fxMap->AddEntry(HiCurve, "");
@@ -340,7 +324,7 @@ void LogicalSurface::InitializeFXMaps()
         
         AddFXMap(fxMap);
         
-        fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+        fxMap = new FXMap(surfaceName + "VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
         
         //fxMap->AddEntry(LoCurve, "");
         //fxMap->AddEntry(HiCurve, "");
