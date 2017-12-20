@@ -170,6 +170,9 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                                 surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
                 }
                 
+                // GAW TBD add this window to list of open FX wundows
+                // Will be used for close when we select another channel
+                
                 DAW::TrackFX_Show(track, i, 3);
             }
         }
@@ -227,7 +230,8 @@ void LogicalSurface::MapFX(MediaTrack* track)
                     }
                 }
             }
-            else if(GetVSTMonitor() && GetManager()->GetLazyIsInitialized())
+            
+            if(GetVSTMonitor() && GetManager()->GetLazyIsInitialized())
             {
                 DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
                 
