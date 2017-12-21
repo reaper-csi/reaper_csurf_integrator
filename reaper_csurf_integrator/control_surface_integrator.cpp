@@ -160,12 +160,10 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 
         for(auto* surface : realSurfaces_)
         {
-            // GAW TBD -- hack -- need to think of how to represent this concept properly
-            if(surface->GetName() == "Console1")
-                for(auto* channel : surface->GetChannels())
+            // Map Track to any Channels interested
+            for(auto* channel : surface->GetChannels())
+                if(channel->GetShouldMapFXTrackToChannel())
                     channel->SetGUID(trackGUID);
-
-            
             
             if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
@@ -517,7 +515,7 @@ void LogicalSurface::BuildCSurfWidgets()
 */
             surface->AddWidget(new PushButton_MidiWidget(LogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
             
-            channel = new RealSurfaceChannel( "", surface, true);
+            channel = new RealSurfaceChannel( "", surface, true, true);
             surface->AddChannel(channel);
             
             channel->AddWidget(new PushButton_MidiWidget("", surface, "Order",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
