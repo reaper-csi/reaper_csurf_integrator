@@ -160,6 +160,13 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 
         for(auto* surface : realSurfaces_)
         {
+            // GAW TBD -- hack -- need to think of how to represent this concept properly
+            if(surface->GetName() == "Console1")
+                for(auto* channel : surface->GetChannels())
+                    channel->SetGUID(trackGUID);
+
+            
+            
             if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
                 FXMap* map = fxMaps_[surface->GetName() + fxName];
