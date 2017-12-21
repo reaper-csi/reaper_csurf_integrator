@@ -363,6 +363,7 @@ private:
     string GUID_ = "";
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
+    bool shouldMapFXTrackToChannel_ = false;
     vector<string> widgetNames_;
 
     RealSurface* GetRealSurface() { return realSurface_; }
@@ -372,8 +373,11 @@ public:
     
     RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
+    RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
+    
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
+    bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
     
     void SetIsMovable(bool isMovable)
     {
