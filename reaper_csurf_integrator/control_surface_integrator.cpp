@@ -674,6 +674,8 @@ void LogicalSurface::BuildCSurfWidgets()
             }
         }
     }
+    
+    numLogicalChannels_++;
 }
 
 void LogicalSurface::InitializeSurfaces()
