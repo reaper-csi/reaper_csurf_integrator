@@ -73,11 +73,10 @@ struct FXWindow
 
 struct MapEntry
 {
-    string surfaceName;
     string widgetName;
     string paramName;
     
-    MapEntry(string aSurfaceName, string aWidgetName, string aParamName) : surfaceName(aSurfaceName), widgetName(aWidgetName), paramName(aParamName) {}
+    MapEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
 };
 
 struct FXMap
@@ -92,9 +91,9 @@ public:
     string GetName() { return name; }
     vector<MapEntry>& GetMapEntries() { return entries_; }
     
-    void AddEntry(string surfaceName, string widgetName, string paramName)
+    void AddEntry(string widgetName, string paramName)
     {
-        entries_.push_back(MapEntry(surfaceName, widgetName, paramName));
+        entries_.push_back(MapEntry(widgetName, paramName));
     }
 };
 
@@ -109,6 +108,7 @@ private:
     string GUID_ = "";
     RealSurface* realSsurface_ = nullptr;
     string name_= "";
+    string actionName_ = "";
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
@@ -118,7 +118,7 @@ protected:
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
-    MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), name_(name), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), actionName_(actionName), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
 
 public:
     virtual ~MidiWidget() {};
@@ -126,7 +126,8 @@ public:
     virtual double GetMinDB() { return -72.0; }
     virtual double GetMaxDB() { return 12.0; }
     string GetName() { return name_; }
-    
+    string GetActionName() { return actionName_; }
+
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
@@ -321,11 +322,11 @@ public:
     }
 
     // to Actions ->
-    double GetActionCurrentNormalizedValue(string surfaceName, string widgetName);
-    void UpdateAction(string surfaceName, string widgetName);
-    void ForceUpdateAction(string surfaceName, string widgetName);
-    void CycleAction(string surfaceName, string widgetName);
-    void RunAction(string surfaceName, string widgetName, double value);
+    double GetActionCurrentNormalizedValue(string surfaceName, string actionName, string widgetName);
+    void UpdateAction(string surfaceName, string actionName, string widgetName);
+    void ForceUpdateAction(string surfaceName, string actionName, string widgetName);
+    void CycleAction(string surfaceName, string actionName, string widgetName);
+    void RunAction(string surfaceName, string actionName, string widgetName, double value);
     
     // to Widgets ->
     void SetWidgetValue(string widgetName, double value)
