@@ -660,7 +660,7 @@ void LogicalSurface::BuildCSurfWidgets()
             
             for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
             {
-                string channelNumber = to_string(i);;
+                string channelNumber = to_string(i + 1);;
                 string trackGUID = DAW::GetTrackGUIDAsString(numLogicalChannels_++);
 
                 channel = new RealSurfaceChannel(trackGUID, surface, true);
