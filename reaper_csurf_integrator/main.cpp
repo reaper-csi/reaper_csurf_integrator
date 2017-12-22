@@ -39,7 +39,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
     }
 }
     
-#ifndef _WIN32 // import the resources. Note: if you do not have these files, run "php ../mac_resgen.php sample_project.rc" from this directory
+#ifndef _WIN32 // import the resources. Note: if you do not have these files, run "php WDL/swell/mac_resgen.php res.rc" from this directory
 #include "./WDL/swell/swell-dlggen.h"
 #include "res.rc_mac_dlg"
 #endif
