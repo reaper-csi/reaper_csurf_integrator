@@ -30,7 +30,7 @@ const string GainReduction_dB = "GainReduction_dB";
 //
 // An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader1"
 // ActionAddress format - GUID + realSurfaceName + modifiers + widgetName
-// GUID and/or modifiers can be ""
+// Modifiers can be ""
 // realSurfaceName + widgetName must be present and unique within a given logical surface
 //
 //
@@ -184,14 +184,14 @@ protected:
         return modifiers;
     }
     
-    string ActionAddressFor(string GUID, string widgetName)
+    string ActionAddressFor(string GUID, string actionName)
     {
         string currentModifiers = "";
         
-        if(widgetName != Shift && widgetName != Option && widgetName != Control && widgetName != Alt)
+        if(actionName != Shift && actionName != Option && actionName != Control && actionName != Alt)
             currentModifiers = CurrentModifers();
         
-        return GUID + GetName() + currentModifiers + widgetName;
+        return GUID + GetName() + currentModifiers + actionName;
     }
     
     RealSurface(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
@@ -764,6 +764,10 @@ public:
    
     void ClearSendActionAddresses()
     {
+        // Remove any existing actionAddress entries for this trackGUID
+        for(auto actionAddresss : sendActionAddresses_)
+            GetLogicalSurface()->RemoveAction(actionAddresss);
+
         sendActionAddresses_.clear();
     }
    
