@@ -36,10 +36,15 @@ public:
         SetValue(reverseSense_ ? 1 : 0);
     }
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
+    }
+    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
+        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -56,6 +61,13 @@ public:
     
     PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, actionName, name,  reverseSense, press, release) {}
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
+    }
+
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
@@ -109,12 +121,15 @@ public:
         SetValue(0.0);
     }
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]), this);
+    }
+
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0])
-        {         
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
-        }
+        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -142,10 +157,15 @@ public:
         SetValue(0.0, 0x00);
     }
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
+    }
+
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -172,19 +192,22 @@ public:
         SetValue(0.0, 0x00);
     }
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
+    }
+ 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        if(midiMessage->midi_message[0] == GetMidiPressMessage()->midi_message[0] && midiMessage->midi_message[1] == GetMidiPressMessage()->midi_message[1])
-        {
-            double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
-            
-            if (midiMessage->midi_message[2] & 0x40)
-                value = -value;
-            
-            value += GetRealSurface()->GetActionCurrentNormalizedValue(GetGUID(), GetActionName(),  GetName());
-            
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), value);
-        }
+        double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
+        
+        if (midiMessage->midi_message[2] & 0x40)
+            value = -value;
+        
+        value += GetRealSurface()->GetActionCurrentNormalizedValue(GetGUID(), GetActionName(),  GetName());
+        
+        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), value);
     }
 };
 
@@ -200,12 +223,19 @@ public:
     
     EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, actionName, name, press, release), cycle_(cycle) {}
     
+    void AddToRealSurface(RealSurface* surface) override
+    {
+        MidiWidget::AddToRealSurface(surface);
+        surface->AddWidgetToMessageMap(to_string(cycle_->midi_message[0]) + to_string(cycle_->midi_message[1]), this);
+        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
+    }
+    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiMessage->IsEqualTo(cycle_))
             GetRealSurface()->CycleAction(GetGUID(), GetActionName(), GetName());
-        
-        Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
+        else
+            Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
 };
 
@@ -331,8 +361,12 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
-        for( auto const& [name, widget] : widgets_ )
-            widget->ProcessMidiMessage(evt);
+        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
 
         if(midiInMonitor_)
         {
