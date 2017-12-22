@@ -174,15 +174,11 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
             if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
                 FXMap* map = fxMaps_[surface->GetName() + fxName];
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
 
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
                     for(auto map : map->GetMapEntries())
                         if(map.paramName == fxParamName)
                             surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
-                }
                 
                 surface->AddFXWindow(FXWindow(track, i));
             }
