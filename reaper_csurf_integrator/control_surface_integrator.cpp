@@ -450,7 +450,7 @@ void LogicalSurface::BuildActions()
             AddAction(trackGUID + surfaceName + Pan, cyclicAction);
 
             AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-            AddAction(trackGUID + surfaceName + Shift + Select, new TrackSelectionSelect_Action(this, track));
+            AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
             AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
