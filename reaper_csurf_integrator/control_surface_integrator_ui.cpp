@@ -172,7 +172,9 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO10);
                 }
             }
+            
             n=GetNumMIDIOutputs();
+            
             for (int x = 0; x < n; x ++)
             {
                 char buf[512];
