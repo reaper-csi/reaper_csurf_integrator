@@ -119,18 +119,91 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             parseParms((const char *)lParam,parms);
             
             int n=GetNumMIDIInputs();
-            int x=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)"None");
+            int x=SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)"None");
             SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_SETITEMDATA,x,-1);
             x=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_ADDSTRING,0,(LPARAM)"None");
             SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO4,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO4,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO5,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO5,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO6,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO6,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO7,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO7,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO8,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO8,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO9,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO9,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO10,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO10,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO11,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO11,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO13,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO13,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO14,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO14,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO15,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO15,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO16,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO16,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO17,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO17,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO18,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO18,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO19,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO19,CB_SETITEMDATA,x,-1);
+            x=SendDlgItemMessage(hwndDlg,IDC_COMBO20,CB_ADDSTRING,0,(LPARAM)"None");
+            SendDlgItemMessage(hwndDlg,IDC_COMBO20,CB_SETITEMDATA,x,-1);
             for (x = 0; x < n; x ++)
             {
                 char buf[512];
                 if (GetMIDIInputName(x,buf,sizeof(buf)))
                 {
-                    int a=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)buf);
+                    int a=SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO1,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_ADDSTRING,0,(LPARAM)buf);
                     SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_SETITEMDATA,a,x);
                     if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO4,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO4,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO4,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO5,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO5,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO5,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO6,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO6,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO6,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO7,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO7,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO7,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO8,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO8,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO8,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO9,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO9,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO9,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO10,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO10,CB_SETITEMDATA,a,x);
+                    if (x == parms[2]) SendDlgItemMessage(hwndDlg,IDC_COMBO10,CB_SETCURSEL,a,0);
+                    
                 }
             }
             n=GetNumMIDIOutputs();
@@ -139,9 +212,46 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 char buf[512];
                 if (GetMIDIOutputName(x,buf,sizeof(buf)))
                 {
-                    int a=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_ADDSTRING,0,(LPARAM)buf);
-                    SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_SETITEMDATA,a,x);
-                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_SETCURSEL,a,0);
+                    int a=SendDlgItemMessage(hwndDlg,IDC_COMBO11,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO11,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO11,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO13,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO13,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO13,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO14,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO14,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO14,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO15,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO15,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO15,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO16,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO16,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO16,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO17,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO17,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO17,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO18,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO18,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO18,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO19,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO19,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO19,CB_SETCURSEL,a,0);
+                    
+                    a=SendDlgItemMessage(hwndDlg,IDC_COMBO20,CB_ADDSTRING,0,(LPARAM)buf);
+                    SendDlgItemMessage(hwndDlg,IDC_COMBO20,CB_SETITEMDATA,a,x);
+                    if (x == parms[3]) SendDlgItemMessage(hwndDlg,IDC_COMBO12,CB_SETCURSEL,a,0);
+                    
                 }
             }
             SetDlgItemInt(hwndDlg,IDC_EDIT1,parms[0],TRUE);
@@ -199,16 +309,6 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    //ShowMessageBox("Here ya go", "This Title", 0);
-    
-    //MessageBox(parent, "Here ya go", "New Title", 0);
-    
-   // return 0;
-    
-    
-    //return CreateDialogParam(g_hInst,0,parent,dlgProc,(LPARAM)initConfigString);
-    
-    
     return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
 }
 
