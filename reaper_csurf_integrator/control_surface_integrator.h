@@ -133,6 +133,7 @@ public:
         GUID_ = GUID;
     }
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+    virtual void AddToRealSurface(RealSurface* surface);
     void Update();
     void ForceUpdate();
     virtual void SetValue(double value) {}
@@ -155,7 +156,8 @@ protected:
     string bankGroup_ = "";
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
-    map<string, MidiWidget*> widgets_;
+    map<string, MidiWidget*> widgetsByName_;
+    map<string, MidiWidget*> widgetsByMessage_;
     vector<FXWindow> openFXWindows_;
     
     bool shift_ = false;
@@ -225,18 +227,28 @@ public:
     
     void ClearWidgets()
     {
-        widgets_.clear();
+        widgetsByName_.clear();
     }
 
     void AddWidget(MidiWidget* widget)
     {
-        widgets_[widget->GetName()] = widget;
+        widget->AddToRealSurface(this);
+    }
+    
+    void AddWidgetToNameMap(string name, MidiWidget* widget)
+    {
+        widgetsByName_[name] = widget;
+    }
+    
+    void AddWidgetToMessageMap(string message, MidiWidget* widget)
+    {
+        widgetsByMessage_[message] = widget;
     }
     
     void SetWidgetGUID(string widgetName, string GUID)
     {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetGUID(GUID);
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetGUID(GUID);
     }
 
     void SetShift(bool value)
@@ -311,13 +323,13 @@ public:
     // to Widgets ->
     virtual void UpdateWidgets()
     {
-        for(auto const& [name, widget] : widgets_ )
+        for(auto const& [name, widget] : widgetsByName_ )
             widget->Update();
     }
 
     virtual void ForceUpdateWidgets()
     {
-        for(auto const& [name, widget] : widgets_ )
+        for(auto const& [name, widget] : widgetsByName_ )
             widget->ForceUpdate();
     }
 
@@ -331,26 +343,26 @@ public:
     // to Widgets ->
     void SetWidgetValue(string widgetName, double value)
     {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetValue(value);
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value);
     }
  
     void SetWidgetValue(string widgetName, double value, int mode)
     {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetValue(value, mode);
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value, mode);
     }
 
     void SetWidgetValue(string widgetName, string value)
     {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetValue(value);
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value);
     }
     
     void SetWidgetValueToZero(string widgetName)
     {
-        if(widgets_.count(widgetName) > 0)
-            widgets_[widgetName]->SetValueToZero();
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValueToZero();
     }
 };
 

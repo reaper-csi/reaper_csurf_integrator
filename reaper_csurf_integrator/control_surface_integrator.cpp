@@ -96,6 +96,11 @@ const string Character = "Character";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void MidiWidget::AddToRealSurface(RealSurface* surface)
+{
+    surface->AddWidgetToNameMap(GetName(), this);
+}
+
 void MidiWidget::Update()
 {
     // this is the turnaround point, now we head back up the chain eventually leading to Action ->
