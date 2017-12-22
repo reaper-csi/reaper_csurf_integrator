@@ -226,7 +226,7 @@ public:
     void AddToRealSurface(RealSurface* surface) override
     {
         MidiWidget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(cycle_->midi_message[0]) + to_string(cycle_->midi_message[1]), this);
+        surface->AddWidgetToMessageMap(to_string(cycle_->midi_message[0]) + to_string(cycle_->midi_message[1]) + to_string(cycle_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
     }
     
