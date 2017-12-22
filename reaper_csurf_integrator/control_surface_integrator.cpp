@@ -151,6 +151,14 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
+    for(auto* surface : realSurfaces_)
+    {
+        // Map Track to any Channels interested
+        for(auto* channel : surface->GetChannels())
+            if(channel->GetShouldMapFXTrackToChannel())
+                channel->SetGUID(trackGUID);
+    }
+    
     char fxName[256];
     char fxGUID[256];
     char fxParamName[256];
@@ -165,11 +173,6 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 
         for(auto* surface : realSurfaces_)
         {
-            // Map Track to any Channels interested
-            for(auto* channel : surface->GetChannels())
-                if(channel->GetShouldMapFXTrackToChannel())
-                    channel->SetGUID(trackGUID);
-            
             if(fxMaps_.count(surface->GetName() + fxName) > 0)
             {
                 FXMap* map = fxMaps_[surface->GetName() + fxName];
@@ -332,7 +335,7 @@ void LogicalSurface::InitializeFXMaps()
         fxMap->AddEntry(HiMidFrequency, "High Freq");
         fxMap->AddEntry(HiMidQ, "HF Q");
         fxMap->AddEntry(LoMidGain, "LF Atten");
-        //fxMap->AddEntry(LoMidFrequency, "");
+        fxMap->AddEntry(LoMidFrequency, "Low Freq");
         //fxMap->AddEntry(LoMidQ, "");
         fxMap->AddEntry(LoGain, "LF Boost");
         fxMap->AddEntry(LoFrequency, "Low Freq");
