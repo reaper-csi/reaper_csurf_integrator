@@ -151,13 +151,11 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
+    // Map Track to any Channels interested
     for(auto* surface : realSurfaces_)
-    {
-        // Map Track to any Channels interested
         for(auto* channel : surface->GetChannels())
             if(channel->GetShouldMapFXTrackToChannel())
                 channel->SetGUID(trackGUID);
-    }
     
     char fxName[256];
     char fxGUID[256];
@@ -181,9 +179,9 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
 
-                        for(auto map : map->GetMapEntries())
-                            if(map.paramName == fxParamName)
-                                surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
+                    for(auto map : map->GetMapEntries())
+                        if(map.paramName == fxParamName)
+                            surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
                 }
                 
                 surface->AddFXWindow(FXWindow(track, i));
@@ -192,6 +190,9 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
             OpenFXWindows(surface);
         }
     }
+    
+    for(auto* surface : realSurfaces_)
+        OpenFXWindows(surface);
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)

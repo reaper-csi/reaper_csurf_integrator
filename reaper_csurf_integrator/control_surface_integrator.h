@@ -244,7 +244,7 @@ public:
     {
         widgetsByMessage_[message] = widget;
     }
-    
+
     void SetWidgetGUID(string widgetName, string GUID)
     {
         if(widgetsByName_.count(widgetName) > 0)
