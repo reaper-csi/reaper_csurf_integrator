@@ -341,27 +341,27 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSelectionSelect_Action : public TrackDoubleAction
+class TrackRangeSelect_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelectionSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackRangeSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
     virtual void Run(double value, string surfaceName, string widgetName) override
     {
-        int selectedTrackNum = 0;
-        int selectionTrackNumber = DAW::CSurf_TrackToID(track_, false);
-        
+        int selectedTrackNum = DAW::CSurf_TrackToID(track_, false);
+        int otherSelectedTrackNum = 0;
+
         if(DAW::CountSelectedTracks(nullptr) == 1)
         {
             for(int i = 0; i < DAW::GetNumTracks(); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, false), "I_SELECTED"))
-                    selectedTrackNum = i;
+                    otherSelectedTrackNum = i;
 
-            int lowerBound = selectionTrackNumber < selectedTrackNum ? selectionTrackNumber : selectedTrackNum;
-            int upperBound = selectionTrackNumber > selectedTrackNum ? selectionTrackNumber : selectedTrackNum;
+            int lowerBound = selectedTrackNum < otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
+            int upperBound = selectedTrackNum > otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
