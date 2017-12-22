@@ -186,8 +186,6 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                 
                 surface->AddFXWindow(FXWindow(track, i));
             }
-            
-            OpenFXWindows(surface);
         }
     }
     
