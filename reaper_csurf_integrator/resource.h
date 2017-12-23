@@ -2,8 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by res.rc
 //
-#define IDD_SURFACEEDIT_MCU             264
-#define IDD_SURFACEEDIT_MCU1            265
+#define IDD_SURFACEEDIT_CSI             265
 #define IDC_CHECK1                      1000
 #define IDC_CHECK2                      1001
 #define IDC_CHECK3                      1002
@@ -21,11 +20,8 @@
 #define IDC_EDIT2                       1014
 #define IDC_EDIT3                       1015
 #define IDC_EDIT4                       1016
-#define IDC_EDIT1_LBL                   1017
 #define IDC_EDIT5                       1017
-#define IDC_EDIT2_LBL                   1018
 #define IDC_EDIT6                       1018
-#define IDC_EDIT2_LBL2                  1019
 #define IDC_EDIT7                       1019
 #define IDC_EDIT8                       1020
 #define IDC_EDIT9                       1021
