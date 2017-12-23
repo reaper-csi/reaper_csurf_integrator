@@ -486,6 +486,11 @@ void LogicalSurface::BuildCSurfWidgets()
         
         if(surface->GetName() == "Console1")
         {
+            channel = new RealSurfaceChannel(ReaperLogicalControlSurface, surface, false);
+            surface->AddChannel(channel);
+            
+            channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
+
             /*
             surface->AddWidget(new PushButton_CSurfWidget("PagePlus", surface,   new MIDI_event_ex_t(0xb0, 0x60, 0x7f), new MIDI_event_ex_t(0xb0, 0x60, 0x00)));
             surface->AddWidget(new PushButton_CSurfWidget("PageMinus", surface,  new MIDI_event_ex_t(0xb0, 0x61, 0x7f), new MIDI_event_ex_t(0xb0, 0x61, 0x00)));
@@ -516,7 +521,6 @@ void LogicalSurface::BuildCSurfWidgets()
  
             surface->AddWidget(new PushButton_CSurfWidget(SendsMode, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x68, 0x7f), new MIDI_event_ex_t(0xb0, 0x68, 0x00)));
 */
-            surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
             
             channel = new RealSurfaceChannel( "", surface, true, true);
             surface->AddChannel(channel);
@@ -684,6 +688,21 @@ void LogicalSurface::BuildCSurfWidgets()
     }
     
     numLogicalChannels_++;
+    
+    // check for immobilized channels
+    char buffer[256];
+    
+    for(auto * surface : realSurfaces_)
+    {
+        for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+        {
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+            {
+                surface->GetChannels()[i]->SetGUID(buffer);
+                surface->GetChannels()[i]->SetIsMovable(false);
+            }
+        }
+    }
 }
 
 void LogicalSurface::InitializeSurfaces()
