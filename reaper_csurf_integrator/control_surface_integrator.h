@@ -13,6 +13,8 @@
 
 #include "control_surface_integrator_Reaper.h"
 
+const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
+
 // Note for Windows environments
 // use std::byte for C++17 byte
 // use ::byte for Windows byte
@@ -675,17 +677,34 @@ public:
     void ImmobilizeSelectedTracks()
     {
         for(auto * surface : realSurfaces_)
-            for(auto * channel : surface->GetChannels())
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                    channel->SetIsMovable(false);
+        {
+            for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+            {
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
+                {
+                    surface->GetChannels()[i]->SetIsMovable(false);
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), surface->GetChannels()[i]->GetGUID().c_str());
+                }
+            }
+        }
     }
     
     void MobilizeSelectedTracks()
     {
+        char buffer[256];
+
         for(auto * surface : realSurfaces_)
-            for(auto * channel : surface->GetChannels())
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                    channel->SetIsMovable(true);
+        {
+            for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+            {
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
+                {
+                    surface->GetChannels()[i]->SetIsMovable(true);
+                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), "");
+                }
+            }
+        }
     }
 
     void TrackFXListChanged(MediaTrack* track)
