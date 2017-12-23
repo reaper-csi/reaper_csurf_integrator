@@ -23,9 +23,9 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following are all reserved words in the map vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const string Master = "Master";
-const string LogicalControlSurface = "LogicalControlSurface";
-const string GainReduction_dB = "GainReduction_dB";
+const string ReaperMaster = "ReaperMaster";
+const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
+const string ReaperGainReduction_dB = "ReaperGainReduction_dB";
 
 //
 // An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader1"
