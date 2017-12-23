@@ -192,8 +192,9 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO20);
                 }
             }
-            SetDlgItemInt(hwndDlg,IDC_EDIT1,parms[0],TRUE);
-            SetDlgItemInt(hwndDlg,IDC_EDIT2,parms[1],FALSE);
+            
+            //SetDlgItemInt(hwndDlg,IDC_EDIT1,parms[0],TRUE);
+            //SetDlgItemInt(hwndDlg,IDC_EDIT2,parms[1],FALSE);
             
             
             //if (parms[4]&CONFIG_FLAG_FADER_TOUCH_MODE)
@@ -202,7 +203,9 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             //CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
             
         }
+            
             break;
+        
         case WM_USER+1024:
             if (wParam > 1 && lParam)
             {
@@ -247,7 +250,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_MCU1),parent,dlgProc,(LPARAM)initConfigString);
+    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_CSI),parent,dlgProc,(LPARAM)initConfigString);
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =
