@@ -39,8 +39,6 @@ struct MIDI_event_ex_t : MIDI_event_t
     }
 };
 
-static const string ReaperMasterTrackGUID = "ReaperMasterTrackGUID";
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +155,7 @@ public:
         if(trackNumber < 0 || trackNumber > GetNumTracks())
             return "";
         else if(trackNumber == 0)
-            return ReaperMasterTrackGUID;
+            return "ReaperMasterTrackGUID";
         else
         {
             char pBuffer[256];
