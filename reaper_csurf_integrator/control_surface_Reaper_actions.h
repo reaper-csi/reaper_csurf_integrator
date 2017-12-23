@@ -164,7 +164,7 @@ public:
     virtual string GetValue(string surfaceName, string widgetName) override
     {
         if(DAW::GetMediaTrackInfo_Value(track_, "IP_TRACKNUMBER") == -1)
-            return ReaperMaster;
+            return "Master";
         else
             return (char *)DAW::GetSetMediaTrackInfo(track_, "P_NAME", NULL);
     }
