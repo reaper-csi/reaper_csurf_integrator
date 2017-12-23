@@ -361,6 +361,7 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
+        // At this point we don't know how much of the message compromises the key, so try all three
         string midiOneByteMatch = to_string(evt->midi_message[0]);
         string midiTwoByteMatch = midiOneByteMatch + to_string(evt->midi_message[1]);
         string midiThreeByteMatch = midiTwoByteMatch + to_string(evt->midi_message[2]);
