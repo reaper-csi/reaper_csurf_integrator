@@ -53,11 +53,19 @@ public:
         midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
 #endif
     }
-    
+
     static DWORD GetPrivateProfileString(const char *appname, const char *keyname, const char *def, char *ret, int retsize, const char *fn) { return ::GetPrivateProfileString(appname, keyname, def, ret, retsize, fn); }
 
     static const char* GetResourcePath() { return ::GetResourcePath(); }
+    
+    static int GetProjExtState(ReaProject* proj, const char* extname, const char* key, char* valOutNeedBig, int valOutNeedBig_sz) { return ::GetProjExtState(proj, extname, key, valOutNeedBig, valOutNeedBig_sz); }
 
+    static int SetProjExtState(ReaProject* proj, const char* extname, const char* key, const char* value) { return ::SetProjExtState(proj, extname, key, value); }
+    
+    static void SendMessage(UINT uint, WPARAM wparam, LPARAM lparam) { ::SendMessage(g_hwnd, uint, wparam, lparam); }
+    
+    static void ShowConsoleMsg(const char* msg) { ::ShowConsoleMsg(msg); }
+    
     static midi_Input* CreateMIDIInput(int dev) {  return ::CreateMIDIInput(dev); }
     
     static midi_Output* CreateMIDIOutput(int dev, bool streamMode, int* msoffset100) {  return ::CreateMIDIOutput(dev, streamMode, msoffset100); }
@@ -138,10 +146,6 @@ public:
     
     static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
 
-    static void SendMessage(UINT uint, WPARAM wparam, LPARAM lparam) { ::SendMessage(g_hwnd, uint, wparam, lparam); }
-    
-    static void ShowConsoleMsg(const char* msg) { ::ShowConsoleMsg(msg); }
-    
     static int GetNumTracks() { return ::GetNumTracks(); };
 
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
