@@ -164,7 +164,7 @@ public:
     virtual string GetValue(string surfaceName, string widgetName) override
     {
         if(DAW::GetMediaTrackInfo_Value(track_, "IP_TRACKNUMBER") == -1)
-            return Master;
+            return ReaperMaster;
         else
             return (char *)DAW::GetSetMediaTrackInfo(track_, "P_NAME", NULL);
     }
@@ -701,7 +701,7 @@ public:
     {
         char buffer[256];
         // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range
-        if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, GainReduction_dB.c_str(), buffer, sizeof(buffer)))
+        if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, ReaperGainReduction_dB.c_str(), buffer, sizeof(buffer)))
            return atof(buffer) * 3.0;
         else
             return 0.0;
