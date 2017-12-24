@@ -684,6 +684,7 @@ public:
                 {
                     surface->GetChannels()[i]->SetIsMovable(false);
                     DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), surface->GetChannels()[i]->GetGUID().c_str());
+                    DAW::MarkProjectDirty(nullptr);
                 }
             }
         }
@@ -701,7 +702,10 @@ public:
                 {
                     surface->GetChannels()[i]->SetIsMovable(true);
                     if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+                    {
                         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), "");
+                        DAW::MarkProjectDirty(nullptr);
+                    }
                 }
             }
         }
