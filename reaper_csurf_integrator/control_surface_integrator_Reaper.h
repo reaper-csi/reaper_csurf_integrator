@@ -62,6 +62,8 @@ public:
 
     static int SetProjExtState(ReaProject* proj, const char* extname, const char* key, const char* value) { return ::SetProjExtState(proj, extname, key, value); }
     
+    static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
+    
     static void SendMessage(UINT uint, WPARAM wparam, LPARAM lparam) { ::SendMessage(g_hwnd, uint, wparam, lparam); }
     
     static void ShowConsoleMsg(const char* msg) { ::ShowConsoleMsg(msg); }
