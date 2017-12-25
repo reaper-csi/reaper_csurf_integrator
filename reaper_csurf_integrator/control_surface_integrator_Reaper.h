@@ -160,7 +160,7 @@ public:
     {
         if(trackNumber < 0 || trackNumber > GetNumTracks())
             return "";
-        else if(trackNumber == 0)
+        else if(0 == trackNumber)
             return "ReaperMasterTrackGUID";
         else
         {

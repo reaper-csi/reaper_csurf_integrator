@@ -354,7 +354,7 @@ public:
         int selectedTrackNum = DAW::CSurf_TrackToID(track_, false);
         int otherSelectedTrackNum = 0;
 
-        if(DAW::CountSelectedTracks(nullptr) == 1)
+        if(1 == DAW::CountSelectedTracks(nullptr))
         {
             for(int i = 0; i < DAW::GetNumTracks(); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, false), "I_SELECTED"))
