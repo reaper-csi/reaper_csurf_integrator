@@ -473,7 +473,7 @@ private:
     
     bool DidTrackListChange()
     {
-        if(trackGUIDs_.size() == 0)
+        if(0 == trackGUIDs_.size())
             return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
         
         if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master

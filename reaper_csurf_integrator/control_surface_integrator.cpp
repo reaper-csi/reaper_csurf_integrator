@@ -9,6 +9,9 @@
 #include "control_surface_Reaper_actions.h"
 #include "control_surface_manager_actions.h"
 
+#include "WDL/lineparse.h"
+#include "WDL/projectcontext.h"
+
 const string ChannelLeft = "ChannelLeft";
 const string ChannelRight = "ChannelRight";
 const string BankLeft = "BankLeft";
