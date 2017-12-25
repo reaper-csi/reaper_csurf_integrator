@@ -199,16 +199,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
     char fxGUID[256];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
-    // We will always find the TrackGUIDAssociation for this track
-    TrackGUIDAssociation* trackGUIDAssociation = nullptr;
-     
-    for(auto * aTrackGUIDAssociation : trackGUIDAssociations_)
-        if(aTrackGUIDAssociation->GetGUID() == trackGUID)
-            trackGUIDAssociation = aTrackGUIDAssociation;
-    
-    trackGUIDAssociation->ClearFXActionAddresses();
-     
+   
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
@@ -226,7 +217,6 @@ void LogicalSurface::MapFX(MediaTrack* track)
                     if(map.paramName == ReaperGainReduction_dB)
                     {
                         AddAction(trackGUID + fxGUID + surface->GetName() + map.widgetName, new GainReductionMeter_Action(this, track, i));
-                        trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + surface->GetName() + map.widgetName);
                     }
                     else
                     {
@@ -235,10 +225,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
                             DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
          
                             if(map.paramName == fxParamName)
-                            {
                                 AddAction(trackGUID + fxGUID + surface->GetName() + map.widgetName, new TrackFX_Action(this, track, i, j));
-                                trackGUIDAssociation->AddFXActionAddress(trackGUID + fxGUID + surface->GetName() + map.widgetName);
-                            }
                         }
                     }
                 }
@@ -364,7 +351,7 @@ void LogicalSurface::InitializeFXMaps()
 void LogicalSurface::BuildActions()
 {
     actions_.clear();
-    trackGUIDAssociations_.clear();
+    //trackGUIDAssociations_.clear();
     trackGUIDs_.clear();
     
     for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
@@ -443,8 +430,8 @@ void LogicalSurface::BuildActions()
             string trackGUID = DAW::GetTrackGUIDAsString(i);
             MediaTrack* track = DAW::CSurf_TrackFromID(i, false);
             
-            AddAction(trackGUID + surfaceName + TrackDisplay , new TrackName_DisplayAction(this, track));
-            AddAction(trackGUID + surfaceName + TrackTouched , new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
+            AddAction(trackGUID + surfaceName + TrackDisplay, new TrackName_DisplayAction(this, track));
+            AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
             AddAction(trackGUID + surfaceName + Volume, new TrackVolume_Action(this, track));
 
             CycledAction* cyclicAction = new CycledAction(this);
@@ -455,21 +442,14 @@ void LogicalSurface::BuildActions()
             AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
             AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
+            
+            AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
+            AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
+            AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
+
             AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
             AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
 
-            if(i == 0)
-            {
-                // The Mute, Solo, and RecArm switches have no meaning for Master, they can be used for something else
-            }
-            else
-            {
-                AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-                AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
-                AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
-            }
-            
-            AddTrackGUIDAssociation(new TrackGUIDAssociation(trackGUID, this));
             MapFX(track);
         }
     }
@@ -693,6 +673,7 @@ void LogicalSurface::BuildCSurfWidgets()
     numLogicalChannels_++;
     
     // check for immobilized channels
+    // GAW TBD with lazy init for Actions this will change to EnumProjExtState, and the resulting GUIDs will be stored in Immobilized tracks list.
     char buffer[256];
     
     for(auto * surface : realSurfaces_)

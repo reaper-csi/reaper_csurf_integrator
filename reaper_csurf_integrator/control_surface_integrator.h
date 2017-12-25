@@ -407,6 +407,8 @@ public:
     {
         GUID_ = GUID;
         
+        // GAW TBD Lazy init Actions roght here
+        
         for (auto widgetName : widgetNames_)
         {
             GetRealSurface()->SetWidgetGUID(widgetName, GUID);
@@ -457,7 +459,6 @@ private:
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
     map<string, Action*> actions_;
-    vector<TrackGUIDAssociation*> trackGUIDAssociations_;
     vector<string> trackGUIDs_;
     
     int numLogicalChannels_ = 0;
@@ -496,11 +497,6 @@ private:
         realSurfaces_.push_back(realSurface);
     }
  
-    void AddTrackGUIDAssociation(TrackGUIDAssociation* trackGUIDAssociation)
-    {
-        trackGUIDAssociations_.push_back(trackGUIDAssociation);
-    }
-
     void AddAction(string actionAddress, Action* action)
     {
         actions_[actionAddress] = action;
@@ -776,52 +772,6 @@ public:
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
                 surface->SetWidgetValue(widgetName, value);
-    }
-};
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackGUIDAssociation
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string GUID_ = "";
-    LogicalSurface* logicalSurface_= nullptr;
-    vector<string> FXActionAddresses_;
-    vector<string> sendActionAddresses_;
-    
-public:
-    TrackGUIDAssociation(string GUID, LogicalSurface* logicalSurface) : GUID_(GUID), logicalSurface_(logicalSurface) {}
-    
-    string GetGUID() { return GUID_; }
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-   
-    void ClearSendActionAddresses()
-    {
-        // Remove any existing actionAddress entries for this trackGUID
-        for(auto actionAddresss : sendActionAddresses_)
-            GetLogicalSurface()->RemoveAction(actionAddresss);
-
-        sendActionAddresses_.clear();
-    }
-   
-    void AddSendActionAddress(string actionAddress)
-    {
-        sendActionAddresses_.push_back(actionAddress);
-    }
-    
-    void ClearFXActionAddresses()
-    {
-        // Remove any existing actionAddress entries for this trackGUID
-        for(auto actionAddresss : FXActionAddresses_)
-            GetLogicalSurface()->RemoveAction(actionAddresss);
-        
-        FXActionAddresses_.clear();
-    }
-    
-    void AddFXActionAddress(string actionAddress)
-    {
-        FXActionAddresses_.push_back(actionAddress);
     }
 };
 
