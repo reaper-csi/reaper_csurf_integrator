@@ -403,20 +403,7 @@ public:
         GetRealSurface()->AddWidget(widget);
     }
     
-    void SetGUID(string GUID)
-    {
-        GUID_ = GUID;
-        
-        // GAW TBD Lazy init Actions roght here
-        
-        for (auto widgetName : widgetNames_)
-        {
-            GetRealSurface()->SetWidgetGUID(widgetName, GUID);
-
-            if(GUID_ == "")
-                GetRealSurface()->SetWidgetValueToZero(widgetName);
-         }
-    }
+    void SetGUID(string GUID);
 };
 
 
@@ -460,7 +447,8 @@ private:
     vector<RealSurface*> realSurfaces_;
     map<string, Action*> actions_;
     vector<string> trackGUIDs_;
-    
+    vector<string> mappedTrackActionGUIDs_;
+
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     bool VSTMonitor_ = false;
@@ -518,8 +506,9 @@ public:
         return false;
     }
     
-    void MapWidgetsToFX(MediaTrack *trackid);
+    void MapTrackActions(string trackGUID);
     void MapFX(MediaTrack* track);
+    void MapWidgetsToFX(MediaTrack *trackid);
 
     void Initialize()
     {
