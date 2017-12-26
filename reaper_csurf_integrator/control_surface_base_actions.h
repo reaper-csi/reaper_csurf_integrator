@@ -77,9 +77,9 @@ public:
         actions_[currentIndex_]->Cycle(surfaceName, widgetName);
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->Run(value, surfaceName, widgetName);
+        actions_[currentIndex_]->Do(value, surfaceName, widgetName);
     }
 };
 

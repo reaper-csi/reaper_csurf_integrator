@@ -44,7 +44,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
     }
 };
 
@@ -71,9 +71,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
+            GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
-            GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 1 : 0);
+            GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 1 : 0);
     }
 };
 
@@ -129,7 +129,7 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -165,7 +165,7 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
     }
 };
 
@@ -207,7 +207,7 @@ public:
         
         value += GetRealSurface()->GetActionCurrentNormalizedValue(GetGUID(), GetActionName(),  GetName());
         
-        GetRealSurface()->RunAction(GetGUID(), GetActionName(), GetName(), value);
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), value);
     }
 };
 

@@ -141,9 +141,9 @@ void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
     GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
-void RealSurface::RunAction(string GUID, string actionName, string widgetName, double value)
+void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
-    GetLogicalSurface()->RunAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
+    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,10 +366,8 @@ void LogicalSurface::InitializeFXMaps()
     }
 }
 
-void LogicalSurface::BuildActions()
+void LogicalSurface::MapActions()
 {
-    //actions_.clear();
-    //trackGUIDAssociations_.clear();
     trackGUIDs_.clear();
     
     for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack

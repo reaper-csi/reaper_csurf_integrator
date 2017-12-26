@@ -64,6 +64,10 @@ const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Structs
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 struct FXWindow
 {
     MediaTrack* track = nullptr;;
@@ -339,7 +343,7 @@ public:
     void UpdateAction(string surfaceName, string actionName, string widgetName);
     void ForceUpdateAction(string surfaceName, string actionName, string widgetName);
     void CycleAction(string surfaceName, string actionName, string widgetName);
-    void RunAction(string surfaceName, string actionName, string widgetName, double value);
+    void DoAction(string surfaceName, string actionName, string widgetName, double value);
     
     // to Widgets ->
     void SetWidgetValue(string widgetName, double value)
@@ -430,13 +434,27 @@ public:
     virtual void Update(string surfaceName, string widgetName) {}
     virtual void ForceUpdate(string surfaceName, string widgetName) {}
     virtual void Cycle(string surfaceName, string widgetName) {}
-    virtual void Run(double value, string surfaceName, string widgetName) {}
+    virtual void Do(double value, string surfaceName, string widgetName) {}
 };
 
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct SurfaceGroup
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string groupName;
+    int numLogicalChannels = 0;
+    int trackOffset = 0;
+    vector<RealSurface*> realSurfaces_;
+    
+    SurfaceGroup(string aGroupName, int aNumLogicalChannels) : groupName(aGroupName), numLogicalChannels(aNumLogicalChannels) {}
+    
+    void AddSurface(RealSurface* surface)
+    {
+        realSurfaces_.push_back(surface);
+    }
+};
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
-class TrackGUIDAssociation;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,17 +463,20 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
+    vector<SurfaceGroup> surfaceGroups_;
     map<string, Action*> actions_;
     vector<string> trackGUIDs_;
     vector<string> mappedTrackActionGUIDs_;
 
     int numLogicalChannels_ = 0;
+    
     int trackOffset_ = 0;
+    
     bool VSTMonitor_ = false;
 
     void InitializeFXMaps();
     void InitializeSurfaces();
-    void BuildActions();
+    void MapActions();
     void BuildCSurfWidgets();
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
@@ -514,7 +535,7 @@ public:
     {
         InitializeSurfaces();
         InitializeFXMaps();
-        BuildActions();
+        MapActions();
         BuildCSurfWidgets();
     }
     
@@ -541,8 +562,9 @@ public:
 
     void TrackListChanged()
     {
+        // GAW TBD This will morph into checking the various groups logical channel GUID lists for differences
         if(DidTrackListChange())
-            BuildActions();
+            MapActions();
     }
     
     void RefreshLayout()
@@ -643,7 +665,7 @@ public:
             surface->CloseFXWindows();
     }
     
-    void AdjustTrackBank(int stride)
+    void AdjustTrackBank(string surfaceName, int stride)
     {
         int previousTrackOffset = trackOffset_;
         
@@ -735,10 +757,10 @@ public:
             actions_[actionAddress]->Cycle(surfaceName, widgetName);
     }
     
-    void RunAction(string actionAddress, double value, string surfaceName, string widgetName)
+    void DoAction(string actionAddress, double value, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            actions_[actionAddress]->Run(value, surfaceName, widgetName);
+            actions_[actionAddress]->Do(value, surfaceName, widgetName);
     }
     
     // to Widgets ->
