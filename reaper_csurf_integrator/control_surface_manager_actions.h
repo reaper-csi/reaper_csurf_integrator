@@ -16,7 +16,7 @@ class Shift_Action : public DoubleAction
 public:
     Shift_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->SetShift(surfaceName, value);
     }
@@ -29,7 +29,7 @@ class Option_Action : public DoubleAction
 public:
     Option_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->SetOption(surfaceName, value);
     }
@@ -42,7 +42,7 @@ class Control_Action : public DoubleAction
 public:
     Control_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->SetControl(surfaceName, value);
     }
@@ -55,7 +55,7 @@ class Alt_Action : public DoubleAction
 public:
     Alt_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->SetAlt(surfaceName, value);
     }
@@ -130,7 +130,7 @@ public:
         return GetLogicalSurface()->IsShowFXWindows(surfaceName);
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->SetShowOpenFXWindows(surfaceName, value);
     }
@@ -143,7 +143,7 @@ class NextMap_Action : public DoubleAction
 public:
     NextMap_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->GetManager()->NextLogicalSurface();
     }
@@ -159,9 +159,9 @@ private:
 public:
     TrackBank_Action(LogicalSurface* logicalSurface, int stride) : DoubleAction(logicalSurface), stride_(stride)   {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        GetLogicalSurface()->AdjustTrackBank(stride_);
+        GetLogicalSurface()->AdjustTrackBank(surfaceName, stride_);
     }
 };
 
@@ -172,7 +172,7 @@ class ImmobilizeSelectedTracks_Action : public DoubleAction
 public:
     ImmobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
        GetLogicalSurface()->ImmobilizeSelectedTracks();
     }
@@ -185,7 +185,7 @@ class MobilizeSelectedTracks_Action : public DoubleAction
 public:
     MobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->MobilizeSelectedTracks();
     }

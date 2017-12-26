@@ -72,7 +72,7 @@ public:
         return DAW::TrackFX_GetParam(track_, fxIndex_, paramIndex_, &min, &max);
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::TrackFX_SetParam(track_, fxIndex_, paramIndex_, value);
     }
@@ -97,7 +97,7 @@ public:
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_VOL"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
          DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
     }
@@ -122,7 +122,7 @@ public:
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_PAN"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_SetSurfacePan(track_, DAW::CSurf_OnPanChange(track_, normalizedToPan(value), false), NULL);
     }
@@ -148,7 +148,7 @@ public:
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_WIDTH"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnWidthChange(track_, normalizedToPan(value), false);
     }
@@ -192,7 +192,7 @@ class Rewind_Action : public DoubleAction
 public:
     Rewind_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -205,7 +205,7 @@ class FastForward_Action : public DoubleAction
 public:
     FastForward_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -226,7 +226,7 @@ public:
         else return 0;
     }
 
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -248,7 +248,7 @@ public:
             return 0;
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnStop();
     }
@@ -271,7 +271,7 @@ public:
             return 0;
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_OnRecord();
     }
@@ -317,7 +317,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED")), NULL);
         GetLogicalSurface()->GetManager()->OnTrackSelection(track_);
@@ -333,7 +333,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SetOnlyTrackSelected(track_);
         GetLogicalSurface()->GetManager()->OnTrackSelection(track_);
@@ -349,7 +349,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         int selectedTrackNum = DAW::CSurf_TrackToID(track_, false);
         int otherSelectedTrackNum = 0;
@@ -381,7 +381,7 @@ public:
    
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_RECARM"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_SetSurfaceRecArm(track_, DAW::CSurf_OnRecArmChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_RECARM")), NULL);
     }
@@ -396,7 +396,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "B_MUTE"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
          DAW::CSurf_SetSurfaceMute(track_, DAW::CSurf_OnMuteChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "B_MUTE")), NULL);
     }
@@ -411,7 +411,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SOLO"); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::CSurf_SetSurfaceSolo(track_, DAW::CSurf_OnSoloChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SOLO")), NULL);
     }
@@ -443,7 +443,7 @@ public:
                 GetLogicalSurface()->ForceUpdateAction(controlledActionAddress_, surfaceName, controlledActionWidgetName_);
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         currentlyTouched_ =  value == 0 ? false : true;
     }
@@ -474,7 +474,7 @@ public:
             SetWidgetValue(surfaceName, widgetName, (currentValue_ = newValue) == autoMode_ ? 1 : 0);
     }
 
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SetGlobalAutomationOverride(autoMode_);
     }
@@ -500,7 +500,7 @@ public:
         return 0.00;
     }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SetAutomationMode(autoMode_, true);
     }
@@ -513,7 +513,7 @@ class PreviousMarker_Action : public DoubleAction
 public:
     PreviousMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_MARKER_PREV, 0);
     }
@@ -526,7 +526,7 @@ class NextMarker_Action : public DoubleAction
 public:
     NextMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_MARKER_NEXT, 0);
     }
@@ -539,7 +539,7 @@ class InsertMarker_Action : public DoubleAction
 public:
     InsertMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKER, 0);
     }
@@ -552,7 +552,7 @@ class InsertMarkerRegion_Action : public DoubleAction
 public:
     InsertMarkerRegion_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKERRGN, 0);
     }
@@ -567,7 +567,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetSetRepeatEx(nullptr, -1); }
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
@@ -580,7 +580,7 @@ class Metronome_Action : public DoubleAction
 public:
     Metronome_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
 
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_METRONOME, 0);
     }
@@ -593,7 +593,7 @@ class Save_Action : public DoubleAction
 public:
     Save_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEPROJECT, 0);
     }
@@ -606,7 +606,7 @@ class SaveAs_Action : public DoubleAction
 public:
     SaveAs_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEAS, 0);
     }
@@ -619,7 +619,7 @@ class Undo_Action : public DoubleAction
 public:
     Undo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, IDC_EDIT_UNDO, 0);
     }
@@ -632,7 +632,7 @@ class Redo_Action : public DoubleAction
 public:
     Redo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual void Run(double value, string surfaceName, string widgetName) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::SendMessage(WM_COMMAND, IDC_EDIT_REDO, 0);
     }
