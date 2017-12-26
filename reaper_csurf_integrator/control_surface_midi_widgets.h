@@ -361,17 +361,13 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
-        // At this point we don't know how much of the message compromises the key, so try all three
-        string midiOneByteMatch = to_string(evt->midi_message[0]);
-        string midiTwoByteMatch = midiOneByteMatch + to_string(evt->midi_message[1]);
-        string midiThreeByteMatch = midiTwoByteMatch + to_string(evt->midi_message[2]);
-
-        if(widgetsByMessage_.count(midiOneByteMatch) > 0)
-            widgetsByMessage_[midiOneByteMatch]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(midiTwoByteMatch) > 0)
-            widgetsByMessage_[midiTwoByteMatch]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(midiThreeByteMatch) > 0)
-            widgetsByMessage_[midiThreeByteMatch]->ProcessMidiMessage(evt);
+        // At this point we don't know how much of the message comprises the key, so try all three
+        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
 
         if(midiInMonitor_)
         {

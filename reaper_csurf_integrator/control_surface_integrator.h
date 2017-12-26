@@ -220,21 +220,11 @@ public:
     
     virtual void RunAndUpdate() {}
     
-    void ClearChannels()
-    {
-        channels_.clear();
-    }
-
     void AddChannel(RealSurfaceChannel*  channel)
     {
         channels_.push_back(channel);
     }
     
-    void ClearWidgets()
-    {
-        widgetsByName_.clear();
-    }
-
     void AddWidget(MidiWidget* widget)
     {
         widget->AddToRealSurface(this);
@@ -536,6 +526,42 @@ public:
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
+    
+    void SetShift(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetShift(value);
+    }
+    
+    void SetOption(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetOption(value);
+    }
+    
+    void SetControl(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetControl(value);
+    }
+    
+    void SetAlt(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetAlt(value);
+    }
+    
+    void SetZoom(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetZoom(value);
+    }
+    
+    void SetScrub(bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            surface->SetScrub(value);
+    }
 };
 
 
@@ -549,7 +575,7 @@ private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
-    vector<SurfaceGroup*> surfaceGroups_;
+    map<string, SurfaceGroup*> surfaceGroups_;
     map<string, Action*> actions_;
     vector<string> mappedTrackActionGUIDs_;
 
@@ -565,6 +591,15 @@ private:
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
 
+    RealSurface* GetRealSurfaceFor(string surfaceName)
+    {
+        for(auto* surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface;
+
+        return nullptr;
+    }
+    
     void AddFXMap(FXMap* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
@@ -573,6 +608,7 @@ private:
     void AddRealSurface(RealSurface* realSurface)
     {
         realSurfaces_.push_back(realSurface);
+        surfaceGroups_[realSurface->GetSurfaceGroupName()]->AddSurface(realSurface);
     }
  
     void AddAction(string actionAddress, Action* action)
@@ -596,14 +632,6 @@ public:
         return false;
     }
     
-    void AdjustTrackBank(string surfaceName, int stride);
-    void TrackListChanged();
-    void RefreshLayout();
-    void MapTrackActions(string trackGUID);
-    void MapFX(MediaTrack* track);
-    void MapWidgetsToFX(MediaTrack *trackid);
-    
-
     void Initialize()
     {
         InitializeRealSurfaces();
@@ -611,7 +639,28 @@ public:
         MapReaperLogicalControlSurfaceActions();
         BuildCSurfWidgets();
     }
-
+    
+    void MapTrackActions(string trackGUID);
+    void MapFX(MediaTrack* track);
+    void MapWidgetsToFX(MediaTrack *trackid);
+    
+    void AdjustTrackBank(string surfaceName, int stride)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->AdjustTrackBank(stride);
+    }
+    
+    void TrackListChanged()
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->TrackListChanged();
+    }
+    
+    void RefreshLayout()
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->RefreshLayout();
+    }
+    
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto & surface : realSurfaces_)
@@ -629,38 +678,32 @@ public:
 
     void SetShift(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetShift(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetShift(value);
     }
     
     void SetOption(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetOption(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetOption(value);
     }
     
     void SetControl(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetControl(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetControl(value);
     }
     
     void SetAlt(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetAlt(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetAlt(value);
     }
     
     void SetZoom(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetZoom(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetZoom(value);
     }
     
     void SetScrub(string surfaceName, bool value)
     {
-        for(auto* surface : realSurfaces_)
-            surface->SetScrub(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetScrub(value);
     }
     
     void SetShowOpenFXWindows(string surfaceName, bool value)

@@ -168,35 +168,6 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::AdjustTrackBank(string surfaceName, int stride)
-{
-    RealSurface* realSurface = nullptr;
-    
-    for(auto* surface : realSurfaces_)
-        if(surface->GetName() == surfaceName)
-            realSurface = surface;
-    
-    for(auto* surfaceGroup : surfaceGroups_)
-        if(surfaceGroup->GetGroupName() == realSurface->GetSurfaceGroupName())
-            surfaceGroup->AdjustTrackBank(stride);
-}
-
-void LogicalSurface::TrackListChanged()
-{
-    for(auto* surfaceGroup : surfaceGroups_)
-        surfaceGroup->TrackListChanged();
-    
-    // GAW TBD just call surface gropus
-    //if(DidTrackListChange())
-        //MapActions();
-}
-
-void LogicalSurface::RefreshLayout()
-{
-    for(auto* surfaceGroup : surfaceGroups_)
-        surfaceGroup->RefreshLayout();
-}
-
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
@@ -519,8 +490,8 @@ void LogicalSurface::BuildCSurfWidgets()
 
     for(auto & surface : realSurfaces_)
     {
-        surface->ClearChannels();
-        surface->ClearWidgets();
+        //surface->ClearChannels();
+        //surface->ClearWidgets();
         
         if(surface->GetName() == "Console1")
         {
