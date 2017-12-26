@@ -220,6 +220,8 @@ public:
     
     virtual void RunAndUpdate() {}
     
+    void MapTrackActions(string GUID);
+    
     void AddChannel(RealSurfaceChannel*  channel)
     {
         channels_.push_back(channel);
@@ -373,8 +375,6 @@ private:
     bool shouldMapFXTrackToChannel_ = false;
     vector<string> widgetNames_;
 
-    RealSurface* GetRealSurface() { return realSurface_; }
-
 public:
     virtual ~RealSurfaceChannel() {}
     
@@ -386,6 +386,8 @@ public:
     bool GetIsMovable() { return isMovable_; }
     bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
     
+    void MapTrackActions(string GUID);
+
     void SetIsMovable(bool isMovable)
     {
         isMovable_ = isMovable;
@@ -394,10 +396,23 @@ public:
     void AddWidget(MidiWidget* widget)
     {
         widgetNames_.push_back(widget->GetName());
-        GetRealSurface()->AddWidget(widget);
+        realSurface_->AddWidget(widget);
     }
     
-    void SetGUID(string GUID);
+    void SetGUID(string GUID)
+    {
+        GUID_ = GUID;
+        
+        realSurface_->MapTrackActions(GUID_);
+        
+        for (auto widgetName : widgetNames_)
+        {
+            realSurface_->SetWidgetGUID(widgetName, GUID);
+            
+            if(GUID_ == "")
+                realSurface_->SetWidgetValueToZero(widgetName);
+        }
+    }
 };
 
 
