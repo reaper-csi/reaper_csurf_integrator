@@ -450,7 +450,7 @@ public:
     
     void TrackListChanged()
     {
-        // GAW TBD calc this by querying the real surfaces present in this ggroup
+        // GAW TBD calc this by querying the real surfaces present in this group
         
         /*
          if(0 == trackGUIDs_.size())
@@ -578,9 +578,6 @@ private:
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, Action*> actions_;
     vector<string> mappedTrackActionGUIDs_;
-
-    vector<string> trackGUIDs_;
-    int numLogicalChannels_ = 0;
     
     bool VSTMonitor_ = false;
 
@@ -588,8 +585,6 @@ private:
     void InitializeRealSurfaces();
     void MapReaperLogicalControlSurfaceActions();
     void BuildCSurfWidgets();
-
-    int GetNumLogicalChannels() { return numLogicalChannels_; }
 
     RealSurface* GetRealSurfaceFor(string surfaceName)
     {
