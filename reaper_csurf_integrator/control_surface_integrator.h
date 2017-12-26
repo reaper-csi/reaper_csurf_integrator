@@ -158,7 +158,7 @@ class RealSurface
 protected:
     const string name_ = "";
     LogicalSurface* logicalSurface_ = nullptr;
-    string bankGroup_ = "";
+    string surfaceGroupName_ = "";
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
@@ -201,14 +201,14 @@ protected:
         return GUID + GetName() + currentModifiers + actionName;
     }
     
-    RealSurface(LogicalSurface* logicalSurface, string bankGroup, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), bankGroup_(bankGroup), name_(name),  numBankableChannels_(numBankableChannels) {}
+    RealSurface(LogicalSurface* logicalSurface, string surfaceGroupName, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), surfaceGroupName_(surfaceGroupName), name_(name),  numBankableChannels_(numBankableChannels) {}
     
 public:
     virtual ~RealSurface() {};
     
     const string GetName() const { return name_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    string GetBankGroup() { return bankGroup_; }
+    string GetSurfaceGroupName() { return surfaceGroupName_; }
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
@@ -449,26 +449,10 @@ class SurfaceGroup
 public:
     SurfaceGroup(string groupName, int numLogicalChannels) : groupName_(groupName), numLogicalChannels_(numLogicalChannels) {}
     
+    string GetGroupName() { return groupName_; }
+    
     int GetNumLogicalChannels() { return numLogicalChannels_; }
     
-    bool DidTrackListChange()
-    {
-        // GAW TBD calc this by querying the real surfaces present in this ggroup
-        
-        /*
-        if(0 == trackGUIDs_.size())
-            return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
-        
-        if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
-            return true; // list sizes disagree
-        
-        for(int i = 0; i < trackGUIDs_.size(); i++)
-            if(trackGUIDs_[i] != DAW::GetTrackGUIDAsString(i))
-                return true;
-        */
-        return false;
-    }
-
     void AddSurface(RealSurface* surface)
     {
         realSurfaces_.push_back(surface);
@@ -476,10 +460,23 @@ public:
     
     void TrackListChanged()
     {
-        // GAW TBD maybe fold DidTrackListChange() into this
+        // GAW TBD calc this by querying the real surfaces present in this ggroup
+        
+        /*
+         if(0 == trackGUIDs_.size())
+         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
+         
+         if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
+         return true; // list sizes disagree
+         
+         for(int i = 0; i < trackGUIDs_.size(); i++)
+         if(trackGUIDs_[i] != DAW::GetTrackGUIDAsString(i))
+         return true;
+         */
+
     }
     
-    void AdjustTrackBank(string surfaceName, int stride)
+    void AdjustTrackBank(int stride)
     {
         int previousTrackOffset = trackOffset_;
         
@@ -554,37 +551,19 @@ private:
     vector<RealSurface*> realSurfaces_;
     vector<SurfaceGroup*> surfaceGroups_;
     map<string, Action*> actions_;
-    vector<string> trackGUIDs_;
     vector<string> mappedTrackActionGUIDs_;
 
+    vector<string> trackGUIDs_;
     int numLogicalChannels_ = 0;
-    
-    //int trackOffset_ = 0;
     
     bool VSTMonitor_ = false;
 
     void InitializeFXMaps();
-    void InitializeSurfaces();
-    void MapActions();
+    void InitializeRealSurfaces();
+    void MapReaperLogicalControlSurfaceActions();
     void BuildCSurfWidgets();
 
     int GetNumLogicalChannels() { return numLogicalChannels_; }
-    /*
-    bool DidTrackListChange()
-    {
-        if(0 == trackGUIDs_.size())
-            return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
-        
-        if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
-            return true; // list sizes disagree
-        
-        for(int i = 0; i < trackGUIDs_.size(); i++)
-            if(trackGUIDs_[i] != DAW::GetTrackGUIDAsString(i))
-                return true;
-
-        return false;
-    }
-     */
 
     void AddFXMap(FXMap* fxMap)
     {
@@ -617,17 +596,19 @@ public:
         return false;
     }
     
+    void AdjustTrackBank(string surfaceName, int stride);
     void TrackListChanged();
     void RefreshLayout();
     void MapTrackActions(string trackGUID);
     void MapFX(MediaTrack* track);
     void MapWidgetsToFX(MediaTrack *trackid);
+    
 
     void Initialize()
     {
-        InitializeSurfaces();
+        InitializeRealSurfaces();
         InitializeFXMaps();
-        MapActions();
+        MapReaperLogicalControlSurfaceActions();
         BuildCSurfWidgets();
     }
 
@@ -646,52 +627,6 @@ public:
             surface->RunAndUpdate();
     }
 
-/*
-    void RefreshLayout()
-    {
-        auto currentOffset = trackOffset_;
-        
-        vector<string> immovableTracks;
-        
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetChannels())
-                if(channel->GetIsMovable() == false)
-                    immovableTracks.push_back(channel->GetGUID());
-        
-        vector<string> movableTracks;
-        
-        for(int i = 0; i < GetNumLogicalChannels(); i++)
-        {
-            if(currentOffset < 0)
-            {
-                movableTracks.push_back("");
-                currentOffset++;
-            }
-            else if(currentOffset >= DAW::GetNumTracks())
-            {
-                movableTracks.push_back("");
-            }
-            else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
-            {
-                movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
-            }
-            else
-            {
-                currentOffset++;
-            }
-        }
-        
-        currentOffset = 0;
-        
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetChannels())
-                if(channel->GetIsMovable() == true)
-                    channel->SetGUID(movableTracks[currentOffset++]);
-        
-        // for surfaces in this group, just call ForceUpdateWidgets() directly
-        ForceUpdate();
-    }
-*/
     void SetShift(string surfaceName, bool value)
     {
         for(auto* surface : realSurfaces_)
@@ -744,26 +679,6 @@ public:
     {
         for(auto* surface : realSurfaces_)
             surface->CloseFXWindows();
-    }
-
-    void AdjustTrackBank(string surfaceName, int stride)
-    {
-        // GAW TBD tell the group associated with this surface to bank
-        
-        /*
-        int previousTrackOffset = trackOffset_;
-        
-        trackOffset_ += stride;
-        
-        if(trackOffset_ < 1 - GetNumLogicalChannels())
-            trackOffset_ = 1 - GetNumLogicalChannels();
-        
-        if(trackOffset_ > DAW::GetNumTracks() - 1)
-            trackOffset_ = DAW::GetNumTracks() - 1;
-        
-        if(trackOffset_ != previousTrackOffset)
-            RefreshLayout();
-         */
     }
     
     void ImmobilizeSelectedTracks()

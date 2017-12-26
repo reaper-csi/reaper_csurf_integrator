@@ -168,6 +168,19 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void LogicalSurface::AdjustTrackBank(string surfaceName, int stride)
+{
+    RealSurface* realSurface = nullptr;
+    
+    for(auto* surface : realSurfaces_)
+        if(surface->GetName() == surfaceName)
+            realSurface = surface;
+    
+    for(auto* surfaceGroup : surfaceGroups_)
+        if(surfaceGroup->GetGroupName() == realSurface->GetSurfaceGroupName())
+            surfaceGroup->AdjustTrackBank(stride);
+}
+
 void LogicalSurface::TrackListChanged()
 {
     for(auto* surfaceGroup : surfaceGroups_)
@@ -382,7 +395,7 @@ void LogicalSurface::InitializeFXMaps()
     }
 }
 
-void LogicalSurface::MapActions()
+void LogicalSurface::MapReaperLogicalControlSurfaceActions()
 {
     trackGUIDs_.clear();
     
@@ -731,7 +744,7 @@ void LogicalSurface::BuildCSurfWidgets()
     }
 }
 
-void LogicalSurface::InitializeSurfaces()
+void LogicalSurface::InitializeRealSurfaces()
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
