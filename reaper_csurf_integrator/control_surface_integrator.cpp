@@ -168,6 +168,22 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void LogicalSurface::TrackListChanged()
+{
+    for(auto* surfaceGroup : surfaceGroups_)
+        surfaceGroup->TrackListChanged();
+    
+    // GAW TBD just call surface gropus
+    //if(DidTrackListChange())
+        //MapActions();
+}
+
+void LogicalSurface::RefreshLayout()
+{
+    for(auto* surfaceGroup : surfaceGroups_)
+        surfaceGroup->RefreshLayout();
+}
+
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
