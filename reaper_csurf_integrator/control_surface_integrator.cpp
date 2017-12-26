@@ -368,10 +368,10 @@ void LogicalSurface::InitializeFXMaps()
 
 void LogicalSurface::MapReaperLogicalControlSurfaceActions()
 {
-    trackGUIDs_.clear();
+    //trackGUIDs_.clear();
     
-    for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
-        trackGUIDs_.push_back(DAW::GetTrackGUIDAsString(i));
+    //for(int i = 0; i < DAW::GetNumTracks() + 1; ++i) // +1 is for ReaperMasterTrack
+        //trackGUIDs_.push_back(DAW::GetTrackGUIDAsString(i));
         
     for(auto * surface : realSurfaces_)
     {
@@ -485,7 +485,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
 
 void LogicalSurface::BuildCSurfWidgets()
 {
-    numLogicalChannels_ = 0;
+    int numLogicalChannels = 0;
     RealSurfaceChannel* channel = nullptr;
 
     for(auto & surface : realSurfaces_)
@@ -677,7 +677,7 @@ void LogicalSurface::BuildCSurfWidgets()
             for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
             {
                 string channelNumber = to_string(i + 1);;
-                string trackGUID = DAW::GetTrackGUIDAsString(numLogicalChannels_++);
+                string trackGUID = DAW::GetTrackGUIDAsString(numLogicalChannels++);
 
                 channel = new RealSurfaceChannel(trackGUID, surface, true);
                 surface->AddChannel(channel);
@@ -696,7 +696,7 @@ void LogicalSurface::BuildCSurfWidgets()
         }
     }
     
-    numLogicalChannels_++;
+    numLogicalChannels++;
     
     // check for immobilized channels
     // GAW TBD with lazy init for Actions this will change to EnumProjExtState, and the resulting GUIDs will be stored in Immobilized tracks list.
@@ -720,6 +720,9 @@ void LogicalSurface::InitializeRealSurfaces()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
+    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 20);
 
     
     const char *ptr = DAW::GetResourcePath();
@@ -866,12 +869,7 @@ void LogicalSurface::InitializeRealSurfaces()
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        string bankGroup = "";
-        
-        if(name == string("Console1"))
-            bankGroup = "FX";
-        else
-            bankGroup = "Avid";
+        string bankGroup = ReaperLogicalControlSurface;
 
         AddRealSurface(new MidiCSurf(this, bankGroup, name, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
