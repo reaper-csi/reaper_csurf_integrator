@@ -118,8 +118,13 @@ void MidiWidget::ForceUpdate()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealCSurf
+// RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealSurface::MapTrackActions(string GUID)
+{
+    GetLogicalSurface()->MapTrackActions(GUID);
+}
+
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
@@ -145,25 +150,6 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 {
     GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealSurfaceChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurfaceChannel::SetGUID(string GUID)
-{
-    GUID_ = GUID;
-    
-    realSurface_->GetLogicalSurface()->MapTrackActions(GUID_);
-    
-    for (auto widgetName : widgetNames_)
-    {
-        GetRealSurface()->SetWidgetGUID(widgetName, GUID);
-        
-        if(GUID_ == "")
-            GetRealSurface()->SetWidgetValueToZero(widgetName);
-    }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
