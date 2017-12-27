@@ -29,13 +29,16 @@ const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
 const string ReaperGainReduction_dB = "ReaperGainReduction_dB";
 
 //
-// An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader"
-// ActionAddress format =realSurface_ GUID + realSurfaceName + modifiers + widgetActionName
+// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
+// ActionAddress format = GUID + realSurfaceName + modifiers + widgetActionName
 // Modifiers can be ""
 //
-//
-//
+
 // Modifiers
+const string Shift = "Shift";
+const string Option = "Option";
+const string Control = "Control";
+const string Alt = "Alt";
 // Combos allowed -- ShiftControl -- OK
 // Dups disallowed -- ShiftShift -- no good
 //
@@ -51,13 +54,8 @@ const string ReaperGainReduction_dB = "ReaperGainReduction_dB";
 // The following modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
-//  in the case of combos, must be in the same order as listed below -- e.g. ShiftOptionControlAlt for the full meal deal
+//  in the case of combos, must be in the same order as listed above -- e.g. ShiftOptionControlAlt for the full meal deal
 //
-
-const string Shift = "Shift";
-const string Option = "Option";
-const string Control = "Control";
-const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +64,6 @@ const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 struct FXWindow
 {
     MediaTrack* track = nullptr;;
@@ -75,6 +72,7 @@ struct FXWindow
     FXWindow(MediaTrack* aTrack, int anIndex) : track(aTrack), index(anIndex) {}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MapEntry
 {
     string widgetName;
@@ -83,6 +81,7 @@ struct MapEntry
     MapEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXMap
 {
 private:
@@ -760,17 +759,13 @@ public:
     void ImmobilizeSelectedTracks()
     {
         for(auto * surface : realSurfaces_)
-        {
             for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
-            {
                 if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
                 {
                     surface->GetChannels()[i]->SetIsMovable(false);
                     DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), surface->GetChannels()[i]->GetGUID().c_str());
                     DAW::MarkProjectDirty(nullptr);
                 }
-            }
-        }
     }
     
     void MobilizeSelectedTracks()
@@ -778,9 +773,7 @@ public:
         char buffer[256];
 
         for(auto * surface : realSurfaces_)
-        {
             for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
-            {
                 if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
                 {
                     surface->GetChannels()[i]->SetIsMovable(true);
@@ -790,8 +783,6 @@ public:
                         DAW::MarkProjectDirty(nullptr);
                     }
                 }
-            }
-        }
     }
 
     void TrackFXListChanged(MediaTrack* track)
