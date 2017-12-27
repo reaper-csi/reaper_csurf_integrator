@@ -29,10 +29,9 @@ const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
 const string ReaperGainReduction_dB = "ReaperGainReduction_dB";
 
 //
-// An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader1"
-// ActionAddress format - GUID + realSurfaceName + modifiers + widgetName
+// An ActionAddress allows a widget to access a particular action == "{ GUID }Mixer1Fader"
+// ActionAddress format =realSurface_ GUID + realSurfaceName + modifiers + widgetActionName
 // Modifiers can be ""
-// realSurfaceName + widgetName must be present and unique within a given logical surface
 //
 //
 //
