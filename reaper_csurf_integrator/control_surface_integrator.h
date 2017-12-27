@@ -464,20 +464,44 @@ public:
     
     void TrackListChanged()
     {
-        // GAW TBD calc this by querying the real surfaces present in this group
-        
-        /*
-         if(0 == trackGUIDs_.size())
-         return false;               // We have no idea if track list changed, we have been called way too early, there's nothing to compare, just return false
-         
-         if(trackGUIDs_.size() != DAW::GetNumTracks() + 1) // +1 is for Master
-         return true; // list sizes disagree
-         
-         for(int i = 0; i < trackGUIDs_.size(); i++)
-         if(trackGUIDs_[i] != DAW::GetTrackGUIDAsString(i))
-         return true;
-         */
+        vector<RealSurfaceChannel*> channels;
+       
+        for(auto* surface : realSurfaces_)
+            for(auto* channel : surface->GetChannels())
+                if(channel->GetGUID() != ReaperLogicalControlSurface)
+                    channels.push_back(channel);
 
+        int currentOffset = 0;
+        bool shouldRefreshLayout = false;
+
+        for(int i = trackOffset_; i < DAW::GetNumTracks() + 1 && currentOffset < channels.size(); i++)
+        {
+            if(channels[currentOffset]->GetIsMovable() == false)
+            {
+                if(DAW::GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
+                {
+                    channels[currentOffset]->SetIsMovable(true); // unlock this, sinvce there is no longer a track to lock to
+                    shouldRefreshLayout = true;
+                    break;
+                }
+                else
+                {
+                    currentOffset++; // track exists, move on
+                }
+            }
+            else if(channels[currentOffset]->GetGUID() == DAW::GetTrackGUIDAsString(i))
+            {
+                currentOffset++; // track exists and positions are in synch
+            }
+            else
+            {
+                shouldRefreshLayout = true;
+                break;
+            }
+        }
+        
+        if(shouldRefreshLayout)
+            RefreshLayout();
     }
     
     void AdjustTrackBank(int stride)
