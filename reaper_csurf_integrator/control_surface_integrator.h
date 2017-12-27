@@ -540,21 +540,16 @@ public:
                 currentOffset++;
             }
             else if(currentOffset >= DAW::GetNumTracks())
-            {
                 movableTracks.push_back("");
-            }
             else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
-            {
                 movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
-            }
             else
-            {
                 currentOffset++;
-            }
         }
         
         currentOffset = 0;
         
+        // Apply new layout
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == true)
