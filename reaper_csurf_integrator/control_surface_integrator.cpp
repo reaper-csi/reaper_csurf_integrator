@@ -116,7 +116,6 @@ void MidiWidget::ForceUpdate()
     GetRealSurface()->ForceUpdateAction(GetGUID(), GetActionName(), GetName());
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -365,8 +364,8 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions()
 
         AddAction(ReaperLogicalControlSurface + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
         AddAction(ReaperLogicalControlSurface + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
-        AddAction(ReaperLogicalControlSurface + surfaceName + BankLeft, new TrackBank_Action(this, -20));
-        AddAction(ReaperLogicalControlSurface + surfaceName + BankRight, new TrackBank_Action(this, 20));
+        AddAction(ReaperLogicalControlSurface + surfaceName + BankLeft, new TrackBank_Action(this, -8));
+        AddAction(ReaperLogicalControlSurface + surfaceName + BankRight, new TrackBank_Action(this, 8));
         
         AddAction(ReaperLogicalControlSurface + surfaceName + NextMap, new NextMap_Action(this));
         AddAction(ReaperLogicalControlSurface + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
@@ -708,7 +707,7 @@ void LogicalSurface::InitializeRealSurfaces()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     
-    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 20);
+    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 21);
 
     
     const char *ptr = DAW::GetResourcePath();
