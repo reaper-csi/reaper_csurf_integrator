@@ -952,8 +952,6 @@ private:
     {
         if(!lazyInitialized_)
         {
-            // init the logical surface maps here
-            
             LogicalSurface* logicalSurface = new LogicalSurface(this);
             logicalSurface->Initialize();
             logicalSurfaces_.push_back(logicalSurface);
