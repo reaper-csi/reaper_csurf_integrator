@@ -994,16 +994,14 @@ public:
 
     void TrackListChanged()
     {
-        if(logicalSurfaces_.size() != 0) // seems we need to protect against prematurely early calls
-            for(auto & surface : logicalSurfaces_)
-                surface->TrackListChanged();
+        for(auto & surface : logicalSurfaces_)
+            surface->TrackListChanged();
     }
 
     void TrackFXListChanged(MediaTrack* trackid)
     {
-        if(logicalSurfaces_.size() != 0) // seems we need to protect against prematurely early calls
-            for(auto & surface : logicalSurfaces_)
-                surface->TrackFXListChanged(trackid);
+        for(auto & surface : logicalSurfaces_)
+            surface->TrackFXListChanged(trackid);
     }
 };
 
