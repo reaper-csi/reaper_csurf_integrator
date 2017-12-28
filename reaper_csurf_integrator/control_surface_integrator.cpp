@@ -184,7 +184,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
     for(auto * surface : realSurfaces_)
     {
         string surfaceName = surface->GetName();
-        
+        // GAW TBD this will be obtained from map
         AddAction(trackGUID + surfaceName + TrackDisplay, new TrackName_DisplayAction(this, track));
         AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
         AddAction(trackGUID + surfaceName + Volume, new TrackVolume_Action(this, track));
@@ -399,8 +399,8 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 void LogicalSurface::InitFXMaps(RealSurface* surface)
 {
-    // param  = GainReduction_dB
     // widget = CompressorMeter
+    // param  = GainReduction_dB
     
     string surfaceName = surface->GetName();
 

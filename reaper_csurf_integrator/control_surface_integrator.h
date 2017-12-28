@@ -51,7 +51,7 @@ const string Alt = "Alt";
 // Modifier Order matters !!
 // Please do not modify RealSurface::CurrentModifiers()
 //
-// The following modifiers, if present:
+// The modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
 //  in the case of combos, must be in the same order as listed above -- e.g. ShiftOptionControlAlt for the full meal deal
@@ -66,6 +66,7 @@ const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
 {
+    // GAW TBD this should really use FXGUID instead of index, as the order might be rearranged whilst the window is open
     MediaTrack* track = nullptr;;
     int index = 0;
     

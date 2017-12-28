@@ -64,7 +64,7 @@ public:
     
     static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
-    static void SendMessage(UINT uint, WPARAM wparam, LPARAM lparam) { ::SendMessage(g_hwnd, uint, wparam, lparam); }
+    static void SendCommandMessage(WPARAM wparam, LPARAM lparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, lparam); }
     
     static void ShowConsoleMsg(const char* msg) { ::ShowConsoleMsg(msg); }
     
