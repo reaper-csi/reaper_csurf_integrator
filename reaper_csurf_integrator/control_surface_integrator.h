@@ -199,7 +199,7 @@ protected:
         return GUID + GetName() + currentModifiers + actionName;
     }
     
-    RealSurface(LogicalSurface* logicalSurface, string surfaceGroupName, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), surfaceGroupName_(surfaceGroupName), name_(name),  numBankableChannels_(numBankableChannels) {}
+    RealSurface(LogicalSurface* logicalSurface, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), name_(name),  numBankableChannels_(numBankableChannels) {}
     
 public:
     virtual ~RealSurface() {};
@@ -219,6 +219,11 @@ public:
     virtual void RunAndUpdate() {}
     
     void MapTrackActions(string GUID);
+    
+    void SetGroupName(string groupName)
+    {
+        surfaceGroupName_ = groupName;
+    }
     
     void AddChannel(RealSurfaceChannel*  channel)
     {
@@ -635,7 +640,6 @@ private:
     void AddRealSurface(RealSurface* realSurface)
     {
         realSurfaces_.push_back(realSurface);
-        surfaceGroups_[realSurface->GetSurfaceGroupName()]->AddSurface(realSurface);
     }
  
     void AddAction(string actionAddress, Action* action)
@@ -663,8 +667,13 @@ public:
     {
         // GAW TBD temp hardwiring -- this will be replaced with load from map file
         InitRealSurfaces();
+        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 21);
+
         for(auto* surface : realSurfaces_)
         {
+            surface->SetGroupName(ReaperLogicalControlSurface);
+            surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
+            
             InitFXMaps(surface);
             MapReaperLogicalControlSurfaceActions(surface);
             InitCSurfWidgets(surface);
@@ -1016,7 +1025,7 @@ public:
     virtual ~OSCCSurf() {};
     
     OSCCSurf(const string name, LogicalSurface* surface)
-    : RealSurface(surface, "", "OSC", 8) {}
+    : RealSurface(surface, "OSC", 8) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1027,7 +1036,7 @@ public:
     virtual ~WebCSurf() {};
     
     WebCSurf(const string name, LogicalSurface* surface)
-    : RealSurface(surface, "", "Web", 8) {};
+    : RealSurface(surface, "Web", 8) {};
 };
 
 #endif /* control_surface_integrator.h */

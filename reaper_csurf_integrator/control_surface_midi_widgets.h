@@ -384,8 +384,8 @@ public:
         if(midiOutput_) delete midiOutput_;
     }
     
-    MidiCSurf(LogicalSurface* logicalSurface, string surfaceGroupName, const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(logicalSurface, surfaceGroupName, name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    MidiCSurf(LogicalSurface* logicalSurface, const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(logicalSurface, name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
