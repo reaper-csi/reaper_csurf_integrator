@@ -338,7 +338,7 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 }
 
 
-void LogicalSurface::InitializeFXMaps()
+void LogicalSurface::InitFXMaps()
 {
     // param  = GainReduction_dB
     // widget = CompressorMeter
@@ -553,7 +553,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
     mappedTrackActionGUIDs_.push_back(trackGUID);
 }
 
-void LogicalSurface::BuildCSurfWidgets()
+void LogicalSurface::InitCSurfWidgets()
 {
     int numLogicalChannels = 0;
     RealSurfaceChannel* channel = nullptr;
@@ -764,7 +764,6 @@ void LogicalSurface::BuildCSurfWidgets()
     
     
     // check for immobilized channels
-    // GAW TBD with lazy init for Actions this will change to EnumProjExtState, and the resulting GUIDs will be stored in Immobilized tracks list.
     char buffer[256];
     
     for(auto * surface : realSurfaces_)
@@ -780,7 +779,7 @@ void LogicalSurface::BuildCSurfWidgets()
     }
 }
 
-void LogicalSurface::InitializeRealSurfaces()
+void LogicalSurface::InitRealSurfaces()
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
