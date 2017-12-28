@@ -244,7 +244,7 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
                         if(map.paramName == fxParamName)
                             surface->SetWidgetGUID(map.widgetName, trackGUID + fxGUID);
                 
-                surface->AddFXWindow(FXWindow(track, i));
+                surface->AddFXWindow(FXWindow(track, fxGUID));
             }
         }
     }
@@ -288,7 +288,7 @@ void LogicalSurface::MapFX(MediaTrack* track)
                             DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
          
                             if(map.paramName == fxParamName)
-                                AddAction(trackGUID + fxGUID + surface->GetName() + map.widgetName, new TrackFX_Action(this, track, i, j));
+                                AddAction(trackGUID + fxGUID + surface->GetName() + map.widgetName, new TrackFX_Action(this, track, fxGUID, j));
                         }
                     }
                 }

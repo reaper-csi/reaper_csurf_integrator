@@ -179,6 +179,20 @@ public:
         
         return nullptr;
     }
+    
+    static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
+    {
+        char fxGUID[256];
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            if(string(fxGUID) == anFxGUID)
+                return i;
+        }
+        
+        return 0;
+    }
 };
 
 #endif /* control_surface_integrator_Reaper_h */
