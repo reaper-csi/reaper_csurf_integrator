@@ -210,6 +210,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
     
     mappedTrackActionGUIDs_.push_back(trackGUID);
 }
+
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
