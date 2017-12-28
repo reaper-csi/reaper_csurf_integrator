@@ -37,6 +37,7 @@ class TrackFX_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    // GAW TBD this should really use FXGUID instead of fxIndex, as the order might be rearranged
     int fxIndex_ = 0;
     int paramIndex_ = 0;
     
@@ -501,7 +502,7 @@ public:
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        DAW::SendMessage(WM_COMMAND, commandId_, 0);
+        DAW::SendCommandMessage(commandId_, 0);
     }
 };
 
