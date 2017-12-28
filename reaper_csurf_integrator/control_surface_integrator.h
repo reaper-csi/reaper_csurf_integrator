@@ -613,10 +613,11 @@ private:
     
     bool VSTMonitor_ = false;
 
-    void InitFXMaps();
     void InitRealSurfaces();
-    void MapReaperLogicalControlSurfaceActions();
-    void InitCSurfWidgets();
+    void InitFXMaps(RealSurface* surface);
+    void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
+    void InitCSurfWidgets(RealSurface* surface);
+    void SetImmobilizedChannels();
 
     RealSurface* GetRealSurfaceFor(string surfaceName)
     {
@@ -661,10 +662,17 @@ public:
     
     void Init()
     {
+        // GAW TBD temp hardwiring -- this will be replaced with load from map file
         InitRealSurfaces();
-        InitFXMaps();
-        MapReaperLogicalControlSurfaceActions();
-        InitCSurfWidgets();
+        for(auto* surface : realSurfaces_)
+        {
+            InitFXMaps(surface);
+            MapReaperLogicalControlSurfaceActions(surface);
+            InitCSurfWidgets(surface);
+        }
+        ///////////////////////
+        
+        SetImmobilizedChannels();
         RefreshLayout();
     }
     
