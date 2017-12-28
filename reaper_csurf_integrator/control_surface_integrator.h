@@ -613,10 +613,10 @@ private:
     
     bool VSTMonitor_ = false;
 
-    void InitializeFXMaps();
-    void InitializeRealSurfaces();
+    void InitFXMaps();
+    void InitRealSurfaces();
     void MapReaperLogicalControlSurfaceActions();
-    void BuildCSurfWidgets();
+    void InitCSurfWidgets();
 
     RealSurface* GetRealSurfaceFor(string surfaceName)
     {
@@ -659,12 +659,12 @@ public:
         return false;
     }
     
-    void Initialize()
+    void Init()
     {
-        InitializeRealSurfaces();
-        InitializeFXMaps();
+        InitRealSurfaces();
+        InitFXMaps();
         MapReaperLogicalControlSurfaceActions();
-        BuildCSurfWidgets();
+        InitCSurfWidgets();
         RefreshLayout();
     }
     
@@ -940,7 +940,7 @@ private:
         if(!lazyInitialized_)
         {
             LogicalSurface* logicalSurface = new LogicalSurface(this);
-            logicalSurface->Initialize();
+            logicalSurface->Init();
             logicalSurfaces_.push_back(logicalSurface);
             
             lazyInitialized_ = true;
