@@ -153,6 +153,63 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void LogicalSurface::SetImmobilizedChannels()
+{
+    char buffer[256];
+    
+    for(auto * surface : realSurfaces_)
+    {
+        for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+        {
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+            {
+                surface->GetChannels()[i]->SetGUID(buffer);
+                surface->GetChannels()[i]->SetIsMovable(false);
+            }
+        }
+    }
+}
+
+void LogicalSurface::MapTrackActions(string trackGUID)
+{
+    if(trackGUID == "")
+        return; // Nothing to map
+    
+    for(string mappedTrackActionGUID : mappedTrackActionGUIDs_)
+        if(mappedTrackActionGUID == trackGUID)
+            return; // Already did this track
+    
+    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    
+    for(auto * surface : realSurfaces_)
+    {
+        string surfaceName = surface->GetName();
+        
+        AddAction(trackGUID + surfaceName + TrackDisplay, new TrackName_DisplayAction(this, track));
+        AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
+        AddAction(trackGUID + surfaceName + Volume, new TrackVolume_Action(this, track));
+        
+        CycledAction* cyclicAction = new CycledAction(this);
+        cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
+        cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
+        AddAction(trackGUID + surfaceName + Pan, cyclicAction);
+        
+        AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
+        AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
+        AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
+        
+        AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
+        AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
+        AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
+        
+        AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
+        AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
+        
+        MapFX(track);
+    }
+    
+    mappedTrackActionGUIDs_.push_back(trackGUID);
+}
 void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
@@ -509,47 +566,6 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
     RefreshLayout();
 }
 
-void LogicalSurface::MapTrackActions(string trackGUID)
-{
-    if(trackGUID == "")
-        return; // Nothing to map
-    
-    for(string mappedTrackActionGUID : mappedTrackActionGUIDs_)
-        if(mappedTrackActionGUID == trackGUID)
-            return; // Already did this track
-    
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
-    
-    for(auto * surface : realSurfaces_)
-    {
-        string surfaceName = surface->GetName();
-
-        AddAction(trackGUID + surfaceName + TrackDisplay, new TrackName_DisplayAction(this, track));
-        AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
-        AddAction(trackGUID + surfaceName + Volume, new TrackVolume_Action(this, track));
-        
-        CycledAction* cyclicAction = new CycledAction(this);
-        cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
-        cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-        AddAction(trackGUID + surfaceName + Pan, cyclicAction);
-        
-        AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-        AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
-        AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
-        AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
-        
-        MapFX(track);
-    }
-    
-    mappedTrackActionGUIDs_.push_back(trackGUID);
-}
-
 void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
 {
     RealSurfaceChannel* channel = nullptr;
@@ -752,23 +768,6 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
             channel->AddWidget(new PushButton_MidiWidget("", surface, Solo, Solo + channelNumber,        new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("", surface, Mute, Mute + channelNumber,        new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
             channel->AddWidget(new PushButton_MidiWidget("", surface, Select, Select + channelNumber,      new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
-        }
-    }
-}
-
-void LogicalSurface::SetImmobilizedChannels()
-{
-    char buffer[256];
-
-    for(auto * surface : realSurfaces_)
-    {
-        for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
-        {
-            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
-            {
-                surface->GetChannels()[i]->SetGUID(buffer);
-                surface->GetChannels()[i]->SetIsMovable(false);
-            }
         }
     }
 }
