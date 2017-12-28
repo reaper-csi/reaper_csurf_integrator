@@ -193,6 +193,8 @@ void LogicalSurface::MapWidgetsToFX(MediaTrack *track)
     
     for(auto* surface : realSurfaces_)
         OpenFXWindows(surface);
+    
+    ForceUpdate();
 }
 
 void LogicalSurface::MapFX(MediaTrack* track)
