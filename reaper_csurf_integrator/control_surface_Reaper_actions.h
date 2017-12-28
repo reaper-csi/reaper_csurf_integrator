@@ -9,23 +9,6 @@
 
 #include "control_surface_base_actions.h"
 
-#define IDC_REPEAT                      1068
-#define ID_FILE_SAVEAS                  40022
-#define ID_FILE_NEWPROJECT              40023
-#define ID_FILE_OPENPROJECT             40025
-#define ID_FILE_SAVEPROJECT             40026
-#define IDC_EDIT_UNDO                   40029
-#define IDC_EDIT_REDO                   40030
-#define ID_MARKER_PREV                  40172
-#define ID_MARKER_NEXT                  40173
-#define ID_INSERT_MARKERRGN             40174
-#define ID_INSERT_MARKER                40157
-#define ID_LOOP_SETSTART                40222
-#define ID_LOOP_SETEND                  40223
-#define ID_METRONOME                    40364
-#define ID_GOTO_MARKER1                 40161
-#define ID_SET_MARKER1                  40657
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackDoubleAction : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -507,54 +490,18 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PreviousMarker_Action : public DoubleAction
+class Reaper_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    int commandId_= 0;
+    
 public:
-    PreviousMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Reaper_Action(LogicalSurface* logicalSurface, int commandId) : DoubleAction(logicalSurface), commandId_(commandId)  {}
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        DAW::SendMessage(WM_COMMAND, ID_MARKER_PREV, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NextMarker_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    NextMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_MARKER_NEXT, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class InsertMarker_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    InsertMarker_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKER, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class InsertMarkerRegion_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    InsertMarkerRegion_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_INSERT_MARKERRGN, 0);
+        DAW::SendMessage(WM_COMMAND, commandId_, 0);
     }
 };
 
@@ -570,71 +517,6 @@ public:
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Metronome_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    Metronome_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_METRONOME, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Save_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    Save_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEPROJECT, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SaveAs_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SaveAs_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, ID_FILE_SAVEAS, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Undo_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    Undo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, IDC_EDIT_UNDO, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Redo_Action : public DoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    Redo_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        DAW::SendMessage(WM_COMMAND, IDC_EDIT_REDO, 0);
     }
 };
 

@@ -665,7 +665,7 @@ public:
     
     void Init()
     {
-        // GAW TBD temp hardwiring -- this will be replaced with load from map file
+        // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
         InitRealSurfaces();
         surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 21);
 
@@ -678,7 +678,7 @@ public:
             MapReaperLogicalControlSurfaceActions(surface);
             InitCSurfWidgets(surface);
         }
-        ///////////////////////
+        // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         SetImmobilizedChannels();
         RefreshLayout();

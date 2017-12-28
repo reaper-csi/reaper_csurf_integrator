@@ -497,6 +497,23 @@ void LogicalSurface::InitFXMaps(RealSurface* surface)
     AddFXMap(fxMap);
 }
 
+#define IDC_REPEAT                      1068
+#define ID_FILE_SAVEAS                  40022
+#define ID_FILE_NEWPROJECT              40023
+#define ID_FILE_OPENPROJECT             40025
+#define ID_FILE_SAVEPROJECT             40026
+#define IDC_EDIT_UNDO                   40029
+#define IDC_EDIT_REDO                   40030
+#define ID_MARKER_PREV                  40172
+#define ID_MARKER_NEXT                  40173
+#define ID_INSERT_MARKERRGN             40174
+#define ID_INSERT_MARKER                40157
+#define ID_LOOP_SETSTART                40222
+#define ID_LOOP_SETEND                  40223
+#define ID_METRONOME                    40364
+#define ID_GOTO_MARKER1                 40161
+#define ID_SET_MARKER1                  40657
+
 void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
 {
     string surfaceName = surface->GetName();
@@ -529,20 +546,20 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
     AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
     AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Save, new Save_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Save, new SaveAs_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Undo, new Undo_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Undo, new Redo_Action(this));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Marker, new PreviousMarker_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Marker, new InsertMarker_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Option + Marker, new InsertMarkerRegion_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Nudge, new NextMarker_Action(this));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
     AddAction(ReaperLogicalControlSurface + surfaceName + Cycle, new CycleTimeline_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Click, new Metronome_Action(this));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
     
     AddAction(ReaperLogicalControlSurface + surfaceName + Rewind, new Rewind_Action(this));
     AddAction(ReaperLogicalControlSurface + surfaceName + FastForward, new FastForward_Action(this));
