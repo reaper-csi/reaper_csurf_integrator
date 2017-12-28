@@ -770,10 +770,6 @@ void LogicalSurface::InitRealSurfaces()
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    
-    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 21);
-
     
     const char *ptr = DAW::GetResourcePath();
     char localBuf[4096];
@@ -919,9 +915,7 @@ void LogicalSurface::InitRealSurfaces()
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        string bankGroup = ReaperLogicalControlSurface;
-
-        AddRealSurface(new MidiCSurf(this, bankGroup, name, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+        AddRealSurface(new MidiCSurf(this, name, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
     VSTMonitor_ = VSTMonitor;
