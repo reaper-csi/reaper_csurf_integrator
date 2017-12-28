@@ -90,10 +90,7 @@ public:
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, volToNormalized(value));
     }
     
-    virtual double GetCurrentNormalizedValue() override
-    {
-        return volToNormalized(currentValue_);
-    }
+    virtual double GetCurrentNormalizedValue() override { return volToNormalized(currentValue_); }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_VOL"); }
     
@@ -358,7 +355,10 @@ public:
         {
             for(int i = 0; i < DAW::GetNumTracks(); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, false), "I_SELECTED"))
+                {
                     otherSelectedTrackNum = i;
+                    break;
+                }
 
             int lowerBound = selectedTrackNum < otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
             int upperBound = selectedTrackNum > otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
@@ -445,7 +445,7 @@ public:
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        currentlyTouched_ =  value == 0 ? false : true;
+        currentlyTouched_ = value == 0 ? false : true;
     }
 };
 
@@ -700,7 +700,7 @@ public:
     virtual double GetValue(string surfaceName, string widgetName) override
     {
         char buffer[256];
-        // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range
+        // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range, we should query surfaceName, widgetName for that range
         if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, ReaperGainReduction_dB.c_str(), buffer, sizeof(buffer)))
            return atof(buffer) * 3.0;
         else
