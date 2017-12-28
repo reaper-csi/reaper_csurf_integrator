@@ -467,8 +467,7 @@ public:
        
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetChannels())
-                if(channel->GetGUID() != ReaperLogicalControlSurface)
-                    channels.push_back(channel);
+                channels.push_back(channel);
 
         int currentOffset = 0;
         bool shouldRefreshLayout = false;
@@ -763,7 +762,7 @@ public:
     void ImmobilizeSelectedTracks()
     {
         for(auto * surface : realSurfaces_)
-            for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+            for(int i = 0; i < surface->GetChannels().size(); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
                 {
                     surface->GetChannels()[i]->SetIsMovable(false);
@@ -777,7 +776,7 @@ public:
         char buffer[256];
 
         for(auto * surface : realSurfaces_)
-            for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+            for(int i = 0; i < surface->GetChannels().size(); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
                 {
                     surface->GetChannels()[i]->SetIsMovable(true);
