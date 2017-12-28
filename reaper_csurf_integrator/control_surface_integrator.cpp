@@ -159,7 +159,7 @@ void LogicalSurface::SetImmobilizedChannels()
     
     for(auto * surface : realSurfaces_)
     {
-        for(int i = 1; i < surface->GetChannels().size(); i++) // start at 1 in order to skip ReaperLogicalControlSurface channel
+        for(int i = 0; i < surface->GetChannels().size(); i++)
         {
             if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
             {
@@ -572,10 +572,7 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
 
     if(surface->GetName() == "Console1")
     {
-        channel = new RealSurfaceChannel(ReaperLogicalControlSurface, surface, false);
-        surface->AddChannel(channel);
-        
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
 
         /*
         surface->AddWidget(new PushButton_CSurfWidget("PagePlus", surface,   new MIDI_event_ex_t(0xb0, 0x60, 0x7f), new MIDI_event_ex_t(0xb0, 0x60, 0x00)));
@@ -684,72 +681,68 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
     }
     else
     {
-        
-        channel = new RealSurfaceChannel(ReaperLogicalControlSurface, surface, false);
-        surface->AddChannel(channel);
-        
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Plugin",      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "EQ",          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Instrument",  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Plugin",      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "EQ",          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Instrument",  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
 
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "nameValue",   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "smpteBeats",  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "nameValue",   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "smpteBeats",  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
         
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, NextMap,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F2",          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F3",          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F4",          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F5",          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F6",          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, UnlockTracks,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, LockTracks,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, NextMap,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F2",          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F3",          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F4",          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F5",          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F6",          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, UnlockTracks,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, LockTracks,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
 
-        channel->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Shift,     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
-        channel->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Option,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
-        channel->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Control,   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
-        channel->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Alt,       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Shift,     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Option,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Control,   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Alt,       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
         
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Read,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Write,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Trim,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Touch,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Latch,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Group,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Read,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Write,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Trim,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Touch,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Latch,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Group,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
         
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Save,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Undo,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cancel,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Enter,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Save,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Undo,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cancel,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Enter,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
         
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cycle,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Drop",        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Replace",     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Click,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Solo",        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cycle,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Drop",        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Replace",     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Click,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Solo",        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
 
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Up,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Down,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Left,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Right,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Zoom,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Scrub,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Up,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Down,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Left,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Right,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Zoom,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Scrub,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
 
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankLeft,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankRight,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelLeft,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelRight,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankLeft,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankRight,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelLeft,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelRight,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
 
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Marker,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Nudge,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Marker,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Nudge,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
 
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Rewind,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, FastForward,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Stop,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Play,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-        channel->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Record,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Rewind,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, FastForward,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Stop,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Play,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Record,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
         
         for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
         {
