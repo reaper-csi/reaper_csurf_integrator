@@ -665,6 +665,7 @@ public:
         InitializeFXMaps();
         MapReaperLogicalControlSurfaceActions();
         BuildCSurfWidgets();
+        RefreshLayout();
     }
     
     void MapTrackActions(string trackGUID);
