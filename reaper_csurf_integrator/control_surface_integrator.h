@@ -668,7 +668,13 @@ public:
     {
         // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
         InitRealSurfaces();
-        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, 21);
+        
+        int numChannels = 1;
+        
+        for(auto* surface : realSurfaces_) // all surfaces are  hardwired to the same group
+            numChannels += surface->GetNumBankableChannels();
+        
+        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, numChannels);
 
         for(auto* surface : realSurfaces_)
         {
