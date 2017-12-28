@@ -37,12 +37,11 @@ class TrackFX_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    // GAW TBD this should really use FXGUID instead of fxIndex, as the order might be rearranged
-    int fxIndex_ = 0;
+    string fxGUID_ = "";
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(LogicalSurface* logicalSurface, MediaTrack* track, int fxIndex, int paramIndex) : TrackDoubleAction(logicalSurface, track), fxIndex_(fxIndex), paramIndex_(paramIndex) {}
+    TrackFX_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID, int paramIndex) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
     
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
@@ -53,12 +52,12 @@ public:
     {
         double min = 0;
         double max = 0;
-        return DAW::TrackFX_GetParam(track_, fxIndex_, paramIndex_, &min, &max);
+        return DAW::TrackFX_GetParam(track_, DAW::IndexFromFXGUID(track_, fxGUID_), paramIndex_, &min, &max);
     }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        DAW::TrackFX_SetParam(track_, fxIndex_, paramIndex_, value);
+        DAW::TrackFX_SetParam(track_, DAW::IndexFromFXGUID(track_, fxGUID_), paramIndex_, value);
     }
 };
 

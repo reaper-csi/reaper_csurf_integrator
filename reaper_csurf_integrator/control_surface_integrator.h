@@ -66,11 +66,10 @@ const string Alt = "Alt";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
 {
-    // GAW TBD this should really use FXGUID instead of index, as the order might be rearranged whilst the window is open
     MediaTrack* track = nullptr;;
-    int index = 0;
+    string fxGUID = "";
     
-    FXWindow(MediaTrack* aTrack, int anIndex) : track(aTrack), index(anIndex) {}
+    FXWindow(MediaTrack* aTrack, string anFxGUID) : track(aTrack), fxGUID(anFxGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,15 +311,15 @@ public:
     {
         if(showFXWindows_)
             for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 3);
+                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
     }
     
     void CloseFXWindows()
     {
         for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.index, 2);
+            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
     }
-    
+
     // to Widgets ->
     virtual void UpdateWidgets()
     {
@@ -671,14 +670,14 @@ public:
         
         int numChannels = 1;
         
-        for(auto* surface : realSurfaces_) // all surfaces are  hardwired to the same group
+        for(auto* surface : realSurfaces_) // all surfaces are hardwired to the same group
             numChannels += surface->GetNumBankableChannels();
         
         surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, numChannels);
 
         for(auto* surface : realSurfaces_)
         {
-            surface->SetGroupName(ReaperLogicalControlSurface);
+            surface->SetGroupName(ReaperLogicalControlSurface); // all surfaces are hardwired to the same group
             surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
             
             InitFXMaps(surface);
