@@ -7,6 +7,7 @@
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
+#include "time.h"
 #include <sstream>
 #include <vector>
 #include <map>
@@ -622,16 +623,7 @@ private:
     void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
     void InitCSurfWidgets(RealSurface* surface);
     void SetImmobilizedChannels();
-
-    RealSurface* GetRealSurfaceFor(string surfaceName)
-    {
-        for(auto* surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface;
-
-        return nullptr;
-    }
-    
+   
     void AddFXMap(FXMap* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
@@ -661,6 +653,15 @@ public:
                 return surface->IsShowFXWindows();
         
         return false;
+    }
+    
+    RealSurface* GetRealSurfaceFor(string surfaceName)
+    {
+        for(auto* surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface;
+        
+        return nullptr;
     }
     
     void Init()

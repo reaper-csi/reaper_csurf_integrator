@@ -257,7 +257,7 @@ public:
     }
 };
 
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RepeatingArrow_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,24 +269,23 @@ private:
     bool pressed_ = false;
     
 public:
-    RepeatingArrow_Action(string name, Interactor* interactor, int direction, double repeatRate) : DoubleAction(name, interactor), direction_(direction), repeatRate_(repeatRate) {}
+    RepeatingArrow_Action(LogicalSurface* logicalSurface, int direction, double repeatRate) : DoubleAction(logicalSurface), direction_(direction), repeatRate_(repeatRate) {}
 
-    virtual void UpdateAction(string surfaceName) override
+    virtual void Update(string surfaceName, string widgetName) override
     {
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetSurface(surfaceName)->IsZoom());
+            DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
         }
     }
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_OnArrow(direction_, GetInteractor()->GetLogicalSurface()->GetSurface(surfaceName)->IsZoom());
+        DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
         pressed_ = value;
     }
 };
- */
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSelect_Action : public TrackDoubleAction

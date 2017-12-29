@@ -60,7 +60,7 @@ public:
         GetLogicalSurface()->SetAlt(surfaceName, value);
     }
 };
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Latched_Action : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,24 +68,24 @@ class Latched_Action : public DoubleAction
 private:
     clock_t lastPressed_ = clock();
 public:
-    Latched_Action(string name, Interactor* interactor) : DoubleAction(name, interactor)  {}
+    Latched_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
     virtual void SetValue(string surfaceName, double value) {}
     
-    virtual void RunAction(string surfaceName, double value) override
+    virtual void Do(double value, string surfaceName, string widgetName) override
     {
         if(value != 0)
         {
             lastPressed_ = clock();
             SetValue(surfaceName, value);
-            GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(surfaceName, value);
-                GetInteractor()->SetWidgetValue(surfaceName, GetName(), value);
+                GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
             }
         }
     }
@@ -96,11 +96,11 @@ class LatchedZoom_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    LatchedZoom_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
+    LatchedZoom_Action(LogicalSurface* logicalSurface) : Latched_Action(logicalSurface)  {}
     
     virtual void SetValue(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetZoom(surfaceName, value);
+        GetLogicalSurface()->SetZoom(surfaceName, value);
     }
 };
 
@@ -109,14 +109,14 @@ class LatchedScrub_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    LatchedScrub_Action(string name, Interactor* interactor) : Latched_Action(name, interactor)  {}
+    LatchedScrub_Action(LogicalSurface* logicalSurface) : Latched_Action(logicalSurface)  {}
     
     virtual void SetValue(string surfaceName, double value) override
     {
-        GetInteractor()->GetLogicalSurface()->SetScrub(surfaceName, value);
+        GetLogicalSurface()->SetScrub(surfaceName, value);
     }
 };
-*/
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SetShowFXWindows_Action : public DoubleAction
@@ -125,10 +125,7 @@ class SetShowFXWindows_Action : public DoubleAction
 public:
     SetShowFXWindows_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual double GetValue (string surfaceName, string widgetName) override
-    {
-        return GetLogicalSurface()->IsShowFXWindows(surfaceName);
-    }
+    virtual double GetValue (string surfaceName, string widgetName) override { return GetLogicalSurface()->IsShowFXWindows(surfaceName); }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
