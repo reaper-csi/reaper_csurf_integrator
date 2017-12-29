@@ -219,8 +219,6 @@ public:
     
     virtual void RunAndUpdate() {}
     
-    void MapTrackActions(string GUID);
-    
     void SetGroupName(string groupName)
     {
         surfaceGroupName_ = groupName;
@@ -390,6 +388,7 @@ public:
     bool GetIsMovable() { return isMovable_; }
     bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
     
+    void SetGUID(string GUID);
     void MapTrackActions(string GUID);
 
     void SetIsMovable(bool isMovable)
@@ -401,21 +400,6 @@ public:
     {
         widgetNames_.push_back(widget->GetName());
         realSurface_->AddWidget(widget);
-    }
-    
-    void SetGUID(string GUID)
-    {
-        GUID_ = GUID;
-        
-        realSurface_->MapTrackActions(GUID_);
-        
-        for (auto widgetName : widgetNames_)
-        {
-            realSurface_->SetWidgetGUID(widgetName, GUID);
-            
-            if(GUID_ == "")
-                realSurface_->SetWidgetValueToZero(widgetName);
-        }
     }
 };
 
