@@ -96,23 +96,20 @@ public:
     virtual void SetValue(double volume) override
     {
         int volint = normalizedToInt14(volume);
-/*
-        if( ! Surface()->Surface()->IsFlipped())
-        {
-            double volumeDB = VAL2DB(normalizedToVol(volume));
-            
-            //slope = (output_end - output_start) / (input_end - input_start)
-            //output = output_start + slope * (input - input_start)
-            
-            // Map Reaper Fader range to surface Fader range
-            double slope = (GetMaxDB() - GetMinDB()) / (Surface()->Manager()->GetFaderMaxDB() - Surface()->Manager()->GetFaderMinDB());
-            double output = GetMinDB() + slope * (volumeDB - Surface()->Manager()->GetFaderMinDB());
-
-            output = volToNormalized(DB2VAL(output));
-            
-            volint = normalizedToInt14(output);
-        }
-*/
+        
+        //slope = (output_end - output_start) / (input_end - input_start)
+        //output = output_start + slope * (input - input_start)
+        
+        // First, map Reaper VU range to surface VU range
+        double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        double output = GetMinDB() + slope * (volume - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        
+        // Now map surface VU range to widget range
+        slope = 127.0 / (GetMaxDB() - GetMinDB());
+        output = slope * (output - GetMinDB());
+        
+        //int volint = normalizedToInt14(output);
+        
         GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
     
