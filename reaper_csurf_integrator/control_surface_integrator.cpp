@@ -568,18 +568,15 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
     AddAction(ReaperLogicalControlSurface + surfaceName + Play, new Play_Action(this));
     AddAction(ReaperLogicalControlSurface + surfaceName + Record, new Record_Action(this));
     
-    // GAW TBD -- timers need to be cross platform
+    AddAction(ReaperLogicalControlSurface + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
     
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Up,  logicalSurfaceInteractor_, 0, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Down,  logicalSurfaceInteractor_, 1, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Left,  logicalSurfaceInteractor_, 2, 0.3));
-    //logicalSurfaceInteractor_->AddAction(new RepeatingArrow_Action(Right, logicalSurfaceInteractor_, 3, 0.3));
-    
-    //logicalSurfaceInteractor_->AddAction(new LatchedZoom_Action(Zoom,  logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new LatchedScrub_Action(Scrub,  logicalSurfaceInteractor_));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Zoom, new LatchedZoom_Action(this));
+    AddAction(ReaperLogicalControlSurface + surfaceName + Scrub, new LatchedScrub_Action(this));
 
     AddAction(ReaperLogicalControlSurface + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
-
     
     RefreshLayout();
 }
