@@ -119,11 +119,6 @@ void MidiWidget::ForceUpdate()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurface::MapTrackActions(string GUID)
-{
-    GetLogicalSurface()->MapTrackActions(GUID);
-}
-
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
@@ -148,6 +143,24 @@ void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
 void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
     GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// RealSurfaceChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealSurfaceChannel::SetGUID(string GUID)
+{
+    GUID_ = GUID;
+    
+    for (auto widgetName : widgetNames_)
+    {
+        realSurface_->SetWidgetGUID(widgetName, GUID);
+        
+        if(GUID_ == "")
+            realSurface_->SetWidgetValueToZero(widgetName);
+    }
+    
+    realSurface_->GetLogicalSurface()->MapTrackActions(GUID_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -577,8 +590,6 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
     AddAction(ReaperLogicalControlSurface + surfaceName + Scrub, new LatchedScrub_Action(this));
 
     AddAction(ReaperLogicalControlSurface + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
-    
-    RefreshLayout();
 }
 
 void LogicalSurface::InitCSurfWidgets(RealSurface* surface)

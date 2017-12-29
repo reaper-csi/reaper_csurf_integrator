@@ -70,6 +70,7 @@ public:
  
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
+        // GAW TBD this should query surfaceName, widgetName for range and scale accordingly
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, volToNormalized(value));
     }
     
@@ -547,6 +548,7 @@ private:
 protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
+        // GAW TBD this should query surfaceName, widgetName for range and scale accordingly
         if(DAW::GetPlayState() & 0x01) // if playing
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         else
@@ -581,7 +583,7 @@ public:
     virtual double GetValue(string surfaceName, string widgetName) override
     {
         char buffer[256];
-        // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range, we should query surfaceName, widgetName for that range
+        // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range, should query surfaceName, widgetName for that range
         if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, ReaperGainReduction_dB.c_str(), buffer, sizeof(buffer)))
            return atof(buffer) * 3.0;
         else
