@@ -16,6 +16,9 @@
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
+const double System_MaxDB = 12.0;
+const double System_MinDB = -72.0;
+
 // Note for Windows environments
 // use std::byte for C++17 byte
 // use ::byte for Windows byte
@@ -127,8 +130,8 @@ protected:
 public:
     virtual ~MidiWidget() {};
     
-    virtual double GetMinDB() { return -72.0; }
-    virtual double GetMaxDB() { return 12.0; }
+    virtual double GetMinDB() { return System_MinDB; }
+    virtual double GetMaxDB() { return System_MaxDB; }
     string GetName() { return name_; }
     string GetActionName() { return actionName_; }
 
