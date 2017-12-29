@@ -548,7 +548,6 @@ private:
 protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        // GAW TBD this should query surfaceName, widgetName for range and scale accordingly
         if(DAW::GetPlayState() & 0x01) // if playing
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         else
