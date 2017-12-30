@@ -553,21 +553,18 @@ protected:
             double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
             double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
 
-            //slope = (output_end - output_start) / (input_end - input_start)
-            //output = output_start + slope * (input - input_start)
-            
-            // First, map Reaper VU range to surface VU range
-            double slope = (widgetMaxDB - widgetMinDB) / (GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetLogicalSurface()->GetManager()->GetVUMinDB());
-            double output = widgetMinDB + slope * (value - GetLogicalSurface()->GetManager()->GetVUMinDB());
+            double reaperMaxDB = GetLogicalSurface()->GetManager()->GetVUMaxDB();
+            double reaperMinDB = GetLogicalSurface()->GetManager()->GetVUMinDB();
 
-            // Now map surface VU range to widget range
-            slope = 1.0 / (widgetMaxDB - widgetMinDB);
-            output = slope * (output - widgetMinDB);
+            value = value > reaperMaxDB ? reaperMaxDB : value;
+            value = value < reaperMinDB ? reaperMinDB : value;
+
+            value = 1.0 / (widgetMaxDB - widgetMinDB) * (value - widgetMinDB);
             
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, output);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
         }
         else
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, GetLogicalSurface()->GetManager()->GetVUMinDB());
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 0.0);
     }
     
 public:
