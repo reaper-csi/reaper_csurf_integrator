@@ -102,12 +102,42 @@ static double int14ToNormalized(unsigned char msb, unsigned char lsb)
     return ((double)val)/16383.0;
 }
 
+static double clampedAndNormalized(double value, double valueMax, double valueMin)
+{
+    value = value > valueMax ? valueMax : value;
+    value = value < valueMin ? valueMin : value;
+    
+    return 1.0 / (valueMax - valueMin) * (value - valueMin);
+}
+
+static double normalizedToVol(double value, double valueMaxDB, double valueMinDB)
+{
+    //slope = (output_end - output_start) / (input_end - input_start)
+    //output = output_start + slope * (input - input_start)
+    
+    double slope = (valueMaxDB - valueMinDB) / (1.0 - 0.0);
+    return DB2VAL(valueMinDB + slope * (value - 0.0));
+}
+
+static double volToNormalized(double value, double valueMaxDB, double valueMinDB)
+{
+    value = VAL2DB(value);
+    
+    //slope = (output_end - output_start) / (input_end - input_start)
+    //output = output_start + slope * (input - input_start)
+    
+    double slope = (1.0 - 0.0) / (valueMaxDB - valueMinDB);
+    return 0.0 + slope * (value - valueMinDB);
+}
+
+/*
 static double normalizedToVol(double val)
 {
     double pos=val*1000.0;
     pos=SLIDER2DB(pos);
     return DB2VAL(pos);
 }
+
 
 static double volToNormalized(double vol)
 {
@@ -117,6 +147,7 @@ static double volToNormalized(double vol)
     
     return d;
 }
+ */
 
 static double normalizedToPan(double val)
 {
