@@ -26,7 +26,7 @@ protected:
     
     virtual double GetValue(string surfaceName, string widgetName) { return 0.0; }
     
-    virtual double GetCurrentNormalizedValue() override { return currentValue_; }
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return currentValue_; }
 
 public:
     virtual void Update(string surfaceName, string widgetName) override
@@ -54,7 +54,7 @@ private:
 public:
     CycledAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
-    virtual double GetCurrentNormalizedValue() override { return actions_[currentIndex_]->GetCurrentNormalizedValue(); }
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(surfaceName, widgetName); }
     
     virtual void Add(Action* action) override
     {

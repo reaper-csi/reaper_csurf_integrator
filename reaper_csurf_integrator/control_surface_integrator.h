@@ -440,7 +440,7 @@ public:
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
-    virtual double GetCurrentNormalizedValue () { return 0.0; }
+    virtual double GetCurrentNormalizedValue (string surfaceName, string widgetName) { return 0.0; }
 
     virtual void Add(Action* action) {}
     virtual void Update(string surfaceName, string widgetName) {}
@@ -823,7 +823,7 @@ public:
     double GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            return actions_[actionAddress]->GetCurrentNormalizedValue();
+            return actions_[actionAddress]->GetCurrentNormalizedValue(surfaceName, widgetName);
         else
             return 0.0;
     }

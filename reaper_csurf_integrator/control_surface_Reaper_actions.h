@@ -70,17 +70,28 @@ public:
  
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        // GAW TBD this should query surfaceName, widgetName for range and scale accordingly
-        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, volToNormalized(value));
+        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
     }
     
-    virtual double GetCurrentNormalizedValue() override { return volToNormalized(currentValue_); }
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override
+    {
+        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+
+        return volToNormalized(currentValue_, widgetMaxDB, widgetMinDB);
+    }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_VOL"); }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-         DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
+        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+
+        DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
     }
 };
 
@@ -99,7 +110,7 @@ public:
     
     TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
 
-    virtual double GetCurrentNormalizedValue() override { return panToNormalized(currentValue_); }
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_PAN"); }
     
@@ -125,7 +136,7 @@ protected:
 public:
     TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
     
-    virtual double GetCurrentNormalizedValue() override { return panToNormalized(currentValue_); }
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_WIDTH"); }
     
@@ -412,7 +423,7 @@ private:
     bool lastTouched_ = true;
     
 public:
-    TouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionwidgetName, string controlledActionAddress, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionWidgetName_(controlledActionwidgetName), controlledActionAddress_(controlledActionAddress), controlledAction_(controlledAction) {}
+    TouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionAddress, string controlledActionwidgetName, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionAddress_(controlledActionAddress), controlledActionWidgetName_(controlledActionwidgetName), controlledAction_(controlledAction) {}
     
     virtual double GetValue(string surfaceName, string widgetName) override { return currentlyTouched_; }
 
@@ -549,20 +560,8 @@ protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-        {
-            double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-            double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
-
-            double reaperMaxDB = GetLogicalSurface()->GetManager()->GetVUMaxDB();
-            double reaperMinDB = GetLogicalSurface()->GetManager()->GetVUMinDB();
-
-            value = value > reaperMaxDB ? reaperMaxDB : value;
-            value = value < reaperMinDB ? reaperMinDB : value;
-
-            value = 1.0 / (widgetMaxDB - widgetMinDB) * (value - widgetMinDB);
-            
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
-        }
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName,
+                                                clampedAndNormalized(value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName)));
         else
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 0.0);
     }
