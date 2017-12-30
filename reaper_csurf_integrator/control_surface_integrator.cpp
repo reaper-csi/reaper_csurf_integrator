@@ -199,7 +199,6 @@ void LogicalSurface::MapTrackActions(string trackGUID)
         string surfaceName = surface->GetName();
         // GAW TBD this will be obtained from map
         AddAction(trackGUID + surfaceName + TrackDisplay, new TrackName_DisplayAction(this, track));
-        AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, TrackDisplay, trackGUID + surfaceName + TrackDisplay, new TrackVolume_DisplayAction(this, track)));
         AddAction(trackGUID + surfaceName + Volume, new TrackVolume_Action(this, track));
         
         CycledAction* cyclicAction = new CycledAction(this);
@@ -217,6 +216,10 @@ void LogicalSurface::MapTrackActions(string trackGUID)
         
         AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
         AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
+        
+        for(int i = 0; i < surface->GetNumBankableChannels(); i++) // GAW TBD -- uggghhh this is hacky, but it works
+            if(surface->GetChannels()[i]->GetGUID() == trackGUID)
+                AddAction(trackGUID + surfaceName + TrackTouched, new TouchStateControlled_Action(this, track, trackGUID + surfaceName + TrackDisplay, TrackDisplay + to_string(i + 1), new TrackVolume_DisplayAction(this, track)));
         
         MapFX(track);
     }
@@ -772,7 +775,7 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
         
         for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
         {
-            string channelNumber = to_string(i + 1);;
+            string channelNumber = to_string(i + 1);
 
             channel = new RealSurfaceChannel("", surface, true);
             surface->AddChannel(channel);

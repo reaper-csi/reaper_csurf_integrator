@@ -96,20 +96,6 @@ public:
     virtual void SetValue(double volume) override
     {
         int volint = volume * 16383.0;
-        
-        //slope = (output_end - output_start) / (input_end - input_start)
-        //output = output_start + slope * (input - input_start)
-        
-        // First, map Reaper VU range to surface VU range
-        //double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        //double output = GetMinDB() + slope * (volume - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        
-        // Now map surface VU range to widget range
-        //slope = 16384.0 / (GetMaxDB() - GetMinDB());
-        //output = slope * (output - GetMinDB());
-        
-        //int volint = normalizedToInt14(output);
-        
         GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
     
@@ -126,17 +112,7 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
-        
-        
-
-        //char buffer[250];
-        //sprintf(buffer, "%f \n", int14ToPos(midiMessage->midi_message[2], midiMessage->midi_message[1]));
-        //DAW::ShowConsoleMsg(buffer);
-
-
-        
-        
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));        
     }
 };
 
