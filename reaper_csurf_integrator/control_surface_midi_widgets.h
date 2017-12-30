@@ -95,18 +95,18 @@ public:
 
     virtual void SetValue(double volume) override
     {
-        int volint = normalizedToInt14(volume);
+        int volint = volume * 16383.0;
         
         //slope = (output_end - output_start) / (input_end - input_start)
         //output = output_start + slope * (input - input_start)
         
         // First, map Reaper VU range to surface VU range
-        double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        double output = GetMinDB() + slope * (volume - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        //double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        //double output = GetMinDB() + slope * (volume - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
         
         // Now map surface VU range to widget range
-        slope = 127.0 / (GetMaxDB() - GetMinDB());
-        output = slope * (output - GetMinDB());
+        //slope = 16384.0 / (GetMaxDB() - GetMinDB());
+        //output = slope * (output - GetMinDB());
         
         //int volint = normalizedToInt14(output);
         
@@ -127,6 +127,16 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        
+        
+
+        //char buffer[250];
+        //sprintf(buffer, "%f \n", int14ToPos(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        //DAW::ShowConsoleMsg(buffer);
+
+
+        
+        
     }
 };
 
@@ -141,7 +151,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], normalizedToUchar(value));
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], value * 127.0);
     }
     
     virtual void SetValue(double value, int displayMode) override
@@ -162,7 +172,7 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), ucharToNormalized(midiMessage->midi_message[2]));
+        GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -177,7 +187,7 @@ public:
     
     virtual void SetValue(double pan, int displayMode) override
     {
-        unsigned char panch = normalizedToUchar(pan);
+        unsigned char panch = pan * 127.0;
         
         int val = (1+((panch*11)>>7)) | displayMode; // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
         
@@ -254,23 +264,12 @@ public:
     
     virtual void SetValueToZero() override
     {
-        SetValue(GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
+        SetValue(0.0);
     }
     
     void SetValue(double value) override
     {
-        //slope = (output_end - output_start) / (input_end - input_start)
-        //output = output_start + slope * (input - input_start)
-        
-        // First, map Reaper VU range to surface VU range
-        double slope = (GetMaxDB() - GetMinDB()) / (GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-        double output = GetMinDB() + slope * (value - GetRealSurface()->GetLogicalSurface()->GetManager()->GetVUMinDB());
-
-        // Now map surface VU range to widget range
-        slope = 127.0 / (GetMaxDB() - GetMinDB());
-        output = slope * (output - GetMinDB());
-        
-        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], output);
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], value * 127.0);
     }
 };
 
