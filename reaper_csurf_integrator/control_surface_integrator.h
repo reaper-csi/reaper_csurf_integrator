@@ -343,12 +343,20 @@ public:
     void DoAction(string surfaceName, string actionName, string widgetName, double value);
     
     // to Widgets ->
-    MidiWidget* GetWidget(string widgetName)
+    double GetWidgetMaxDB(string widgetName)
     {
         if(widgetsByName_.count(widgetName) > 0)
-            return widgetsByName_[widgetName];
+            return widgetsByName_[widgetName]->GetMaxDB();
         
-        return nullptr;
+        return System_MaxDB;
+    }
+    
+    double GetWidgetMinDB(string widgetName)
+    {
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName]->GetMinDB();
+        
+        return System_MinDB;
     }
     
     void SetWidgetValue(string widgetName, double value)
@@ -845,13 +853,22 @@ public:
     }
     
     // to Widgets ->
-    MidiWidget* GetWidget(string surfaceName, string widgetName)
+    double GetWidgetMaxDB(string surfaceName, string widgetName)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
-                return surface->GetWidget(widgetName);
-
-        return nullptr;
+                return surface->GetWidgetMaxDB(widgetName);
+        
+        return System_MaxDB;
+    }
+    
+    double GetWidgetMinDB(string surfaceName, string widgetName)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->GetWidgetMinDB(widgetName);
+        
+        return System_MinDB;
     }
     
     void SetWidgetValue(string surfaceName, string widgetName, double value)
