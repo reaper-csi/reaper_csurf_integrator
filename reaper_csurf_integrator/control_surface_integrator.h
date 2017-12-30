@@ -343,6 +343,14 @@ public:
     void DoAction(string surfaceName, string actionName, string widgetName, double value);
     
     // to Widgets ->
+    MidiWidget* GetWidget(string widgetName)
+    {
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName];
+        
+        return nullptr;
+    }
+    
     void SetWidgetValue(string widgetName, double value)
     {
         if(widgetsByName_.count(widgetName) > 0)
@@ -837,6 +845,15 @@ public:
     }
     
     // to Widgets ->
+    MidiWidget* GetWidget(string surfaceName, string widgetName)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->GetWidget(widgetName);
+
+        return nullptr;
+    }
+    
     void SetWidgetValue(string surfaceName, string widgetName, double value)
     {
         for(auto & surface : realSurfaces_)

@@ -549,7 +549,22 @@ protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
+        {
+            MidiWidget* widget = GetLogicalSurface()->GetWidget(surfaceName, widgetName);
+            
+            //slope = (output_end - output_start) / (input_end - input_start)
+            //output = output_start + slope * (input - input_start)
+            
+            // First, map Reaper VU range to surface VU range
+            double slope = (widget->GetMaxDB() - widget->GetMinDB()) / (GetLogicalSurface()->GetManager()->GetVUMaxDB() - GetLogicalSurface()->GetManager()->GetVUMinDB());
+            double output = widget->GetMinDB() + slope * (value - GetLogicalSurface()->GetManager()->GetVUMinDB());
+
+            // Now map surface VU range to widget range
+            slope = 1.0 / (widget->GetMaxDB() - widget->GetMinDB());
+            output = slope * (output - widget->GetMinDB());
+            
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, output);
+        }
         else
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, GetLogicalSurface()->GetManager()->GetVUMinDB());
     }
