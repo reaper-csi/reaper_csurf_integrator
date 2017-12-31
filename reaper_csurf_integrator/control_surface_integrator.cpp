@@ -219,7 +219,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
         
         for(int i = 0; i < surface->GetNumBankableChannels(); i++) // GAW TBD -- uggghhh this is hacky, but it works, it relies on the GUIDS being set prior to running this
             if(surface->GetChannels()[i]->GetGUID() == trackGUID)                                                                                //this is the key, need i + 1 to complete the widget name
-                AddAction(trackGUID + surfaceName + FaderTouched, new TouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(i + 1), new TrackVolume_DisplayAction(this, track)));
+                AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(i + 1), new TrackVolume_DisplayAction(this, track)));
         
         MapFX(track);
     }
