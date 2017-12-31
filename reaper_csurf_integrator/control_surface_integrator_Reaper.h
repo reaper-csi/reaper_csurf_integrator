@@ -161,7 +161,7 @@ public:
         if(trackNumber < 0 || trackNumber > GetNumTracks())
             return "";
         else if(0 == trackNumber)
-            return "ReaperMasterTrackGUID";
+            return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure ever track has a GUID
         else
         {
             char pBuffer[256];
