@@ -464,7 +464,7 @@ public:
     string GetGroupName() { return groupName_; }
     
     int GetNumLogicalChannels() { return numLogicalChannels_; }
-    
+
     void AddSurface(RealSurface* surface)
     {
         realSurfaces_.push_back(surface);
@@ -618,6 +618,7 @@ private:
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, Action*> actions_;
     vector<string> mappedTrackActionGUIDs_;
+    vector<string> touchedTracks_;
     
     bool VSTMonitor_ = false;
 
@@ -657,7 +658,7 @@ public:
         
         return false;
     }
-    
+ 
     RealSurface* GetRealSurfaceFor(string surfaceName)
     {
         for(auto* surface : realSurfaces_)
@@ -666,7 +667,16 @@ public:
         
         return nullptr;
     }
-    
+   
+    bool GetTouchState(string trackGUID, int touchedControl)
+    {
+        for(string touchedGUID : touchedTracks_)
+            if(touchedGUID == trackGUID)
+                return true;
+        
+        return false;
+    }
+   
     void Init()
     {
         // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
@@ -700,6 +710,7 @@ public:
     
     void AdjustTrackBank(string surfaceName, int stride)
     {
+        touchedTracks_.clear(); // in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
         surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->AdjustTrackBank(stride);
     }
     
@@ -1032,6 +1043,11 @@ public:
         logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
 
+    bool GetTouchState(string trackGUID, int touchedControl)
+    {
+        return logicalSurfaces_[currentLogicalSurfaceIndex_]->GetTouchState(trackGUID, touchedControl);
+    }
+    
     void TrackListChanged()
     {
         for(auto & surface : logicalSurfaces_)
