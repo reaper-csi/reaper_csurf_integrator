@@ -109,7 +109,7 @@ static double clampedAndNormalized(double value, double valueMax, double valueMi
     
     return 1.0 / (valueMax - valueMin) * (value - valueMin);
 }
-
+/*
 static double normalizedToVol(double value, double valueMaxDB, double valueMinDB)
 {
     //slope = (output_end - output_start) / (input_end - input_start)
@@ -129,8 +129,8 @@ static double volToNormalized(double value, double valueMaxDB, double valueMinDB
     double slope = (1.0 - 0.0) / (valueMaxDB - valueMinDB);
     return 0.0 + slope * (value - valueMinDB);
 }
+*/
 
-/*
 static double normalizedToVol(double val)
 {
     double pos=val*1000.0;
@@ -147,7 +147,7 @@ static double volToNormalized(double vol)
     
     return d;
 }
- */
+
 
 static double normalizedToPan(double val)
 {
