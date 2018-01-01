@@ -12,90 +12,6 @@
 #include "WDL/lineparse.h"
 #include "WDL/projectcontext.h"
 
-const string ChannelLeft = "ChannelLeft";
-const string ChannelRight = "ChannelRight";
-const string BankLeft = "BankLeft";
-const string BankRight = "BankRight";
-
-const string Fader = "Fader";
-const string Rotary = "Rotary";
-const string Display = "Display";
-const string FaderTouched = "FaderTouched";
-const string Solo = "Solo";
-const string RecordArm = "RecordArm";
-const string Select = "Select";
-const string Mute = "Mute";
-
-const string NextMap = "NextMap";
-const string LockTracks = "LockTracks";
-const string UnlockTracks = "UnlockTracks";
-
-const string Read = "Read";
-const string Write = "Write";
-const string Trim = "Trim";
-const string Touch = "Touch";
-const string Latch = "Latch";
-const string Group = "Group";
-
-const string Save = "Save";
-const string Undo = "Undo";
-const string Cancel = "Cancel";
-const string Enter = "Enter";
-
-const string Marker = "Marker";
-const string Nudge = "Nudge";
-const string Cycle = "Cycle";
-const string Click = "Click";
-
-const string Rewind = "Rewind";
-const string FastForward = "FastForward";
-const string Stop = "Stop";
-const string Play = "Play";
-const string Record = "Record";
-
-const string Up = "Up";
-const string Down = "Down";
-const string Left = "Left";
-const string Right = "Right";
-const string Zoom = "Zoom";
-const string Scrub = "Scrub";
-
-const string TrackInMeterLeft = "TrackInMeterLeft";
-const string TrackInMeterRight = "TrackInMeterRight";
-const string CompressorMeter = "CompressorMeter";
-const string GateMeter = "GateMeter";
-const string TrackOutMeterLeft = "TrackOutMeterLeft";
-const string TrackOutMeterRight = "TrackOutMeterRight";
-
-const string DisplayFX = "DisplayFX";
-const string SendsMode = "SendsMode";
-
-const string  Equalizer = "Equalizer";
-
-const string  LoCurve = "LoCurve";
-const string  HiCurve = "HiCurve";
-const string  HiGain = "HiGain";
-const string  HiFrequency = "HiFrequency";
-const string  HiMidGain = "HiMidGain";
-const string  HiMidFrequency = "HiMidFrequency";
-const string  HiMidQ = "HiMidQ";
-const string  LoMidGain = "LoMidGain";
-const string  LoMidFrequency = "LoMidFrequency";
-const string  LoMidQ = "LoMidQ";
-const string  LoGain = "LoGain";
-const string  LoFrequency = "LoFrequency";
-
-const string Compressor = "Compressor";
-
-const string Threshold = "Threshold";
-const string Release = "Release";
-const string Ratio = "Ratio";
-const string Parallel = "Parallel";
-const string Attack = "Attack";
-
-const string Drive = "Drive";
-const string Character = "Character";
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,9 +129,97 @@ void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
     }
 }
 
+
+
 //////////////////////////////////////////////////////////////////////
 /// All the following code will be replaced with map reading functions
 //////////////////////////////////////////////////////////////////////
+
+
+const string ChannelLeft = "ChannelLeft";
+const string ChannelRight = "ChannelRight";
+const string BankLeft = "BankLeft";
+const string BankRight = "BankRight";
+
+const string Fader = "Fader";
+const string Rotary = "Rotary";
+const string Display = "Display";
+const string FaderTouched = "FaderTouched";
+const string Solo = "Solo";
+const string RecordArm = "RecordArm";
+const string Select = "Select";
+const string Mute = "Mute";
+
+const string NextMap = "NextMap";
+const string LockTracks = "LockTracks";
+const string UnlockTracks = "UnlockTracks";
+
+const string Read = "Read";
+const string Write = "Write";
+const string Trim = "Trim";
+const string Touch = "Touch";
+const string Latch = "Latch";
+const string Group = "Group";
+
+const string Save = "Save";
+const string Undo = "Undo";
+const string Cancel = "Cancel";
+const string Enter = "Enter";
+
+const string Marker = "Marker";
+const string Nudge = "Nudge";
+const string Cycle = "Cycle";
+const string Click = "Click";
+
+const string Rewind = "Rewind";
+const string FastForward = "FastForward";
+const string Stop = "Stop";
+const string Play = "Play";
+const string Record = "Record";
+
+const string Up = "Up";
+const string Down = "Down";
+const string Left = "Left";
+const string Right = "Right";
+const string Zoom = "Zoom";
+const string Scrub = "Scrub";
+
+const string TrackInMeterLeft = "TrackInMeterLeft";
+const string TrackInMeterRight = "TrackInMeterRight";
+const string CompressorMeter = "CompressorMeter";
+const string GateMeter = "GateMeter";
+const string TrackOutMeterLeft = "TrackOutMeterLeft";
+const string TrackOutMeterRight = "TrackOutMeterRight";
+
+const string DisplayFX = "DisplayFX";
+const string SendsMode = "SendsMode";
+
+const string  Equalizer = "Equalizer";
+
+const string  LoCurve = "LoCurve";
+const string  HiCurve = "HiCurve";
+const string  HiGain = "HiGain";
+const string  HiFrequency = "HiFrequency";
+const string  HiMidGain = "HiMidGain";
+const string  HiMidFrequency = "HiMidFrequency";
+const string  HiMidQ = "HiMidQ";
+const string  LoMidGain = "LoMidGain";
+const string  LoMidFrequency = "LoMidFrequency";
+const string  LoMidQ = "LoMidQ";
+const string  LoGain = "LoGain";
+const string  LoFrequency = "LoFrequency";
+
+const string Compressor = "Compressor";
+
+const string Threshold = "Threshold";
+const string Release = "Release";
+const string Ratio = "Ratio";
+const string Parallel = "Parallel";
+const string Attack = "Attack";
+
+const string Drive = "Drive";
+const string Character = "Character";
+
 /*
  void SID_PCM_Source::SaveState(ProjectStateContext * ctx)
  {
