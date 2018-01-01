@@ -600,7 +600,7 @@ protected:
     {
         if(DAW::GetPlayState() & 0x01) // if playing
             //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName)));
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, -value / 20.0);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, -value / 20.0); // GAW TBD hacked for now
         else
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 1.0);
     }
