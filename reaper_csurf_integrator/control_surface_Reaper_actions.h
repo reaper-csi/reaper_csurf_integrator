@@ -599,7 +599,7 @@ protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, fabs(1.0 - clampedAndNormalized(value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName))));
+            //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName)));
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, -value / 20.0);
         else
             GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 1.0);
