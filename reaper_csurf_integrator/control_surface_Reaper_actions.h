@@ -70,10 +70,11 @@ public:
  
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
-        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
         
-        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
+        //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, volToNormalized(value));
     }
     
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override
