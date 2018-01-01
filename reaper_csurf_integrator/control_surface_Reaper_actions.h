@@ -78,20 +78,22 @@ public:
     
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override
     {
-        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
 
-        return volToNormalized(currentValue_, widgetMaxDB, widgetMinDB);
+        //return volToNormalized(currentValue_, widgetMaxDB, widgetMinDB);
+        return volToNormalized(currentValue_);
     }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_VOL"); }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
-        double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
 
-        DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
+        //DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
+        DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
     }
 };
 
