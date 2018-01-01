@@ -166,51 +166,6 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::MapTrackActions(string trackGUID, int index)
-{
-    if(trackGUID == "")
-        return; // Nothing to map
-    
-    for(string mappedTrackActionGUID : mappedTrackActionGUIDs_)
-        if(mappedTrackActionGUID == trackGUID)
-            return; // Already did this track
-    
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
-    
-    for(auto * surface : realSurfaces_)
-    {
-        string surfaceName = surface->GetName();
-        // GAW TBD this will be obtained from map
-        AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
-        AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
-        
-        CycledAction* cyclicAction = new CycledAction(this);
-        cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
-        cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-        AddAction(trackGUID + surfaceName + Rotary, cyclicAction);
-        
-        AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-        AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
-        AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
-        AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
-
-        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
-        
-        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
-
-        MapFX(track, surface);
-    }
-    
-    mappedTrackActionGUIDs_.push_back(trackGUID);
-}
-
-
 void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
 {
     char fxName[256];
@@ -258,41 +213,42 @@ void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
     }
 }
 
-
-
+//////////////////////////////////////////////////////////////////////
+/// All the following code will be replaced with map reading functions
+//////////////////////////////////////////////////////////////////////
 /*
-void SID_PCM_Source::SaveState(ProjectStateContext * ctx)
-{
-    ctx->AddLine("FILE \"%s\" %f %d %d %d %d", m_sidfn.toRawUTF8(),m_sidlen,m_sid_track, m_sid_channelmode,m_sid_sr,m_sid_render_mode);
-}
-
-int SID_PCM_Source::LoadState(const char * firstline, ProjectStateContext * ctx)
-{
-    LineParser lp;
-    char buf[2048];
-    for (;;)
-    {
-        if (ctx->GetLine(buf, sizeof(buf)))
-            break;
-        lp.parse(buf);
-        if (strcmp(lp.gettoken_str(0), "FILE") == 0)
-        {
-            m_sidfn = String(CharPointer_UTF8(lp.gettoken_str(1)));
-            m_sidlen = lp.gettoken_float(2);
-            m_sid_track = lp.gettoken_int(3);
-            m_sid_channelmode = lp.gettoken_int(4);
-            m_sid_sr = lp.gettoken_int(5);
-            m_sid_render_mode = lp.gettoken_int(6);
-        }
-        if (lp.gettoken_str(0)[0] == '>')
-        {
-            renderSID();
-            return 0;
-        }
-    }
-    return -1;
-}
-*/
+ void SID_PCM_Source::SaveState(ProjectStateContext * ctx)
+ {
+ ctx->AddLine("FILE \"%s\" %f %d %d %d %d", m_sidfn.toRawUTF8(),m_sidlen,m_sid_track, m_sid_channelmode,m_sid_sr,m_sid_render_mode);
+ }
+ 
+ int SID_PCM_Source::LoadState(const char * firstline, ProjectStateContext * ctx)
+ {
+ LineParser lp;
+ char buf[2048];
+ for (;;)
+ {
+ if (ctx->GetLine(buf, sizeof(buf)))
+ break;
+ lp.parse(buf);
+ if (strcmp(lp.gettoken_str(0), "FILE") == 0)
+ {
+ m_sidfn = String(CharPointer_UTF8(lp.gettoken_str(1)));
+ m_sidlen = lp.gettoken_float(2);
+ m_sid_track = lp.gettoken_int(3);
+ m_sid_channelmode = lp.gettoken_int(4);
+ m_sid_sr = lp.gettoken_int(5);
+ m_sid_render_mode = lp.gettoken_int(6);
+ }
+ if (lp.gettoken_str(0)[0] == '>')
+ {
+ renderSID();
+ return 0;
+ }
+ }
+ return -1;
+ }
+ */
 
 
 
@@ -316,7 +272,7 @@ inline void setFromToken(LineParser& lp, int index, T& value)
     else if constexpr (is_same<string, T>::value)
         value = string(lp.gettoken_str(index));
     //else
-        //static_assert(false, "Type not supported by LineParser");
+    //static_assert(false, "Type not supported by LineParser");
 }
 
 template<typename... Args>
@@ -348,6 +304,52 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
     return -1;
 }
 
+
+
+
+void LogicalSurface::MapTrackActions(string trackGUID, int index)
+{
+    if(trackGUID == "")
+        return; // Nothing to map
+    
+    for(string mappedTrackActionGUID : mappedTrackActionGUIDs_)
+        if(mappedTrackActionGUID == trackGUID)
+            return; // Already did this track
+    
+    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    
+    for(auto * surface : realSurfaces_)
+    {
+        string surfaceName = surface->GetName();
+        // GAW TBD this will be obtained from map
+        AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
+        AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
+        
+        CycledAction* cyclicAction = new CycledAction(this);
+        cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
+        cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
+        AddAction(trackGUID + surfaceName + Rotary, cyclicAction);
+        
+        AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
+        AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
+        AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
+        
+        AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
+        AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
+        AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
+        
+        AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
+        AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
+
+        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
+        
+        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
+
+        MapFX(track, surface);
+    }
+    
+    mappedTrackActionGUIDs_.push_back(trackGUID);
+}
 
 void LogicalSurface::InitFXMaps(RealSurface* surface)
 {
