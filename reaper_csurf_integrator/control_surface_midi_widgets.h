@@ -229,7 +229,7 @@ class VUMeter_MidiWidget : public MidiWidget
 private:
     double minDB_ = 0.0;
     double maxDB_ = 0.0;
-
+    
 public:
     VUMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release), minDB_(minDB), maxDB_(maxDB){}
     
@@ -246,6 +246,26 @@ public:
     void SetValue(double value) override
     {
         GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], value * 127.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GainReductionMeter_MidiWidget : public VUMeter_MidiWidget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, name, name, minDB, maxDB, press, release) {}
+    
+    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, name, name, minDB, maxDB, press, release) {}
+
+    virtual void SetValueToZero() override
+    {
+        SetValue(1.0);
+    }
+    
+    void SetValue(double value) override
+    {
+        GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], fabs(1.0 - value) * 127.0);
     }
 };
 
