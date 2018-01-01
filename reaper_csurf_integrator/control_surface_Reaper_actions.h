@@ -593,26 +593,26 @@ class GainReductionMeter_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int fxIndex_ = 0;
+    string fxGUID_ = "";
     
 protected:
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
+            //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, fabs(1.0 - clampedAndNormalized(value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName))));
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, -value / 20.0);
         else
-            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 0.0);
+            GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, 1.0);
     }
     
 public:
-    GainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int fxIndex) : TrackDoubleAction(logicalSurface, track), fxIndex_(fxIndex)  {}
+    GainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID)  {}
     
     virtual double GetValue(string surfaceName, string widgetName) override
     {
         char buffer[256];
-        // GAW TBD "* 3.0" is bogus should be scaled value based on GR widget range, should query surfaceName, widgetName for that range
-        if(DAW::TrackFX_GetNamedConfigParm(track_, fxIndex_, ReaperGainReduction_dB.c_str(), buffer, sizeof(buffer)))
-           return atof(buffer) * 3.0;
+        if(DAW::TrackFX_GetNamedConfigParm(track_, DAW::IndexFromFXGUID(track_, fxGUID_), GainReduction_dB.c_str(), buffer, sizeof(buffer)))
+            return atof(buffer);
         else
             return 0.0;
     }
