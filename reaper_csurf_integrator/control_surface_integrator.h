@@ -627,7 +627,23 @@ private:
     void InitFXMaps(RealSurface* surface);
     void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
     void InitCSurfWidgets(RealSurface* surface);
-    void SetImmobilizedChannels();
+
+    void SetImmobilizedChannels()
+    {
+        char buffer[256];
+        
+        for(auto * surface : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetChannels().size(); i++)
+            {
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+                {
+                    surface->GetChannels()[i]->SetGUID(buffer);
+                    surface->GetChannels()[i]->SetIsMovable(false);
+                }
+            }
+        }
+    }
    
     void AddFXMap(FXMap* fxMap)
     {
@@ -715,8 +731,44 @@ public:
     
     void MapTrackActions(string trackGUID, int index);
     void MapFX(MediaTrack* track, RealSurface* surface);
-    void MapWidgetsToFX(MediaTrack *track, RealSurface* surface);
     
+    void MapWidgetsToFX(MediaTrack *track, RealSurface* surface)
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+        
+        // Map Track to any Channels interested
+        for(auto* channel : surface->GetChannels())
+            if(channel->GetShouldMapFXTrackToChannel())
+                channel->SetGUID(trackGUID);
+        
+        char fxName[256];
+        char fxGUID[256];
+        char fxParamName[256];
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            if(fxMaps_.count(surface->GetName() + fxName) > 0)
+            {
+                FXMap* map = fxMaps_[surface->GetName() + fxName];
+                
+                for(auto mapEntry : map->GetMapEntries())
+                {
+                    if(mapEntry.paramName == GainReduction_dB)
+                        surface->SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                    else
+                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                            if(mapEntry.paramName == fxParamName)
+                                surface->SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                }
+                
+                surface->AddFXWindow(FXWindow(track, fxGUID));
+            }
+        }
+    }
+
     void AdjustTrackBank(string surfaceName, int stride)
     {
         touchedTracks_.clear(); // in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
