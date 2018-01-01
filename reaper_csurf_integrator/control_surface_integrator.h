@@ -390,18 +390,19 @@ class RealSurfaceChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    int index_ = 0;
     string GUID_ = "";
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     bool shouldMapFXTrackToChannel_ = false;
     vector<string> widgetNames_;
-
+    
 public:
     virtual ~RealSurfaceChannel() {}
     
-    RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
+    RealSurfaceChannel(int index, string GUID, RealSurface* surface, bool isMovable) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
-    RealSurfaceChannel(string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
+    RealSurfaceChannel(int index, string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
     
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
@@ -712,7 +713,7 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackActions(string trackGUID);
+    void MapTrackActions(string trackGUID, int index);
     void MapFX(MediaTrack* track, RealSurface* surface);
     void MapWidgetsToFX(MediaTrack *track, RealSurface* surface);
     

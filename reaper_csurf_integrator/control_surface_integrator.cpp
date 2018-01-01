@@ -160,7 +160,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrackActions(GUID_);
+    realSurface_->GetLogicalSurface()->MapTrackActions(GUID_, index_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +183,7 @@ void LogicalSurface::SetImmobilizedChannels()
     }
 }
 
-void LogicalSurface::MapTrackActions(string trackGUID)
+void LogicalSurface::MapTrackActions(string trackGUID, int index)
 {
     if(trackGUID == "")
         return; // Nothing to map
@@ -217,9 +217,7 @@ void LogicalSurface::MapTrackActions(string trackGUID)
         AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
         AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
 
-        for(int i = 0; i < surface->GetNumBankableChannels(); i++) // GAW TBD -- uggghhh this is hacky, but it works, it relies on the GUIDS being set prior to running this
-            if(surface->GetChannels()[i]->GetGUID() == trackGUID)                                                                                //this is the key, need i + 1 to complete the widget name
-                AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(i + 1), new TrackVolume_DisplayAction(this, track)));
+        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
         
         AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
 
@@ -645,7 +643,7 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
         surface->AddWidget(new PushButton_CSurfWidget(SendsMode, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x68, 0x7f), new MIDI_event_ex_t(0xb0, 0x68, 0x00)));
 */
         
-        channel = new RealSurfaceChannel( "", surface, true, true);
+        channel = new RealSurfaceChannel( 0, "", surface, true, true);
         surface->AddChannel(channel);
         
         channel->AddWidget(new PushButton_MidiWidget("", surface, "Order",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -788,7 +786,7 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
         {
             string channelNumber = to_string(i + 1);
 
-            channel = new RealSurfaceChannel("", surface, true);
+            channel = new RealSurfaceChannel(i, "", surface, true);
             surface->AddChannel(channel);
             
             channel->AddWidget(new PushButtonWithRelease_MidiWidget("", surface, FaderTouched, FaderTouched + channelNumber, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
