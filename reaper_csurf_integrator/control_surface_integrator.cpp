@@ -221,6 +221,8 @@ void LogicalSurface::MapTrackActions(string trackGUID)
             if(surface->GetChannels()[i]->GetGUID() == trackGUID)                                                                                //this is the key, need i + 1 to complete the widget name
                 AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(i + 1), new TrackVolume_DisplayAction(this, track)));
         
+        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
+
         MapFX(track);
     }
     

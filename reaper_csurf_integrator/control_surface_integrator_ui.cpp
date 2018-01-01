@@ -63,7 +63,6 @@ void CSurfIntegrator::SetTrackListChange()
     manager_->TrackListChanged();
 }
 
-
 const char *CSurfIntegrator::GetTypeString()
 {
     return "CSI";

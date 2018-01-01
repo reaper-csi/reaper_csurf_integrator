@@ -616,7 +616,7 @@ private:
     map<string, FXMap *> fxMaps_;
     vector<RealSurface*> realSurfaces_;
     map<string, SurfaceGroup*> surfaceGroups_;
-    map<string, Action*> actions_;
+    map<string, vector<Action*>> actions_;
     vector<string> mappedTrackActionGUIDs_;
     vector<string> touchedTracks_;
     
@@ -640,7 +640,7 @@ private:
  
     void AddAction(string actionAddress, Action* action)
     {
-        actions_[actionAddress] = action;
+        actions_[actionAddress].push_back(action);
     }
     
 public:
@@ -677,6 +677,14 @@ public:
         return false;
     }
    
+    void SetTouchState(string trackGUID,  bool state)
+    {
+        if(state)
+            touchedTracks_.push_back(trackGUID);
+        else
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID        ), touchedTracks_.end());
+    }
+    
     void Init()
     {
         // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
@@ -833,8 +841,8 @@ public:
     // to Actions ->
     double GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
     {
-        if(actions_.count(actionAddress) > 0)
-            return actions_[actionAddress]->GetCurrentNormalizedValue(surfaceName, widgetName);
+        if(actions_.count(actionAddress) > 0 && actions_[actionAddress].size() > 0)
+            return actions_[actionAddress][0]->GetCurrentNormalizedValue(surfaceName, widgetName);
         else
             return 0.0;
     }
@@ -842,25 +850,29 @@ public:
     void UpdateAction(string actionAddress, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            actions_[actionAddress]->Update(surfaceName, widgetName);
+            for(auto* action : actions_[actionAddress])
+                action->Update(surfaceName, widgetName);
     }
     
     void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            actions_[actionAddress]->ForceUpdate(surfaceName, widgetName);
+            for(auto* action : actions_[actionAddress])
+                action->ForceUpdate(surfaceName, widgetName);
     }
 
     void CycleAction(string actionAddress, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            actions_[actionAddress]->Cycle(surfaceName, widgetName);
+            for(auto* action : actions_[actionAddress])
+                action->Cycle(surfaceName, widgetName);
     }
     
     void DoAction(string actionAddress, double value, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
-            actions_[actionAddress]->Do(value, surfaceName, widgetName);
+            for(auto* action : actions_[actionAddress])
+                action->Do(value, surfaceName, widgetName);
     }
     
     // to Widgets ->
