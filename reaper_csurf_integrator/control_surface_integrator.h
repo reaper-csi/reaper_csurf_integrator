@@ -30,7 +30,7 @@ const double System_MinDB = -72.0;
 // The following are all reserved words in the map vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
-const string ReaperGainReduction_dB = "ReaperGainReduction_dB";
+const string GainReduction_dB = "GainReduction_dB";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
@@ -713,8 +713,8 @@ public:
     }
     
     void MapTrackActions(string trackGUID);
-    void MapFX(MediaTrack* track);
-    void MapWidgetsToFX(MediaTrack *trackid);
+    void MapFX(MediaTrack* track, RealSurface* surface);
+    void MapWidgetsToFX(MediaTrack *track, RealSurface* surface);
     
     void AdjustTrackBank(string surfaceName, int stride)
     {
@@ -736,11 +736,19 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
-        for(auto & surface : realSurfaces_)
+        for(auto* surface : realSurfaces_)
+        {        
             surface->CloseFXWindows();
+            surface->ClearFXWindows();
+    
+            if(DAW::CountSelectedTracks(nullptr) == 1)
+                MapWidgetsToFX(track, surface);
+        }
         
-        if(DAW::CountSelectedTracks(nullptr) == 1)
-            MapWidgetsToFX(track);
+        for(auto* surface : realSurfaces_)
+            OpenFXWindows(surface);
+        
+        ForceUpdate();
     }
 
     void RunAndUpdate()
@@ -828,7 +836,8 @@ public:
 
     void TrackFXListChanged(MediaTrack* track)
     {
-        MapFX(track);
+        for(auto* surface : realSurfaces_)
+            MapFX(track, surface);
     }
     
     // to Widgets ->
@@ -999,18 +1008,18 @@ class CSurfManager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <LogicalSurface*> logicalSurfaces_;
-    bool lazyInitialized_ = false;
+    bool isLazyInitialized_ = false;
     int currentLogicalSurfaceIndex_ = 0;;
 
     void RunAndUpdate()
     {
-        if(!lazyInitialized_)
+        if(!isLazyInitialized_)
         {
             LogicalSurface* logicalSurface = new LogicalSurface(this);
             logicalSurface->Init();
             logicalSurfaces_.push_back(logicalSurface);
             
-            lazyInitialized_ = true;
+            isLazyInitialized_ = true;
         }
         
         logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
@@ -1032,7 +1041,7 @@ public:
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* MidiManager() { return midiIOManager_; }
-    bool GetLazyIsInitialized() { return lazyInitialized_; }
+    bool GetIsLazyInitialized() { return isLazyInitialized_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
