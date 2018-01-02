@@ -18,13 +18,9 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release)  {}
+    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release)  {}
     
-    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release), reverseSense_(reverseSense) {}
-    
-    PushButton_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release)  {}
-    
-    PushButton_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
@@ -53,13 +49,9 @@ class PushButtonWithRelease_MidiWidget : public PushButton_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, press, release)  {}
+    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, suffix, press, release)  {}
     
-    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name,  reverseSense, press, release) {}
-    
-    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, actionName, name, press, release)  {}
-    
-    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, actionName, name,  reverseSense, press, release) {}
+    PushButtonWithRelease_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, suffix,  reverseSense, press, release) {}
     
     void AddToRealSurface(RealSurface* surface) override
     {
@@ -86,9 +78,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
-    
-    Fader14Bit_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
     double GetMaxDB() override { return maxDB_; }
@@ -121,9 +111,7 @@ class Fader7Bit_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release) {}
-    
-    Fader7Bit_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release) {}
+    Fader7Bit_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release) {}
     
     virtual void SetValue(double value) override
     {
@@ -157,9 +145,7 @@ class Encoder_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release) {}
-    
-    Encoder_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release) {}
+    Encoder_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release) {}
     
     virtual void SetValue(double pan, int displayMode) override
     {
@@ -202,9 +188,7 @@ private:
     MIDI_event_ex_t* cycle_;
     
 public:
-    EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, press, release), cycle_(cycle) {}
-    
-    EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, actionName, name, press, release), cycle_(cycle) {}
+    EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, suffix, press, release), cycle_(cycle) {}
     
     void AddToRealSurface(RealSurface* surface) override
     {
@@ -231,9 +215,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, name, press, release), minDB_(minDB), maxDB_(maxDB){}
-    
-    VUMeter_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, actionName, name, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : MidiWidget(GUID, surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     double GetMaxDB() override { return maxDB_; }
@@ -254,9 +236,7 @@ class GainReductionMeter_MidiWidget : public VUMeter_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, name, name, minDB, maxDB, press, release) {}
-    
-    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, name, name, minDB, maxDB, press, release) {}
+    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, suffix, suffix, minDB, maxDB, press, release) {}
 
     virtual void SetValueToZero() override
     {
@@ -276,9 +256,7 @@ class Display_MidiWidget : public MidiWidget
     int slotIndex_ = 0;
     
 public:
-    Display_MidiWidget(string GUID, RealSurface* surface, string name, int slotIndex) : MidiWidget(GUID, surface, name, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    Display_MidiWidget(string GUID, RealSurface* surface, string actionName, string name, int slotIndex) : MidiWidget(GUID, surface, actionName, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    Display_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, int slotIndex) : MidiWidget(GUID, surface, name, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {

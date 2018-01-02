@@ -114,8 +114,8 @@ class MidiWidget
 private:
     string GUID_ = "";
     RealSurface* realSsurface_ = nullptr;
-    string name_= "";
-    string actionName_ = "";
+    string suffix_= "";
+    string name_ = "";
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
@@ -125,15 +125,15 @@ protected:
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
-    MidiWidget(string GUID, RealSurface* surface, string actionName, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), actionName_(actionName), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), name_(name), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
 
 public:
     virtual ~MidiWidget() {};
     
     virtual double GetMinDB() { return System_MinDB; }
     virtual double GetMaxDB() { return System_MaxDB; }
-    string GetName() { return name_; }
-    string GetActionName() { return actionName_; }
+    string GetName() { return name_ + suffix_; }
+    string GetActionName() { return name_; }
 
     void SetGUID(string GUID)
     {
@@ -409,7 +409,6 @@ public:
     bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
     
     void SetGUID(string GUID);
-    void MapTrackActions(string GUID);
 
     void SetIsMovable(bool isMovable)
     {
