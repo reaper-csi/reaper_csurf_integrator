@@ -139,6 +139,7 @@ public:
     {
         GUID_ = GUID;
     }
+    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     virtual void AddToRealSurface(RealSurface* surface);
     void Update();
@@ -617,7 +618,7 @@ private:
     vector<RealSurface*> realSurfaces_;
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, vector<Action*>> actions_;
-    vector<string> mappedTrackActionGUIDs_;
+    vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
     bool VSTMonitor_ = false;
@@ -728,8 +729,23 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackActions(string trackGUID, int index);
-    void MapFX(MediaTrack* track, RealSurface* surface);
+    void MapTrackActionsAndFX(string trackGUID, int index, string surfaceName);
+    void MapFX(MediaTrack* track, string surfaceName);
+    
+    void MapTrack(string trackGUID, int index)
+    {
+        if(trackGUID == "")
+            return; // Nothing to map
+        
+        for(string mappedTrackActionGUID : mappedTrackGUIDs_)
+            if(mappedTrackActionGUID == trackGUID)
+                return; // Already did this track
+        
+        for(auto * surface : realSurfaces_)
+            MapTrackActionsAndFX(trackGUID, index, surface->GetName());
+        
+        mappedTrackGUIDs_.push_back(trackGUID);
+    }
     
     void MapWidgetsToFX(MediaTrack *track, RealSurface* surface)
     {
@@ -889,7 +905,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            MapFX(track, surface);
+            MapFX(track, surface->GetName());
     }
     
     // to Widgets ->
