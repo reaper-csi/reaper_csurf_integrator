@@ -359,29 +359,6 @@ void LogicalSurface::InitFXMaps(RealSurface* surface)
     
     AddFXMap(fxMap);
     
-    fxMap->AddEntry(Threshold, "Threshold");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Attack");
-    fxMap->AddEntry(Release, "Release");
-    fxMap->AddEntry(Ratio, "Ratio");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    fxMap->AddEntry(CompressorMeter, GainReduction_dB);
-    
-    AddFXMap(fxMap);
-    
-    fxMap->AddEntry(Threshold, "Input");
-    fxMap->AddEntry(Character, "Output");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Attack");
-    fxMap->AddEntry(Release, "Release");
-    fxMap->AddEntry(Ratio, "Ratio");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
     fxMap = new FXMap(surfaceName + "VST: UAD Fairchild 660 (Universal Audio, Inc.)");
     
     fxMap->AddEntry(Threshold, "Thresh");
