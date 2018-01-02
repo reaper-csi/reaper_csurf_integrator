@@ -236,7 +236,7 @@ class GainReductionMeter_MidiWidget : public VUMeter_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, suffix, suffix, minDB, maxDB, press, release) {}
+    GainReductionMeter_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(GUID, surface, name, suffix, minDB, maxDB, press, release) {}
 
     virtual void SetValueToZero() override
     {
