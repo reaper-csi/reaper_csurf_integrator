@@ -76,13 +76,13 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrackActions(GUID_, index_);
+    realSurface_->GetLogicalSurface()->MapTrack(GUID_, index_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
+void LogicalSurface::MapFX(MediaTrack* track, string surfaceName)
 {
     char fxName[256];
     char fxParamName[256];
@@ -94,15 +94,15 @@ void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
-        if(fxMaps_.count(surface->GetName() + fxName) > 0)
+        if(fxMaps_.count(surfaceName + fxName) > 0)
         {
-            FXMap* map = fxMaps_[surface->GetName() + fxName];
+            FXMap* map = fxMaps_[surfaceName + fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             
             for(auto mapEntry : map->GetMapEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(trackGUID + fxGUID + surface->GetName() + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
+                    AddAction(trackGUID + fxGUID + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -110,7 +110,7 @@ void LogicalSurface::MapFX(MediaTrack* track, RealSurface* surface)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            AddAction(trackGUID + fxGUID + surface->GetName() + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
+                            AddAction(trackGUID + fxGUID + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
                     }
                 }
             }
@@ -311,48 +311,35 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 
 
-void LogicalSurface::MapTrackActions(string trackGUID, int index)
+void LogicalSurface::MapTrackActionsAndFX(string trackGUID, int index, string surfaceName)
 {
-    if(trackGUID == "")
-        return; // Nothing to map
-    
-    for(string mappedTrackActionGUID : mappedTrackActionGUIDs_)
-        if(mappedTrackActionGUID == trackGUID)
-            return; // Already did this track
-    
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
-    for(auto * surface : realSurfaces_)
-    {
-        string surfaceName = surface->GetName();
-        // GAW TBD this will be obtained from map
-        AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
-        AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
-        
-        CycledAction* cyclicAction = new CycledAction(this);
-        cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
-        cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-        AddAction(trackGUID + surfaceName + Rotary, cyclicAction);
-        
-        AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
-        AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-        AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
-        AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
-        
-        AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
-        AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
-
-        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
-        
-        AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
-
-        MapFX(track, surface);
-    }
+    // GAW TBD this will be obtained from map
+    AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
+    AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
     
-    mappedTrackActionGUIDs_.push_back(trackGUID);
+    CycledAction* cyclicAction = new CycledAction(this);
+    cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
+    cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
+    AddAction(trackGUID + surfaceName + Rotary, cyclicAction);
+    
+    AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
+    AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
+    AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
+    
+    AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
+    AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
+    AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
+    
+    AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
+    AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
+    
+    AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
+    
+    AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
+    
+    MapFX(track, surfaceName);
 }
 
 void LogicalSurface::InitFXMaps(RealSurface* surface)
