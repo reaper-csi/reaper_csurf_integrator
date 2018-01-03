@@ -707,7 +707,7 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
             
             channel->AddWidget(new PushButtonWithRelease_MidiWidget("", surface, FaderTouched, channelNumber, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
             
-            channel->AddWidget(new EncoderCycledAction_MidiWidget("", surface, Rotary, channelNumber, new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
+            channel->AddWidget(new PushButtonCycledEncoder_MidiWidget("", surface, Rotary, channelNumber, new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
 
             channel->AddWidget(new Display_MidiWidget("", surface, Display, channelNumber, i));
             channel->AddWidget(new Fader14Bit_MidiWidget("", surface, Fader, channelNumber, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
