@@ -181,14 +181,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EncoderCycledAction_MidiWidget : public Encoder_MidiWidget
+class PushButtonCycledEncoder_MidiWidget : public Encoder_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     MIDI_event_ex_t* cycle_;
     
 public:
-    EncoderCycledAction_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, suffix, press, release), cycle_(cycle) {}
+    PushButtonCycledEncoder_MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, suffix, press, release), cycle_(cycle) {}
     
     void AddToRealSurface(RealSurface* surface) override
     {
