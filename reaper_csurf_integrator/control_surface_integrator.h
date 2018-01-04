@@ -125,7 +125,7 @@ protected:
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
-    MidiWidget(string GUID, RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), name_(name), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
 
 public:
     virtual ~MidiWidget() {};
@@ -135,6 +135,11 @@ public:
     string GetName() { return name_ + suffix_; }
     string GetActionName() { return name_; }
 
+    void SetSuffix(string suffix)
+    {
+        suffix_ = suffix;
+    }
+    
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
@@ -391,6 +396,7 @@ class RealSurfaceChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    string suffix_= "";
     int index_ = 0;
     string GUID_ = "";
     RealSurface* realSurface_= nullptr;
@@ -401,9 +407,9 @@ private:
 public:
     virtual ~RealSurfaceChannel() {}
     
-    RealSurfaceChannel(int index, string GUID, RealSurface* surface, bool isMovable) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
+    RealSurfaceChannel(string suffix, int index, string GUID, RealSurface* surface, bool isMovable) : suffix_(suffix), index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
     
-    RealSurfaceChannel(int index, string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
+    RealSurfaceChannel(string suffix, int index, string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
     
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
@@ -418,6 +424,7 @@ public:
     
     void AddWidget(MidiWidget* widget)
     {
+        widget->SetSuffix(suffix_);
         widgetNames_.push_back(widget->GetName());
         realSurface_->AddWidget(widget);
     }
