@@ -450,7 +450,7 @@ public:
     virtual int GetDisplayMode() { return 0; }
     virtual double GetCurrentNormalizedValue (string surfaceName, string widgetName) { return 0.0; }
 
-    virtual void Add(Action* action) {}
+    virtual void AddAction(Action* action) {}
     virtual void Update(string surfaceName, string widgetName) {}
     virtual void ForceUpdate(string surfaceName, string widgetName) {}
     virtual void Cycle(string surfaceName, string widgetName) {}
