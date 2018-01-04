@@ -56,7 +56,7 @@ public:
     
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(surfaceName, widgetName); }
     
-    virtual void Add(Action* action) override
+    virtual void AddAction(Action* action) override
     {
         actions_.push_back(action);
     }

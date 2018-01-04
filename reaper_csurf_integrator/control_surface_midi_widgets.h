@@ -59,13 +59,27 @@ public:
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
     }
-
+    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(GetMidiPressMessage()->IsEqualTo(midiMessage))
             GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 0 : 1);
         else if(GetMidiReleaseMessage()->IsEqualTo(midiMessage))
             GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), reverseSense_ ? 1 : 0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PushButtonCycler_MidiWidget : public PushButton_MidiWidget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PushButtonCycler_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(GUID, surface, name, press, release)  {}
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(GetMidiPressMessage()->IsEqualTo(midiMessage))
+            GetRealSurface()->CycleAction(GetGUID(), GetActionName(), GetName());
     }
 };
 
@@ -177,32 +191,6 @@ public:
         value += GetRealSurface()->GetActionCurrentNormalizedValue(GetGUID(), GetActionName(),  GetName());
         
         GetRealSurface()->DoAction(GetGUID(), GetActionName(), GetName(), value);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButtonCycledEncoder_MidiWidget : public Encoder_MidiWidget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    MIDI_event_ex_t* cycle_;
-    
-public:
-    PushButtonCycledEncoder_MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release, MIDI_event_ex_t* cycle) : Encoder_MidiWidget(GUID, surface, name, press, release), cycle_(cycle) {}
-    
-    void AddToRealSurface(RealSurface* surface) override
-    {
-        MidiWidget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(cycle_->midi_message[0]) + to_string(cycle_->midi_message[1]) + to_string(cycle_->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiMessage->IsEqualTo(cycle_))
-            GetRealSurface()->CycleAction(GetGUID(), GetActionName(), GetName());
-        else
-            Encoder_MidiWidget::ProcessMidiMessage(midiMessage);
     }
 };
 
