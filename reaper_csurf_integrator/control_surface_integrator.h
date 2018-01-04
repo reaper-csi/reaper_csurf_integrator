@@ -405,12 +405,8 @@ private:
     vector<string> widgetNames_;
     
 public:
-    virtual ~RealSurfaceChannel() {}
-    
-    RealSurfaceChannel(string suffix, int index, string GUID, RealSurface* surface, bool isMovable) : suffix_(suffix), index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable) {}
-    
-    RealSurfaceChannel(string suffix, int index, string GUID, RealSurface* surface, bool isMovable, bool shouldMapFXTrackToChannel) : index_(index), GUID_(GUID), realSurface_(surface), isMovable_(isMovable), shouldMapFXTrackToChannel_(shouldMapFXTrackToChannel) {}
-    
+    RealSurfaceChannel(string suffix, int index, RealSurface* surface) : suffix_(suffix), index_(index), realSurface_(surface) {}
+   
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
     bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
@@ -420,6 +416,11 @@ public:
     void SetIsMovable(bool isMovable)
     {
         isMovable_ = isMovable;
+    }
+    
+    void SetShouldMapFXTrackToChannel(bool shouldMapFXTrackToChannel)
+    {
+        shouldMapFXTrackToChannel_ = shouldMapFXTrackToChannel;
     }
     
     void AddWidget(MidiWidget* widget)

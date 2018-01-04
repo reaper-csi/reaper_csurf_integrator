@@ -122,13 +122,13 @@ private:
     int displayMode_ = 0;
     
 public:
+    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
+
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, panToNormalized(value), displayMode_);
     }
     
-    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
-
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
     virtual double GetValue(string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_PAN"); }
