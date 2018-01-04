@@ -143,6 +143,7 @@ const string BankRight = "BankRight";
 
 const string Fader = "Fader";
 const string Rotary = "Rotary";
+const string RotaryPush = "RotaryPush";
 const string Display = "Display";
 const string FaderTouched = "FaderTouched";
 const string Solo = "Solo";
@@ -319,11 +320,12 @@ void LogicalSurface::MapTrackActionsAndFX(string trackGUID, string suffix, strin
     AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
     AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
     
-    CycledAction* cyclicAction = new CycledAction(this);
-    cyclicAction->Add(new TrackPan_Action(this, track, 0x00));
-    cyclicAction->Add(new TrackPanWidth_Action(this, track, 0x30));
-    AddAction(trackGUID + surfaceName + Rotary, cyclicAction);
-    
+    CycledAction* cycledAction = new CycledAction(this);
+    cycledAction->AddAction(new TrackPan_Action(this, track, 0x00));
+    cycledAction->AddAction(new TrackPanWidth_Action(this, track, 0x30));
+    AddAction(trackGUID + surfaceName + Rotary, cycledAction);
+    AddAction(trackGUID + surfaceName + RotaryPush, cycledAction);
+
     AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
     AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
     AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
@@ -705,7 +707,8 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
             
             channel->AddWidget(new PushButtonWithRelease_MidiWidget("", surface, FaderTouched, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
             
-            channel->AddWidget(new PushButtonCycledEncoder_MidiWidget("", surface, Rotary, new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00), new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f)));
+            channel->AddWidget(new Encoder_MidiWidget("", surface, Rotary, new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00)));
+            channel->AddWidget(new PushButtonCycler_MidiWidget("", surface, RotaryPush, new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x20 + i, 0x00)));
 
             channel->AddWidget(new Display_MidiWidget("", surface, Display, i));
             channel->AddWidget(new Fader14Bit_MidiWidget("", surface, Fader, -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
