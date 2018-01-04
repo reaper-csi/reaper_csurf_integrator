@@ -817,7 +817,7 @@ public:
             surface->CloseFXWindows();
             surface->ClearFXWindows();
     
-            if(DAW::CountSelectedTracks(nullptr) == 1)
+            if(1 == DAW::CountSelectedTracks(nullptr))
                 MapWidgetsToFX(track, surface);
         }
         
