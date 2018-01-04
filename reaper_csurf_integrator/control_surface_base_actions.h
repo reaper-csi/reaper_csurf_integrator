@@ -17,7 +17,6 @@ protected:
     double currentValue_ = 999999.99;
     
     DoubleAction(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
-    DoubleAction(LogicalSurface* logicalSurface, double initialValue) : Action(logicalSurface), currentValue_(initialValue)  {}
 
     virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
     {
