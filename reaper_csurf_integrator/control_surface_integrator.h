@@ -736,10 +736,10 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackActionsAndFX(string trackGUID, int index, string surfaceName);
+    void MapTrackActionsAndFX(string trackGUID, string suffix, string surfaceName);
     void MapFX(MediaTrack* track, string surfaceName);
     
-    void MapTrack(string trackGUID, int index)
+    void MapTrack(string trackGUID, string suffix)
     {
         if(trackGUID == "")
             return; // Nothing to map
@@ -749,7 +749,7 @@ public:
                 return; // Already did this track
         
         for(auto * surface : realSurfaces_)
-            MapTrackActionsAndFX(trackGUID, index, surface->GetName());
+            MapTrackActionsAndFX(trackGUID, suffix, surface->GetName());
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }

@@ -76,7 +76,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrack(GUID_, index_);
+    realSurface_->GetLogicalSurface()->MapTrack(GUID_, suffix_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 
 
-void LogicalSurface::MapTrackActionsAndFX(string trackGUID, int index, string surfaceName)
+void LogicalSurface::MapTrackActionsAndFX(string trackGUID, string suffix, string surfaceName)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
@@ -335,7 +335,7 @@ void LogicalSurface::MapTrackActionsAndFX(string trackGUID, int index, string su
     AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
     AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
     
-    AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + to_string(index + 1), new TrackVolume_DisplayAction(this, track)));
+    AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + suffix, new TrackVolume_DisplayAction(this, track)));
     
     AddAction(trackGUID + surfaceName + FaderTouched, new TrackTouch_Action(this, track));
     
