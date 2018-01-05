@@ -82,7 +82,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::MapFX(MediaTrack* track, string surfaceName)
+void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
 {
     char fxName[256];
     char fxParamName[256];
@@ -312,7 +312,7 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 
 
-void LogicalSurface::MapTrackActionsAndFX(string trackGUID, string suffix, string surfaceName)
+void LogicalSurface::MapTrackAndFXActions(string trackGUID, string suffix, string surfaceName)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
@@ -341,7 +341,7 @@ void LogicalSurface::MapTrackActionsAndFX(string trackGUID, string suffix, strin
     
     AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
     
-    MapFX(track, surfaceName);
+    MapFXActions(track, surfaceName);
 }
 
 void LogicalSurface::InitFXMaps(RealSurface* surface)

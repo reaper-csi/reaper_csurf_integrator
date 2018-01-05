@@ -538,7 +538,7 @@ public:
 
     void RefreshLayout()
     {
-        auto currentOffset = trackOffset_;
+        auto offset = trackOffset_;
         
         vector<string> immovableTracks;
         
@@ -551,26 +551,26 @@ public:
         
         for(int i = 0; i < GetNumLogicalChannels(); i++)
         {
-            if(currentOffset < 0)
+            if(offset < 0)
             {
                 movableTracks.push_back("");
-                currentOffset++;
+                offset++;
             }
-            else if(currentOffset >= DAW::GetNumTracks())
+            else if(offset >= DAW::GetNumTracks())
                 movableTracks.push_back("");
-            else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(currentOffset)) == immovableTracks.end())
-                movableTracks.push_back(DAW::GetTrackGUIDAsString(currentOffset++));
+            else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(offset)) == immovableTracks.end())
+                movableTracks.push_back(DAW::GetTrackGUIDAsString(offset++));
             else
-                currentOffset++;
+                offset++;
         }
         
-        currentOffset = 0;
+        offset = 0;
         
         // Apply new layout
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == true)
-                    channel->SetGUID(movableTracks[currentOffset++]);
+                    channel->SetGUID(movableTracks[offset++]);
         
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
@@ -737,8 +737,8 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackActionsAndFX(string trackGUID, string suffix, string surfaceName);
-    void MapFX(MediaTrack* track, string surfaceName);
+    void MapTrackAndFXActions(string trackGUID, string suffix, string surfaceName);
+    void MapFXActions(MediaTrack* track, string surfaceName);
     
     void MapTrack(string trackGUID, string suffix)
     {
@@ -750,12 +750,12 @@ public:
                 return; // Already did this track
         
         for(auto * surface : realSurfaces_)
-            MapTrackActionsAndFX(trackGUID, suffix, surface->GetName());
+            MapTrackAndFXActions(trackGUID, suffix, surface->GetName());
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
     
-    void MapWidgetsToFX(MediaTrack *track, RealSurface* surface)
+    void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
         
@@ -818,7 +818,7 @@ public:
             surface->ClearFXWindows();
     
             if(1 == DAW::CountSelectedTracks(nullptr))
-                MapWidgetsToFX(track, surface);
+                MapFXToWidgets(track, surface);
         }
         
         for(auto* surface : realSurfaces_)
@@ -913,7 +913,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            MapFX(track, surface->GetName());
+            MapFXActions(track, surface->GetName());
     }
     
     // to Widgets ->
