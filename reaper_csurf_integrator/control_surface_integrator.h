@@ -638,7 +638,7 @@ private:
 
     void SetImmobilizedChannels()
     {
-        char buffer[256];
+        char buffer[BUFSZ];
         
         for(auto * surface : realSurfaces_)
         {
@@ -764,9 +764,9 @@ public:
             if(channel->GetShouldMapFXTrackToChannel())
                 channel->SetGUID(trackGUID);
         
-        char fxName[256];
-        char fxGUID[256];
-        char fxParamName[256];
+        char fxName[BUFSZ];
+        char fxGUID[BUFSZ];
+        char fxParamName[BUFSZ];
         
         for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
         {
@@ -895,7 +895,7 @@ public:
     
     void MobilizeSelectedTracks()
     {
-        char buffer[256];
+        char buffer[BUFSZ];
 
         for(auto * surface : realSurfaces_)
             for(int i = 0; i < surface->GetChannels().size(); i++)

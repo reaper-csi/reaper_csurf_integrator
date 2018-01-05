@@ -13,6 +13,8 @@ using namespace std;
 
 extern HWND g_hwnd;
 
+const int BUFSZ = 512;
+
 struct MIDI_event_ex_t : MIDI_event_t
 {
     MIDI_event_ex_t() {};
@@ -164,7 +166,7 @@ public:
             return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure ever track has a GUID
         else
         {
-            char pBuffer[256];
+            char pBuffer[BUFSZ];
             memset(pBuffer, 0, sizeof(pBuffer));
             guidToString(GetTrackGUID(CSurf_TrackFromID(trackNumber, false)), pBuffer);
             return pBuffer;
@@ -182,7 +184,7 @@ public:
     
     static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
     {
-        char fxGUID[256];
+        char fxGUID[BUFSZ];
         
         for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
         {
