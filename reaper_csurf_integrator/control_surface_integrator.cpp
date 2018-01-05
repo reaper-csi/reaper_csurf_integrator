@@ -84,9 +84,9 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
 {
-    char fxName[256];
-    char fxParamName[256];
-    char fxGUID[256];
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    char fxGUID[BUFSZ];
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     

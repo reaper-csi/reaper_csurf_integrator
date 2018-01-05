@@ -610,7 +610,7 @@ public:
     
     virtual double GetValue(string surfaceName, string widgetName) override
     {
-        char buffer[256];
+        char buffer[BUFSZ];
         if(DAW::TrackFX_GetNamedConfigParm(track_, DAW::IndexFromFXGUID(track_, fxGUID_), GainReduction_dB.c_str(), buffer, sizeof(buffer)))
             return atof(buffer);
         else
