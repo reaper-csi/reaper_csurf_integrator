@@ -407,6 +407,7 @@ private:
 public:
     RealSurfaceChannel(string suffix, int index, RealSurface* surface) : suffix_(suffix), index_(index), realSurface_(surface) {}
    
+    string GetSuffix() { return suffix_; }
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
     bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
@@ -639,15 +640,18 @@ private:
     void SetImmobilizedChannels()
     {
         char buffer[BUFSZ];
+        RealSurfaceChannel* channel = nullptr;
         
         for(auto * surface : realSurfaces_)
         {
             for(int i = 0; i < surface->GetChannels().size(); i++)
             {
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+                channel = surface->GetChannels()[i];
+                
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
                 {
-                    surface->GetChannels()[i]->SetGUID(buffer);
-                    surface->GetChannels()[i]->SetIsMovable(false);
+                    channel->SetGUID(buffer);
+                    channel->SetIsMovable(false);
                 }
             }
         }
@@ -883,31 +887,46 @@ public:
     
     void ImmobilizeSelectedTracks()
     {
+        RealSurfaceChannel* channel = nullptr;
+
         for(auto * surface : realSurfaces_)
+        {
             for(int i = 0; i < surface->GetChannels().size(); i++)
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
+            {
+                channel = surface->GetChannels()[i];
+
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
                 {
-                    surface->GetChannels()[i]->SetIsMovable(false);
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), surface->GetChannels()[i]->GetGUID().c_str());
+                    channel->SetIsMovable(false);
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
                     DAW::MarkProjectDirty(nullptr);
                 }
+            }
+        }
     }
     
     void MobilizeSelectedTracks()
     {
         char buffer[BUFSZ];
-
+        RealSurfaceChannel* channel = nullptr;
+        
         for(auto * surface : realSurfaces_)
+        {
             for(int i = 0; i < surface->GetChannels().size(); i++)
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(surface->GetChannels()[i]->GetGUID()), "I_SELECTED"))
+            {
+                channel = surface->GetChannels()[i];
+                
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
                 {
-                    surface->GetChannels()[i]->SetIsMovable(true);
-                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), buffer, sizeof(buffer)))
+                    channel->SetIsMovable(true);
+                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
                     {
-                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  to_string(i - 1)).c_str(), "");
+                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
                         DAW::MarkProjectDirty(nullptr);
                     }
                 }
+            }
+        }
     }
 
     void TrackFXListChanged(MediaTrack* track)
