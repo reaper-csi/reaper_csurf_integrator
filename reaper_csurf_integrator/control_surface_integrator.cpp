@@ -76,7 +76,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrack(GUID_, suffix_);
+    realSurface_->GetLogicalSurface()->MapTrack(GUID_, GetSuffix());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
