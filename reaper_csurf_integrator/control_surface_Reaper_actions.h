@@ -444,7 +444,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchStateControlled_Action : public TrackDoubleAction
+class TrackTouchControlledDouble_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -455,7 +455,7 @@ private:
     bool lastTouched_ = true;
     
 public:
-    TrackTouchStateControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionAddress, string controlledActionwidgetName, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionAddress_(controlledActionAddress), controlledActionWidgetName_(controlledActionwidgetName), controlledAction_(controlledAction) {}
+    TrackTouchControlledDouble_Action(LogicalSurface* logicalSurface, MediaTrack* track, string controlledActionAddress, string controlledActionwidgetName, Action* controlledAction) : TrackDoubleAction(logicalSurface, track), controlledActionAddress_(controlledActionAddress), controlledActionWidgetName_(controlledActionwidgetName), controlledAction_(controlledAction) {}
     
     virtual double GetValue(string surfaceName, string widgetName) override { return currentlyTouched_; }
 
