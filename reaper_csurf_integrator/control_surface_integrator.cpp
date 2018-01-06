@@ -337,7 +337,7 @@ void LogicalSurface::MapTrackAndFXActions(string trackGUID, string suffix, strin
     AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
     AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
     
-    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouchStateControlled_Action(this, track, trackGUID + surfaceName + Display, Display + suffix, new TrackVolume_DisplayAction(this, track)));
+    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouchControlledDouble_Action(this, track, trackGUID + surfaceName + Display, Display + suffix, new TrackVolume_DisplayAction(this, track)));
     
     AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
     
