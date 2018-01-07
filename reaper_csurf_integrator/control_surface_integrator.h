@@ -1125,7 +1125,7 @@ private:
         char tmp[512];
         memset(tmp, 0, sizeof(tmp));
         
-        DAW::GetPrivateProfileString("REAPER", key.c_str() , "", tmp, sizeof(tmp), get_ini_file());
+        DAW::GetPrivateProfileString("REAPER", key.c_str() , "", tmp, sizeof(tmp), DAW::get_ini_file());
 
         return strtod (tmp, NULL);
     }
