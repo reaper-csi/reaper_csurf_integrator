@@ -461,14 +461,14 @@ class TouchControlledTrack_Action : public TrackAction
 {
 private:
     Action* touchAction_= nullptr;
-    Action* baseAction_= nullptr;
+    string actionAddress_= nullptr;
     
     bool lastTouched_ = false;
     
     bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
     
 public:
-    TouchControlledTrack_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* touchAction, Action* baseAction) : TrackAction(logicalSurface, track), touchAction_(touchAction), baseAction_(baseAction) {}
+    TouchControlledTrack_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* touchAction, string actionAddress) : TrackAction(logicalSurface, track), touchAction_(touchAction), actionAddress_(actionAddress) {}
     
     virtual void Update(string surfaceName, string widgetName) override
     {
@@ -482,7 +482,7 @@ public:
         else if(lastTouched_ != currentlyTouched)
         {
             lastTouched_ = currentlyTouched;
-            baseAction_->ForceUpdate(surfaceName, widgetName);
+            GetLogicalSurface()->ForceUpdateAction(actionAddress_, surfaceName, widgetName);
         }
     }
 
