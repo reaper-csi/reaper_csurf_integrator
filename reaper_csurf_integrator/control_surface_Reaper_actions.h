@@ -454,11 +454,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TouchControlledTrack_Action : public TrackAction
+class TrackTouchControlled_Action : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Action* touchAction_= nullptr;
+    Action* action_= nullptr;
     string actionAddress_= nullptr;
     
     bool lastTouched_ = false;
@@ -466,7 +466,7 @@ private:
     bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
     
 public:
-    TouchControlledTrack_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* touchAction, string actionAddress) : TrackAction(logicalSurface, track), touchAction_(touchAction), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* action, string actionAddress) : TrackAction(logicalSurface, track), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string surfaceName, string widgetName) override
     {
@@ -475,7 +475,7 @@ public:
         if(currentlyTouched)
         {
             lastTouched_ = currentlyTouched;
-            touchAction_->Update(surfaceName, widgetName);
+            action_->Update(surfaceName, widgetName);
         }
         else if(lastTouched_ != currentlyTouched)
         {
@@ -486,30 +486,30 @@ public:
 
     virtual int GetDisplayMode() override
     {
-        return touchAction_->GetDisplayMode();
+        return action_->GetDisplayMode();
     }
     
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override
     {
-        return touchAction_->GetCurrentNormalizedValue(surfaceName, widgetName);
+        return action_->GetCurrentNormalizedValue(surfaceName, widgetName);
     }
     
     virtual void ForceUpdate(string surfaceName, string widgetName) override
     {
         if(IsCurrentlyTouched())
-            touchAction_->ForceUpdate(surfaceName, widgetName);
+            action_->ForceUpdate(surfaceName, widgetName);
     }
     
     virtual void Cycle(string surfaceName, string widgetName) override
     {
         if(IsCurrentlyTouched())
-            touchAction_->Cycle(surfaceName, widgetName);
+            action_->Cycle(surfaceName, widgetName);
     }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
         if(IsCurrentlyTouched())
-            touchAction_->Do(value, surfaceName, widgetName);
+            action_->Do(value, surfaceName, widgetName);
     }
 };
 
