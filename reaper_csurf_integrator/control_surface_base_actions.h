@@ -15,20 +15,20 @@ class DoubleAction : public Action
 {
 protected:
     double currentValue_ = 999999.99;
+    
+    virtual double GetValue(string surfaceName, string widgetName) { return 0.0; }
+
+    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
+    {
+        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
+    }
 
     DoubleAction(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
     
 public:
     ~DoubleAction() {}
     
-    virtual double GetValue(string surfaceName, string widgetName) { return 0.0; }
-    
     virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override { return currentValue_; }
-
-    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) override
-    {
-        GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
-    }
     
     virtual void Update(string surfaceName, string widgetName) override
     {
@@ -93,17 +93,18 @@ class StringAction : public Action
 protected:
     string currentValue_ = "";
     
-public:
-    StringAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
-    
-    ~StringAction() {}
-    
     virtual string GetValue(string surfaceName, string widgetName) { return currentValue_; }
-
+    
     virtual void SetWidgetValue(string surfaceName, string widgetName, string value) override
     {
         GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, value);
     }
+    
+    StringAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
+
+public:
+    
+    ~StringAction() {}
     
     virtual void Update(string surfaceName, string widgetName) override
     {
