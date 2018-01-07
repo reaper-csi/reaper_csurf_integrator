@@ -317,10 +317,8 @@ void LogicalSurface::MapTrackAndFXActions(string trackGUID, string surfaceName)
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
     // GAW TBD this will be obtained from map
-
-    TrackStringAction* trackNameDisplay_Action =  new TrackNameDisplay_Action(this, track);
-    AddAction(trackGUID + surfaceName + Display, trackNameDisplay_Action);
-    AddAction(trackGUID + surfaceName + Display, new TrackTouchString_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackNameDisplay_Action));
+    AddAction(trackGUID + surfaceName + Display, new TrackNameDisplay_Action(this, track));
+    AddAction(trackGUID + surfaceName + Display, new TouchControlledTrack_Action(this, track, new TrackVolumeDisplay_Action(this, track), new TrackNameDisplay_Action(this, track)));
 
     AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
     AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));

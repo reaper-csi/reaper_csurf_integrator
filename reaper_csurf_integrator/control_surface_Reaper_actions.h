@@ -26,6 +26,18 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackAction : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    MediaTrack* track_;
+    
+public:
+    TrackAction(LogicalSurface* logicalSurface, MediaTrack* track) : Action(logicalSurface), track_(track) {}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackDoubleAction : public DoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -444,21 +456,19 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchDouble_Action : public TrackDoubleAction
+class TouchControlledTrack_Action : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    TrackDoubleAction* touchAction_= nullptr;
-    TrackStringAction* baseAction_= nullptr;
+    Action* touchAction_= nullptr;
+    Action* baseAction_= nullptr;
     
     bool lastTouched_ = false;
     
     bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
     
 public:
-    TrackTouchDouble_Action(LogicalSurface* logicalSurface, MediaTrack* track, TrackDoubleAction* touchAction, TrackStringAction* baseAction) : TrackDoubleAction(logicalSurface, track), touchAction_(touchAction), baseAction_(baseAction) {}
-    
-    virtual double GetValue(string surfaceName, string widgetName) override { return touchAction_->GetValue(surfaceName, widgetName); }
+    TouchControlledTrack_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* touchAction, Action* baseAction) : TrackAction(logicalSurface, track), touchAction_(touchAction), baseAction_(baseAction) {}
     
     virtual void Update(string surfaceName, string widgetName) override
     {
@@ -475,56 +485,33 @@ public:
             baseAction_->ForceUpdate(surfaceName, widgetName);
         }
     }
-    
-    virtual void Do(double value, string surfaceName, string widgetName) override
-    {
-        touchAction_->Do(value, surfaceName, widgetName);
-    }
-};
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchString_Action : public TrackStringAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    TrackStringAction* touchAction_= nullptr;
-    TrackStringAction* baseAction_= nullptr;
-    
-    bool lastTouched_ = false;
-    
-    bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
-    
-public:
-    TrackTouchString_Action(LogicalSurface* logicalSurface, MediaTrack* track, TrackStringAction* touchAction, TrackStringAction* baseAction) : TrackStringAction(logicalSurface, track), touchAction_(touchAction), baseAction_(baseAction) {}
-    
-    virtual string GetValue(string surfaceName, string widgetName) override { return touchAction_->GetValue(surfaceName, widgetName); }
-    
-    virtual void Update(string surfaceName, string widgetName) override
+    virtual int GetDisplayMode() override
     {
-        bool currentlyTouched = IsCurrentlyTouched();
-        
-        if(currentlyTouched)
-        {
-            lastTouched_ = currentlyTouched;
-            touchAction_->Update(surfaceName, widgetName);
-        }
-        else if(lastTouched_ != currentlyTouched)
-        {
-            lastTouched_ = currentlyTouched;
-            baseAction_->ForceUpdate(surfaceName, widgetName);
-        }
+        return touchAction_->GetDisplayMode();
+    }
+    
+    virtual double GetCurrentNormalizedValue(string surfaceName, string widgetName) override
+    {
+        return touchAction_->GetCurrentNormalizedValue(surfaceName, widgetName);
+    }
+    
+    virtual void ForceUpdate(string surfaceName, string widgetName) override
+    {
+        if(IsCurrentlyTouched())
+            touchAction_->ForceUpdate(surfaceName, widgetName);
+    }
+    
+    virtual void Cycle(string surfaceName, string widgetName) override
+    {
+        if(IsCurrentlyTouched())
+            touchAction_->Cycle(surfaceName, widgetName);
     }
     
     virtual void Do(double value, string surfaceName, string widgetName) override
     {
         if(IsCurrentlyTouched())
             touchAction_->Do(value, surfaceName, widgetName);
-    }
-
-    virtual void SetWidgetValue(string surfaceName, string widgetName, string value) override
-    {
-        if(IsCurrentlyTouched())
-            touchAction_->SetWidgetValue(surfaceName, widgetName, value);
     }
 };
 
