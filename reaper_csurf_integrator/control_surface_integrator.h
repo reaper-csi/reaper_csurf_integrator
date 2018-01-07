@@ -711,7 +711,7 @@ public:
         if(state)
             touchedTracks_.push_back(trackGUID);
         else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID        ), touchedTracks_.end());
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID), touchedTracks_.end());
     }
     
     void Init()
@@ -741,10 +741,10 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackAndFXActions(string trackGUID, string suffix, string surfaceName);
+    void MapTrackAndFXActions(string trackGUID, string surfaceName);
     void MapFXActions(MediaTrack* track, string surfaceName);
     
-    void MapTrack(string trackGUID, string suffix)
+    void MapTrack(string trackGUID)
     {
         if(trackGUID == "")
             return; // Nothing to map
@@ -754,7 +754,7 @@ public:
                 return; // Already did this track
         
         for(auto * surface : realSurfaces_)
-            MapTrackAndFXActions(trackGUID, suffix, surface->GetName());
+            MapTrackAndFXActions(trackGUID, surface->GetName());
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
