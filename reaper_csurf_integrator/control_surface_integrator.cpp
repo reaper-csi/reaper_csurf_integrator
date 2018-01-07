@@ -76,7 +76,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrack(GUID_, GetSuffix());
+    realSurface_->GetLogicalSurface()->MapTrack(GUID_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -312,14 +312,19 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 
 
-void LogicalSurface::MapTrackAndFXActions(string trackGUID, string suffix, string surfaceName)
+void LogicalSurface::MapTrackAndFXActions(string trackGUID, string surfaceName)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
     // GAW TBD this will be obtained from map
-    AddAction(trackGUID + surfaceName + Display, new TrackName_DisplayAction(this, track));
+
+    TrackStringAction* trackNameDisplay_Action =  new TrackNameDisplay_Action(this, track);
+    AddAction(trackGUID + surfaceName + Display, trackNameDisplay_Action);
+    AddAction(trackGUID + surfaceName + Display, new TrackTouchString_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackNameDisplay_Action));
+
     AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
-    
+    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
+
     CycledAction* cycledAction = new CycledAction(this);
     cycledAction->AddAction(new TrackPan_Action(this, track, 0x00));
     cycledAction->AddAction(new TrackPanWidth_Action(this, track, 0x30));
@@ -336,10 +341,6 @@ void LogicalSurface::MapTrackAndFXActions(string trackGUID, string suffix, strin
     
     AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
     AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
-    
-    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouchControlledDouble_Action(this, track, trackGUID + surfaceName + Display, Display + suffix, new TrackVolume_DisplayAction(this, track)));
-    
-    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
     
     MapFXActions(track, surfaceName);
 }
