@@ -318,7 +318,7 @@ void LogicalSurface::MapTrackAndFXActions(string trackGUID, string surfaceName)
     
     // GAW TBD this will be obtained from map
     AddAction(trackGUID + surfaceName + Display, new TrackNameDisplay_Action(this, track));
-    AddAction(trackGUID + surfaceName + Display, new TouchControlledTrack_Action(this, track, new TrackVolumeDisplay_Action(this, track), new TrackNameDisplay_Action(this, track)));
+    AddAction(trackGUID + surfaceName + Display, new TouchControlledTrack_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackGUID + surfaceName + Display));
 
     AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
     AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
