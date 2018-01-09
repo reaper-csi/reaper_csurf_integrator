@@ -31,10 +31,11 @@ const double System_MinDB = -72.0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
+const string TrackOnSelection = "TrackOnSelection";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
-// ActionAddress format = GUID + realSurfaceName + modifiers + widgetActionName
+// ActionAddress format = GUID + realSurfaceName + modifiers + widgetName
 // Modifiers can be ""
 //
 
@@ -58,7 +59,7 @@ const string Alt = "Alt";
 // The modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
-//  in the case of combos, must be in the same order as listed above -- e.g. ShiftOptionControlAlt for the full meal deal
+//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Mixer1ShiftOptionControlAltFader" for the full meal deal
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
@@ -120,7 +121,6 @@ private:
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 protected:
-    string GetGUID() { return GUID_; }
     RealSurface* GetRealSurface() { return realSsurface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
@@ -130,6 +130,7 @@ protected:
 public:
     virtual ~MidiWidget() {};
     
+    string GetGUID() { return GUID_; }
     virtual double GetMinDB() { return System_MinDB; }
     virtual double GetMaxDB() { return System_MaxDB; }
     string GetName() { return name_ + suffix_; }
@@ -171,7 +172,6 @@ protected:
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
-    vector<FXWindow> openFXWindows_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -180,8 +180,6 @@ protected:
     
     bool zoom_ = false;
     bool scrub_ = false;
-    
-    bool showFXWindows_ = false;
     
     string CurrentModifers()
     {
@@ -209,9 +207,57 @@ protected:
         return GUID + GetName() + currentModifiers + actionName;
     }
     
-    RealSurface(LogicalSurface* logicalSurface, const string name, int numBankableChannels) : logicalSurface_(logicalSurface), name_(name),  numBankableChannels_(numBankableChannels) {}
+    RealSurface(const string name, int numBankableChannels) : name_(name),  numBankableChannels_(numBankableChannels) {}
     
 public:
+    
+    
+    
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
+    
+    void ClearFXWindows()
+    {
+        openFXWindows_.clear();
+    }
+    
+    void AddFXWindow(FXWindow fxWindow)
+    {
+        openFXWindows_.push_back(fxWindow);
+    }
+    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+    
+    void OpenFXWindows()
+    {
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
+    }
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
     virtual ~RealSurface() {};
     
     const string GetName() const { return name_; }
@@ -227,6 +273,11 @@ public:
     virtual void SendMidiMessage(int first, int second, int third) {}
     
     virtual void RunAndUpdate() {}
+    
+    void SetLogicalSurface(LogicalSurface* logicalSurface)
+    {
+        logicalSurface_ = logicalSurface;
+    }
     
     void SetGroupName(string groupName)
     {
@@ -295,39 +346,6 @@ public:
         ForceUpdateWidgets();
     }
     
-    void ClearFXWindows()
-    {
-        openFXWindows_.clear();
-    }
-    
-    void AddFXWindow(FXWindow fxWindow)
-    {
-        openFXWindows_.push_back(fxWindow);
-    }
-    
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-    
-    void OpenFXWindows()
-    {
-        if(showFXWindows_)
-            for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
-    }
-    
-    void CloseFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
-    }
-
     // to Widgets ->
     virtual void UpdateWidgets()
     {
@@ -630,8 +648,6 @@ private:
     vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
-    bool VSTMonitor_ = false;
-
     void InitRealSurfaces();
     void InitFXMaps(RealSurface* surface);
     void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
@@ -661,7 +677,7 @@ private:
     {
         fxMaps_[fxMap->GetName()] = fxMap;
     }
-    
+
     void AddRealSurface(RealSurface* realSurface)
     {
         realSurfaces_.push_back(realSurface);
@@ -677,7 +693,6 @@ public:
 
     CSurfManager* GetManager() { return manager_; }
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
-    bool GetVSTMonitor() { return VSTMonitor_; }
 
     bool IsShowFXWindows(string surfaceName)
     {
@@ -728,6 +743,7 @@ public:
 
         for(auto* surface : realSurfaces_)
         {
+            surface->SetLogicalSurface(this);
             surface->SetGroupName(ReaperLogicalControlSurface); // all surfaces are hardwired to the same group
             surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
             
@@ -757,6 +773,83 @@ public:
             MapTrackAndFXActions(trackGUID, surface->GetName());
         
         mappedTrackGUIDs_.push_back(trackGUID);
+    }
+    
+    void AdjustTrackBank(string surfaceName, int stride)
+    {
+        touchedTracks_.clear(); // GAW -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->AdjustTrackBank(stride);
+    }
+    
+    void TrackListChanged()
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->TrackListChanged();
+    }
+    
+    void RefreshLayout()
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->RefreshLayout();
+    }
+    
+    void RunAndUpdate()
+    {
+        for(auto & surface : realSurfaces_)
+            surface->RunAndUpdate();
+    }
+
+    void SetShift(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetShift(value);
+    }
+    
+    void SetOption(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetOption(value);
+    }
+    
+    void SetControl(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetControl(value);
+    }
+    
+    void SetAlt(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetAlt(value);
+    }
+    
+    void SetZoom(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetZoom(value);
+    }
+    
+    void SetScrub(string surfaceName, bool value)
+    {
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetScrub(value);
+    }
+
+    
+    
+    
+    
+    
+    
+    void OnTrackSelection(MediaTrack* track)
+    {
+        for(auto* surface : realSurfaces_)
+        {
+            surface->CloseFXWindows();
+            surface->ClearFXWindows();
+            
+            if(1 == DAW::CountSelectedTracks(nullptr))
+                MapFXToWidgets(track, surface);
+        }
+        
+        for(auto* surface : realSurfaces_)
+            OpenFXWindows(surface);
+        
+        ForceUpdate();
     }
     
     void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
@@ -795,83 +888,9 @@ public:
             }
         }
     }
+    
 
-    void AdjustTrackBank(string surfaceName, int stride)
-    {
-        touchedTracks_.clear(); // in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->AdjustTrackBank(stride);
-    }
-    
-    void TrackListChanged()
-    {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->TrackListChanged();
-    }
-    
-    void RefreshLayout()
-    {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->RefreshLayout();
-    }
-    
-    void OnTrackSelection(MediaTrack* track)
-    {
-        for(auto* surface : realSurfaces_)
-        {        
-            surface->CloseFXWindows();
-            surface->ClearFXWindows();
-    
-            if(1 == DAW::CountSelectedTracks(nullptr))
-                MapFXToWidgets(track, surface);
-        }
-        
-        for(auto* surface : realSurfaces_)
-            OpenFXWindows(surface);
-        
-        ForceUpdate();
-    }
 
-    void RunAndUpdate()
-    {
-        for(auto & surface : realSurfaces_)
-            surface->RunAndUpdate();
-    }
-
-    void SetShift(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetShift(value);
-    }
-    
-    void SetOption(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetOption(value);
-    }
-    
-    void SetControl(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetControl(value);
-    }
-    
-    void SetAlt(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetAlt(value);
-    }
-    
-    void SetZoom(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetZoom(value);
-    }
-    
-    void SetScrub(string surfaceName, bool value)
-    {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetScrub(value);
-    }
-    
-    void SetShowOpenFXWindows(string surfaceName, bool value)
-    {
-        for(auto* surface : realSurfaces_)
-            surface->SetShowFXWindows(value);
-    }
     
     void OpenFXWindows(RealSurface* surface)
     {
@@ -885,6 +904,19 @@ public:
             surface->CloseFXWindows();
     }
     
+    
+    
+    
+    
+    
+
+    void SetShowOpenFXWindows(string surfaceName, bool value)
+    {
+        for(auto* surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetShowFXWindows(value);
+    }
+   
     void ImmobilizeSelectedTracks()
     {
         RealSurfaceChannel* channel = nullptr;
@@ -1103,18 +1135,31 @@ class CSurfManager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <LogicalSurface*> logicalSurfaces_;
-    bool isLazyInitialized_ = false;
+    vector<RealSurface*> realSurfaces_;
+    bool isInitialized_ = false;
     int currentLogicalSurfaceIndex_ = 0;;
+    
+    bool VSTMonitor_ = false;
+    
+    void InitRealSurfaces();
+    
+    void AddRealSurface(RealSurface* realSurface)
+    {
+        realSurfaces_.push_back(realSurface);
+    }
 
     void RunAndUpdate()
     {
-        if(!isLazyInitialized_)
+        if(!isInitialized_)
         {
+            InitRealSurfaces();
+           
             LogicalSurface* logicalSurface = new LogicalSurface(this);
+            
             logicalSurface->Init();
             logicalSurfaces_.push_back(logicalSurface);
             
-            isLazyInitialized_ = true;
+            isInitialized_ = true;
         }
         
         logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
@@ -1135,8 +1180,10 @@ public:
     
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
-    MidiIOManager* MidiManager() { return midiIOManager_; }
-    bool GetIsLazyInitialized() { return isLazyInitialized_; }
+    MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
+    vector<RealSurface*> GetRealSurfaces() { return realSurfaces_; }
+    bool GetIsInitialized() { return isInitialized_; }
+    bool GetVSTMonitor() { return VSTMonitor_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
@@ -1185,7 +1232,7 @@ public:
     virtual ~OSCCSurf() {};
     
     OSCCSurf(const string name, LogicalSurface* surface)
-    : RealSurface(surface, "OSC", 8) {}
+    : RealSurface("OSC", 8) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1196,7 +1243,7 @@ public:
     virtual ~WebCSurf() {};
     
     WebCSurf(const string name, LogicalSurface* surface)
-    : RealSurface(surface, "Web", 8) {};
+    : RealSurface("Web", 8) {};
 };
 
 #endif /* control_surface_integrator.h */
