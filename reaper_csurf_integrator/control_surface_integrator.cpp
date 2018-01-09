@@ -116,7 +116,7 @@ void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
             }
         }
         
-        if(GetVSTMonitor() && GetManager()->GetIsLazyInitialized())
+        if(GetManager()->GetVSTMonitor() && GetManager()->GetIsInitialized())
         {
             DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
             
@@ -722,6 +722,11 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
 
 void LogicalSurface::InitRealSurfaces()
 {
+    realSurfaces_ = GetManager()->GetRealSurfaces();
+}
+
+void CSurfManager::InitRealSurfaces()
+{
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -870,10 +875,10 @@ void LogicalSurface::InitRealSurfaces()
         int channelOut = atoi(channelOutString);
         channelOut--; // MIDI channels are 0  based
 
-        AddRealSurface(new MidiCSurf(this, name, numBankableChannels, GetManager()->MidiManager()->GetMidiInputForChannel(channelIn), GetManager()->MidiManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+        AddRealSurface(new MidiCSurf(name, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
-    VSTMonitor_ = VSTMonitor;
+    //VSTMonitor_ = VSTMonitor;
     
     fclose ( filePtr );
 }
