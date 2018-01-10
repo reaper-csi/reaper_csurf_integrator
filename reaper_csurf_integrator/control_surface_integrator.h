@@ -159,6 +159,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class LogicalSurface;
+class SurfaceGroup;
 class RealSurfaceChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface
@@ -166,8 +167,7 @@ class RealSurface
 {
 protected:
     const string name_ = "";
-    LogicalSurface* logicalSurface_ = nullptr;
-    string surfaceGroupName_ = "";
+    SurfaceGroup* surfaceGroup_ = nullptr;
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
@@ -261,8 +261,7 @@ public:
     virtual ~RealSurface() {};
     
     const string GetName() const { return name_; }
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    string GetSurfaceGroupName() { return surfaceGroupName_; }
+    SurfaceGroup* GetSurfaceGroup() { return surfaceGroup_; }
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
@@ -274,16 +273,11 @@ public:
     
     virtual void RunAndUpdate() {}
     
-    void SetLogicalSurface(LogicalSurface* logicalSurface)
+    void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
     {
-        logicalSurface_ = logicalSurface;
+        surfaceGroup_ = surfaceGroup;
     }
-    
-    void SetGroupName(string groupName)
-    {
-        surfaceGroupName_ = groupName;
-    }
-    
+
     void AddChannel(RealSurfaceChannel*  channel)
     {
         channels_.push_back(channel);
@@ -481,15 +475,18 @@ public:
 class SurfaceGroup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    string groupName_ = "";
+    string name_ = "";
+    LogicalSurface* logicalSurface_= nullptr;
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     
 public:
-    SurfaceGroup(string groupName, int numLogicalChannels) : groupName_(groupName), numLogicalChannels_(numLogicalChannels) {}
+    SurfaceGroup(string name, LogicalSurface* logicalSurface, int numLogicalChannels) : name_(name), logicalSurface_(logicalSurface), numLogicalChannels_(numLogicalChannels) {}
     
-    string GetGroupName() { return groupName_; }
+    string GetName() { return name_; }
+    
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     int GetNumLogicalChannels() { return numLogicalChannels_; }
 
@@ -733,12 +730,11 @@ public:
         for(auto* surface : realSurfaces_) // all surfaces are hardwired to the same group
             numChannels += surface->GetNumBankableChannels();
         
-        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, numChannels);
+        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
 
         for(auto* surface : realSurfaces_)
         {
-            surface->SetLogicalSurface(this);
-            surface->SetGroupName(ReaperLogicalControlSurface); // all surfaces are hardwired to the same group
+            surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
             surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
             
             InitFXMaps(surface);
@@ -771,7 +767,7 @@ public:
     void AdjustTrackBank(string surfaceName, int stride)
     {
         touchedTracks_.clear(); // GAW -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->AdjustTrackBank(stride);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->AdjustTrackBank(stride);
     }
     
     void TrackListChanged()
@@ -794,32 +790,32 @@ public:
 
     void SetShift(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetShift(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetShift(value);
     }
     
     void SetOption(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetOption(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetOption(value);
     }
     
     void SetControl(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetControl(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetControl(value);
     }
     
     void SetAlt(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetAlt(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetAlt(value);
     }
     
     void SetZoom(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetZoom(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetZoom(value);
     }
     
     void SetScrub(string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroupName()]->SetScrub(value);
+        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetScrub(value);
     }
 
     
