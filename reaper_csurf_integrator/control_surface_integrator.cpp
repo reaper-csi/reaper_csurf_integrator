@@ -38,27 +38,27 @@ void MidiWidget::ForceUpdate()
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
-    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    return GetSurfaceGroup()->GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
 {
-    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
-    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
+    GetSurfaceGroup()->GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +76,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
             realSurface_->SetWidgetValueToZero(widgetName);
     }
     
-    realSurface_->GetLogicalSurface()->MapTrack(GUID_);
+    realSurface_->GetSurfaceGroup()->GetLogicalSurface()->MapTrack(GUID_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
