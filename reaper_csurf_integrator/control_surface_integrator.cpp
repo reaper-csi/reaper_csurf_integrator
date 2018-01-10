@@ -679,7 +679,7 @@ void CSurfManager::InitRealSurfaces()
         AddRealSurface(new MidiCSurf(name, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
     }
     
-    //VSTMonitor_ = VSTMonitor;
+    VSTMonitor_ = VSTMonitor;
     
     fclose ( filePtr );
 }
