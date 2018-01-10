@@ -521,7 +521,170 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
     AddAction(ReaperLogicalControlSurface + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
 }
 
-void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
+void LogicalSurface::InitRealSurfaces()
+{
+    realSurfaces_ = GetManager()->GetRealSurfaces();
+}
+
+void CSurfManager::InitRealSurfaces()
+{
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    const char *ptr = DAW::GetResourcePath();
+    char localBuf[4096];
+    
+    strcpy( localBuf, ptr );
+    
+    strcpy( localBuf + strlen(localBuf), "/CSI/CSI.ini" );
+    
+    FILE *filePtr;
+    
+    filePtr = fopen(localBuf, "r" );
+    
+    if(! filePtr)
+    {
+        char errorBuf[4096];
+        strcpy(errorBuf, "Can't locate ");
+        strcpy(&errorBuf[13], localBuf);
+        DAW::ShowConsoleMsg(errorBuf);
+        return;
+    }
+    
+    while (fgets(localBuf, sizeof(localBuf), filePtr))
+        if(localBuf[0] == '/')
+            continue;
+        else
+            break;
+    
+    char *p;
+    char optionName[512];
+    char optionValue[512];
+    
+    
+    
+    
+    // Midi monitoring //////////////////////////
+    bool midiInMonitor = false;
+    
+    p = strtok (localBuf,"=");
+    
+    strcpy( optionName, p );
+    
+    if(!strcmp(optionName, "MidiInMonitor"))
+        if(p != NULL)
+        {
+            p = strtok(NULL, "=");
+            
+            if(p != NULL)
+            {
+                strcpy( optionValue, p );
+                if(!strcmp(optionValue, "On\n"))
+                    midiInMonitor = true;
+                
+            }
+        }
+    
+    fgets(localBuf, sizeof(localBuf), filePtr);
+    
+    bool midiOutMonitor = false;
+    
+    p = strtok (localBuf,"=");
+    
+    strcpy( optionName, p );
+    
+    if(!strcmp(optionName, "MidiOutMonitor"))
+        if(p != NULL)
+        {
+            p = strtok(NULL, "=");
+            
+            if(p != NULL)
+            {
+                strcpy( optionValue, p );
+                if(!strcmp(optionValue, "On\n"))
+                    midiOutMonitor = true;
+                
+            }
+        }
+    
+    // VST monitoring //////////////////////////
+    fgets(localBuf, sizeof(localBuf), filePtr);
+    
+    bool VSTMonitor = false;
+    
+    p = strtok (localBuf,"=");
+    
+    strcpy( optionName, p );
+    
+    if(!strcmp(optionName, "VSTMonitor"))
+        if(p != NULL)
+        {
+            p = strtok(NULL, "=");
+            
+            if(p != NULL)
+            {
+                strcpy( optionValue, p );
+                if(!strcmp(optionValue, "On\n"))
+                    VSTMonitor = true;
+                
+            }
+        }
+    
+    while (fgets(localBuf, sizeof(localBuf), filePtr))
+    {
+        if(localBuf[0] == '/')
+            continue;
+        
+        int index = 0;
+        char name[512];
+        char numBankableChannelsString[512];
+        char channelInString[512];
+        char channelOutString[512];
+        
+        p = strtok (localBuf," ");
+        
+        strcpy( name, p );
+        index++;
+        
+        while (p != NULL)
+        {
+            p = strtok(NULL, " ");
+            
+            if( p != NULL && index == 1)
+            {
+                strcpy(numBankableChannelsString, p);
+                index++;
+            }
+            else if(p != NULL && index == 2)
+            {
+                strcpy(channelInString, p);
+                index++;
+            }
+            else if(p != NULL && index == 3)
+            {
+                strcpy(channelOutString, p);
+                index++;
+            }
+        }
+        
+        int numBankableChannels = atoi(numBankableChannelsString);
+        
+        int channelIn = atoi(channelInString);
+        channelIn--; // MIDI channels are 0  based
+        
+        int channelOut = atoi(channelOutString);
+        channelOut--; // MIDI channels are 0  based
+        
+        AddRealSurface(new MidiCSurf(name, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+    }
+    
+    //VSTMonitor_ = VSTMonitor;
+    
+    fclose ( filePtr );
+}
+
+void CSurfManager::InitRealSurfaceMap(RealSurface* surface)
 {
     RealSurfaceChannel* channel = nullptr;
 
@@ -718,167 +881,4 @@ void LogicalSurface::InitCSurfWidgets(RealSurface* surface)
             channel->AddWidget(new PushButton_MidiWidget("", surface, Select,      new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
         }
     }
-}
-
-void LogicalSurface::InitRealSurfaces()
-{
-    realSurfaces_ = GetManager()->GetRealSurfaces();
-}
-
-void CSurfManager::InitRealSurfaces()
-{
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    const char *ptr = DAW::GetResourcePath();
-    char localBuf[4096];
-    
-    strcpy( localBuf, ptr );
-    
-    strcpy( localBuf + strlen(localBuf), "/CSI/CSI.ini" );
-    
-    FILE *filePtr;
-    
-    filePtr = fopen(localBuf, "r" );
-    
-    if(! filePtr)
-    {
-        char errorBuf[4096];
-        strcpy(errorBuf, "Can't locate ");
-        strcpy(&errorBuf[13], localBuf);
-        DAW::ShowConsoleMsg(errorBuf);
-        return;
-    }
-    
-    while (fgets(localBuf, sizeof(localBuf), filePtr))
-        if(localBuf[0] == '/')
-            continue;
-        else
-            break;
-
-    char *p;
-    char optionName[512];
-    char optionValue[512];
-    
-    
-    
-    
-    // Midi monitoring //////////////////////////
-    bool midiInMonitor = false;
-    
-    p = strtok (localBuf,"=");
-    
-    strcpy( optionName, p );
-    
-    if(!strcmp(optionName, "MidiInMonitor"))
-        if(p != NULL)
-        {
-            p = strtok(NULL, "=");
-            
-            if(p != NULL)
-            {
-                strcpy( optionValue, p );
-                if(!strcmp(optionValue, "On\n"))
-                    midiInMonitor = true;
-                
-            }
-        }
-    
-    fgets(localBuf, sizeof(localBuf), filePtr);
-    
-    bool midiOutMonitor = false;
-    
-    p = strtok (localBuf,"=");
-    
-    strcpy( optionName, p );
-    
-    if(!strcmp(optionName, "MidiOutMonitor"))
-        if(p != NULL)
-        {
-            p = strtok(NULL, "=");
-            
-            if(p != NULL)
-            {
-                strcpy( optionValue, p );
-                if(!strcmp(optionValue, "On\n"))
-                    midiOutMonitor = true;
-                
-            }
-        }
-    
-    // VST monitoring //////////////////////////    
-    fgets(localBuf, sizeof(localBuf), filePtr);
-
-    bool VSTMonitor = false;
-    
-    p = strtok (localBuf,"=");
-    
-    strcpy( optionName, p );
-    
-    if(!strcmp(optionName, "VSTMonitor"))
-        if(p != NULL)
-        {
-            p = strtok(NULL, "=");
-            
-            if(p != NULL)
-            {
-                strcpy( optionValue, p );
-                if(!strcmp(optionValue, "On\n"))
-                    VSTMonitor = true;
-                
-            }
-        }
-    
-    while (fgets(localBuf, sizeof(localBuf), filePtr))
-    {
-        if(localBuf[0] == '/')
-            continue;
-        
-        int index = 0;
-        char name[512];
-        char numBankableChannelsString[512];
-        char channelInString[512];
-        char channelOutString[512];
-      
-        p = strtok (localBuf," ");
-        
-        strcpy( name, p );
-        index++;
-        
-        while (p != NULL)
-        {
-            p = strtok(NULL, " ");
-            
-            if( p != NULL && index == 1)
-            {
-                strcpy(numBankableChannelsString, p);
-                index++;
-            }
-            else if(p != NULL && index == 2)
-            {
-                strcpy(channelInString, p);
-                index++;
-            }
-            else if(p != NULL && index == 3)
-            {
-                strcpy(channelOutString, p);
-                index++;
-            }
-        }
-        
-        int numBankableChannels = atoi(numBankableChannelsString);
-
-        int channelIn = atoi(channelInString);
-        channelIn--; // MIDI channels are 0  based
-        
-        int channelOut = atoi(channelOutString);
-        channelOut--; // MIDI channels are 0  based
-
-        AddRealSurface(new MidiCSurf(name, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
-    }
-    
-    //VSTMonitor_ = VSTMonitor;
-    
-    fclose ( filePtr );
 }
