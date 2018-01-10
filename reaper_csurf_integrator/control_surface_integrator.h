@@ -651,7 +651,6 @@ private:
     void InitRealSurfaces();
     void InitFXMaps(RealSurface* surface);
     void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
-    void InitCSurfWidgets(RealSurface* surface);
 
     void SetImmobilizedChannels()
     {
@@ -678,11 +677,6 @@ private:
         fxMaps_[fxMap->GetName()] = fxMap;
     }
 
-    void AddRealSurface(RealSurface* realSurface)
-    {
-        realSurfaces_.push_back(realSurface);
-    }
- 
     void AddAction(string actionAddress, Action* action)
     {
         actions_[actionAddress].push_back(action);
@@ -749,7 +743,6 @@ public:
             
             InitFXMaps(surface);
             MapReaperLogicalControlSurfaceActions(surface);
-            InitCSurfWidgets(surface);
         }
         // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -1142,9 +1135,11 @@ private:
     bool VSTMonitor_ = false;
     
     void InitRealSurfaces();
+    void InitRealSurfaceMap(RealSurface* surface);
     
     void AddRealSurface(RealSurface* realSurface)
     {
+        InitRealSurfaceMap(realSurface);
         realSurfaces_.push_back(realSurface);
     }
 
@@ -1153,9 +1148,9 @@ private:
         if(!isInitialized_)
         {
             InitRealSurfaces();
-           
+          
             LogicalSurface* logicalSurface = new LogicalSurface(this);
-            
+
             logicalSurface->Init();
             logicalSurfaces_.push_back(logicalSurface);
             
