@@ -627,6 +627,14 @@ public:
         for(auto* surface : realSurfaces_)
             surface->SetScrub(value);
     }
+    
+    
+    // to Actions ->
+    double GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName);
+    void UpdateAction(string actionAddress, string surfaceName, string widgetName);
+    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName);
+    void CycleAction(string actionAddress, string surfaceName, string widgetName);
+    void DoAction(string actionAddress, double value, string surfaceName, string widgetName);
 };
 
 

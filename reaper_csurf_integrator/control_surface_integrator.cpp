@@ -43,23 +43,54 @@ double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionNa
 
 void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->UpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->ForceUpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
 }
 
 void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
-    GetSurfaceGroup()->GetLogicalSurface()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
+    GetSurfaceGroup()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SurfaceGroup
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// to Actions ->
+double SurfaceGroup::GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
+{
+    return GetLogicalSurface()->GetActionCurrentNormalizedValue(actionAddress, surfaceName, widgetName);
+}
+
+void SurfaceGroup::UpdateAction(string actionAddress, string surfaceName, string widgetName)
+{
+    GetLogicalSurface()->UpdateAction(actionAddress, surfaceName, widgetName);
+}
+
+void SurfaceGroup::ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
+{
+    GetLogicalSurface()->ForceUpdateAction(actionAddress, surfaceName, widgetName);
+}
+
+void SurfaceGroup::CycleAction(string actionAddress, string surfaceName, string widgetName)
+{
+    GetLogicalSurface()->CycleAction(actionAddress, surfaceName, widgetName);
+}
+
+void SurfaceGroup::DoAction(string actionAddress, double value, string surfaceName, string widgetName)
+{
+    GetLogicalSurface()->DoAction(actionAddress, value, surfaceName, widgetName);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurfaceChannel
