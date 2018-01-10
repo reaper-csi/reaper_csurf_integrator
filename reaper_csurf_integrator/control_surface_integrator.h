@@ -173,43 +173,15 @@ protected:
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
     
-    bool shift_ = false;
-    bool option_ = false;
-    bool control_ = false;
-    bool alt_ = false;
-    
     bool zoom_ = false;
     bool scrub_ = false;
-    
-    string CurrentModifers()
-    {
-        string modifiers = "";
-        
-        if(shift_)
-            modifiers += Shift;
-        if(option_)
-            modifiers += Option;
-        if(control_)
-            modifiers +=  Control;
-        if(alt_)
-            modifiers += Alt;
-        
-        return modifiers;
-    }
-    
-    string ActionAddressFor(string GUID, string actionName)
-    {
-        string currentModifiers = "";
-        
-        if(actionName != Shift && actionName != Option && actionName != Control && actionName != Alt)
-            currentModifiers = CurrentModifers();
-        
-        return GUID + GetName() + currentModifiers + actionName;
-    }
     
     RealSurface(const string name, int numBankableChannels) : name_(name),  numBankableChannels_(numBankableChannels) {}
     
 public:
+
+    
+    
     
     
     
@@ -302,30 +274,6 @@ public:
     {
         if(widgetsByName_.count(widgetName) > 0)
             widgetsByName_[widgetName]->SetGUID(GUID);
-    }
-
-    void SetShift(bool value)
-    {
-        shift_ = value;
-        ForceUpdateWidgets();
-    }
-    
-    void SetOption(bool value)
-    {
-        option_ = value;
-        ForceUpdateWidgets();
-    }
-    
-    void SetControl(bool value)
-    {
-        control_ = value;
-        ForceUpdateWidgets();
-    }
-    
-    void SetAlt(bool value)
-    {
-        alt_ = value;
-        ForceUpdateWidgets();
     }
     
     void SetZoom(bool value)
@@ -481,6 +429,38 @@ class SurfaceGroup
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     
+    bool shift_ = false;
+    bool option_ = false;
+    bool control_ = false;
+    bool alt_ = false;
+    
+    string CurrentModifers()
+    {
+        string modifiers = "";
+        
+        if(shift_)
+            modifiers += Shift;
+        if(option_)
+            modifiers += Option;
+        if(control_)
+            modifiers +=  Control;
+        if(alt_)
+            modifiers += Alt;
+        
+        return modifiers;
+    }
+    
+    string ActionAddressFor(string GUID, string surfaceName, string actionName)
+    {
+        string currentModifiers = "";
+        
+        if(actionName != Shift && actionName != Option && actionName != Control && actionName != Alt)
+            currentModifiers = CurrentModifers();
+        
+        return GUID + GetName() + surfaceName + currentModifiers + actionName;
+    }
+
+   
 public:
     SurfaceGroup(string name, LogicalSurface* logicalSurface, int numLogicalChannels) : name_(name), logicalSurface_(logicalSurface), numLogicalChannels_(numLogicalChannels) {}
     
@@ -594,26 +574,30 @@ public:
     
     void SetShift(bool value)
     {
+        shift_ = value;
         for(auto* surface : realSurfaces_)
-            surface->SetShift(value);
+            surface->ForceUpdateWidgets();
     }
     
     void SetOption(bool value)
     {
+        option_ = value;
         for(auto* surface : realSurfaces_)
-            surface->SetOption(value);
+            surface->ForceUpdateWidgets();
     }
     
     void SetControl(bool value)
     {
+        control_ = value;
         for(auto* surface : realSurfaces_)
-            surface->SetControl(value);
+            surface->ForceUpdateWidgets();
     }
     
     void SetAlt(bool value)
     {
+        alt_ = value;
         for(auto* surface : realSurfaces_)
-            surface->SetAlt(value);
+            surface->ForceUpdateWidgets();
     }
     
     void SetZoom(bool value)
@@ -628,13 +612,12 @@ public:
             surface->SetScrub(value);
     }
     
-    
     // to Actions ->
-    double GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName);
-    void UpdateAction(string actionAddress, string surfaceName, string widgetName);
-    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName);
-    void CycleAction(string actionAddress, string surfaceName, string widgetName);
-    void DoAction(string actionAddress, double value, string surfaceName, string widgetName);
+    double GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName);
+    void UpdateAction(string GUID, string surfaceName, string actionName, string widgetName);
+    void ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName);
+    void CycleAction(string GUID, string surfaceName, string actionName, string widgetName);
+    void DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName);
 };
 
 
@@ -655,7 +638,7 @@ private:
     
     void InitRealSurfaces();
     void InitFXMaps(RealSurface* surface);
-    void MapReaperLogicalControlSurfaceActions(RealSurface* surface);
+    void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
 
     void SetImmobilizedChannels()
     {
@@ -746,7 +729,7 @@ public:
             surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
             
             InitFXMaps(surface);
-            MapReaperLogicalControlSurfaceActions(surface);
+            MapReaperLogicalControlSurfaceActions(surfaceGroups_[ReaperLogicalControlSurface]->GetName(), surface->GetName());
         }
         // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -754,8 +737,8 @@ public:
         RefreshLayout();
     }
     
-    void MapTrackAndFXActions(string trackGUID, string surfaceName);
-    void MapFXActions(MediaTrack* track, string surfaceName);
+    void MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName);
+    void MapFXActions(MediaTrack* track, string groupName, string surfaceName);
     
     void MapTrack(string trackGUID)
     {
@@ -767,7 +750,7 @@ public:
                 return; // Already did this track
         
         for(auto * surface : realSurfaces_)
-            MapTrackAndFXActions(trackGUID, surface->GetName());
+            MapTrackAndFXActions(trackGUID, surface->GetSurfaceGroup()->GetName(), surface->GetName());
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
@@ -961,7 +944,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            MapFXActions(track, surface->GetName());
+            MapFXActions(track, surface->GetSurfaceGroup()->GetName(), surface->GetName());
     }
     
     // to Widgets ->
