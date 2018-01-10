@@ -38,27 +38,27 @@ void MidiWidget::ForceUpdate()
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
-    return GetSurfaceGroup()->GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    return GetSurfaceGroup()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->UpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->UpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->ForceUpdateAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->CycleAction(ActionAddressFor(GUID, actionName), GetName(), widgetName);
+    GetSurfaceGroup()->CycleAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
-    GetSurfaceGroup()->DoAction(ActionAddressFor(GUID, actionName), value, GetName(), widgetName);
+    GetSurfaceGroup()->DoAction(value, GUID, GetName(), actionName, widgetName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,29 +66,29 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // to Actions ->
-double SurfaceGroup::GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
+double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    return GetLogicalSurface()->GetActionCurrentNormalizedValue(actionAddress, surfaceName, widgetName);
+    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
 }
 
-void SurfaceGroup::UpdateAction(string actionAddress, string surfaceName, string widgetName)
+void SurfaceGroup::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->UpdateAction(actionAddress, surfaceName, widgetName);
+    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
 }
 
-void SurfaceGroup::ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
+void SurfaceGroup::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->ForceUpdateAction(actionAddress, surfaceName, widgetName);
+    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
 }
 
-void SurfaceGroup::CycleAction(string actionAddress, string surfaceName, string widgetName)
+void SurfaceGroup::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->CycleAction(actionAddress, surfaceName, widgetName);
+    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
 }
 
-void SurfaceGroup::DoAction(string actionAddress, double value, string surfaceName, string widgetName)
+void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->DoAction(actionAddress, value, surfaceName, widgetName);
+    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, surfaceName, widgetName);
 }
 
 
@@ -113,7 +113,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // LogicalSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
+void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string surfaceName)
 {
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -133,7 +133,7 @@ void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
             for(auto mapEntry : map->GetMapEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(trackGUID + fxGUID + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
+                    AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -141,7 +141,7 @@ void LogicalSurface::MapFXActions(MediaTrack* track, string surfaceName)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            AddAction(trackGUID + fxGUID + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
+                            AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
                     }
                 }
             }
@@ -343,35 +343,35 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 
 
-void LogicalSurface::MapTrackAndFXActions(string trackGUID, string surfaceName)
+void LogicalSurface::MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     
     // GAW TBD this will be obtained from map
-    AddAction(trackGUID + surfaceName + Display, new TrackNameDisplay_Action(this, track));
-    AddAction(trackGUID + surfaceName + Display, new TrackTouchControlled_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackGUID + surfaceName + Display));
+    AddAction(trackGUID + groupName + surfaceName + Display, new TrackNameDisplay_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Display, new TrackTouchControlled_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackGUID + surfaceName + Display));
 
-    AddAction(trackGUID + surfaceName + Fader, new TrackVolume_Action(this, track));
-    AddAction(trackGUID + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Fader, new TrackVolume_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
 
     CycledAction* cycledAction = new CycledAction(this);
     cycledAction->AddAction(new TrackPan_Action(this, track, 0x00));
     cycledAction->AddAction(new TrackPanWidth_Action(this, track, 0x30));
-    AddAction(trackGUID + surfaceName + Rotary, cycledAction);
-    AddAction(trackGUID + surfaceName + RotaryPush, cycledAction);
+    AddAction(trackGUID + groupName + surfaceName + Rotary, cycledAction);
+    AddAction(trackGUID + groupName + surfaceName + RotaryPush, cycledAction);
 
-    AddAction(trackGUID + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-    AddAction(trackGUID + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
-    AddAction(trackGUID + surfaceName + Control + Select, new TrackSelect_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Control + Select, new TrackSelect_Action(this, track));
     
-    AddAction(trackGUID + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-    AddAction(trackGUID + surfaceName + Mute, new TrackMute_Action(this, track));
-    AddAction(trackGUID + surfaceName + Solo, new TrackSolo_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Mute, new TrackMute_Action(this, track));
+    AddAction(trackGUID + groupName + surfaceName + Solo, new TrackSolo_Action(this, track));
     
-    AddAction(trackGUID + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
-    AddAction(trackGUID + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
+    AddAction(trackGUID + groupName + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
+    AddAction(trackGUID + groupName + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
     
-    MapFXActions(track, surfaceName);
+    MapFXActions(track, groupName, surfaceName);
 }
 
 void LogicalSurface::InitFXMaps(RealSurface* surface)
@@ -488,68 +488,66 @@ void LogicalSurface::InitFXMaps(RealSurface* surface)
 #define ID_GOTO_MARKER1                 40161
 #define ID_SET_MARKER1                  40657
 
-void LogicalSurface::MapReaperLogicalControlSurfaceActions(RealSurface* surface)
+void LogicalSurface::MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName)
 {
-    string surfaceName = surface->GetName();
-
-    AddAction(ReaperLogicalControlSurface + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
-    AddAction(ReaperLogicalControlSurface + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + surfaceName + BankLeft, new TrackBank_Action(this, -8));
-    AddAction(ReaperLogicalControlSurface + surfaceName + BankRight, new TrackBank_Action(this, 8));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankLeft, new TrackBank_Action(this, -8));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankRight, new TrackBank_Action(this, 8));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + NextMap, new NextMap_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + NextMap, new NextMap_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift, new Shift_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Option, new Option_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Control, new Control_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Alt, new Alt_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift, new Shift_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option, new Option_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Control, new Control_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Alt, new Alt_Action(this));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Read, new TrackAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Write, new TrackAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Group, new TrackAutoMode_Action(this, 5));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Read, new TrackAutoMode_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Write, new TrackAutoMode_Action(this, 3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Group, new TrackAutoMode_Action(this, 5));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Cycle, new CycleTimeline_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Cycle, new CycleTimeline_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Rewind, new Rewind_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + FastForward, new FastForward_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Stop, new Stop_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Play, new Play_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Record, new Record_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Rewind, new Rewind_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + FastForward, new FastForward_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Stop, new Stop_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Play, new Play_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Record, new Record_Action(this));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
     
-    AddAction(ReaperLogicalControlSurface + surfaceName + Zoom, new LatchedZoom_Action(this));
-    AddAction(ReaperLogicalControlSurface + surfaceName + Scrub, new LatchedScrub_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Zoom, new LatchedZoom_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Scrub, new LatchedScrub_Action(this));
 
-    AddAction(ReaperLogicalControlSurface + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
 }
 
 void LogicalSurface::InitRealSurfaces()
