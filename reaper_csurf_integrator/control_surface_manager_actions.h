@@ -158,7 +158,7 @@ public:
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
-        GetLogicalSurface()->AdjustTrackBank(surfaceName, stride_);
+        GetLogicalSurface()->AdjustTrackBank(groupName, surfaceName, stride_);
     }
 };
 

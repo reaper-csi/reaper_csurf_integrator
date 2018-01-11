@@ -684,15 +684,6 @@ public:
         
         return false;
     }
- 
-    RealSurface* GetRealSurfaceFor(string surfaceName)
-    {
-        for(auto* surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface;
-        
-        return nullptr;
-    }
    
     bool GetTouchState(string trackGUID, int touchedControl)
     {
@@ -755,10 +746,10 @@ public:
         mappedTrackGUIDs_.push_back(trackGUID);
     }
     
-    void AdjustTrackBank(string surfaceName, int stride)
+    void AdjustTrackBank(string groupName, string surfaceName, int stride)
     {
         touchedTracks_.clear(); // GAW -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->AdjustTrackBank(stride);
+        surfaceGroups_[groupName]->AdjustTrackBank(stride);
     }
     
     void TrackListChanged()
