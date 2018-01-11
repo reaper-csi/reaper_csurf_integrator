@@ -550,9 +550,32 @@ void LogicalSurface::MapReaperLogicalControlSurfaceActions(string groupName, str
     AddAction(ReaperLogicalControlSurface + groupName + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
 }
 
-void LogicalSurface::InitRealSurfaces()
+void LogicalSurface::Init()
 {
-    realSurfaces_ = GetManager()->GetRealSurfaces();
+    // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
+    vector<RealSurface*> realSurfaces = GetManager()->GetRealSurfaces();
+    
+    int numChannels = 1;
+    
+    for(auto* surface : realSurfaces) // all surfaces are hardwired to the same group
+        numChannels += surface->GetNumBankableChannels();
+    
+    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
+    
+    for(auto* surface : realSurfaces)
+    {
+        surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
+        surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
+        
+        InitFXMaps(surface);
+        MapReaperLogicalControlSurfaceActions(surfaceGroups_[ReaperLogicalControlSurface]->GetName(), surface->GetName());
+        
+        realSurfaces_.push_back(surface);
+    }
+    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    SetImmobilizedChannels();
+    RefreshLayout();
 }
 
 void CSurfManager::InitRealSurfaces()

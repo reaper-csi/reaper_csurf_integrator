@@ -618,6 +618,46 @@ public:
     void ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName);
     void CycleAction(string GUID, string surfaceName, string actionName, string widgetName);
     void DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName);
+    
+    // to Widgets ->
+    double GetWidgetMaxDB(string surfaceName, string widgetName)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->GetWidgetMaxDB(widgetName);
+        
+        return System_MaxDB;
+    }
+    
+    double GetWidgetMinDB(string surfaceName, string widgetName)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->GetWidgetMinDB(widgetName);
+        
+        return System_MinDB;
+    }
+    
+    void SetWidgetValue(string surfaceName, string widgetName, double value)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value);
+    }
+    
+    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value, mode);
+    }
+    
+    void SetWidgetValue(string surfaceName, string widgetName, string value)
+    {
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                surface->SetWidgetValue(widgetName, value);
+    }
 };
 
 
@@ -636,7 +676,6 @@ private:
     vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
-    void InitRealSurfaces();
     void InitFXMaps(RealSurface* surface);
     void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
 
@@ -659,7 +698,7 @@ private:
             }
         }
     }
-   
+    
     void AddFXMap(FXMap* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
@@ -702,31 +741,7 @@ public:
             touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID), touchedTracks_.end());
     }
     
-    void Init()
-    {
-        // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
-        InitRealSurfaces();
-        
-        int numChannels = 1;
-        
-        for(auto* surface : realSurfaces_) // all surfaces are hardwired to the same group
-            numChannels += surface->GetNumBankableChannels();
-        
-        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
-
-        for(auto* surface : realSurfaces_)
-        {
-            surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
-            surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
-            
-            InitFXMaps(surface);
-            MapReaperLogicalControlSurfaceActions(surfaceGroups_[ReaperLogicalControlSurface]->GetName(), surface->GetName());
-        }
-        // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
-        SetImmobilizedChannels();
-        RefreshLayout();
-    }
+    void Init();
     
     void MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName);
     void MapFXActions(MediaTrack* track, string groupName, string surfaceName);
@@ -985,41 +1000,36 @@ public:
     // to Widgets ->
     double GetWidgetMaxDB(string groupName, string surfaceName, string widgetName)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->GetWidgetMaxDB(widgetName);
+        if(surfaceGroups_.count(groupName) > 0)
+            return surfaceGroups_[groupName]->GetWidgetMaxDB(surfaceName, widgetName);
         
         return System_MaxDB;
     }
     
     double GetWidgetMinDB(string groupName, string surfaceName, string widgetName)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->GetWidgetMinDB(widgetName);
+        if(surfaceGroups_.count(groupName) > 0)
+            return surfaceGroups_[groupName]->GetWidgetMinDB(surfaceName, widgetName);
         
         return System_MinDB;
     }
     
     void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value);
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
     }
     
     void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value, int mode)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value, mode);
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value, mode);
     }
     
     void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value);
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
     }
 };
 
