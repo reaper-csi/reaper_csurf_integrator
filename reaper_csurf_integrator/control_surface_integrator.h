@@ -572,6 +572,12 @@ public:
             surface->ForceUpdateWidgets();
     }
     
+    void RunAndUpdate()
+    {
+        for(auto [name, surface] : realSurfaces_)
+            surface->RunAndUpdate();
+    }
+
     void SetShift(bool value)
     {
         shift_ = value;
@@ -610,6 +616,77 @@ public:
     {
         for(auto [name, surface] : realSurfaces_)
             surface->SetScrub(value);
+    }
+    
+    void SetImmobilizedTracks()
+    {
+        char buffer[BUFSZ];
+        RealSurfaceChannel* channel = nullptr;
+        
+        for(auto [name, surface] : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetChannels().size(); i++)
+            {
+                channel = surface->GetChannels()[i];
+                
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                {
+                    channel->SetGUID(buffer);
+                    channel->SetIsMovable(false);
+                }
+            }
+        }
+    }
+
+    void ImmobilizeSelectedTracks()
+    {
+        RealSurfaceChannel* channel = nullptr;
+        
+        for(auto [name, surface] : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetChannels().size(); i++)
+            {
+                channel = surface->GetChannels()[i];
+                
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                {
+                    channel->SetIsMovable(false);
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
+                    DAW::MarkProjectDirty(nullptr);
+                }
+            }
+        }
+    }
+    
+    void MobilizeSelectedTracks()
+    {
+        char buffer[BUFSZ];
+        RealSurfaceChannel* channel = nullptr;
+        
+        for(auto [name, surface] : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetChannels().size(); i++)
+            {
+                channel = surface->GetChannels()[i];
+                
+                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                {
+                    channel->SetIsMovable(true);
+                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                    {
+                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
+                        DAW::MarkProjectDirty(nullptr);
+                    }
+                }
+            }
+        }
+    }
+    
+    // to Widgets ->
+    void ForceUpdateWidgets()
+    {
+        for(auto [name, surface] : realSurfaces_)
+            surface->ForceUpdateWidgets();
     }
     
     // to Actions ->
@@ -674,24 +751,10 @@ private:
     void InitFXMaps(RealSurface* surface);
     void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
 
-    void SetImmobilizedChannels()
+    void SetImmobilizedTracks()
     {
-        char buffer[BUFSZ];
-        RealSurfaceChannel* channel = nullptr;
-        
-        for(auto * surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
-            {
-                channel = surface->GetChannels()[i];
-                
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
-                {
-                    channel->SetGUID(buffer);
-                    channel->SetIsMovable(false);
-                }
-            }
-        }
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->SetImmobilizedTracks();
     }
     
     void AddFXMap(FXMap* fxMap)
@@ -709,15 +772,6 @@ public:
 
     CSurfManager* GetManager() { return manager_; }
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
-
-    bool IsShowFXWindows(string surfaceName)
-    {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->IsShowFXWindows();
-        
-        return false;
-    }
    
     bool GetTouchState(string trackGUID, int touchedControl)
     {
@@ -776,8 +830,8 @@ public:
     
     void RunAndUpdate()
     {
-        for(auto & surface : realSurfaces_)
-            surface->RunAndUpdate();
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->RunAndUpdate();
     }
 
     void SetShift(string groupName, string surfaceName, bool value)
@@ -830,7 +884,7 @@ public:
         for(auto* surface : realSurfaces_)
             OpenFXWindows(surface);
         
-        ForceUpdate();
+        ForceUpdateWidgets();
     }
     
     void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
@@ -885,74 +939,54 @@ public:
             surface->CloseFXWindows();
     }
     
-    
-    
-    
-    
-    
-
     void SetShowOpenFXWindows(string surfaceName, bool value)
     {
         for(auto* surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
                 surface->SetShowFXWindows(value);
     }
-   
-    void ImmobilizeSelectedTracks()
-    {
-        RealSurfaceChannel* channel = nullptr;
-
-        for(auto * surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
-            {
-                channel = surface->GetChannels()[i];
-
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                {
-                    channel->SetIsMovable(false);
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
-                    DAW::MarkProjectDirty(nullptr);
-                }
-            }
-        }
-    }
     
-    void MobilizeSelectedTracks()
+    
+    bool IsShowFXWindows(string surfaceName)
     {
-        char buffer[BUFSZ];
-        RealSurfaceChannel* channel = nullptr;
+        for(auto & surface : realSurfaces_)
+            if(surface->GetName() == surfaceName)
+                return surface->IsShowFXWindows();
         
-        for(auto * surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
-            {
-                channel = surface->GetChannels()[i];
-                
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
-                {
-                    channel->SetIsMovable(true);
-                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
-                    {
-                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
-                        DAW::MarkProjectDirty(nullptr);
-                    }
-                }
-            }
-        }
+        return false;
     }
 
+    
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
             MapFXActions(track, surface->GetSurfaceGroup()->GetName(), surface->GetName());
     }
+
+    
+    
+    
+    
+    
+    
+   
+    void ImmobilizeSelectedTracks()
+    {
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->ImmobilizeSelectedTracks();
+    }
+    
+    void MobilizeSelectedTracks()
+    {
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->MobilizeSelectedTracks();
+    }
     
     // to Widgets ->
-    void ForceUpdate()
+    void ForceUpdateWidgets()
     {
-        for(auto& surface : realSurfaces_)
-            surface->ForceUpdateWidgets();
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->ForceUpdateWidgets();
     }
 
     // to Actions ->
