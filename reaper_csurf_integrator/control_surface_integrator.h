@@ -427,7 +427,7 @@ class SurfaceGroup
     LogicalSurface* logicalSurface_= nullptr;
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
-    vector<RealSurface*> realSurfaces_;
+    map<string, RealSurface*> realSurfaces_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -472,14 +472,14 @@ public:
 
     void AddSurface(RealSurface* surface)
     {
-        realSurfaces_.push_back(surface);
+        realSurfaces_[surface->GetName()] = surface;
     }
     
     void TrackListChanged()
     {
         vector<RealSurfaceChannel*> channels;
        
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 channels.push_back(channel);
 
@@ -538,7 +538,7 @@ public:
         
         vector<string> immovableTracks;
         
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == false)
                     immovableTracks.push_back(channel->GetGUID());
@@ -563,52 +563,52 @@ public:
         offset = 0;
         
         // Apply new layout
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == true)
                     channel->SetGUID(movableTracks[offset++]);
         
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
     
     void SetShift(bool value)
     {
         shift_ = value;
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
     
     void SetOption(bool value)
     {
         option_ = value;
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
     
     void SetControl(bool value)
     {
         control_ = value;
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
     
     void SetAlt(bool value)
     {
         alt_ = value;
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
     
     void SetZoom(bool value)
     {
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->SetZoom(value);
     }
     
     void SetScrub(bool value)
     {
-        for(auto* surface : realSurfaces_)
+        for(auto [name, surface] : realSurfaces_)
             surface->SetScrub(value);
     }
     
@@ -622,41 +622,36 @@ public:
     // to Widgets ->
     double GetWidgetMaxDB(string surfaceName, string widgetName)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->GetWidgetMaxDB(widgetName);
+        if(realSurfaces_.count(surfaceName) > 0)
+            return realSurfaces_[surfaceName]->GetWidgetMaxDB(widgetName);
         
         return System_MaxDB;
     }
     
     double GetWidgetMinDB(string surfaceName, string widgetName)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->GetWidgetMinDB(widgetName);
+        if(realSurfaces_.count(surfaceName) > 0)
+            return realSurfaces_[surfaceName]->GetWidgetMinDB(widgetName);
         
         return System_MinDB;
     }
     
     void SetWidgetValue(string surfaceName, string widgetName, double value)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value);
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->SetWidgetValue(widgetName, value);
     }
     
     void SetWidgetValue(string surfaceName, string widgetName, double value, int mode)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value, mode);
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->SetWidgetValue(widgetName, value, mode);
     }
     
     void SetWidgetValue(string surfaceName, string widgetName, string value)
     {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetWidgetValue(widgetName, value);
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->SetWidgetValue(widgetName, value);
     }
 };
 
