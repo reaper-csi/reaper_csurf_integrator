@@ -401,8 +401,8 @@ protected:
     LogicalSurface* logicalSurface_ = nullptr;
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
-    virtual void SetWidgetValue(string surfaceName, string widgetName, double value) {}
-    virtual void SetWidgetValue(string surfaceName, string widgetName, string value) {}
+    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) {}
+    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) {}
 
     Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
     
@@ -410,13 +410,13 @@ public:
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
-    virtual double GetCurrentNormalizedValue (string surfaceName, string widgetName) { return 0.0; }
+    virtual double GetCurrentNormalizedValue (string groupName, string surfaceName, string widgetName) { return 0.0; }
 
     virtual void AddAction(Action* action) {}
-    virtual void Update(string surfaceName, string widgetName) {}
-    virtual void ForceUpdate(string surfaceName, string widgetName) {}
-    virtual void Cycle(string surfaceName, string widgetName) {}
-    virtual void Do(double value, string surfaceName, string widgetName) {}
+    virtual void Update(string groupName, string surfaceName, string widgetName) {}
+    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) {}
+    virtual void Cycle(string groupName, string surfaceName, string widgetName) {}
+    virtual void Do(double value, string groupName, string surfaceName, string widgetName) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -779,34 +779,34 @@ public:
             surface->RunAndUpdate();
     }
 
-    void SetShift(string surfaceName, bool value)
+    void SetShift(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetShift(value);
+        surfaceGroups_[groupName]->SetShift(value);
     }
     
-    void SetOption(string surfaceName, bool value)
+    void SetOption(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetOption(value);
+        surfaceGroups_[groupName]->SetOption(value);
     }
     
-    void SetControl(string surfaceName, bool value)
+    void SetControl(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetControl(value);
+        surfaceGroups_[groupName]->SetControl(value);
     }
     
-    void SetAlt(string surfaceName, bool value)
+    void SetAlt(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetAlt(value);
+        surfaceGroups_[groupName]->SetAlt(value);
     }
     
-    void SetZoom(string surfaceName, bool value)
+    void SetZoom(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetZoom(value);
+        surfaceGroups_[groupName]->SetZoom(value);
     }
     
-    void SetScrub(string surfaceName, bool value)
+    void SetScrub(string groupName, string surfaceName, bool value)
     {
-        surfaceGroups_[GetRealSurfaceFor(surfaceName)->GetSurfaceGroup()->GetName()]->SetScrub(value);
+        surfaceGroups_[groupName]->SetScrub(value);
     }
 
     
@@ -955,44 +955,44 @@ public:
     }
 
     // to Actions ->
-    double GetActionCurrentNormalizedValue(string actionAddress, string surfaceName, string widgetName)
+    double GetActionCurrentNormalizedValue(string actionAddress, string groupName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0 && actions_[actionAddress].size() > 0)
-            return actions_[actionAddress][0]->GetCurrentNormalizedValue(surfaceName, widgetName);
+            return actions_[actionAddress][0]->GetCurrentNormalizedValue(groupName, surfaceName, widgetName);
         else
             return 0.0;
     }
 
-    void UpdateAction(string actionAddress, string surfaceName, string widgetName)
+    void UpdateAction(string actionAddress, string groupName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Update(surfaceName, widgetName);
+                action->Update(groupName, surfaceName, widgetName);
     }
     
-    void ForceUpdateAction(string actionAddress, string surfaceName, string widgetName)
+    void ForceUpdateAction(string actionAddress, string groupName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->ForceUpdate(surfaceName, widgetName);
+                action->ForceUpdate(groupName, surfaceName, widgetName);
     }
 
-    void CycleAction(string actionAddress, string surfaceName, string widgetName)
+    void CycleAction(string actionAddress, string groupName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Cycle(surfaceName, widgetName);
+                action->Cycle(groupName, surfaceName, widgetName);
     }
     
-    void DoAction(string actionAddress, double value, string surfaceName, string widgetName)
+    void DoAction(string actionAddress, double value, string groupName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Do(value, surfaceName, widgetName);
+                action->Do(value, groupName, surfaceName, widgetName);
     }
     
     // to Widgets ->
-    double GetWidgetMaxDB(string surfaceName, string widgetName)
+    double GetWidgetMaxDB(string groupName, string surfaceName, string widgetName)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
@@ -1001,7 +1001,7 @@ public:
         return System_MaxDB;
     }
     
-    double GetWidgetMinDB(string surfaceName, string widgetName)
+    double GetWidgetMinDB(string groupName, string surfaceName, string widgetName)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
@@ -1010,21 +1010,21 @@ public:
         return System_MinDB;
     }
     
-    void SetWidgetValue(string surfaceName, string widgetName, double value)
+    void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
                 surface->SetWidgetValue(widgetName, value);
     }
     
-    void SetWidgetValue(string surfaceName, string widgetName, double value, int mode)
+    void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value, int mode)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
                 surface->SetWidgetValue(widgetName, value, mode);
     }
     
-    void SetWidgetValue(string surfaceName, string widgetName, string value)
+    void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value)
     {
         for(auto & surface : realSurfaces_)
             if(surface->GetName() == surfaceName)

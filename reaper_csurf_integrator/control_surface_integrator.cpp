@@ -68,27 +68,27 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 // to Actions ->
 double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
+    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void SurfaceGroup::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
+    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void SurfaceGroup::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
+    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void SurfaceGroup::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), surfaceName, widgetName);
+    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, surfaceName, widgetName);
+    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
 }
 
 
