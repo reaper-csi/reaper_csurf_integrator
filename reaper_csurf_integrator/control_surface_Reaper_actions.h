@@ -317,13 +317,15 @@ public:
         if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
         {
             lastRepeated = clock();
-            DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
+            // GAW TBD
+            //DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
         }
     }
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
+        // GAW TBD
+        // DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
         pressed_ = value;
     }
 };
