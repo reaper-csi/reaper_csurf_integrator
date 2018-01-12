@@ -140,6 +140,87 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define IDC_REPEAT                      1068
+#define ID_FILE_SAVEAS                  40022
+#define ID_FILE_NEWPROJECT              40023
+#define ID_FILE_OPENPROJECT             40025
+#define ID_FILE_SAVEPROJECT             40026
+#define IDC_EDIT_UNDO                   40029
+#define IDC_EDIT_REDO                   40030
+#define ID_MARKER_PREV                  40172
+#define ID_MARKER_NEXT                  40173
+#define ID_INSERT_MARKERRGN             40174
+#define ID_INSERT_MARKER                40157
+#define ID_LOOP_SETSTART                40222
+#define ID_LOOP_SETEND                  40223
+#define ID_METRONOME                    40364
+#define ID_GOTO_MARKER1                 40161
+#define ID_SET_MARKER1                  40657
+
+void RealSurface::MapReaperLogicalControlSurfaceActions()
+{
+    LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + ChannelLeft, new TrackBank_Action(logicalSurface, -1));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + ChannelRight, new TrackBank_Action(logicalSurface, 1));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + BankLeft, new TrackBank_Action(logicalSurface, -8));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + BankRight, new TrackBank_Action(logicalSurface, 8));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + NextMap, new NextMap_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + LockTracks, new ImmobilizeSelectedTracks_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + UnlockTracks, new MobilizeSelectedTracks_Action(logicalSurface));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift, new Shift_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Option, new Option_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Control, new Control_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Alt, new Alt_Action(logicalSurface));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Read, new TrackAutoMode_Action(logicalSurface, 1));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Write, new TrackAutoMode_Action(logicalSurface, 3));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Trim, new TrackAutoMode_Action(logicalSurface, 0));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Touch, new TrackAutoMode_Action(logicalSurface, 2));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Latch, new TrackAutoMode_Action(logicalSurface, 4));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Group, new TrackAutoMode_Action(logicalSurface, 5));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Read, new GlobalAutoMode_Action(logicalSurface, 1));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Write, new GlobalAutoMode_Action(logicalSurface, 3));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Trim, new GlobalAutoMode_Action(logicalSurface, 0));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Touch, new GlobalAutoMode_Action(logicalSurface, 2));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Latch, new GlobalAutoMode_Action(logicalSurface, 4));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Group, new GlobalAutoMode_Action(logicalSurface, 5));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEPROJECT));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEAS));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_UNDO));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_REDO));
+    
+    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
+    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Marker, new Reaper_Action(logicalSurface, ID_MARKER_PREV));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Marker, new Reaper_Action(logicalSurface, ID_INSERT_MARKER));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Option + Marker, new Reaper_Action(logicalSurface,ID_INSERT_MARKERRGN));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Nudge, new Reaper_Action(logicalSurface, ID_MARKER_NEXT));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Cycle, new CycleTimeline_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Click, new Reaper_Action(logicalSurface, ID_METRONOME));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Rewind, new Rewind_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + FastForward, new FastForward_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Stop, new Stop_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Play, new Play_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Record, new Record_Action(logicalSurface));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Right, new RepeatingArrow_Action(logicalSurface, 3, 0.3));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Zoom, new LatchedZoom_Action(logicalSurface));
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Scrub, new LatchedScrub_Action(logicalSurface));
+    
+    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + DisplayFX, new SetShowFXWindows_Action(logicalSurface));
+}
 void RealSurface::InitFXMaps()
 {
     FXMap* fxMap = new FXMap("VST: ReaComp (Cockos)");
@@ -340,11 +421,6 @@ void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, strin
 
 
 
-//////////////////////////////////////////////////////////////////////
-/// All the following code will be replaced with map reading functions
-//////////////////////////////////////////////////////////////////////
-
-
 
 /*
  void SID_PCM_Source::SaveState(ProjectStateContext * ctx)
@@ -518,84 +594,7 @@ void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string su
 }
 
 
-#define IDC_REPEAT                      1068
-#define ID_FILE_SAVEAS                  40022
-#define ID_FILE_NEWPROJECT              40023
-#define ID_FILE_OPENPROJECT             40025
-#define ID_FILE_SAVEPROJECT             40026
-#define IDC_EDIT_UNDO                   40029
-#define IDC_EDIT_REDO                   40030
-#define ID_MARKER_PREV                  40172
-#define ID_MARKER_NEXT                  40173
-#define ID_INSERT_MARKERRGN             40174
-#define ID_INSERT_MARKER                40157
-#define ID_LOOP_SETSTART                40222
-#define ID_LOOP_SETEND                  40223
-#define ID_METRONOME                    40364
-#define ID_GOTO_MARKER1                 40161
-#define ID_SET_MARKER1                  40657
 
-void LogicalSurface::MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName)
-{
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankLeft, new TrackBank_Action(this, -8));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankRight, new TrackBank_Action(this, 8));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + NextMap, new NextMap_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift, new Shift_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option, new Option_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Control, new Control_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Alt, new Alt_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Read, new TrackAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Write, new TrackAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Group, new TrackAutoMode_Action(this, 5));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
-    
-    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Cycle, new CycleTimeline_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Rewind, new Rewind_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + FastForward, new FastForward_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Stop, new Stop_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Play, new Play_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Record, new Record_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Zoom, new LatchedZoom_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Scrub, new LatchedScrub_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
-}
 
 
 
