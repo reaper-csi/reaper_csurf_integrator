@@ -35,6 +35,45 @@ void MidiWidget::ForceUpdate()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealSurface::MapFXToWidgets(MediaTrack *track)
+{
+    // GAW TBD -- should get fxMaps from rigfht here
+
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    // Map Track to any Channels interested
+    for(auto* channel : GetChannels())
+        if(channel->GetShouldMapFXTrackToChannel())
+            channel->SetGUID(trackGUID);
+    
+    char fxName[BUFSZ];
+    char fxGUID[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+        
+        if(GetSurfaceGroup()->GetLogicalSurface()->GetFXMaps().count(GetName() + fxName) > 0)
+        {
+            FXMap* map = GetSurfaceGroup()->GetLogicalSurface()->GetFXMaps()[GetName() + fxName];
+            
+            for(auto mapEntry : map->GetMapEntries())
+            {
+                if(mapEntry.paramName == GainReduction_dB)
+                    SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                else
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                        if(mapEntry.paramName == fxParamName)
+                            SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+            }
+            
+            AddFXWindow(FXWindow(track, fxGUID));
+        }
+    }
+}
+
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
@@ -64,7 +103,6 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SurfaceGroup
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // to Actions ->
 double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
@@ -115,6 +153,8 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string surfaceName)
 {
+    // GAW TBD -- should get fxMaps from surface
+    
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
     char fxGUID[BUFSZ];
@@ -569,8 +609,6 @@ void LogicalSurface::Init()
         
         InitFXMaps(surface);
         MapReaperLogicalControlSurfaceActions(surfaceGroups_[ReaperLogicalControlSurface]->GetName(), surface->GetName());
-        
-        realSurfaces_.push_back(surface);
     }
     // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
