@@ -107,7 +107,37 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class LogicalSurface;
+class SurfaceGroup;
 class RealSurface;
+class RealSurfaceChannel;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    LogicalSurface* logicalSurface_ = nullptr;
+    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    
+    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) {}
+    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) {}
+    
+    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
+    
+public:
+    virtual ~Action() {}
+    
+    virtual int GetDisplayMode() { return 0; }
+    virtual double GetCurrentNormalizedValue (string groupName, string surfaceName, string widgetName) { return 0.0; }
+    
+    virtual void AddAction(Action* action) {}
+    virtual void Update(string groupName, string surfaceName, string widgetName) {}
+    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) {}
+    virtual void Cycle(string groupName, string surfaceName, string widgetName) {}
+    virtual void Do(double value, string groupName, string surfaceName, string widgetName) {}
+};
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,10 +188,6 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalSurface;
-class SurfaceGroup;
-class RealSurfaceChannel;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -172,6 +198,7 @@ protected:
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
+    map<string, FXMap *> fxMaps_;
     
     bool zoom_ = false;
     bool scrub_ = false;
@@ -181,7 +208,7 @@ protected:
 public:
 
     
-    
+    void InitFXMaps();
     
     
     
@@ -240,13 +267,17 @@ public:
     bool IsScrub() { return scrub_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     
-    void MapFXToWidgets(MediaTrack *track);
-
-    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
     
+    void AddAction(string actionAddress, Action* action);
+    void MapFXToWidgets(MediaTrack *track);
     virtual void RunAndUpdate() {}
+    
+    void AddFXMap(FXMap* fxMap)
+    {
+        fxMaps_[fxMap->GetName()] = fxMap;
+    }
     
     void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
     {
@@ -395,32 +426,6 @@ public:
     }
 };
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    LogicalSurface* logicalSurface_ = nullptr;
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) {}
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) {}
-
-    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
-    
-public:
-    virtual ~Action() {}
-    
-    virtual int GetDisplayMode() { return 0; }
-    virtual double GetCurrentNormalizedValue (string groupName, string surfaceName, string widgetName) { return 0.0; }
-
-    virtual void AddAction(Action* action) {}
-    virtual void Update(string groupName, string surfaceName, string widgetName) {}
-    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) {}
-    virtual void Cycle(string groupName, string surfaceName, string widgetName) {}
-    virtual void Do(double value, string groupName, string surfaceName, string widgetName) {}
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceGroup
@@ -785,9 +790,6 @@ private:
     vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
-    void InitFXMaps(RealSurface* surface);
-    void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
-
     void SetImmobilizedTracks()
     {
         for(auto [name, surfaceGroup] : surfaceGroups_)
@@ -797,11 +799,6 @@ private:
     void AddFXMap(FXMap* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
-    }
-
-    void AddAction(string actionAddress, Action* action)
-    {
-        actions_[actionAddress].push_back(action);
     }
     
 public:
@@ -827,11 +824,53 @@ public:
             touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID), touchedTracks_.end());
     }
     
-    void Init();
+    void AddAction(string actionAddress, Action* action)
+    {
+        actions_[actionAddress].push_back(action);
+    }
+
     
+    
+    
+    
+    
+    
+    void InitFXMaps(RealSurface* surface);
+    
+    void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
+
     void MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName);
     void MapFXActions(MediaTrack* track, string groupName, string surfaceName);
-    
+
+    void Init(vector<RealSurface*> realSurfaces)
+    {
+        // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
+        
+        int numChannels = 1;
+        
+        for(auto* surface : realSurfaces) // all surfaces are hardwired to the same group
+            numChannels += surface->GetNumBankableChannels();
+        
+        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
+        
+        for(auto* surface : realSurfaces)
+        {
+            surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
+            surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
+            
+            // GAW TBD dump this later
+            InitFXMaps(surface);
+            
+            surface->InitFXMaps();
+            
+            MapReaperLogicalControlSurfaceActions(surface->GetSurfaceGroup()->GetName(), surface->GetName());
+        }
+        // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        SetImmobilizedTracks();
+        RefreshLayout();
+    }
+ 
     void MapTrack(string trackGUID)
     {
         if(trackGUID == "")
@@ -847,6 +886,13 @@ public:
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
+    
+    
+    
+    
+    
+    
+    
     
     void AdjustTrackBank(string groupName, string surfaceName, int stride)
     {
@@ -1112,11 +1158,11 @@ private:
     bool VSTMonitor_ = false;
     
     void InitRealSurfaces();
-    void InitRealSurfaceMap(RealSurface* surface);
+    void InitRealSurface(RealSurface* surface);
     
     void AddRealSurface(RealSurface* realSurface)
     {
-        InitRealSurfaceMap(realSurface);
+        InitRealSurface(realSurface);
         realSurfaces_.push_back(realSurface);
     }
 
@@ -1128,7 +1174,7 @@ private:
           
             LogicalSurface* logicalSurface = new LogicalSurface(this);
 
-            logicalSurface->Init();
+            logicalSurface->Init(realSurfaces_);
             logicalSurfaces_.push_back(logicalSurface);
             
             isInitialized_ = true;
