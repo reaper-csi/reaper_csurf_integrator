@@ -12,201 +12,6 @@
 #include "WDL/lineparse.h"
 #include "WDL/projectcontext.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MidiWidget
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void MidiWidget::AddToRealSurface(RealSurface* surface)
-{
-    surface->AddWidgetToNameMap(GetName(), this);
-}
-
-void MidiWidget::Update()
-{
-    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
-    GetRealSurface()->UpdateAction(GetGUID(), GetActionName(), GetName());
-}
-
-void MidiWidget::ForceUpdate()
-{
-    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
-    GetRealSurface()->ForceUpdateAction(GetGUID(), GetActionName(), GetName());
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurface::MapFXToWidgets(MediaTrack *track)
-{
-    // GAW TBD -- should get fxMaps from rigfht here
-
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
-    // Map Track to any Channels interested
-    for(auto* channel : GetChannels())
-        if(channel->GetShouldMapFXTrackToChannel())
-            channel->SetGUID(trackGUID);
-    
-    char fxName[BUFSZ];
-    char fxGUID[BUFSZ];
-    char fxParamName[BUFSZ];
-    
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-        
-        if(GetSurfaceGroup()->GetLogicalSurface()->GetFXMaps().count(GetName() + fxName) > 0)
-        {
-            FXMap* map = GetSurfaceGroup()->GetLogicalSurface()->GetFXMaps()[GetName() + fxName];
-            
-            for(auto mapEntry : map->GetMapEntries())
-            {
-                if(mapEntry.paramName == GainReduction_dB)
-                    SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                else
-                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
-                        if(mapEntry.paramName == fxParamName)
-                            SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
-            }
-            
-            AddFXWindow(FXWindow(track, fxGUID));
-        }
-    }
-}
-
-// to Actions ->
-double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
-{
-    return GetSurfaceGroup()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
-}
-
-void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
-{
-    GetSurfaceGroup()->UpdateAction(GUID, GetName(), actionName, widgetName);
-}
-
-void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
-{
-    GetSurfaceGroup()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
-}
-
-void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
-{
-    GetSurfaceGroup()->CycleAction(GUID, GetName(), actionName, widgetName);
-}
-
-void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
-{
-    GetSurfaceGroup()->DoAction(value, GUID, GetName(), actionName, widgetName);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SurfaceGroup
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// to Actions ->
-double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
-{
-    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
-}
-
-void SurfaceGroup::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
-{
-    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
-}
-
-void SurfaceGroup::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
-{
-    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
-}
-
-void SurfaceGroup::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
-{
-    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
-}
-
-void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
-{
-    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealSurfaceChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RealSurfaceChannel::SetGUID(string GUID)
-{
-    GUID_ = GUID;
-    
-    for (auto widgetName : widgetNames_)
-    {
-        realSurface_->SetWidgetGUID(widgetName, GUID);
-        
-        if(GUID_ == "")
-            realSurface_->SetWidgetValueToZero(widgetName);
-    }
-    
-    realSurface_->GetSurfaceGroup()->GetLogicalSurface()->MapTrack(GUID_);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// LogicalSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string surfaceName)
-{
-    // GAW TBD -- should get fxMaps from surface
-    
-    char fxName[BUFSZ];
-    char fxParamName[BUFSZ];
-    char fxGUID[BUFSZ];
-    
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        
-        if(fxMaps_.count(surfaceName + fxName) > 0)
-        {
-            FXMap* map = fxMaps_[surfaceName + fxName];
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
-            for(auto mapEntry : map->GetMapEntries())
-            {
-                if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
-                else
-                {
-                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                    {
-                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                        
-                        if(mapEntry.paramName == fxParamName)
-                            AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
-                    }
-                }
-            }
-        }
-        
-        if(GetManager()->GetVSTMonitor() && GetManager()->GetIsInitialized())
-        {
-            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-            
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-            {
-                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-            }
-        }
-    }
-}
-
-
-
-//////////////////////////////////////////////////////////////////////
-/// All the following code will be replaced with map reading functions
-//////////////////////////////////////////////////////////////////////
-
-
 const string ChannelLeft = "ChannelLeft";
 const string ChannelRight = "ChannelRight";
 const string BankLeft = "BankLeft";
@@ -291,6 +96,255 @@ const string Attack = "Attack";
 
 const string Drive = "Drive";
 const string Character = "Character";
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MidiWidget
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void MidiWidget::AddToRealSurface(RealSurface* surface)
+{
+    surface->AddWidgetToNameMap(GetName(), this);
+}
+
+void MidiWidget::Update()
+{
+    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
+    GetRealSurface()->UpdateAction(GetGUID(), GetActionName(), GetName());
+}
+
+void MidiWidget::ForceUpdate()
+{
+    // this is the turnaround point, now we head back up the chain eventually leading to Action ->
+    GetRealSurface()->ForceUpdateAction(GetGUID(), GetActionName(), GetName());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// RealSurfaceChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealSurfaceChannel::SetGUID(string GUID)
+{
+    GUID_ = GUID;
+    
+    for (auto widgetName : widgetNames_)
+    {
+        realSurface_->SetWidgetGUID(widgetName, GUID);
+        
+        if(GUID_ == "")
+            realSurface_->SetWidgetValueToZero(widgetName);
+    }
+    
+    realSurface_->GetSurfaceGroup()->GetLogicalSurface()->MapTrack(GUID_);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// RealSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RealSurface::InitFXMaps()
+{
+    FXMap* fxMap = new FXMap("VST: ReaComp (Cockos)");
+    
+    fxMap->AddEntry(Threshold, "Thresh");
+    fxMap->AddEntry(Character, "Gain");
+    fxMap->AddEntry(Attack, "Attack");
+    fxMap->AddEntry(Release, "Release");
+    fxMap->AddEntry(Ratio, "Ratio");
+    fxMap->AddEntry(Compressor, "Bypass");
+    fxMap->AddEntry(Parallel, "Wet");
+    fxMap->AddEntry(CompressorMeter, GainReduction_dB);
+    
+    AddFXMap(fxMap);
+    
+    fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+    
+    fxMap->AddEntry(Threshold, "Thresh");
+    fxMap->AddEntry(Character, "Output");
+    fxMap->AddEntry(Drive, "Meter");
+    fxMap->AddEntry(Attack, "Headroom");
+    fxMap->AddEntry(Release, "Input");
+    fxMap->AddEntry(Ratio, "Time Const");
+    fxMap->AddEntry(Compressor, "Bypass");
+    fxMap->AddEntry(Parallel, "Wet");
+    
+    AddFXMap(fxMap);
+    
+    fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+    
+    fxMap->AddEntry(Threshold, "Peak Reduct");
+    fxMap->AddEntry(Character, "Gain");
+    fxMap->AddEntry(Drive, "Meter");
+    fxMap->AddEntry(Attack, "Emphasis");
+    fxMap->AddEntry(Ratio, "Comp/Limit");
+    fxMap->AddEntry(Compressor, "Bypass");
+    fxMap->AddEntry(Parallel, "Wet");
+    
+    AddFXMap(fxMap);
+    
+    fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+    
+    fxMap->AddEntry(LoCurve, "LowPeak");
+    //fxMap->AddEntry(HiCurve, "");
+    fxMap->AddEntry(HiGain, "HiGain");
+    fxMap->AddEntry(HiFrequency, "HiFreq");
+    fxMap->AddEntry(HiMidGain, "HiMidGain");
+    fxMap->AddEntry(HiMidFrequency, "HiMidFreq");
+    fxMap->AddEntry(HiMidQ, "LowPass");
+    fxMap->AddEntry(LoMidGain, "LoMidGain");
+    fxMap->AddEntry(LoMidFrequency, "LoMidFreq");
+    fxMap->AddEntry(LoMidQ, "HiPass");
+    fxMap->AddEntry(LoGain, "LowGain");
+    fxMap->AddEntry(LoFrequency, "LowFreq");
+    fxMap->AddEntry(Equalizer, "Bypass");
+    
+    AddFXMap(fxMap);
+    
+    fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+    
+    //fxMap->AddEntry(LoCurve, "");
+    //fxMap->AddEntry(HiCurve, "");
+    fxMap->AddEntry(HiGain, "HF Atten");
+    fxMap->AddEntry(HiFrequency, "HF Atten Freq");
+    fxMap->AddEntry(HiMidGain, "HF Boost");
+    fxMap->AddEntry(HiMidFrequency, "High Freq");
+    fxMap->AddEntry(HiMidQ, "HF Q");
+    fxMap->AddEntry(LoMidGain, "LF Atten");
+    fxMap->AddEntry(LoMidFrequency, "Low Freq");
+    //fxMap->AddEntry(LoMidQ, "");
+    fxMap->AddEntry(LoGain, "LF Boost");
+    fxMap->AddEntry(LoFrequency, "Low Freq");
+    fxMap->AddEntry(Equalizer, "Bypass");
+    
+    AddFXMap(fxMap);
+    
+    fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+    
+    //fxMap->AddEntry(LoCurve, "");
+    //fxMap->AddEntry(HiCurve, "");
+    fxMap->AddEntry(HiGain, "HM Peak");
+    fxMap->AddEntry(HiFrequency, "HM Freq");
+    fxMap->AddEntry(HiMidGain, "Mid Dip");
+    fxMap->AddEntry(HiMidFrequency, "Mid Freq");
+    //fxMap->AddEntry(HiMidQ, "");
+    fxMap->AddEntry(LoMidGain, "LM Peak");
+    fxMap->AddEntry(LoMidFrequency, "LM Freq");
+    //fxMap->AddEntry(LoMidQ, "");
+    //fxMap->AddEntry(LoGain, "");
+    //fxMap->AddEntry(LoFrequency, "");
+    fxMap->AddEntry(Equalizer, "Bypass");
+    
+    AddFXMap(fxMap);
+}
+
+void RealSurface::MapFXToWidgets(MediaTrack *track)
+{
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    // Map Track to any Channels interested
+    for(auto* channel : GetChannels())
+        if(channel->GetShouldMapFXTrackToChannel())
+            channel->SetGUID(trackGUID);
+    
+    char fxName[BUFSZ];
+    char fxGUID[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+        
+        if(fxMaps_.count(fxName) > 0)
+        {
+            FXMap* map = fxMaps_[fxName];
+            
+            for(auto mapEntry : map->GetMapEntries())
+            {
+                if(mapEntry.paramName == GainReduction_dB)
+                    SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                else
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                        if(mapEntry.paramName == fxParamName)
+                            SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
+            }
+            
+            AddFXWindow(FXWindow(track, fxGUID));
+        }
+    }
+}
+
+
+void RealSurface::AddAction(string actionAddress, Action* action)
+{
+    GetSurfaceGroup()->GetLogicalSurface()->AddAction(actionAddress, action);
+}
+
+// to Actions ->
+double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
+{
+    return GetSurfaceGroup()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
+}
+
+void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
+{
+    GetSurfaceGroup()->UpdateAction(GUID, GetName(), actionName, widgetName);
+}
+
+void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
+{
+    GetSurfaceGroup()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
+}
+
+void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
+{
+    GetSurfaceGroup()->CycleAction(GUID, GetName(), actionName, widgetName);
+}
+
+void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
+{
+    GetSurfaceGroup()->DoAction(value, GUID, GetName(), actionName, widgetName);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SurfaceGroup
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// to Actions ->
+double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
+{
+    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+}
+
+void SurfaceGroup::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
+{
+    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+}
+
+void SurfaceGroup::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
+{
+    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+}
+
+void SurfaceGroup::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
+{
+    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+}
+
+void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
+{
+    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// CSurfManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// All the following code will be replaced with map reading functions
+//////////////////////////////////////////////////////////////////////
+
+
 
 /*
  void SID_PCM_Source::SaveState(ProjectStateContext * ctx)
@@ -414,6 +468,141 @@ void LogicalSurface::MapTrackAndFXActions(string trackGUID, string groupName, st
     MapFXActions(track, groupName, surfaceName);
 }
 
+void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string surfaceName)
+{
+    // GAW TBD -- should get fxMaps from surface
+    
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    char fxGUID[BUFSZ];
+    
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        
+        if(fxMaps_.count(surfaceName + fxName) > 0)
+        {
+            FXMap* map = fxMaps_[surfaceName + fxName];
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            for(auto mapEntry : map->GetMapEntries())
+            {
+                if(mapEntry.paramName == GainReduction_dB)
+                    AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
+                else
+                {
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    {
+                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                        
+                        if(mapEntry.paramName == fxParamName)
+                            AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
+                    }
+                }
+            }
+        }
+        
+        if(GetManager()->GetVSTMonitor() && GetManager()->GetIsInitialized())
+        {
+            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+            }
+        }
+    }
+}
+
+
+#define IDC_REPEAT                      1068
+#define ID_FILE_SAVEAS                  40022
+#define ID_FILE_NEWPROJECT              40023
+#define ID_FILE_OPENPROJECT             40025
+#define ID_FILE_SAVEPROJECT             40026
+#define IDC_EDIT_UNDO                   40029
+#define IDC_EDIT_REDO                   40030
+#define ID_MARKER_PREV                  40172
+#define ID_MARKER_NEXT                  40173
+#define ID_INSERT_MARKERRGN             40174
+#define ID_INSERT_MARKER                40157
+#define ID_LOOP_SETSTART                40222
+#define ID_LOOP_SETEND                  40223
+#define ID_METRONOME                    40364
+#define ID_GOTO_MARKER1                 40161
+#define ID_SET_MARKER1                  40657
+
+void LogicalSurface::MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName)
+{
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankLeft, new TrackBank_Action(this, -8));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankRight, new TrackBank_Action(this, 8));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + NextMap, new NextMap_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift, new Shift_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option, new Option_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Control, new Control_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Alt, new Alt_Action(this));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Read, new TrackAutoMode_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Write, new TrackAutoMode_Action(this, 3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Group, new TrackAutoMode_Action(this, 5));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
+    
+    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
+    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Cycle, new CycleTimeline_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Rewind, new Rewind_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + FastForward, new FastForward_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Stop, new Stop_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Play, new Play_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Record, new Record_Action(this));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Zoom, new LatchedZoom_Action(this));
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Scrub, new LatchedScrub_Action(this));
+    
+    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
+}
+
+
+
+
+
+
+
 void LogicalSurface::InitFXMaps(RealSurface* surface)
 {
     string surfaceName = surface->GetName();
@@ -509,111 +698,6 @@ void LogicalSurface::InitFXMaps(RealSurface* surface)
     fxMap->AddEntry(Equalizer, "Bypass");
     
     AddFXMap(fxMap);
-}
-
-#define IDC_REPEAT                      1068
-#define ID_FILE_SAVEAS                  40022
-#define ID_FILE_NEWPROJECT              40023
-#define ID_FILE_OPENPROJECT             40025
-#define ID_FILE_SAVEPROJECT             40026
-#define IDC_EDIT_UNDO                   40029
-#define IDC_EDIT_REDO                   40030
-#define ID_MARKER_PREV                  40172
-#define ID_MARKER_NEXT                  40173
-#define ID_INSERT_MARKERRGN             40174
-#define ID_INSERT_MARKER                40157
-#define ID_LOOP_SETSTART                40222
-#define ID_LOOP_SETEND                  40223
-#define ID_METRONOME                    40364
-#define ID_GOTO_MARKER1                 40161
-#define ID_SET_MARKER1                  40657
-
-void LogicalSurface::MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName)
-{
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelLeft, new TrackBank_Action(this, -1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + ChannelRight, new TrackBank_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankLeft, new TrackBank_Action(this, -8));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + BankRight, new TrackBank_Action(this, 8));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + NextMap, new NextMap_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + LockTracks, new ImmobilizeSelectedTracks_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + UnlockTracks, new MobilizeSelectedTracks_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift, new Shift_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option, new Option_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Control, new Control_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Alt, new Alt_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Read, new TrackAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Write, new TrackAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Trim, new TrackAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Touch, new TrackAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Latch, new TrackAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Group, new TrackAutoMode_Action(this, 5));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Read, new GlobalAutoMode_Action(this, 1));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Write, new GlobalAutoMode_Action(this, 3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Trim, new GlobalAutoMode_Action(this, 0));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Touch, new GlobalAutoMode_Action(this, 2));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Latch, new GlobalAutoMode_Action(this, 4));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Group, new GlobalAutoMode_Action(this, 5));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Save, new Reaper_Action(this, ID_FILE_SAVEPROJECT));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Save, new Reaper_Action(this, ID_FILE_SAVEAS));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Undo, new Reaper_Action(this, IDC_EDIT_UNDO));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Undo, new Reaper_Action(this, IDC_EDIT_REDO));
-    
-    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Marker, new Reaper_Action(this, ID_MARKER_PREV));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Shift + Marker, new Reaper_Action(this, ID_INSERT_MARKER));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Option + Marker, new Reaper_Action(this,ID_INSERT_MARKERRGN));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Nudge, new Reaper_Action(this, ID_MARKER_NEXT));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Cycle, new CycleTimeline_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Click, new Reaper_Action(this, ID_METRONOME));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Rewind, new Rewind_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + FastForward, new FastForward_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Stop, new Stop_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Play, new Play_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Record, new Record_Action(this));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Up, new RepeatingArrow_Action(this, 0, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Down, new RepeatingArrow_Action(this, 1, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Left, new RepeatingArrow_Action(this, 2, 0.3));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Right, new RepeatingArrow_Action(this, 3, 0.3));
-    
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Zoom, new LatchedZoom_Action(this));
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + Scrub, new LatchedScrub_Action(this));
-
-    AddAction(ReaperLogicalControlSurface + groupName + surfaceName + DisplayFX, new SetShowFXWindows_Action(this));
-}
-
-void LogicalSurface::Init()
-{
-    // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
-    vector<RealSurface*> realSurfaces = GetManager()->GetRealSurfaces();
-    
-    int numChannels = 1;
-    
-    for(auto* surface : realSurfaces) // all surfaces are hardwired to the same group
-        numChannels += surface->GetNumBankableChannels();
-    
-    surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
-    
-    for(auto* surface : realSurfaces)
-    {
-        surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
-        surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
-        
-        InitFXMaps(surface);
-        MapReaperLogicalControlSurfaceActions(surfaceGroups_[ReaperLogicalControlSurface]->GetName(), surface->GetName());
-    }
-    // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    SetImmobilizedTracks();
-    RefreshLayout();
 }
 
 void CSurfManager::InitRealSurfaces()
@@ -774,10 +858,10 @@ void CSurfManager::InitRealSurfaces()
     fclose ( filePtr );
 }
 
-void CSurfManager::InitRealSurfaceMap(RealSurface* surface)
+void CSurfManager::InitRealSurface(RealSurface* surface)
 {
     RealSurfaceChannel* channel = nullptr;
-
+    
     if(surface->GetName() == "Console1")
     {
         surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
