@@ -207,6 +207,7 @@ protected:
     
 public:
 
+    void MapReaperLogicalControlSurfaceActions();
     
     void InitFXMaps();
     
@@ -837,7 +838,6 @@ public:
     
     void InitFXMaps(RealSurface* surface);
     
-    void MapReaperLogicalControlSurfaceActions(string groupName, string surfaceName);
 
     void MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName);
     void MapFXActions(MediaTrack* track, string groupName, string surfaceName);
@@ -862,8 +862,7 @@ public:
             InitFXMaps(surface);
             
             surface->InitFXMaps();
-            
-            MapReaperLogicalControlSurfaceActions(surface->GetSurfaceGroup()->GetName(), surface->GetName());
+            surface->MapReaperLogicalControlSurfaceActions();
         }
         // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
