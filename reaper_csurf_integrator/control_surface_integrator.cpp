@@ -97,8 +97,6 @@ const string Attack = "Attack";
 const string Drive = "Drive";
 const string Character = "Character";
 
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -353,6 +351,87 @@ void RealSurface::MapFXToWidgets(MediaTrack *track)
     }
 }
 
+void RealSurface::MapTrackAndFXActions(string trackGUID)
+{
+    LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
+
+    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    
+    // GAW TBD this will be obtained from map
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display, new TrackNameDisplay_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display, new TrackTouchControlled_Action(logicalSurface, track, new TrackVolumeDisplay_Action(logicalSurface, track), trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display));
+    
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Fader, new TrackVolume_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + FaderTouch, new TrackTouch_Action(logicalSurface, track));
+    
+    CycledAction* cycledAction = new CycledAction(logicalSurface);
+    cycledAction->AddAction(new TrackPan_Action(logicalSurface, track, 0x00));
+    cycledAction->AddAction(new TrackPanWidth_Action(logicalSurface, track, 0x30));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Rotary, cycledAction);
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + RotaryPush, cycledAction);
+    
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Select, new TrackUniqueSelect_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Shift + Select, new TrackRangeSelect_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Control + Select, new TrackSelect_Action(logicalSurface, track));
+    
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + RecordArm, new TrackRecordArm_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Mute, new TrackMute_Action(logicalSurface, track));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Solo, new TrackSolo_Action(logicalSurface, track));
+    
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterRight, new VUMeter_Action(logicalSurface, track, 1));
+    
+    MapFXActions(track);
+}
+
+void RealSurface::MapFXActions(MediaTrack* track)
+{
+    LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
+    
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    char fxGUID[BUFSZ];
+    
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        
+        if(fxMaps_.count(fxName) > 0)
+        {
+            FXMap* map = fxMaps_[fxName];
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            for(auto mapEntry : map->GetMapEntries())
+            {
+                if(mapEntry.paramName == GainReduction_dB)
+                    AddAction(trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName() + mapEntry.widgetName, new GainReductionMeter_Action(logicalSurface, track, fxGUID));
+                else
+                {
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    {
+                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                        
+                        if(mapEntry.paramName == fxParamName)
+                            AddAction(trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName() + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
+                    }
+                }
+            }
+        }
+        
+        if(GetSurfaceGroup()->GetLogicalSurface()->GetManager()->GetVSTMonitor() && GetSurfaceGroup()->GetLogicalSurface()->GetManager()->GetIsInitialized())
+        {
+            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+            }
+        }
+    }
+}
 
 void RealSurface::AddAction(string actionAddress, Action* action)
 {
@@ -510,194 +589,6 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
     return -1;
 }
 
-
-
-
-void LogicalSurface::MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName)
-{
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
-    
-    // GAW TBD this will be obtained from map
-    AddAction(trackGUID + groupName + surfaceName + Display, new TrackNameDisplay_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + Display, new TrackTouchControlled_Action(this, track, new TrackVolumeDisplay_Action(this, track), trackGUID + surfaceName + Display));
-
-    AddAction(trackGUID + groupName + surfaceName + Fader, new TrackVolume_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + FaderTouch, new TrackTouch_Action(this, track));
-
-    CycledAction* cycledAction = new CycledAction(this);
-    cycledAction->AddAction(new TrackPan_Action(this, track, 0x00));
-    cycledAction->AddAction(new TrackPanWidth_Action(this, track, 0x30));
-    AddAction(trackGUID + groupName + surfaceName + Rotary, cycledAction);
-    AddAction(trackGUID + groupName + surfaceName + RotaryPush, cycledAction);
-
-    AddAction(trackGUID + groupName + surfaceName + Select, new TrackUniqueSelect_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + Shift + Select, new TrackRangeSelect_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + Control + Select, new TrackSelect_Action(this, track));
-    
-    AddAction(trackGUID + groupName + surfaceName + RecordArm, new TrackRecordArm_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + Mute, new TrackMute_Action(this, track));
-    AddAction(trackGUID + groupName + surfaceName + Solo, new TrackSolo_Action(this, track));
-    
-    AddAction(trackGUID + groupName + surfaceName + TrackOutMeterLeft, new VUMeter_Action(this, track, 0));
-    AddAction(trackGUID + groupName + surfaceName + TrackOutMeterRight, new VUMeter_Action(this, track, 1));
-    
-    MapFXActions(track, groupName, surfaceName);
-}
-
-void LogicalSurface::MapFXActions(MediaTrack* track, string groupName, string surfaceName)
-{
-    // GAW TBD -- should get fxMaps from surface
-    
-    char fxName[BUFSZ];
-    char fxParamName[BUFSZ];
-    char fxGUID[BUFSZ];
-    
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        
-        if(fxMaps_.count(surfaceName + fxName) > 0)
-        {
-            FXMap* map = fxMaps_[surfaceName + fxName];
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
-            for(auto mapEntry : map->GetMapEntries())
-            {
-                if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new GainReductionMeter_Action(this, track, fxGUID));
-                else
-                {
-                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                    {
-                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                        
-                        if(mapEntry.paramName == fxParamName)
-                            AddAction(trackGUID + fxGUID + groupName + surfaceName + mapEntry.widgetName, new TrackFX_Action(this, track, fxGUID, j));
-                    }
-                }
-            }
-        }
-        
-        if(GetManager()->GetVSTMonitor() && GetManager()->GetIsInitialized())
-        {
-            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-            
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-            {
-                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-            }
-        }
-    }
-}
-
-
-
-
-
-
-
-
-
-
-void LogicalSurface::InitFXMaps(RealSurface* surface)
-{
-    string surfaceName = surface->GetName();
-    
-    FXMap* fxMap = new FXMap(surfaceName + "VST: ReaComp (Cockos)");
-    
-    fxMap->AddEntry(Threshold, "Thresh");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Attack, "Attack");
-    fxMap->AddEntry(Release, "Release");
-    fxMap->AddEntry(Ratio, "Ratio");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    fxMap->AddEntry(CompressorMeter, GainReduction_dB);
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap(surfaceName + "VST: UAD Fairchild 660 (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(Threshold, "Thresh");
-    fxMap->AddEntry(Character, "Output");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Headroom");
-    fxMap->AddEntry(Release, "Input");
-    fxMap->AddEntry(Ratio, "Time Const");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap(surfaceName + "VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(Threshold, "Peak Reduct");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Emphasis");
-    fxMap->AddEntry(Ratio, "Comp/Limit");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap(surfaceName + "VST: UAD Harrison 32C (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(LoCurve, "LowPeak");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HiGain");
-    fxMap->AddEntry(HiFrequency, "HiFreq");
-    fxMap->AddEntry(HiMidGain, "HiMidGain");
-    fxMap->AddEntry(HiMidFrequency, "HiMidFreq");
-    fxMap->AddEntry(HiMidQ, "LowPass");
-    fxMap->AddEntry(LoMidGain, "LoMidGain");
-    fxMap->AddEntry(LoMidFrequency, "LoMidFreq");
-    fxMap->AddEntry(LoMidQ, "HiPass");
-    fxMap->AddEntry(LoGain, "LowGain");
-    fxMap->AddEntry(LoFrequency, "LowFreq");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap(surfaceName + "VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
-    
-    //fxMap->AddEntry(LoCurve, "");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HF Atten");
-    fxMap->AddEntry(HiFrequency, "HF Atten Freq");
-    fxMap->AddEntry(HiMidGain, "HF Boost");
-    fxMap->AddEntry(HiMidFrequency, "High Freq");
-    fxMap->AddEntry(HiMidQ, "HF Q");
-    fxMap->AddEntry(LoMidGain, "LF Atten");
-    fxMap->AddEntry(LoMidFrequency, "Low Freq");
-    //fxMap->AddEntry(LoMidQ, "");
-    fxMap->AddEntry(LoGain, "LF Boost");
-    fxMap->AddEntry(LoFrequency, "Low Freq");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-    
-    fxMap = new FXMap(surfaceName + "VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
-    
-    //fxMap->AddEntry(LoCurve, "");
-    //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HM Peak");
-    fxMap->AddEntry(HiFrequency, "HM Freq");
-    fxMap->AddEntry(HiMidGain, "Mid Dip");
-    fxMap->AddEntry(HiMidFrequency, "Mid Freq");
-    //fxMap->AddEntry(HiMidQ, "");
-    fxMap->AddEntry(LoMidGain, "LM Peak");
-    fxMap->AddEntry(LoMidFrequency, "LM Freq");
-    //fxMap->AddEntry(LoMidQ, "");
-    //fxMap->AddEntry(LoGain, "");
-    //fxMap->AddEntry(LoFrequency, "");
-    fxMap->AddEntry(Equalizer, "Bypass");
-    
-    AddFXMap(fxMap);
-}
 
 void CSurfManager::InitRealSurfaces()
 {

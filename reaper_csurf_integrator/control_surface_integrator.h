@@ -207,10 +207,7 @@ protected:
     
 public:
 
-    void MapReaperLogicalControlSurfaceActions();
-    
-    void InitFXMaps();
-    
+   
     
     
     vector<FXWindow> openFXWindows_;
@@ -273,6 +270,11 @@ public:
     
     void AddAction(string actionAddress, Action* action);
     void MapFXToWidgets(MediaTrack *track);
+    void MapReaperLogicalControlSurfaceActions();
+    void InitFXMaps();
+    void MapTrackAndFXActions(string trackGUID);
+    void MapFXActions(MediaTrack* track);
+
     virtual void RunAndUpdate() {}
     
     void AddFXMap(FXMap* fxMap)
@@ -437,7 +439,6 @@ class SurfaceGroup
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     map<string, RealSurface*> realSurfaces_;
-    vector <string> realSurfaceNames_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -470,13 +471,10 @@ class SurfaceGroup
         return GUID + GetName() + surfaceName + currentModifiers + actionName;
     }
 
-   
 public:
     SurfaceGroup(string name, LogicalSurface* logicalSurface, int numLogicalChannels) : name_(name), logicalSurface_(logicalSurface), numLogicalChannels_(numLogicalChannels) {}
     
     string GetName() { return name_; }
-    
-    vector <string> GetRealSurfaceNames() { return realSurfaceNames_; }
     
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
@@ -485,7 +483,6 @@ public:
     void AddSurface(RealSurface* surface)
     {
         realSurfaces_[surface->GetName()] = surface;
-        realSurfaceNames_.push_back(surface->GetName());
     }
     
     void SetShowFXWindows(string surfaceName, bool value)
@@ -500,6 +497,12 @@ public:
             return realSurfaces_[surfaceName]->IsShowFXWindows();
         
         return false;
+    }
+    
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        for(auto [name, surface] : realSurfaces_)
+            surface->MapFXActions(track);
     }
     
     void OnTrackSelection(MediaTrack* track)
@@ -519,6 +522,12 @@ public:
         ForceUpdateWidgets();
     }
     
+    void MapTrackAndFXActions(string trackGUID)
+    {
+        for(auto [name, surface] : realSurfaces_)
+            surface->MapTrackAndFXActions(trackGUID);
+    }
+
     void TrackListChanged()
     {
         vector<RealSurfaceChannel*> channels;
@@ -829,19 +838,33 @@ public:
     {
         actions_[actionAddress].push_back(action);
     }
-
     
+    void OnTrackSelection(MediaTrack* track)
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->OnTrackSelection(track);
+    }
     
+    void SetShowFXWindows(string groupName, string surfaceName, bool value)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->SetShowFXWindows(surfaceName, value);
+    }
     
+    bool IsShowFXWindows(string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            return surfaceGroups_[groupName]->IsShowFXWindows(surfaceName);
+        
+        return false;
+    }
     
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->TrackFXListChanged(track);
+    }
     
-    
-    void InitFXMaps(RealSurface* surface);
-    
-
-    void MapTrackAndFXActions(string trackGUID, string groupName, string surfaceName);
-    void MapFXActions(MediaTrack* track, string groupName, string surfaceName);
-
     void Init(vector<RealSurface*> realSurfaces)
     {
         // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
@@ -857,9 +880,6 @@ public:
         {
             surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
             surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
-            
-            // GAW TBD dump this later
-            InitFXMaps(surface);
             
             surface->InitFXMaps();
             surface->MapReaperLogicalControlSurfaceActions();
@@ -880,18 +900,10 @@ public:
                 return; // Already did this track
         
         for(auto [name, surfaceGroup] : surfaceGroups_)
-            for(string surfaceName : surfaceGroup->GetRealSurfaceNames())
-                MapTrackAndFXActions(trackGUID, surfaceGroup->GetName(), surfaceName);
+            surfaceGroup->MapTrackAndFXActions(trackGUID);
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
-    
-    
-    
-    
-    
-    
-    
     
     void AdjustTrackBank(string groupName, string surfaceName, int stride)
     {
@@ -1037,34 +1049,6 @@ public:
         if(surfaceGroups_.count(groupName) > 0)
             surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
     }
-
-    void OnTrackSelection(MediaTrack* track)
-    {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->OnTrackSelection(track);
-    }
-    
-    void SetShowFXWindows(string groupName, string surfaceName, bool value)
-    {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetShowFXWindows(surfaceName, value);
-    }
-    
-    bool IsShowFXWindows(string groupName, string surfaceName)
-    {
-        if(surfaceGroups_.count(groupName) > 0)
-            return surfaceGroups_[groupName]->IsShowFXWindows(surfaceName);
-        
-        return false;
-    }
-    
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            for(string surfaceName : surfaceGroup->GetRealSurfaceNames())
-                MapFXActions(track, surfaceGroup->GetName(), surfaceName);
-    }
-    
 };
 
 
