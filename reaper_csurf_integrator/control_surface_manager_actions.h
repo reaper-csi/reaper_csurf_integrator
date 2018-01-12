@@ -125,11 +125,11 @@ class SetShowFXWindows_Action : public DoubleAction
 public:
     SetShowFXWindows_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
     
-    virtual double GetValue (string groupName, string surfaceName, string widgetName) override { return GetLogicalSurface()->IsShowFXWindows(surfaceName); }
+    virtual double GetValue (string groupName, string surfaceName, string widgetName) override { return GetLogicalSurface()->IsShowFXWindows(groupName, surfaceName); }
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
-        GetLogicalSurface()->SetShowOpenFXWindows(surfaceName, value);
+        GetLogicalSurface()->SetShowFXWindows(groupName, surfaceName, value);
     }
 };
 

@@ -240,6 +240,9 @@ public:
     bool IsScrub() { return scrub_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     
+    void MapFXToWidgets(MediaTrack *track);
+
+    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
     
@@ -428,6 +431,7 @@ class SurfaceGroup
     int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     map<string, RealSurface*> realSurfaces_;
+    vector <string> realSurfaceNames_;
     
     bool shift_ = false;
     bool option_ = false;
@@ -466,6 +470,8 @@ public:
     
     string GetName() { return name_; }
     
+    vector <string> GetRealSurfaceNames() { return realSurfaceNames_; }
+    
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     
     int GetNumLogicalChannels() { return numLogicalChannels_; }
@@ -473,6 +479,38 @@ public:
     void AddSurface(RealSurface* surface)
     {
         realSurfaces_[surface->GetName()] = surface;
+        realSurfaceNames_.push_back(surface->GetName());
+    }
+    
+    void SetShowFXWindows(string surfaceName, bool value)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->SetShowFXWindows(value);
+    }
+    
+    bool IsShowFXWindows(string surfaceName)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            return realSurfaces_[surfaceName]->IsShowFXWindows();
+        
+        return false;
+    }
+    
+    void OnTrackSelection(MediaTrack* track)
+    {
+        for(auto [name, surface] : realSurfaces_)
+        {
+            surface->CloseFXWindows();
+            surface->ClearFXWindows();
+            
+            if(1 == DAW::CountSelectedTracks(nullptr))
+                surface->MapFXToWidgets(track);
+        }
+        
+        for(auto [name, surface] : realSurfaces_)
+            surface->OpenFXWindows();
+        
+        ForceUpdateWidgets();
     }
     
     void TrackListChanged()
@@ -681,7 +719,7 @@ public:
             }
         }
     }
-    
+
     // to Widgets ->
     void ForceUpdateWidgets()
     {
@@ -742,7 +780,6 @@ class LogicalSurface
 private:
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
-    vector<RealSurface*> realSurfaces_;
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, vector<Action*>> actions_;
     vector<string> mappedTrackGUIDs_;
@@ -804,8 +841,9 @@ public:
             if(mappedTrackActionGUID == trackGUID)
                 return; // Already did this track
         
-        for(auto * surface : realSurfaces_)
-            MapTrackAndFXActions(trackGUID, surface->GetSurfaceGroup()->GetName(), surface->GetName());
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            for(string surfaceName : surfaceGroup->GetRealSurfaceNames())
+                MapTrackAndFXActions(trackGUID, surfaceGroup->GetName(), surfaceName);
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
@@ -864,112 +902,6 @@ public:
         surfaceGroups_[groupName]->SetScrub(value);
     }
 
-    
-    
-    
-    
-    
-    
-    void OnTrackSelection(MediaTrack* track)
-    {
-        for(auto* surface : realSurfaces_)
-        {
-            surface->CloseFXWindows();
-            surface->ClearFXWindows();
-            
-            if(1 == DAW::CountSelectedTracks(nullptr))
-                MapFXToWidgets(track, surface);
-        }
-        
-        for(auto* surface : realSurfaces_)
-            OpenFXWindows(surface);
-        
-        ForceUpdateWidgets();
-    }
-    
-    void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
-    {
-        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-        
-        // Map Track to any Channels interested
-        for(auto* channel : surface->GetChannels())
-            if(channel->GetShouldMapFXTrackToChannel())
-                channel->SetGUID(trackGUID);
-        
-        char fxName[BUFSZ];
-        char fxGUID[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
-            if(fxMaps_.count(surface->GetName() + fxName) > 0)
-            {
-                FXMap* map = fxMaps_[surface->GetName() + fxName];
-                
-                for(auto mapEntry : map->GetMapEntries())
-                {
-                    if(mapEntry.paramName == GainReduction_dB)
-                        surface->SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                    else
-                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
-                            if(mapEntry.paramName == fxParamName)
-                                surface->SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                }
-                
-                surface->AddFXWindow(FXWindow(track, fxGUID));
-            }
-        }
-    }
-    
-
-
-    
-    void OpenFXWindows(RealSurface* surface)
-    {
-        for(auto* surface : realSurfaces_)
-            surface->OpenFXWindows();
-    }
-    
-    void CloseFXWindows(RealSurface* surface)
-    {
-        for(auto* surface : realSurfaces_)
-            surface->CloseFXWindows();
-    }
-    
-    void SetShowOpenFXWindows(string surfaceName, bool value)
-    {
-        for(auto* surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetShowFXWindows(value);
-    }
-    
-    
-    bool IsShowFXWindows(string surfaceName)
-    {
-        for(auto & surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                return surface->IsShowFXWindows();
-        
-        return false;
-    }
-
-    
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        for(auto* surface : realSurfaces_)
-            MapFXActions(track, surface->GetSurfaceGroup()->GetName(), surface->GetName());
-    }
-
-    
-    
-    
-    
-    
-    
-   
     void ImmobilizeSelectedTracks()
     {
         for(auto [name, surfaceGroup] : surfaceGroups_)
@@ -1060,6 +992,34 @@ public:
         if(surfaceGroups_.count(groupName) > 0)
             surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
     }
+
+    void OnTrackSelection(MediaTrack* track)
+    {
+        for(auto const& [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->OnTrackSelection(track);
+    }
+    
+    void SetShowFXWindows(string groupName, string surfaceName, bool value)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->SetShowFXWindows(surfaceName, value);
+    }
+    
+    bool IsShowFXWindows(string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            return surfaceGroups_[groupName]->IsShowFXWindows(surfaceName);
+        
+        return false;
+    }
+    
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            for(string surfaceName : surfaceGroup->GetRealSurfaceNames())
+                MapFXActions(track, surfaceGroup->GetName(), surfaceName);
+    }
+    
 };
 
 
