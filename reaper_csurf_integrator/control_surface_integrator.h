@@ -206,6 +206,27 @@ protected:
     RealSurface(const string name, int numBankableChannels) : name_(name),  numBankableChannels_(numBankableChannels) {}
     
 public:
+    virtual ~RealSurface() {};
+    
+    const string GetName() const { return name_; }
+    SurfaceGroup* GetSurfaceGroup() { return surfaceGroup_; }
+    vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
+    int GetNumBankableChannels() { return numBankableChannels_; }
+    bool IsZoom() { return zoom_; }
+    bool IsScrub() { return scrub_; }
+    bool IsShowFXWindows() { return showFXWindows_; }
+    
+    void AddAction(string actionAddress, Action* action);
+    void MapFXToWidgets(MediaTrack *track);
+    void MapReaperLogicalControlSurfaceActions();
+    void InitFXMaps();
+    void MapTrackAndFXActions(string trackGUID);
+    void MapFXActions(MediaTrack* track);
+    
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
+    virtual void SendMidiMessage(int first, int second, int third) {}
+    
+    virtual void RunAndUpdate() {}
 
    
     
@@ -255,27 +276,6 @@ public:
     
     
     
-    virtual ~RealSurface() {};
-    
-    const string GetName() const { return name_; }
-    SurfaceGroup* GetSurfaceGroup() { return surfaceGroup_; }
-    vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
-    int GetNumBankableChannels() { return numBankableChannels_; }
-    bool IsZoom() { return zoom_; }
-    bool IsScrub() { return scrub_; }
-    bool IsShowFXWindows() { return showFXWindows_; }
-    
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
-    virtual void SendMidiMessage(int first, int second, int third) {}
-    
-    void AddAction(string actionAddress, Action* action);
-    void MapFXToWidgets(MediaTrack *track);
-    void MapReaperLogicalControlSurfaceActions();
-    void InitFXMaps();
-    void MapTrackAndFXActions(string trackGUID);
-    void MapFXActions(MediaTrack* track);
-
-    virtual void RunAndUpdate() {}
     
     void AddFXMap(FXMap* fxMap)
     {
@@ -468,9 +468,7 @@ public:
     SurfaceGroup(string name, LogicalSurface* logicalSurface, int numLogicalChannels) : name_(name), logicalSurface_(logicalSurface), numLogicalChannels_(numLogicalChannels) {}
     
     string GetName() { return name_; }
-    
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
-    
     int GetNumLogicalChannels() { return numLogicalChannels_; }
 
     void AddSurface(RealSurface* surface)
@@ -900,9 +898,8 @@ public:
         if(trackGUID == "")
             return; // Nothing to map
         
-        for(string mappedTrackActionGUID : mappedTrackGUIDs_)
-            if(mappedTrackActionGUID == trackGUID)
-                return; // Already did this track
+        if(find(mappedTrackGUIDs_.begin(), mappedTrackGUIDs_.end(), trackGUID) != mappedTrackGUIDs_.end())
+            return; // Already did this track
         
         for(auto [name, surfaceGroup] : surfaceGroups_)
             surfaceGroup->MapTrackAndFXActions(trackGUID);
