@@ -376,6 +376,9 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Mute, new TrackMute_Action(logicalSurface, track));
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Solo, new TrackSolo_Action(logicalSurface, track));
     
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackInMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
+    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackInMeterRight, new VUMeter_Action(logicalSurface, track, 1));
+    
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterRight, new VUMeter_Action(logicalSurface, track, 1));
     
@@ -803,9 +806,10 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         //channel->AddWidget(new Fader8Bit_CSurfWidget("HiCut", surface, channel,      new MIDI_event_ex_t(0xb0, 0x69, 0x7f)));
         //channel->AddWidget(new Fader8Bit_CSurfWidget("LoCut", surface, channel,      new MIDI_event_ex_t(0xb0, 0x67, 0x7f)));
         
-        //channel->AddWidget(new VUMeter_CSurfWidget(TrackInMeterLeft, surface, channel, new  MIDI_event_ex_t(0xb0, 0x6e, 0x7f)));
-        //channel->AddWidget(new VUMeter_CSurfWidget(TrackInMeterRight, surface, channel, new  MIDI_event_ex_t(0xb0, 0x6f, 0x7f)));
+        channel->AddWidget(new VUMeter_MidiWidget("", surface, TrackInMeterLeft, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x6e, 0x7f),     new MIDI_event_ex_t(0xb0, 0x6e, 0x00)));
+        channel->AddWidget(new VUMeter_MidiWidget("", surface, TrackInMeterRight, -60.0, 6.0, new  MIDI_event_ex_t(0xb0, 0x6f, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x6f, 0x00)));
 
+        
         // Shape
         channel->AddWidget(new PushButton_MidiWidget("", surface, "Shape",     new MIDI_event_ex_t(0xb0, 0x35, 0x7f), new MIDI_event_ex_t(0xb0, 0x35, 0x00)));
         channel->AddWidget(new PushButton_MidiWidget("", surface, "HardGate",  new MIDI_event_ex_t(0xb0, 0x3b, 0x7f), new MIDI_event_ex_t(0xb0, 0x3b, 0x00)));
