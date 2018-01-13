@@ -318,10 +318,8 @@ void RealSurface::MapFXToWidgets(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
     
-    // Map Track to any Channels interested
     for(auto* channel : GetChannels())
-        if(channel->GetShouldMapFXTrackToChannel())
-            channel->SetGUID(trackGUID);
+        channel->SetGUID(trackGUID);
     
     char fxName[BUFSZ];
     char fxGUID[BUFSZ];
@@ -380,6 +378,9 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
     
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
     AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterRight, new VUMeter_Action(logicalSurface, track, 1));
+    
+    if(GetName() == "Console1")
+        AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOnSelection, new MapFXToWidgets_Action(logicalSurface, track));
     
     MapFXActions(track);
 }
@@ -788,7 +789,6 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
 */
         
         channel = new RealSurfaceChannel( "", 0, surface);
-        channel->SetShouldMapFXTrackToChannel(true);
         surface->AddChannel(channel);
         
         channel->AddWidget(new PushButton_MidiWidget("", surface, "Order",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
