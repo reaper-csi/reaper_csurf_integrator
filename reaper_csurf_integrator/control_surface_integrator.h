@@ -48,13 +48,13 @@ const string Alt = "Alt";
 // Dups disallowed -- ShiftShift -- no good
 //
 // Modifier Order matters !!
-// Please do not modify RealSurface::CurrentModifiers()
+// Please do not modify SurfaceGroup::CurrentModifiers()
 //
 // Allowed -- ShiftControl -- OK
 // Disallowed -- ControlShift -- no good
 //
 // Modifier Order matters !!
-// Please do not modify RealSurface::CurrentModifiers()
+// Please do not modify SurfaceGroup::CurrentModifiers()
 //
 // The modifiers, if present:
 //  must be contained in the modifier part of the action address
