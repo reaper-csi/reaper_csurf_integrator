@@ -398,7 +398,6 @@ private:
     string GUID_ = "";
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
-    bool shouldMapFXTrackToChannel_ = false;
     vector<string> widgetNames_;
     
 public:
@@ -407,18 +406,12 @@ public:
     string GetSuffix() { return suffix_; }
     string GetGUID() { return GUID_; }
     bool GetIsMovable() { return isMovable_; }
-    bool GetShouldMapFXTrackToChannel() { return shouldMapFXTrackToChannel_; }
     
     void SetGUID(string GUID);
 
     void SetIsMovable(bool isMovable)
     {
         isMovable_ = isMovable;
-    }
-    
-    void SetShouldMapFXTrackToChannel(bool shouldMapFXTrackToChannel)
-    {
-        shouldMapFXTrackToChannel_ = shouldMapFXTrackToChannel;
     }
     
     void AddWidget(MidiWidget* widget)
@@ -513,13 +506,19 @@ public:
             surface->ClearFXWindows();
             
             if(1 == DAW::CountSelectedTracks(nullptr))
-                surface->MapFXToWidgets(track);
+                DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
         }
         
         for(auto [name, surface] : realSurfaces_)
             surface->OpenFXWindows();
         
         ForceUpdateWidgets();
+    }
+    
+    void MapFXToWidgets(MediaTrack* track, string surfaceName)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->MapFXToWidgets(track);
     }
     
     void MapTrackAndFXActions(string trackGUID)
@@ -838,7 +837,13 @@ public:
     {
         actions_[actionAddress].push_back(action);
     }
-    
+   
+    void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->MapFXToWidgets(track, surfaceName);
+    }
+
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto const& [name, surfaceGroup] : surfaceGroups_)
