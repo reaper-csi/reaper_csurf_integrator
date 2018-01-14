@@ -405,11 +405,10 @@ void RealSurface::MapFXActions(MediaTrack* track)
         
         if(fxMaps_.count(fxName) > 0)
         {
-            string actionBaseAddress = trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName();
-
             FXMap* map = fxMaps_[fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
+            string actionBaseAddress = trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName();
+
             for(auto mapEntry : map->GetMapEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
