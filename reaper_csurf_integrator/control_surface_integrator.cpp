@@ -156,68 +156,69 @@ void RealSurfaceChannel::SetGUID(string GUID)
 #define ID_GOTO_MARKER1                 40161
 #define ID_SET_MARKER1                  40657
 
-void RealSurface::MapReaperLogicalControlSurfaceActions()
+void RealSurface::MapRealSurfaceActions()
 {
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
+    string actionBaseAddress = RealControlSurface + GetSurfaceGroup()->GetName() + GetName();;
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + ChannelLeft, new TrackBank_Action(logicalSurface, -1));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + ChannelRight, new TrackBank_Action(logicalSurface, 1));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + BankLeft, new TrackBank_Action(logicalSurface, -8));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + BankRight, new TrackBank_Action(logicalSurface, 8));
+    AddAction(actionBaseAddress + ChannelLeft, new TrackBank_Action(logicalSurface, -1));
+    AddAction(actionBaseAddress + ChannelRight, new TrackBank_Action(logicalSurface, 1));
+    AddAction(actionBaseAddress + BankLeft, new TrackBank_Action(logicalSurface, -8));
+    AddAction(actionBaseAddress + BankRight, new TrackBank_Action(logicalSurface, 8));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + NextMap, new NextMap_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + LockTracks, new ImmobilizeSelectedTracks_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + UnlockTracks, new MobilizeSelectedTracks_Action(logicalSurface));
+    AddAction(actionBaseAddress + NextMap, new NextMap_Action(logicalSurface));
+    AddAction(actionBaseAddress + LockTracks, new ImmobilizeSelectedTracks_Action(logicalSurface));
+    AddAction(actionBaseAddress + UnlockTracks, new MobilizeSelectedTracks_Action(logicalSurface));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift, new Shift_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Option, new Option_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Control, new Control_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Alt, new Alt_Action(logicalSurface));
+    AddAction(actionBaseAddress + Shift, new Shift_Action(logicalSurface));
+    AddAction(actionBaseAddress + Option, new Option_Action(logicalSurface));
+    AddAction(actionBaseAddress + Control, new Control_Action(logicalSurface));
+    AddAction(actionBaseAddress + Alt, new Alt_Action(logicalSurface));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Read, new TrackAutoMode_Action(logicalSurface, 1));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Write, new TrackAutoMode_Action(logicalSurface, 3));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Trim, new TrackAutoMode_Action(logicalSurface, 0));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Touch, new TrackAutoMode_Action(logicalSurface, 2));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Latch, new TrackAutoMode_Action(logicalSurface, 4));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Group, new TrackAutoMode_Action(logicalSurface, 5));
+    AddAction(actionBaseAddress + Read, new TrackAutoMode_Action(logicalSurface, 1));
+    AddAction(actionBaseAddress + Write, new TrackAutoMode_Action(logicalSurface, 3));
+    AddAction(actionBaseAddress + Trim, new TrackAutoMode_Action(logicalSurface, 0));
+    AddAction(actionBaseAddress + Touch, new TrackAutoMode_Action(logicalSurface, 2));
+    AddAction(actionBaseAddress + Latch, new TrackAutoMode_Action(logicalSurface, 4));
+    AddAction(actionBaseAddress + Group, new TrackAutoMode_Action(logicalSurface, 5));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Read, new GlobalAutoMode_Action(logicalSurface, 1));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Write, new GlobalAutoMode_Action(logicalSurface, 3));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Trim, new GlobalAutoMode_Action(logicalSurface, 0));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Touch, new GlobalAutoMode_Action(logicalSurface, 2));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Latch, new GlobalAutoMode_Action(logicalSurface, 4));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Group, new GlobalAutoMode_Action(logicalSurface, 5));
+    AddAction(actionBaseAddress + Shift + Read, new GlobalAutoMode_Action(logicalSurface, 1));
+    AddAction(actionBaseAddress + Shift + Write, new GlobalAutoMode_Action(logicalSurface, 3));
+    AddAction(actionBaseAddress + Shift + Trim, new GlobalAutoMode_Action(logicalSurface, 0));
+    AddAction(actionBaseAddress + Shift + Touch, new GlobalAutoMode_Action(logicalSurface, 2));
+    AddAction(actionBaseAddress + Shift + Latch, new GlobalAutoMode_Action(logicalSurface, 4));
+    AddAction(actionBaseAddress + Shift + Group, new GlobalAutoMode_Action(logicalSurface, 5));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEPROJECT));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEAS));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_UNDO));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_REDO));
+    AddAction(actionBaseAddress + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEPROJECT));
+    AddAction(actionBaseAddress + Shift + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEAS));
+    AddAction(actionBaseAddress + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_UNDO));
+    AddAction(actionBaseAddress + Shift + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_REDO));
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Marker, new Reaper_Action(logicalSurface, ID_MARKER_PREV));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Shift + Marker, new Reaper_Action(logicalSurface, ID_INSERT_MARKER));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Option + Marker, new Reaper_Action(logicalSurface,ID_INSERT_MARKERRGN));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Nudge, new Reaper_Action(logicalSurface, ID_MARKER_NEXT));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Cycle, new CycleTimeline_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Click, new Reaper_Action(logicalSurface, ID_METRONOME));
+    AddAction(actionBaseAddress + Marker, new Reaper_Action(logicalSurface, ID_MARKER_PREV));
+    AddAction(actionBaseAddress + Shift + Marker, new Reaper_Action(logicalSurface, ID_INSERT_MARKER));
+    AddAction(actionBaseAddress + Option + Marker, new Reaper_Action(logicalSurface,ID_INSERT_MARKERRGN));
+    AddAction(actionBaseAddress + Nudge, new Reaper_Action(logicalSurface, ID_MARKER_NEXT));
+    AddAction(actionBaseAddress + Cycle, new CycleTimeline_Action(logicalSurface));
+    AddAction(actionBaseAddress + Click, new Reaper_Action(logicalSurface, ID_METRONOME));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Rewind, new Rewind_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + FastForward, new FastForward_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Stop, new Stop_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Play, new Play_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Record, new Record_Action(logicalSurface));
+    AddAction(actionBaseAddress + Rewind, new Rewind_Action(logicalSurface));
+    AddAction(actionBaseAddress + FastForward, new FastForward_Action(logicalSurface));
+    AddAction(actionBaseAddress + Stop, new Stop_Action(logicalSurface));
+    AddAction(actionBaseAddress + Play, new Play_Action(logicalSurface));
+    AddAction(actionBaseAddress + Record, new Record_Action(logicalSurface));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Right, new RepeatingArrow_Action(logicalSurface, 3, 0.3));
+    AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
+    AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
+    AddAction(actionBaseAddress + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
+    AddAction(actionBaseAddress + Right, new RepeatingArrow_Action(logicalSurface, 3, 0.3));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Zoom, new LatchedZoom_Action(logicalSurface));
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + Scrub, new LatchedScrub_Action(logicalSurface));
+    AddAction(actionBaseAddress + Zoom, new LatchedZoom_Action(logicalSurface));
+    AddAction(actionBaseAddress + Scrub, new LatchedScrub_Action(logicalSurface));
     
-    AddAction(ReaperLogicalControlSurface + GetSurfaceGroup()->GetName() + GetName() + DisplayFX, new SetShowFXWindows_Action(logicalSurface));
+    AddAction(actionBaseAddress + DisplayFX, new SetShowFXWindows_Action(logicalSurface));
 }
 void RealSurface::InitFXMaps()
 {
@@ -352,38 +353,38 @@ void RealSurface::MapFXToWidgets(MediaTrack *track)
 void RealSurface::MapTrackAndFXActions(string trackGUID)
 {
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
-
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    string actionBaseAddress = trackGUID + GetSurfaceGroup()->GetName() + GetName();
     
     // GAW TBD this will be obtained from map
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display, new TrackNameDisplay_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display, new TrackTouchControlled_Action(logicalSurface, track, new TrackVolumeDisplay_Action(logicalSurface, track), trackGUID + GetSurfaceGroup()->GetName() + GetName() + Display));
+    AddAction(actionBaseAddress + Display, new TrackNameDisplay_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Display, new TrackTouchControlled_Action(logicalSurface, track, new TrackVolumeDisplay_Action(logicalSurface, track), actionBaseAddress + Display));
     
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Fader, new TrackVolume_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + FaderTouch, new TrackTouch_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Fader, new TrackVolume_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + FaderTouch, new TrackTouch_Action(logicalSurface, track));
     
     CycledAction* cycledAction = new CycledAction(logicalSurface);
     cycledAction->AddAction(new TrackPan_Action(logicalSurface, track, 0x00));
     cycledAction->AddAction(new TrackPanWidth_Action(logicalSurface, track, 0x30));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Rotary, cycledAction);
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + RotaryPush, cycledAction);
+    AddAction(actionBaseAddress + Rotary, cycledAction);
+    AddAction(actionBaseAddress + RotaryPush, cycledAction);
     
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Select, new TrackUniqueSelect_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Shift + Select, new TrackRangeSelect_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Control + Select, new TrackSelect_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Select, new TrackUniqueSelect_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Shift + Select, new TrackRangeSelect_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Control + Select, new TrackSelect_Action(logicalSurface, track));
     
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + RecordArm, new TrackRecordArm_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Mute, new TrackMute_Action(logicalSurface, track));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + Solo, new TrackSolo_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + RecordArm, new TrackRecordArm_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Mute, new TrackMute_Action(logicalSurface, track));
+    AddAction(actionBaseAddress + Solo, new TrackSolo_Action(logicalSurface, track));
     
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackInMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackInMeterRight, new VUMeter_Action(logicalSurface, track, 1));
+    AddAction(actionBaseAddress + TrackInMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
+    AddAction(actionBaseAddress + TrackInMeterRight, new VUMeter_Action(logicalSurface, track, 1));
     
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
-    AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOutMeterRight, new VUMeter_Action(logicalSurface, track, 1));
+    AddAction(actionBaseAddress + TrackOutMeterLeft, new VUMeter_Action(logicalSurface, track, 0));
+    AddAction(actionBaseAddress + TrackOutMeterRight, new VUMeter_Action(logicalSurface, track, 1));
     
     if(GetName() == "Console1")
-        AddAction(trackGUID + GetSurfaceGroup()->GetName() + GetName() + TrackOnSelection, new MapFXToWidgets_Action(logicalSurface, track));
+        AddAction(actionBaseAddress + TrackOnSelection, new MapFXToWidgets_Action(logicalSurface, track));
     
     MapFXActions(track);
 }
@@ -404,13 +405,15 @@ void RealSurface::MapFXActions(MediaTrack* track)
         
         if(fxMaps_.count(fxName) > 0)
         {
+            string actionBaseAddress = trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName();
+
             FXMap* map = fxMaps_[fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             
             for(auto mapEntry : map->GetMapEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName() + mapEntry.widgetName, new GainReductionMeter_Action(logicalSurface, track, fxGUID));
+                    AddAction(actionBaseAddress + mapEntry.widgetName, new GainReductionMeter_Action(logicalSurface, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -418,7 +421,7 @@ void RealSurface::MapFXActions(MediaTrack* track)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            AddAction(trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName() + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
+                            AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
                     }
                 }
             }
@@ -758,7 +761,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
     
     if(surface->GetName() == "Console1")
     {
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, DisplayFX, new MIDI_event_ex_t(0xb0, 0x66, 0x7f), new MIDI_event_ex_t(0xb0, 0x66, 0x00)));
 
         /*
         surface->AddWidget(new PushButton_CSurfWidget("PagePlus", surface,   new MIDI_event_ex_t(0xb0, 0x60, 0x7f), new MIDI_event_ex_t(0xb0, 0x60, 0x00)));
@@ -868,68 +871,68 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
     }
     else
     {
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Plugin",      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "EQ",          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Instrument",  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Plugin",      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "EQ",          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Instrument",  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
 
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "nameValue",   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "smpteBeats",  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "nameValue",   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "smpteBeats",  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
         
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, NextMap,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F2",          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F3",          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F4",          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F5",          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "F6",          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, UnlockTracks,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, LockTracks,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, NextMap,       new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "F2",          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "F3",          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "F4",          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "F5",          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "F6",          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, UnlockTracks,  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, LockTracks,    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
 
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Shift,     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Option,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Control,   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(ReaperLogicalControlSurface, surface, Alt,       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(RealControlSurface, surface, Shift,     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(RealControlSurface, surface, Option,    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(RealControlSurface, surface, Control,   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
+        surface->AddWidget(new PushButtonWithRelease_MidiWidget(RealControlSurface, surface, Alt,       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
         
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Read,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Write,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Trim,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Touch,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Latch,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Group,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Read,          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Write,         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Trim,          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Touch,         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Latch,         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Group,         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
         
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Save,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Undo,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cancel,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Enter,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Save,          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Undo,          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Cancel,        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Enter,         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
         
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Cycle,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Drop",        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Replace",     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Click,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, "Solo",        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Cycle,         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Drop",        new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Replace",     new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Click,         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, "Solo",        new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
 
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Up,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Down,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Left,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Right,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Zoom,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Scrub,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Up,            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Down,          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Left,          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Right,         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Zoom,          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Scrub,         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
 
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankLeft,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, BankRight,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelLeft,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, ChannelRight,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, BankLeft,      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, BankRight,     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, ChannelLeft,   new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, ChannelRight,  new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
 
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Marker,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Nudge,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Marker,        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Nudge,         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
 
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Rewind,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, FastForward,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Stop,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Play,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(ReaperLogicalControlSurface, surface, Record,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Rewind,        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, FastForward,   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Stop,          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Play,          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
+        surface->AddWidget(new PushButton_MidiWidget(RealControlSurface, surface, Record,        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
         
         for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
         {
