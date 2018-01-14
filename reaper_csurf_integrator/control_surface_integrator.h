@@ -29,7 +29,7 @@ const double System_MinDB = -72.0;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following are all reserved words in the map vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const string ReaperLogicalControlSurface = "ReaperLogicalControlSurface";
+const string RealControlSurface = "RealControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
 const string TrackOnSelection = "TrackOnSelection";
 
@@ -218,7 +218,7 @@ public:
     
     void AddAction(string actionAddress, Action* action);
     void MapFXToWidgets(MediaTrack *track);
-    void MapReaperLogicalControlSurfaceActions();
+    void MapRealSurfaceActions();
     void InitFXMaps();
     void MapTrackAndFXActions(string trackGUID);
     void MapFXActions(MediaTrack* track);
@@ -877,15 +877,15 @@ public:
         for(auto* surface : realSurfaces) // all surfaces are hardwired to the same group
             numChannels += surface->GetNumBankableChannels();
         
-        surfaceGroups_[ReaperLogicalControlSurface] = new SurfaceGroup(ReaperLogicalControlSurface, this, numChannels);
+        surfaceGroups_[RealControlSurface] = new SurfaceGroup(RealControlSurface, this, numChannels);
         
         for(auto* surface : realSurfaces)
         {
-            surface->SetSurfaceGroup(surfaceGroups_[ReaperLogicalControlSurface]);
-            surfaceGroups_[ReaperLogicalControlSurface]->AddSurface(surface);
+            surface->SetSurfaceGroup(surfaceGroups_[RealControlSurface]);
+            surfaceGroups_[RealControlSurface]->AddSurface(surface);
             
             surface->InitFXMaps();
-            surface->MapReaperLogicalControlSurfaceActions();
+            surface->MapRealSurfaceActions();
         }
         // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
