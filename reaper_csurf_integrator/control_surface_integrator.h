@@ -32,6 +32,10 @@ const double System_MinDB = -72.0;
 const string RealControlSurface = "RealControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
 const string TrackOnSelection = "TrackOnSelection";
+const string TrackVolume = "TrackVolume";
+const string TrackPan = "TrackPan";
+const string TrackMute = "TrackMute";
+const string TrackSolo = "TrackSolo";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
@@ -873,14 +877,14 @@ public:
         
         int numChannels = 1;
         
-        for(auto* surface : realSurfaces) // all surfaces are hardwired to the same group
+        for(auto* surface : realSurfaces)
             numChannels += surface->GetNumBankableChannels();
         
         surfaceGroups_[RealControlSurface] = new SurfaceGroup(RealControlSurface, this, numChannels);
         
         for(auto* surface : realSurfaces)
         {
-            surface->SetSurfaceGroup(surfaceGroups_[RealControlSurface]);
+            surface->SetSurfaceGroup(surfaceGroups_[RealControlSurface]); // all surfaces are hardwired to the same group
             surfaceGroups_[RealControlSurface]->AddSurface(surface);
             
             surface->InitFXMaps();
