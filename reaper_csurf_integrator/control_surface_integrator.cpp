@@ -793,7 +793,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         surface->AddWidget(new PushButton_CSurfWidget(SendsMode, surface, channel, "",   new MIDI_event_ex_t(0xb0, 0x68, 0x7f), new MIDI_event_ex_t(0xb0, 0x68, 0x00)));
 */
         
-        channel = new RealSurfaceChannel( "", 0, surface);
+        channel = new RealSurfaceChannel( "", surface);
         surface->AddChannel(channel);
         
         channel->AddWidget(new PushButton_MidiWidget("", surface, "Order",             new MIDI_event_ex_t(0xb0, 0x0e, 0x7f), new MIDI_event_ex_t(0xb0, 0x0e, 0x00)));
@@ -935,7 +935,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         
         for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
         {
-            channel = new RealSurfaceChannel(to_string(i + 1), i, surface);
+            channel = new RealSurfaceChannel(to_string(i + 1), surface);
             surface->AddChannel(channel);
             
             channel->AddWidget(new PushButtonWithRelease_MidiWidget("", surface, FaderTouch, new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
