@@ -394,14 +394,13 @@ class RealSurfaceChannel
 {
 private:
     string suffix_= "";
-    int index_ = 0;
     string GUID_ = "";
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     vector<string> widgetNames_;
     
 public:
-    RealSurfaceChannel(string suffix, int index, RealSurface* surface) : suffix_(suffix), index_(index), realSurface_(surface) {}
+    RealSurfaceChannel(string suffix, RealSurface* surface) : suffix_(suffix), realSurface_(surface) {}
    
     string GetSuffix() { return suffix_; }
     string GetGUID() { return GUID_; }
