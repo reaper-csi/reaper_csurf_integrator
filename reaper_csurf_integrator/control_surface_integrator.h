@@ -32,12 +32,6 @@ const double System_MinDB = -72.0;
 const string RealControlSurface = "RealControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
 const string TrackOnSelection = "TrackOnSelection";
-const string TrackVolume = "TrackVolume";
-const string TrackPan = "TrackPan";
-const string TrackMute = "TrackMute";
-const string TrackSolo = "TrackSolo";
-const string TrackOutputMeterLeft = "TrackOutputMeterLeft";
-const string TrackOutputMeterRight = "TrackOutputMeterRight";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
@@ -223,6 +217,7 @@ public:
     bool IsShowFXWindows() { return showFXWindows_; }
     
     void AddAction(string actionAddress, Action* action);
+    void MapTrackToWidgets(MediaTrack *track);
     void MapFXToWidgets(MediaTrack *track);
     void MapRealSurfaceActions();
     void InitFXMaps();
@@ -506,6 +501,12 @@ public:
         for(auto [name, surface] : realSurfaces_)
             if(1 == DAW::CountSelectedTracks(nullptr))
                 DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
+    }
+    
+    void MapTrackToWidgets(MediaTrack* track, string surfaceName)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->MapTrackToWidgets(track);
     }
     
     void MapFXToWidgets(MediaTrack* track, string surfaceName)
@@ -831,12 +832,18 @@ public:
         actions_[actionAddress].push_back(action);
     }
    
+    void MapTrackToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->MapTrackToWidgets(track, surfaceName);
+    }
+    
     void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
     {
         if(surfaceGroups_.count(groupName) > 0)
             surfaceGroups_[groupName]->MapFXToWidgets(track, surfaceName);
     }
-
+    
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto const& [name, surfaceGroup] : surfaceGroups_)
