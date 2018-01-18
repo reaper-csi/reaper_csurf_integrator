@@ -217,7 +217,6 @@ public:
     bool IsShowFXWindows() { return showFXWindows_; }
     
     void AddAction(string actionAddress, Action* action);
-    void MapTrackToWidgets(MediaTrack *track);
     void MapFXToWidgets(MediaTrack *track);
     void MapRealSurfaceActions();
     void InitFXMaps();
@@ -501,12 +500,6 @@ public:
         for(auto [name, surface] : realSurfaces_)
             if(1 == DAW::CountSelectedTracks(nullptr))
                 DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
-    }
-    
-    void MapTrackToWidgets(MediaTrack* track, string surfaceName)
-    {
-        if(realSurfaces_.count(surfaceName) > 0)
-            realSurfaces_[surfaceName]->MapTrackToWidgets(track);
     }
     
     void MapFXToWidgets(MediaTrack* track, string surfaceName)
@@ -832,12 +825,6 @@ public:
         actions_[actionAddress].push_back(action);
     }
    
-    void MapTrackToWidgets(MediaTrack* track, string groupName, string surfaceName)
-    {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->MapTrackToWidgets(track, surfaceName);
-    }
-    
     void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
     {
         if(surfaceGroups_.count(groupName) > 0)
