@@ -88,17 +88,31 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapTrackToWidgets_Action  : public TrackDoubleAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    MapTrackToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    
+    virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
+    {
+        GetLogicalSurface()->MapTrackToWidgets(track_, groupName, surfaceName);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapFXToWidgets_Action  : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     MapFXToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
-
+    
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
         GetLogicalSurface()->MapFXToWidgets(track_, groupName, surfaceName);
     }
 };
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolume_Action : public TrackDoubleAction
@@ -619,7 +633,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class OutputMeter_Action : public TrackDoubleAction
+class TrackOutputMeter_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -636,13 +650,13 @@ protected:
     }
     
 public:
-    OutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDoubleAction(logicalSurface, track), channel_(channel) {}
+    TrackOutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDoubleAction(logicalSurface, track), channel_(channel) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return VAL2DB(DAW::Track_GetPeakInfo(track_, channel_)); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GainReductionMeter_Action : public TrackDoubleAction
+class TrackGainReductionMeter_Action : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -659,7 +673,7 @@ protected:
     }
     
 public:
-    GainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID)  {}
+    TrackGainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID)  {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override
     {

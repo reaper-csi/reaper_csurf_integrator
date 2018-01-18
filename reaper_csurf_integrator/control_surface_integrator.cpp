@@ -224,13 +224,6 @@ void RealSurface::MapRealSurfaceActions()
 void RealSurface::InitFXMaps()
 {
     FXMap* fxMap = new FXMap("VST: ReaComp (Cockos)");
-    
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
 
     fxMap->AddEntry(Threshold, "Thresh");
     fxMap->AddEntry(Character, "Gain");
@@ -244,13 +237,6 @@ void RealSurface::InitFXMaps()
     AddFXMap(fxMap);
     
     fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
-    
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
 
     fxMap->AddEntry(Threshold, "Thresh");
     fxMap->AddEntry(Character, "Output");
@@ -265,13 +251,6 @@ void RealSurface::InitFXMaps()
     
     fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
-
     fxMap->AddEntry(Threshold, "Peak Reduct");
     fxMap->AddEntry(Character, "Gain");
     fxMap->AddEntry(Drive, "Meter");
@@ -284,13 +263,6 @@ void RealSurface::InitFXMaps()
     
     fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
-
     fxMap->AddEntry(LoCurve, "LowPeak");
     //fxMap->AddEntry(HiCurve, "");
     fxMap->AddEntry(HiGain, "HiGain");
@@ -309,13 +281,6 @@ void RealSurface::InitFXMaps()
     
     fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
-
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
     fxMap->AddEntry(HiGain, "HF Atten");
@@ -334,13 +299,6 @@ void RealSurface::InitFXMaps()
     
     fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(Fader, TrackVolume);
-    fxMap->AddEntry(Rotary, TrackPan);
-    fxMap->AddEntry(Mute, TrackMute);
-    fxMap->AddEntry(Solo, TrackSolo);
-    fxMap->AddEntry(ChannelOutputMeterLeft, TrackOutputMeterLeft);
-    fxMap->AddEntry(ChannelOutputMeterRight, TrackOutputMeterRight);
-
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
     fxMap->AddEntry(HiGain, "HM Peak");
@@ -356,6 +314,12 @@ void RealSurface::InitFXMaps()
     fxMap->AddEntry(Equalizer, "Bypass");
     
     AddFXMap(fxMap);
+}
+
+void RealSurface::MapTrackToWidgets(MediaTrack *track)
+{
+    for(auto* channel : channels_)
+        channel->SetGUID(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
 }
 
 void RealSurface::MapFXToWidgets(MediaTrack *track)
@@ -380,9 +344,7 @@ void RealSurface::MapFXToWidgets(MediaTrack *track)
             
             for(auto mapEntry : map->GetMapEntries())
             {
-                if(mapEntry.paramName == TrackVolume || mapEntry.paramName == TrackPan || mapEntry.paramName == TrackMute || mapEntry.paramName == TrackSolo || mapEntry.paramName == TrackOutputMeterLeft ||  mapEntry.paramName == TrackOutputMeterRight)
-                    SetWidgetGUID(mapEntry.widgetName, trackGUID);
-                else if(mapEntry.paramName == GainReduction_dB)
+                if(mapEntry.paramName == GainReduction_dB)
                     SetWidgetGUID(mapEntry.widgetName, trackGUID + fxGUID);
                 else
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
@@ -427,8 +389,17 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
     AddAction(actionBaseAddress + Solo, new TrackSolo_Action(logicalSurface, track));
         
     if(GetName() == "Console1")
+    {
+        AddAction(actionBaseAddress + ChannelInputMeterLeft, new TrackOutputMeter_Action(logicalSurface, track, 0));
+        AddAction(actionBaseAddress + ChannelInputMeterRight, new TrackOutputMeter_Action(logicalSurface, track, 1));
+        
+        AddAction(actionBaseAddress + ChannelOutputMeterLeft, new TrackOutputMeter_Action(logicalSurface, track, 0));
+        AddAction(actionBaseAddress + ChannelOutputMeterRight, new TrackOutputMeter_Action(logicalSurface, track, 1));
+
+        AddAction(actionBaseAddress + TrackOnSelection, new MapTrackToWidgets_Action(logicalSurface, track));
         AddAction(actionBaseAddress + TrackOnSelection, new MapFXToWidgets_Action(logicalSurface, track));
-    
+    }
+
     MapFXActions(track);
 }
 
@@ -455,20 +426,8 @@ void RealSurface::MapFXActions(MediaTrack* track)
 
             for(auto mapEntry : map->GetMapEntries())
             {
-                if(mapEntry.paramName == TrackVolume)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new TrackVolume_Action(logicalSurface, track));
-                else if(mapEntry.paramName == TrackPan)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new TrackPan_Action(logicalSurface, track, 0x00));
-                else if(mapEntry.paramName == TrackMute)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new TrackMute_Action(logicalSurface, track));
-                else if(mapEntry.paramName == TrackSolo)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new TrackSolo_Action(logicalSurface, track));
-                else if(mapEntry.paramName == TrackOutputMeterLeft)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new OutputMeter_Action(logicalSurface, track, 0));
-                else if(mapEntry.paramName == TrackOutputMeterRight)
-                    AddAction(actionTrackBaseAddress + mapEntry.widgetName, new OutputMeter_Action(logicalSurface, track, 1));
-                else if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(actionBaseAddress + mapEntry.widgetName, new GainReductionMeter_Action(logicalSurface, track, fxGUID));
+                if(mapEntry.paramName == GainReduction_dB)
+                    AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(logicalSurface, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
