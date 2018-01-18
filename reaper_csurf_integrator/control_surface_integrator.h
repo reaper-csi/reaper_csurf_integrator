@@ -36,6 +36,8 @@ const string TrackVolume = "TrackVolume";
 const string TrackPan = "TrackPan";
 const string TrackMute = "TrackMute";
 const string TrackSolo = "TrackSolo";
+const string TrackOutputMeterLeft = "TrackOutputMeterLeft";
+const string TrackOutputMeterRight = "TrackOutputMeterRight";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
@@ -502,18 +504,8 @@ public:
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto [name, surface] : realSurfaces_)
-        {
-            surface->CloseFXWindows();
-            surface->ClearFXWindows();
-            
             if(1 == DAW::CountSelectedTracks(nullptr))
                 DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
-        }
-        
-        for(auto [name, surface] : realSurfaces_)
-            surface->OpenFXWindows();
-        
-        ForceUpdateWidgets();
     }
     
     void MapFXToWidgets(MediaTrack* track, string surfaceName)
