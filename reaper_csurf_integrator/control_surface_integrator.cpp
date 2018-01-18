@@ -316,12 +316,17 @@ void RealSurface::InitFXMaps()
     AddFXMap(fxMap);
 }
 
+void RealSurface::MapTrackToWidgets(MediaTrack *track)
+{
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    
+    for(auto* channel : channels_)
+        channel->SetGUID(trackGUID);
+}
+
 void RealSurface::MapFXToWidgets(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-
-    for(auto* channel : channels_)
-        channel->SetGUID(trackGUID);
 
     CloseFXWindows();
     ClearFXWindows();
@@ -393,6 +398,7 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
         AddAction(actionBaseAddress + ChannelOutputMeterLeft, new TrackOutputMeter_Action(logicalSurface, track, 0));
         AddAction(actionBaseAddress + ChannelOutputMeterRight, new TrackOutputMeter_Action(logicalSurface, track, 1));
 
+        AddAction(actionBaseAddress + TrackOnSelection, new MapTrackToWidgets_Action(logicalSurface, track));
         AddAction(actionBaseAddress + TrackOnSelection, new MapFXToWidgets_Action(logicalSurface, track));
     }
 
