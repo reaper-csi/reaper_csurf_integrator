@@ -326,15 +326,14 @@ void RealSurface::MapTrackToWidgets(MediaTrack *track)
 
 void RealSurface::MapFXToWidgets(MediaTrack *track)
 {
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-
-    CloseFXWindows();
-    ClearFXWindows();
-
     char fxName[BUFSZ];
     char fxGUID[BUFSZ];
     char fxParamName[BUFSZ];
+
+    DeleteFXToWidgetMaps();
     
+    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
