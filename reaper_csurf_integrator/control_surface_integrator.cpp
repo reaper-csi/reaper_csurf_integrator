@@ -125,12 +125,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
     GUID_ = GUID;
     
     for (auto widgetName : widgetNames_)
-    {
         realSurface_->SetWidgetGUID(widgetName, GUID);
-        
-        if(GUID_ == "")
-            realSurface_->SetWidgetValueToZero(widgetName);
-    }
     
     realSurface_->GetSurfaceGroup()->GetLogicalSurface()->MapTrack(GUID_);
 }
@@ -341,7 +336,7 @@ void RealSurface::MapFXToWidgets(MediaTrack *track)
     char fxGUID[BUFSZ];
     char fxParamName[BUFSZ];
 
-    DeleteFXToWidgetMaps();
+    DeleteFXWindows();
     
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
 
