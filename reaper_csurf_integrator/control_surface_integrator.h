@@ -216,6 +216,14 @@ public:
     bool IsScrub() { return scrub_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     
+    string GetWidgetGUID(string widgetName)
+    {
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName]->GetGUID();
+        
+        return "";
+    }
+    
     void AddAction(string actionAddress, Action* action);
     void MapTrackToWidgets(MediaTrack *track);
     void MapFXToWidgets(MediaTrack *track);
@@ -235,10 +243,6 @@ public:
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
-    void ClearFXWindows()
-    {
-        openFXWindows_.clear();
-    }
     
     void AddFXWindow(FXWindow fxWindow)
     {
@@ -268,8 +272,20 @@ public:
             DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
     }
     
+    void ClearFXWindows()
+    {
+        openFXWindows_.clear();
+    }
 
     
+
+    void DeleteFXToWidgetMaps()
+    {
+        CloseFXWindows();
+        ClearFXWindows();
+
+        
+    }
     
     
     
@@ -499,8 +515,7 @@ public:
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto [name, surface] : realSurfaces_)
-            if(1 == DAW::CountSelectedTracks(nullptr))
-                DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
+            DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
     }
     
     void MapTrackToWidgets(MediaTrack* track, string surfaceName)
