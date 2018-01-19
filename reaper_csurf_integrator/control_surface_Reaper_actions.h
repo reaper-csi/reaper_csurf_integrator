@@ -96,7 +96,10 @@ public:
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
-        GetLogicalSurface()->MapTrackToWidgets(track_, groupName, surfaceName);
+        if(1 == DAW::CountSelectedTracks(nullptr))
+            GetLogicalSurface()->MapTrackToWidgets(track_, groupName, surfaceName);
+        else
+            GetLogicalSurface()->UnmapWidgetsFromTrack(track_, groupName, surfaceName);
     }
 };
 
@@ -111,9 +114,10 @@ public:
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
             GetLogicalSurface()->MapFXToWidgets(track_, groupName, surfaceName);
+        else
+            GetLogicalSurface()->UnmapWidgetsFromFX(track_, groupName, surfaceName);
     }
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolume_Action : public TrackDoubleAction
