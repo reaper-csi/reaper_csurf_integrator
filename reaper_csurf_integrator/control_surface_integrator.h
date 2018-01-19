@@ -226,6 +226,8 @@ public:
     
     void AddAction(string actionAddress, Action* action);
     void MapTrackToWidgets(MediaTrack *track);
+    void UnmapWidgetsFromTrack(MediaTrack *track);
+    void UnmapFXFromWidgets(MediaTrack *track);
     void MapFXToWidgets(MediaTrack *track);
     void MapRealSurfaceActions();
     void InitFXMaps();
@@ -524,10 +526,22 @@ public:
             realSurfaces_[surfaceName]->MapTrackToWidgets(track);
     }
     
+    void UnmapWidgetsFromTrack(MediaTrack* track, string surfaceName)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->UnmapWidgetsFromTrack(track);
+    }
+    
     void MapFXToWidgets(MediaTrack* track, string surfaceName)
     {
         if(realSurfaces_.count(surfaceName) > 0)
             realSurfaces_[surfaceName]->MapFXToWidgets(track);
+    }
+    
+    void UnmapWidgetsFromFX(MediaTrack* track, string surfaceName)
+    {
+        if(realSurfaces_.count(surfaceName) > 0)
+            realSurfaces_[surfaceName]->UnmapFXFromWidgets(track);
     }
     
     void MapTrackAndFXActions(string trackGUID)
@@ -853,10 +867,22 @@ public:
             surfaceGroups_[groupName]->MapTrackToWidgets(track, surfaceName);
     }
     
+    void UnmapWidgetsFromTrack(MediaTrack* track, string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->UnmapWidgetsFromTrack(track, surfaceName);
+    }
+    
     void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
     {
         if(surfaceGroups_.count(groupName) > 0)
             surfaceGroups_[groupName]->MapFXToWidgets(track, surfaceName);
+    }
+    
+    void UnmapWidgetsFromFX(MediaTrack* track, string groupName, string surfaceName)
+    {
+        if(surfaceGroups_.count(groupName) > 0)
+            surfaceGroups_[groupName]->UnmapWidgetsFromFX(track, surfaceName);
     }
     
     void OnTrackSelection(MediaTrack* track)
