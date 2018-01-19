@@ -174,6 +174,12 @@ public:
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
+        
+        if(GUID_ == "")
+        {
+            SetValueToZero();
+            ForceUpdate();
+        }
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
@@ -281,7 +287,7 @@ public:
 
     
 
-    void DeleteFXToWidgetMaps()
+    void DeleteFXWindows()
     {
         CloseFXWindows();
         ClearFXWindows();
