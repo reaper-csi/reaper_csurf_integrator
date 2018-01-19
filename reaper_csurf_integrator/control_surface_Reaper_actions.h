@@ -109,7 +109,8 @@ public:
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
-        GetLogicalSurface()->MapFXToWidgets(track_, groupName, surfaceName);
+        if(1 == DAW::CountSelectedTracks(nullptr))
+            GetLogicalSurface()->MapFXToWidgets(track_, groupName, surfaceName);
     }
 };
 
