@@ -205,6 +205,7 @@ protected:
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
     map<string, FXMap *> fxMaps_;
+    map<string, string> remappedFXWidgets_;
     
     bool zoom_ = false;
     bool scrub_ = false;
@@ -334,8 +335,19 @@ public:
 
     void SetWidgetGUID(string widgetName, string GUID)
     {
-        if(widgetsByName_.count(widgetName) > 0)
+        if(remappedFXWidgets_.count(widgetName) > 0)
+            remappedFXWidgets_[widgetName] = GUID;
+        else if(widgetsByName_.count(widgetName) > 0)
             widgetsByName_[widgetName]->SetGUID(GUID);
+    }
+    
+    void SetWidgetFXGUID(string widgetName, string GUID)
+    {
+        if(widgetsByName_.count(widgetName) > 0)
+        {
+            remappedFXWidgets_[widgetName] = widgetsByName_[widgetName]->GetGUID();
+            widgetsByName_[widgetName]->SetGUID(GUID);
+        }
     }
     
     void SetZoom(bool value)
