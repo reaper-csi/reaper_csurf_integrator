@@ -931,8 +931,8 @@ public:
     
     void Init(vector<RealSurface*> realSurfaces)
     {
-        // GAW TBD temp hardwiring -- this will be replaced with load from map file //////////////////////////////////////////
-        
+        // GAW TBD -- this will be in .lsm files
+
         int numChannels = 1;
         
         for(auto* surface : realSurfaces)

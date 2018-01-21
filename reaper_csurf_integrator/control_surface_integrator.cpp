@@ -153,6 +153,8 @@ void RealSurfaceChannel::SetGUID(string GUID)
 
 void RealSurface::MapRealSurfaceActions()
 {
+    // GAW TBD -- this will be in .axm files
+    
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
     string actionBaseAddress = RealControlSurface + GetSurfaceGroup()->GetName() + GetName();;
     
@@ -218,6 +220,8 @@ void RealSurface::MapRealSurfaceActions()
 
 void RealSurface::InitFXMaps()
 {
+    // GAW TBD -- this will be in .fxt files
+
     FXMap* fxMap = new FXMap("VST: ReaComp (Cockos)");
 
     fxMap->AddEntry(Threshold, "Thresh");
@@ -379,8 +383,8 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     string actionBaseAddress = trackGUID + GetSurfaceGroup()->GetName() + GetName();
     
-    // GAW TBD this will be obtained from map
-    
+    // GAW TBD -- this will be in .axm files
+
     if(GetName() == "Console1")
     {
         AddAction(actionBaseAddress + Fader, new TrackVolume_Action(logicalSurface, track));
@@ -634,6 +638,8 @@ int LoadState(const char * firstline, ProjectStateContext * ctx)
 
 void CSurfManager::InitRealSurfaces()
 {
+    // GAW TBD -- this will be in .rsm files
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
     // GAW TBD Hack an ini file so that testers can config MIDI IO for their local surfaces
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -792,6 +798,9 @@ void CSurfManager::InitRealSurfaces()
 
 void CSurfManager::InitRealSurface(RealSurface* surface)
 {
+    
+    // GAW TBD -- this will be in .rst files
+    
     RealSurfaceChannel* channel = nullptr;
     
     if(surface->GetName() == "Console1")
