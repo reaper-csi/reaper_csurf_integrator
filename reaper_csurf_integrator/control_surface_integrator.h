@@ -16,9 +16,6 @@
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
-const double System_MaxDB = 12.0;
-const double System_MinDB = -72.0;
-
 // Note for Windows environments
 // use std::byte for C++17 byte
 // use ::byte for Windows byte
@@ -161,8 +158,8 @@ public:
     virtual ~MidiWidget() {};
     
     string GetGUID() { return GUID_; }
-    virtual double GetMinDB() { return System_MinDB; }
-    virtual double GetMaxDB() { return System_MaxDB; }
+    virtual double GetMinDB() { return 0.0; }
+    virtual double GetMaxDB() { return 0.0; }
     string GetName() { return name_ + suffix_; }
     string GetActionName() { return name_; }
 
@@ -388,7 +385,7 @@ public:
         if(widgetsByName_.count(widgetName) > 0)
             return widgetsByName_[widgetName]->GetMaxDB();
         
-        return System_MaxDB;
+        return 0.0;
     }
     
     double GetWidgetMinDB(string widgetName)
@@ -396,7 +393,7 @@ public:
         if(widgetsByName_.count(widgetName) > 0)
             return widgetsByName_[widgetName]->GetMinDB();
         
-        return System_MinDB;
+        return 0.0;
     }
     
     void SetWidgetValue(string widgetName, double value)
@@ -795,7 +792,7 @@ public:
         if(realSurfaces_.count(surfaceName) > 0)
             return realSurfaces_[surfaceName]->GetWidgetMaxDB(widgetName);
         
-        return System_MaxDB;
+        return 0.0;
     }
     
     double GetWidgetMinDB(string surfaceName, string widgetName)
@@ -803,7 +800,7 @@ public:
         if(realSurfaces_.count(surfaceName) > 0)
             return realSurfaces_[surfaceName]->GetWidgetMinDB(widgetName);
         
-        return System_MinDB;
+        return 0.0;
     }
     
     void SetWidgetValue(string surfaceName, string widgetName, double value)
@@ -1084,7 +1081,7 @@ public:
         if(surfaceGroups_.count(groupName) > 0)
             return surfaceGroups_[groupName]->GetWidgetMaxDB(surfaceName, widgetName);
         
-        return System_MaxDB;
+        return 0.0;
     }
     
     double GetWidgetMinDB(string groupName, string surfaceName, string widgetName)
@@ -1092,7 +1089,7 @@ public:
         if(surfaceGroups_.count(groupName) > 0)
             return surfaceGroups_[groupName]->GetWidgetMinDB(surfaceName, widgetName);
         
-        return System_MinDB;
+        return 0.0;
     }
     
     void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value)
