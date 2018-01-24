@@ -830,6 +830,7 @@ class LogicalSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    string name_ = "";
     CSurfManager* manager_ = nullptr;
     map<string, FXMap *> fxMaps_;
     map<string, SurfaceGroup*> surfaceGroups_;
@@ -849,8 +850,9 @@ private:
     }
     
 public:
-    LogicalSurface(CSurfManager* manager) : manager_(manager) {}
+    LogicalSurface(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
 
+    string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
     map<string, FXMap *> GetFXMaps() { return fxMaps_; }
    
@@ -1215,7 +1217,7 @@ private:
         {
             InitRealSurfaces();
           
-            LogicalSurface* logicalSurface = new LogicalSurface(this);
+            LogicalSurface* logicalSurface = new LogicalSurface("aName", this);
 
             logicalSurface->Init(realSurfaces_);
             logicalSurfaces_.push_back(logicalSurface);
