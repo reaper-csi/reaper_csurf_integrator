@@ -120,7 +120,7 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,x,-1);
 }
 
-static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -130,7 +130,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             parseParms((const char *)lParam,parms);
             
             int n=GetNumMIDIInputs();
-            
+            /*
             AddNoneToMIDIList(hwndDlg, IDC_COMBO1);
             AddNoneToMIDIList(hwndDlg, IDC_COMBO2);
             AddNoneToMIDIList(hwndDlg, IDC_COMBO3);
@@ -151,12 +151,13 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             AddNoneToMIDIList(hwndDlg, IDC_COMBO18);
             AddNoneToMIDIList(hwndDlg, IDC_COMBO19);
             AddNoneToMIDIList(hwndDlg, IDC_COMBO20);
-
+*/
             for (int x = 0; x < n; x ++)
             {
                 char buf[512];
                 if (GetMIDIInputName(x,buf,sizeof(buf)))
                 {
+                    /*
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO1);
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO2);
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO3);
@@ -167,6 +168,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO8);
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO9);
                     FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO10);
+                     */
                 }
             }
             
@@ -177,6 +179,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 char buf[512];
                 if (GetMIDIOutputName(x,buf,sizeof(buf)))
                 {
+                    /*
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO11);
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO12);
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO13);
@@ -187,6 +190,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO18);
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO19);
                     FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO20);
+                     */
                 }
             }
             
@@ -209,21 +213,21 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 char tmp[512];
                 
                 int indev=-1, outdev=-1, offs=0, size=9;
-                int r=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETCURSEL,0,0);
-                if (r != CB_ERR) indev = SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETITEMDATA,r,0);
-                r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
-                if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
+                //int r=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETCURSEL,0,0);
+                //if (r != CB_ERR) indev = SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETITEMDATA,r,0);
+                //r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
+                //if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
                 
                 BOOL t;
-                r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
-                if (t) offs=r;
-                r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
-                if (t)
-                {
-                    if (r<1)r=1;
-                    else if(r>256)r=256;
-                    size=r;
-                }
+                //r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
+                //if (t) offs=r;
+                //r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
+                //if (t)
+                //{
+                    //if (r<1)r=1;
+                    //else if(r>256)r=256;
+                    //size=r;
+                //}
                 int cflags=0;
                 
                 
@@ -247,7 +251,7 @@ static WDL_DLGRET dlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 static HWND configFunc(const char *type_string, HWND parent, const char *initConfigString)
 {
-    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_CSI),parent,dlgProc,(LPARAM)initConfigString);
+    return CreateDialogParam(g_hInst,MAKEINTRESOURCE(IDD_SURFACEEDIT_CSI),parent,dlgProcMainConfig,(LPARAM)initConfigString);
 }
 
 reaper_csurf_reg_t csurf_integrator_reg =
