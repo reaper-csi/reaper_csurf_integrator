@@ -11,6 +11,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include "control_surface_integrator_Reaper.h"
 
