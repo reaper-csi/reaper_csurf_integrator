@@ -120,10 +120,215 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,x,-1);
 }
 
+static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {/*
+          switch(LOWORD(wParam))
+          {
+          case BUTTON_IDENTIFIER:
+          {
+          //Step 5: User click on the button
+          if (HIWORD(wParam) == BN_CLICKED)
+          {
+          UINT nButton    = (UINT) LOWORD(wParam) ;
+          HWND hButtonWnd = (HWND) lParam ;
+          
+          char szMessage[1024] ;
+          sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
+          MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
+          }
+          }
+          break ;
+          }
+          */
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {/*
+          switch(LOWORD(wParam))
+          {
+          case BUTTON_IDENTIFIER:
+          {
+          //Step 5: User click on the button
+          if (HIWORD(wParam) == BN_CLICKED)
+          {
+          UINT nButton    = (UINT) LOWORD(wParam) ;
+          HWND hButtonWnd = (HWND) lParam ;
+          
+          char szMessage[1024] ;
+          sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
+          MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
+          }
+          }
+          break ;
+          }
+          */
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcSurfaceGroup(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {/*
+          switch(LOWORD(wParam))
+          {
+          case BUTTON_IDENTIFIER:
+          {
+          //Step 5: User click on the button
+          if (HIWORD(wParam) == BN_CLICKED)
+          {
+          UINT nButton    = (UINT) LOWORD(wParam) ;
+          HWND hButtonWnd = (HWND) lParam ;
+          
+          char szMessage[1024] ;
+          sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
+          MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
+          }
+          }
+          break ;
+          }
+          */
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {/*
+          switch(LOWORD(wParam))
+          {
+          case BUTTON_IDENTIFIER:
+          {
+          //Step 5: User click on the button
+          if (HIWORD(wParam) == BN_CLICKED)
+          {
+          UINT nButton    = (UINT) LOWORD(wParam) ;
+          HWND hButtonWnd = (HWND) lParam ;
+          
+          char szMessage[1024] ;
+          sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
+          MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
+          }
+          }
+          break ;
+          }
+          */
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
 static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+            
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_BUTTON_AddRealSurface:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcSurface);
+                    break ;
+                    
+                case IDC_BUTTON_AddSurface:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
+                    break ;
+                    
+                case IDC_BUTTON_AddSurfaceGroup:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_SurfaceGroup), hwndDlg, dlgProcSurface);
+                    break ;
+                    
+                case IDC_BUTTON_AddLogicalSurface:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicallSurface), hwndDlg, dlgProcSurface);
+                    break ;
+            }
+        }
+            break ;
+            
+
+            
+            
+            
+            
+            
+            
+            
         case WM_INITDIALOG:
         {
             int parms[5];
