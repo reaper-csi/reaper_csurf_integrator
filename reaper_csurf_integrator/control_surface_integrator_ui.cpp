@@ -315,7 +315,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                 case IDC_BUTTON_AddLogicalSurface:
                     if (HIWORD(wParam) == BN_CLICKED)
-                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicallSurface), hwndDlg, dlgProcSurface);
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicalSurface), hwndDlg, dlgProcSurface);
                     break ;
             }
         }

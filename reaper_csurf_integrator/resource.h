@@ -5,7 +5,7 @@
 #define IDD_DIALOG_SurfaceGroup         103
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_Surface              266
-#define IDD_DIALOG_LogicallSurface      267
+#define IDD_DIALOG_LogicalSurface       267
 #define IDD_DIALOG_RealSurface          268
 #define IDC_CHECK_MidiInMon             1000
 #define IDC_CHECK_MidiOutMon            1001
