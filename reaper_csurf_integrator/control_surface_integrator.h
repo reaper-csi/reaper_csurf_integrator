@@ -32,8 +32,8 @@ const string GainReduction_dB = "GainReduction_dB";
 const string TrackOnSelection = "TrackOnSelection";
 
 //
-// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Mixer1Fader"
-// ActionAddress format = GUID + realSurfaceName + modifiers + widgetName
+// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Group1Mixer1Fader"
+// ActionAddress format = GUID + surfaceGroupName + realSurfaceName + modifiers + widgetName
 // Modifiers can be ""
 //
 
@@ -57,7 +57,7 @@ const string Alt = "Alt";
 // The modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
-//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Mixer1ShiftOptionControlAltFader" for the full meal deal
+//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Group1Mixer1ShiftOptionControlAltFader" for the full meal deal
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
@@ -204,6 +204,8 @@ protected:
     map<string, MidiWidget*> widgetsByMessage_;
     map<string, FXMap *> fxMaps_;
     map<string, string> remappedFXWidgets_;
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
     
     bool zoom_ = false;
     bool scrub_ = false;
@@ -232,8 +234,6 @@ public:
     void AddAction(string actionAddress, Action* action);
     void MapTrackToWidgets(MediaTrack *track);
     void UnmapWidgetsFromTrack(MediaTrack *track);
-    void UnmapFXFromWidgets(MediaTrack *track);
-    void MapFXToWidgets(MediaTrack *track);
     void MapRealSurfaceActions();
     void InitFXMaps();
     void MapTrackAndFXActions(string trackGUID);
@@ -244,12 +244,53 @@ public:
     
     virtual void RunAndUpdate() {}
 
-   
+    void UnmapFXFromWidgets(MediaTrack *track)
+    {
+        for(auto [widgetName, GUID] : remappedFXWidgets_)
+            if(widgetsByName_.count(widgetName) > 0)
+                widgetsByName_[widgetName]->SetGUID(GUID);
+        
+        remappedFXWidgets_.clear();
+    }
     
-    
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
-    
+    void MapFXToWidgets(MediaTrack *track)
+    {
+        char fxName[BUFSZ];
+        char fxGUID[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        DeleteFXWindows();
+        UnmapFXFromWidgets(track);
+        
+        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            if(fxMaps_.count(fxName) > 0)
+            {
+                FXMap* map = fxMaps_[fxName];
+                
+                for(auto mapEntry : map->GetMapEntries())
+                {
+                    if(mapEntry.paramName == GainReduction_dB)
+                        SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                    else
+                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                            if(mapEntry.paramName == fxParamName)
+                                SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                }
+                
+                AddFXWindow(FXWindow(track, fxGUID));
+            }
+        }
+        
+        OpenFXWindows();
+        
+        ForceUpdateWidgets();
+    }
     
     void AddFXWindow(FXWindow fxWindow)
     {
@@ -284,22 +325,11 @@ public:
         openFXWindows_.clear();
     }
 
-    
-
     void DeleteFXWindows()
     {
         CloseFXWindows();
         ClearFXWindows();
-
-        
     }
-    
-    
-    
-    
-    
-    
-    
     
     void AddFXMap(FXMap* fxMap)
     {
