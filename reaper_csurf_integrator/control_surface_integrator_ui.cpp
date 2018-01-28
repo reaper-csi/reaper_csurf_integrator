@@ -6,6 +6,9 @@
 
 #include "control_surface_integrator_ui.h"
 
+
+
+//GAW TBD -- need Windows equivalent -- yucchhh no support in Xcode for <filesystem> yet
 #include <dirent.h>
 #include <cstring>
 #include <iostream>
@@ -22,6 +25,8 @@ vector<string> GetDirectoryFiles(const string& dir)
 
     return files;
 }
+
+
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst; 
 
