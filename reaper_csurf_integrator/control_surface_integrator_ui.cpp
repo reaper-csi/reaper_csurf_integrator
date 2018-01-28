@@ -8,6 +8,8 @@
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst; 
 
+static CSurfIntegrator* integrator = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +84,8 @@ const char *CSurfIntegrator::GetConfigString() // string of configuration data
 
 static IReaperControlSurface *createFunc(const char *type_string, const char *configString, int *errStats)
 {
-    return new CSurfIntegrator();
+    integrator = new CSurfIntegrator();
+    return integrator;
 }
 
 static void parseParms(const char *str, int parms[5])
@@ -107,11 +110,16 @@ static void parseParms(const char *str, int parms[5])
 }
 
 
-void FillCombo(HWND hwndDlg, int parms, int x, char * buf, int comboId)
+void FillCombo(HWND hwndDlg, int x, char * buf, int comboId)
 {
     int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
-    if (x == parms) SendDlgItemMessage(hwndDlg,comboId,CB_SETCURSEL,a,0);
+}
+
+void FillCombo(HWND hwndDlg, string buf, int comboId)
+{
+    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf.c_str());
+    //SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
 void AddNoneToMIDIList(HWND hwndDlg, int comboId)
@@ -167,6 +175,23 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            char buf[BUFSZ];
+            
+            AddNoneToMIDIList(hwndDlg, IDC_COMBO_MidiIn);
+            int n = GetNumMIDIInputs();
+            for (int i = 0; i < n; i++)
+                if (GetMIDIInputName(i, buf, sizeof(buf)))
+                    FillCombo(hwndDlg, i, buf, IDC_COMBO_MidiIn);
+            
+            AddNoneToMIDIList(hwndDlg, IDC_COMBO_MidiOut);
+            n = GetNumMIDIOutputs();
+            for (int i = 0; i < n; i++)
+                if (GetMIDIOutputName(i, buf, sizeof(buf)))
+                    FillCombo(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+        }
+
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -247,6 +272,12 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            for(auto* realSurface :  integrator->GetManager()->GetRealSurfaces())
+                FillCombo(hwndDlg, realSurface->GetName(), IDC_COMBO_RealSurface);
+        }
+            
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -254,7 +285,9 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        //GetDlgItemText(hwndDlg, IDC_EDIT_SurfaceName, name, sizeof(name));
+                        int index = SendDlgItemMessage(hwndDlg, IDC_COMBO_RealSurface, CB_GETCURSEL, 0, 0);
+                        if (index != CB_ERR)
+                            strcpy(name, integrator->GetManager()->GetRealSurfaces()[index]->GetName().c_str());
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -437,7 +470,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 //r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
                 //if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
                 
-                BOOL t;
+                //BOOL t;
                 //r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
                 //if (t) offs=r;
                 //r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
