@@ -25,7 +25,7 @@ const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The following are all reserved words in the map vocabulary
+// The following are all reserved words in the template vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const string RealControlSurface = "RealControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
@@ -319,16 +319,11 @@ public:
         for(auto fxWindow : openFXWindows_)
             DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
     }
-    
-    void ClearFXWindows()
-    {
-        openFXWindows_.clear();
-    }
 
     void DeleteFXWindows()
     {
         CloseFXWindows();
-        ClearFXWindows();
+        openFXWindows_.clear();
     }
     
     void AddFXMap(FXMap* fxMap)
