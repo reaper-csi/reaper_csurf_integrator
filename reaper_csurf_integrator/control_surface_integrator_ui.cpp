@@ -121,7 +121,7 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
 }
 
 static int dlgResult = 0;
-static char logicalSurfaceName[BUFSZ];
+static char name[BUFSZ];
 
 static LRESULT dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -134,7 +134,7 @@ static LRESULT dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     case IDOK:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            GetDlgItemText(hwndDlg, IDC_EDIT_LogicalSurfaceName, logicalSurfaceName, sizeof(logicalSurfaceName));
+                            GetDlgItemText(hwndDlg, IDC_EDIT_LogicalSurfaceName, name, sizeof(name));
                             dlgResult = IDOK;
                             EndDialog(hwndDlg, 0);
                         }
@@ -168,26 +168,24 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
     switch (uMsg)
     {
         case WM_COMMAND:
-            {/*
-              switch(LOWORD(wParam))
-              {
-              case BUTTON_IDENTIFIER:
-              {
-              //Step 5: User click on the button
-              if (HIWORD(wParam) == BN_CLICKED)
-              {
-              UINT nButton    = (UINT) LOWORD(wParam) ;
-              HWND hButtonWnd = (HWND) lParam ;
-              
-              char szMessage[1024] ;
-              sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
-              MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
-              }
-              }
-              break ;
-              }
-              */
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name, sizeof(name));
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
             }
+        }
             break ;
             
         case WM_CLOSE:
@@ -210,26 +208,24 @@ static WDL_DLGRET dlgProcSurfaceGroup(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
     switch (uMsg)
     {
         case WM_COMMAND:
-            {/*
-              switch(LOWORD(wParam))
-              {
-              case BUTTON_IDENTIFIER:
-              {
-              //Step 5: User click on the button
-              if (HIWORD(wParam) == BN_CLICKED)
-              {
-              UINT nButton    = (UINT) LOWORD(wParam) ;
-              HWND hButtonWnd = (HWND) lParam ;
-              
-              char szMessage[1024] ;
-              sprintf(szMessage, "Hello World from Click Me. Button ID is = %d", nButton) ;
-              MessageBox(hWnd, szMessage, "Click Me", MB_OK) ;
-              }
-              }
-              break ;
-              }
-              */
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_LogicalSurfaceGroup , name, sizeof(name));
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
             }
+        }
             break ;
             
         case WM_CLOSE:
@@ -252,10 +248,24 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     switch (uMsg)
     {
         case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
             {
-                
-                
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        //GetDlgItemText(hwndDlg, IDC_EDIT_SurfaceName, name, sizeof(name));
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
             }
+        }
             break ;
             
         case WM_CLOSE:
@@ -277,25 +287,38 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 {
     switch (uMsg)
     {
-            
-            
         case WM_COMMAND:
             {
                 switch(LOWORD(wParam))
                 {
                     case IDC_BUTTON_AddRealSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
+                            if(dlgResult == IDOK)
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_ADDSTRING, 0, (LPARAM)name);
+                        }
                         break ;
                         
                     case IDC_BUTTON_AddSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
+                            if(dlgResult == IDOK)
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_ADDSTRING, 0, (LPARAM)name);
+                        }
                         break ;
                         
                     case IDC_BUTTON_AddSurfaceGroup:
                         if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_SurfaceGroup), hwndDlg, dlgProcSurfaceGroup);
+                            if(dlgResult == IDOK)
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_ADDSTRING, 0, (LPARAM)name);
+                        }
                         break ;
                         
                     case IDC_BUTTON_AddLogicalSurface:
@@ -304,10 +327,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicalSurface), hwndDlg, dlgProcLogicalSurface);
                             if(dlgResult == IDOK)
-                            {
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_ADDSTRING, 0, (LPARAM)logicalSurfaceName);
-
-                            }
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_ADDSTRING, 0, (LPARAM)name);
                         }
                         
                         break ;
