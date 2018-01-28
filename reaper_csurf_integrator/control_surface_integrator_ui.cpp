@@ -131,7 +131,7 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
 static int dlgResult = 0;
 static char name[BUFSZ];
 
-static LRESULT dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
