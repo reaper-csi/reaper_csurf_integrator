@@ -6,6 +6,23 @@
 
 #include "control_surface_integrator_ui.h"
 
+#include <dirent.h>
+#include <cstring>
+#include <iostream>
+#include <memory>
+
+vector<string> GetDirectoryFiles(const string& dir)
+{
+    vector<string> files;
+    shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+    struct dirent *dirent_ptr;
+    
+    while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+        files.push_back(string(dirent_ptr->d_name));
+
+    return files;
+}
+
 extern REAPER_PLUGIN_HINSTANCE g_hInst; 
 
 static CSurfIntegrator* integrator = nullptr;
@@ -131,7 +148,7 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
 static int dlgResult = 0;
 static char name[BUFSZ];
 
-static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -157,7 +174,7 @@ static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
             break ;
             
         case WM_CLOSE:
-            DestroyWindow(hwndDlg) ;
+            DestroyWindow(hwndDlg);
             break ;
             
         case WM_DESTROY:
