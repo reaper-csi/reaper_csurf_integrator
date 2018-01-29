@@ -10,9 +10,6 @@
 
 //GAW TBD -- need Windows equivalent -- yucchhh no support in Xcode for <filesystem> yet
 #include <dirent.h>
-#include <cstring>
-#include <iostream>
-#include <memory>
 
 vector<string> GetDirectoryFiles(const string& dir)
 {
@@ -446,82 +443,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
         case WM_INITDIALOG:
         {
-            int parms[5];
-            parseParms((const char *)lParam,parms);
-            
-            int n=GetNumMIDIInputs();
-            /*
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO1);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO2);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO3);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO4);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO5);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO6);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO7);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO8);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO9);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO10);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO11);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO12);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO13);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO14);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO15);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO16);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO17);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO18);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO19);
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO20);
-*/
-            for (int x = 0; x < n; x ++)
-            {
-                char buf[512];
-                if (GetMIDIInputName(x,buf,sizeof(buf)))
-                {
-                    /*
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO1);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO2);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO3);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO4);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO5);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO6);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO7);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO8);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO9);
-                    FillCombo(hwndDlg, parms[2], x, buf, IDC_COMBO10);
-                     */
-                }
-            }
-            
-            n=GetNumMIDIOutputs();
-            
-            for (int x = 0; x < n; x ++)
-            {
-                char buf[512];
-                if (GetMIDIOutputName(x,buf,sizeof(buf)))
-                {
-                    /*
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO11);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO12);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO13);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO14);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO15);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO16);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO17);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO18);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO19);
-                    FillCombo(hwndDlg, parms[3], x, buf, IDC_COMBO20);
-                     */
-                }
-            }
-            
-            //SetDlgItemInt(hwndDlg,IDC_EDIT1,parms[0],TRUE);
-            //SetDlgItemInt(hwndDlg,IDC_EDIT2,parms[1],FALSE);
-            
-            
-            //if (parms[4]&CONFIG_FLAG_FADER_TOUCH_MODE)
-            //CheckDlgButton(hwndDlg,IDC_CHECK1,BST_CHECKED);
-            //if (parms[4]&CONFIG_FLAG_MAPF1F8TOMARKERS)
-            //CheckDlgButton(hwndDlg,IDC_CHECK2,BST_CHECKED);
             
         }
             
