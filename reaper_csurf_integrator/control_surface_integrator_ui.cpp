@@ -22,11 +22,22 @@ vector<string> GetDirectoryFiles(const string& dir)
     
     while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
         files.push_back(string(dirent_ptr->d_name));
-
+    
     return files;
 }
 
-
+vector<string> GetDirectoryFolders(const string& dir)
+{
+    vector<string> folders;
+    shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+    struct dirent *dirent_ptr;
+    
+    while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+        if(dirent_ptr->d_type == DT_DIR)
+            folders.push_back(string(dirent_ptr->d_name));
+    
+    return folders;
+}
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst; 
 
@@ -212,6 +223,18 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             for (int i = 0; i < n; i++)
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
                     FillCombo(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+            
+            string path(DAW::GetResourcePath());
+            path += "/CSI/rst/";
+            int i = 0;
+            for(auto filename : GetDirectoryFiles(path))
+            {
+                if(filename.length() > 4 && filename.c_str()[filename.length() - 4] == '.' && filename.c_str()[filename.length() - 3] == 'r' && filename.c_str()[filename.length() - 2] == 's' &&filename.c_str()[filename.length() - 1] == 't')
+                {
+                    strcpy(buf, filename.c_str());
+                    FillCombo(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
+                }
+            }
         }
 
         case WM_COMMAND:
@@ -296,8 +319,31 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     {
         case WM_INITDIALOG:
         {
+            char buf[BUFSZ];
+            
             for(auto* realSurface :  integrator->GetManager()->GetRealSurfaces())
                 FillCombo(hwndDlg, realSurface->GetName(), IDC_COMBO_RealSurface);
+            
+            string resourcePath(DAW::GetResourcePath());
+            resourcePath += "/CSI/";
+            
+            for(auto filename : GetDirectoryFolders(resourcePath + "axt/"))
+            {
+                if(filename.c_str()[0] != '.')
+                {
+                    strcpy(buf, filename.c_str());
+                    FillCombo(hwndDlg, buf, IDC_COMBO_ActionTemplates);
+                }
+            }
+
+            for(auto filename : GetDirectoryFolders(resourcePath + "fxt/"))
+            {
+                if(filename.c_str()[0] != '.')
+                {
+                    strcpy(buf, filename.c_str());
+                    FillCombo(hwndDlg, buf, IDC_COMBO_FXTemplates);
+                }
+            }
         }
             
         case WM_COMMAND:
