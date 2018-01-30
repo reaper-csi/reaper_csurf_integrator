@@ -7,8 +7,7 @@
 #include "control_surface_integrator_ui.h"
 
 
-
-//GAW TBD -- need Windows equivalent -- yucchhh no support in Xcode for <filesystem> yet
+#ifndef _WIN32
 #include <dirent.h>
 
 vector<string> GetDirectoryFiles(const string& dir)
@@ -35,6 +34,43 @@ vector<string> GetDirectoryFolders(const string& dir)
     
     return folders;
 }
+
+
+#else
+#include <Windows.h>
+#include <vector>
+#include <iostream>
+
+vector<string> GetDirectoryFiles(const string& directory)
+{
+    vector<string> files;
+    WIN32_FIND_DATA fileData;
+    HANDLE hFind;
+    
+    if (! ((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) )
+        while(FindNextFile(hFind, &fileData))
+            files.push_back(fileData.cFileName);
+    
+    FindClose(hFind);
+    return files;
+}
+
+vector<string> GetDirectoryFolders(const string& directory)
+{
+    vector<string> files;
+    WIN32_FIND_DATA fileData;
+    HANDLE hFind;
+    
+    if (! ((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) )
+        while(FindNextFile(hFind, &fileData))
+            if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+                files.push_back(fileData.cFileName);
+    
+    FindClose(hFind);
+    return files;
+}
+#endif
+
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst; 
 
