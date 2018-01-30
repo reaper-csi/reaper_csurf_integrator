@@ -39,7 +39,6 @@ vector<string> GetDirectoryFolders(const string& dir)
 #else
 #include <Windows.h>
 #include <vector>
-#include <iostream>
 
 vector<string> GetDirectoryFiles(const string& directory)
 {
@@ -47,9 +46,17 @@ vector<string> GetDirectoryFiles(const string& directory)
     WIN32_FIND_DATA fileData;
     HANDLE hFind;
     
-    if (! ((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) )
-        while(FindNextFile(hFind, &fileData))
+    string fullPath = directory + "*.*";
+    
+    hFind = FindFirstFile(fullPath.c_str(), &fileData);
+
+    if ( hFind != INVALID_HANDLE_VALUE)
+    {
+        files.push_back(fileData.cFileName);
+        
+        while (FindNextFile(hFind, &fileData))
             files.push_back(fileData.cFileName);
+    }
     
     FindClose(hFind);
     return files;
@@ -61,10 +68,19 @@ vector<string> GetDirectoryFolders(const string& directory)
     WIN32_FIND_DATA fileData;
     HANDLE hFind;
     
-    if (! ((hFind = FindFirstFile(directory.c_str(), &fileData)) == INVALID_HANDLE_VALUE) )
-        while(FindNextFile(hFind, &fileData))
+    string fullPath = directory + "*.*";
+    
+    hFind = FindFirstFile(fullPath.c_str(), &fileData);
+    
+    if ( hFind != INVALID_HANDLE_VALUE)
+    {
+        if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            files.push_back(fileData.cFileName);
+        
+        while (FindNextFile(hFind, &fileData))
             if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 files.push_back(fileData.cFileName);
+    }
     
     FindClose(hFind);
     return files;
@@ -262,7 +278,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             int i = 0;
             for(auto filename : GetDirectoryFiles(path))
             {
-                if(filename.length() > 4 && filename.c_str()[filename.length() - 4] == '.' && filename.c_str()[filename.length() - 3] == 'r' && filename.c_str()[filename.length() - 2] == 's' &&filename.c_str()[filename.length() - 1] == 't')
+                if(filename.length() > 4 && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
                 {
                     strcpy(buf, filename.c_str());
                     FillCombo(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
@@ -362,7 +378,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             
             for(auto filename : GetDirectoryFolders(resourcePath + "axt/"))
             {
-                if(filename.c_str()[0] != '.')
+                if(filename[0] != '.')
                 {
                     strcpy(buf, filename.c_str());
                     FillCombo(hwndDlg, buf, IDC_COMBO_ActionTemplates);
@@ -371,7 +387,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
 
             for(auto filename : GetDirectoryFolders(resourcePath + "fxt/"))
             {
-                if(filename.c_str()[0] != '.')
+                if(filename[0] != '.')
                 {
                     strcpy(buf, filename.c_str());
                     FillCombo(hwndDlg, buf, IDC_COMBO_FXTemplates);
