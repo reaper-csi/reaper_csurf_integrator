@@ -278,7 +278,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             int i = 0;
             for(auto filename : GetDirectoryFiles(path))
             {
-                if(filename.length() > 4 && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
+                if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
                 {
                     strcpy(buf, filename.c_str());
                     FillCombo(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
