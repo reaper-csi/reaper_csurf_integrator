@@ -199,6 +199,7 @@ protected:
     const string name_ = "";
     SurfaceGroup* surfaceGroup_ = nullptr;
     int numBankableChannels_ = 0;
+    map<string, function<Action*(LogicalSurface*)>> actionConstructors_;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
