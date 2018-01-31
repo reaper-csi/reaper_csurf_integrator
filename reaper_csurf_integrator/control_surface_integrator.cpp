@@ -158,11 +158,19 @@ void RealSurface::MapRealSurfaceActions()
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
     string actionBaseAddress = RealControlSurface + GetSurfaceGroup()->GetName() + GetName();;
     
+    // GAW TBD for Mix and Control
     AddAction(actionBaseAddress + ChannelLeft, new TrackBank_Action(logicalSurface, -1));
     AddAction(actionBaseAddress + ChannelRight, new TrackBank_Action(logicalSurface, 1));
     AddAction(actionBaseAddress + BankLeft, new TrackBank_Action(logicalSurface, -8));
     AddAction(actionBaseAddress + BankRight, new TrackBank_Action(logicalSurface, 8));
     
+    AddAction(actionBaseAddress + Rewind, new Rewind_Action(logicalSurface));
+    AddAction(actionBaseAddress + FastForward, new FastForward_Action(logicalSurface));
+    AddAction(actionBaseAddress + Stop, new Stop_Action(logicalSurface));
+    AddAction(actionBaseAddress + Play, new Play_Action(logicalSurface));
+    AddAction(actionBaseAddress + Record, new Record_Action(logicalSurface));
+    
+    // GAW TBD for Control only
     AddAction(actionBaseAddress + NextMap, new NextMap_Action(logicalSurface));
     AddAction(actionBaseAddress + LockTracks, new ImmobilizeSelectedTracks_Action(logicalSurface));
     AddAction(actionBaseAddress + UnlockTracks, new MobilizeSelectedTracks_Action(logicalSurface));
@@ -201,12 +209,6 @@ void RealSurface::MapRealSurfaceActions()
     AddAction(actionBaseAddress + Cycle, new CycleTimeline_Action(logicalSurface));
     AddAction(actionBaseAddress + Click, new Reaper_Action(logicalSurface, ID_METRONOME));
     
-    AddAction(actionBaseAddress + Rewind, new Rewind_Action(logicalSurface));
-    AddAction(actionBaseAddress + FastForward, new FastForward_Action(logicalSurface));
-    AddAction(actionBaseAddress + Stop, new Stop_Action(logicalSurface));
-    AddAction(actionBaseAddress + Play, new Play_Action(logicalSurface));
-    AddAction(actionBaseAddress + Record, new Record_Action(logicalSurface));
-    
     AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
     AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
     AddAction(actionBaseAddress + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
@@ -215,6 +217,7 @@ void RealSurface::MapRealSurfaceActions()
     AddAction(actionBaseAddress + Zoom, new LatchedZoom_Action(logicalSurface));
     AddAction(actionBaseAddress + Scrub, new LatchedScrub_Action(logicalSurface));
     
+    // GAW TBD for Console 1 only
     AddAction(actionBaseAddress + DisplayFX, new SetShowFXWindows_Action(logicalSurface));
 }
 
