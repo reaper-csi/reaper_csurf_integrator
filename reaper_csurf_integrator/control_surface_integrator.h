@@ -202,7 +202,7 @@ protected:
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
-    map<string, FXTemplate *> fxMaps_;
+    map<string, FXTemplate *> fxTemplates_;
     map<string, string> remappedFXWidgets_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -236,8 +236,8 @@ public:
     void UnmapWidgetsFromTrack(MediaTrack *track);
     void MapRealSurfaceActions();
     void InitFXMaps();
-    void MapTrackAndFXActions(string trackGUID);
-    void MapFXActions(MediaTrack* track);
+    void MapTrackActions(string trackGUID);
+    void MapFXActions(string trackGUID);
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
@@ -269,9 +269,9 @@ public:
             DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             
-            if(fxMaps_.count(fxName) > 0)
+            if(fxTemplates_.count(fxName) > 0)
             {
-                FXTemplate* map = fxMaps_[fxName];
+                FXTemplate* map = fxTemplates_[fxName];
                 
                 for(auto mapEntry : map->GetTemplateEntries())
                 {
@@ -326,11 +326,17 @@ public:
         openFXWindows_.clear();
     }
     
-    void AddFXMap(FXTemplate* fxMap)
+    void AddFXTemplate(FXTemplate* fxTemplate)
     {
-        fxMaps_[fxMap->GetName()] = fxMap;
+        fxTemplates_[fxTemplate->GetName()] = fxTemplate;
     }
     
+    void MapTrackAndFXActions(string trackGUID)
+    {
+        MapTrackActions(trackGUID);
+        MapFXActions(trackGUID);
+    }
+
     void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
     {
         surfaceGroup_ = surfaceGroup;
@@ -555,7 +561,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            surface->MapFXActions(track);
+            surface->MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
     }
     
     void OnTrackSelection(MediaTrack* track)
