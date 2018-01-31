@@ -222,7 +222,7 @@ void RealSurface::InitFXMaps()
 {
     // GAW TBD -- this will be in .fxt files
 
-    FXMap* fxMap = new FXMap("VST: ReaComp (Cockos)");
+    FXTemplate* fxMap = new FXTemplate("VST: ReaComp (Cockos)");
 
     fxMap->AddEntry(Threshold, "Thresh");
     fxMap->AddEntry(Character, "Gain");
@@ -235,7 +235,7 @@ void RealSurface::InitFXMaps()
     
     AddFXMap(fxMap);
     
-    fxMap = new FXMap("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+    fxMap = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
 
     fxMap->AddEntry(Threshold, "Thresh");
     fxMap->AddEntry(Character, "Output");
@@ -248,7 +248,7 @@ void RealSurface::InitFXMaps()
     
     AddFXMap(fxMap);
     
-    fxMap = new FXMap("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+    fxMap = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
     
     fxMap->AddEntry(Threshold, "Peak Reduct");
     fxMap->AddEntry(Character, "Gain");
@@ -260,7 +260,7 @@ void RealSurface::InitFXMaps()
     
     AddFXMap(fxMap);
     
-    fxMap = new FXMap("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+    fxMap = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
     
     fxMap->AddEntry(LoCurve, "LowPeak");
     //fxMap->AddEntry(HiCurve, "");
@@ -278,7 +278,7 @@ void RealSurface::InitFXMaps()
     
     AddFXMap(fxMap);
     
-    fxMap = new FXMap("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+    fxMap = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
     
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
@@ -296,7 +296,7 @@ void RealSurface::InitFXMaps()
     
     AddFXMap(fxMap);
     
-    fxMap = new FXMap("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+    fxMap = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
     
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
@@ -396,11 +396,11 @@ void RealSurface::MapFXActions(MediaTrack* track)
         
         if(fxMaps_.count(fxName) > 0)
         {
-            FXMap* map = fxMaps_[fxName];
+            FXTemplate* map = fxMaps_[fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             string actionBaseAddress = trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName();
 
-            for(auto mapEntry : map->GetMapEntries())
+            for(auto mapEntry : map->GetTemplateEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
                     AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(logicalSurface, track, fxGUID));
