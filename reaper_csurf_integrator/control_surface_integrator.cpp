@@ -222,97 +222,97 @@ void RealSurface::InitFXMaps()
 {
     // GAW TBD -- this will be in .fxt files
 
-    FXTemplate* fxMap = new FXTemplate("VST: ReaComp (Cockos)");
+    FXTemplate* fxTemplate = new FXTemplate("VST: ReaComp (Cockos)");
 
-    fxMap->AddEntry(Threshold, "Thresh");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Attack, "Attack");
-    fxMap->AddEntry(Release, "Release");
-    fxMap->AddEntry(Ratio, "Ratio");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
-    fxMap->AddEntry(CompressorMeter, GainReduction_dB);
+    fxTemplate->AddEntry(Threshold, "Thresh");
+    fxTemplate->AddEntry(Character, "Gain");
+    fxTemplate->AddEntry(Attack, "Attack");
+    fxTemplate->AddEntry(Release, "Release");
+    fxTemplate->AddEntry(Ratio, "Ratio");
+    fxTemplate->AddEntry(Compressor, "Bypass");
+    fxTemplate->AddEntry(Parallel, "Wet");
+    fxTemplate->AddEntry(CompressorMeter, GainReduction_dB);
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
     
-    fxMap = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+    fxTemplate = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
 
-    fxMap->AddEntry(Threshold, "Thresh");
-    fxMap->AddEntry(Character, "Output");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Headroom");
-    fxMap->AddEntry(Release, "Input");
-    fxMap->AddEntry(Ratio, "Time Const");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
+    fxTemplate->AddEntry(Threshold, "Thresh");
+    fxTemplate->AddEntry(Character, "Output");
+    fxTemplate->AddEntry(Drive, "Meter");
+    fxTemplate->AddEntry(Attack, "Headroom");
+    fxTemplate->AddEntry(Release, "Input");
+    fxTemplate->AddEntry(Ratio, "Time Const");
+    fxTemplate->AddEntry(Compressor, "Bypass");
+    fxTemplate->AddEntry(Parallel, "Wet");
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
     
-    fxMap = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+    fxTemplate = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(Threshold, "Peak Reduct");
-    fxMap->AddEntry(Character, "Gain");
-    fxMap->AddEntry(Drive, "Meter");
-    fxMap->AddEntry(Attack, "Emphasis");
-    fxMap->AddEntry(Ratio, "Comp/Limit");
-    fxMap->AddEntry(Compressor, "Bypass");
-    fxMap->AddEntry(Parallel, "Wet");
+    fxTemplate->AddEntry(Threshold, "Peak Reduct");
+    fxTemplate->AddEntry(Character, "Gain");
+    fxTemplate->AddEntry(Drive, "Meter");
+    fxTemplate->AddEntry(Attack, "Emphasis");
+    fxTemplate->AddEntry(Ratio, "Comp/Limit");
+    fxTemplate->AddEntry(Compressor, "Bypass");
+    fxTemplate->AddEntry(Parallel, "Wet");
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
     
-    fxMap = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+    fxTemplate = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
     
-    fxMap->AddEntry(LoCurve, "LowPeak");
+    fxTemplate->AddEntry(LoCurve, "LowPeak");
     //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HiGain");
-    fxMap->AddEntry(HiFrequency, "HiFreq");
-    fxMap->AddEntry(HiMidGain, "HiMidGain");
-    fxMap->AddEntry(HiMidFrequency, "HiMidFreq");
-    fxMap->AddEntry(HiMidQ, "LowPass");
-    fxMap->AddEntry(LoMidGain, "LoMidGain");
-    fxMap->AddEntry(LoMidFrequency, "LoMidFreq");
-    fxMap->AddEntry(LoMidQ, "HiPass");
-    fxMap->AddEntry(LoGain, "LowGain");
-    fxMap->AddEntry(LoFrequency, "LowFreq");
-    fxMap->AddEntry(Equalizer, "Bypass");
+    fxTemplate->AddEntry(HiGain, "HiGain");
+    fxTemplate->AddEntry(HiFrequency, "HiFreq");
+    fxTemplate->AddEntry(HiMidGain, "HiMidGain");
+    fxTemplate->AddEntry(HiMidFrequency, "HiMidFreq");
+    fxTemplate->AddEntry(HiMidQ, "LowPass");
+    fxTemplate->AddEntry(LoMidGain, "LoMidGain");
+    fxTemplate->AddEntry(LoMidFrequency, "LoMidFreq");
+    fxTemplate->AddEntry(LoMidQ, "HiPass");
+    fxTemplate->AddEntry(LoGain, "LowGain");
+    fxTemplate->AddEntry(LoFrequency, "LowFreq");
+    fxTemplate->AddEntry(Equalizer, "Bypass");
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
     
-    fxMap = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+    fxTemplate = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
     
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HF Atten");
-    fxMap->AddEntry(HiFrequency, "HF Atten Freq");
-    fxMap->AddEntry(HiMidGain, "HF Boost");
-    fxMap->AddEntry(HiMidFrequency, "High Freq");
-    fxMap->AddEntry(HiMidQ, "HF Q");
-    fxMap->AddEntry(LoMidGain, "LF Atten");
-    fxMap->AddEntry(LoMidFrequency, "Low Freq");
+    fxTemplate->AddEntry(HiGain, "HF Atten");
+    fxTemplate->AddEntry(HiFrequency, "HF Atten Freq");
+    fxTemplate->AddEntry(HiMidGain, "HF Boost");
+    fxTemplate->AddEntry(HiMidFrequency, "High Freq");
+    fxTemplate->AddEntry(HiMidQ, "HF Q");
+    fxTemplate->AddEntry(LoMidGain, "LF Atten");
+    fxTemplate->AddEntry(LoMidFrequency, "Low Freq");
     //fxMap->AddEntry(LoMidQ, "");
-    fxMap->AddEntry(LoGain, "LF Boost");
-    fxMap->AddEntry(LoFrequency, "Low Freq");
-    fxMap->AddEntry(Equalizer, "Bypass");
+    fxTemplate->AddEntry(LoGain, "LF Boost");
+    fxTemplate->AddEntry(LoFrequency, "Low Freq");
+    fxTemplate->AddEntry(Equalizer, "Bypass");
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
     
-    fxMap = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+    fxTemplate = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
     
     //fxMap->AddEntry(LoCurve, "");
     //fxMap->AddEntry(HiCurve, "");
-    fxMap->AddEntry(HiGain, "HM Peak");
-    fxMap->AddEntry(HiFrequency, "HM Freq");
-    fxMap->AddEntry(HiMidGain, "Mid Dip");
-    fxMap->AddEntry(HiMidFrequency, "Mid Freq");
+    fxTemplate->AddEntry(HiGain, "HM Peak");
+    fxTemplate->AddEntry(HiFrequency, "HM Freq");
+    fxTemplate->AddEntry(HiMidGain, "Mid Dip");
+    fxTemplate->AddEntry(HiMidFrequency, "Mid Freq");
     //fxMap->AddEntry(HiMidQ, "");
-    fxMap->AddEntry(LoMidGain, "LM Peak");
-    fxMap->AddEntry(LoMidFrequency, "LM Freq");
+    fxTemplate->AddEntry(LoMidGain, "LM Peak");
+    fxTemplate->AddEntry(LoMidFrequency, "LM Freq");
     //fxMap->AddEntry(LoMidQ, "");
     //fxMap->AddEntry(LoGain, "");
     //fxMap->AddEntry(LoFrequency, "");
-    fxMap->AddEntry(Equalizer, "Bypass");
+    fxTemplate->AddEntry(Equalizer, "Bypass");
     
-    AddFXMap(fxMap);
+    AddFXTemplate(fxTemplate);
 }
 
 void RealSurface::MapTrackToWidgets(MediaTrack *track)
@@ -329,7 +329,7 @@ void  RealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
         channel->SetGUID("");
 }
 
-void RealSurface::MapTrackAndFXActions(string trackGUID)
+void RealSurface::MapTrackActions(string trackGUID)
 {
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
@@ -375,28 +375,24 @@ void RealSurface::MapTrackAndFXActions(string trackGUID)
         AddAction(actionBaseAddress + Mute, new TrackMute_Action(logicalSurface, track));
         AddAction(actionBaseAddress + Solo, new TrackSolo_Action(logicalSurface, track));
     }
-        
-
-    MapFXActions(track);
 }
 
-void RealSurface::MapFXActions(MediaTrack* track)
+void RealSurface::MapFXActions(string trackGUID)
 {
+    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     LogicalSurface* logicalSurface = GetSurfaceGroup()->GetLogicalSurface();
     
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
     char fxGUID[BUFSZ];
     
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-    
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
-        if(fxMaps_.count(fxName) > 0)
+        if(fxTemplates_.count(fxName) > 0)
         {
-            FXTemplate* map = fxMaps_[fxName];
+            FXTemplate* map = fxTemplates_[fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             string actionBaseAddress = trackGUID + fxGUID + GetSurfaceGroup()->GetName() + GetName();
 
