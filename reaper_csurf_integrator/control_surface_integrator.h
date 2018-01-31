@@ -76,30 +76,30 @@ struct FXWindow
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct MapEntry
+struct FXTemplateEntry
 {
     string widgetName;
     string paramName;
     
-    MapEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
+    FXTemplateEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXMap
+struct FXTemplate
 {
 private:
     string name;
-    vector<MapEntry> entries_;
+    vector<FXTemplateEntry> entries_;
     
 public:
-    FXMap(string aName) : name(aName) {}
+    FXTemplate(string aName) : name(aName) {}
     
     string GetName() { return name; }
-    vector<MapEntry>& GetMapEntries() { return entries_; }
+    vector<FXTemplateEntry>& GetTemplateEntries() { return entries_; }
     
     void AddEntry(string widgetName, string paramName)
     {
-        entries_.push_back(MapEntry(widgetName, paramName));
+        entries_.push_back(FXTemplateEntry(widgetName, paramName));
     }
 };
 
@@ -202,7 +202,7 @@ protected:
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
-    map<string, FXMap *> fxMaps_;
+    map<string, FXTemplate *> fxMaps_;
     map<string, string> remappedFXWidgets_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -271,9 +271,9 @@ public:
             
             if(fxMaps_.count(fxName) > 0)
             {
-                FXMap* map = fxMaps_[fxName];
+                FXTemplate* map = fxMaps_[fxName];
                 
-                for(auto mapEntry : map->GetMapEntries())
+                for(auto mapEntry : map->GetTemplateEntries())
                 {
                     if(mapEntry.paramName == GainReduction_dB)
                         SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
@@ -326,7 +326,7 @@ public:
         openFXWindows_.clear();
     }
     
-    void AddFXMap(FXMap* fxMap)
+    void AddFXMap(FXTemplate* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
     }
@@ -532,6 +532,7 @@ public:
 
     void AddSurface(RealSurface* surface)
     {
+        surface->SetSurfaceGroup(this);
         realSurfaces_.push_back(surface);
     }
     
@@ -869,7 +870,7 @@ class LogicalSurface
 private:
     string name_ = "";
     CSurfManager* manager_ = nullptr;
-    map<string, FXMap *> fxMaps_;
+    map<string, FXTemplate *> fxMaps_;
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, vector<Action*>> actions_;
     vector<string> mappedTrackGUIDs_;
@@ -881,7 +882,7 @@ private:
             surfaceGroup->SetImmobilizedTracks();
     }
     
-    void AddFXMap(FXMap* fxMap)
+    void AddFXMap(FXTemplate* fxMap)
     {
         fxMaps_[fxMap->GetName()] = fxMap;
     }
@@ -891,7 +892,7 @@ public:
 
     string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
-    map<string, FXMap *> GetFXMaps() { return fxMaps_; }
+    map<string, FXTemplate *> GetFXMaps() { return fxMaps_; }
    
     bool GetTouchState(string trackGUID, int touchedControl)
     {
@@ -967,7 +968,7 @@ public:
     
     void Init(vector<RealSurface*> realSurfaces)
     {
-        // GAW TBD -- this will be in .lsm files
+        // GAW TBD -- this will be in CSI.ini file
 
         int numChannels = 1;
         
@@ -978,7 +979,6 @@ public:
         
         for(auto* surface : realSurfaces)
         {
-            surface->SetSurfaceGroup(surfaceGroups_[RealControlSurface]); // all surfaces are hardwired to the same group
             surfaceGroups_[RealControlSurface]->AddSurface(surface);
             
             surface->InitFXMaps();
