@@ -69,6 +69,8 @@ public:
     
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
     
+    static int GetToggleCommandState(int commandId) { return ::GetToggleCommandState(commandId); }
+    
     static void ShowConsoleMsg(const char* msg) { ::ShowConsoleMsg(msg); }
     
     static midi_Input* CreateMIDIInput(int dev) {  return ::CreateMIDIInput(dev); }
