@@ -199,7 +199,6 @@ protected:
     const string name_ = "";
     SurfaceGroup* surfaceGroup_ = nullptr;
     int numBankableChannels_ = 0;
-    map<string, function<Action*(LogicalSurface*)>> actionConstructors_;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
@@ -1242,8 +1241,7 @@ private:
     vector <LogicalSurface*> logicalSurfaces_;
     vector<RealSurface*> realSurfaces_;
     bool isInitialized_ = false;
-    int currentLogicalSurfaceIndex_ = 0;;
-    
+    int currentLogicalSurfaceIndex_ = 0; 
     bool VSTMonitor_ = false;
     
     void InitRealSurfaces();
