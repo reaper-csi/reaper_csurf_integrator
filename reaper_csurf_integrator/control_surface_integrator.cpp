@@ -133,24 +133,6 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define IDC_REPEAT                      1068
-#define ID_FILE_SAVEAS                  40022
-#define ID_FILE_NEWPROJECT              40023
-#define ID_FILE_OPENPROJECT             40025
-#define ID_FILE_SAVEPROJECT             40026
-#define IDC_EDIT_UNDO                   40029
-#define IDC_EDIT_REDO                   40030
-#define ID_MARKER_PREV                  40172
-#define ID_MARKER_NEXT                  40173
-#define ID_INSERT_MARKERRGN             40174
-#define ID_INSERT_MARKER                40157
-#define ID_LOOP_SETSTART                40222
-#define ID_LOOP_SETEND                  40223
-#define ID_METRONOME                    40364
-#define ID_GOTO_MARKER1                 40161
-#define ID_SET_MARKER1                  40657
-
 void RealSurface::MapRealSurfaceActions()
 {
     // GAW TBD -- this will be in .axt files
@@ -194,20 +176,20 @@ void RealSurface::MapRealSurfaceActions()
     AddAction(actionBaseAddress + Shift + Latch, new GlobalAutoMode_Action(logicalSurface, 4));
     AddAction(actionBaseAddress + Shift + Group, new GlobalAutoMode_Action(logicalSurface, 5));
     
-    AddAction(actionBaseAddress + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEPROJECT));
-    AddAction(actionBaseAddress + Shift + Save, new Reaper_Action(logicalSurface, ID_FILE_SAVEAS));
-    AddAction(actionBaseAddress + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_UNDO));
-    AddAction(actionBaseAddress + Shift + Undo, new Reaper_Action(logicalSurface, IDC_EDIT_REDO));
+    AddAction(actionBaseAddress + Save, new Reaper_Action(logicalSurface, 40026));
+    AddAction(actionBaseAddress + Shift + Save, new Reaper_Action(logicalSurface, 40022));
+    AddAction(actionBaseAddress + Undo, new Reaper_Action(logicalSurface, 40029));
+    AddAction(actionBaseAddress + Shift + Undo, new Reaper_Action(logicalSurface, 40030));
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(actionBaseAddress + Marker, new Reaper_Action(logicalSurface, ID_MARKER_PREV));
-    AddAction(actionBaseAddress + Shift + Marker, new Reaper_Action(logicalSurface, ID_INSERT_MARKER));
-    AddAction(actionBaseAddress + Option + Marker, new Reaper_Action(logicalSurface,ID_INSERT_MARKERRGN));
-    AddAction(actionBaseAddress + Nudge, new Reaper_Action(logicalSurface, ID_MARKER_NEXT));
+    AddAction(actionBaseAddress + Marker, new Reaper_Action(logicalSurface, 40172));
+    AddAction(actionBaseAddress + Shift + Marker, new Reaper_Action(logicalSurface, 40157));
+    AddAction(actionBaseAddress + Option + Marker, new Reaper_Action(logicalSurface, 40174));
+    AddAction(actionBaseAddress + Nudge, new Reaper_Action(logicalSurface, 40173));
     AddAction(actionBaseAddress + Cycle, new CycleTimeline_Action(logicalSurface));
-    AddAction(actionBaseAddress + Click, new Reaper_Action(logicalSurface, ID_METRONOME));
+    AddAction(actionBaseAddress + Click, new Reaper_Action(logicalSurface, 40364));
     
     AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
     AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
