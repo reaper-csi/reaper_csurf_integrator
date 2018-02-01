@@ -67,6 +67,8 @@ public:
     
     static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
+    static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }
+
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
     
     static int GetToggleCommandState(int commandId) { return ::GetToggleCommandState(commandId); }
