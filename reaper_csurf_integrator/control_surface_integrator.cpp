@@ -180,7 +180,8 @@ void RealSurface::MapRealSurfaceActions()
     AddAction(actionBaseAddress + Shift + Save, new Reaper_Action(logicalSurface, 40022));
     AddAction(actionBaseAddress + Undo, new Reaper_Action(logicalSurface, 40029));
     AddAction(actionBaseAddress + Shift + Undo, new Reaper_Action(logicalSurface, 40030));
-    
+   
+
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
