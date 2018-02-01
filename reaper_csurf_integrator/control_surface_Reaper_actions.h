@@ -52,6 +52,14 @@ private:
 public:
     Reaper_Action(LogicalSurface* logicalSurface, int commandId) : DoubleAction(logicalSurface), commandId_(commandId)  {}
     
+    Reaper_Action(LogicalSurface* logicalSurface, string commandStr) : DoubleAction(logicalSurface)
+    {
+        commandId_ = DAW::NamedCommandLookup(commandStr.c_str());
+        
+        if(commandId_ == 0) // can't find it
+            commandId_ = 65535; // no-op
+    }
+    
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetToggleCommandState(commandId_); }
 
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
