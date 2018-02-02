@@ -98,36 +98,21 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapTrackToWidgets_Action  : public TrackDoubleAction
+class MapTrackAndFXToWidgets_Action  : public TrackDoubleAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapTrackToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    MapTrackAndFXToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
-            GetLogicalSurface()->MapTrackToWidgets(track_, groupName, surfaceName);
+            GetLogicalSurface()->MapTrackAndFXToWidgets(track_, groupName, surfaceName);
         else
             GetLogicalSurface()->UnmapWidgetsFromTrack(track_, groupName, surfaceName);
     }
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapFXToWidgets_Action  : public TrackDoubleAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    MapFXToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
-    
-    virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
-    {
-        if(1 == DAW::CountSelectedTracks(nullptr))
-            GetLogicalSurface()->MapFXToWidgets(track_, groupName, surfaceName);
-        else
-            GetLogicalSurface()->UnmapWidgetsFromFX(track_, groupName, surfaceName);
-    }
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolume_Action : public TrackDoubleAction
