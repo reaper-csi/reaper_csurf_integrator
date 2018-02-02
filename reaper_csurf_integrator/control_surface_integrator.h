@@ -1299,10 +1299,11 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
-    static class Action* Action(string name, LogicalSurface* logicalSurface);
-    static class Action* Action(string name, LogicalSurface* logicalSurface, double param);
-    static class Action* Action(string name, LogicalSurface* logicalSurface, MediaTrack* track);
-    static class Action* Action(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param);
+    static Action* ActionFor(string name, LogicalSurface* logicalSurface);
+    static Action* ActionFor(string name, LogicalSurface* logicalSurface, double param);
+    static Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track);
+    static Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param);
+    static Action* ActionFor(string name, string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* action);
 
     void OnTrackSelection(MediaTrack *track)
     {
