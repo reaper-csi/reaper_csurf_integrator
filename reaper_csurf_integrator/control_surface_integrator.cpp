@@ -258,9 +258,9 @@ void RealSurface::MapTrackActions(string trackGUID)
         AddAction(actionBaseAddress + "ChannelDisplay", CSurfManager::ActionFor("TrackNameDisplay", logicalSurface, track));
         
         // GAW TBD
-        string channelDisplay = actionBaseAddress + "ChannelDisplay";
+        string actionAddress = actionBaseAddress + "ChannelDisplay";
         Action* controlledAction = CSurfManager::ActionFor("TrackVolumeDisplay", logicalSurface, track);
-        AddAction(channelDisplay, CSurfManager::ActionFor("TrackTouchControlled", channelDisplay, logicalSurface, track, controlledAction));
+        AddAction(actionAddress, CSurfManager::ActionFor("TrackTouchControlled", actionAddress, logicalSurface, track, controlledAction));
         
         AddAction(actionBaseAddress + "ChannelFader", CSurfManager::ActionFor("TrackVolume", logicalSurface, track));
         AddAction(actionBaseAddress + "ChannelFaderTouch", CSurfManager::ActionFor("TrackTouch", logicalSurface, track));
