@@ -120,9 +120,8 @@ protected:
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) {}
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) {}
     
-    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
-    
 public:
+    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
@@ -922,6 +921,12 @@ public:
         actions_[actionAddress].push_back(action);
     }
    
+    void MapTrackAndFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    {
+        MapTrackToWidgets(track, groupName, surfaceName);
+        MapFXToWidgets(track, groupName, surfaceName);
+    }
+
     void MapTrackToWidgets(MediaTrack* track, string groupName, string surfaceName)
     {
         if(surfaceGroups_.count(groupName) > 0)
@@ -1294,6 +1299,11 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
+    static class Action* Action(string name, LogicalSurface* logicalSurface);
+    static class Action* Action(string name, LogicalSurface* logicalSurface, double param);
+    static class Action* Action(string name, LogicalSurface* logicalSurface, MediaTrack* track);
+    static class Action* Action(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param);
+
     void OnTrackSelection(MediaTrack *track)
     {
         logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(track);
