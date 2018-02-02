@@ -21,38 +21,38 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackDoubleAction : public DoubleAction
+class TrackDoubleAction : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     MediaTrack* track_;
     
 public:
-    TrackDoubleAction(LogicalSurface* logicalSurface, MediaTrack* track) : DoubleAction(logicalSurface), track_(track) {}
+    TrackDoubleAction(LogicalSurface* logicalSurface, MediaTrack* track) : Double_Action(logicalSurface), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackStringAction : public StringAction
+class TrackStringAction : public String_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     MediaTrack* track_;
     
 public:
-    TrackStringAction(LogicalSurface* logicalSurface, MediaTrack* track) : StringAction(logicalSurface), track_(track) {}
+    TrackStringAction(LogicalSurface* logicalSurface, MediaTrack* track) : String_Action(logicalSurface), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Reaper_Action : public DoubleAction
+class Reaper_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int commandId_= 0;
     
 public:
-    Reaper_Action(LogicalSurface* logicalSurface, int commandId) : DoubleAction(logicalSurface), commandId_(commandId)  {}
+    Reaper_Action(LogicalSurface* logicalSurface, int commandId) : Double_Action(logicalSurface), commandId_(commandId)  {}
     
-    Reaper_Action(LogicalSurface* logicalSurface, string commandStr) : DoubleAction(logicalSurface)
+    Reaper_Action(LogicalSurface* logicalSurface, string commandStr) : Double_Action(logicalSurface)
     {
         commandId_ = DAW::NamedCommandLookup(commandStr.c_str());
         
@@ -234,11 +234,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Rewind_Action : public DoubleAction
+class Rewind_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Rewind_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -247,11 +247,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FastForward_Action : public DoubleAction
+class FastForward_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
+    FastForward_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface) {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -260,11 +260,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Play_Action : public DoubleAction
+class Play_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
+    Play_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override
     {
@@ -281,11 +281,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Stop_Action : public DoubleAction
+class Stop_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
+    Stop_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override
     {
@@ -303,11 +303,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Record_Action : public DoubleAction
+class Record_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface) {}
+    Record_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override
     {
@@ -327,7 +327,7 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RepeatingArrow_Action : public DoubleAction
+class RepeatingArrow_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -337,7 +337,7 @@ private:
     bool pressed_ = false;
     
 public:
-    RepeatingArrow_Action(LogicalSurface* logicalSurface, int direction, double repeatRate) : DoubleAction(logicalSurface), direction_(direction), repeatRate_(repeatRate) {}
+    RepeatingArrow_Action(LogicalSurface* logicalSurface, int direction, double repeatRate) : Double_Action(logicalSurface), direction_(direction), repeatRate_(repeatRate) {}
 
     virtual void Update(string groupName, string surfaceName, string widgetName) override
     {
@@ -495,7 +495,7 @@ private:
     bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
     
 public:
-    TrackTouchControlled_Action(LogicalSurface* logicalSurface, MediaTrack* track, Action* action, string actionAddress) : TrackAction(logicalSurface, track), action_(action), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* action) : TrackAction(logicalSurface, track), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string groupName, string surfaceName, string widgetName) override
     {
@@ -543,14 +543,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalAutoMode_Action : public DoubleAction
+class GlobalAutoMode_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     int autoMode_ = 0;
     
 public:
-    GlobalAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : DoubleAction(logicalSurface), autoMode_(autoMode) {}
+    GlobalAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : Double_Action(logicalSurface), autoMode_(autoMode) {}
     
     virtual double GetValue (string groupName, string surfaceName, string widgetName) override { return DAW::GetGlobalAutomationOverride(); }
     
@@ -600,11 +600,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycleTimeline_Action : public DoubleAction
+class CycleTimeline_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    CycleTimeline_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetSetRepeatEx(nullptr, -1); }
     
@@ -615,20 +615,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Cancel_Action : public DoubleAction
+class Cancel_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Cancel_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Cancel_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     // GAW TBD
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Enter_Action : public DoubleAction
+class Enter_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Enter_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Enter_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     // GAW TBD
 };
 

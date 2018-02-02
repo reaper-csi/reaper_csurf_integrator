@@ -10,11 +10,11 @@
 #include "control_surface_base_actions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Shift_Action : public DoubleAction
+class Shift_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Shift_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Shift_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -23,11 +23,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Option_Action : public DoubleAction
+class Option_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Option_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Option_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -36,11 +36,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Control_Action : public DoubleAction
+class Control_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Control_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Control_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -49,11 +49,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Alt_Action : public DoubleAction
+class Alt_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Alt_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Alt_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -62,13 +62,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Latched_Action : public DoubleAction
+class Latched_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     clock_t lastPressed_ = clock();
 public:
-    Latched_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    Latched_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void SetValue(string groupName, string surfaceName, double value) {}
     
@@ -119,11 +119,11 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetShowFXWindows_Action : public DoubleAction
+class SetShowFXWindows_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    SetShowFXWindows_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual double GetValue (string groupName, string surfaceName, string widgetName) override { return GetLogicalSurface()->IsShowFXWindows(groupName, surfaceName); }
     
@@ -134,11 +134,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NextMap_Action : public DoubleAction
+class NextMap_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NextMap_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    NextMap_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -147,14 +147,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackBank_Action : public DoubleAction
+class TrackBank_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int stride_ = 0;
 
 public:
-    TrackBank_Action(LogicalSurface* logicalSurface, int stride) : DoubleAction(logicalSurface), stride_(stride)   {}
+    TrackBank_Action(LogicalSurface* logicalSurface, int stride) : Double_Action(logicalSurface), stride_(stride)   {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -163,11 +163,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ImmobilizeSelectedTracks_Action : public DoubleAction
+class ImmobilizeSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ImmobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    ImmobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -176,11 +176,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MobilizeSelectedTracks_Action : public DoubleAction
+class MobilizeSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : DoubleAction(logicalSurface)  {}
+    MobilizeSelectedTracks_Action(LogicalSurface* logicalSurface) : Double_Action(logicalSurface)  {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {

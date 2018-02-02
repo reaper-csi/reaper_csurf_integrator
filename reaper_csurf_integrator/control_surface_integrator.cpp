@@ -56,67 +56,67 @@ void RealSurface::MapRealSurfaceActions()
     string actionBaseAddress = RealControlSurface + GetSurfaceGroup()->GetName() + GetName();;
     
     // GAW TBD for Mix and Control
-    AddAction(actionBaseAddress + "NudgeLeft", CSurfManager::Action("TrackBank", logicalSurface, -1));
-    AddAction(actionBaseAddress + "NudgeRight", CSurfManager::Action("TrackBank", logicalSurface, 1));
-    AddAction(actionBaseAddress + "BankLeft", CSurfManager::Action("TrackBank", logicalSurface, -8));
-    AddAction(actionBaseAddress + "BankRight", CSurfManager::Action("TrackBank", logicalSurface, 8));
+    AddAction(actionBaseAddress + "NudgeLeft", CSurfManager::ActionFor("TrackBank", logicalSurface, -1));
+    AddAction(actionBaseAddress + "NudgeRight", CSurfManager::ActionFor("TrackBank", logicalSurface, 1));
+    AddAction(actionBaseAddress + "BankLeft", CSurfManager::ActionFor("TrackBank", logicalSurface, -8));
+    AddAction(actionBaseAddress + "BankRight", CSurfManager::ActionFor("TrackBank", logicalSurface, 8));
     
-    AddAction(actionBaseAddress + "Rewind", CSurfManager::Action("Rewind", logicalSurface));
-    AddAction(actionBaseAddress + "FastForward", CSurfManager::Action("FastForward", logicalSurface));
-    AddAction(actionBaseAddress + "Stop", CSurfManager::Action("Stop", logicalSurface));
-    AddAction(actionBaseAddress + "Play", CSurfManager::Action("Play", logicalSurface));
-    AddAction(actionBaseAddress + "Record", CSurfManager::Action("Record", logicalSurface));
+    AddAction(actionBaseAddress + "Rewind", CSurfManager::ActionFor("Rewind", logicalSurface));
+    AddAction(actionBaseAddress + "FastForward", CSurfManager::ActionFor("FastForward", logicalSurface));
+    AddAction(actionBaseAddress + "Stop", CSurfManager::ActionFor("Stop", logicalSurface));
+    AddAction(actionBaseAddress + "Play", CSurfManager::ActionFor("Play", logicalSurface));
+    AddAction(actionBaseAddress + "Record", CSurfManager::ActionFor("Record", logicalSurface));
     
     // GAW TBD for Control only
-    AddAction(actionBaseAddress + "NextMap", CSurfManager::Action("NextMap", logicalSurface));
-    AddAction(actionBaseAddress + "LockTracks", CSurfManager::Action("ImmobilizeSelectedTracks", logicalSurface));
-    AddAction(actionBaseAddress + "UnlockTracks", CSurfManager::Action("MobilizeSelectedTracks", logicalSurface));
+    AddAction(actionBaseAddress + "NextMap", CSurfManager::ActionFor("NextMap", logicalSurface));
+    AddAction(actionBaseAddress + "LockTracks", CSurfManager::ActionFor("ImmobilizeSelectedTracks", logicalSurface));
+    AddAction(actionBaseAddress + "UnlockTracks", CSurfManager::ActionFor("MobilizeSelectedTracks", logicalSurface));
     
-    AddAction(actionBaseAddress + "Shift",  CSurfManager::Action("Shift", logicalSurface));
-    AddAction(actionBaseAddress + "Option", CSurfManager::Action("Option", logicalSurface));
-    AddAction(actionBaseAddress + "Control", CSurfManager::Action("Control", logicalSurface));
-    AddAction(actionBaseAddress + "Alt", CSurfManager::Action("Alt", logicalSurface));
+    AddAction(actionBaseAddress + "Shift",  CSurfManager::ActionFor("Shift", logicalSurface));
+    AddAction(actionBaseAddress + "Option", CSurfManager::ActionFor("Option", logicalSurface));
+    AddAction(actionBaseAddress + "Control", CSurfManager::ActionFor("Control", logicalSurface));
+    AddAction(actionBaseAddress + "Alt", CSurfManager::ActionFor("Alt", logicalSurface));
     
-    AddAction(actionBaseAddress + "Read", CSurfManager::Action("TrackAutoMode", logicalSurface, 1));
-    AddAction(actionBaseAddress + "Write", CSurfManager::Action("TrackAutoMode", logicalSurface, 3));
-    AddAction(actionBaseAddress + "Trim", CSurfManager::Action("TrackAutoMode", logicalSurface, 0.0));
-    AddAction(actionBaseAddress + "Touch", CSurfManager::Action("TrackAutoMode", logicalSurface, 2));
-    AddAction(actionBaseAddress + "Latch", CSurfManager::Action("TrackAutoMode", logicalSurface, 4));
-    AddAction(actionBaseAddress + "Group", CSurfManager::Action("TrackAutoMode", logicalSurface, 5));
+    AddAction(actionBaseAddress + "Read", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 1));
+    AddAction(actionBaseAddress + "Write", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 3));
+    AddAction(actionBaseAddress + "Trim", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 0.0));
+    AddAction(actionBaseAddress + "Touch", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 2));
+    AddAction(actionBaseAddress + "Latch", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 4));
+    AddAction(actionBaseAddress + "Group", CSurfManager::ActionFor("TrackAutoMode", logicalSurface, 5));
     
-    AddAction(actionBaseAddress + "ShiftRead", CSurfManager::Action("GlobalAutoMode", logicalSurface, 1));
-    AddAction(actionBaseAddress + "ShiftWrite", CSurfManager::Action("GlobalAutoMode", logicalSurface, 3));
-    AddAction(actionBaseAddress + "ShiftTrim", CSurfManager::Action("GlobalAutoMode", logicalSurface, 0.0));
-    AddAction(actionBaseAddress + "ShiftTouch", CSurfManager::Action("GlobalAutoMode", logicalSurface, 2));
-    AddAction(actionBaseAddress + "ShiftLatch", CSurfManager::Action("GlobalAutoMode", logicalSurface, 4));
-    AddAction(actionBaseAddress + "ShiftGroup", CSurfManager::Action("GlobalAutoMode", logicalSurface, 5));
+    AddAction(actionBaseAddress + "ShiftRead", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 1));
+    AddAction(actionBaseAddress + "ShiftWrite", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 3));
+    AddAction(actionBaseAddress + "ShiftTrim", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 0.0));
+    AddAction(actionBaseAddress + "ShiftTouch", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 2));
+    AddAction(actionBaseAddress + "ShiftLatch", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 4));
+    AddAction(actionBaseAddress + "ShiftGroup", CSurfManager::ActionFor("GlobalAutoMode", logicalSurface, 5));
     
-    AddAction(actionBaseAddress + "Save", CSurfManager::Action("Reaper", logicalSurface, 40026));
-    AddAction(actionBaseAddress + "ShiftSave", CSurfManager::Action("Reaper", logicalSurface, 40022));
-    AddAction(actionBaseAddress + "Undo", CSurfManager::Action("Reaper", logicalSurface, 40029));
-    AddAction(actionBaseAddress + "ShiftUndo", CSurfManager::Action("Reaper", logicalSurface, 40030));
+    AddAction(actionBaseAddress + "Save", CSurfManager::ActionFor("Reaper", logicalSurface, 40026));
+    AddAction(actionBaseAddress + "ShiftSave", CSurfManager::ActionFor("Reaper", logicalSurface, 40022));
+    AddAction(actionBaseAddress + "Undo", CSurfManager::ActionFor("Reaper", logicalSurface, 40029));
+    AddAction(actionBaseAddress + "ShiftUndo", CSurfManager::ActionFor("Reaper", logicalSurface, 40030));
    
 
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(actionBaseAddress + "Marker", CSurfManager::Action("Reaper", logicalSurface, 40172));
-    AddAction(actionBaseAddress + "ShiftMarker", CSurfManager::Action("Reaper", logicalSurface, 40157));
-    AddAction(actionBaseAddress + "OptionMarker", CSurfManager::Action("Reaper", logicalSurface, 40174));
-    AddAction(actionBaseAddress + "Nudge", CSurfManager::Action("Reaper", logicalSurface, 40173));
-    AddAction(actionBaseAddress + "Cycle", CSurfManager::Action("CycleTimeline", logicalSurface));
-    AddAction(actionBaseAddress + "Click", CSurfManager::Action("Reaper", logicalSurface, 40364));
+    AddAction(actionBaseAddress + "Marker", CSurfManager::ActionFor("Reaper", logicalSurface, 40172));
+    AddAction(actionBaseAddress + "ShiftMarker", CSurfManager::ActionFor("Reaper", logicalSurface, 40157));
+    AddAction(actionBaseAddress + "OptionMarker", CSurfManager::ActionFor("Reaper", logicalSurface, 40174));
+    AddAction(actionBaseAddress + "Nudge", CSurfManager::ActionFor("Reaper", logicalSurface, 40173));
+    AddAction(actionBaseAddress + "Cycle", CSurfManager::ActionFor("CycleTimeline", logicalSurface));
+    AddAction(actionBaseAddress + "Click", CSurfManager::ActionFor("Reaper", logicalSurface, 40364));
     
     //AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
     //AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
     //AddAction(actionBaseAddress + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
     //AddAction(actionBaseAddress + Right, new RepeatingArrow_Action(logicalSurface, 3, 0.3));
     
-    AddAction(actionBaseAddress + "Zoom", CSurfManager::Action("LatchedZoom", logicalSurface));
-    AddAction(actionBaseAddress + "Scrub", CSurfManager::Action("LatchedScrub", logicalSurface));
+    AddAction(actionBaseAddress + "Zoom", CSurfManager::ActionFor("LatchedZoom", logicalSurface));
+    AddAction(actionBaseAddress + "Scrub", CSurfManager::ActionFor("LatchedScrub", logicalSurface));
     
     // GAW TBD for Console 1 only
-    AddAction(actionBaseAddress + "DisplayFX",  CSurfManager::Action("SetShowFXWindows", logicalSurface));
+    AddAction(actionBaseAddress + "DisplayFX",  CSurfManager::ActionFor("SetShowFXWindows", logicalSurface));
 }
 
 void RealSurface::InitFXMaps()
@@ -240,43 +240,45 @@ void RealSurface::MapTrackActions(string trackGUID)
 
     if(GetName() == "Console1")
     {
-        AddAction(actionBaseAddress + "ChannelFader", CSurfManager::Action("TrackVolume", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelRotary", CSurfManager::Action("TrackPan", logicalSurface, track, 0x00));
-        AddAction(actionBaseAddress + "ChannelMute", CSurfManager::Action("TrackMute", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelSolo", CSurfManager::Action("TrackSolo", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelFader", CSurfManager::ActionFor("TrackVolume", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelRotary", CSurfManager::ActionFor("TrackPan", logicalSurface, track, 0x00));
+        AddAction(actionBaseAddress + "ChannelMute", CSurfManager::ActionFor("TrackMute", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelSolo", CSurfManager::ActionFor("TrackSolo", logicalSurface, track));
 
-        AddAction(actionBaseAddress + "ChannelInputMeterLeft", CSurfManager::Action("TrackOutputMeter", logicalSurface, track, 0));
-        AddAction(actionBaseAddress + "ChannelInputMeterRight", CSurfManager::Action("TrackOutputMeter", logicalSurface, track, 1));
+        AddAction(actionBaseAddress + "ChannelInputMeterLeft", CSurfManager::ActionFor("TrackOutputMeter", logicalSurface, track, 0));
+        AddAction(actionBaseAddress + "ChannelInputMeterRight", CSurfManager::ActionFor("TrackOutputMeter", logicalSurface, track, 1));
         
-        AddAction(actionBaseAddress + "ChannelOutputMeterLeft", CSurfManager::Action("TrackOutputMeter", logicalSurface, track, 0));
-        AddAction(actionBaseAddress + "ChannelOutputMeterRight", CSurfManager::Action("TrackOutputMeter", logicalSurface, track, 1));
+        AddAction(actionBaseAddress + "ChannelOutputMeterLeft", CSurfManager::ActionFor("TrackOutputMeter", logicalSurface, track, 0));
+        AddAction(actionBaseAddress + "ChannelOutputMeterRight", CSurfManager::ActionFor("TrackOutputMeter", logicalSurface, track, 1));
         
-        AddAction(actionBaseAddress + "TrackOnSelection", CSurfManager::Action("MapTrackAndFXToWidgets", logicalSurface, track));
+        AddAction(actionBaseAddress + "TrackOnSelection", CSurfManager::ActionFor("MapTrackAndFXToWidgets", logicalSurface, track));
     }
     else
     {
-        AddAction(actionBaseAddress + "ChannelDisplay", CSurfManager::Action("TrackNameDisplay", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelDisplay", CSurfManager::ActionFor("TrackNameDisplay", logicalSurface, track));
         
         // GAW TBD
-        AddAction(actionBaseAddress + "ChannelDisplay", new TrackTouchControlled_Action(logicalSurface, track, new TrackVolumeDisplay_Action(logicalSurface, track), actionBaseAddress + "ChannelDisplay"));
+        string channelDisplay = actionBaseAddress + "ChannelDisplay";
+        Action* controlledAction = CSurfManager::ActionFor("TrackVolumeDisplay", logicalSurface, track);
+        AddAction(channelDisplay, CSurfManager::ActionFor("TrackTouchControlled", channelDisplay, logicalSurface, track, controlledAction));
         
-        AddAction(actionBaseAddress + "ChannelFader", CSurfManager::Action("TrackVolume", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelFaderTouch", CSurfManager::Action("TrackTouch", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelFader", CSurfManager::ActionFor("TrackVolume", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelFaderTouch", CSurfManager::ActionFor("TrackTouch", logicalSurface, track));
         
         // GAW TBD
-        CycledAction* cycledAction = new CycledAction(logicalSurface);
-        cycledAction->AddAction(new TrackPan_Action(logicalSurface, track, 0x00));
-        cycledAction->AddAction(new TrackPanWidth_Action(logicalSurface, track, 0x30));
+        Action* cycledAction = CSurfManager::ActionFor("Cycled", logicalSurface);
+        cycledAction->AddAction(CSurfManager::ActionFor("TrackPan", logicalSurface, track, 0x00));
+        cycledAction->AddAction(CSurfManager::ActionFor("TrackPanWidth", logicalSurface, track, 0x30));
         AddAction(actionBaseAddress + "ChannelRotary", cycledAction);
         AddAction(actionBaseAddress + "ChannelRotaryPush", cycledAction);
         
-        AddAction(actionBaseAddress + "ChannelSelect", CSurfManager::Action("TrackUniqueSelect", logicalSurface, track));
-        AddAction(actionBaseAddress + "ShiftChannelSelect", CSurfManager::Action("TrackRangeSelect", logicalSurface, track));
-        AddAction(actionBaseAddress + "ControlChannelSelect", CSurfManager::Action("TrackSelect", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelSelect", CSurfManager::ActionFor("TrackUniqueSelect", logicalSurface, track));
+        AddAction(actionBaseAddress + "ShiftChannelSelect", CSurfManager::ActionFor("TrackRangeSelect", logicalSurface, track));
+        AddAction(actionBaseAddress + "ControlChannelSelect", CSurfManager::ActionFor("TrackSelect", logicalSurface, track));
         
-        AddAction(actionBaseAddress + "ChannelRecordArm", CSurfManager::Action("TrackRecordArm", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelMute", CSurfManager::Action("TrackMute", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelSolo", CSurfManager::Action("TrackSolo", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelRecordArm", CSurfManager::ActionFor("TrackRecordArm", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelMute", CSurfManager::ActionFor("TrackMute", logicalSurface, track));
+        AddAction(actionBaseAddress + "ChannelSolo", CSurfManager::ActionFor("TrackSolo", logicalSurface, track));
     }
 }
 
@@ -389,12 +391,10 @@ void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, strin
     GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
 }
 
-std::hash<std::string> hash_fn;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface)
+Action* CSurfManager::ActionFor(string name, LogicalSurface* logicalSurface)
 {
 
     if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(logicalSurface);
@@ -412,24 +412,26 @@ Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface)
     else if(name == "Alt")  return new Alt_Action(logicalSurface);
     else if(name == "LatchedZoom")  return new LatchedZoom_Action(logicalSurface);
     else if(name == "LatchedScrub")  return new LatchedScrub_Action(logicalSurface);
+    else if(name == "Cycled")  return new Cycled_Action(logicalSurface);
     else if(name == "CycleTimeline")  return new CycleTimeline_Action(logicalSurface);
 
-    return new class Action(logicalSurface);
+    return new Action(logicalSurface);
 }
 
-Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface, double param)
+Action* CSurfManager::ActionFor(string name, LogicalSurface* logicalSurface, double param)
 {
     if(name == "TrackBank")  return new TrackBank_Action(logicalSurface, param);
     else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(logicalSurface, param);
     else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(logicalSurface, param);
     else if(name == "Reaper")  return new Reaper_Action(logicalSurface, param);
     
-    return new class Action(logicalSurface);
+    return new Action(logicalSurface);
 }
 
-Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface, MediaTrack* track)
+Action* CSurfManager::ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track)
 {
     if(name == "TrackVolume")  return new TrackVolume_Action(logicalSurface, track);
+    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(logicalSurface, track);
     else if(name == "TrackTouch")  return new TrackTouch_Action(logicalSurface, track);
     else if(name == "TrackMute")  return new TrackMute_Action(logicalSurface, track);
     else if(name == "TrackSolo")  return new TrackSolo_Action(logicalSurface, track);
@@ -443,12 +445,20 @@ Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface, MediaT
     return new class Action(logicalSurface);
 }
 
-Action* CSurfManager::Action(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param)
+Action* CSurfManager::ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param)
 {
     if(name == "TrackPan")  return new TrackPan_Action(logicalSurface, track, param);
+    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(logicalSurface, track, param);
     else if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(logicalSurface, track, param);
+
+    return new Action(logicalSurface);
+}
+
+Action* CSurfManager::ActionFor(string name, string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* baseAction)
+{
+    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, logicalSurface, track, baseAction);
     
-    return new class Action(logicalSurface);
+    return new Action(logicalSurface);
 }
 
 void CSurfManager::InitRealSurfaces()

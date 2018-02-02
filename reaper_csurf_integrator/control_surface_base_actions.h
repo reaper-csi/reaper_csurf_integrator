@@ -10,7 +10,7 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class DoubleAction : public Action
+class Double_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -23,10 +23,10 @@ protected:
         GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName, value);
     }
 
-    DoubleAction(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
+    Double_Action(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
     
 public:
-    ~DoubleAction() {}
+    ~Double_Action() {}
     
     virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return currentValue_; }
     
@@ -45,7 +45,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycledAction : public Action
+class Cycled_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -53,9 +53,9 @@ private:
     int currentIndex_ = 0;
     
 public:
-    CycledAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
+    Cycled_Action(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
     
-    ~CycledAction() {}
+    ~Cycled_Action() {}
     
     virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(groupName, surfaceName, widgetName); }
     
@@ -87,7 +87,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class StringAction : public Action
+class String_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -100,11 +100,11 @@ protected:
         GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName, value);
     }
     
-    StringAction(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
+    String_Action(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
 
 public:
     
-    ~StringAction() {}
+    ~String_Action() {}
     
     virtual void Update(string groupName, string surfaceName, string widgetName) override
     {
