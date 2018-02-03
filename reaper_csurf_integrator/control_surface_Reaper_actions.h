@@ -10,36 +10,36 @@
 #include "control_surface_base_actions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackAction : public Action
+class Track_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     MediaTrack* track_;
     
 public:
-    TrackAction(LogicalSurface* logicalSurface, MediaTrack* track) : Action(logicalSurface), track_(track) {}
+    Track_Action(LogicalSurface* logicalSurface, MediaTrack* track) : Action(logicalSurface), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackDoubleAction : public Double_Action
+class TrackDouble_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     MediaTrack* track_;
     
 public:
-    TrackDoubleAction(LogicalSurface* logicalSurface, MediaTrack* track) : Double_Action(logicalSurface), track_(track) {}
+    TrackDouble_Action(LogicalSurface* logicalSurface, MediaTrack* track) : Double_Action(logicalSurface), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackStringAction : public String_Action
+class TrackString_Action : public String_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     MediaTrack* track_;
     
 public:
-    TrackStringAction(LogicalSurface* logicalSurface, MediaTrack* track) : String_Action(logicalSurface), track_(track) {}
+    TrackString_Action(LogicalSurface* logicalSurface, MediaTrack* track) : String_Action(logicalSurface), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackFX_Action : public TrackDoubleAction
+class TrackFX_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -77,7 +77,7 @@ private:
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID, int paramIndex) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
+    TrackFX_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID, int paramIndex) : TrackDouble_Action(logicalSurface, track), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
     
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
@@ -98,11 +98,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapTrackAndFXToWidgets_Action  : public TrackDoubleAction
+class MapTrackAndFXToWidgets_Action  : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapTrackAndFXToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    MapTrackAndFXToWidgets_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -115,11 +115,11 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolume_Action : public TrackDoubleAction
+class TrackVolume_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackVolume_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
  
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
@@ -152,14 +152,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPan_Action : public TrackDoubleAction
+class TrackPan_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int displayMode_ = 0;
     
 public:
-    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
+    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDouble_Action(logicalSurface, track), displayMode_(displayMode) {}
 
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
@@ -177,7 +177,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPanWidth_Action : public TrackDoubleAction
+class TrackPanWidth_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -190,7 +190,7 @@ protected:
     }
     
 public:
-    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDoubleAction(logicalSurface, track), displayMode_(displayMode) {}
+    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDouble_Action(logicalSurface, track), displayMode_(displayMode) {}
     
     virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
@@ -203,11 +203,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNameDisplay_Action : public TrackStringAction
+class TrackNameDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackNameDisplay_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackStringAction(logicalSurface, track) {}
+    TrackNameDisplay_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackString_Action(logicalSurface, track) {}
     
     virtual string GetValue(string groupName, string surfaceName, string widgetName) override
     {
@@ -219,11 +219,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolumeDisplay_Action : public TrackStringAction
+class TrackVolumeDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolumeDisplay_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackStringAction(logicalSurface, track) {}
+    TrackVolumeDisplay_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackString_Action(logicalSurface, track) {}
     
     virtual string GetValue(string groupName, string surfaceName, string widgetName) override
     {
@@ -358,11 +358,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSelect_Action : public TrackDoubleAction
+class TrackSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
@@ -374,11 +374,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackUniqueSelect_Action : public TrackDoubleAction
+class TrackUniqueSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackUniqueSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
@@ -390,11 +390,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackRangeSelect_Action : public TrackDoubleAction
+class TrackRangeSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRangeSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackRangeSelect_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
     
@@ -425,11 +425,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackRecordArm_Action : public TrackDoubleAction
+class TrackRecordArm_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackRecordArm_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
    
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_RECARM"); }
     
@@ -440,11 +440,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackMute_Action : public TrackDoubleAction
+class TrackMute_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackMute_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "B_MUTE"); }
     
@@ -455,11 +455,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSolo_Action : public TrackDoubleAction
+class TrackSolo_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackSolo_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SOLO"); }
     
@@ -470,11 +470,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouch_Action : public TrackDoubleAction
+class TrackTouch_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackTouch_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDoubleAction(logicalSurface, track) {}
+    TrackTouch_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
 
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {
@@ -483,7 +483,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchControlled_Action : public TrackAction
+class TrackTouchControlled_Action : public Track_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -495,7 +495,7 @@ private:
     bool IsCurrentlyTouched() { return GetLogicalSurface()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
     
 public:
-    TrackTouchControlled_Action(string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* action) : TrackAction(logicalSurface, track), action_(action), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* action) : Track_Action(logicalSurface, track), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string groupName, string surfaceName, string widgetName) override
     {
@@ -633,7 +633,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackOutputMeter_Action : public TrackDoubleAction
+class TrackOutputMeter_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -650,13 +650,13 @@ protected:
     }
     
 public:
-    TrackOutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDoubleAction(logicalSurface, track), channel_(channel) {}
+    TrackOutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDouble_Action(logicalSurface, track), channel_(channel) {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return VAL2DB(DAW::Track_GetPeakInfo(track_, channel_)); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackGainReductionMeter_Action : public TrackDoubleAction
+class TrackGainReductionMeter_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -673,7 +673,7 @@ protected:
     }
     
 public:
-    TrackGainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID) : TrackDoubleAction(logicalSurface, track), fxGUID_(fxGUID)  {}
+    TrackGainReductionMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string fxGUID) : TrackDouble_Action(logicalSurface, track), fxGUID_(fxGUID)  {}
     
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override
     {
