@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <iomanip>
+#include <fstream>
 
 #include "control_surface_integrator_Reaper.h"
 
@@ -1250,9 +1252,44 @@ private:
     int currentLogicalSurfaceIndex_ = 0; 
     bool VSTMonitor_ = false;
     
-    void InitRealSurfaces();
     void InitRealSurface(RealSurface* surface);
-    
+
+    void InitRealSurfaces()
+    {
+        bool midiInMonitor = false;
+        bool midiOutMonitor = false;
+        VSTMonitor_ = false;
+
+        ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+        
+        for (string line; getline(iniFile, line) ; )
+        {
+            if(line[0] != '/') // ignore comment lines
+            {
+                istringstream iss(line);
+                vector<string> tokens;
+                string token;
+                
+                while (iss >> quoted(token))
+                    tokens.push_back(token);
+                
+                if(tokens[1] == "On")
+                {
+                    if(tokens[0] == "MidiInMonitor")
+                        midiInMonitor = true;
+                    else if(tokens[0] == "MidiOutMonitor")
+                        midiOutMonitor = true;
+                    else if(tokens[0] == "VSTMonitor")
+                        VSTMonitor_ = true;
+                }
+                else
+                    ProcessRealSurfaceTokens(tokens, midiInMonitor, midiOutMonitor);
+            }
+        }
+    }
+
+    void ProcessRealSurfaceTokens(vector<string>& tokens, bool midiInMonitor, bool midiOutMonitor);
+
     void AddRealSurface(RealSurface* realSurface)
     {
         InitRealSurface(realSurface);
