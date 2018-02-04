@@ -25,6 +25,7 @@
 #ifndef _WIN32
 #include <dirent.h>
 #else
+#include <memory>
 #include "direntWin.h"
 #endif
 
