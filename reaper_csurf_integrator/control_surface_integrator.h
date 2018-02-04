@@ -492,6 +492,82 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MidiCSurf : public RealSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    midi_Input* midiInput_ = nullptr;
+    midi_Output* midiOutput_ = nullptr;
+    bool midiInMonitor_ = false;
+    bool midiOutMonitor_ = false;
+    
+    void HandleMidiInput()
+    {
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
+    }
+    
+    void ProcessMidiMessage(const MIDI_event_ex_t* evt)
+    {
+        // At this point we don't know how much of the message comprises the key, so try all three
+        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
+        
+        if(midiInMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+public:
+    virtual ~MidiCSurf()
+    {
+        if (midiInput_) delete midiInput_;
+        if(midiOutput_) delete midiOutput_;
+    }
+    
+    MidiCSurf(const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiOutput_)
+            midiOutput_->SendMsg(midiMessage, -1);
+    }
+    
+    virtual void SendMidiMessage(int first, int second, int third) override
+    {
+        if(midiOutput_)
+            midiOutput_->Send(first, second, third, -1);
+        
+        if(midiOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+    virtual void RunAndUpdate() override
+    {
+        HandleMidiInput();
+        RealSurface::UpdateWidgets();
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurfaceChannel
@@ -1298,11 +1374,14 @@ private:
         bool midiOutMonitor = false;
         VSTMonitor_ = false;
 
+        LogicalSurface* currentLogicalSurface = nullptr;
+        SurfaceGroup* currentSurfaceGroup = nullptr;
+
         ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
         
         for (string line; getline(iniFile, line) ; )
         {
-            if(line[0] != '/') // ignore comment lines
+            if(line[0] != '/' && line != "") // ignore comment lines and blank lines
             {
                 istringstream iss(line);
                 vector<string> tokens;
@@ -1311,22 +1390,69 @@ private:
                 while (iss >> quoted(token))
                     tokens.push_back(token);
                 
-                if(tokens[1] == "On")
+                if(tokens[0] == "MidiInMonitor")
                 {
-                    if(tokens[0] == "MidiInMonitor")
+                    if(tokens.size() != 2)
+                        continue;
+
+                    if(tokens[1] == "On")
                         midiInMonitor = true;
-                    else if(tokens[0] == "MidiOutMonitor")
+                }
+                else if(tokens[0] == "MidiOutMonitor")
+                {
+                    if(tokens.size() != 2)
+                        continue;
+
+                    if(tokens[1] == "On")
                         midiOutMonitor = true;
-                    else if(tokens[0] == "VSTMonitor")
+                }
+                else if(tokens[0] == "VSTMonitor")
+                {
+                    if(tokens.size() != 2)
+                        continue;
+
+                    if(tokens[1] == "On")
                         VSTMonitor_ = true;
                 }
-                else
-                    ProcessRealSurfaceTokens(tokens, midiInMonitor, midiOutMonitor);
+                else if(tokens[0] == "RealSurface")
+                {
+                    if(tokens.size() != 6)
+                        continue;
+                    
+                    int numBankableChannels = atoi(tokens[2].c_str());
+                    
+                    int channelIn = atoi(tokens[3].c_str());
+                    channelIn--; // MIDI channels are 0  based
+                    
+                    int channelOut = atoi(tokens[4].c_str());
+                    channelOut--; // MIDI channels are 0  based
+                    
+                    AddRealSurface(new MidiCSurf(tokens[1], numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                }
+                else if(tokens[0] == "LogicalSurface")
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    
+                }
+                else if(tokens[0] == "SurfaceGroup")
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    
+                }
+                else if(tokens[0] == "Surface")
+                {
+                    if(tokens.size() != 3)
+                        continue;
+                    
+                    
+                }
             }
         }
     }
-
-    void ProcessRealSurfaceTokens(vector<string>& tokens, bool midiInMonitor, bool midiOutMonitor);
 
     void AddRealSurface(RealSurface* realSurface)
     {
