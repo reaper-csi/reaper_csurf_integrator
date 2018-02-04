@@ -609,7 +609,7 @@ class SurfaceGroup
 {
     string name_ = "";
     LogicalSurface* logicalSurface_= nullptr;
-    int numLogicalChannels_ = 0;
+    int numLogicalChannels_ = 1;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     
@@ -645,7 +645,7 @@ class SurfaceGroup
     }
 
 public:
-    SurfaceGroup(string name, LogicalSurface* logicalSurface, int numLogicalChannels) : name_(name), logicalSurface_(logicalSurface), numLogicalChannels_(numLogicalChannels) {}
+    SurfaceGroup(string name, LogicalSurface* logicalSurface) : name_(name), logicalSurface_(logicalSurface) {}
     
     string GetName() { return name_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
@@ -653,6 +653,7 @@ public:
 
     void AddSurface(RealSurface* surface)
     {
+        numLogicalChannels_ += surface->GetNumBankableChannels();
         surface->SetSurfaceGroup(this);
         realSurfaces_.push_back(surface);
     }
@@ -1093,25 +1094,18 @@ public:
             surfaceGroup->TrackFXListChanged(track);
     }
     
+    void AddSurfaceGroup(SurfaceGroup* surfaceGroup)
+    {
+        surfaceGroups_[surfaceGroup->GetName()] = surfaceGroup;
+    }
+    
     void Init(vector<RealSurface*> realSurfaces)
     {
-        // GAW TBD -- this will be in CSI.ini file
-
-        int numChannels = 1;
-        
-        for(auto* surface : realSurfaces)
-            numChannels += surface->GetNumBankableChannels();
-        
-        surfaceGroups_[RealControlSurface] = new SurfaceGroup(RealControlSurface, this, numChannels);
-        
         for(auto* surface : realSurfaces)
         {
-            surfaceGroups_[RealControlSurface]->AddSurface(surface);
-            
             surface->InitFXMaps();
             surface->MapRealSurfaceActions();
         }
-        // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         
         SetImmobilizedTracks();
         RefreshLayout();
@@ -1368,7 +1362,7 @@ private:
     
     void InitRealSurface(RealSurface* surface);
 
-    void InitRealSurfaces()
+    void Init()
     {
         bool midiInMonitor = false;
         bool midiOutMonitor = false;
@@ -1434,6 +1428,8 @@ private:
                     if(tokens.size() != 2)
                         continue;
                     
+                    currentLogicalSurface = new LogicalSurface(tokens[1], this);
+                    logicalSurfaces_.push_back(currentLogicalSurface);
                     
                 }
                 else if(tokens[0] == "SurfaceGroup")
@@ -1441,17 +1437,23 @@ private:
                     if(tokens.size() != 2)
                         continue;
                     
-                    
+                    currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
+                    currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
                 }
                 else if(tokens[0] == "Surface")
                 {
-                    if(tokens.size() != 3)
+                    if(tokens.size() != 4)
                         continue;
-                    
-                    
+
+                    for(auto surface : realSurfaces_)
+                        if(surface->GetName() == tokens[1])
+                            currentSurfaceGroup->AddSurface(surface);
                 }
             }
         }
+        
+        for(auto logicalSurface : logicalSurfaces_)
+            logicalSurface->Init(realSurfaces_);
     }
 
     void AddRealSurface(RealSurface* realSurface)
@@ -1464,13 +1466,7 @@ private:
     {
         if(!isInitialized_)
         {
-            InitRealSurfaces();
-          
-            LogicalSurface* logicalSurface = new LogicalSurface("aName", this);
-
-            logicalSurface->Init(realSurfaces_);
-            logicalSurfaces_.push_back(logicalSurface);
-            
+            Init();
             isInitialized_ = true;
         }
         
