@@ -458,22 +458,6 @@ void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, strin
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSurfManager::ProcessRealSurfaceTokens(vector<string>& tokens, bool midiInMonitor, bool midiOutMonitor)
-{
-    if(tokens.size() < 4)
-        return;
-    
-    int numBankableChannels = atoi(tokens[1].c_str());
-    
-    int channelIn = atoi(tokens[2].c_str());
-    channelIn--; // MIDI channels are 0  based
-    
-    int channelOut = atoi(tokens[3].c_str());
-    channelOut--; // MIDI channels are 0  based
-
-    AddRealSurface(new MidiCSurf(tokens[0], numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
-}
-
 void CSurfManager::InitRealSurface(RealSurface* surface)
 {
     
