@@ -59,6 +59,9 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator_ui.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\direntWin.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc">

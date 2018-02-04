@@ -128,6 +128,7 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_manager_actions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_midi_widgets.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_Reaper_actions.h" />
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\direntWin.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\handy_reaper_functions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin_functions.h" />
