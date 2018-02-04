@@ -4,6 +4,11 @@
 //
 //
 
+// Note for Windows environments
+// use std::byte for C++17 byte
+// use ::byte for Windows byte
+
+
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
@@ -17,11 +22,42 @@
 
 #include "control_surface_integrator_Reaper.h"
 
-const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
+#ifndef _WIN32
+#include <dirent.h>
+#else
+#include "direntWin.h"
+#endif
 
-// Note for Windows environments
-// use std::byte for C++17 byte
-// use ::byte for Windows byte
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FileSystem
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    static vector<string> GetDirectoryFileNames(const string& dir)
+    {
+        vector<string> fileNames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            fileNames.push_back(string(dirent_ptr->d_name));
+        
+        return fileNames;
+    }
+
+    static vector<string> GetDirectoryFolderNames(const string& dir)
+    {
+        vector<string> folderNames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            if(dirent_ptr->d_type == DT_DIR)
+                folderNames.push_back(string(dirent_ptr->d_name));
+        
+        return folderNames;
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,6 +65,7 @@ const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The following are all reserved words in the template vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string RealControlSurface = "RealControlSurface";
 const string GainReduction_dB = "GainReduction_dB";
 const string TrackOnSelection = "TrackOnSelection";

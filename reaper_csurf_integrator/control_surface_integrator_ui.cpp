@@ -6,89 +6,7 @@
 
 #include "control_surface_integrator_ui.h"
 
-
-#ifndef _WIN32
-#include <dirent.h>
-
-vector<string> GetDirectoryFiles(const string& dir)
-{
-    vector<string> files;
-    shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
-    struct dirent *dirent_ptr;
-    
-    while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
-        files.push_back(string(dirent_ptr->d_name));
-    
-    return files;
-}
-
-vector<string> GetDirectoryFolders(const string& dir)
-{
-    vector<string> folders;
-    shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
-    struct dirent *dirent_ptr;
-    
-    while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
-        if(dirent_ptr->d_type == DT_DIR)
-            folders.push_back(string(dirent_ptr->d_name));
-    
-    return folders;
-}
-
-
-#else
-#include <Windows.h>
-#include <vector>
-
-vector<string> GetDirectoryFiles(const string& directory)
-{
-    vector<string> files;
-    WIN32_FIND_DATA fileData;
-    HANDLE hFind;
-    
-    string fullPath = directory + "*.*";
-    
-    hFind = FindFirstFile(fullPath.c_str(), &fileData);
-
-    if ( hFind != INVALID_HANDLE_VALUE)
-    {
-        files.push_back(fileData.cFileName);
-        
-        while (FindNextFile(hFind, &fileData))
-            files.push_back(fileData.cFileName);
-    }
-    
-    FindClose(hFind);
-    return files;
-}
-
-vector<string> GetDirectoryFolders(const string& directory)
-{
-    vector<string> files;
-    WIN32_FIND_DATA fileData;
-    HANDLE hFind;
-    
-    string fullPath = directory + "*.*";
-    
-    hFind = FindFirstFile(fullPath.c_str(), &fileData);
-    
-    if ( hFind != INVALID_HANDLE_VALUE)
-    {
-        if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-            files.push_back(fileData.cFileName);
-        
-        while (FindNextFile(hFind, &fileData))
-            if (fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                files.push_back(fileData.cFileName);
-    }
-    
-    FindClose(hFind);
-    return files;
-}
-#endif
-
-
-extern REAPER_PLUGIN_HINSTANCE g_hInst; 
+extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 static CSurfIntegrator* integrator = nullptr;
 
@@ -169,28 +87,6 @@ static IReaperControlSurface *createFunc(const char *type_string, const char *co
     integrator = new CSurfIntegrator();
     return integrator;
 }
-
-static void parseParms(const char *str, int parms[5])
-{
-    parms[0]=0;
-    parms[1]=9;
-    parms[2]=parms[3]=-1;
-    parms[4]=0;
-    
-    const char *p=str;
-    if (p)
-    {
-        int x=0;
-        while (x<5)
-        {
-            while (*p == ' ') p++;
-            if ((*p < '0' || *p > '9') && *p != '-') break;
-            parms[x++]=atoi(p);
-            while (*p && *p != ' ') p++;
-        }
-    }
-}
-
 
 void FillCombo(HWND hwndDlg, int x, char * buf, int comboId)
 {
@@ -276,7 +172,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             string path(DAW::GetResourcePath());
             path += "/CSI/rst/";
             int i = 0;
-            for(auto filename : GetDirectoryFiles(path))
+            for(auto filename : FileSystem::GetDirectoryFileNames(path))
             {
                 if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
                 {
@@ -376,7 +272,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             string resourcePath(DAW::GetResourcePath());
             resourcePath += "/CSI/";
             
-            for(auto filename : GetDirectoryFolders(resourcePath + "axt/"))
+            for(auto filename : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
             {
                 if(filename[0] != '.')
                 {
@@ -385,7 +281,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 }
             }
 
-            for(auto filename : GetDirectoryFolders(resourcePath + "fxt/"))
+            for(auto filename : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
             {
                 if(filename[0] != '.')
                 {
