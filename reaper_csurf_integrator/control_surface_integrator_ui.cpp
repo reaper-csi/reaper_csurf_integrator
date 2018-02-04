@@ -172,7 +172,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             string path(DAW::GetResourcePath());
             path += "/CSI/rst/";
             int i = 0;
-            for(auto filename : FileSystem::GetDirectoryFileNames(path))
+            for(auto filename : FileSystem::GetDirectoryFilenames(path))
             {
                 if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
                 {

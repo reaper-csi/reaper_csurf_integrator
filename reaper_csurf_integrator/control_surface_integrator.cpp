@@ -463,6 +463,10 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
     
     // GAW TBD -- this will be in .rst files
     
+    string templateFilename = surface->GetTemplateFilename();
+    
+    
+    
     RealSurfaceChannel* channel = nullptr;
     
     if(surface->GetName() == "Console1")
