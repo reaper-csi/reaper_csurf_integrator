@@ -133,6 +133,9 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin_functions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\resource.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
