@@ -11,6 +11,83 @@
 #include "handy_reaper_functions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MidiCSurf : public RealSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    midi_Input* midiInput_ = nullptr;
+    midi_Output* midiOutput_ = nullptr;
+    bool midiInMonitor_ = false;
+    bool midiOutMonitor_ = false;
+    
+    void HandleMidiInput()
+    {
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
+    }
+    
+    void ProcessMidiMessage(const MIDI_event_ex_t* evt)
+    {
+        // At this point we don't know how much of the message comprises the key, so try all three
+        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
+        
+        if(midiInMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+public:
+    virtual ~MidiCSurf()
+    {
+        if (midiInput_) delete midiInput_;
+        if(midiOutput_) delete midiOutput_;
+    }
+    
+    MidiCSurf(const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiOutput_)
+            midiOutput_->SendMsg(midiMessage, -1);
+    }
+    
+    virtual void SendMidiMessage(int first, int second, int third) override
+    {
+        if(midiOutput_)
+            midiOutput_->Send(first, second, third, -1);
+        
+        if(midiOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+    virtual void RunAndUpdate() override
+    {
+        HandleMidiInput();
+        RealSurface::UpdateWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class PushButton_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -327,83 +404,6 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
         GetRealSurface()->SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiCSurf : public RealSurface
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    midi_Input* midiInput_ = nullptr;
-    midi_Output* midiOutput_ = nullptr;
-    bool midiInMonitor_ = false;
-    bool midiOutMonitor_ = false;
-
-    void HandleMidiInput()
-    {
-        if(midiInput_)
-        {
-            DAW::SwapBufsPrecise(midiInput_);
-            MIDI_eventlist* list = midiInput_->GetReadBuf();
-            int bpos = 0;
-            MIDI_event_t* evt;
-            while ((evt = list->EnumItems(&bpos)))
-                ProcessMidiMessage((MIDI_event_ex_t*)evt);
-        }
-    }
-    
-    void ProcessMidiMessage(const MIDI_event_ex_t* evt)
-    {
-        // At this point we don't know how much of the message comprises the key, so try all three
-        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
-
-        if(midiInMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-    
-public:
-    virtual ~MidiCSurf()
-    {
-        if (midiInput_) delete midiInput_;
-        if(midiOutput_) delete midiOutput_;
-    }
-    
-    MidiCSurf(const string name, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
-    
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiOutput_)
-            midiOutput_->SendMsg(midiMessage, -1);
-    }
-    
-    virtual void SendMidiMessage(int first, int second, int third) override
-    {
-        if(midiOutput_)
-            midiOutput_->Send(first, second, third, -1);
-        
-        if(midiOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-    
-    virtual void RunAndUpdate() override
-    {
-        HandleMidiInput();
-        RealSurface::UpdateWidgets();
     }
 };
 
