@@ -651,6 +651,15 @@ public:
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     int GetNumLogicalChannels() { return numLogicalChannels_; }
 
+    void Init()
+    {
+        for(auto* surface : realSurfaces_)
+        {
+            surface->InitFXMaps();
+            surface->MapRealSurfaceActions();
+        }
+    }
+    
     void AddSurface(RealSurface* surface)
     {
         numLogicalChannels_ += surface->GetNumBankableChannels();
@@ -1099,13 +1108,10 @@ public:
         surfaceGroups_[surfaceGroup->GetName()] = surfaceGroup;
     }
     
-    void Init(vector<RealSurface*> realSurfaces)
+    void Init()
     {
-        for(auto* surface : realSurfaces)
-        {
-            surface->InitFXMaps();
-            surface->MapRealSurfaceActions();
-        }
+        for(auto [name, surfaceGroup] : surfaceGroups_)
+            surfaceGroup->Init();
         
         SetImmobilizedTracks();
         RefreshLayout();
@@ -1453,7 +1459,7 @@ private:
         }
         
         for(auto logicalSurface : logicalSurfaces_)
-            logicalSurface->Init(realSurfaces_);
+            logicalSurface->Init();
     }
 
     void AddRealSurface(RealSurface* realSurface)
