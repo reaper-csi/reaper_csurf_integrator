@@ -174,7 +174,6 @@ public:
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) {}
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +228,6 @@ public:
     virtual void SetValueToZero() {}
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,8 +241,6 @@ protected:
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
     map<string, string> remappedFXWidgets_;
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
     
     bool zoom_ = false;
     bool scrub_ = false;
@@ -261,7 +257,6 @@ public:
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
-    bool IsShowFXWindows() { return showFXWindows_; }
     
     string GetWidgetGUID(string widgetName)
     {
@@ -289,40 +284,6 @@ public:
                 widgetsByName_[widgetName]->SetGUID(GUID);
         
         remappedFXWidgets_.clear();
-    }
-    
-    void AddFXWindow(FXWindow fxWindow)
-    {
-        openFXWindows_.push_back(fxWindow);
-    }
-    
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-    
-    void OpenFXWindows()
-    {
-        if(showFXWindows_)
-            for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
-    }
-    
-    void CloseFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
-    }
-
-    void DeleteFXWindows()
-    {
-        CloseFXWindows();
-        openFXWindows_.clear();
     }
     
     void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
@@ -551,7 +512,6 @@ public:
     }
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceGroup
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,8 +521,9 @@ class SurfaceGroup
     int numLogicalChannels_ = 1;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
-    //map<string, map<string, FXTemplate *>> fxTemplates_;
-    map <string, FXTemplate *> fxTemplates_;
+    map<string, map<string, FXTemplate *>> fxTemplates_;
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
 
     bool shift_ = false;
     bool option_ = false;
@@ -594,13 +555,8 @@ class SurfaceGroup
         
         return GUID + GetName() + surfaceName + currentModifiers + actionName;
     }
-
-    void AddFXTemplate(FXTemplate* fxTemplate)
-    {
-        fxTemplates_[fxTemplate->GetName()] = fxTemplate;
-    }
     
-    void InitFXMaps()
+    void InitFXMaps(RealSurface* surface)
     {
         // GAW TBD -- this will be in .fxt files
         
@@ -615,8 +571,8 @@ class SurfaceGroup
         fxTemplate->AddEntry("Parallel", "Wet");
         fxTemplate->AddEntry("CompressorMeter", GainReduction_dB);
         
-        AddFXTemplate(fxTemplate);
-        
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+
         fxTemplate = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
         
         fxTemplate->AddEntry("Threshold", "Thresh");
@@ -628,8 +584,8 @@ class SurfaceGroup
         fxTemplate->AddEntry("Compressor", "Bypass");
         fxTemplate->AddEntry("Parallel", "Wet");
         
-        AddFXTemplate(fxTemplate);
-        
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+
         fxTemplate = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
         
         fxTemplate->AddEntry("Threshold", "Peak Reduct");
@@ -640,8 +596,8 @@ class SurfaceGroup
         fxTemplate->AddEntry("Compressor", "Bypass");
         fxTemplate->AddEntry("Parallel", "Wet");
         
-        AddFXTemplate(fxTemplate);
-        
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+
         fxTemplate = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
         
         fxTemplate->AddEntry("LoCurve", "LowPeak");
@@ -658,8 +614,8 @@ class SurfaceGroup
         fxTemplate->AddEntry("LoFrequency", "LowFreq");
         fxTemplate->AddEntry("Equalizer", "Bypass");
         
-        AddFXTemplate(fxTemplate);
-        
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+
         fxTemplate = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
         
         //fxMap->AddEntry(LoCurve, "");
@@ -676,8 +632,8 @@ class SurfaceGroup
         fxTemplate->AddEntry("LoFrequency", "Low Freq");
         fxTemplate->AddEntry("Equalizer", "Bypass");
         
-        AddFXTemplate(fxTemplate);
-        
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+
         fxTemplate = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
         
         //fxMap->AddEntry(LoCurve, "");
@@ -694,7 +650,7 @@ class SurfaceGroup
         //fxMap->AddEntry(LoFrequency, "");
         fxTemplate->AddEntry("Equalizer", "Bypass");
         
-        AddFXTemplate(fxTemplate);
+        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
     }
 
 public:
@@ -703,50 +659,64 @@ public:
     string GetName() { return name_; }
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     int GetNumLogicalChannels() { return numLogicalChannels_; }
-
-    void AddAction(string actionAddress, Action* action);
+    bool IsShowFXWindows() { return showFXWindows_; }
+    void MapFXActions(string trackGUID, RealSurface* surface);
 
     void Init()
     {
         for(auto* surface : realSurfaces_)
         {
-            InitFXMaps();
+            InitFXMaps(surface);
             surface->MapRealSurfaceActions();
         }
     }
     
     void AddSurface(RealSurface* surface)
     {
-        // GAW TBD do mapping here
-        
         numLogicalChannels_ += surface->GetNumBankableChannels();
         surface->SetSurfaceGroup(this);
         realSurfaces_.push_back(surface);
     }
     
-    void SetShowFXWindows(string surfaceName, bool value)
+    void AddFXWindow(FXWindow fxWindow)
     {
-        for(auto* surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->SetShowFXWindows(value);
+        openFXWindows_.push_back(fxWindow);
     }
     
-    bool IsShowFXWindows(string surfaceName)
+    void SetShowFXWindows(bool value)
     {
-        for(auto* surface : realSurfaces_)
-            if(surface->GetName() == surfaceName)
-                surface->IsShowFXWindows();
+        showFXWindows_ = ! showFXWindows_;
         
-        return false;
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
     }
     
+    void OpenFXWindows()
+    {
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
+    }
+    
+    void DeleteFXWindows()
+    {
+        CloseFXWindows();
+        openFXWindows_.clear();
+    }
+
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName());
+            MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface);
     }
-    
-    void MapFXActions(string trackGUID, string surfaceName);
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -781,7 +751,7 @@ public:
         char fxGUID[BUFSZ];
         char fxParamName[BUFSZ];
         
-        surface->DeleteFXWindows();
+        DeleteFXWindows();
         surface->UnmapFXFromWidgets(track);
         
         string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
@@ -791,9 +761,9 @@ public:
             DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             
-            if(fxTemplates_.count(fxName) > 0)
+            if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
             {
-                FXTemplate* map = fxTemplates_[fxName];
+                FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
                 
                 for(auto mapEntry : map->GetTemplateEntries())
                 {
@@ -805,11 +775,11 @@ public:
                                 surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
                 }
                 
-                surface->AddFXWindow(FXWindow(track, fxGUID));
+                AddFXWindow(FXWindow(track, fxGUID));
             }
         }
         
-        surface->OpenFXWindows();
+        OpenFXWindows();
         
         surface->ForceUpdateWidgets();
     }
@@ -828,7 +798,7 @@ public:
             surface->MapTrackActions(trackGUID);
         
         for(auto* surface : realSurfaces_)
-            MapFXActions(trackGUID, surface->GetName());
+            MapFXActions(trackGUID, surface);
     }
 
     void TrackListChanged()
@@ -1188,13 +1158,13 @@ public:
     void SetShowFXWindows(string groupName, string surfaceName, bool value)
     {
         if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetShowFXWindows(surfaceName, value);
+            surfaceGroups_[groupName]->SetShowFXWindows(value);
     }
     
     bool IsShowFXWindows(string groupName, string surfaceName)
     {
         if(surfaceGroups_.count(groupName) > 0)
-            return surfaceGroups_[groupName]->IsShowFXWindows(surfaceName);
+            return surfaceGroups_[groupName]->IsShowFXWindows();
         
         return false;
     }
@@ -1379,7 +1349,6 @@ public:
     }
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1454,7 +1423,6 @@ public:
         return nullptr;
     }
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager
