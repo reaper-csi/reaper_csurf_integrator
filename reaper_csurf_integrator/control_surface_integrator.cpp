@@ -283,7 +283,7 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SurfaceGroup
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SurfaceGroup::MapFXActions(string trackGUID, string surfaceName)
+void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     LogicalSurface* logicalSurface = GetLogicalSurface();
@@ -296,16 +296,16 @@ void SurfaceGroup::MapFXActions(string trackGUID, string surfaceName)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
-        if(fxTemplates_.count(fxName) > 0)
+        if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
         {
-            FXTemplate* map = fxTemplates_[fxName];
+            FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            string actionBaseAddress = trackGUID + fxGUID + GetName() + surfaceName;
+            string actionBaseAddress = trackGUID + fxGUID + GetName() + surface->GetName();
             
             for(auto mapEntry : map->GetTemplateEntries())
             {
                 if(mapEntry.paramName == GainReduction_dB)
-                    AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(logicalSurface, track, fxGUID));
+                    GetLogicalSurface()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(logicalSurface, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -313,7 +313,7 @@ void SurfaceGroup::MapFXActions(string trackGUID, string surfaceName)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
+                            GetLogicalSurface()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
                     }
                 }
             }
@@ -330,11 +330,6 @@ void SurfaceGroup::MapFXActions(string trackGUID, string surfaceName)
             }
         }
     }
-}
-
-void SurfaceGroup::AddAction(string actionAddress, Action* action)
-{
-    GetLogicalSurface()->AddAction(actionAddress, action);
 }
 
 // to Actions ->
