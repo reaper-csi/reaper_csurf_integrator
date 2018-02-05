@@ -521,6 +521,8 @@ class SurfaceGroup
     int numLogicalChannels_ = 1;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
+    map<string, string> actionTemplateDirectory_;
+    map<string, string> fxTemplateDirectory_;
     map<string, map<string, FXTemplate *>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -558,6 +560,9 @@ class SurfaceGroup
     
     void InitFXMaps(RealSurface* surface)
     {
+        string templateDirectory = fxTemplateDirectory_[surface->GetName()];
+        
+        
         // GAW TBD -- this will be in .fxt files
         
         FXTemplate* fxTemplate = new FXTemplate("VST: ReaComp (Cockos)");
@@ -671,8 +676,14 @@ public:
         }
     }
     
-    void AddSurface(RealSurface* surface)
+    void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
     {
+        string resourcePath(DAW::GetResourcePath());
+        resourcePath += "/CSI/";
+        
+        actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
+        fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
+
         numLogicalChannels_ += surface->GetNumBankableChannels();
         surface->SetSurfaceGroup(this);
         realSurfaces_.push_back(surface);
@@ -1523,7 +1534,7 @@ private:
 
                     for(auto surface : realSurfaces_)
                         if(surface->GetName() == tokens[1])
-                            currentSurfaceGroup->AddSurface(surface);
+                            currentSurfaceGroup->AddSurface(surface, tokens[2], tokens[3]);
                 }
             }
         }
