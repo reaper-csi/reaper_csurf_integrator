@@ -242,7 +242,6 @@ protected:
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
-    map<string, FXTemplate *> fxTemplates_;
     map<string, string> remappedFXWidgets_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -276,9 +275,7 @@ public:
     void MapTrackToWidgets(MediaTrack *track);
     void UnmapWidgetsFromTrack(MediaTrack *track);
     void MapRealSurfaceActions();
-    void InitFXMaps();
     void MapTrackActions(string trackGUID);
-    void MapFXActions(string trackGUID);
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
@@ -292,45 +289,6 @@ public:
                 widgetsByName_[widgetName]->SetGUID(GUID);
         
         remappedFXWidgets_.clear();
-    }
-    
-    void MapFXToWidgets(MediaTrack *track)
-    {
-        char fxName[BUFSZ];
-        char fxGUID[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        DeleteFXWindows();
-        UnmapFXFromWidgets(track);
-        
-        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
-            if(fxTemplates_.count(fxName) > 0)
-            {
-                FXTemplate* map = fxTemplates_[fxName];
-                
-                for(auto mapEntry : map->GetTemplateEntries())
-                {
-                    if(mapEntry.paramName == GainReduction_dB)
-                        SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                    else
-                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
-                            if(mapEntry.paramName == fxParamName)
-                                SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                }
-                
-                AddFXWindow(FXWindow(track, fxGUID));
-            }
-        }
-        
-        OpenFXWindows();
-        
-        ForceUpdateWidgets();
     }
     
     void AddFXWindow(FXWindow fxWindow)
@@ -367,17 +325,6 @@ public:
         openFXWindows_.clear();
     }
     
-    void AddFXTemplate(FXTemplate* fxTemplate)
-    {
-        fxTemplates_[fxTemplate->GetName()] = fxTemplate;
-    }
-    
-    void MapTrackAndFXActions(string trackGUID)
-    {
-        MapTrackActions(trackGUID);
-        MapFXActions(trackGUID);
-    }
-
     void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
     {
         surfaceGroup_ = surfaceGroup;
@@ -614,7 +561,9 @@ class SurfaceGroup
     int numLogicalChannels_ = 1;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
-    
+    //map<string, map<string, FXTemplate *>> fxTemplates_;
+    map <string, FXTemplate *> fxTemplates_;
+
     bool shift_ = false;
     bool option_ = false;
     bool control_ = false;
@@ -646,6 +595,108 @@ class SurfaceGroup
         return GUID + GetName() + surfaceName + currentModifiers + actionName;
     }
 
+    void AddFXTemplate(FXTemplate* fxTemplate)
+    {
+        fxTemplates_[fxTemplate->GetName()] = fxTemplate;
+    }
+    
+    void InitFXMaps()
+    {
+        // GAW TBD -- this will be in .fxt files
+        
+        FXTemplate* fxTemplate = new FXTemplate("VST: ReaComp (Cockos)");
+        
+        fxTemplate->AddEntry("Threshold", "Thresh");
+        fxTemplate->AddEntry("Character", "Gain");
+        fxTemplate->AddEntry("Attack", "Attack");
+        fxTemplate->AddEntry("Release", "Release");
+        fxTemplate->AddEntry("Ratio", "Ratio");
+        fxTemplate->AddEntry("Compressor", "Bypass");
+        fxTemplate->AddEntry("Parallel", "Wet");
+        fxTemplate->AddEntry("CompressorMeter", GainReduction_dB);
+        
+        AddFXTemplate(fxTemplate);
+        
+        fxTemplate = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
+        
+        fxTemplate->AddEntry("Threshold", "Thresh");
+        fxTemplate->AddEntry("Character", "Output");
+        fxTemplate->AddEntry("Drive", "Meter");
+        fxTemplate->AddEntry("Attack", "Headroom");
+        fxTemplate->AddEntry("Release", "Input");
+        fxTemplate->AddEntry("Ratio", "Time Const");
+        fxTemplate->AddEntry("Compressor", "Bypass");
+        fxTemplate->AddEntry("Parallel", "Wet");
+        
+        AddFXTemplate(fxTemplate);
+        
+        fxTemplate = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
+        
+        fxTemplate->AddEntry("Threshold", "Peak Reduct");
+        fxTemplate->AddEntry("Character", "Gain");
+        fxTemplate->AddEntry("Drive", "Meter");
+        fxTemplate->AddEntry("Attack", "Emphasis");
+        fxTemplate->AddEntry("Ratio", "Comp/Limit");
+        fxTemplate->AddEntry("Compressor", "Bypass");
+        fxTemplate->AddEntry("Parallel", "Wet");
+        
+        AddFXTemplate(fxTemplate);
+        
+        fxTemplate = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
+        
+        fxTemplate->AddEntry("LoCurve", "LowPeak");
+        //fxMap->AddEntry(HiCurve, "");
+        fxTemplate->AddEntry("HiGain", "HiGain");
+        fxTemplate->AddEntry("HiFrequency", "HiFreq");
+        fxTemplate->AddEntry("HiMidGain", "HiMidGain");
+        fxTemplate->AddEntry("HiMidFrequency", "HiMidFreq");
+        fxTemplate->AddEntry("HiMidQ", "LowPass");
+        fxTemplate->AddEntry("LoMidGain", "LoMidGain");
+        fxTemplate->AddEntry("LoMidFrequency", "LoMidFreq");
+        fxTemplate->AddEntry("LoMidQ", "HiPass");
+        fxTemplate->AddEntry("LoGain", "LowGain");
+        fxTemplate->AddEntry("LoFrequency", "LowFreq");
+        fxTemplate->AddEntry("Equalizer", "Bypass");
+        
+        AddFXTemplate(fxTemplate);
+        
+        fxTemplate = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
+        
+        //fxMap->AddEntry(LoCurve, "");
+        //fxMap->AddEntry(HiCurve, "");
+        fxTemplate->AddEntry("HiGain", "HF Atten");
+        fxTemplate->AddEntry("HiFrequency", "HF Atten Freq");
+        fxTemplate->AddEntry("HiMidGain", "HF Boost");
+        fxTemplate->AddEntry("HiMidFrequency", "High Freq");
+        fxTemplate->AddEntry("HiMidQ", "HF Q");
+        fxTemplate->AddEntry("LoMidGain", "LF Atten");
+        fxTemplate->AddEntry("LoMidFrequency", "Low Freq");
+        //fxMap->AddEntry(LoMidQ, "");
+        fxTemplate->AddEntry("LoGain", "LF Boost");
+        fxTemplate->AddEntry("LoFrequency", "Low Freq");
+        fxTemplate->AddEntry("Equalizer", "Bypass");
+        
+        AddFXTemplate(fxTemplate);
+        
+        fxTemplate = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
+        
+        //fxMap->AddEntry(LoCurve, "");
+        //fxMap->AddEntry(HiCurve, "");
+        fxTemplate->AddEntry("HiGain", "HM Peak");
+        fxTemplate->AddEntry("HiFrequency", "HM Freq");
+        fxTemplate->AddEntry("HiMidGain", "Mid Dip");
+        fxTemplate->AddEntry("HiMidFrequency", "Mid Freq");
+        //fxMap->AddEntry(HiMidQ, "");
+        fxTemplate->AddEntry("LoMidGain", "LM Peak");
+        fxTemplate->AddEntry("LoMidFrequency", "LM Freq");
+        //fxMap->AddEntry(LoMidQ, "");
+        //fxMap->AddEntry(LoGain, "");
+        //fxMap->AddEntry(LoFrequency, "");
+        fxTemplate->AddEntry("Equalizer", "Bypass");
+        
+        AddFXTemplate(fxTemplate);
+    }
+
 public:
     SurfaceGroup(string name, LogicalSurface* logicalSurface) : name_(name), logicalSurface_(logicalSurface) {}
     
@@ -653,17 +704,21 @@ public:
     LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
     int GetNumLogicalChannels() { return numLogicalChannels_; }
 
+    void AddAction(string actionAddress, Action* action);
+
     void Init()
     {
         for(auto* surface : realSurfaces_)
         {
-            surface->InitFXMaps();
+            InitFXMaps();
             surface->MapRealSurfaceActions();
         }
     }
     
     void AddSurface(RealSurface* surface)
     {
+        // GAW TBD do mapping here
+        
         numLogicalChannels_ += surface->GetNumBankableChannels();
         surface->SetSurfaceGroup(this);
         realSurfaces_.push_back(surface);
@@ -688,8 +743,10 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
-            surface->MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
+            MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName());
     }
+    
+    void MapFXActions(string trackGUID, string surfaceName);
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -715,7 +772,46 @@ public:
     {
         for(auto* surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
-                surface->MapFXToWidgets(track);
+                MapFXToWidgets(track, surface);
+    }
+    
+    void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
+    {
+        char fxName[BUFSZ];
+        char fxGUID[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        surface->DeleteFXWindows();
+        surface->UnmapFXFromWidgets(track);
+        
+        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            if(fxTemplates_.count(fxName) > 0)
+            {
+                FXTemplate* map = fxTemplates_[fxName];
+                
+                for(auto mapEntry : map->GetTemplateEntries())
+                {
+                    if(mapEntry.paramName == GainReduction_dB)
+                        surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                    else
+                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                            if(mapEntry.paramName == fxParamName)
+                                surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                }
+                
+                surface->AddFXWindow(FXWindow(track, fxGUID));
+            }
+        }
+        
+        surface->OpenFXWindows();
+        
+        surface->ForceUpdateWidgets();
     }
     
     void UnmapWidgetsFromFX(MediaTrack* track, string surfaceName)
@@ -727,8 +823,12 @@ public:
     
     void MapTrackAndFXActions(string trackGUID)
     {
+        // GAW TBD -- move everything downstream to here
         for(auto* surface : realSurfaces_)
-            surface->MapTrackAndFXActions(trackGUID);
+            surface->MapTrackActions(trackGUID);
+        
+        for(auto* surface : realSurfaces_)
+            MapFXActions(trackGUID, surface->GetName());
     }
 
     void TrackListChanged()
