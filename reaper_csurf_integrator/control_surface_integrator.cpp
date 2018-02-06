@@ -218,73 +218,39 @@ void SurfaceGroup::AddAction(string actionAddress, Action* action)
 
 void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
 {
-    // GAW TBD -- this will be in .axt files
-    
     LogicalSurface* logicalSurface = GetLogicalSurface();
     string actionBaseAddress = RealControlSurface + GetName() + surface->GetName();;
+
+    string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
-    // GAW TBD for Mix and Control
-    AddAction(actionBaseAddress + "NudgeLeft", ActionFor("TrackBank", logicalSurface, "-1"));
-    AddAction(actionBaseAddress + "NudgeRight", ActionFor("TrackBank", logicalSurface, "1"));
-    AddAction(actionBaseAddress + "BankLeft", ActionFor("TrackBank", logicalSurface, "-8"));
-    AddAction(actionBaseAddress + "BankRight", ActionFor("TrackBank", logicalSurface, "8"));
-    
-    AddAction(actionBaseAddress + "Rewind", ActionFor("Rewind", logicalSurface));
-    AddAction(actionBaseAddress + "FastForward", ActionFor("FastForward", logicalSurface));
-    AddAction(actionBaseAddress + "Stop", ActionFor("Stop", logicalSurface));
-    AddAction(actionBaseAddress + "Play", ActionFor("Play", logicalSurface));
-    AddAction(actionBaseAddress + "Record", ActionFor("Record", logicalSurface));
-    
-    // GAW TBD for Control only
-    AddAction(actionBaseAddress + "NextMap", ActionFor("NextMap", logicalSurface));
-    AddAction(actionBaseAddress + "LockTracks", ActionFor("ImmobilizeSelectedTracks", logicalSurface));
-    AddAction(actionBaseAddress + "UnlockTracks", ActionFor("MobilizeSelectedTracks", logicalSurface));
-    
-    AddAction(actionBaseAddress + "Shift",  ActionFor("Shift", logicalSurface));
-    AddAction(actionBaseAddress + "Option", ActionFor("Option", logicalSurface));
-    AddAction(actionBaseAddress + "Control", ActionFor("Control", logicalSurface));
-    AddAction(actionBaseAddress + "Alt", ActionFor("Alt", logicalSurface));
-    
-    AddAction(actionBaseAddress + "Read", ActionFor("TrackAutoMode", logicalSurface, "1"));
-    AddAction(actionBaseAddress + "Write", ActionFor("TrackAutoMode", logicalSurface, "3"));
-    AddAction(actionBaseAddress + "Trim", ActionFor("TrackAutoMode", logicalSurface, "0"));
-    AddAction(actionBaseAddress + "Touch", ActionFor("TrackAutoMode", logicalSurface, "2"));
-    AddAction(actionBaseAddress + "Latch", ActionFor("TrackAutoMode", logicalSurface, "4"));
-    AddAction(actionBaseAddress + "Group", ActionFor("TrackAutoMode", logicalSurface, "5"));
-    
-    AddAction(actionBaseAddress + "ShiftRead", ActionFor("GlobalAutoMode", logicalSurface, "1"));
-    AddAction(actionBaseAddress + "ShiftWrite", ActionFor("GlobalAutoMode", logicalSurface, "3"));
-    AddAction(actionBaseAddress + "ShiftTrim", ActionFor("GlobalAutoMode", logicalSurface, "0"));
-    AddAction(actionBaseAddress + "ShiftTouch", ActionFor("GlobalAutoMode", logicalSurface, "2"));
-    AddAction(actionBaseAddress + "ShiftLatch", ActionFor("GlobalAutoMode", logicalSurface, "4"));
-    AddAction(actionBaseAddress + "ShiftGroup", ActionFor("GlobalAutoMode", logicalSurface, "5"));
-    
-    AddAction(actionBaseAddress + "Save", ActionFor("Reaper", logicalSurface, "40026"));
-    AddAction(actionBaseAddress + "ShiftSave", ActionFor("Reaper", logicalSurface, "40022"));
-    AddAction(actionBaseAddress + "Undo", ActionFor("Reaper", logicalSurface, "40029"));
-    AddAction(actionBaseAddress + "ShiftUndo", ActionFor("Reaper", logicalSurface, "40030"));
-    
-    
-    //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
-    //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
-    
-    AddAction(actionBaseAddress + "Marker", ActionFor("Reaper", logicalSurface, "40172"));
-    AddAction(actionBaseAddress + "ShiftMarker", ActionFor("Reaper", logicalSurface, "40157"));
-    AddAction(actionBaseAddress + "OptionMarker", ActionFor("Reaper", logicalSurface, "40174"));
-    AddAction(actionBaseAddress + "Nudge", ActionFor("Reaper", logicalSurface, "40173"));
-    AddAction(actionBaseAddress + "Cycle", ActionFor("CycleTimeline", logicalSurface));
-    AddAction(actionBaseAddress + "Click", ActionFor("Reaper", logicalSurface, "40364"));
-    
-    //AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
-    //AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
-    //AddAction(actionBaseAddress + Left, new RepeatingArrow_Action(logicalSurface, 2, 0.3));
-    //AddAction(actionBaseAddress + Right, new RepeatingArrow_Action(logicalSurface, 3, 0.3));
-    
-    AddAction(actionBaseAddress + "Zoom", ActionFor("LatchedZoom", logicalSurface));
-    AddAction(actionBaseAddress + "Scrub", ActionFor("LatchedScrub", logicalSurface));
-    
-    // GAW TBD for Console 1 only
-    AddAction(actionBaseAddress + "DisplayFX",  ActionFor("SetShowFXWindows", logicalSurface));
+    for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
+    {
+        if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+        {
+            ifstream actionTemplateFile(string(templateDirectory + "/" + filename));
+           
+            for (string line; getline(actionTemplateFile, line) ; )
+            {
+                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                {
+                    istringstream iss(line);
+                    vector<string> tokens;
+                    string token;
+                    while (iss >> quoted(token))
+                        tokens.push_back(token);
+                    
+                    if(tokens.size() == 2)
+                    {
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface));
+                    }
+                    if(tokens.size() == 3)
+                    {
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, tokens[2]));
+                    }
+                }
+            }
+        }
+    }
 }
 
 void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
@@ -292,48 +258,53 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
     LogicalSurface* logicalSurface = GetLogicalSurface();
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     string actionBaseAddress = trackGUID + GetName() + surface->GetName();
+ 
+    string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
-    // GAW TBD -- this will be in .axt files
-    
-    if(surface->GetName() == "Console1")
+    for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
     {
-        AddAction(actionBaseAddress + "ChannelFader", ActionFor("TrackVolume", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelRotary", ActionFor("TrackPan", logicalSurface, track, "0x00"));
-        AddAction(actionBaseAddress + "ChannelMute", ActionFor("TrackMute", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelSolo", ActionFor("TrackSolo", logicalSurface, track));
-        
-        AddAction(actionBaseAddress + "ChannelInputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, "0"));
-        AddAction(actionBaseAddress + "ChannelInputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, "1"));
-        
-        AddAction(actionBaseAddress + "ChannelOutputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, "0"));
-        AddAction(actionBaseAddress + "ChannelOutputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, "1"));
-        
-        AddAction(actionBaseAddress + "TrackOnSelection", ActionFor("MapTrackAndFXToWidgets", logicalSurface, track));
-    }
-    else
-    {
-        AddAction(actionBaseAddress + "ChannelDisplay", ActionFor("TrackNameDisplay", logicalSurface, track));
-        
-        string actionAddress = actionBaseAddress + "ChannelDisplay";
-        Action* controlledAction = ActionFor("TrackVolumeDisplay", logicalSurface, track);
-        AddAction(actionAddress, ActionFor("TrackTouchControlled", actionAddress, logicalSurface, track, controlledAction));
-        
-        AddAction(actionBaseAddress + "ChannelFader", ActionFor("TrackVolume", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelFaderTouch", ActionFor("TrackTouch", logicalSurface, track));
-        
-        Action* cycledAction = ActionFor("Cycled", logicalSurface);
-        cycledAction->AddAction(ActionFor("TrackPan", logicalSurface, track, "0x00"));
-        cycledAction->AddAction(ActionFor("TrackPanWidth", logicalSurface, track, "0x30"));
-        AddAction(actionBaseAddress + "ChannelRotary", cycledAction);
-        AddAction(actionBaseAddress + "ChannelRotaryPush", cycledAction);
-        
-        AddAction(actionBaseAddress + "ChannelSelect", ActionFor("TrackUniqueSelect", logicalSurface, track));
-        AddAction(actionBaseAddress + "ShiftChannelSelect", ActionFor("TrackRangeSelect", logicalSurface, track));
-        AddAction(actionBaseAddress + "ControlChannelSelect", ActionFor("TrackSelect", logicalSurface, track));
-        
-        AddAction(actionBaseAddress + "ChannelRecordArm", ActionFor("TrackRecordArm", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelMute", ActionFor("TrackMute", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelSolo", ActionFor("TrackSolo", logicalSurface, track));
+        if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+        {
+            ifstream actionTemplateFile(string(templateDirectory + "/Track/" + filename));
+            
+            for (string line; getline(actionTemplateFile, line) ; )
+            {
+                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                {
+                    istringstream iss(line);
+                    vector<string> tokens;
+                    string token;
+                    while (iss >> quoted(token))
+                        tokens.push_back(token);
+                    
+                    if(tokens.size() == 2)
+                    {
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track));
+                    }
+                    if(tokens.size() == 3)
+                    {
+                        if(tokens[0] == "TrackTouchControlled")
+                        {
+                            string actionAddress = actionBaseAddress + tokens[2];
+                            Action* controlledAction = ActionFor(tokens[1], logicalSurface, track);
+                            AddAction(actionAddress, ActionFor(tokens[0], actionAddress, logicalSurface, track, controlledAction));
+                        }
+                        else
+                        {
+                            AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track, tokens[2]));
+                        }
+                    }
+                    else if(tokens[0] == "Cycled" && tokens.size() == 7)
+                    {
+                        Action* cycledAction = ActionFor(tokens[0], logicalSurface);
+                        cycledAction->AddAction(ActionFor(tokens[3], logicalSurface, track, tokens[4]));
+                        cycledAction->AddAction(ActionFor(tokens[5], logicalSurface, track, tokens[6]));
+                        AddAction(actionBaseAddress + tokens[1], cycledAction);
+                        AddAction(actionBaseAddress + tokens[2], cycledAction);
+                    }
+                }
+            }
+        }
     }
 }
 
