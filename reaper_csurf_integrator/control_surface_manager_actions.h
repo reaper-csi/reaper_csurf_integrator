@@ -154,7 +154,10 @@ private:
     int stride_ = 0;
 
 public:
-    TrackBank_Action(LogicalSurface* logicalSurface, int stride) : Double_Action(logicalSurface), stride_(stride)   {}
+    TrackBank_Action(LogicalSurface* logicalSurface, string paramStr) : Double_Action(logicalSurface)
+    {
+        stride_ =  atol(paramStr.c_str());
+    }
     
     virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
     {

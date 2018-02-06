@@ -9,6 +9,8 @@
 
 #include "control_surface_base_actions.h"
 
+#include <cstdlib>
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Track_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,10 +52,13 @@ private:
     int commandId_= 0;
     
 public:
-    Reaper_Action(LogicalSurface* logicalSurface, int commandId) : Double_Action(logicalSurface), commandId_(commandId)  {}
-    
     Reaper_Action(LogicalSurface* logicalSurface, string commandStr) : Double_Action(logicalSurface)
     {
+        commandId_ =  atol(commandStr.c_str());
+        
+        if(commandId_ != 0)
+            return;
+        
         commandId_ = DAW::NamedCommandLookup(commandStr.c_str());
         
         if(commandId_ == 0) // can't find it
@@ -159,7 +164,10 @@ private:
     int displayMode_ = 0;
     
 public:
-    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDouble_Action(logicalSurface, track), displayMode_(displayMode) {}
+    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, string displayModeStr) : TrackDouble_Action(logicalSurface, track)
+    {
+        displayMode_ = atol(displayModeStr.c_str());
+    }
 
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
@@ -190,8 +198,11 @@ protected:
     }
     
 public:
-    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, int displayMode) : TrackDouble_Action(logicalSurface, track), displayMode_(displayMode) {}
-    
+    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, string displayModeStr) : TrackDouble_Action(logicalSurface, track)
+    {
+        displayMode_ = atol(displayModeStr.c_str());
+    }
+
     virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_WIDTH"); }
@@ -550,8 +561,11 @@ protected:
     int autoMode_ = 0;
     
 public:
-    GlobalAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : Double_Action(logicalSurface), autoMode_(autoMode) {}
-    
+    GlobalAutoMode_Action(LogicalSurface* logicalSurface, string autoModeStr) : Double_Action(logicalSurface)
+    {
+        autoMode_ = atol(autoModeStr.c_str());
+    }
+
     virtual double GetValue (string groupName, string surfaceName, string widgetName) override { return DAW::GetGlobalAutomationOverride(); }
     
     virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) override
@@ -578,7 +592,7 @@ class TrackAutoMode_Action : public GlobalAutoMode_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackAutoMode_Action(LogicalSurface* logicalSurface, int autoMode) : GlobalAutoMode_Action(logicalSurface, autoMode) {}
+    TrackAutoMode_Action(LogicalSurface* logicalSurface, string autoModeStr) : GlobalAutoMode_Action(logicalSurface, autoModeStr) {}
     
     virtual double GetValue (string groupName, string surfaceName, string widgetName) override
     {
@@ -650,8 +664,11 @@ protected:
     }
     
 public:
-    TrackOutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, int channel) : TrackDouble_Action(logicalSurface, track), channel_(channel) {}
-    
+    TrackOutputMeter_Action(LogicalSurface* logicalSurface, MediaTrack* track, string channelStr) : TrackDouble_Action(logicalSurface, track)
+    {
+        channel_ = atol(channelStr.c_str());
+    }
+
     virtual double GetValue(string groupName, string surfaceName, string widgetName) override { return VAL2DB(DAW::Track_GetPeakInfo(track_, channel_)); }
 };
 
