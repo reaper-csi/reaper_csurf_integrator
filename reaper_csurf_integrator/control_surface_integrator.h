@@ -68,7 +68,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string RealControlSurface = "RealControlSurface";
-const string GainReduction_dB = "GainReduction_dB";
+const string GainReductionDB = "GainReductionDB";
 const string TrackOnSelection = "TrackOnSelection";
 
 //
@@ -269,8 +269,6 @@ public:
     void AddAction(string actionAddress, Action* action);
     void MapTrackToWidgets(MediaTrack *track);
     void UnmapWidgetsFromTrack(MediaTrack *track);
-    void MapRealSurfaceActions();
-    void MapTrackActions(string trackGUID);
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
@@ -532,6 +530,10 @@ class SurfaceGroup
     bool control_ = false;
     bool alt_ = false;
     
+    void AddAction(string actionAddress, Action* action);
+    void MapRealSurfaceActions(RealSurface* surface);
+    void MapTrackActions(string trackGUID, RealSurface* surface);
+
     string CurrentModifers()
     {
         string modifiers = "";
@@ -613,7 +615,7 @@ public:
         for(auto* surface : realSurfaces_)
         {
             InitFXMaps(surface);
-            surface->MapRealSurfaceActions();
+            MapRealSurfaceActions(surface);
         }
     }
     
@@ -719,7 +721,7 @@ public:
                 
                 for(auto mapEntry : map->GetTemplateEntries())
                 {
-                    if(mapEntry.paramName == GainReduction_dB)
+                    if(mapEntry.paramName == GainReductionDB)
                         surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
                     else
                         for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
@@ -745,9 +747,8 @@ public:
     
     void MapTrackAndFXActions(string trackGUID)
     {
-        // GAW TBD -- move everything downstream to here
         for(auto* surface : realSurfaces_)
-            surface->MapTrackActions(trackGUID);
+            MapTrackActions(trackGUID, surface);
         
         for(auto* surface : realSurfaces_)
             MapFXActions(trackGUID, surface);
