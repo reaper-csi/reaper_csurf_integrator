@@ -560,102 +560,43 @@ class SurfaceGroup
     
     void InitFXMaps(RealSurface* surface)
     {
+        FXTemplate* fxTemplate = nullptr;
         string templateDirectory = fxTemplateDirectory_[surface->GetName()];
         
-        
-        // GAW TBD -- this will be in .fxt files
-        
-        FXTemplate* fxTemplate = new FXTemplate("VST: ReaComp (Cockos)");
-        
-        fxTemplate->AddEntry("Threshold", "Thresh");
-        fxTemplate->AddEntry("Character", "Gain");
-        fxTemplate->AddEntry("Attack", "Attack");
-        fxTemplate->AddEntry("Release", "Release");
-        fxTemplate->AddEntry("Ratio", "Ratio");
-        fxTemplate->AddEntry("Compressor", "Bypass");
-        fxTemplate->AddEntry("Parallel", "Wet");
-        fxTemplate->AddEntry("CompressorMeter", GainReduction_dB);
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+        for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
+        {
+            if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+            {
+                ifstream fxTemplateFile(string(templateDirectory + "/" + filename));
+                
+                string firstLine;
+                getline(fxTemplateFile, firstLine);
+                fxTemplate = new FXTemplate(firstLine);
+                
+                for (string line; getline(fxTemplateFile, line) ; )
+                {
+                    if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                    {
+                        istringstream iss(line);
+                        vector<string> tokens;
+                        string token;
+                        while (iss >> quoted(token))
+                            tokens.push_back(token);
+                        
+                        if(tokens.size() == 2)
+                        {
+                            if(fxTemplate != nullptr)
+                            {
+                                replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
+                                fxTemplate->AddEntry(tokens[0], tokens[1]);
+                            }
+                        }
+                    }
+                }
 
-        fxTemplate = new FXTemplate("VST: UAD Fairchild 660 (Universal Audio, Inc.)");
-        
-        fxTemplate->AddEntry("Threshold", "Thresh");
-        fxTemplate->AddEntry("Character", "Output");
-        fxTemplate->AddEntry("Drive", "Meter");
-        fxTemplate->AddEntry("Attack", "Headroom");
-        fxTemplate->AddEntry("Release", "Input");
-        fxTemplate->AddEntry("Ratio", "Time Const");
-        fxTemplate->AddEntry("Compressor", "Bypass");
-        fxTemplate->AddEntry("Parallel", "Wet");
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
-
-        fxTemplate = new FXTemplate("VST: UAD Teletronix LA-2A Silver (Universal Audio, Inc.)");
-        
-        fxTemplate->AddEntry("Threshold", "Peak Reduct");
-        fxTemplate->AddEntry("Character", "Gain");
-        fxTemplate->AddEntry("Drive", "Meter");
-        fxTemplate->AddEntry("Attack", "Emphasis");
-        fxTemplate->AddEntry("Ratio", "Comp/Limit");
-        fxTemplate->AddEntry("Compressor", "Bypass");
-        fxTemplate->AddEntry("Parallel", "Wet");
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
-
-        fxTemplate = new FXTemplate("VST: UAD Harrison 32C (Universal Audio, Inc.)");
-        
-        fxTemplate->AddEntry("LoCurve", "LowPeak");
-        //fxMap->AddEntry(HiCurve, "");
-        fxTemplate->AddEntry("HiGain", "HiGain");
-        fxTemplate->AddEntry("HiFrequency", "HiFreq");
-        fxTemplate->AddEntry("HiMidGain", "HiMidGain");
-        fxTemplate->AddEntry("HiMidFrequency", "HiMidFreq");
-        fxTemplate->AddEntry("HiMidQ", "LowPass");
-        fxTemplate->AddEntry("LoMidGain", "LoMidGain");
-        fxTemplate->AddEntry("LoMidFrequency", "LoMidFreq");
-        fxTemplate->AddEntry("LoMidQ", "HiPass");
-        fxTemplate->AddEntry("LoGain", "LowGain");
-        fxTemplate->AddEntry("LoFrequency", "LowFreq");
-        fxTemplate->AddEntry("Equalizer", "Bypass");
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
-
-        fxTemplate = new FXTemplate("VST: UAD Pultec EQP-1A (Universal Audio, Inc.)");
-        
-        //fxMap->AddEntry(LoCurve, "");
-        //fxMap->AddEntry(HiCurve, "");
-        fxTemplate->AddEntry("HiGain", "HF Atten");
-        fxTemplate->AddEntry("HiFrequency", "HF Atten Freq");
-        fxTemplate->AddEntry("HiMidGain", "HF Boost");
-        fxTemplate->AddEntry("HiMidFrequency", "High Freq");
-        fxTemplate->AddEntry("HiMidQ", "HF Q");
-        fxTemplate->AddEntry("LoMidGain", "LF Atten");
-        fxTemplate->AddEntry("LoMidFrequency", "Low Freq");
-        //fxMap->AddEntry(LoMidQ, "");
-        fxTemplate->AddEntry("LoGain", "LF Boost");
-        fxTemplate->AddEntry("LoFrequency", "Low Freq");
-        fxTemplate->AddEntry("Equalizer", "Bypass");
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
-
-        fxTemplate = new FXTemplate("VST: UAD Pultec MEQ-5 (Universal Audio, Inc.)");
-        
-        //fxMap->AddEntry(LoCurve, "");
-        //fxMap->AddEntry(HiCurve, "");
-        fxTemplate->AddEntry("HiGain", "HM Peak");
-        fxTemplate->AddEntry("HiFrequency", "HM Freq");
-        fxTemplate->AddEntry("HiMidGain", "Mid Dip");
-        fxTemplate->AddEntry("HiMidFrequency", "Mid Freq");
-        //fxMap->AddEntry(HiMidQ, "");
-        fxTemplate->AddEntry("LoMidGain", "LM Peak");
-        fxTemplate->AddEntry("LoMidFrequency", "LM Freq");
-        //fxMap->AddEntry(LoMidQ, "");
-        //fxMap->AddEntry(LoGain, "");
-        //fxMap->AddEntry(LoFrequency, "");
-        fxTemplate->AddEntry("Equalizer", "Bypass");
-        
-        fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+                fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+            }
+        }
     }
 
 public:
