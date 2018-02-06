@@ -35,7 +35,7 @@ Action* ActionFor(string name, LogicalSurface* logicalSurface)
     return new Action(logicalSurface);
 }
 
-Action* ActionFor(string name, LogicalSurface* logicalSurface, double param)
+Action* ActionFor(string name, LogicalSurface* logicalSurface, string param)
 {
     if(name == "TrackBank")  return new TrackBank_Action(logicalSurface, param);
     else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(logicalSurface, param);
@@ -62,7 +62,7 @@ Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track
     return new class Action(logicalSurface);
 }
 
-Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, double param)
+Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, string param)
 {
     if(name == "TrackPan")  return new TrackPan_Action(logicalSurface, track, param);
     else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(logicalSurface, track, param);
@@ -224,10 +224,10 @@ void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
     string actionBaseAddress = RealControlSurface + GetName() + surface->GetName();;
     
     // GAW TBD for Mix and Control
-    AddAction(actionBaseAddress + "NudgeLeft", ActionFor("TrackBank", logicalSurface, -1));
-    AddAction(actionBaseAddress + "NudgeRight", ActionFor("TrackBank", logicalSurface, 1));
-    AddAction(actionBaseAddress + "BankLeft", ActionFor("TrackBank", logicalSurface, -8));
-    AddAction(actionBaseAddress + "BankRight", ActionFor("TrackBank", logicalSurface, 8));
+    AddAction(actionBaseAddress + "NudgeLeft", ActionFor("TrackBank", logicalSurface, "-1"));
+    AddAction(actionBaseAddress + "NudgeRight", ActionFor("TrackBank", logicalSurface, "1"));
+    AddAction(actionBaseAddress + "BankLeft", ActionFor("TrackBank", logicalSurface, "-8"));
+    AddAction(actionBaseAddress + "BankRight", ActionFor("TrackBank", logicalSurface, "8"));
     
     AddAction(actionBaseAddress + "Rewind", ActionFor("Rewind", logicalSurface));
     AddAction(actionBaseAddress + "FastForward", ActionFor("FastForward", logicalSurface));
@@ -245,35 +245,35 @@ void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
     AddAction(actionBaseAddress + "Control", ActionFor("Control", logicalSurface));
     AddAction(actionBaseAddress + "Alt", ActionFor("Alt", logicalSurface));
     
-    AddAction(actionBaseAddress + "Read", ActionFor("TrackAutoMode", logicalSurface, 1));
-    AddAction(actionBaseAddress + "Write", ActionFor("TrackAutoMode", logicalSurface, 3));
-    AddAction(actionBaseAddress + "Trim", ActionFor("TrackAutoMode", logicalSurface, 0.0));
-    AddAction(actionBaseAddress + "Touch", ActionFor("TrackAutoMode", logicalSurface, 2));
-    AddAction(actionBaseAddress + "Latch", ActionFor("TrackAutoMode", logicalSurface, 4));
-    AddAction(actionBaseAddress + "Group", ActionFor("TrackAutoMode", logicalSurface, 5));
+    AddAction(actionBaseAddress + "Read", ActionFor("TrackAutoMode", logicalSurface, "1"));
+    AddAction(actionBaseAddress + "Write", ActionFor("TrackAutoMode", logicalSurface, "3"));
+    AddAction(actionBaseAddress + "Trim", ActionFor("TrackAutoMode", logicalSurface, "0"));
+    AddAction(actionBaseAddress + "Touch", ActionFor("TrackAutoMode", logicalSurface, "2"));
+    AddAction(actionBaseAddress + "Latch", ActionFor("TrackAutoMode", logicalSurface, "4"));
+    AddAction(actionBaseAddress + "Group", ActionFor("TrackAutoMode", logicalSurface, "5"));
     
-    AddAction(actionBaseAddress + "ShiftRead", ActionFor("GlobalAutoMode", logicalSurface, 1));
-    AddAction(actionBaseAddress + "ShiftWrite", ActionFor("GlobalAutoMode", logicalSurface, 3));
-    AddAction(actionBaseAddress + "ShiftTrim", ActionFor("GlobalAutoMode", logicalSurface, 0.0));
-    AddAction(actionBaseAddress + "ShiftTouch", ActionFor("GlobalAutoMode", logicalSurface, 2));
-    AddAction(actionBaseAddress + "ShiftLatch", ActionFor("GlobalAutoMode", logicalSurface, 4));
-    AddAction(actionBaseAddress + "ShiftGroup", ActionFor("GlobalAutoMode", logicalSurface, 5));
+    AddAction(actionBaseAddress + "ShiftRead", ActionFor("GlobalAutoMode", logicalSurface, "1"));
+    AddAction(actionBaseAddress + "ShiftWrite", ActionFor("GlobalAutoMode", logicalSurface, "3"));
+    AddAction(actionBaseAddress + "ShiftTrim", ActionFor("GlobalAutoMode", logicalSurface, "0"));
+    AddAction(actionBaseAddress + "ShiftTouch", ActionFor("GlobalAutoMode", logicalSurface, "2"));
+    AddAction(actionBaseAddress + "ShiftLatch", ActionFor("GlobalAutoMode", logicalSurface, "4"));
+    AddAction(actionBaseAddress + "ShiftGroup", ActionFor("GlobalAutoMode", logicalSurface, "5"));
     
-    AddAction(actionBaseAddress + "Save", ActionFor("Reaper", logicalSurface, 40026));
-    AddAction(actionBaseAddress + "ShiftSave", ActionFor("Reaper", logicalSurface, 40022));
-    AddAction(actionBaseAddress + "Undo", ActionFor("Reaper", logicalSurface, 40029));
-    AddAction(actionBaseAddress + "ShiftUndo", ActionFor("Reaper", logicalSurface, 40030));
+    AddAction(actionBaseAddress + "Save", ActionFor("Reaper", logicalSurface, "40026"));
+    AddAction(actionBaseAddress + "ShiftSave", ActionFor("Reaper", logicalSurface, "40022"));
+    AddAction(actionBaseAddress + "Undo", ActionFor("Reaper", logicalSurface, "40029"));
+    AddAction(actionBaseAddress + "ShiftUndo", ActionFor("Reaper", logicalSurface, "40030"));
     
     
     //logicalSurfaceInteractor_->AddAction(new Enter_Action(Enter, logicalSurfaceInteractor_));
     //logicalSurfaceInteractor_->AddAction(new Cancel_Action(Cancel, logicalSurfaceInteractor_));
     
-    AddAction(actionBaseAddress + "Marker", ActionFor("Reaper", logicalSurface, 40172));
-    AddAction(actionBaseAddress + "ShiftMarker", ActionFor("Reaper", logicalSurface, 40157));
-    AddAction(actionBaseAddress + "OptionMarker", ActionFor("Reaper", logicalSurface, 40174));
-    AddAction(actionBaseAddress + "Nudge", ActionFor("Reaper", logicalSurface, 40173));
+    AddAction(actionBaseAddress + "Marker", ActionFor("Reaper", logicalSurface, "40172"));
+    AddAction(actionBaseAddress + "ShiftMarker", ActionFor("Reaper", logicalSurface, "40157"));
+    AddAction(actionBaseAddress + "OptionMarker", ActionFor("Reaper", logicalSurface, "40174"));
+    AddAction(actionBaseAddress + "Nudge", ActionFor("Reaper", logicalSurface, "40173"));
     AddAction(actionBaseAddress + "Cycle", ActionFor("CycleTimeline", logicalSurface));
-    AddAction(actionBaseAddress + "Click", ActionFor("Reaper", logicalSurface, 40364));
+    AddAction(actionBaseAddress + "Click", ActionFor("Reaper", logicalSurface, "40364"));
     
     //AddAction(actionBaseAddress + Up, new RepeatingArrow_Action(logicalSurface, 0, 0.3));
     //AddAction(actionBaseAddress + Down, new RepeatingArrow_Action(logicalSurface, 1, 0.3));
@@ -298,15 +298,15 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
     if(surface->GetName() == "Console1")
     {
         AddAction(actionBaseAddress + "ChannelFader", ActionFor("TrackVolume", logicalSurface, track));
-        AddAction(actionBaseAddress + "ChannelRotary", ActionFor("TrackPan", logicalSurface, track, 0x00));
+        AddAction(actionBaseAddress + "ChannelRotary", ActionFor("TrackPan", logicalSurface, track, "0x00"));
         AddAction(actionBaseAddress + "ChannelMute", ActionFor("TrackMute", logicalSurface, track));
         AddAction(actionBaseAddress + "ChannelSolo", ActionFor("TrackSolo", logicalSurface, track));
         
-        AddAction(actionBaseAddress + "ChannelInputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, 0));
-        AddAction(actionBaseAddress + "ChannelInputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, 1));
+        AddAction(actionBaseAddress + "ChannelInputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, "0"));
+        AddAction(actionBaseAddress + "ChannelInputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, "1"));
         
-        AddAction(actionBaseAddress + "ChannelOutputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, 0));
-        AddAction(actionBaseAddress + "ChannelOutputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, 1));
+        AddAction(actionBaseAddress + "ChannelOutputMeterLeft", ActionFor("TrackOutputMeter", logicalSurface, track, "0"));
+        AddAction(actionBaseAddress + "ChannelOutputMeterRight", ActionFor("TrackOutputMeter", logicalSurface, track, "1"));
         
         AddAction(actionBaseAddress + "TrackOnSelection", ActionFor("MapTrackAndFXToWidgets", logicalSurface, track));
     }
@@ -322,8 +322,8 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
         AddAction(actionBaseAddress + "ChannelFaderTouch", ActionFor("TrackTouch", logicalSurface, track));
         
         Action* cycledAction = ActionFor("Cycled", logicalSurface);
-        cycledAction->AddAction(ActionFor("TrackPan", logicalSurface, track, 0x00));
-        cycledAction->AddAction(ActionFor("TrackPanWidth", logicalSurface, track, 0x30));
+        cycledAction->AddAction(ActionFor("TrackPan", logicalSurface, track, "0x00"));
+        cycledAction->AddAction(ActionFor("TrackPanWidth", logicalSurface, track, "0x30"));
         AddAction(actionBaseAddress + "ChannelRotary", cycledAction);
         AddAction(actionBaseAddress + "ChannelRotaryPush", cycledAction);
         
