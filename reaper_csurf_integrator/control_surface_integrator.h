@@ -191,9 +191,8 @@ protected:
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
-    MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
-
 public:
+    MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~MidiWidget() {};
     
     string GetGUID() { return GUID_; }
