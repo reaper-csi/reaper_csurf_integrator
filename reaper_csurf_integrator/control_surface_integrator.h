@@ -179,19 +179,19 @@ class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string GUID_ = "";
-    RealSurface* realSsurface_ = nullptr;
+    string GUID_ = RealControlSurface;
+    RealSurface* realSurface_ = nullptr;
     string suffix_= "";
     string name_ = "";
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 protected:
-    RealSurface* GetRealSurface() { return realSsurface_; }
+    RealSurface* GetRealSurface() { return realSurface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
-    MidiWidget(string GUID, RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : GUID_(GUID), realSsurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
 
 public:
     virtual ~MidiWidget() {};
@@ -483,7 +483,7 @@ class RealSurfaceChannel
 {
 private:
     string suffix_= "";
-    string GUID_ = "";
+    string GUID_ = RealControlSurface;
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     vector<string> widgetNames_;
