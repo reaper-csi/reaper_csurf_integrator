@@ -456,7 +456,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         surface->AddWidget(new Fader7Bit_MidiWidget(surface, "Character",        new MIDI_event_ex_t(0xb0, 0x12, 0x7f), new MIDI_event_ex_t(0xb0, 0x12, 0x00)));
 
         // Channel
-        channel = new RealSurfaceChannel("", surface);
+        channel = new RealSurfaceChannel("1", surface);
         surface->AddChannel(channel);
 
         //channel->AddWidget(new Fader8Bit_CSurfWidget("InputGain", surface, channel,  new MIDI_event_ex_t(0xb0, 0x6b, 0x7f)));
