@@ -287,13 +287,9 @@ void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
                         tokens.push_back(token);
                     
                     if(tokens.size() == 2)
-                    {
                         AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface));
-                    }
-                    if(tokens.size() == 3)
-                    {
+                    else if(tokens.size() == 3)
                         AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, tokens[2]));
-                    }
                 }
             }
         }
@@ -328,7 +324,7 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
                     {
                         AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track));
                     }
-                    if(tokens.size() == 3)
+                    else if(tokens.size() == 3)
                     {
                         if(tokens[0] == "TrackTouchControlled")
                         {
@@ -390,7 +386,31 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
 
     string templateFilename = surface->GetTemplateFilename();
 
+    ifstream surfaceTemplateFile(templateFilename);
     
+    for (string line; getline(surfaceTemplateFile, line) ; )
+    {
+        if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+        {
+            istringstream iss(line);
+            vector<string> tokens;
+            string token;
+            while (iss >> quoted(token))
+                tokens.push_back(token);
+            
+            if(tokens.size() == 6)
+            {
+                surface->AddWidget(WidgetFor(surface, tokens[1], tokens[0], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
+                
+
+            }
+            else if(tokens.size() == 3)
+            {
+                //AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, tokens[2]));
+            }
+        }
+    }
+
     
     
     
@@ -398,35 +418,6 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
     
     if(surface->GetName() == "Console1")
     {
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "DisplayFX", strToHex("b0"), strToHex("66"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "Order", strToHex("b0"), strToHex("0e"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "ExternalSidechain", strToHex("b0"), strToHex("11"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "FiltersToCompressor", strToHex("b0"), strToHex("3d"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "PhaseInvert", strToHex("b0"), strToHex("6c"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "Preset", strToHex("b0"), strToHex("3a"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "Shape", strToHex("b0"), strToHex("35"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "HardGate", strToHex("b0"), strToHex("3b"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "Equalizer", strToHex("b0"), strToHex("50"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "LoCurve", strToHex("b0"), strToHex("5d"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "HiCurve", strToHex("b0"), strToHex("41"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "HiGain", strToHex("b0"), strToHex("52"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "HiFrequency", strToHex("b0"), strToHex("53"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "HiMidGain", strToHex("b0"), strToHex("55"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "HiMidFrequency", strToHex("b0"), strToHex("56"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "HiMidQ", strToHex("b0"), strToHex("57"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "LoMidGain", strToHex("b0"), strToHex("58"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "LoMidFrequency", strToHex("b0"), strToHex("59"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "LoMidQ", strToHex("b0"), strToHex("5a"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "LoGain", strToHex("b0"), strToHex("5b"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "LoFrequency", strToHex("b0"), strToHex("5c"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "ButtonWithLatch", "Compressor", strToHex("b0"), strToHex("5c"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Threshold", strToHex("b0"), strToHex("2f"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Release", strToHex("b0"), strToHex("30"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Ratio", strToHex("b0"), strToHex("31"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Parallel", strToHex("b0"), strToHex("32"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Attack", strToHex("b0"), strToHex("33"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Drive", strToHex("b0"), strToHex("0f"), strToHex("00"), strToHex("7f")));
-        surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Character", strToHex("b0"), strToHex("12"), strToHex("00"), strToHex("7f")));
         surface->AddWidget(WidgetFor(surface, "GainReductionMeter", "CompressorMeter", strToDouble("0.0"), strToDouble("-20.0"),  strToHex("b0"), strToHex("73"), strToHex("00"), strToHex("7f")));
 
         
