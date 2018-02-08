@@ -86,20 +86,44 @@ int strToHex(string valueStr)
     return strtol(valueStr.c_str(), nullptr, 16);
 }
 
+double strToDouble(string valueStr)
+{
+    return strtod(valueStr.c_str(), nullptr);
+}
+
+MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, int index)
+{
+    if(widgetClass == "Display") return new Display_MidiWidget(surface, name, index);
+    
+    return new MidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+}
+
 MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, int byte1, int byte2, int byte3Min, int byte3Max)
 {
-    if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "Fader7Bit") return new Fader7Bit_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-
-    
-    
+    if(widgetClass == "Button") return new PushButton_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonCycler") return new PushButtonCycler_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "Encoder") return new Encoder_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "Fader7Bit") return new Fader7Bit_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
     return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
+MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
+{
+    if(widgetClass == "VUMeter") return new VUMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+  
+    return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+}
 
-
-
+MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
+{
+    if(widgetClass == "Fader14Bit") return new Fader14Bit_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+    
+    return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
@@ -403,18 +427,15 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Attack", strToHex("b0"), strToHex("33"), strToHex("00"), strToHex("7f")));
         surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Drive", strToHex("b0"), strToHex("0f"), strToHex("00"), strToHex("7f")));
         surface->AddWidget(WidgetFor(surface, "Fader7Bit", "Character", strToHex("b0"), strToHex("12"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "GainReductionMeter", "CompressorMeter", strToDouble("0.0"), strToDouble("-20.0"),  strToHex("b0"), strToHex("73"), strToHex("00"), strToHex("7f")));
 
-       
-        surface->AddWidget(new GainReductionMeter_MidiWidget(surface, "CompressorMeter", 0.0, -20.0, new  MIDI_event_ex_t(0xb0, 0x73, 0x7f), new  MIDI_event_ex_t(0xb0, 0x73, 0x00)));
-
-        // Channel
-        channel = new RealSurfaceChannel("1", surface);
-        surface->AddChannel(channel);
-
-        //channel->AddWidget(new Fader8Bit_CSurfWidget("InputGain", surface, channel,  new MIDI_event_ex_t(0xb0, 0x6b, 0x7f)));
         
-        channel->AddWidget(new VUMeter_MidiWidget(surface, "ChannelInputMeterLeft", -60.0, 6.0, new MIDI_event_ex_t(0xb0, 0x6e, 0x7f),     new MIDI_event_ex_t(0xb0, 0x6e, 0x00)));
-        channel->AddWidget(new VUMeter_MidiWidget(surface, "ChannelInputMeterRight", -60.0, 6.0, new MIDI_event_ex_t(0xb0, 0x6f, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x6f, 0x00)));
+        // Channel
+        channel = new RealSurfaceChannel("", surface);
+        surface->AddChannel(channel);
+        
+        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelInputMeterLeft", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("6e"), strToHex("00"), strToHex("7f")));
+        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelInputMeterRight", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("6f"), strToHex("00"), strToHex("7f")));
 
         channel->AddWidget(WidgetFor(surface, "ButtonWithLatch","ChannelMute", strToHex("b0"), strToHex("0c"), strToHex("00"), strToHex("7f")));
         channel->AddWidget(WidgetFor(surface, "ButtonWithLatch","ChannelSolo", strToHex("b0"), strToHex("0d"), strToHex("00"), strToHex("7f")));
@@ -422,90 +443,82 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
         channel->AddWidget(WidgetFor(surface, "Fader7Bit", "ChannelFader", strToHex("b0"), strToHex("07,"), strToHex("00"), strToHex("7f")));
         channel->AddWidget(WidgetFor(surface, "Fader7Bit", "ChannelRotary", strToHex("b0"), strToHex("0a,"), strToHex("00"), strToHex("7f")));
 
-        channel->AddWidget(new VUMeter_MidiWidget(surface, "ChannelOutputMeterLeft", -60.0, 6.0, new MIDI_event_ex_t(0xb0, 0x70, 0x7f),     new MIDI_event_ex_t(0xb0, 0x70, 0x00)));
-        channel->AddWidget(new VUMeter_MidiWidget(surface, "ChannelOutputMeterRight", -60.0, 6.0, new MIDI_event_ex_t(0xb0, 0x71, 0x7f),    new  MIDI_event_ex_t(0xb0, 0x71, 0x00)));
+        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelOutputMeterLeft", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("70"), strToHex("00"), strToHex("7f")));
+        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelOutputMeterRight", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("71"), strToHex("00"), strToHex("7f")));
     }
     else
     {
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Track",       new MIDI_event_ex_t(0x90, 0x28, 0x7f), new MIDI_event_ex_t(0x90, 0x28, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Send",        new MIDI_event_ex_t(0x90, 0x29, 0x7f), new MIDI_event_ex_t(0x90, 0x29, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Pan",         new MIDI_event_ex_t(0x90, 0x2a, 0x7f), new MIDI_event_ex_t(0x90, 0x2a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Plugin",      new MIDI_event_ex_t(0x90, 0x2b, 0x7f), new MIDI_event_ex_t(0x90, 0x2b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "EQ",          new MIDI_event_ex_t(0x90, 0x2c, 0x7f), new MIDI_event_ex_t(0x90, 0x2c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Instrument",  new MIDI_event_ex_t(0x90, 0x2d, 0x7f), new MIDI_event_ex_t(0x90, 0x2d, 0x00)));
-
-        surface->AddWidget(new PushButton_MidiWidget(surface, "nameValue",   new MIDI_event_ex_t(0x90, 0x34, 0x7f), new MIDI_event_ex_t(0x90, 0x34, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "smpteBeats",  new MIDI_event_ex_t(0x90, 0x35, 0x7f), new MIDI_event_ex_t(0x90, 0x35, 0x00)));
-        
-        surface->AddWidget(new PushButton_MidiWidget(surface, "NextMap",     new MIDI_event_ex_t(0x90, 0x36, 0x7f), new MIDI_event_ex_t(0x90, 0x36, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "F2",          new MIDI_event_ex_t(0x90, 0x37, 0x7f), new MIDI_event_ex_t(0x90, 0x37, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "F3",          new MIDI_event_ex_t(0x90, 0x38, 0x7f), new MIDI_event_ex_t(0x90, 0x38, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "F4",          new MIDI_event_ex_t(0x90, 0x39, 0x7f), new MIDI_event_ex_t(0x90, 0x39, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "F5",          new MIDI_event_ex_t(0x90, 0x3a, 0x7f), new MIDI_event_ex_t(0x90, 0x3a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "F6",          new MIDI_event_ex_t(0x90, 0x3b, 0x7f), new MIDI_event_ex_t(0x90, 0x3b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "UnlockTracks",  new MIDI_event_ex_t(0x90, 0x3c, 0x7f), new MIDI_event_ex_t(0x90, 0x3c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "LockTracks",    new MIDI_event_ex_t(0x90, 0x3d, 0x7f), new MIDI_event_ex_t(0x90, 0x3d, 0x00)));
-
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(surface, "Shift",     new MIDI_event_ex_t(0x90, 0x46, 0x7f), new MIDI_event_ex_t(0x90, 0x46, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(surface, "Option",    new MIDI_event_ex_t(0x90, 0x47, 0x7f), new MIDI_event_ex_t(0x90, 0x47, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(surface, "Control",   new MIDI_event_ex_t(0x90, 0x48, 0x7f), new MIDI_event_ex_t(0x90, 0x48, 0x00)));
-        surface->AddWidget(new PushButtonWithRelease_MidiWidget(surface, "Alt",       new MIDI_event_ex_t(0x90, 0x49, 0x7f), new MIDI_event_ex_t(0x90, 0x49, 0x00)));
-        
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Read",          new MIDI_event_ex_t(0x90, 0x4a, 0x7f), new MIDI_event_ex_t(0x90, 0x4a, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Write",         new MIDI_event_ex_t(0x90, 0x4b, 0x7f), new MIDI_event_ex_t(0x90, 0x4b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Trim",          new MIDI_event_ex_t(0x90, 0x4c, 0x7f), new MIDI_event_ex_t(0x90, 0x4c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Touch",         new MIDI_event_ex_t(0x90, 0x4d, 0x7f), new MIDI_event_ex_t(0x90, 0x4d, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Latch",         new MIDI_event_ex_t(0x90, 0x4e, 0x7f), new MIDI_event_ex_t(0x90, 0x4e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Group",         new MIDI_event_ex_t(0x90, 0x4f, 0x7f), new MIDI_event_ex_t(0x90, 0x4f, 0x00)));
-        
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Save",          new MIDI_event_ex_t(0x90, 0x50, 0x7f), new MIDI_event_ex_t(0x90, 0x50, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Undo",          new MIDI_event_ex_t(0x90, 0x51, 0x7f), new MIDI_event_ex_t(0x90, 0x51, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Cancel",        new MIDI_event_ex_t(0x90, 0x52, 0x7f), new MIDI_event_ex_t(0x90, 0x52, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Enter",         new MIDI_event_ex_t(0x90, 0x53, 0x7f), new MIDI_event_ex_t(0x90, 0x53, 0x00)));
-        
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Cycle",         new MIDI_event_ex_t(0x90, 0x56, 0x7f), new MIDI_event_ex_t(0x90, 0x56, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Drop",          new MIDI_event_ex_t(0x90, 0x57, 0x7f), new MIDI_event_ex_t(0x90, 0x57, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Replace",       new MIDI_event_ex_t(0x90, 0x58, 0x7f), new MIDI_event_ex_t(0x90, 0x58, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Click",         new MIDI_event_ex_t(0x90, 0x59, 0x7f), new MIDI_event_ex_t(0x90, 0x59, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Solo",          new MIDI_event_ex_t(0x90, 0x5a, 0x7f), new MIDI_event_ex_t(0x90, 0x5a, 0x00)));
-
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Up",            new MIDI_event_ex_t(0x90, 0x60, 0x7f), new MIDI_event_ex_t(0x90, 0x60, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Down",          new MIDI_event_ex_t(0x90, 0x61, 0x7f), new MIDI_event_ex_t(0x90, 0x61, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Left",          new MIDI_event_ex_t(0x90, 0x62, 0x7f), new MIDI_event_ex_t(0x90, 0x62, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Right",         new MIDI_event_ex_t(0x90, 0x63, 0x7f), new MIDI_event_ex_t(0x90, 0x63, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Zoom",          new MIDI_event_ex_t(0x90, 0x64, 0x7f), new MIDI_event_ex_t(0x90, 0x64, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Scrub",         new MIDI_event_ex_t(0x90, 0x65, 0x7f), new MIDI_event_ex_t(0x90, 0x65, 0x00)));
-
-        surface->AddWidget(new PushButton_MidiWidget(surface, "BankLeft",      new MIDI_event_ex_t(0x90, 0x2e, 0x7f), new MIDI_event_ex_t(0x90, 0x2e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "BankRight",     new MIDI_event_ex_t(0x90, 0x2f, 0x7f), new MIDI_event_ex_t(0x90, 0x2f, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "NudgeLeft",     new MIDI_event_ex_t(0x90, 0x30, 0x7f), new MIDI_event_ex_t(0x90, 0x30, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "NudgeRight",    new MIDI_event_ex_t(0x90, 0x31, 0x7f), new MIDI_event_ex_t(0x90, 0x31, 0x00)));
-
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Marker",        new MIDI_event_ex_t(0x90, 0x54, 0x7f), new MIDI_event_ex_t(0x90, 0x54, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Nudge",         new MIDI_event_ex_t(0x90, 0x55, 0x7f), new MIDI_event_ex_t(0x90, 0x55, 0x00)));
-
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Rewind",        new MIDI_event_ex_t(0x90, 0x5b, 0x7f), new MIDI_event_ex_t(0x90, 0x5b, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "FastForward",   new MIDI_event_ex_t(0x90, 0x5c, 0x7f), new MIDI_event_ex_t(0x90, 0x5c, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Stop",          new MIDI_event_ex_t(0x90, 0x5d, 0x7f), new MIDI_event_ex_t(0x90, 0x5d, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Play",          new MIDI_event_ex_t(0x90, 0x5e, 0x7f), new MIDI_event_ex_t(0x90, 0x5e, 0x00)));
-        surface->AddWidget(new PushButton_MidiWidget(surface, "Record",        new MIDI_event_ex_t(0x90, 0x5f, 0x7f), new MIDI_event_ex_t(0x90, 0x5f, 0x00)));
+        surface->AddWidget(WidgetFor(surface, "Button", "Track", strToHex("90"), strToHex("28"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Send", strToHex("90"), strToHex("29"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Pan", strToHex("90"), strToHex("2a"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Plugin", strToHex("90"), strToHex("2b"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "EQ", strToHex("90"), strToHex("2c"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Instrument", strToHex("90"), strToHex("2d"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "nameValue", strToHex("90"), strToHex("34"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "smpteBeats", strToHex("90"), strToHex("35"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F1", strToHex("90"), strToHex("36"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F2", strToHex("90"), strToHex("37"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F3", strToHex("90"), strToHex("38"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F4", strToHex("90"), strToHex("39"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F5", strToHex("90"), strToHex("3a"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F6", strToHex("90"), strToHex("3b"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F7", strToHex("90"), strToHex("3c"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "F8", strToHex("90"), strToHex("3d"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "ButtonWithRelease", "Shift", strToHex("90"), strToHex("46"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "ButtonWithRelease", "Option", strToHex("90"), strToHex("47"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "ButtonWithRelease", "Control", strToHex("90"), strToHex("48"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "ButtonWithRelease", "Alt", strToHex("90"), strToHex("49"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Read", strToHex("90"), strToHex("4a"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Write", strToHex("90"), strToHex("4b"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Trim", strToHex("90"), strToHex("4c"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Touch", strToHex("90"), strToHex("4d"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Latch", strToHex("90"), strToHex("4e"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Group", strToHex("90"), strToHex("4f"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Save", strToHex("90"), strToHex("50"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Undo", strToHex("90"), strToHex("51"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Cancel", strToHex("90"), strToHex("52"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Enter", strToHex("90"), strToHex("53"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Cycle", strToHex("90"), strToHex("56"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Drop", strToHex("90"), strToHex("57"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Replace", strToHex("90"), strToHex("58"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Click", strToHex("90"), strToHex("59"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Solo", strToHex("90"), strToHex("5a"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Up", strToHex("90"), strToHex("60"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Down", strToHex("90"), strToHex("61"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Left", strToHex("90"), strToHex("62"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Right", strToHex("90"), strToHex("63"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Zoom", strToHex("90"), strToHex("64"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Scrub", strToHex("90"), strToHex("65"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "BankLeft", strToHex("90"), strToHex("2e"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "BankRight", strToHex("90"), strToHex("2f"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "NudgeLeft", strToHex("90"), strToHex("30"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "NudgeRight", strToHex("90"), strToHex("31"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Marker", strToHex("90"), strToHex("54"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Nudge", strToHex("90"), strToHex("55"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Rewind", strToHex("90"), strToHex("5b"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "FastForward", strToHex("90"), strToHex("5c"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Stop", strToHex("90"), strToHex("5d"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Play", strToHex("90"), strToHex("5e"), strToHex("00"), strToHex("7f")));
+        surface->AddWidget(WidgetFor(surface, "Button", "Record", strToHex("90"), strToHex("5f"), strToHex("00"), strToHex("7f")));
         
         for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
         {
             channel = new RealSurfaceChannel(to_string(i + 1), surface);
             surface->AddChannel(channel);
             
-            channel->AddWidget(new PushButtonWithRelease_MidiWidget(surface, "ChannelFaderTouch", new MIDI_event_ex_t(0x90, 0x68 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x68 + i, 0x00)));
-            
-            channel->AddWidget(new PushButtonCycler_MidiWidget(surface, "ChannelRotaryPush", new MIDI_event_ex_t(0x90, 0x20 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x20 + i, 0x00)));
-            channel->AddWidget(new Encoder_MidiWidget(surface, "ChannelRotary", new MIDI_event_ex_t(0xb0, 0x10 + i, 0x7f), new MIDI_event_ex_t(0xb0, 0x10 + i, 0x00)));
+            channel->AddWidget(WidgetFor(surface, "ButtonWithRelease", "ChannelFaderTouch", strToHex("90"), strToHex("68") + i, strToHex("00"), strToHex("7f")));
 
-            channel->AddWidget(new Display_MidiWidget(surface, "ChannelDisplay", i));
-            channel->AddWidget(new Fader14Bit_MidiWidget(surface, "ChannelFader", -72.0, 12.0, new MIDI_event_ex_t(0xe0 + i, 0x7f, 0x7f), new MIDI_event_ex_t(0xe0 + i, 0x00, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(surface, "ChannelRecordArm",   new MIDI_event_ex_t(0x90, 0x00 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x00 + i, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(surface, "ChannelSolo",        new MIDI_event_ex_t(0x90, 0x08 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x08 + i, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(surface, "ChannelMute",        new MIDI_event_ex_t(0x90, 0x10 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x10 + i, 0x00)));
-            channel->AddWidget(new PushButton_MidiWidget(surface, "ChannelSelect",      new MIDI_event_ex_t(0x90, 0x18 + i, 0x7f), new MIDI_event_ex_t(0x90, 0x18 + i, 0x00)));
+            channel->AddWidget(WidgetFor(surface, "ButtonCycler", "ChannelRotaryPush", strToHex("90"), strToHex("20") + i, strToHex("00"), strToHex("7f")));
+            channel->AddWidget(WidgetFor(surface, "Encoder", "ChannelRotary", strToHex("b0"), strToHex("10") + i, strToHex("00"), strToHex("7f")));
+
+            channel->AddWidget(WidgetFor(surface, "Display", "ChannelDisplay", i));
+            
+            channel->AddWidget(WidgetFor(surface, "Fader14Bit", "ChannelFader", strToDouble("-72.0"), strToDouble("12.0"), strToHex("e0") + i, strToHex("00"), strToHex("7f"), strToHex("00"), strToHex("7f")));
+           
+            channel->AddWidget(WidgetFor(surface, "Button", "ChannelRecordArm", strToHex("90"), strToHex("00") + i, strToHex("00"), strToHex("7f")));
+            channel->AddWidget(WidgetFor(surface, "Button", "ChannelSolo", strToHex("90"), strToHex("08") + i, strToHex("00"), strToHex("7f")));
+            channel->AddWidget(WidgetFor(surface, "Button", "ChannelMute", strToHex("90"), strToHex("10") + i, strToHex("00"), strToHex("7f")));
+            channel->AddWidget(WidgetFor(surface, "Button", "ChannelSelect", strToHex("90"), strToHex("18") + i, strToHex("00"), strToHex("7f")));
         }
     }
 }
@@ -550,6 +563,9 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
  surface->AddWidget(new Fader8Bit_CSurfWidget("Punch", surface, channel,          new MIDI_event_ex_t(0xb0, 0x39, 0x7f)l));
  
  surface->AddWidget(new VUMeter_CSurfWidget(GateMeter, surface, channel, new  MIDI_event_ex_t(0xb0, 0x72, 0x7f)));
+
+ channel->AddWidget(new Fader8Bit_CSurfWidget("InputGain", surface, channel,  new MIDI_event_ex_t(0xb0, 0x6b, 0x7f)));
+
  */
 
 
