@@ -9,8 +9,6 @@
 
 #include "control_surface_base_actions.h"
 
-#include <cstdlib>
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Track_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -657,7 +655,7 @@ protected:
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName,
+              GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName,
                                                 clampedAndNormalized(value, GetLogicalSurface()->GetWidgetMaxDB(groupName, surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(groupName, surfaceName, widgetName)));
         else
             GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName, 0.0);
