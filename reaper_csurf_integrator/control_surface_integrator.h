@@ -235,6 +235,7 @@ protected:
     const string name_ = "";
     string templateFilename_ = "";
     SurfaceGroup* surfaceGroup_ = nullptr;
+    int numChannels_ = 0;
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
     map<string, MidiWidget*> widgetsByName_;
@@ -244,7 +245,7 @@ protected:
     bool zoom_ = false;
     bool scrub_ = false;
     
-    RealSurface(const string name, string templateFilename, int numBankableChannels) : name_(name),  templateFilename_(templateFilename), numBankableChannels_(numBankableChannels) {}
+    RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels) : name_(name),  templateFilename_(templateFilename), numChannels_(numChannels), numBankableChannels_(numBankableChannels) {}
     
 public:
     virtual ~RealSurface() {};
@@ -253,6 +254,7 @@ public:
     string GetTemplateFilename() const { return templateFilename_; }
     SurfaceGroup* GetSurfaceGroup() { return surfaceGroup_; }
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
+    int GetNumChannels() { return numChannels_; }
     int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
@@ -447,8 +449,8 @@ public:
         if(midiOutput_) delete midiOutput_;
     }
     
-    MidiCSurf(const string name, string templateFilename, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, templateFilename, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    MidiCSurf(const string name, string templateFilename, int numChannels, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, templateFilename, numChannels, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
@@ -1438,18 +1440,20 @@ private:
                 }
                 else if(tokens[0] == "RealSurface")
                 {
-                    if(tokens.size() != 6)
+                    if(tokens.size() != 7)
                         continue;
                     
-                    int numBankableChannels = atoi(tokens[2].c_str());
+                    int numChannels = atoi(tokens[2].c_str());
                     
-                    int channelIn = atoi(tokens[3].c_str());
+                    int numBankableChannels = atoi(tokens[3].c_str());
+
+                    int channelIn = atoi(tokens[4].c_str());
                     channelIn--; // MIDI channels are 0  based
                     
-                    int channelOut = atoi(tokens[4].c_str());
+                    int channelOut = atoi(tokens[5].c_str());
                     channelOut--; // MIDI channels are 0  based
                     
-                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[5], numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
                 else if(tokens[0] == "LogicalSurface")
                 {
@@ -1568,7 +1572,7 @@ public:
     virtual ~OSCCSurf() {};
     
     OSCCSurf(const string name, string templateFilename, LogicalSurface* surface)
-    : RealSurface("OSC", templateFilename, 8) {}
+    : RealSurface("OSC", templateFilename, 8, 8) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1579,7 +1583,7 @@ public:
     virtual ~WebCSurf() {};
     
     WebCSurf(const string name, string templateFilename, LogicalSurface* surface)
-    : RealSurface("Web", templateFilename, 8) {};
+    : RealSurface("Web", templateFilename, 8, 8) {};
 };
 
 #endif /* control_surface_integrator.h */
