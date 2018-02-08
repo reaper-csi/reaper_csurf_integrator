@@ -91,14 +91,14 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, int index)
+MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int index)
 {
     if(widgetClass == "Display") return new Display_MidiWidget(surface, name, index);
     
     return new MidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, int byte1, int byte2, int byte3Min, int byte3Max)
+MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Button") return new PushButton_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -110,7 +110,7 @@ MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, int
     return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
+MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "VUMeter") return new VUMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -118,7 +118,7 @@ MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, dou
     return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string widgetClass, string name, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
+MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Fader14Bit") return new Fader14Bit_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
     
@@ -380,9 +380,8 @@ void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, strin
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CSurfManager::InitRealSurface(RealSurface* surface)
 {
-    RealSurfaceChannel* channel = nullptr;
-    string templateFilename = surface->GetTemplateFilename();
-    ifstream surfaceTemplateFile(templateFilename);
+    ifstream surfaceTemplateFile(surface->GetTemplateFilename());
+    bool inChannel = false;
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
@@ -394,51 +393,47 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             while (iss >> quoted(token))
                 tokens.push_back(token);
             
-            if(tokens.size() == 6)
-                surface->AddWidget(WidgetFor(surface, tokens[1], tokens[0], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
+            if(tokens.size() == 1)
+            {
+                if(tokens[0] == "ChannelEnd")
+                    inChannel = false;
+                else if(tokens[0] == "Channel")
+                {
+                    inChannel = true;
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        surface->AddChannel(new RealSurfaceChannel(to_string(i + 1), surface));
+                }
+            }
+            else if(tokens.size() == 2)
+            {
+                if(tokens[1] == "Display" && inChannel)
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                        surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], i));
+            }
+            else if(tokens.size() == 6)
+            {
+                if(! inChannel)
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
+                else
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                        surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5])));
+            }
             else if(tokens.size() == 8)
-                surface->AddWidget(WidgetFor(surface, tokens[1], tokens[0], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
-        }
-    }
-    
-    if(surface->GetName() == "Console1")
-    {
-        // Channel
-        channel = new RealSurfaceChannel("", surface);
-        surface->AddChannel(channel);
-        
-        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelInputMeterLeft", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("6e"), strToHex("00"), strToHex("7f")));
-        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelInputMeterRight", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("6f"), strToHex("00"), strToHex("7f")));
-
-        channel->AddWidget(WidgetFor(surface, "ButtonWithLatch","ChannelMute", strToHex("b0"), strToHex("0c"), strToHex("00"), strToHex("7f")));
-        channel->AddWidget(WidgetFor(surface, "ButtonWithLatch","ChannelSolo", strToHex("b0"), strToHex("0d"), strToHex("00"), strToHex("7f")));
-       
-        channel->AddWidget(WidgetFor(surface, "Fader7Bit", "ChannelFader", strToHex("b0"), strToHex("07,"), strToHex("00"), strToHex("7f")));
-        channel->AddWidget(WidgetFor(surface, "Fader7Bit", "ChannelRotary", strToHex("b0"), strToHex("0a,"), strToHex("00"), strToHex("7f")));
-
-        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelOutputMeterLeft", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("70"), strToHex("00"), strToHex("7f")));
-        channel->AddWidget(WidgetFor(surface, "VUMeter", "ChannelOutputMeterRight", strToDouble("-60.0"), strToDouble("6.0"), strToHex("b0"), strToHex("71"), strToHex("00"), strToHex("7f")));
-    }
-    else
-    {
-        for(int i = 0; i < surface->GetNumBankableChannels(); ++i)
-        {
-            channel = new RealSurfaceChannel(to_string(i + 1), surface);
-            surface->AddChannel(channel);
-            
-            channel->AddWidget(WidgetFor(surface, "ButtonWithRelease", "ChannelFaderTouch", strToHex("90"), strToHex("68") + i, strToHex("00"), strToHex("7f")));
-
-            channel->AddWidget(WidgetFor(surface, "ButtonCycler", "ChannelRotaryPush", strToHex("90"), strToHex("20") + i, strToHex("00"), strToHex("7f")));
-            channel->AddWidget(WidgetFor(surface, "Encoder", "ChannelRotary", strToHex("b0"), strToHex("10") + i, strToHex("00"), strToHex("7f")));
-
-            channel->AddWidget(WidgetFor(surface, "Display", "ChannelDisplay", i));
-            
-            channel->AddWidget(WidgetFor(surface, "Fader14Bit", "ChannelFader", strToDouble("-72.0"), strToDouble("12.0"), strToHex("e0") + i, strToHex("00"), strToHex("7f"), strToHex("00"), strToHex("7f")));
-           
-            channel->AddWidget(WidgetFor(surface, "Button", "ChannelRecordArm", strToHex("90"), strToHex("00") + i, strToHex("00"), strToHex("7f")));
-            channel->AddWidget(WidgetFor(surface, "Button", "ChannelSolo", strToHex("90"), strToHex("08") + i, strToHex("00"), strToHex("7f")));
-            channel->AddWidget(WidgetFor(surface, "Button", "ChannelMute", strToHex("90"), strToHex("10") + i, strToHex("00"), strToHex("7f")));
-            channel->AddWidget(WidgetFor(surface, "Button", "ChannelSelect", strToHex("90"), strToHex("18") + i, strToHex("00"), strToHex("7f")));
+            {
+                if(! inChannel)
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+                else
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                        surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])));
+            }
+             else if(tokens.size() == 9)
+            {
+                if(! inChannel)
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+                else
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                        surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+            }
         }
     }
 }
