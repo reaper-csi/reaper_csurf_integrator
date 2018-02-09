@@ -4,10 +4,9 @@
 //
 //
 
-// Note for Windows environments
-// use std::byte for C++17 byte
-// use ::byte for Windows byte
-
+// Note for Windows environments:
+//  use std::byte for C++17 byte
+//  use ::byte for Windows byte
 
 #ifndef control_surface_integrator
 #define control_surface_integrator

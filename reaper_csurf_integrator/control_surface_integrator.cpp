@@ -428,7 +428,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
                 else
                     surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
             }
-             else if(tokens.size() == 9)
+            else if(tokens.size() == 9)
             {
                 if(inChannel)
                     for(int i = 0; i < surface->GetNumChannels(); i++)
