@@ -11,6 +11,38 @@ extern REAPER_PLUGIN_HINSTANCE g_hInst;
 static CSurfIntegrator* integrator = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// structs
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct RealSurfaceLine
+{
+    string name = "";
+    int numChannels = 0;
+    int numBankableChannels = 0;
+    int midiIn = 0;
+    int midiOut = 0;
+    string templateFilename = "";
+};
+
+struct RealSurfaceContextLine
+{
+    RealSurfaceLine* realSurface = nullptr;
+    string actionTemplateFolder = "";
+    string FXTemplateFolder = "";
+};
+
+struct SurfaceGroupLine
+{
+    string name = "";
+    vector<RealSurfaceContextLine> surfaceContexts;
+};
+
+struct LogicalSurfaceLine
+{
+    string name = "";
+    vector<SurfaceGroup> surfaceGroups;
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 CSurfIntegrator::CSurfIntegrator()
@@ -108,6 +140,10 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
 
 static int dlgResult = 0;
 static char name[BUFSZ];
+
+vector<RealSurfaceLine> realSurfaces;
+
+vector<LogicalSurfaceLine> logicalSurfaces;
 
 static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -391,6 +427,25 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
         case WM_INITDIALOG:
         {
+            ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+            
+            for (string line; getline(iniFile, line) ; )
+            {
+                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                {
+                    istringstream iss(line);
+                    vector<string> tokens;
+                    string token;
+                    
+                    while (iss >> quoted(token))
+                        tokens.push_back(token);
+                    
+                }
+            }
+            
+            
+            
+            
             
         }
             
