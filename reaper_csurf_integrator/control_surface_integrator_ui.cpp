@@ -25,7 +25,7 @@ struct RealSurfaceLine
 
 struct RealSurfaceContextLine
 {
-    RealSurfaceLine* realSurface = nullptr;
+    string realSurfaceName = "";
     string actionTemplateFolder = "";
     string FXTemplateFolder = "";
 };
@@ -33,13 +33,13 @@ struct RealSurfaceContextLine
 struct SurfaceGroupLine
 {
     string name = "";
-    vector<RealSurfaceContextLine> surfaceContexts;
+    vector<RealSurfaceContextLine*> realSurfaceContexts;
 };
 
 struct LogicalSurfaceLine
 {
     string name = "";
-    vector<SurfaceGroup> surfaceGroups;
+    vector<SurfaceGroupLine*> surfaceGroups;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,9 +141,9 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
 static int dlgResult = 0;
 static char name[BUFSZ];
 
-vector<RealSurfaceLine> realSurfaces;
+vector<RealSurfaceLine*> realSurfaces;
 
-vector<LogicalSurfaceLine> logicalSurfaces;
+vector<LogicalSurfaceLine*> logicalSurfaces;
 
 static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -417,14 +417,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
             break ;
             
-
-            
-            
-            
-            
-            
-            
-            
         case WM_INITDIALOG:
         {
             ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
@@ -440,11 +432,85 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
+                    if(tokens[0] == "MidiInMonitor")
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "On")
+                            CheckDlgButton(hwndDlg, IDC_CHECK_MidiInMon, BST_CHECKED);
+                    }
+                    else if(tokens[0] == "MidiOutMonitor")
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "On")
+                            CheckDlgButton(hwndDlg, IDC_CHECK_MidiOutMon, BST_CHECKED);
+                    }
+                    else if(tokens[0] == "VSTMonitor")
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "On")
+                            CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
+                    }
+                    else if(tokens[0] == "RealSurface")
+                    {
+                        if(tokens.size() != 7)
+                            continue;
+                    
+                        RealSurfaceLine* surface = new RealSurfaceLine();
+                        surface->name = tokens[1];
+                        surface->numChannels = atoi(tokens[2].c_str());
+                        surface->numBankableChannels = atoi(tokens[3].c_str());
+                        surface->midiIn = atoi(tokens[4].c_str());
+                        surface->midiOut = atoi(tokens[5].c_str());
+                        surface->templateFilename = tokens[6];
+                        
+                        realSurfaces.push_back(surface);
+                        
+                    }
+                    else if(tokens[0] == "LogicalSurface")
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        LogicalSurfaceLine* logicalSurface = new LogicalSurfaceLine();
+                        logicalSurface->name = tokens[1];
+                        logicalSurfaces.push_back(logicalSurface);
+                    }
+                    else if(tokens[0] == "SurfaceGroup")
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+ 
+                        SurfaceGroupLine* surfaceGroup = new SurfaceGroupLine();
+                        surfaceGroup->name = tokens[1];
+                        logicalSurfaces.back()->surfaceGroups.push_back(surfaceGroup);
+
+                        //currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
+                        //currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
+                    }
+                    else if(tokens[0] == "Surface")
+                    {
+                        if(tokens.size() != 4)
+                            continue;
+                        
+                        RealSurfaceContextLine* realSurfaceContext = new RealSurfaceContextLine();
+                        realSurfaceContext->realSurfaceName = tokens[1];
+                        realSurfaceContext->actionTemplateFolder = tokens[2];
+                        realSurfaceContext->FXTemplateFolder = tokens[3];
+
+                        logicalSurfaces.back()->surfaceGroups.back()->realSurfaceContexts.push_back(realSurfaceContext);
+                        
+                    }
                 }
             }
             
             
-            
+            int blah = 0;
             
             
         }
