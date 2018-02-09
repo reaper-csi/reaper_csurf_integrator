@@ -1021,7 +1021,6 @@ class LogicalSurface
 private:
     string name_ = "";
     CSurfManager* manager_ = nullptr;
-    map<string, FXTemplate *> fxTemplates_;
     map<string, SurfaceGroup*> surfaceGroups_;
     map<string, vector<Action*>> actions_;
     vector<string> mappedTrackGUIDs_;
@@ -1033,17 +1032,11 @@ private:
             surfaceGroup->SetImmobilizedTracks();
     }
     
-    void AddFXMap(FXTemplate* fxMap)
-    {
-        fxTemplates_[fxMap->GetName()] = fxMap;
-    }
-    
 public:
     LogicalSurface(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
 
     string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
-    map<string, FXTemplate *> GetFXMaps() { return fxTemplates_; }
    
     bool GetTouchState(string trackGUID, int touchedControl)
     {
