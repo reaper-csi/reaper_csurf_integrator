@@ -245,8 +245,8 @@ protected:
     bool zoom_ = false;
     bool scrub_ = false;
     
-    RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels) : name_(name),  templateFilename_(templateFilename), numChannels_(numChannels), numBankableChannels_(numBankableChannels) {}
-    
+    RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels); 
+
 public:
     virtual ~RealSurface() {};
     
@@ -288,11 +288,6 @@ public:
     void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
     {
         surfaceGroup_ = surfaceGroup;
-    }
-
-    void AddChannel(RealSurfaceChannel*  channel)
-    {
-        channels_.push_back(channel);
     }
     
     void AddWidget(MidiWidget* widget)

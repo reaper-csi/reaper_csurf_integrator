@@ -161,6 +161,12 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+RealSurface::RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels) : name_(name),  templateFilename_(templateFilename), numChannels_(numChannels), numBankableChannels_(numBankableChannels)
+{
+    for(int i = 0; i < numChannels_; i++)
+        channels_.push_back(new RealSurfaceChannel(to_string(i + 1), this));
+}
+
 void RealSurface::MapTrackToWidgets(MediaTrack *track)
 {
     string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
@@ -395,44 +401,40 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             
             if(tokens.size() == 1)
             {
-                if(tokens[0] == "ChannelEnd")
-                    inChannel = false;
-                else if(tokens[0] == "Channel")
-                {
+                if(tokens[0] == "Channel")
                     inChannel = true;
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
-                        surface->AddChannel(new RealSurfaceChannel(to_string(i + 1), surface));
-                }
+                else if(tokens[0] == "ChannelEnd")
+                    inChannel = false;
             }
             else if(tokens.size() == 2)
             {
-                if(tokens[1] == "Display" && inChannel)
-                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                if(inChannel)
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], i));
             }
             else if(tokens.size() == 6)
             {
-                if(! inChannel)
-                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
-                else
-                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                if(inChannel)
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5])));
+                else
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
             }
             else if(tokens.size() == 8)
             {
-                if(! inChannel)
-                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
-                else
-                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                if(inChannel)
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])));
+                else
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
             }
              else if(tokens.size() == 9)
             {
-                if(! inChannel)
-                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
-                else
-                    for(int i = 0; i < surface->GetChannels().size(); i++)
+                if(inChannel)
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+                else
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
             }
         }
     }
