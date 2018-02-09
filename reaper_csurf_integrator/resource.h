@@ -25,6 +25,7 @@
 #define IDC_EDIT_RealSurfaceName        1022
 #define IDC_EDIT_RealSurfaceNumChannels 1023
 #define IDC_LIST_SurfaceGroups          1024
+#define IDC_EDIT_RealSurfaceNumBankableChannels 1024
 #define IDC_BUTTON_AddSurfaceGroup      1025
 #define IDC_BUTTON_EditSurfaceGroup     1026
 #define IDC_BUTTON_RemoveSurfaceGroup   1027
