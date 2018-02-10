@@ -23,7 +23,7 @@ struct RealSurfaceLine
     string templateFilename = "";
 };
 
-struct RealSurfaceContextLine
+struct SurfaceLine
 {
     string realSurfaceName = "";
     string actionTemplateFolder = "";
@@ -33,7 +33,7 @@ struct RealSurfaceContextLine
 struct SurfaceGroupLine
 {
     string name = "";
-    vector<RealSurfaceContextLine*> realSurfaceContexts;
+    vector<SurfaceLine*> realSurfaceContexts;
 };
 
 struct LogicalSurfaceLine
@@ -120,16 +120,15 @@ static IReaperControlSurface *createFunc(const char *type_string, const char *co
     return integrator;
 }
 
-void FillCombo(HWND hwndDlg, int x, char * buf, int comboId)
+void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
 {
     int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-void FillCombo(HWND hwndDlg, string buf, int comboId)
+void AddListEntry(HWND hwndDlg, string buf, int comboId)
 {
-    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf.c_str());
-    //SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
+    SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
 }
 
 void AddNoneToMIDIList(HWND hwndDlg, int comboId)
@@ -197,13 +196,13 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             int n = GetNumMIDIInputs();
             for (int i = 0; i < n; i++)
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
-                    FillCombo(hwndDlg, i, buf, IDC_COMBO_MidiIn);
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
             
             AddNoneToMIDIList(hwndDlg, IDC_COMBO_MidiOut);
             n = GetNumMIDIOutputs();
             for (int i = 0; i < n; i++)
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
-                    FillCombo(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
             
             string path(DAW::GetResourcePath());
             path += "/CSI/rst/";
@@ -213,7 +212,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
                 {
                     strcpy(buf, filename.c_str());
-                    FillCombo(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
+                    AddComboEntry(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
                 }
             }
         }
@@ -303,7 +302,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
             char buf[BUFSZ];
             
             for(auto* realSurface :  integrator->GetManager()->GetRealSurfaces())
-                FillCombo(hwndDlg, realSurface->GetName(), IDC_COMBO_RealSurface);
+                AddListEntry(hwndDlg, realSurface->GetName(), IDC_COMBO_RealSurface);
             
             string resourcePath(DAW::GetResourcePath());
             resourcePath += "/CSI/";
@@ -313,7 +312,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 if(filename[0] != '.')
                 {
                     strcpy(buf, filename.c_str());
-                    FillCombo(hwndDlg, buf, IDC_COMBO_ActionTemplates);
+                    AddListEntry(hwndDlg, buf, IDC_COMBO_ActionTemplates);
                 }
             }
 
@@ -322,7 +321,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 if(filename[0] != '.')
                 {
                     strcpy(buf, filename.c_str());
-                    FillCombo(hwndDlg, buf, IDC_COMBO_FXTemplates);
+                    AddListEntry(hwndDlg, buf, IDC_COMBO_FXTemplates);
                 }
             }
         }
@@ -471,6 +470,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         realSurfaces.push_back(surface);
                         
+                        AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
+                        
                     }
                     else if(tokens[0] == "LogicalSurface")
                     {
@@ -480,6 +481,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         LogicalSurfaceLine* logicalSurface = new LogicalSurfaceLine();
                         logicalSurface->name = tokens[1];
                         logicalSurfaces.push_back(logicalSurface);
+                        
+                        AddListEntry(hwndDlg, logicalSurface->name, IDC_LIST_LogicalSurfaces);
+
                     }
                     else if(tokens[0] == "SurfaceGroup")
                     {
@@ -489,30 +493,32 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         SurfaceGroupLine* surfaceGroup = new SurfaceGroupLine();
                         surfaceGroup->name = tokens[1];
                         logicalSurfaces.back()->surfaceGroups.push_back(surfaceGroup);
+                        
+                        AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
 
-                        //currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
-                        //currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
                     }
                     else if(tokens[0] == "Surface")
                     {
                         if(tokens.size() != 4)
                             continue;
                         
-                        RealSurfaceContextLine* realSurfaceContext = new RealSurfaceContextLine();
-                        realSurfaceContext->realSurfaceName = tokens[1];
-                        realSurfaceContext->actionTemplateFolder = tokens[2];
-                        realSurfaceContext->FXTemplateFolder = tokens[3];
+                        SurfaceLine* surface = new SurfaceLine();
+                        surface->realSurfaceName = tokens[1];
+                        surface->actionTemplateFolder = tokens[2];
+                        surface->FXTemplateFolder = tokens[3];
 
-                        logicalSurfaces.back()->surfaceGroups.back()->realSurfaceContexts.push_back(realSurfaceContext);
-                        
+                        logicalSurfaces.back()->surfaceGroups.back()->realSurfaceContexts.push_back(surface);
+
+                        AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces );
                     }
                 }
             }
             
-            
-            int blah = 0;
-            
-            
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, 0, 0);
+
         }
             
             break;
