@@ -28,6 +28,21 @@
 #include "direntWin.h"
 #endif
 
+const string Control_Surface_Integrator = "Control Surface Integrator";
+const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
+const string DefaultGUID = "Control Surface Integrator GUID";
+const string GainReductionDB = "GainReductionDB";
+const string TrackOnSelection = "TrackOnSelection";
+const string Channel = "Channel";
+const string ChannelEnd = "ChannelEnd";
+const string MidiInMonitor = "MidiInMonitor";
+const string MidiOutMonitor = "MidiOutMonitor";
+const string VSTMonitor = "VSTMonitor";
+const string RealSurface_ = "RealSurface";
+const string LogicalSurface_ = "LogicalSurface";
+const string SurfaceGroup_ = "SurfaceGroup";
+const string Surface_ = "Surface";
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,12 +78,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The following are all reserved words in the template vocabulary
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
-const string RealControlSurface = "RealControlSurface";
-const string GainReductionDB = "GainReductionDB";
-const string TrackOnSelection = "TrackOnSelection";
 
 //
 // An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Group1Mixer1Fader"
@@ -178,7 +188,7 @@ class MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string GUID_ = RealControlSurface;
+    string GUID_ = DefaultGUID;
     RealSurface* realSurface_ = nullptr;
     string suffix_= "";
     string name_ = "";
@@ -478,7 +488,7 @@ class RealSurfaceChannel
 {
 private:
     string suffix_= "";
-    string GUID_ = RealControlSurface;
+    string GUID_ = DefaultGUID;
     RealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     vector<string> widgetNames_;
@@ -1401,7 +1411,7 @@ private:
                 while (iss >> quoted(token))
                     tokens.push_back(token);
                 
-                if(tokens[0] == "MidiInMonitor")
+                if(tokens[0] == MidiInMonitor)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1409,7 +1419,7 @@ private:
                     if(tokens[1] == "On")
                         midiInMonitor = true;
                 }
-                else if(tokens[0] == "MidiOutMonitor")
+                else if(tokens[0] == MidiOutMonitor)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1417,7 +1427,7 @@ private:
                     if(tokens[1] == "On")
                         midiOutMonitor = true;
                 }
-                else if(tokens[0] == "VSTMonitor")
+                else if(tokens[0] == VSTMonitor)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1425,24 +1435,19 @@ private:
                     if(tokens[1] == "On")
                         VSTMonitor_ = true;
                 }
-                else if(tokens[0] == "RealSurface")
+                else if(tokens[0] == RealSurface_)
                 {
                     if(tokens.size() != 7)
                         continue;
                     
                     int numChannels = atoi(tokens[2].c_str());
-                    
                     int numBankableChannels = atoi(tokens[3].c_str());
-
                     int channelIn = atoi(tokens[4].c_str());
-                    channelIn--; // MIDI channels are 0  based
-                    
                     int channelOut = atoi(tokens[5].c_str());
-                    channelOut--; // MIDI channels are 0  based
-                    
+        
                     AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
-                else if(tokens[0] == "LogicalSurface")
+                else if(tokens[0] == LogicalSurface_)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1451,7 +1456,7 @@ private:
                     logicalSurfaces_.push_back(currentLogicalSurface);
                     
                 }
-                else if(tokens[0] == "SurfaceGroup")
+                else if(tokens[0] == SurfaceGroup_)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1459,7 +1464,7 @@ private:
                     currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
                     currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
                 }
-                else if(tokens[0] == "Surface")
+                else if(tokens[0] == Surface_)
                 {
                     if(tokens.size() != 4)
                         continue;

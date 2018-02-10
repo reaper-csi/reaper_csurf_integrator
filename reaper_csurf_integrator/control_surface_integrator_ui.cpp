@@ -4,6 +4,7 @@
 //
 //
 
+#include "control_surface_integrator.h"
 #include "control_surface_integrator_ui.h"
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
@@ -104,7 +105,7 @@ const char *CSurfIntegrator::GetTypeString()
 
 const char *CSurfIntegrator::GetDescString()
 {
-    descspace.Set("Control Surface Integrator");
+    descspace.Set(Control_Surface_Integrator.c_str());
     return descspace.Get();
 }
 
@@ -431,7 +432,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    if(tokens[0] == "MidiInMonitor")
+                    if(tokens[0] == MidiInMonitor)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -439,7 +440,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_MidiInMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == "MidiOutMonitor")
+                    else if(tokens[0] == MidiOutMonitor)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -447,7 +448,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_MidiOutMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == "VSTMonitor")
+                    else if(tokens[0] == VSTMonitor)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -455,7 +456,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == "RealSurface")
+                    else if(tokens[0] == RealSurface_)
                     {
                         if(tokens.size() != 7)
                             continue;
@@ -473,7 +474,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
                         
                     }
-                    else if(tokens[0] == "LogicalSurface")
+                    else if(tokens[0] == LogicalSurface_)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -485,7 +486,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, logicalSurface->name, IDC_LIST_LogicalSurfaces);
 
                     }
-                    else if(tokens[0] == "SurfaceGroup")
+                    else if(tokens[0] == SurfaceGroup_)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -497,7 +498,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
 
                     }
-                    else if(tokens[0] == "Surface")
+                    else if(tokens[0] == Surface_)
                     {
                         if(tokens.size() != 4)
                             continue;
@@ -573,7 +574,7 @@ static HWND configFunc(const char *type_string, HWND parent, const char *initCon
 reaper_csurf_reg_t csurf_integrator_reg =
 {
     "CSI",
-    "Control Surface Integrator",
+    Control_Surface_Integrator.c_str(),
     createFunc,
     configFunc,
 };

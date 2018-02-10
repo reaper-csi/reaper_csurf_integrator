@@ -271,7 +271,7 @@ void SurfaceGroup::AddAction(string actionAddress, Action* action)
 void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
 {
     LogicalSurface* logicalSurface = GetLogicalSurface();
-    string actionBaseAddress = RealControlSurface + GetName() + surface->GetName();;
+    string actionBaseAddress = DefaultGUID + GetName() + surface->GetName();;
     string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
@@ -401,9 +401,9 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             
             if(tokens.size() == 1)
             {
-                if(tokens[0] == "Channel")
+                if(tokens[0] == Channel)
                     inChannel = true;
-                else if(tokens[0] == "ChannelEnd")
+                else if(tokens[0] == ChannelEnd)
                     inChannel = false;
             }
             else if(tokens.size() == 2)
