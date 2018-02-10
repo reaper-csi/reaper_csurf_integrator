@@ -330,23 +330,23 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
                     }
                     else if(tokens.size() == 3)
                     {
-                        if(tokens[0] == "TrackTouchControlled")
+                        if(tokens[1] == "TrackTouchControlled")
                         {
-                            string actionAddress = actionBaseAddress + tokens[2];
-                            Action* controlledAction = ActionFor(tokens[1], logicalSurface, track);
-                            AddAction(actionAddress, ActionFor(tokens[0], actionAddress, logicalSurface, track, controlledAction));
+                            string actionAddress = actionBaseAddress + tokens[0];
+                            Action* controlledAction = ActionFor(tokens[2], logicalSurface, track);
+                            AddAction(actionAddress, ActionFor(tokens[1], actionAddress, logicalSurface, track, controlledAction));
                         }
                         else
                         {
                             AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track, tokens[2]));
                         }
                     }
-                    else if(tokens[0] == "Cycled" && tokens.size() == 7)
+                    else if(tokens[1] == "Cycled" && tokens.size() == 7)
                     {
-                        Action* cycledAction = ActionFor(tokens[0], logicalSurface);
+                        Action* cycledAction = ActionFor(tokens[1], logicalSurface);
                         cycledAction->AddAction(ActionFor(tokens[3], logicalSurface, track, tokens[4]));
                         cycledAction->AddAction(ActionFor(tokens[5], logicalSurface, track, tokens[6]));
-                        AddAction(actionBaseAddress + tokens[1], cycledAction);
+                        AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
                     }
                 }
