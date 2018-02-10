@@ -34,7 +34,7 @@ struct SurfaceLine
 struct SurfaceGroupLine
 {
     string name = "";
-    vector<SurfaceLine*> realSurfaceContexts;
+    vector<SurfaceLine*> surfaces;
 };
 
 struct LogicalSurfaceLine
@@ -373,13 +373,48 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 switch(LOWORD(wParam))
                 {
+                    case IDC_LIST_LogicalSurfaces:
+                        if (HIWORD(wParam) == LBN_SELCHANGE)
+                        {
+                            int index = (int) SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
+                            {
+                                for(auto* surfaceGroup : logicalSurfaces[index]->surfaceGroups)
+                                    AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
+                            }
+                            else
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                            }
+                        }
+                        break;
+                        
+                    case IDC_LIST_SurfaceGroups:
+                        if (HIWORD(wParam) == LBN_SELCHANGE)
+                        {
+                            int logicalSurfaceIndex = (int) SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+
+                            int index = (int) SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+                            if (logicalSurfaceIndex >= 0 && index >= 0)
+                            {
+                                for(auto* surface: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[index]->surfaces)
+                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces);
+                            }
+                            else
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                            }
+                        }
+                        break;
+                        
                     case IDC_BUTTON_AddRealSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
                             if(dlgResult == IDOK)
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_ADDSTRING, 0, (LPARAM)name);
+                                AddListEntry(hwndDlg, name, IDC_LIST_RealSurfaces);
                         }
                         break ;
                         
@@ -389,7 +424,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
                             if(dlgResult == IDOK)
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_ADDSTRING, 0, (LPARAM)name);
+                                AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
                         }
                         break ;
                         
@@ -399,7 +434,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_SurfaceGroup), hwndDlg, dlgProcSurfaceGroup);
                             if(dlgResult == IDOK)
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_ADDSTRING, 0, (LPARAM)name);
+                                AddListEntry(hwndDlg, name, IDC_LIST_SurfaceGroups);
                         }
                         break ;
                         
@@ -409,7 +444,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicalSurface), hwndDlg, dlgProcLogicalSurface);
                             if(dlgResult == IDOK)
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_ADDSTRING, 0, (LPARAM)name);
+                                AddListEntry(hwndDlg, name, IDC_LIST_LogicalSurfaces);
                         }
                         
                         break ;
@@ -468,7 +503,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->midiIn = atoi(tokens[4].c_str());
                         surface->midiOut = atoi(tokens[5].c_str());
                         surface->templateFilename = tokens[6];
-                        
                         realSurfaces.push_back(surface);
                         
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
@@ -494,9 +528,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         SurfaceGroupLine* surfaceGroup = new SurfaceGroupLine();
                         surfaceGroup->name = tokens[1];
                         logicalSurfaces.back()->surfaceGroups.push_back(surfaceGroup);
-                        
-                        AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
-
                     }
                     else if(tokens[0] == Surface_)
                     {
@@ -507,10 +538,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->realSurfaceName = tokens[1];
                         surface->actionTemplateFolder = tokens[2];
                         surface->FXTemplateFolder = tokens[3];
-
-                        logicalSurfaces.back()->surfaceGroups.back()->realSurfaceContexts.push_back(surface);
-
-                        AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces );
+                        logicalSurfaces.back()->surfaceGroups.back()->surfaces.push_back(surface);
                     }
                 }
             }
