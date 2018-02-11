@@ -162,10 +162,7 @@ private:
     int displayMode_ = 0;
     
 public:
-    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track, string displayModeStr) : TrackDouble_Action(logicalSurface, track)
-    {
-        displayMode_ = atol(displayModeStr.c_str());
-    }
+    TrackPan_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
 
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
     {
@@ -187,7 +184,7 @@ class TrackPanWidth_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int displayMode_ = 0;
+    int displayMode_ = 3;
     
 protected:
     virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
@@ -196,10 +193,7 @@ protected:
     }
     
 public:
-    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track, string displayModeStr) : TrackDouble_Action(logicalSurface, track)
-    {
-        displayMode_ = atol(displayModeStr.c_str());
-    }
+    TrackPanWidth_Action(LogicalSurface* logicalSurface, MediaTrack* track) : TrackDouble_Action(logicalSurface, track) {}
 
     virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
