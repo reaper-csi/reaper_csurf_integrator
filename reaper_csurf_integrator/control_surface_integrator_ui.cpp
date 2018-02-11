@@ -327,31 +327,19 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     {
         case WM_INITDIALOG:
         {
-            char buf[BUFSZ];
-            
-            for(auto* realSurface :  integrator->GetManager()->GetRealSurfaces())
-                AddListEntry(hwndDlg, realSurface->GetName(), IDC_COMBO_RealSurface);
+            for(auto* surface :  realSurfaces)
+                AddComboEntry(hwndDlg, 0, (char *)surface->name.c_str(), IDC_COMBO_RealSurface);
             
             string resourcePath(DAW::GetResourcePath());
             resourcePath += "/CSI/";
             
-            for(auto filename : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
-            {
-                if(filename[0] != '.')
-                {
-                    strcpy(buf, filename.c_str());
-                    AddListEntry(hwndDlg, buf, IDC_COMBO_ActionTemplates);
-                }
-            }
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
 
-            for(auto filename : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
-            {
-                if(filename[0] != '.')
-                {
-                    strcpy(buf, filename.c_str());
-                    AddListEntry(hwndDlg, buf, IDC_COMBO_FXTemplates);
-                }
-            }
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
         }
             
         case WM_COMMAND:
@@ -362,7 +350,7 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         int index = SendDlgItemMessage(hwndDlg, IDC_COMBO_RealSurface, CB_GETCURSEL, 0, 0);
-                        if (index != CB_ERR)
+                        if (index >= 0)
                             strcpy(name, integrator->GetManager()->GetRealSurfaces()[index]->GetName().c_str());
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
