@@ -49,6 +49,8 @@ Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track
 {
     if(name == "TrackVolume")  return new TrackVolume_Action(logicalSurface, track);
     else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(logicalSurface, track);
+    else if(name == "TrackPan")  return new TrackPan_Action(logicalSurface, track);
+    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(logicalSurface, track);
     else if(name == "TrackTouch")  return new TrackTouch_Action(logicalSurface, track);
     else if(name == "TrackMute")  return new TrackMute_Action(logicalSurface, track);
     else if(name == "TrackSolo")  return new TrackSolo_Action(logicalSurface, track);
@@ -64,9 +66,7 @@ Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track
 
 Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, string param)
 {
-    if(name == "TrackPan")  return new TrackPan_Action(logicalSurface, track, param);
-    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(logicalSurface, track, param);
-    else if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(logicalSurface, track, param);
+    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(logicalSurface, track, param);
     
     return new Action(logicalSurface);
 }
@@ -341,13 +341,13 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
                             AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track, tokens[2]));
                         }
                     }
-                    else if(tokens[1] == "Cycled" && tokens.size() == 7)
+                    else if(tokens[1] == "Cycled" && tokens.size() > 4)
                     {
                         Action* cycledAction = ActionFor(tokens[1], logicalSurface);
-                        cycledAction->AddAction(ActionFor(tokens[3], logicalSurface, track, tokens[4]));
-                        cycledAction->AddAction(ActionFor(tokens[5], logicalSurface, track, tokens[6]));
                         AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
+                        for(int i = 3 ; i < tokens.size(); i++)
+                            cycledAction->AddAction(ActionFor(tokens[i], logicalSurface, track));
                     }
                 }
             }
