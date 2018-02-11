@@ -138,17 +138,35 @@ void AddNoneToMIDIList(HWND hwndDlg, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,x,-1);
 }
 
-static int dlgResult = 0;
-static char name[BUFSZ];
-
 vector<RealSurfaceLine*> realSurfaces;
-
 vector<LogicalSurfaceLine*> logicalSurfaces;
+
+bool editMode = false;
+static int dlgResult = 0;
+
+static char name[BUFSZ];
+static int numChannels = 0;
+static int numBankableChannels = 0;
+static int midiIn = 0;
+static int midiOut = 0;
+static char templateFilename[BUFSZ];
+static char realSurfaceName[BUFSZ];
+static char actionTemplateFolder[BUFSZ];
+static char FXTemplateFolder[BUFSZ];
 
 static WDL_DLGRET dlgProcLogicalSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            if(editMode)
+            {
+                editMode = false;
+                SetDlgItemText(hwndDlg, IDC_EDIT_LogicalSurfaceName, name);
+            }
+        }
+            
         case WM_COMMAND:
             {
                 switch(LOWORD(wParam))
@@ -258,6 +276,15 @@ static WDL_DLGRET dlgProcSurfaceGroup(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            if(editMode)
+            {
+                editMode = false;
+                
+            }
+        }
+
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -446,7 +473,28 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(dlgResult == IDOK)
                                 AddListEntry(hwndDlg, name, IDC_LIST_LogicalSurfaces);
                         }
+                        break ;
                         
+                    case IDC_BUTTON_EditLogicalSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = (int) SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_GETTEXT, (WPARAM)(int)(index), (LPARAM)(LPCTSTR)(name));
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETTEXT, index, 0);
+                                dlgResult = false;
+                                editMode = true;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicalSurface), hwndDlg, dlgProcLogicalSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    logicalSurfaces[index]->name = name;
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_RESETCONTENT, 0, 0);
+                                    for(auto* surface: logicalSurfaces)
+                                        AddListEntry(hwndDlg, surface->name, IDC_LIST_LogicalSurfaces);
+                                }
+                            }
+                        }
                         break ;
                 }
             }
