@@ -132,12 +132,6 @@ void AddListEntry(HWND hwndDlg, string buf, int comboId)
     SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
 }
 
-void AddNoneToMIDIList(HWND hwndDlg, int comboId)
-{
-    int x=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)"None");
-    SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,x,-1);
-}
-
 vector<RealSurfaceLine*> realSurfaces;
 vector<LogicalSurfaceLine*> logicalSurfaces;
 
@@ -209,20 +203,6 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
     {
         case WM_INITDIALOG:
         {
-            char buf[BUFSZ];
-            
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO_MidiIn);
-            int n = GetNumMIDIInputs();
-            for (int i = 0; i < n; i++)
-                if (GetMIDIInputName(i, buf, sizeof(buf)))
-                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
-            
-            AddNoneToMIDIList(hwndDlg, IDC_COMBO_MidiOut);
-            n = GetNumMIDIOutputs();
-            for (int i = 0; i < n; i++)
-                if (GetMIDIOutputName(i, buf, sizeof(buf)))
-                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
-            
             string path(DAW::GetResourcePath());
             path += "/CSI/rst/";
             int i = 0;
@@ -232,6 +212,22 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'r' && filename[length - 2] == 's' &&filename[length - 1] == 't')
                     AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
             }
+
+            char buf[BUFSZ];
+            
+            int n = GetNumMIDIInputs();
+            for (int i = 0; i < n; i++)
+                if (GetMIDIInputName(i, buf, sizeof(buf)))
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
+            
+            n = GetNumMIDIOutputs();
+            for (int i = 0; i < n; i++)
+                if (GetMIDIOutputName(i, buf, sizeof(buf)))
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+            
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
         }
 
         case WM_COMMAND:
