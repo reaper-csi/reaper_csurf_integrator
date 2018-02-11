@@ -9,8 +9,6 @@
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
-static CSurfIntegrator* integrator = nullptr;
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // structs
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +115,7 @@ const char *CSurfIntegrator::GetConfigString() // string of configuration data
 
 static IReaperControlSurface *createFunc(const char *type_string, const char *configString, int *errStats)
 {
-    integrator = new CSurfIntegrator();
-    return integrator;
+    return new CSurfIntegrator();
 }
 
 void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
@@ -225,9 +222,17 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
+            if(editMode)
+            {
+                editMode = false;
+                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name);
+            }
+            else
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
+            }
         }
 
         case WM_COMMAND:
@@ -335,9 +340,27 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 if(foldername[0] != '.')
                     AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
+            if(editMode)
+            {
+                editMode = false;
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_FINDSTRING, -1, (LPARAM)name);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, index, 0);
+                
+                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_FINDSTRING, -1, (LPARAM)actionTemplateFolder);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, index, 0);
+                
+                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_FINDSTRING, -1, (LPARAM)FXTemplateFolder);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, index, 0);
+            }
+            else
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
+            }
         }
             
         case WM_COMMAND:
@@ -347,9 +370,9 @@ static WDL_DLGRET dlgProcSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        int index = SendDlgItemMessage(hwndDlg, IDC_COMBO_RealSurface, CB_GETCURSEL, 0, 0);
-                        if (index >= 0)
-                            strcpy(name, integrator->GetManager()->GetRealSurfaces()[index]->GetName().c_str());
+                        GetDlgItemText(hwndDlg, IDC_COMBO_RealSurface , name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_ActionTemplates , actionTemplateFolder, sizeof(actionTemplateFolder));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_FXTemplates , FXTemplateFolder, sizeof(FXTemplateFolder));
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -461,6 +484,65 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break ;
                         
+                    case IDC_BUTTON_EditRealSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                dlgResult = false;
+                                editMode = true;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    //logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[index]->name = name;
+                                    //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
+                                    //for(auto* surfaceGroup: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups)
+                                    //AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
+                                }
+                            }
+                        }
+                        break ;
+                        
+                    case IDC_BUTTON_EditSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                
+                                int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                                int surfaceGroupIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+
+                                SurfaceLine* surfaceLine = nullptr;
+                                
+                                if(logicalSurfaceIndex >= 0 && surfaceGroupIndex >= 0)
+                                {
+                                    for(auto* surface : logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
+                                        if(surface->realSurfaceName == name)
+                                        {
+                                            surfaceLine = surface;
+                                            
+                                            strcpy(actionTemplateFolder, surface->actionTemplateFolder.c_str());
+                                            strcpy(FXTemplateFolder, surface->FXTemplateFolder.c_str());
+                                        }
+                                
+                                    dlgResult = false;
+                                    editMode = true;
+                                    DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
+                                    if(dlgResult == IDOK)
+                                    {
+                                        surfaceLine->realSurfaceName = name;
+                                        surfaceLine->actionTemplateFolder = actionTemplateFolder;
+                                        surfaceLine->FXTemplateFolder = FXTemplateFolder;
+                                    }
+                                }
+                            }
+                        }
+                        break ;
+
                     case IDC_BUTTON_EditSurfaceGroup:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
@@ -482,7 +564,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             }
                         }
                         break ;
-                        
+
                     case IDC_BUTTON_EditLogicalSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
