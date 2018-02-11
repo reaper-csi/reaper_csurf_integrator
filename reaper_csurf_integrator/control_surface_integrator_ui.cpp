@@ -228,11 +228,9 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             int i = 0;
             for(auto filename : FileSystem::GetDirectoryFilenames(path))
             {
-                if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'r' && filename[filename.length() - 2] == 's' &&filename[filename.length() - 1] == 't')
-                {
-                    strcpy(buf, filename.c_str());
-                    AddComboEntry(hwndDlg, i++, buf, IDC_COMBO_SurfaceTemplate);
-                }
+                int length = filename.length();
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'r' && filename[length - 2] == 's' &&filename[length - 1] == 't')
+                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
             }
         }
 
