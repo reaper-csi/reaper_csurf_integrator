@@ -430,7 +430,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
                             int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
-
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
                             if (logicalSurfaceIndex >= 0 && index >= 0)
                             {
@@ -537,6 +536,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                         surfaceLine->realSurfaceName = name;
                                         surfaceLine->actionTemplateFolder = actionTemplateFolder;
                                         surfaceLine->FXTemplateFolder = FXTemplateFolder;
+                                        
+                                        int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                                        int index = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+                                        if (logicalSurfaceIndex >= 0 && index >= 0)
+                                        {
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                            for(auto* surface: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[index]->surfaces)
+                                                AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces);
+                                        }
                                     }
                                 }
                             }
@@ -686,46 +694,46 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, 0, 0);
 
         }
-            
-            break;
+        break;
         
         case WM_USER+1024:
-            if (wParam > 1 && lParam)
-            {
-                char tmp[512];
-                
-                int indev=-1, outdev=-1, offs=0, size=9;
-                //int r=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETCURSEL,0,0);
-                //if (r != CB_ERR) indev = SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETITEMDATA,r,0);
-                //r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
-                //if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
-                
-                //BOOL t;
-                //r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
-                //if (t) offs=r;
-                //r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
-                //if (t)
-                //{
-                    //if (r<1)r=1;
-                    //else if(r>256)r=256;
-                    //size=r;
-                //}
-                int cflags=0;
-                
-                
-                //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-                //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
-                
-                //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
-                //{
-                //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
-                //}
-                
-                sprintf(tmp,"%d %d %d %d %d",offs,size,indev,outdev,cflags);
-                lstrcpyn((char *)lParam, tmp,wParam);
-                
-            }
-            break;
+        {
+            // GAW TBD -- write the file
+            
+            //char tmp[512];
+            
+            //int indev=-1, outdev=-1, offs=0, size=9;
+            //int r=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETCURSEL,0,0);
+            //if (r != CB_ERR) indev = SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETITEMDATA,r,0);
+            //r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
+            //if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
+            
+            //BOOL t;
+            //r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
+            //if (t) offs=r;
+            //r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
+            //if (t)
+            //{
+                //if (r<1)r=1;
+                //else if(r>256)r=256;
+                //size=r;
+            //}
+            //int cflags=0;
+            
+            
+            //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
+            //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
+            
+            //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
+            //{
+            //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
+            //}
+            
+            //sprintf(tmp,"%d %d %d %d %d",offs,size,indev,outdev,cflags);
+            //lstrcpyn((char *)lParam, tmp,wParam);
+            
+        }
+        break;
     }
     
     return 0;
