@@ -211,16 +211,27 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             }
 
             char buf[BUFSZ];
-            
-            int n = GetNumMIDIInputs();
-            for (int i = 0; i < n; i++)
+            int currentIndex = 0;
+
+            for (int i = 0; i < GetNumMIDIInputs(); i++)
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
+                {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
+                    if(editMode && midiIn == i)
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
+                    currentIndex++;
+                }
             
-            n = GetNumMIDIOutputs();
-            for (int i = 0; i < n; i++)
+            currentIndex = 0;
+            
+            for (int i = 0; i < GetNumMIDIOutputs(); i++)
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
+                {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+                    if(editMode && midiOut == i)
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
+                    currentIndex++;
+                }
             
             if(editMode)
             {
@@ -251,6 +262,15 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name, sizeof(name));
+                        char tempBuf[BUFSZ];
+                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, tempBuf, sizeof(tempBuf));
+                        numChannels = atoi(tempBuf);
+                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumBankableChannels, tempBuf, sizeof(tempBuf));
+                        numBankableChannels = atoi(tempBuf);
+                        GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
+                        
+                        // GAW TBD midi in/out
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -508,10 +528,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
                                 if(dlgResult == IDOK)
                                 {
-                                    //logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[index]->name = name;
-                                    //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
-                                    //for(auto* surfaceGroup: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups)
-                                    //AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
+                                    realSurfaces[index]->name = name;
+                                    realSurfaces[index]->numChannels = numChannels;
+                                    realSurfaces[index]->numBankableChannels = numBankableChannels;
+                                    realSurfaces[index]->midiIn = midiIn;
+                                    realSurfaces[index]->midiOut = midiOut;
+                                    realSurfaces[index]->templateFilename = templateFilename;
+                                    
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_RESETCONTENT, 0, 0);
+                                    for(auto* surface: realSurfaces)
+                                        AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
                                 }
                             }
                         }
