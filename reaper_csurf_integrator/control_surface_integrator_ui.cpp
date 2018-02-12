@@ -44,6 +44,8 @@ struct LogicalSurfaceLine
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+static CSurfIntegrator* integrator = nullptr;
+
 CSurfIntegrator::CSurfIntegrator()
 {
     manager_ = new CSurfManager();
@@ -115,7 +117,8 @@ const char *CSurfIntegrator::GetConfigString() // string of configuration data
 
 static IReaperControlSurface *createFunc(const char *type_string, const char *configString, int *errStats)
 {
-    return new CSurfIntegrator();
+    integrator = new CSurfIntegrator();
+    return integrator;
 }
 
 void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
@@ -781,40 +784,77 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
         
         case WM_USER+1024:
         {
-            // GAW TBD -- write the file
+            ofstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+
+            if(iniFile.is_open())
+            {
+                string line = "MidiInMonitor ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiInMon))
+                    line += "On";
+                else
+                    line += "Off";
+                iniFile << line + "\n";
+                
+                line = "MidiOutMonitor ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiOutMon))
+                    line += "On";
+                else
+                    line += "Off";
+                iniFile << line + "\n";
+                
+                line = "VSTMonitor ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_VSTParamMon))
+                    line += "On";
+                else
+                    line += "Off";
+                iniFile << line + "\n";
+                
+                iniFile << "\n";
             
-            //char tmp[512];
+                for(auto surface : realSurfaces)
+                {
+                    line = RealSurface_ + " ";
+                    line += surface->name + " ";
+                    line += to_string(surface->numChannels) + " ";
+                    line += to_string(surface->numBankableChannels) + " ";
+                    line += to_string(surface->midiIn) + " " ;
+                    line += to_string(surface->midiOut) + " " ;
+                    line += surface->templateFilename + "\n";
+                 
+                    iniFile << line;
+                }
+
+                for(auto logicalSurface : logicalSurfaces)
+                {
+                    iniFile << "\n";
+                    
+                    line = LogicalSurface_ + " ";
+                    line += logicalSurface->name + "\n";
+                    iniFile << line;
+                    
+                    for(auto surfaceGroup : logicalSurface->surfaceGroups)
+                    {
+                        line = SurfaceGroup_ + " ";
+                        line += surfaceGroup->name + "\n";
+                        iniFile << line;
+
+                        for(auto surface : surfaceGroup->surfaces)
+                        {
+                            line = Surface_ + " ";
+                            line += surface->realSurfaceName + " ";
+                            line += surface->actionTemplateFolder + " " ;
+                            line += surface->FXTemplateFolder + "\n";
+                            
+                            iniFile << line;
+                        }
+                    }
+                }
+                
+                iniFile.close();
+            }
             
-            //int indev=-1, outdev=-1, offs=0, size=9;
-            //int r=SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETCURSEL,0,0);
-            //if (r != CB_ERR) indev = SendDlgItemMessage(hwndDlg,IDC_COMBO2,CB_GETITEMDATA,r,0);
-            //r=SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETCURSEL,0,0);
-            //if (r != CB_ERR)  outdev = SendDlgItemMessage(hwndDlg,IDC_COMBO3,CB_GETITEMDATA,r,0);
-            
-            //BOOL t;
-            //r=GetDlgItemInt(hwndDlg,IDC_EDIT1,&t,TRUE);
-            //if (t) offs=r;
-            //r=GetDlgItemInt(hwndDlg,IDC_EDIT2,&t,FALSE);
-            //if (t)
-            //{
-                //if (r<1)r=1;
-                //else if(r>256)r=256;
-                //size=r;
-            //}
-            //int cflags=0;
-            
-            
-            //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK1))
-            //cflags|=CONFIG_FLAG_FADER_TOUCH_MODE;
-            
-            //if (IsDlgButtonChecked(hwndDlg,IDC_CHECK2))
-            //{
-            //cflags|=CONFIG_FLAG_MAPF1F8TOMARKERS;
-            //}
-            
-            //sprintf(tmp,"%d %d %d %d %d",offs,size,indev,outdev,cflags);
-            //lstrcpyn((char *)lParam, tmp,wParam);
-            
+            if(integrator)
+                integrator->GetManager()->ReInit();
         }
         break;
     }
