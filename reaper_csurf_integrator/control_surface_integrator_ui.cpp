@@ -853,8 +853,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile.close();
             }
             
-            if(integrator)
-                integrator->GetManager()->ReInit();
+            // GAW TBD -- just reload for now
+            //if(integrator)
+                //integrator->GetManager()->ReInit();
         }
         break;
     }
