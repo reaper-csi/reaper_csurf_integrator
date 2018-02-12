@@ -1534,7 +1534,10 @@ public:
     {
         logicalSurfaces_.clear();
         realSurfaces_.clear();
+        isInitialized_ = false;
         Init();
+        isInitialized_ = true;
+
         logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
     
