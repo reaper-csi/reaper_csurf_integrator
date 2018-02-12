@@ -1456,7 +1456,7 @@ private:
                     logicalSurfaces_.push_back(currentLogicalSurface);
                     
                 }
-                else if(tokens[0] == SurfaceGroup_)
+                else if(tokens[0] == SurfaceGroup_ && currentLogicalSurface != nullptr)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1464,7 +1464,7 @@ private:
                     currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
                     currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
                 }
-                else if(tokens[0] == Surface_)
+                else if(tokens[0] == Surface_ && currentSurfaceGroup != nullptr)
                 {
                     if(tokens.size() != 4)
                         continue;
@@ -1513,7 +1513,6 @@ public:
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
-    vector<RealSurface*> GetRealSurfaces() { return realSurfaces_; }
     bool GetIsInitialized() { return isInitialized_; }
     bool GetVSTMonitor() { return VSTMonitor_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
@@ -1529,6 +1528,14 @@ public:
     void Run()
     {
         RunAndUpdate();
+    }
+    
+    void ReInit()
+    {
+        logicalSurfaces_.clear();
+        realSurfaces_.clear();
+        Init();
+        logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
     
     void NextLogicalSurface()
