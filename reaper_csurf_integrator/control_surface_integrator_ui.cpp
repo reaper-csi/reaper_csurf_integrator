@@ -141,7 +141,6 @@ static int numBankableChannels = 0;
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
-static char realSurfaceName[BUFSZ];
 static char actionTemplateFolder[BUFSZ];
 static char FXTemplateFolder[BUFSZ];
 
@@ -479,7 +478,18 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
                             if(dlgResult == IDOK)
+                            {
+                                RealSurfaceLine* surface = new RealSurfaceLine();
+                                surface->name = name;
+                                surface->numChannels = numChannels;
+                                surface->numBankableChannels = numBankableChannels;
+                                surface->midiIn = midiIn;
+                                surface->midiOut = midiOut;
+                                surface->templateFilename = templateFilename;
+                                realSurfaces.push_back(surface);
                                 AddListEntry(hwndDlg, name, IDC_LIST_RealSurfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, realSurfaces.size() - 1, 0);
+                            }
                         }
                         break ;
                         
@@ -489,17 +499,42 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
                             if(dlgResult == IDOK)
-                                AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                            {
+                                int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                                int surfaceGroupIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+                                
+                                if(logicalSurfaceIndex >= 0 && surfaceGroupIndex >= 0)
+                                {
+                                    SurfaceLine* surface = new SurfaceLine();
+                                    surface->realSurfaceName = name;
+                                    surface->actionTemplateFolder = actionTemplateFolder;
+                                    surface->FXTemplateFolder = FXTemplateFolder;
+                                    logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces.push_back(surface);
+                                    AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces.size() - 1, 0);
+                                }
+                            }
                         }
                         break ;
                         
                     case IDC_BUTTON_AddSurfaceGroup:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            dlgResult = false;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_SurfaceGroup), hwndDlg, dlgProcSurfaceGroup);
-                            if(dlgResult == IDOK)
-                                AddListEntry(hwndDlg, name, IDC_LIST_SurfaceGroups);
+                            int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            if(logicalSurfaceIndex >= 0)
+                            {
+                                dlgResult = false;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_SurfaceGroup), hwndDlg, dlgProcSurfaceGroup);
+                                if(dlgResult == IDOK)
+                                {
+                                    SurfaceGroupLine* surfaceGroup = new SurfaceGroupLine();
+                                    surfaceGroup->name = name;
+                                    logicalSurfaces[logicalSurfaceIndex]->surfaceGroups.push_back(surfaceGroup);
+                                    AddListEntry(hwndDlg, name, IDC_LIST_SurfaceGroups);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, logicalSurfaces.size() - 1, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                }
+                            }
                         }
                         break ;
                         
@@ -509,7 +544,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             dlgResult = false;
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_LogicalSurface), hwndDlg, dlgProcLogicalSurface);
                             if(dlgResult == IDOK)
+                            {
+                                LogicalSurfaceLine* logicalSurface = new LogicalSurfaceLine();
+                                logicalSurface->name = name;
+                                logicalSurfaces.push_back(logicalSurface);
                                 AddListEntry(hwndDlg, name, IDC_LIST_LogicalSurfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_SETCURSEL, logicalSurfaces.size() - 1, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                            }
                         }
                         break ;
                         
