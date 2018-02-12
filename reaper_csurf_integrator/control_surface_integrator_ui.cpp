@@ -226,6 +226,14 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, to_string(numChannels).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumBankableChannels, to_string(numBankableChannels).c_str());
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
+                
+                // GAW TBD midi in/out
+
             }
             else
             {
@@ -490,6 +498,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                numChannels = realSurfaces[index]->numChannels;
+                                numBankableChannels = realSurfaces[index]->numBankableChannels;
+                                midiIn = realSurfaces[index]->midiIn;
+                                midiOut = realSurfaces[index]->midiOut;
+                                strcpy(templateFilename, realSurfaces[index]->templateFilename.c_str());
                                 dlgResult = false;
                                 editMode = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
