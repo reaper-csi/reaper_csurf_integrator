@@ -685,6 +685,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
         case WM_INITDIALOG:
         {
+            realSurfaces.clear();
+            logicalSurfaces.clear();
+            
             ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
             
             for (string line; getline(iniFile, line) ; )
@@ -853,9 +856,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile.close();
             }
             
-            // GAW TBD -- just reload for now
-            //if(integrator)
-                //integrator->GetManager()->ReInit();
+            if(integrator)
+                integrator->GetManager()->ReInit();
         }
         break;
     }
