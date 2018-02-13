@@ -985,7 +985,7 @@ public:
     {
         for(auto* surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
-                surface->GetWidgetMaxDB(widgetName);
+                return surface->GetWidgetMaxDB(widgetName);
         
         return 0.0;
     }
@@ -994,7 +994,7 @@ public:
     {
         for(auto* surface : realSurfaces_)
             if(surface->GetName() == surfaceName)
-                surface->GetWidgetMinDB(widgetName);
+                return surface->GetWidgetMinDB(widgetName);
         
         return 0.0;
     }
