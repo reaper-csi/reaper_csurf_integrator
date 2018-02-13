@@ -248,18 +248,18 @@ void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
                     }
                 }
             }
-        }
-        
-        if(GetLogicalSurface()->GetManager()->GetVSTMonitor() && GetLogicalSurface()->GetManager()->GetIsInitialized())
-        {
-            if(DAW::TrackFX_GetNumParams(track, i) < 50)
+            
+            if(GetLogicalSurface()->GetManager()->GetVSTMonitor() && GetLogicalSurface()->GetManager()->GetIsInitialized())
             {
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                if(DAW::TrackFX_GetNumParams(track, i) < 50)
                 {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                    DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                    
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    {
+                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                        DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                    }
                 }
             }
         }
