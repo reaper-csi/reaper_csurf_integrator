@@ -1514,8 +1514,7 @@ public:
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
-    bool GetIsInitialized() { return isInitialized_; }
-    bool GetVSTMonitor() { return VSTMonitor_; }
+    bool GetVSTMonitor() { return isInitialized_ ? VSTMonitor_ : false; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
