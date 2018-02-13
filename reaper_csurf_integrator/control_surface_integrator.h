@@ -1494,7 +1494,8 @@ private:
             isInitialized_ = true;
         }
         
-        logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
+        if(logicalSurfaces_.size() > 0)
+            logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -1522,7 +1523,8 @@ public:
     
     void OnTrackSelection(MediaTrack *track)
     {
-        logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(track);
+        if(logicalSurfaces_.size() > 0)
+            logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(track);
     }
     
     void Run()
@@ -1538,19 +1540,25 @@ public:
         Init();
         isInitialized_ = true;
 
-        logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
+        if(logicalSurfaces_.size() > 0)
+            logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
     }
     
     void NextLogicalSurface()
     {
-        currentLogicalSurfaceIndex_ = currentLogicalSurfaceIndex_ == logicalSurfaces_.size() - 1 ? 0 : ++currentLogicalSurfaceIndex_;
-
-        logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
+        if(logicalSurfaces_.size() > 0)
+        {
+            currentLogicalSurfaceIndex_ = currentLogicalSurfaceIndex_ == logicalSurfaces_.size() - 1 ? 0 : ++currentLogicalSurfaceIndex_;
+            logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
+        }
     }
 
     bool GetTouchState(string trackGUID, int touchedControl)
     {
-        return logicalSurfaces_[currentLogicalSurfaceIndex_]->GetTouchState(trackGUID, touchedControl);
+        if(logicalSurfaces_.size() > 0)
+            return logicalSurfaces_[currentLogicalSurfaceIndex_]->GetTouchState(trackGUID, touchedControl);
+        else
+            return false;
     }
     
     void TrackListChanged()
