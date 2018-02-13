@@ -595,41 +595,38 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_BUTTON_EditSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
+                            int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            int surfaceGroupIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
-                            if(index >= 0)
+                            
+                            SurfaceLine* surfaceLine = nullptr;
+                            
+                            if(logicalSurfaceIndex >= 0 && surfaceGroupIndex >= 0 && index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 
-                                int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
-                                int surfaceGroupIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
-
-                                SurfaceLine* surfaceLine = nullptr;
-                                
-                                if(logicalSurfaceIndex >= 0 && surfaceGroupIndex >= 0)
-                                {
-                                    for(auto* surface : logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
-                                        if(surface->realSurfaceName == name)
-                                        {
-                                            surfaceLine = surface;
-                                            
-                                            strcpy(actionTemplateFolder, surface->actionTemplateFolder.c_str());
-                                            strcpy(FXTemplateFolder, surface->FXTemplateFolder.c_str());
-                                        }
-                                
-                                    dlgResult = false;
-                                    editMode = true;
-                                    DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
-                                    if(dlgResult == IDOK)
+                                for(auto* surface : logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
+                                    if(surface->realSurfaceName == name)
                                     {
-                                        surfaceLine->realSurfaceName = name;
-                                        surfaceLine->actionTemplateFolder = actionTemplateFolder;
-                                        surfaceLine->FXTemplateFolder = FXTemplateFolder;
+                                        surfaceLine = surface;
                                         
-                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
-                                        for(auto* surface: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
-                                            AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces);
-                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
+                                        strcpy(actionTemplateFolder, surface->actionTemplateFolder.c_str());
+                                        strcpy(FXTemplateFolder, surface->FXTemplateFolder.c_str());
                                     }
+                            
+                                dlgResult = false;
+                                editMode = true;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Surface), hwndDlg, dlgProcSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    surfaceLine->realSurfaceName = name;
+                                    surfaceLine->actionTemplateFolder = actionTemplateFolder;
+                                    surfaceLine->FXTemplateFolder = FXTemplateFolder;
+                                    
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                    for(auto* surface: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
+                                        AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
                                 }
                             }
                         }
@@ -676,6 +673,81 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                         AddListEntry(hwndDlg, surface->name, IDC_LIST_LogicalSurfaces);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_SETCURSEL, index, 0);
                                 }
+                            }
+                        }
+                        break ;
+
+                    case IDC_BUTTON_RemoveRealSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_GETCURSEL, 0, 0);
+                            
+                            if(index >= 0)
+                            {
+                                realSurfaces.erase(realSurfaces.begin() + index);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_RESETCONTENT, 0, 0);
+                                for(auto* surface: realSurfaces)
+                                    AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, index, 0);
+                            }
+                        }
+                        break ;
+                        
+                    case IDC_BUTTON_RemoveSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            int surfaceGroupIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
+                            
+                            if(logicalSurfaceIndex >= 0 && surfaceGroupIndex >= 0 && index >= 0)
+                            {
+                                logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces.erase(logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces.begin() + index);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                for(auto* surface: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups[surfaceGroupIndex]->surfaces)
+                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_Surfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
+                            }
+                        }
+                        break ;
+                        
+                    case IDC_BUTTON_RemoveSurfaceGroup:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int logicalSurfaceIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_SurfaceGroups, LB_GETCURSEL, 0, 0);
+                            if(logicalSurfaceIndex >= 0 && index >= 0)
+                            {
+                                logicalSurfaces[logicalSurfaceIndex]->surfaceGroups.erase(logicalSurfaces[logicalSurfaceIndex]->surfaceGroups.begin() + index);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                
+                                for(auto* surfaceGroup: logicalSurfaces[logicalSurfaceIndex]->surfaceGroups)
+                                    AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_SurfaceGroups);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, index, 0);
+                            }
+                        }
+                        break ;
+
+                    case IDC_BUTTON_RemoveLogicalSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_LogicalSurfaces, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                logicalSurfaces.erase(logicalSurfaces.begin() + index);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
+                                
+                                for(auto* surface: logicalSurfaces)
+                                    AddListEntry(hwndDlg, surface->name, IDC_LIST_LogicalSurfaces);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_LogicalSurfaces), LB_SETCURSEL, 0, 0);
                             }
                         }
                         break ;
