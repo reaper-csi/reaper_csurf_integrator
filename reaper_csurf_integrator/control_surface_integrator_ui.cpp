@@ -534,7 +534,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surfaceGroup->name = name;
                                     logicalSurfaces[logicalSurfaceIndex]->surfaceGroups.push_back(surfaceGroup);
                                     AddListEntry(hwndDlg, name, IDC_LIST_SurfaceGroups);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, logicalSurfaces.size() - 1, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_SurfaceGroups), LB_SETCURSEL, logicalSurfaces[logicalSurfaceIndex]->surfaceGroups.size() - 1, 0);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
                                 }
                             }
