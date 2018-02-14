@@ -41,7 +41,7 @@ const string VSTMonitor = "VSTMonitor";
 const string RealSurface_ = "RealSurface";
 const string Layout_ = "Layout";
 const string Zone_ = "Zone";
-const string Surface_ = "Surface";
+const string VirtualSurface_ = "VirtualSurface";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
@@ -1459,7 +1459,7 @@ private:
                     currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
                     currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
                 }
-                else if(tokens[0] == Surface_ && currentSurfaceGroup != nullptr)
+                else if(tokens[0] == VirtualSurface_ && currentSurfaceGroup != nullptr)
                 {
                     if(tokens.size() != 4)
                         continue;
