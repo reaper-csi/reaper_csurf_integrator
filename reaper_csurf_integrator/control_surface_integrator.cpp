@@ -249,21 +249,32 @@ void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
                 }
             }
         }
+    }
+}
+
+void SurfaceGroup::TrackFXListChanged(MediaTrack* track)
+{
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
         if(GetLogicalSurface()->GetManager()->GetVSTMonitor())
         {
-            if(DAW::TrackFX_GetNumParams(track, i) < 50)
+            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
             {
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-                }
+                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
             }
         }
     }
+    
+    for(auto* surface : realSurfaces_)
+        MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface);
 }
 
 void SurfaceGroup::AddAction(string actionAddress, Action* action)

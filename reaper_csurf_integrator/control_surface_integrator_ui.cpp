@@ -814,7 +814,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
                         
                     }
-                    else if(tokens[0] == LogicalSurface_)
+                    else if(tokens[0] == Layout_)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -826,7 +826,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, logicalSurface->name, IDC_LIST_LogicalSurfaces);
 
                     }
-                    else if(tokens[0] == SurfaceGroup_)
+                    else if(tokens[0] == Zone_)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -903,13 +903,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 {
                     iniFile << "\n";
                     
-                    line = LogicalSurface_ + " ";
+                    line = Layout_ + " ";
                     line += logicalSurface->name + "\n";
                     iniFile << line;
                     
                     for(auto surfaceGroup : logicalSurface->surfaceGroups)
                     {
-                        line = SurfaceGroup_ + " ";
+                        line = Zone_ + " ";
                         line += surfaceGroup->name + "\n";
                         iniFile << line;
 

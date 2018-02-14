@@ -39,8 +39,8 @@ const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string RealSurface_ = "RealSurface";
-const string LogicalSurface_ = "LogicalSurface";
-const string SurfaceGroup_ = "SurfaceGroup";
+const string Layout_ = "Layout";
+const string Zone_ = "Zone";
 const string Surface_ = "Surface";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -614,6 +614,7 @@ public:
     int GetNumLogicalChannels() { return numLogicalChannels_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     void MapFXActions(string trackGUID, RealSurface* surface);
+    void TrackFXListChanged(MediaTrack* track);
 
     void Init()
     {
@@ -671,12 +672,6 @@ public:
         openFXWindows_.clear();
     }
 
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        for(auto* surface : realSurfaces_)
-            MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface);
-    }
-    
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto* surface : realSurfaces_)
@@ -1447,7 +1442,7 @@ private:
         
                     AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
-                else if(tokens[0] == LogicalSurface_)
+                else if(tokens[0] == Layout_)
                 {
                     if(tokens.size() != 2)
                         continue;
@@ -1456,7 +1451,7 @@ private:
                     logicalSurfaces_.push_back(currentLogicalSurface);
                     
                 }
-                else if(tokens[0] == SurfaceGroup_ && currentLogicalSurface != nullptr)
+                else if(tokens[0] == Zone_ && currentLogicalSurface != nullptr)
                 {
                     if(tokens.size() != 2)
                         continue;
