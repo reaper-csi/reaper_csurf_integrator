@@ -835,7 +835,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surfaceGroup->name = tokens[1];
                         logicalSurfaces.back()->surfaceGroups.push_back(surfaceGroup);
                     }
-                    else if(tokens[0] == Surface_)
+                    else if(tokens[0] == VirtualSurface_)
                     {
                         if(tokens.size() != 4)
                             continue;
@@ -915,7 +915,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                         for(auto surface : surfaceGroup->surfaces)
                         {
-                            line = Surface_ + " ";
+                            line = VirtualSurface_ + " ";
                             line += surface->realSurfaceName + " ";
                             line += surface->actionTemplateFolder + " " ;
                             line += surface->FXTemplateFolder + "\n";
