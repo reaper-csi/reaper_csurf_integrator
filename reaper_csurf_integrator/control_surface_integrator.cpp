@@ -21,8 +21,8 @@ Action* ActionFor(string name, LogicalSurface* logicalSurface)
     else if(name == "Play")  return new Play_Action(logicalSurface);
     else if(name == "Record")  return new Record_Action(logicalSurface);
     else if(name == "NextMap")  return new NextMap_Action(logicalSurface);
-    else if(name == "LockTracks")  return new ImmobilizeSelectedTracks_Action(logicalSurface);
-    else if(name == "UnlockTracks")  return new MobilizeSelectedTracks_Action(logicalSurface);
+    else if(name == "ImmobilizeSelectedTracks")  return new ImmobilizeSelectedTracks_Action(logicalSurface);
+    else if(name == "MobilizeSelectedTracks")  return new MobilizeSelectedTracks_Action(logicalSurface);
     else if(name == "Shift")  return new Shift_Action(logicalSurface);
     else if(name == "Option")  return new Option_Action(logicalSurface);
     else if(name == "Control")  return new Control_Action(logicalSurface);
