@@ -1151,7 +1151,7 @@ public:
     
     void AdjustTrackBank(string zoneName, string surfaceName, int stride)
     {
-        touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
+        touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another zone is being touched it gets cleared too
         zones_[zoneName]->AdjustTrackBank(stride);
     }
     
