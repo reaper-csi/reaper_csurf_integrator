@@ -2,20 +2,20 @@
 // Microsoft Visual C++ generated include file.
 // Used by res.rc
 //
-#define IDD_DIALOG_SurfaceGroup         103
+#define IDD_DIALOG_Zone                 103
 #define IDD_SURFACEEDIT_CSI             265
-#define IDD_DIALOG_Surface              266
-#define IDD_DIALOG_LogicalSurface       267
+#define IDD_DIALOG_VirtualSurface       266
+#define IDD_DIALOG_Layout               267
 #define IDD_DIALOG_RealSurface          268
 #define IDC_CHECK_MidiInMon             1000
 #define IDC_CHECK_MidiOutMon            1001
 #define IDC_CHECK_VSTParamMon           1002
-#define IDC_LIST_LogicalSurfaces        1012
-#define IDC_BUTTON_AddLogicalSurface    1013
-#define IDC_BUTTON_EditLogicalSurface   1014
-#define IDC_EDIT_LogicalSurfaceName     1014
-#define IDC_BUTTON_RemoveLogicalSurface 1015
-#define IDC_EDIT_LogicalSurfaceGroup    1015
+#define IDC_LIST_Layouts                1012
+#define IDC_BUTTON_AddLayout            1013
+#define IDC_BUTTON_EditLayout           1014
+#define IDC_EDIT_LayoutName             1014
+#define IDC_BUTTON_RemoveLayout         1015
+#define IDC_EDIT_ZoneName               1015
 #define IDC_COMBO_RealSurface           1016
 #define IDC_COMBO_ActionTemplates       1017
 #define IDC_COMBO_FXTemplates           1018
@@ -24,15 +24,15 @@
 #define IDC_COMBO_MidiOut               1021
 #define IDC_EDIT_RealSurfaceName        1022
 #define IDC_EDIT_RealSurfaceNumChannels 1023
-#define IDC_LIST_SurfaceGroups          1024
+#define IDC_LIST_Zones                  1024
 #define IDC_EDIT_RealSurfaceNumBankableChannels 1024
-#define IDC_BUTTON_AddSurfaceGroup      1025
-#define IDC_BUTTON_EditSurfaceGroup     1026
-#define IDC_BUTTON_RemoveSurfaceGroup   1027
-#define IDC_LIST_Surfaces               1028
-#define IDC_BUTTON_AddSurface           1029
-#define IDC_BUTTON_EditSurface          1030
-#define IDC_BUTTON_RemoveSurface        1031
+#define IDC_BUTTON_AddZone              1025
+#define IDC_BUTTON_EditZone             1026
+#define IDC_BUTTON_RemoveZone           1027
+#define IDC_LIST_VirtualSurfaces        1028
+#define IDC_BUTTON_AddVirtualSurface    1029
+#define IDC_BUTTON_EditVirtualSurface   1030
+#define IDC_BUTTON_RemoveVirtualSurface 1031
 #define IDC_LIST_RealSurfaces           1032
 #define IDC_BUTTON_AddRealSurface       1033
 #define IDC_BUTTON_EditRealSurface      1034
