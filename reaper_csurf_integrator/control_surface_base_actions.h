@@ -57,7 +57,7 @@ public:
     
     ~Cycled_Action() {}
     
-    virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(groupName, surfaceName, widgetName); }
+    virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName); }
     
     virtual void AddAction(Action* action) override
     {

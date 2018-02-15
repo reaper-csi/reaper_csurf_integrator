@@ -447,8 +447,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Layouts, LB_GETCURSEL, 0, 0);
                             if (index >= 0)
                             {
-                                for(auto* surfaceGroup : layouts[index]->zones)
-                                    AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_Zones);
+                                for(auto* zone : layouts[index]->zones)
+                                    AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
                             }
                             else
                             {
@@ -465,8 +465,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                             if (layoutIndex >= 0 && index >= 0)
                             {
-                                for(auto* surface: layouts[layoutIndex]->zones[index]->virtualSurfaces)
-                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
+                                for(auto* layout: layouts[layoutIndex]->zones[index]->virtualSurfaces)
+                                    AddListEntry(hwndDlg, layout->realSurfaceName, IDC_LIST_VirtualSurfaces);
                             }
                             else
                             {
@@ -530,9 +530,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Zone), hwndDlg, dlgProcZone);
                                 if(dlgResult == IDOK)
                                 {
-                                    ZoneLine* surfaceGroup = new ZoneLine();
-                                    surfaceGroup->name = name;
-                                    layouts[layoutIndex]->zones.push_back(surfaceGroup);
+                                    ZoneLine* zone = new ZoneLine();
+                                    zone->name = name;
+                                    layouts[layoutIndex]->zones.push_back(zone);
                                     AddListEntry(hwndDlg, name, IDC_LIST_Zones);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, layouts[layoutIndex]->zones.size() - 1, 0);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
@@ -548,9 +548,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Layout), hwndDlg, dlgProcLayout);
                             if(dlgResult == IDOK)
                             {
-                                LayoutLine* logicalSurface = new LayoutLine();
-                                logicalSurface->name = name;
-                                layouts.push_back(logicalSurface);
+                                LayoutLine* layout = new LayoutLine();
+                                layout->name = name;
+                                layouts.push_back(layout);
                                 AddListEntry(hwndDlg, name, IDC_LIST_Layouts);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layouts), LB_SETCURSEL, layouts.size() - 1, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
@@ -647,8 +647,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     layouts[layoutIndex]->zones[index]->name = name;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                    for(auto* surfaceGroup: layouts[layoutIndex]->zones)
-                                        AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_Zones);
+                                    for(auto* zone: layouts[layoutIndex]->zones)
+                                        AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, index, 0);
                                 }
                             }
@@ -669,8 +669,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     layouts[index]->name = name;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layouts), LB_RESETCONTENT, 0, 0);
-                                    for(auto* surface: layouts)
-                                        AddListEntry(hwndDlg, surface->name, IDC_LIST_Layouts);
+                                    for(auto* layout: layouts)
+                                        AddListEntry(hwndDlg, layout->name, IDC_LIST_Layouts);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layouts), LB_SETCURSEL, index, 0);
                                 }
                             }
@@ -725,8 +725,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 
-                                for(auto* surfaceGroup: layouts[layoutIndex]->zones)
-                                    AddListEntry(hwndDlg, surfaceGroup->name, IDC_LIST_Zones);
+                                for(auto* zone: layouts[layoutIndex]->zones)
+                                    AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, index, 0);
                             }
                         }
@@ -744,8 +744,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 
-                                for(auto* surface: layouts)
-                                    AddListEntry(hwndDlg, surface->name, IDC_LIST_Layouts);
+                                for(auto* layout: layouts)
+                                    AddListEntry(hwndDlg, layout->name, IDC_LIST_Layouts);
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layouts), LB_SETCURSEL, 0, 0);
                             }
