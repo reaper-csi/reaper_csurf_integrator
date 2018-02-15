@@ -12,70 +12,70 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reaper Actions available for mapping, this list will get added to substantially over time
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action* ActionFor(string name, LogicalSurface* logicalSurface)
+Action* ActionFor(string name, Layout* layout)
 {
-    if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(logicalSurface);
-    else if(name == "Rewind")  return new Rewind_Action(logicalSurface);
-    else if(name == "FastForward")  return new FastForward_Action(logicalSurface);
-    else if(name == "Stop")  return new Stop_Action(logicalSurface);
-    else if(name == "Play")  return new Play_Action(logicalSurface);
-    else if(name == "Record")  return new Record_Action(logicalSurface);
-    else if(name == "NextMap")  return new NextMap_Action(logicalSurface);
-    else if(name == "ImmobilizeSelectedTracks")  return new ImmobilizeSelectedTracks_Action(logicalSurface);
-    else if(name == "MobilizeSelectedTracks")  return new MobilizeSelectedTracks_Action(logicalSurface);
-    else if(name == "Shift")  return new Shift_Action(logicalSurface);
-    else if(name == "Option")  return new Option_Action(logicalSurface);
-    else if(name == "Control")  return new Control_Action(logicalSurface);
-    else if(name == "Alt")  return new Alt_Action(logicalSurface);
-    else if(name == "LatchedZoom")  return new LatchedZoom_Action(logicalSurface);
-    else if(name == "LatchedScrub")  return new LatchedScrub_Action(logicalSurface);
-    else if(name == "Cycled")  return new Cycled_Action(logicalSurface);
-    else if(name == "CycleTimeline")  return new CycleTimeline_Action(logicalSurface);
+    if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(layout);
+    else if(name == "Rewind")  return new Rewind_Action(layout);
+    else if(name == "FastForward")  return new FastForward_Action(layout);
+    else if(name == "Stop")  return new Stop_Action(layout);
+    else if(name == "Play")  return new Play_Action(layout);
+    else if(name == "Record")  return new Record_Action(layout);
+    else if(name == "NextMap")  return new NextMap_Action(layout);
+    else if(name == "ImmobilizeSelectedTracks")  return new ImmobilizeSelectedTracks_Action(layout);
+    else if(name == "MobilizeSelectedTracks")  return new MobilizeSelectedTracks_Action(layout);
+    else if(name == "Shift")  return new Shift_Action(layout);
+    else if(name == "Option")  return new Option_Action(layout);
+    else if(name == "Control")  return new Control_Action(layout);
+    else if(name == "Alt")  return new Alt_Action(layout);
+    else if(name == "LatchedZoom")  return new LatchedZoom_Action(layout);
+    else if(name == "LatchedScrub")  return new LatchedScrub_Action(layout);
+    else if(name == "Cycled")  return new Cycled_Action(layout);
+    else if(name == "CycleTimeline")  return new CycleTimeline_Action(layout);
     
-    return new Action(logicalSurface);
+    return new Action(layout);
 }
 
-Action* ActionFor(string name, LogicalSurface* logicalSurface, string param)
+Action* ActionFor(string name, Layout* layout, string param)
 {
-    if(name == "TrackBank")  return new TrackBank_Action(logicalSurface, param);
-    else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(logicalSurface, param);
-    else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(logicalSurface, param);
-    else if(name == "Reaper")  return new Reaper_Action(logicalSurface, param);
+    if(name == "TrackBank")  return new TrackBank_Action(layout, param);
+    else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(layout, param);
+    else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(layout, param);
+    else if(name == "Reaper")  return new Reaper_Action(layout, param);
     
-    return new Action(logicalSurface);
+    return new Action(layout);
 }
 
-Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track)
+Action* ActionFor(string name, Layout* layout, MediaTrack* track)
 {
-    if(name == "TrackVolume")  return new TrackVolume_Action(logicalSurface, track);
-    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(logicalSurface, track);
-    else if(name == "TrackPan")  return new TrackPan_Action(logicalSurface, track);
-    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(logicalSurface, track);
-    else if(name == "TrackTouch")  return new TrackTouch_Action(logicalSurface, track);
-    else if(name == "TrackMute")  return new TrackMute_Action(logicalSurface, track);
-    else if(name == "TrackSolo")  return new TrackSolo_Action(logicalSurface, track);
-    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(logicalSurface, track);
-    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(logicalSurface, track);
-    else if(name == "TrackSelect")  return new TrackSelect_Action(logicalSurface, track);
-    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(logicalSurface, track);
-    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(logicalSurface, track);
-    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(logicalSurface, track);
+    if(name == "TrackVolume")  return new TrackVolume_Action(layout, track);
+    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layout, track);
+    else if(name == "TrackPan")  return new TrackPan_Action(layout, track);
+    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layout, track);
+    else if(name == "TrackTouch")  return new TrackTouch_Action(layout, track);
+    else if(name == "TrackMute")  return new TrackMute_Action(layout, track);
+    else if(name == "TrackSolo")  return new TrackSolo_Action(layout, track);
+    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(layout, track);
+    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(layout, track);
+    else if(name == "TrackSelect")  return new TrackSelect_Action(layout, track);
+    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(layout, track);
+    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layout, track);
+    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layout, track);
     
-    return new Action(logicalSurface);
+    return new Action(layout);
 }
 
-Action* ActionFor(string name, LogicalSurface* logicalSurface, MediaTrack* track, string param)
+Action* ActionFor(string name, Layout* layout, MediaTrack* track, string param)
 {
-    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(logicalSurface, track, param);
+    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layout, track, param);
     
-    return new Action(logicalSurface);
+    return new Action(layout);
 }
 
-Action* ActionFor(string name, string actionAddress, LogicalSurface* logicalSurface, MediaTrack* track, Action* baseAction)
+Action* ActionFor(string name, string actionAddress, Layout* layout, MediaTrack* track, Action* baseAction)
 {
-    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, logicalSurface, track, baseAction);
+    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layout, track, baseAction);
     
-    return new Action(logicalSurface);
+    return new Action(layout);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
     for (auto widgetName : widgetNames_)
         realSurface_->SetWidgetGUID(widgetName, GUID);
     
-    realSurface_->GetSurfaceGroup()->GetLogicalSurface()->MapTrack(GUID_);
+    realSurface_->GetZone()->GetLayout()->MapTrack(GUID_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,42 +183,42 @@ void  RealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
 
 void RealSurface::AddAction(string actionAddress, Action* action)
 {
-    GetSurfaceGroup()->GetLogicalSurface()->AddAction(actionAddress, action);
+    GetZone()->GetLayout()->AddAction(actionAddress, action);
 }
 
 // to Actions ->
 double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
-    return GetSurfaceGroup()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
+    return GetZone()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->UpdateAction(GUID, GetName(), actionName, widgetName);
+    GetZone()->UpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
+    GetZone()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
 {
-    GetSurfaceGroup()->CycleAction(GUID, GetName(), actionName, widgetName);
+    GetZone()->CycleAction(GUID, GetName(), actionName, widgetName);
 }
 
 void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
-    GetSurfaceGroup()->DoAction(value, GUID, GetName(), actionName, widgetName);
+    GetZone()->DoAction(value, GUID, GetName(), actionName, widgetName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SurfaceGroup
+// Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
+void Zone::MapFXActions(string trackGUID, RealSurface* surface)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
-    LogicalSurface* logicalSurface = GetLogicalSurface();
+    Layout* layout = GetLayout();
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
     char fxGUID[BUFSZ];
@@ -236,7 +236,7 @@ void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
             for(auto mapEntry : map->GetTemplateEntries())
             {
                 if(mapEntry.paramName == GainReductionDB)
-                    GetLogicalSurface()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(logicalSurface, track, fxGUID));
+                    GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layout, track, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -244,7 +244,7 @@ void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            GetLogicalSurface()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(logicalSurface, track, fxGUID, j));
+                            GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layout, track, fxGUID, j));
                     }
                 }
             }
@@ -252,7 +252,7 @@ void SurfaceGroup::MapFXActions(string trackGUID, RealSurface* surface)
     }
 }
 
-void SurfaceGroup::TrackFXListChanged(MediaTrack* track)
+void Zone::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -261,7 +261,7 @@ void SurfaceGroup::TrackFXListChanged(MediaTrack* track)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
-        if(GetLogicalSurface()->GetManager()->GetVSTMonitor())
+        if(GetLayout()->GetManager()->GetVSTMonitor())
         {
             DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
             
@@ -277,14 +277,14 @@ void SurfaceGroup::TrackFXListChanged(MediaTrack* track)
         MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface);
 }
 
-void SurfaceGroup::AddAction(string actionAddress, Action* action)
+void Zone::AddAction(string actionAddress, Action* action)
 {
-    GetLogicalSurface()->AddAction(actionAddress, action);
+    GetLayout()->AddAction(actionAddress, action);
 }
 
-void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
+void Zone::MapRealSurfaceActions(RealSurface* surface)
 {
-    LogicalSurface* logicalSurface = GetLogicalSurface();
+    Layout* layout = GetLayout();
     string actionBaseAddress = DefaultGUID + GetName() + surface->GetName();;
     string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
@@ -305,18 +305,18 @@ void SurfaceGroup::MapRealSurfaceActions(RealSurface* surface)
                         tokens.push_back(token);
                     
                     if(tokens.size() == 2)
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface));
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout));
                     else if(tokens.size() == 3)
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, tokens[2]));
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, tokens[2]));
                 }
             }
         }
     }
 }
 
-void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
+void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
 {
-    LogicalSurface* logicalSurface = GetLogicalSurface();
+    Layout* layout = GetLayout();
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
     string actionBaseAddress = trackGUID + GetName() + surface->GetName();
  
@@ -340,28 +340,28 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
                     
                     if(tokens.size() == 2)
                     {
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track));
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, track));
                     }
                     else if(tokens.size() == 3)
                     {
                         if(tokens[1] == "TrackTouchControlled")
                         {
                             string actionAddress = actionBaseAddress + tokens[0];
-                            Action* controlledAction = ActionFor(tokens[2], logicalSurface, track);
-                            AddAction(actionAddress, ActionFor(tokens[1], actionAddress, logicalSurface, track, controlledAction));
+                            Action* controlledAction = ActionFor(tokens[2], layout, track);
+                            AddAction(actionAddress, ActionFor(tokens[1], actionAddress, layout, track, controlledAction));
                         }
                         else
                         {
-                            AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], logicalSurface, track, tokens[2]));
+                            AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, track, tokens[2]));
                         }
                     }
                     else if(tokens[1] == "Cycled" && tokens.size() > 4)
                     {
-                        Action* cycledAction = ActionFor(tokens[1], logicalSurface);
+                        Action* cycledAction = ActionFor(tokens[1], layout);
                         AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
                         for(int i = 3 ; i < tokens.size(); i++)
-                            cycledAction->AddAction(ActionFor(tokens[i], logicalSurface, track));
+                            cycledAction->AddAction(ActionFor(tokens[i], layout, track));
                     }
                 }
             }
@@ -370,29 +370,29 @@ void SurfaceGroup::MapTrackActions(string trackGUID, RealSurface* surface)
 }
 
 // to Actions ->
-double SurfaceGroup::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
+double Zone::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    return GetLogicalSurface()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    return GetLayout()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
-void SurfaceGroup::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
+void Zone::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayout()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
-void SurfaceGroup::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
+void Zone::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayout()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
-void SurfaceGroup::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
+void Zone::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayout()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
-void SurfaceGroup::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
+void Zone::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLogicalSurface()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
+    GetLayout()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
