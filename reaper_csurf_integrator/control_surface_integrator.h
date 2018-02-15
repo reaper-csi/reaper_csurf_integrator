@@ -81,8 +81,8 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //
-// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Group1Mixer1Fader"
-// ActionAddress format = GUID + surfaceGroupName + realSurfaceName + modifiers + widgetName
+// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Zone1Mixer1Fader"
+// ActionAddress format = GUID + zoneName + realSurfaceName + modifiers + widgetName
 // Modifiers can be ""
 //
 
@@ -95,18 +95,18 @@ const string Alt = "Alt";
 // Dups disallowed -- ShiftShift -- no good
 //
 // Modifier Order matters !!
-// Please do not modify SurfaceGroup::CurrentModifiers()
+// Please do not modify Zone::CurrentModifiers()
 //
 // Allowed -- ShiftControl -- OK
 // Disallowed -- ControlShift -- no good
 //
 // Modifier Order matters !!
-// Please do not modify SurfaceGroup::CurrentModifiers()
+// Please do not modify Zone::CurrentModifiers()
 //
 // The modifiers, if present:
 //  must be contained in the modifier part of the action address
 //  must be contained only in the modifier part of the action address
-//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Group1Mixer1ShiftOptionControlAltFader" for the full meal deal
+//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Zone1Mixer1ShiftOptionControlAltFader" for the full meal deal
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                        THE RULES
@@ -154,8 +154,8 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalSurface;
-class SurfaceGroup;
+class Layout;
+class Zone;
 class RealSurface;
 class RealSurfaceChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,24 +163,24 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    LogicalSurface* logicalSurface_ = nullptr;
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    Layout* layout_ = nullptr;
+    Layout* GetLayout() { return layout_; }
     
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) {}
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) {}
+    virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) {}
+    virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value) {}
     
 public:
-    Action(LogicalSurface* logicalSurface) : logicalSurface_(logicalSurface) {}
+    Action(Layout* layout) : layout_(layout) {}
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
     virtual double GetCurrentNormalizedValue (string groupName, string surfaceName, string widgetName) { return 0.0; }
     
     virtual void AddAction(Action* action) {}
-    virtual void Update(string groupName, string surfaceName, string widgetName) {}
-    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) {}
-    virtual void Cycle(string groupName, string surfaceName, string widgetName) {}
-    virtual void Do(double value, string groupName, string surfaceName, string widgetName) {}
+    virtual void Update(string zoneName, string surfaceName, string widgetName) {}
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) {}
+    virtual void Cycle(string zoneName, string surfaceName, string widgetName) {}
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +243,7 @@ class RealSurface
 protected:
     const string name_ = "";
     string templateFilename_ = "";
-    SurfaceGroup* surfaceGroup_ = nullptr;
+    Zone* zone_ = nullptr;
     int numChannels_ = 0;
     int numBankableChannels_ = 0;
     vector<RealSurfaceChannel*> channels_;
@@ -261,7 +261,7 @@ public:
     
     const string GetName() const { return name_; }
     string GetTemplateFilename() const { return templateFilename_; }
-    SurfaceGroup* GetSurfaceGroup() { return surfaceGroup_; }
+    Zone* GetZone() { return zone_; }
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
     int GetNumChannels() { return numChannels_; }
     int GetNumBankableChannels() { return numBankableChannels_; }
@@ -294,9 +294,9 @@ public:
         remappedFXWidgets_.clear();
     }
     
-    void SetSurfaceGroup(SurfaceGroup* surfaceGroup)
+    void SetZone(Zone* zone)
     {
-        surfaceGroup_ = surfaceGroup;
+        zone_ = zone;
     }
     
     void AddWidget(MidiWidget* widget)
@@ -516,11 +516,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceGroup
+class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string name_ = "";
-    LogicalSurface* logicalSurface_= nullptr;
+    Layout* layout_= nullptr;
     int numLogicalChannels_ = 1;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
@@ -607,10 +607,10 @@ class SurfaceGroup
     }
 
 public:
-    SurfaceGroup(string name, LogicalSurface* logicalSurface) : name_(name), logicalSurface_(logicalSurface) {}
+    Zone(string name, Layout* layout) : name_(name), layout_(layout) {}
     
     string GetName() { return name_; }
-    LogicalSurface* GetLogicalSurface() { return logicalSurface_; }
+    Layout* GetLayout() { return layout_; }
     int GetNumLogicalChannels() { return numLogicalChannels_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     void MapFXActions(string trackGUID, RealSurface* surface);
@@ -634,7 +634,7 @@ public:
         fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
 
         numLogicalChannels_ += surface->GetNumBankableChannels();
-        surface->SetSurfaceGroup(this);
+        surface->SetZone(this);
         realSurfaces_.push_back(surface);
     }
     
@@ -1020,25 +1020,25 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class LogicalSurface
+class Layout
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string name_ = "";
     CSurfManager* manager_ = nullptr;
-    map<string, SurfaceGroup*> surfaceGroups_;
+    map<string, Zone*> zones_;
     map<string, vector<Action*>> actions_;
     vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
     void SetImmobilizedTracks()
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->SetImmobilizedTracks();
+        for(auto [name, zone] : zones_)
+            zone->SetImmobilizedTracks();
     }
     
 public:
-    LogicalSurface(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
+    Layout(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
 
     string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
@@ -1065,71 +1065,71 @@ public:
         actions_[actionAddress].push_back(action);
     }
    
-    void MapTrackAndFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    void MapTrackAndFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
     {
-        MapTrackToWidgets(track, groupName, surfaceName);
-        MapFXToWidgets(track, groupName, surfaceName);
+        MapTrackToWidgets(track, zoneName, surfaceName);
+        MapFXToWidgets(track, zoneName, surfaceName);
     }
 
-    void MapTrackToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    void MapTrackToWidgets(MediaTrack* track, string zoneName, string surfaceName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->MapTrackToWidgets(track, surfaceName);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->MapTrackToWidgets(track, surfaceName);
     }
     
-    void UnmapWidgetsFromTrack(MediaTrack* track, string groupName, string surfaceName)
+    void UnmapWidgetsFromTrack(MediaTrack* track, string zoneName, string surfaceName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->UnmapWidgetsFromTrack(track, surfaceName);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
     }
     
     void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->MapFXToWidgets(track, surfaceName);
+        if(zones_.count(groupName) > 0)
+            zones_[groupName]->MapFXToWidgets(track, surfaceName);
     }
     
-    void UnmapWidgetsFromFX(MediaTrack* track, string groupName, string surfaceName)
+    void UnmapWidgetsFromFX(MediaTrack* track, string zoneName, string surfaceName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->UnmapWidgetsFromFX(track, surfaceName);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
     }
     
     void OnTrackSelection(MediaTrack* track)
     {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->OnTrackSelection(track);
+        for(auto const& [name, zone] : zones_)
+            zone->OnTrackSelection(track);
     }
     
-    void SetShowFXWindows(string groupName, string surfaceName, bool value)
+    void SetShowFXWindows(string zoneName, string surfaceName, bool value)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetShowFXWindows(value);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetShowFXWindows(value);
     }
     
-    bool IsShowFXWindows(string groupName, string surfaceName)
+    bool IsShowFXWindows(string zoneName, string surfaceName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            return surfaceGroups_[groupName]->IsShowFXWindows();
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->IsShowFXWindows();
         
         return false;
     }
     
     void TrackFXListChanged(MediaTrack* track)
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->TrackFXListChanged(track);
+        for(auto [name, zone] : zones_)
+            zone->TrackFXListChanged(track);
     }
     
-    void AddSurfaceGroup(SurfaceGroup* surfaceGroup)
+    void AddZone(Zone* zone)
     {
-        surfaceGroups_[surfaceGroup->GetName()] = surfaceGroup;
+        zones_[zone->GetName()] = zone;
     }
     
     void Init()
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->Init();
+        for(auto [name, zone] : zones_)
+            zone->Init();
         
         SetImmobilizedTracks();
         RefreshLayout();
@@ -1143,155 +1143,155 @@ public:
         if(find(mappedTrackGUIDs_.begin(), mappedTrackGUIDs_.end(), trackGUID) != mappedTrackGUIDs_.end())
             return; // Already did this track
         
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->MapTrackAndFXActions(trackGUID);
+        for(auto [name, zone] : zones_)
+            zone->MapTrackAndFXActions(trackGUID);
         
         mappedTrackGUIDs_.push_back(trackGUID);
     }
     
-    void AdjustTrackBank(string groupName, string surfaceName, int stride)
+    void AdjustTrackBank(string zoneName, string surfaceName, int stride)
     {
         touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another durface group is being touched it gets cleared too
-        surfaceGroups_[groupName]->AdjustTrackBank(stride);
+        zones_[zoneName]->AdjustTrackBank(stride);
     }
     
     void TrackListChanged()
     {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->TrackListChanged();
+        for(auto const& [name, zone] : zones_)
+            zone->TrackListChanged();
     }
     
     void RefreshLayout()
     {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->RefreshLayout();
+        for(auto const& [name, zone] : zones_)
+            zone->RefreshLayout();
     }
     
     void RunAndUpdate()
     {
-        for(auto const& [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->RunAndUpdate();
+        for(auto const& [name, zone] : zones_)
+            zone->RunAndUpdate();
     }
 
-    void SetShift(string groupName, string surfaceName, bool value)
+    void SetShift(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetShift(value);
+        zones_[zoneName]->SetShift(value);
     }
     
-    void SetOption(string groupName, string surfaceName, bool value)
+    void SetOption(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetOption(value);
+        zones_[zoneName]->SetOption(value);
     }
     
-    void SetControl(string groupName, string surfaceName, bool value)
+    void SetControl(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetControl(value);
+        zones_[zoneName]->SetControl(value);
     }
     
-    void SetAlt(string groupName, string surfaceName, bool value)
+    void SetAlt(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetAlt(value);
+        zones_[zoneName]->SetAlt(value);
     }
     
-    void SetZoom(string groupName, string surfaceName, bool value)
+    void SetZoom(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetZoom(value);
+        zones_[zoneName]->SetZoom(value);
     }
     
-    void SetScrub(string groupName, string surfaceName, bool value)
+    void SetScrub(string zoneName, string surfaceName, bool value)
     {
-        surfaceGroups_[groupName]->SetScrub(value);
+        zones_[zoneName]->SetScrub(value);
     }
 
     void ImmobilizeSelectedTracks()
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->ImmobilizeSelectedTracks();
+        for(auto [name, zone] : zones_)
+            zone->ImmobilizeSelectedTracks();
     }
     
     void MobilizeSelectedTracks()
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->MobilizeSelectedTracks();
+        for(auto [name, zone] : zones_)
+            zone->MobilizeSelectedTracks();
     }
     
     // to Widgets ->
     void ForceUpdateWidgets()
     {
-        for(auto [name, surfaceGroup] : surfaceGroups_)
-            surfaceGroup->ForceUpdateWidgets();
+        for(auto [name, zone] : zones_)
+            zone->ForceUpdateWidgets();
     }
 
     // to Actions ->
-    double GetActionCurrentNormalizedValue(string actionAddress, string groupName, string surfaceName, string widgetName)
+    double GetActionCurrentNormalizedValue(string actionAddress, string zoneName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0 && actions_[actionAddress].size() > 0)
-            return actions_[actionAddress][0]->GetCurrentNormalizedValue(groupName, surfaceName, widgetName);
+            return actions_[actionAddress][0]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName);
         else
             return 0.0;
     }
 
-    void UpdateAction(string actionAddress, string groupName, string surfaceName, string widgetName)
+    void UpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Update(groupName, surfaceName, widgetName);
+                action->Update(zoneName, surfaceName, widgetName);
     }
     
-    void ForceUpdateAction(string actionAddress, string groupName, string surfaceName, string widgetName)
+    void ForceUpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->ForceUpdate(groupName, surfaceName, widgetName);
+                action->ForceUpdate(zoneName, surfaceName, widgetName);
     }
 
-    void CycleAction(string actionAddress, string groupName, string surfaceName, string widgetName)
+    void CycleAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Cycle(groupName, surfaceName, widgetName);
+                action->Cycle(zoneName, surfaceName, widgetName);
     }
     
-    void DoAction(string actionAddress, double value, string groupName, string surfaceName, string widgetName)
+    void DoAction(string actionAddress, double value, string zoneName, string surfaceName, string widgetName)
     {
         if(actions_.count(actionAddress) > 0)
             for(auto* action : actions_[actionAddress])
-                action->Do(value, groupName, surfaceName, widgetName);
+                action->Do(value, zoneName, surfaceName, widgetName);
     }
     
     // to Widgets ->
-    double GetWidgetMaxDB(string groupName, string surfaceName, string widgetName)
+    double GetWidgetMaxDB(string zoneName, string surfaceName, string widgetName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            return surfaceGroups_[groupName]->GetWidgetMaxDB(surfaceName, widgetName);
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetWidgetMaxDB(surfaceName, widgetName);
         
         return 0.0;
     }
     
-    double GetWidgetMinDB(string groupName, string surfaceName, string widgetName)
+    double GetWidgetMinDB(string zoneName, string surfaceName, string widgetName)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            return surfaceGroups_[groupName]->GetWidgetMinDB(surfaceName, widgetName);
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetWidgetMinDB(surfaceName, widgetName);
         
         return 0.0;
     }
     
-    void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value)
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
     }
     
-    void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value, int mode)
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value, int mode)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value, mode);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value, mode);
     }
     
-    void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value)
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value)
     {
-        if(surfaceGroups_.count(groupName) > 0)
-            surfaceGroups_[groupName]->SetWidgetValue(surfaceName, widgetName, value);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
     }
 };
 
@@ -1376,10 +1376,10 @@ class CSurfManager
 {
 private:
     MidiIOManager* midiIOManager_ = nullptr;
-    vector <LogicalSurface*> logicalSurfaces_;
+    vector <Layout*> layouts_;
     vector<RealSurface*> realSurfaces_;
     bool isInitialized_ = false;
-    int currentLogicalSurfaceIndex_ = 0; 
+    int currentLayoutIndex_ = 0; 
     bool VSTMonitor_ = false;
     
     void InitRealSurface(RealSurface* surface);
@@ -1390,8 +1390,8 @@ private:
         bool midiOutMonitor = false;
         VSTMonitor_ = false;
 
-        LogicalSurface* currentLogicalSurface = nullptr;
-        SurfaceGroup* currentSurfaceGroup = nullptr;
+        Layout* currentLayout = nullptr;
+        Zone* currentZone = nullptr;
 
         ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
         
@@ -1447,32 +1447,32 @@ private:
                     if(tokens.size() != 2)
                         continue;
                     
-                    currentLogicalSurface = new LogicalSurface(tokens[1], this);
-                    logicalSurfaces_.push_back(currentLogicalSurface);
+                    currentLayout = new Layout(tokens[1], this);
+                    layouts_.push_back(currentLayout);
                     
                 }
-                else if(tokens[0] == Zone_ && currentLogicalSurface != nullptr)
+                else if(tokens[0] == Zone_ && currentLayout != nullptr)
                 {
                     if(tokens.size() != 2)
                         continue;
                     
-                    currentSurfaceGroup = new SurfaceGroup(tokens[1], currentLogicalSurface);
-                    currentLogicalSurface->AddSurfaceGroup(currentSurfaceGroup);
+                    currentZone = new Zone(tokens[1], currentLayout);
+                    currentLayout->AddZone(currentZone);
                 }
-                else if(tokens[0] == VirtualSurface_ && currentSurfaceGroup != nullptr)
+                else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
                 {
                     if(tokens.size() != 4)
                         continue;
 
                     for(auto surface : realSurfaces_)
                         if(surface->GetName() == tokens[1])
-                            currentSurfaceGroup->AddSurface(surface, tokens[2], tokens[3]);
+                            currentZone->AddSurface(surface, tokens[2], tokens[3]);
                 }
             }
         }
         
-        for(auto logicalSurface : logicalSurfaces_)
-            logicalSurface->Init();
+        for(auto layout : layouts_)
+            layout->Init();
     }
 
     void AddRealSurface(RealSurface* realSurface)
@@ -1489,8 +1489,8 @@ private:
             isInitialized_ = true;
         }
         
-        if(logicalSurfaces_.size() > 0)
-            logicalSurfaces_[currentLogicalSurfaceIndex_]->RunAndUpdate();
+        if(layouts_.size() > 0)
+            layouts_[currentLayoutIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -1517,8 +1517,8 @@ public:
     
     void OnTrackSelection(MediaTrack *track)
     {
-        if(logicalSurfaces_.size() > 0)
-            logicalSurfaces_[currentLogicalSurfaceIndex_]->OnTrackSelection(track);
+        if(layouts_.size() > 0)
+            layouts_[currentLayoutIndex_]->OnTrackSelection(track);
     }
     
     void Run()
@@ -1528,43 +1528,43 @@ public:
     
     void ReInit()
     {
-        logicalSurfaces_.clear();
+        layouts_.clear();
         realSurfaces_.clear();
         isInitialized_ = false;
         Init();
         isInitialized_ = true;
 
-        if(logicalSurfaces_.size() > 0)
-            logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
+        if(layouts_.size() > 0)
+            layouts_[currentLayoutIndex_]->RefreshLayout();
     }
     
     void NextLogicalSurface()
     {
-        if(logicalSurfaces_.size() > 0)
+        if(layouts_.size() > 0)
         {
-            currentLogicalSurfaceIndex_ = currentLogicalSurfaceIndex_ == logicalSurfaces_.size() - 1 ? 0 : ++currentLogicalSurfaceIndex_;
-            logicalSurfaces_[currentLogicalSurfaceIndex_]->RefreshLayout();
+            currentLayoutIndex_ = currentLayoutIndex_ == layouts_.size() - 1 ? 0 : ++currentLayoutIndex_;
+            layouts_[currentLayoutIndex_]->RefreshLayout();
         }
     }
 
     bool GetTouchState(string trackGUID, int touchedControl)
     {
-        if(logicalSurfaces_.size() > 0)
-            return logicalSurfaces_[currentLogicalSurfaceIndex_]->GetTouchState(trackGUID, touchedControl);
+        if(layouts_.size() > 0)
+            return layouts_[currentLayoutIndex_]->GetTouchState(trackGUID, touchedControl);
         else
             return false;
     }
     
     void TrackListChanged()
     {
-        for(auto & surface : logicalSurfaces_)
-            surface->TrackListChanged();
+        for(auto & layout : layouts_)
+            layout->TrackListChanged();
     }
 
     void TrackFXListChanged(MediaTrack* trackid)
     {
-        for(auto & surface : logicalSurfaces_)
-            surface->TrackFXListChanged(trackid);
+        for(auto & layout : layouts_)
+            layout->TrackFXListChanged(trackid);
     }
 };
 
@@ -1575,7 +1575,7 @@ class OSCCSurf : public RealSurface
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(const string name, string templateFilename, LogicalSurface* surface)
+    OSCCSurf(const string name, string templateFilename, Layout* surface)
     : RealSurface("OSC", templateFilename, 8, 8) {}
 };
 
@@ -1586,7 +1586,7 @@ class WebCSurf : public RealSurface
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(const string name, string templateFilename, LogicalSurface* surface)
+    WebCSurf(const string name, string templateFilename, Layout* surface)
     : RealSurface("Web", templateFilename, 8, 8) {};
 };
 

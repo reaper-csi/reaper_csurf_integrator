@@ -16,31 +16,31 @@ class Double_Action : public Action
 protected:
     double currentValue_ = 999999.99;
     
-    virtual double GetValue(string groupName, string surfaceName, string widgetName) { return 0.0; }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) { return 0.0; }
 
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, double value) override
+    virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName, value);
+        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
 
-    Double_Action(LogicalSurface* logicalSurface) : Action(logicalSurface)  {}
+    Double_Action(Layout* layout) : Action(layout)  {}
     
 public:
     ~Double_Action() {}
     
-    virtual double GetCurrentNormalizedValue(string groupName, string surfaceName, string widgetName) override { return currentValue_; }
+    virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return currentValue_; }
     
-    virtual void Update(string groupName, string surfaceName, string widgetName) override
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
-        double newValue = GetValue(groupName, surfaceName, widgetName);
+        double newValue = GetValue(zoneName, surfaceName, widgetName);
         
         if(currentValue_ != newValue)
-            SetWidgetValue(groupName, surfaceName, widgetName, currentValue_ = newValue);
+            SetWidgetValue(zoneName, surfaceName, widgetName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) override
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
     {
-        SetWidgetValue(groupName, surfaceName, widgetName, GetValue(groupName, surfaceName, widgetName));
+        SetWidgetValue(zoneName, surfaceName, widgetName, GetValue(zoneName, surfaceName, widgetName));
     }
 };
 
@@ -53,7 +53,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    Cycled_Action(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
+    Cycled_Action(Layout* layout) : Action(layout) {}
     
     ~Cycled_Action() {}
     
@@ -64,25 +64,25 @@ public:
         actions_.push_back(action);
     }
    
-    virtual void Update(string groupName, string surfaceName, string widgetName) override
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->Update(groupName, surfaceName, widgetName);
+        actions_[currentIndex_]->Update(zoneName, surfaceName, widgetName);
     }
     
-    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) override
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->ForceUpdate(groupName, surfaceName, widgetName);
+        actions_[currentIndex_]->ForceUpdate(zoneName, surfaceName, widgetName);
     }
     
-    virtual void Cycle(string groupName, string surfaceName, string widgetName) override
+    virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
     {
         currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
-        actions_[currentIndex_]->Cycle(groupName, surfaceName, widgetName);
+        actions_[currentIndex_]->Cycle(zoneName, surfaceName, widgetName);
     }
     
-    virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        actions_[currentIndex_]->Do(value, groupName, surfaceName, widgetName);
+        actions_[currentIndex_]->Do(value, zoneName, surfaceName, widgetName);
     }
 };
 
@@ -93,30 +93,30 @@ class String_Action : public Action
 protected:
     string currentValue_ = "";
     
-    virtual string GetValue(string groupName, string surfaceName, string widgetName) { return currentValue_; }
+    virtual string GetValue(string zoneName, string surfaceName, string widgetName) { return currentValue_; }
     
-    virtual void SetWidgetValue(string groupName, string surfaceName, string widgetName, string value) override
+    virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value) override
     {
-        GetLogicalSurface()->SetWidgetValue(groupName, surfaceName, widgetName, value);
+        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
     
-    String_Action(LogicalSurface* logicalSurface) : Action(logicalSurface) {}
+    String_Action(Layout* layout) : Action(layout) {}
 
 public:
     
     ~String_Action() {}
     
-    virtual void Update(string groupName, string surfaceName, string widgetName) override
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
-        string newValue = GetValue(groupName, surfaceName, widgetName);
+        string newValue = GetValue(zoneName, surfaceName, widgetName);
         
         if(currentValue_ != newValue)
-            SetWidgetValue(groupName, surfaceName, widgetName, currentValue_ = newValue);
+            SetWidgetValue(zoneName, surfaceName, widgetName, currentValue_ = newValue);
     }
     
-    virtual void ForceUpdate(string groupName, string surfaceName, string widgetName) override
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
     {
-        SetWidgetValue(groupName, surfaceName, widgetName, GetValue(groupName, surfaceName, widgetName));
+        SetWidgetValue(zoneName, surfaceName, widgetName, GetValue(zoneName, surfaceName, widgetName));
     }
 };
 
