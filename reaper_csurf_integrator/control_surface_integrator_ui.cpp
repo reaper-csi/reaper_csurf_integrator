@@ -491,7 +491,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 surface->templateFilename = templateFilename;
                                 realSurfaces.push_back(surface);
                                 AddListEntry(hwndDlg, name, IDC_LIST_RealSurfaces);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, realSurfaces.size() - 1, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, realSurfaces.size() - 1, 0);
                             }
                         }
                         break ;
