@@ -1083,10 +1083,10 @@ public:
             zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
     }
     
-    void MapFXToWidgets(MediaTrack* track, string groupName, string surfaceName)
+    void MapFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
     {
-        if(zones_.count(groupName) > 0)
-            zones_[groupName]->MapFXToWidgets(track, surfaceName);
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->MapFXToWidgets(track, surfaceName);
     }
     
     void UnmapWidgetsFromFX(MediaTrack* track, string zoneName, string surfaceName)
