@@ -1538,7 +1538,7 @@ public:
             layouts_[currentLayoutIndex_]->RefreshLayout();
     }
     
-    void NextLogicalSurface()
+    void NextLayout()
     {
         if(layouts_.size() > 0)
         {

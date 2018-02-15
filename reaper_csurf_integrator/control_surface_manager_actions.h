@@ -142,7 +142,7 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->GetManager()->NextLogicalSurface();
+        GetLayout()->GetManager()->NextLayout();
     }
 };
 
