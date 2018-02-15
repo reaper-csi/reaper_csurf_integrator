@@ -39,7 +39,7 @@ protected:
     MediaTrack* track_;
     
 public:
-    TrackString_Action(Layout* logicalSurface, MediaTrack* track) : String_Action(logicalSurface), track_(track) {}
+    TrackString_Action(Layout* layout, MediaTrack* track) : String_Action(layout), track_(track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,17 +126,17 @@ public:
  
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
         
-        //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
+        //GetLayout->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
         GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, volToNormalized(value));
     }
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override
     {
-        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
 
         //return volToNormalized(currentValue_, widgetMaxDB, widgetMinDB);
         return volToNormalized(currentValue_);
@@ -146,8 +146,8 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        //double widgetMaxDB = GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
 
         //DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
         DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
@@ -348,14 +348,14 @@ public:
         {
             lastRepeated = clock();
             // GAW TBD
-            //DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
+            //DAW::CSurf_OnArrow(direction_, GetLayout->GetRealSurfaceFor(surfaceName)->IsZoom());
         }
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         // GAW TBD
-        // DAW::CSurf_OnArrow(direction_, GetLogicalSurface()->GetRealSurfaceFor(surfaceName)->IsZoom());
+        // DAW::CSurf_OnArrow(direction_, GetLayout->GetRealSurfaceFor(surfaceName)->IsZoom());
         pressed_ = value;
     }
 };
@@ -599,7 +599,7 @@ public:
         return 0.00;
     }
     
-    virtual void Do(double value, string groupName, string surfaceName, string widgetName) override
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         DAW::SetAutomationMode(autoMode_, true);
     }
@@ -675,7 +675,7 @@ protected:
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            //GetLogicalSurface()->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, GetLogicalSurface()->GetWidgetMaxDB(surfaceName, widgetName), GetLogicalSurface()->GetWidgetMinDB(surfaceName, widgetName)));
+            //GetLayout->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, GetLayout->GetWidgetMaxDB(surfaceName, widgetName), GetLayout->GetWidgetMinDB(surfaceName, widgetName)));
             GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, -value / 20.0); // GAW TBD hacked for now
         else
             GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, 1.0);

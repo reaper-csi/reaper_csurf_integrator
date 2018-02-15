@@ -1575,7 +1575,7 @@ class OSCCSurf : public RealSurface
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(const string name, string templateFilename, Layout* surface)
+    OSCCSurf(const string name, string templateFilename, Layout* layout)
     : RealSurface("OSC", templateFilename, 8, 8) {}
 };
 
@@ -1586,7 +1586,7 @@ class WebCSurf : public RealSurface
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(const string name, string templateFilename, Layout* surface)
+    WebCSurf(const string name, string templateFilename, Layout* layout)
     : RealSurface("Web", templateFilename, 8, 8) {};
 };
 
