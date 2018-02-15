@@ -521,7 +521,7 @@ class Zone
 {
     string name_ = "";
     Layout* layout_= nullptr;
-    int numLogicalChannels_ = 1;
+    int numLogicalChannels_ = 0;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     map<string, string> actionTemplateDirectory_;
