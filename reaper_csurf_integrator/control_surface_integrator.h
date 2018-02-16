@@ -845,7 +845,8 @@ public:
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == true)
-                    channel->SetGUID(movableTracks[offset++]);
+                    if(movableTracks.size() < offset)
+                        channel->SetGUID(movableTracks[offset++]);
         
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
@@ -1097,6 +1098,8 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
+        MapTrack(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
+        
         for(auto const& [name, zone] : zones_)
             zone->OnTrackSelection(track);
     }
