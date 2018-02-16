@@ -125,8 +125,8 @@ public:
     
     static void SetOnlyTrackSelected(MediaTrack* track) { ::SetOnlyTrackSelected(track); }
 
-    static int CountSelectedTracks(ReaProject* proj) { return ::CountSelectedTracks(proj); }
-
+    static int CountSelectedTracks(ReaProject* proj) { return ::CountSelectedTracks2(proj, true); }
+    
     static bool CSurf_OnRecArmChange(MediaTrack* trackid, int recarm) { return ::CSurf_OnRecArmChange(trackid, recarm); }
 
     static void CSurf_SetSurfaceRecArm(MediaTrack* trackid, bool recarm, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceRecArm(trackid, recarm, ignoresurf); }
