@@ -820,27 +820,41 @@ public:
     void RefreshLayout()
     {
         vector<string> trackLayout;
+        vector<string> lockedChannels;
        
         for(auto surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
                 if(channel->GetIsMovable() == false)
+                {
                     trackLayout.push_back(channel->GetGUID());
+                    lockedChannels.push_back(channel->GetGUID());
+                }
                 else
                     trackLayout.push_back("");
 
         int offset = trackOffset_;
         for(int i = 0; i < trackLayout.size(); i++)
-            if(trackLayout[i] == "" && offset < DAW::GetNumTracks())
-                trackLayout[i] = DAW::GetTrackGUIDAsString(offset++);
-            else
+        {
+            string trackGUID = DAW::GetTrackGUIDAsString(offset);
+            
+            if(find(lockedChannels.begin(), lockedChannels.end(), trackGUID) != lockedChannels.end())
+            {
+                if(trackLayout[i] != "")
+                    offset++;
+                continue;
+            }
+            else if(trackLayout[i] == "")
+            {
+                trackLayout[i] = trackGUID;
                 offset++;
-       
+            }
+        }
+            
         // Apply new layout
         offset = 0;
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
-                if(channel->GetIsMovable() == true)
-                     channel->SetGUID(trackLayout[offset++]);
+                 channel->SetGUID(trackLayout[offset++]);
 
         
         for(auto* surface : realSurfaces_)
