@@ -244,9 +244,10 @@ protected:
     const string name_ = "";
     string templateFilename_ = "";
     Zone* zone_ = nullptr;
-    int numChannels_ = 0;
-    int numBankableChannels_ = 0;
+    bool isBankable_ = true;
+    
     vector<RealSurfaceChannel*> channels_;
+    vector<RealSurfaceChannel*> emptyChannels_;
     map<string, MidiWidget*> widgetsByName_;
     map<string, MidiWidget*> widgetsByMessage_;
     map<string, string> remappedFXWidgets_;
@@ -263,8 +264,6 @@ public:
     string GetTemplateFilename() const { return templateFilename_; }
     Zone* GetZone() { return zone_; }
     vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
-    int GetNumChannels() { return numChannels_; }
-    int GetNumBankableChannels() { return numBankableChannels_; }
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
@@ -274,6 +273,14 @@ public:
             return widgetsByName_[widgetName]->GetGUID();
         
         return "";
+    }
+    
+    vector<RealSurfaceChannel*> & GetBankableChannels()
+    {
+        if(isBankable_)
+            return GetChannels();
+        else
+            return emptyChannels_;
     }
     
     void AddAction(string actionAddress, Action* action);
@@ -453,8 +460,8 @@ public:
         if(midiOutput_) delete midiOutput_;
     }
     
-    MidiCSurf(const string name, string templateFilename, int numChannels, int numBankableChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, templateFilename, numChannels, numBankableChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    MidiCSurf(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
@@ -521,7 +528,7 @@ class Zone
 {
     string name_ = "";
     Layout* layout_= nullptr;
-    int numLogicalChannels_ = 0;
+    int numBankableChannels_ = 0;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     map<string, string> actionTemplateDirectory_;
@@ -611,7 +618,6 @@ public:
     
     string GetName() { return name_; }
     Layout* GetLayout() { return layout_; }
-    int GetNumLogicalChannels() { return numLogicalChannels_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     void MapFXActions(string trackGUID, RealSurface* surface);
     void TrackFXListChanged(MediaTrack* track);
@@ -633,7 +639,7 @@ public:
         actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
         fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
 
-        numLogicalChannels_ += surface->GetNumBankableChannels();
+        numBankableChannels_ += surface->GetBankableChannels().size();
         surface->SetZone(this);
         realSurfaces_.push_back(surface);
     }
@@ -801,8 +807,8 @@ public:
         
         trackOffset_ += stride;
         
-        if(trackOffset_ < 1 - GetNumLogicalChannels())
-            trackOffset_ = 1 - GetNumLogicalChannels();
+        if(trackOffset_ < 1 - numBankableChannels_)
+            trackOffset_ = 1 - numBankableChannels_;
         
         if(trackOffset_ > DAW::GetNumTracks() - 1)
             trackOffset_ = DAW::GetNumTracks() - 1;
@@ -813,8 +819,37 @@ public:
 
     void RefreshLayout()
     {
-        auto offset = trackOffset_;
+        vector<string> trackLayout;
+       
+        for(auto surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                if(channel->GetIsMovable() == false)
+                    trackLayout.push_back(channel->GetGUID());
+                else
+                    trackLayout.push_back("");
+
+        int offset = trackOffset_;
+        for(int i = 0; i < trackLayout.size(); i++)
+            if(trackLayout[i] == "" && offset < DAW::GetNumTracks())
+                trackLayout[i] = DAW::GetTrackGUIDAsString(offset++);
+            else
+                offset++;
+       
+        // Apply new layout
+        offset = 0;
+        for(auto* surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                if(channel->GetIsMovable() == true)
+                     channel->SetGUID(trackLayout[offset++]);
+
         
+        for(auto* surface : realSurfaces_)
+            surface->ForceUpdateWidgets();
+
+        
+        
+        
+        /*
         vector<string> immovableTracks;
         
         for(auto surface : realSurfaces_)
@@ -824,7 +859,7 @@ public:
         
         vector<string> movableTracks;
         
-        for(int i = 0; i < GetNumLogicalChannels(); i++)
+        for(int i = 0; i < GetNumBankableChannels(); i++)
         {
             if(offset < 0)
             {
@@ -845,11 +880,12 @@ public:
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetChannels())
                 if(channel->GetIsMovable() == true)
-                    if(movableTracks.size() < offset)
+                    //if(movableTracks.size() < offset)
                         channel->SetGUID(movableTracks[offset++]);
         
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
+         */
     }
     
     void RunAndUpdate()
@@ -1439,11 +1475,11 @@ private:
                         continue;
                     
                     int numChannels = atoi(tokens[2].c_str());
-                    int numBankableChannels = atoi(tokens[3].c_str());
+                    bool isBankable = tokens[3] == "1" ? true : false;
                     int channelIn = atoi(tokens[4].c_str());
                     int channelOut = atoi(tokens[5].c_str());
         
-                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, numBankableChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
                 else if(tokens[0] == Layout_)
                 {
