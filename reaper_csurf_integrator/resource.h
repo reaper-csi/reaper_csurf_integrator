@@ -25,7 +25,7 @@
 #define IDC_EDIT_RealSurfaceName        1022
 #define IDC_EDIT_RealSurfaceNumChannels 1023
 #define IDC_LIST_Zones                  1024
-#define IDC_EDIT_RealSurfaceNumBankableChannels 1024
+#define IDC_CHECK_IsBankable            1024
 #define IDC_BUTTON_AddZone              1025
 #define IDC_BUTTON_EditZone             1026
 #define IDC_BUTTON_RemoveZone           1027
@@ -44,7 +44,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1023
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

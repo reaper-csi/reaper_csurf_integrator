@@ -16,7 +16,7 @@ struct RealSurfaceLine
 {
     string name = "";
     int numChannels = 0;
-    int numBankableChannels = 0;
+    bool isBankable = true;
     int midiIn = 0;
     int midiOut = 0;
     string templateFilename = "";
@@ -140,7 +140,7 @@ static int dlgResult = 0;
 
 static char name[BUFSZ];
 static int numChannels = 0;
-static int numBankableChannels = 0;
+static bool isBankable = true;
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
@@ -240,13 +240,21 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, to_string(numChannels).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumBankableChannels, to_string(numBankableChannels).c_str());
+                
+                if(isBankable)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
+
+                
+                
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
             }
             else
             {
+                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
@@ -264,8 +272,8 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         char tempBuf[BUFSZ];
                         GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, tempBuf, sizeof(tempBuf));
                         numChannels = atoi(tempBuf);
-                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumBankableChannels, tempBuf, sizeof(tempBuf));
-                        numBankableChannels = atoi(tempBuf);
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
+                            isBankable = true;
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
@@ -485,7 +493,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 RealSurfaceLine* surface = new RealSurfaceLine();
                                 surface->name = name;
                                 surface->numChannels = numChannels;
-                                surface->numBankableChannels = numBankableChannels;
+                                surface->isBankable = isBankable;
                                 surface->midiIn = midiIn;
                                 surface->midiOut = midiOut;
                                 surface->templateFilename = templateFilename;
@@ -567,7 +575,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 numChannels = realSurfaces[index]->numChannels;
-                                numBankableChannels = realSurfaces[index]->numBankableChannels;
+                                isBankable = realSurfaces[index]->isBankable;
                                 midiIn = realSurfaces[index]->midiIn;
                                 midiOut = realSurfaces[index]->midiOut;
                                 strcpy(templateFilename, realSurfaces[index]->templateFilename.c_str());
@@ -578,7 +586,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     realSurfaces[index]->name = name;
                                     realSurfaces[index]->numChannels = numChannels;
-                                    realSurfaces[index]->numBankableChannels = numBankableChannels;
+                                    realSurfaces[index]->isBankable = isBankable;
                                     realSurfaces[index]->midiIn = midiIn;
                                     realSurfaces[index]->midiOut = midiOut;
                                     realSurfaces[index]->templateFilename = templateFilename;
@@ -805,7 +813,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         RealSurfaceLine* surface = new RealSurfaceLine();
                         surface->name = tokens[1];
                         surface->numChannels = atoi(tokens[2].c_str());
-                        surface->numBankableChannels = atoi(tokens[3].c_str());
+                        surface->isBankable = tokens[3] == "1" ? true : false;
                         surface->midiIn = atoi(tokens[4].c_str());
                         surface->midiOut = atoi(tokens[5].c_str());
                         surface->templateFilename = tokens[6];
@@ -891,7 +899,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     line = RealSurface_ + " ";
                     line += surface->name + " ";
                     line += to_string(surface->numChannels) + " ";
-                    line += to_string(surface->numBankableChannels) + " ";
+                    line += surface->isBankable ? "1 " : "0 ";
                     line += to_string(surface->midiIn) + " " ;
                     line += to_string(surface->midiOut) + " " ;
                     line += surface->templateFilename + "\n";

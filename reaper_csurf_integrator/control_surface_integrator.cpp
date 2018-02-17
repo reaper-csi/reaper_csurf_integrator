@@ -161,9 +161,9 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-RealSurface::RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels) : name_(name),  templateFilename_(templateFilename), numChannels_(numChannels), numBankableChannels_(numBankableChannels)
+RealSurface::RealSurface(const string name, string templateFilename, int numChannels, int isBankable) : name_(name),  templateFilename_(templateFilename), isBankable_(isBankable) 
 {
-    for(int i = 0; i < numChannels_; i++)
+    for(int i = 0; i < numChannels; i++)
         channels_.push_back(new RealSurfaceChannel(to_string(i + 1), this));
 }
 
@@ -423,13 +423,13 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             else if(tokens.size() == 2)
             {
                 if(inChannel)
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], i));
             }
             else if(tokens.size() == 6)
             {
                 if(inChannel)
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5])));
                 else
                     surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
@@ -437,7 +437,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             else if(tokens.size() == 8)
             {
                 if(inChannel)
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])));
                 else
                     surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
@@ -445,7 +445,7 @@ void CSurfManager::InitRealSurface(RealSurface* surface)
             else if(tokens.size() == 9)
             {
                 if(inChannel)
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                    for(int i = 0; i < surface->GetChannels().size(); i++)
                         surface->GetChannels()[i]->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
                 else
                     surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));

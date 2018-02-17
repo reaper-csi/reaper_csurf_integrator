@@ -134,8 +134,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_RealSurfaceName,41,9,170,14,ES_AUTOHSCROLL
     LTEXT           "Channels",IDC_STATIC,8,34,30,8
     EDITTEXT        IDC_EDIT_RealSurfaceNumChannels,41,31,25,14,ES_CENTER | ES_NUMBER
-    LTEXT           "Bankable Channels",IDC_STATIC,120,34,61,8
-    EDITTEXT        IDC_EDIT_RealSurfaceNumBankableChannels,186,31,25,14,ES_CENTER | ES_NUMBER
+    CONTROL         "Bankable",IDC_CHECK_IsBankable,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,166,35,45,10
 END
 
 
