@@ -821,8 +821,9 @@ public:
     {
         vector<string> trackLayout;
         vector<string> lockedChannels;
-       
-        // Place locked channel GUIDs
+        vector<string> movableChannels;
+
+        // Layout locked channel GUIDs
         for(auto surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
                 if(channel->GetIsMovable() == false)
@@ -833,26 +834,27 @@ public:
                 else
                     trackLayout.push_back("");
 
-        // Fill, in the rest of the GUID slots
-        int layoutStartIndex = 0;
+        // Layout movable channel GUIDs
         int offset = trackOffset_;
-        
-        while(offset < 0)
+        for(int i = 0; i < trackLayout.size() && offset < DAW::GetNumTracks() ; )
         {
-            offset++;
-            layoutStartIndex++;
-        }
-        
-        for(int i = layoutStartIndex; i < trackLayout.size() && offset < DAW::GetNumTracks() ; )
-        {
-            if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
+            if(offset < 0)
+            {
+                offset++;
+                movableChannels.push_back("");
+            }
+            else if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
                 offset++;
             else if(trackLayout[i] == "")
-                trackLayout[i++] = DAW::GetTrackGUIDAsString(offset++);
-            else
-                i++;
+                movableChannels.push_back(DAW::GetTrackGUIDAsString(offset++));
         }
-            
+        
+        // Merge in the movable channel GUIDs
+        offset = 0;
+        for(int i = 0; i < trackLayout.size() && offset < movableChannels.size(); i++)
+            if(trackLayout[i] == "")
+                trackLayout[i] = movableChannels[offset++];
+        
         // Apply new layout
         offset = 0;
         for(auto* surface : realSurfaces_)
@@ -862,47 +864,6 @@ public:
         
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
-
-        
-        
-        
-        /*
-        vector<string> immovableTracks;
-        
-        for(auto surface : realSurfaces_)
-            for(auto* channel : surface->GetChannels())
-                if(channel->GetIsMovable() == false)
-                    immovableTracks.push_back(channel->GetGUID());
-        
-        vector<string> movableTracks;
-        
-        for(int i = 0; i < GetNumBankableChannels(); i++)
-        {
-            if(offset < 0)
-            {
-                movableTracks.push_back("");
-                offset++;
-            }
-            else if(offset >= DAW::GetNumTracks())
-                movableTracks.push_back("");
-            else if(find(immovableTracks.begin(), immovableTracks.end(), DAW::GetTrackGUIDAsString(offset)) == immovableTracks.end())
-                movableTracks.push_back(DAW::GetTrackGUIDAsString(offset++));
-            else
-                offset++;
-        }
-        
-        offset = 0;
-        
-        // Apply new layout
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetChannels())
-                if(channel->GetIsMovable() == true)
-                    //if(movableTracks.size() < offset)
-                        channel->SetGUID(movableTracks[offset++]);
-        
-        for(auto* surface : realSurfaces_)
-            surface->ForceUpdateWidgets();
-         */
     }
     
     void RunAndUpdate()
