@@ -846,10 +846,7 @@ public:
         for(int i = layoutStartIndex; i < trackLayout.size() && offset < DAW::GetNumTracks() ; )
         {
             if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
-            {
                 offset++;
-                continue;
-            }
             else if(trackLayout[i] == "")
                 trackLayout[i++] = DAW::GetTrackGUIDAsString(offset++);
             else
