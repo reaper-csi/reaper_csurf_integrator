@@ -822,6 +822,7 @@ public:
         vector<string> trackLayout;
         vector<string> lockedChannels;
        
+        // Place locked channel GUIDs
         for(auto surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
                 if(channel->GetIsMovable() == false)
@@ -832,22 +833,27 @@ public:
                 else
                     trackLayout.push_back("");
 
+        // Fill, in the rest of the GUID slots
+        int layoutStartIndex = 0;
         int offset = trackOffset_;
-        for(int i = 0; i < trackLayout.size(); i++)
+        
+        while(offset < 0)
         {
-            string trackGUID = DAW::GetTrackGUIDAsString(offset);
-            
-            if(find(lockedChannels.begin(), lockedChannels.end(), trackGUID) != lockedChannels.end())
+            offset++;
+            layoutStartIndex++;
+        }
+        
+        for(int i = layoutStartIndex; i < trackLayout.size() && offset < DAW::GetNumTracks() ; )
+        {
+            if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
             {
-                if(trackLayout[i] != "")
-                    offset++;
+                offset++;
                 continue;
             }
             else if(trackLayout[i] == "")
-            {
-                trackLayout[i] = trackGUID;
-                offset++;
-            }
+                trackLayout[i++] = DAW::GetTrackGUIDAsString(offset++);
+            else
+                i++;
         }
             
         // Apply new layout
