@@ -821,8 +821,8 @@ public:
     {
         vector<string> lockedChannelLayout;
         vector<string> lockedChannels;
-        vector<string> channelLayout;
-
+        vector<string> movableChannelLayout;
+ 
         // Layout locked channel GUIDs
         for(auto surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
@@ -832,45 +832,61 @@ public:
                     lockedChannels.push_back(channel->GetGUID());
                 }
                 else
+                    
                     lockedChannelLayout.push_back("");
 
-        // Layout all channel GUIDs
-        int offset = trackOffset_;
+        // Layout channel GUIDs
+        int baseOffset = trackOffset_;
         for(int i = 0; i < lockedChannelLayout.size(); i++)
         {
-            if(lockedChannelLayout[i] != "")
+            if(baseOffset < 0)
             {
-                channelLayout.push_back(lockedChannelLayout[i]);
+                baseOffset++;
+                movableChannelLayout.push_back("");
             }
+            else if(baseOffset >= DAW::GetNumTracks())
+                movableChannelLayout.push_back("");
             else
+                movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(baseOffset++));
+        }
+        
+        // Remove the locked GUIDs
+        int preAdjustSize = movableChannelLayout.size();
+        for(int i = 0; i < lockedChannels.size(); i++)
+        {
+            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
+            if(iter != movableChannelLayout.end())
             {
-                if(offset >= DAW::GetNumTracks())
-                    channelLayout.push_back("");
-                else
-                {
-                    if(offset < 0)
-                    {
-                        offset++;
-                        channelLayout.push_back("");
-                    }
-                    else
-                    {
-                        if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
-                            while(offset < DAW::GetNumTracks() && find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset++)) != lockedChannels.end());
-
-                        channelLayout.push_back(DAW::GetTrackGUIDAsString(offset++));
-                    }
-                }
+                movableChannelLayout.erase(iter);
             }
         }
         
+        int delta = preAdjustSize - movableChannelLayout.size();
+
+        if(delta > 0 && delta < lockedChannels.size())
+        {
+            if(movableChannelLayout.size() >= delta - 1)
+                for(int i = 0; i < delta - 1; i++)
+                    movableChannelLayout.erase(movableChannelLayout.begin());
+        }
+
+        // Merge the layouts
+        vector<string> channelLayout;
+        baseOffset = 0;
+        for(int i = 0; i < lockedChannelLayout.size(); i++)
+        {
+            if(lockedChannelLayout[i] != "")
+                channelLayout.push_back(lockedChannelLayout[i]);
+            else
+                channelLayout.push_back(movableChannelLayout[baseOffset++]);
+        }
+        
         // Apply new layout
-        offset = 0;
+        baseOffset = 0;
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
-                 channel->SetGUID(channelLayout[offset++]);
-
-        
+                channel->SetGUID(channelLayout[baseOffset++]);
+     
         for(auto* surface : realSurfaces_)
             surface->ForceUpdateWidgets();
     }
