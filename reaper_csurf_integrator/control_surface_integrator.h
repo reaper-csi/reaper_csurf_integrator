@@ -819,47 +819,56 @@ public:
 
     void RefreshLayout()
     {
-        vector<string> trackLayout;
+        vector<string> lockedChannelLayout;
         vector<string> lockedChannels;
-        vector<string> movableChannels;
+        vector<string> channelLayout;
 
         // Layout locked channel GUIDs
         for(auto surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
                 if(channel->GetIsMovable() == false)
                 {
-                    trackLayout.push_back(channel->GetGUID());
+                    lockedChannelLayout.push_back(channel->GetGUID());
                     lockedChannels.push_back(channel->GetGUID());
                 }
                 else
-                    trackLayout.push_back("");
+                    lockedChannelLayout.push_back("");
 
-        // Layout movable channel GUIDs
+        // Layout all channel GUIDs
         int offset = trackOffset_;
-        for(int i = 0; i < trackLayout.size() && offset < DAW::GetNumTracks() ; )
+        for(int i = 0; i < lockedChannelLayout.size(); i++)
         {
-            if(offset < 0)
+            if(lockedChannelLayout[i] != "")
             {
-                offset++;
-                movableChannels.push_back("");
+                channelLayout.push_back(lockedChannelLayout[i]);
             }
-            else if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
-                offset++;
-            else if(trackLayout[i] == "")
-                movableChannels.push_back(DAW::GetTrackGUIDAsString(offset++));
+            else
+            {
+                if(offset >= DAW::GetNumTracks())
+                    channelLayout.push_back("");
+                else
+                {
+                    if(offset < 0)
+                    {
+                        offset++;
+                        channelLayout.push_back("");
+                    }
+                    else
+                    {
+                        if(find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset)) != lockedChannels.end())
+                            while(offset < DAW::GetNumTracks() && find(lockedChannels.begin(), lockedChannels.end(), DAW::GetTrackGUIDAsString(offset++)) != lockedChannels.end());
+
+                        channelLayout.push_back(DAW::GetTrackGUIDAsString(offset++));
+                    }
+                }
+            }
         }
-        
-        // Merge in the movable channel GUIDs
-        offset = 0;
-        for(int i = 0; i < trackLayout.size() && offset < movableChannels.size(); i++)
-            if(trackLayout[i] == "")
-                trackLayout[i] = movableChannels[offset++];
         
         // Apply new layout
         offset = 0;
         for(auto* surface : realSurfaces_)
             for(auto* channel : surface->GetBankableChannels())
-                 channel->SetGUID(trackLayout[offset++]);
+                 channel->SetGUID(channelLayout[offset++]);
 
         
         for(auto* surface : realSurfaces_)
