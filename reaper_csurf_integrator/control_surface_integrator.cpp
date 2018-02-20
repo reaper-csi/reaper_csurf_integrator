@@ -161,7 +161,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-RealSurface::RealSurface(const string name, string templateFilename, int numChannels, int isBankable) : name_(name),  templateFilename_(templateFilename), isBankable_(isBankable) 
+RealSurface::RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name),  templateFilename_(templateFilename), isBankable_(isBankable)
 {
     for(int i = 0; i < numChannels; i++)
         channels_.push_back(new RealSurfaceChannel(to_string(i + 1), this));
