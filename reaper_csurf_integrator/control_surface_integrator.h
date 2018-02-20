@@ -981,7 +981,7 @@ public:
         
         for(auto* surface : realSurfaces_)
         {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
+            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
                 channel = surface->GetChannels()[i];
                 
@@ -1000,7 +1000,7 @@ public:
         
         for(auto* surface : realSurfaces_)
         {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
+            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
                 channel = surface->GetChannels()[i];
                 MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
@@ -1024,7 +1024,7 @@ public:
         
         for(auto* surface : realSurfaces_)
         {
-            for(int i = 0; i < surface->GetChannels().size(); i++)
+            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
                 channel = surface->GetChannels()[i];
                 MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
