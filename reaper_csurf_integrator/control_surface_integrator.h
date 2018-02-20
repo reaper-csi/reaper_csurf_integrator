@@ -1002,8 +1002,11 @@ public:
             for(int i = 0; i < surface->GetChannels().size(); i++)
             {
                 channel = surface->GetChannels()[i];
+                MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
+                if(track == nullptr)
+                    continue;
                 
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                 {
                     channel->SetIsMovable(false);
                     DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
@@ -1023,8 +1026,11 @@ public:
             for(int i = 0; i < surface->GetChannels().size(); i++)
             {
                 channel = surface->GetChannels()[i];
-                
-                if(DAW::GetMediaTrackInfo_Value(DAW::GetTrackFromGUID(channel->GetGUID()), "I_SELECTED"))
+                MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
+                if(track == nullptr)
+                    continue;
+
+                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                 {
                     channel->SetIsMovable(true);
                     if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))

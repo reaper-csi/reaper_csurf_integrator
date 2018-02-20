@@ -218,6 +218,9 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 void Zone::MapFXActions(string trackGUID, RealSurface* surface)
 {
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    if(track == nullptr)
+        return;
+    
     Layout* layout = GetLayout();
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -316,10 +319,12 @@ void Zone::MapRealSurfaceActions(RealSurface* surface)
 
 void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
 {
-    Layout* layout = GetLayout();
     MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    if(track == nullptr)
+        return;
+
+    Layout* layout = GetLayout();
     string actionBaseAddress = trackGUID + GetName() + surface->GetName();
- 
     string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
