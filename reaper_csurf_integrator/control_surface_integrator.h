@@ -807,8 +807,8 @@ public:
         
         trackOffset_ += stride;
         
-        if(trackOffset_ < 1 - numBankableChannels_)
-            trackOffset_ = 1 - numBankableChannels_;
+        if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
+            trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
         
         if(trackOffset_ > DAW::GetNumTracks() - 1)
             trackOffset_ = DAW::GetNumTracks() - 1;
@@ -816,6 +816,19 @@ public:
         if(trackOffset_ != previousTrackOffset)
             RefreshLayout();
     }
+    
+    int GetNumLockedTracks()
+    {
+        int numLockedTracks = 0;
+        
+        for(auto surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                if(channel->GetIsMovable() == false)
+                    numLockedTracks++;
+        
+        return numLockedTracks;
+    }
+    
 
     void RefreshLayout()
     {
@@ -879,7 +892,7 @@ public:
                     channelLayout.push_back(movableChannelLayout[baseOffset++]);
             }
         
-            // GAW TBD -- Yucchy feedback servo correct algo
+            // GAW NASTY -- Yucchy feedback servo correct algo
             if(channelLayout.size() == previousChannelLayout.size())
             {
                 bool identical = true;
