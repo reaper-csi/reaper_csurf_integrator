@@ -639,7 +639,6 @@ public:
         actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
         fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
 
-        if(surface->)
         numBankableChannels_ += surface->GetBankableChannels().size();
         
         surface->SetZone(this);
