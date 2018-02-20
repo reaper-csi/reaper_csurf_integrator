@@ -255,7 +255,7 @@ protected:
     bool zoom_ = false;
     bool scrub_ = false;
     
-    RealSurface(const string name, string templateFilename, int numChannels, int numBankableChannels); 
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable_);
 
 public:
     virtual ~RealSurface() {};
@@ -639,7 +639,9 @@ public:
         actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
         fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
 
+        if(surface->)
         numBankableChannels_ += surface->GetBankableChannels().size();
+        
         surface->SetZone(this);
         realSurfaces_.push_back(surface);
     }
