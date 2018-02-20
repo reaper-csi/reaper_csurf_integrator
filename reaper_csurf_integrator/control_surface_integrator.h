@@ -819,9 +819,13 @@ public:
 
     void RefreshLayout()
     {
+        static int previousTrackOffset = 99999999;
+        static vector<string> previousChannelLayout;
+        
         vector<string> lockedChannelLayout;
         vector<string> lockedChannels;
         vector<string> movableChannelLayout;
+        vector<string> channelLayout;
  
         // Layout locked channel GUIDs
         for(auto surface : realSurfaces_)
@@ -835,50 +839,69 @@ public:
                     
                     lockedChannelLayout.push_back("");
 
-        // Layout channel GUIDs
-        int baseOffset = trackOffset_;
-        for(int i = 0; i < lockedChannelLayout.size(); i++)
-        {
-            if(baseOffset < 0)
-            {
-                baseOffset++;
-                movableChannelLayout.push_back("");
-            }
-            else if(baseOffset >= DAW::GetNumTracks())
-                movableChannelLayout.push_back("");
-            else
-                movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(baseOffset++));
-        }
+        int baseOffset = 0;
         
-        // Remove the locked GUIDs
-        int preAdjustSize = movableChannelLayout.size();
-        for(int i = 0; i < lockedChannels.size(); i++)
+        for(;;)
         {
-            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
-            if(iter != movableChannelLayout.end())
+            // Layout channel GUIDs
+            baseOffset = trackOffset_;
+            
+            for(int i = 0; i < lockedChannelLayout.size(); i++)
             {
-                movableChannelLayout.erase(iter);
+                if(baseOffset < 0)
+                {
+                    baseOffset++;
+                    movableChannelLayout.push_back("");
+                }
+                else if(baseOffset >= DAW::GetNumTracks())
+                    movableChannelLayout.push_back("");
+                else
+                    movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(baseOffset++));
             }
-        }
+            
+            // Remove the locked GUIDs
+            for(int i = 0; i < lockedChannels.size(); i++)
+            {
+                auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
+                if(iter != movableChannelLayout.end())
+                {
+                    movableChannelLayout.erase(iter);
+                }
+            }
+            
+            // Merge the layouts
+            baseOffset = 0;
+            for(int i = 0; i < lockedChannelLayout.size(); i++)
+            {
+                if(lockedChannelLayout[i] != "")
+                    channelLayout.push_back(lockedChannelLayout[i]);
+                else
+                    channelLayout.push_back(movableChannelLayout[baseOffset++]);
+            }
         
-        int delta = preAdjustSize - movableChannelLayout.size();
-
-        if(delta > 0 && delta < lockedChannels.size())
-        {
-            if(movableChannelLayout.size() >= delta - 1)
-                for(int i = 0; i < delta - 1; i++)
-                    movableChannelLayout.erase(movableChannelLayout.begin());
-        }
-
-        // Merge the layouts
-        vector<string> channelLayout;
-        baseOffset = 0;
-        for(int i = 0; i < lockedChannelLayout.size(); i++)
-        {
-            if(lockedChannelLayout[i] != "")
-                channelLayout.push_back(lockedChannelLayout[i]);
-            else
-                channelLayout.push_back(movableChannelLayout[baseOffset++]);
+            // GAW TBD -- Yucchy feedback servo correct algo
+            if(channelLayout.size() == previousChannelLayout.size())
+            {
+                bool identical = true;
+               
+                for(int i = 0; i < channelLayout.size(); i++)
+                    if(channelLayout[i] != previousChannelLayout[i])
+                        identical = false;
+               
+                if(identical == true)
+                {
+                    previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+                    movableChannelLayout.clear();
+                    channelLayout.clear();
+                    continue;
+                }
+           }
+            
+            previousTrackOffset = trackOffset_;
+            previousChannelLayout.clear();
+            for(auto GUID : channelLayout)
+                previousChannelLayout.push_back(GUID);
+            break;
         }
         
         // Apply new layout
