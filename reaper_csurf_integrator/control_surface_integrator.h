@@ -983,7 +983,7 @@ public:
         {
             for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
-                channel = surface->GetChannels()[i];
+                channel = surface->GetBankableChannels()[i];
                 
                 if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
                 {
@@ -1002,7 +1002,7 @@ public:
         {
             for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
-                channel = surface->GetChannels()[i];
+                channel = surface->GetBankableChannels()[i];
                 MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
                 if(track == nullptr)
                     continue;
@@ -1026,7 +1026,7 @@ public:
         {
             for(int i = 0; i < surface->GetBankableChannels().size(); i++)
             {
-                channel = surface->GetChannels()[i];
+                channel = surface->GetBankableChannels()[i];
                 MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
                 if(track == nullptr)
                     continue;
