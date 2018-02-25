@@ -778,7 +778,7 @@ public:
             {
                 if(DAW::GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
                 {
-                    channels[currentOffset]->SetIsMovable(true); // unlock this, sinvce there is no longer a track to lock to
+                    channels[currentOffset]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
                     shouldRefreshLayout = true;
                     break;
                 }
