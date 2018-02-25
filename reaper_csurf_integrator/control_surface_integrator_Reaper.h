@@ -55,6 +55,7 @@ public:
         midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
 #endif
     }
+    
     static const char* get_ini_file() { return ::get_ini_file(); }
 
     static DWORD GetPrivateProfileString(const char *appname, const char *keyname, const char *def, char *ret, int retsize, const char *fn) { return ::GetPrivateProfileString(appname, keyname, def, ret, retsize, fn); }
