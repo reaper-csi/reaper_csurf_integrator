@@ -37,6 +37,8 @@
 #define IDC_BUTTON_AddRealSurface       1033
 #define IDC_BUTTON_EditRealSurface      1034
 #define IDC_BUTTON_RemoveRealSurface    1035
+#define IDC_RADIO_MCP                   1036
+#define IDC_RADIO_TCP                   1037
 
 // Next default values for new objects
 // 
@@ -44,7 +46,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1025
+#define _APS_NEXT_CONTROL_VALUE         1037
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
