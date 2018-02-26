@@ -169,7 +169,7 @@ RealSurface::RealSurface(const string name, string templateFilename, int numChan
 
 void RealSurface::MapTrackToWidgets(MediaTrack *track)
 {
-    string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
+    string trackGUID = GetZone()->GetLayout()->GetManager()->GetTrackGUIDAsString(track);
     
     for(auto* channel : channels_)
         channel->SetGUID(trackGUID);
@@ -215,9 +215,210 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::OnTrackSelection(MediaTrack* track)
+{
+    for(auto* surface : realSurfaces_)
+        DoAction(1.0, GetLayout()->GetManager()->GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
+}
+
+void Zone::TrackListChanged()
+{
+    vector<RealSurfaceChannel*> channels;
+    
+    for(auto* surface : realSurfaces_)
+        for(auto* channel : surface->GetChannels())
+            channels.push_back(channel);
+    
+    int currentOffset = 0;
+    bool shouldRefreshLayout = false;
+    
+    for(int i = trackOffset_; i < GetLayout()->GetManager()->GetNumTracks() + 1 && currentOffset < channels.size(); i++)
+    {
+        if(channels[currentOffset]->GetIsMovable() == false)
+        {
+            if(GetLayout()->GetManager()->GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
+            {
+                channels[currentOffset]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
+                shouldRefreshLayout = true;
+                break;
+            }
+            else
+            {
+                currentOffset++; // track exists, move on
+            }
+        }
+        else if(channels[currentOffset]->GetGUID() == GetLayout()->GetManager()->GetTrackGUIDAsString(i))
+        {
+            currentOffset++; // track exists and positions are in synch
+        }
+        else
+        {
+            shouldRefreshLayout = true;
+            break;
+        }
+    }
+    
+    if(shouldRefreshLayout)
+        RefreshLayout();
+}
+
+void Zone::AdjustTrackBank(int stride)
+{
+    int previousTrackOffset = trackOffset_;
+    
+    trackOffset_ += stride;
+    
+    if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
+        trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
+    
+    if(trackOffset_ >  GetLayout()->GetManager()->GetNumTracks() - 1)
+        trackOffset_ = GetLayout()->GetManager()->GetNumTracks() - 1;
+    
+    if(trackOffset_ != previousTrackOffset)
+        RefreshLayout();
+}
+
+
+void Zone::RefreshLayout()
+{
+    static int previousTrackOffset = 99999999;
+    static vector<string> previousChannelLayout;
+    
+    vector<string> lockedChannelLayout;
+    vector<string> lockedChannels;
+    vector<string> movableChannelLayout;
+    vector<string> channelLayout;
+    
+    // Layout locked channel GUIDs
+    for(auto surface : realSurfaces_)
+        for(auto* channel : surface->GetBankableChannels())
+            if(channel->GetIsMovable() == false)
+            {
+                lockedChannelLayout.push_back(channel->GetGUID());
+                lockedChannels.push_back(channel->GetGUID());
+            }
+            else
+                
+                lockedChannelLayout.push_back("");
+    
+    int baseOffset = 0;
+    
+    for(;;)
+    {
+        // Layout channel GUIDs
+        baseOffset = trackOffset_;
+        
+        for(int i = 0; i < lockedChannelLayout.size(); i++)
+        {
+            if(baseOffset < 0)
+            {
+                baseOffset++;
+                movableChannelLayout.push_back("");
+            }
+            else if(baseOffset >= GetLayout()->GetManager()->GetNumTracks())
+                movableChannelLayout.push_back("");
+            else
+                movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(baseOffset++));
+        }
+        
+        // Remove the locked GUIDs
+        for(int i = 0; i < lockedChannels.size(); i++)
+        {
+            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
+            if(iter != movableChannelLayout.end())
+            {
+                movableChannelLayout.erase(iter);
+            }
+        }
+        
+        // Merge the layouts
+        baseOffset = 0;
+        for(int i = 0; i < lockedChannelLayout.size(); i++)
+        {
+            if(lockedChannelLayout[i] != "")
+                channelLayout.push_back(lockedChannelLayout[i]);
+            else
+                channelLayout.push_back(movableChannelLayout[baseOffset++]);
+        }
+        
+        // GAW NASTY -- Yucchy feedback servo correct algo
+        if(channelLayout.size() == previousChannelLayout.size())
+        {
+            bool identical = true;
+            
+            for(int i = 0; i < channelLayout.size(); i++)
+                if(channelLayout[i] != previousChannelLayout[i])
+                    identical = false;
+            
+            if(identical == true)
+            {
+                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+                movableChannelLayout.clear();
+                channelLayout.clear();
+                continue;
+            }
+        }
+        
+        previousTrackOffset = trackOffset_;
+        previousChannelLayout.clear();
+        for(auto GUID : channelLayout)
+            previousChannelLayout.push_back(GUID);
+        break;
+    }
+    
+    // Apply new layout
+    baseOffset = 0;
+    for(auto* surface : realSurfaces_)
+        for(auto* channel : surface->GetBankableChannels())
+            channel->SetGUID(channelLayout[baseOffset++]);
+    
+    for(auto* surface : realSurfaces_)
+        surface->ForceUpdateWidgets();
+}
+
+void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
+{
+    char fxName[BUFSZ];
+    char fxGUID[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    DeleteFXWindows();
+    surface->UnmapFXFromWidgets(track);
+    
+    string trackGUID = GetLayout()->GetManager()->GetTrackGUIDAsString(track);
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+        
+        if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+        {
+            FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
+            
+            for(auto mapEntry : map->GetTemplateEntries())
+            {
+                if(mapEntry.paramName == GainReductionDB)
+                    surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                else
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                        if(mapEntry.paramName == fxParamName)
+                            surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+            }
+            
+            AddFXWindow(FXWindow(track, fxGUID));
+        }
+    }
+    
+    OpenFXWindows();
+    
+    surface->ForceUpdateWidgets();
+}
+
+
 void Zone::MapFXActions(string trackGUID, RealSurface* surface)
 {
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(trackGUID);
     if(track == nullptr)
         return;
     
@@ -277,7 +478,7 @@ void Zone::TrackFXListChanged(MediaTrack* track)
     }
     
     for(auto* surface : realSurfaces_)
-        MapFXActions(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface);
+        MapFXActions(GetLayout()->GetManager()->GetTrackGUIDAsString(track), surface);
 }
 
 void Zone::AddAction(string actionAddress, Action* action)
@@ -319,7 +520,7 @@ void Zone::MapRealSurfaceActions(RealSurface* surface)
 
 void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
 {
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID);
+    MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(trackGUID);
     if(track == nullptr)
         return;
 
@@ -374,6 +575,56 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
     }
 }
 
+void Zone::ImmobilizeSelectedTracks()
+{
+    RealSurfaceChannel* channel = nullptr;
+    
+    for(auto* surface : realSurfaces_)
+    {
+        for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+        {
+            channel = surface->GetBankableChannels()[i];
+            MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(channel->GetGUID());
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+            {
+                channel->SetIsMovable(false);
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
+                DAW::MarkProjectDirty(nullptr);
+            }
+        }
+    }
+}
+
+void Zone::MobilizeSelectedTracks()
+{
+    char buffer[BUFSZ];
+    RealSurfaceChannel* channel = nullptr;
+    
+    for(auto* surface : realSurfaces_)
+    {
+        for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+        {
+            channel = surface->GetBankableChannels()[i];
+            MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(channel->GetGUID());
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+            {
+                channel->SetIsMovable(true);
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                {
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
+                    DAW::MarkProjectDirty(nullptr);
+                }
+            }
+        }
+    }
+}
+
 // to Actions ->
 double Zone::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
@@ -398,6 +649,17 @@ void Zone::CycleAction(string GUID, string surfaceName, string actionName, strin
 void Zone::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
 {
     GetLayout()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Layout
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Layout::OnTrackSelection(MediaTrack* track)
+{
+    MapTrack(GetManager()->GetTrackGUIDAsString(track));
+    
+    for(auto const& [name, zone] : zones_)
+        zone->OnTrackSelection(track);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
