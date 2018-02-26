@@ -621,7 +621,14 @@ public:
     Layout* GetLayout() { return layout_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     void MapFXActions(string trackGUID, RealSurface* surface);
+    void TrackListChanged();
     void TrackFXListChanged(MediaTrack* track);
+    void AdjustTrackBank(int stride);
+    void RefreshLayout();
+    void OnTrackSelection(MediaTrack* track);
+    void MapFXToWidgets(MediaTrack *track, RealSurface* surface);
+    void ImmobilizeSelectedTracks();
+    void MobilizeSelectedTracks();
 
     void Init()
     {
@@ -679,12 +686,6 @@ public:
         CloseFXWindows();
         openFXWindows_.clear();
     }
-
-    void OnTrackSelection(MediaTrack* track)
-    {
-        for(auto* surface : realSurfaces_)
-            DoAction(1.0, DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), surface->GetName(), TrackOnSelection, TrackOnSelection);
-    }
     
     void MapTrackToWidgets(MediaTrack* track, string surfaceName)
     {
@@ -707,45 +708,6 @@ public:
                 MapFXToWidgets(track, surface);
     }
     
-    void MapFXToWidgets(MediaTrack *track, RealSurface* surface)
-    {
-        char fxName[BUFSZ];
-        char fxGUID[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        DeleteFXWindows();
-        surface->UnmapFXFromWidgets(track);
-        
-        string trackGUID = DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false));
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            
-            if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
-            {
-                FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
-                
-                for(auto mapEntry : map->GetTemplateEntries())
-                {
-                    if(mapEntry.paramName == GainReductionDB)
-                        surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                    else
-                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
-                            if(mapEntry.paramName == fxParamName)
-                                surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
-                }
-                
-                AddFXWindow(FXWindow(track, fxGUID));
-            }
-        }
-        
-        OpenFXWindows();
-        
-        surface->ForceUpdateWidgets();
-    }
-    
     void UnmapWidgetsFromFX(MediaTrack* track, string surfaceName)
     {
         for(auto* surface : realSurfaces_)
@@ -761,63 +723,6 @@ public:
         for(auto* surface : realSurfaces_)
             MapFXActions(trackGUID, surface);
     }
-
-    void TrackListChanged()
-    {
-        vector<RealSurfaceChannel*> channels;
-       
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetChannels())
-                channels.push_back(channel);
-
-        int currentOffset = 0;
-        bool shouldRefreshLayout = false;
-
-        for(int i = trackOffset_; i < DAW::GetNumTracks() + 1 && currentOffset < channels.size(); i++)
-        {
-            if(channels[currentOffset]->GetIsMovable() == false)
-            {
-                if(DAW::GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
-                {
-                    channels[currentOffset]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
-                    shouldRefreshLayout = true;
-                    break;
-                }
-                else
-                {
-                    currentOffset++; // track exists, move on
-                }
-            }
-            else if(channels[currentOffset]->GetGUID() == DAW::GetTrackGUIDAsString(i))
-            {
-                currentOffset++; // track exists and positions are in synch
-            }
-            else
-            {
-                shouldRefreshLayout = true;
-                break;
-            }
-        }
-        
-        if(shouldRefreshLayout)
-            RefreshLayout();
-    }
-    
-    void AdjustTrackBank(int stride)
-    {
-        int previousTrackOffset = trackOffset_;
-        
-        trackOffset_ += stride;
-        
-        if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
-            trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
-        
-        if(trackOffset_ > DAW::GetNumTracks() - 1)
-            trackOffset_ = DAW::GetNumTracks() - 1;
-        
-        if(trackOffset_ != previousTrackOffset)
-            RefreshLayout();
-    }
     
     int GetNumLockedTracks()
     {
@@ -829,104 +734,6 @@ public:
                     numLockedTracks++;
         
         return numLockedTracks;
-    }
-    
-
-    void RefreshLayout()
-    {
-        static int previousTrackOffset = 99999999;
-        static vector<string> previousChannelLayout;
-        
-        vector<string> lockedChannelLayout;
-        vector<string> lockedChannels;
-        vector<string> movableChannelLayout;
-        vector<string> channelLayout;
- 
-        // Layout locked channel GUIDs
-        for(auto surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                if(channel->GetIsMovable() == false)
-                {
-                    lockedChannelLayout.push_back(channel->GetGUID());
-                    lockedChannels.push_back(channel->GetGUID());
-                }
-                else
-                    
-                    lockedChannelLayout.push_back("");
-
-        int baseOffset = 0;
-        
-        for(;;)
-        {
-            // Layout channel GUIDs
-            baseOffset = trackOffset_;
-            
-            for(int i = 0; i < lockedChannelLayout.size(); i++)
-            {
-                if(baseOffset < 0)
-                {
-                    baseOffset++;
-                    movableChannelLayout.push_back("");
-                }
-                else if(baseOffset >= DAW::GetNumTracks())
-                    movableChannelLayout.push_back("");
-                else
-                    movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(baseOffset++));
-            }
-            
-            // Remove the locked GUIDs
-            for(int i = 0; i < lockedChannels.size(); i++)
-            {
-                auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
-                if(iter != movableChannelLayout.end())
-                {
-                    movableChannelLayout.erase(iter);
-                }
-            }
-            
-            // Merge the layouts
-            baseOffset = 0;
-            for(int i = 0; i < lockedChannelLayout.size(); i++)
-            {
-                if(lockedChannelLayout[i] != "")
-                    channelLayout.push_back(lockedChannelLayout[i]);
-                else
-                    channelLayout.push_back(movableChannelLayout[baseOffset++]);
-            }
-        
-            // GAW NASTY -- Yucchy feedback servo correct algo
-            if(channelLayout.size() == previousChannelLayout.size())
-            {
-                bool identical = true;
-               
-                for(int i = 0; i < channelLayout.size(); i++)
-                    if(channelLayout[i] != previousChannelLayout[i])
-                        identical = false;
-               
-                if(identical == true)
-                {
-                    previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-                    movableChannelLayout.clear();
-                    channelLayout.clear();
-                    continue;
-                }
-           }
-            
-            previousTrackOffset = trackOffset_;
-            previousChannelLayout.clear();
-            for(auto GUID : channelLayout)
-                previousChannelLayout.push_back(GUID);
-            break;
-        }
-        
-        // Apply new layout
-        baseOffset = 0;
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                channel->SetGUID(channelLayout[baseOffset++]);
-     
-        for(auto* surface : realSurfaces_)
-            surface->ForceUpdateWidgets();
     }
     
     void RunAndUpdate()
@@ -990,56 +797,6 @@ public:
                 {
                     channel->SetGUID(buffer);
                     channel->SetIsMovable(false);
-                }
-            }
-        }
-    }
-
-    void ImmobilizeSelectedTracks()
-    {
-        RealSurfaceChannel* channel = nullptr;
-        
-        for(auto* surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
-            {
-                channel = surface->GetBankableChannels()[i];
-                MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
-                if(track == nullptr)
-                    continue;
-                
-                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-                {
-                    channel->SetIsMovable(false);
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
-                    DAW::MarkProjectDirty(nullptr);
-                }
-            }
-        }
-    }
-    
-    void MobilizeSelectedTracks()
-    {
-        char buffer[BUFSZ];
-        RealSurfaceChannel* channel = nullptr;
-        
-        for(auto* surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
-            {
-                channel = surface->GetBankableChannels()[i];
-                MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID());
-                if(track == nullptr)
-                    continue;
-
-                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-                {
-                    channel->SetIsMovable(true);
-                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
-                    {
-                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
-                        DAW::MarkProjectDirty(nullptr);
-                    }
                 }
             }
         }
@@ -1126,7 +883,8 @@ public:
 
     string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
-   
+    void OnTrackSelection(MediaTrack* track);
+    
     bool GetTouchState(string trackGUID, int touchedControl)
     {
         for(string touchedGUID : touchedTracks_)
@@ -1177,14 +935,6 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
-    }
-    
-    void OnTrackSelection(MediaTrack* track)
-    {
-        MapTrack(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)));
-        
-        for(auto const& [name, zone] : zones_)
-            zone->OnTrackSelection(track);
     }
     
     void SetShowFXWindows(string zoneName, string surfaceName, bool value)
@@ -1610,7 +1360,12 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
-       
+    string GetTrackGUIDAsString(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
+    string GetTrackGUIDAsString(int trackNumber) { return DAW::GetTrackGUIDAsString(trackNumber, followMCP_); }
+    MediaTrack *GetTrackFromGUID(string trackGUID) { return DAW::GetTrackFromGUID(trackGUID, followMCP_); }
+    MediaTrack* CSurf_TrackFromID(int idx) { return DAW::CSurf_TrackFromID(idx, followMCP_); }
+    int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
+
     void OnTrackSelection(MediaTrack *track)
     {
         if(layouts_.size() > 0)

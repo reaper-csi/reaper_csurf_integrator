@@ -157,11 +157,6 @@ public:
     static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
 
     static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
-
-    static int GetNumTracks() { return ::GetNumTracks(); };
-
-    
-    // GAW TBD This whole section has to be called through Manager with MCP/TCP context
    
     static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
     
@@ -169,10 +164,9 @@ public:
     
     static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView);}
 
-    
-    static string GetTrackGUIDAsString(int trackNumber)
+    static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
-        if(trackNumber < 0 || trackNumber > GetNumTracks())
+        if(trackNumber < 0 || trackNumber > CSurf_NumTracks(mcpView))
             return "";
         else if(0 == trackNumber)
             return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
@@ -180,15 +174,32 @@ public:
         {
             char pBuffer[BUFSZ];
             memset(pBuffer, 0, sizeof(pBuffer));
-            guidToString(GetTrackGUID(CSurf_TrackFromID(trackNumber, false)), pBuffer);
+            guidToString(GetTrackGUID(CSurf_TrackFromID(trackNumber, mcpView)), pBuffer);
             return pBuffer;
         }
     }
-
-    static MediaTrack *GetTrackFromGUID(string trackGUID)
+    
+    static string GetTrackGUIDAsString(MediaTrack* track, bool mcpView)
     {
-        for(int i = 0; i < GetNumTracks() + 1; i++) // +1 is for Reaper Master Track
-            if(GetTrackGUIDAsString(i) == trackGUID)
+        int trackNumber = CSurf_TrackToID(track, mcpView);
+        
+        if(trackNumber < 0 || trackNumber > CSurf_NumTracks(mcpView))
+            return "";
+        else if(0 == trackNumber)
+            return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
+        else
+        {
+            char pBuffer[BUFSZ];
+            memset(pBuffer, 0, sizeof(pBuffer));
+            guidToString(GetTrackGUID(track), pBuffer);
+            return pBuffer;
+        }
+    }
+    
+    static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
+    {
+        for(int i = 0; i < CSurf_NumTracks(mcpView) + 1; i++) // +1 is for Reaper Master Track
+            if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
                 return CSurf_TrackFromID(i, false);
         
         return nullptr;

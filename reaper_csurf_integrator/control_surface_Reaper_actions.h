@@ -403,13 +403,13 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        int selectedTrackNum = DAW::CSurf_TrackToID(track_, false);
+        int selectedTrackNum = GetLayout()->GetManager()->CSurf_TrackToID(track_);
         int otherSelectedTrackNum = 0;
 
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
-            for(int i = 0; i < DAW::GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, false), "I_SELECTED"))
+            for(int i = 0; i < GetLayout()->GetManager()->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetLayout()->GetManager()->CSurf_TrackFromID(i), "I_SELECTED"))
                 {
                     otherSelectedTrackNum = i;
                     break;
@@ -420,8 +420,8 @@ public:
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
-                DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(DAW::CSurf_TrackFromID(i, false), 1), NULL);
-                GetLayout()->GetManager()->OnTrackSelection(DAW::CSurf_TrackFromID(i, false));
+                DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(GetLayout()->GetManager()->CSurf_TrackFromID(i), 1), NULL);
+                GetLayout()->GetManager()->OnTrackSelection(GetLayout()->GetManager()->CSurf_TrackFromID(i));
             }
         }
     }
@@ -481,7 +481,7 @@ public:
 
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), value == 0 ? false : true);
+        GetLayout()->SetTouchState(GetLayout()->GetManager()->GetTrackGUIDAsString(track_), value == 0 ? false : true);
     }
 };
 
@@ -495,7 +495,7 @@ private:
     
     bool lastTouched_ = false;
     
-    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track_, false)), 0); }
+    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(GetLayout()->GetManager()->GetTrackGUIDAsString(track_), 0); }
     
 public:
     TrackTouchControlled_Action(string actionAddress, Layout* layout, MediaTrack* track, Action* action) : Track_Action(layout, track), action_(action), actionAddress_(actionAddress) {}
@@ -588,9 +588,9 @@ public:
     
     virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
     {
-        for(int i = 0; i < DAW::GetNumTracks(); i++)
+        for(int i = 0; i < GetLayout()->GetManager()->GetNumTracks(); i++)
         {
-            MediaTrack *track = DAW::CSurf_TrackFromID(i, false);
+            MediaTrack *track = GetLayout()->GetManager()->CSurf_TrackFromID(i);
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                 return DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
