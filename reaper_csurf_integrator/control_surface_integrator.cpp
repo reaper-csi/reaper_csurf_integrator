@@ -226,7 +226,7 @@ void Zone::TrackListChanged()
     vector<RealSurfaceChannel*> channels;
     
     for(auto* surface : realSurfaces_)
-        for(auto* channel : surface->GetChannels())
+        for(auto* channel : surface->GetBankableChannels())
             channels.push_back(channel);
     
     int currentOffset = 0;
