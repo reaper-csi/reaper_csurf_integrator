@@ -38,6 +38,7 @@ const string ChannelEnd = "ChannelEnd";
 const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
+const string FollowMCP = "FollowMCP";
 const string RealSurface_ = "RealSurface";
 const string Layout_ = "Layout";
 const string Zone_ = "Zone";
@@ -1466,6 +1467,7 @@ private:
     bool isInitialized_ = false;
     int currentLayoutIndex_ = 0; 
     bool VSTMonitor_ = false;
+    bool followMCP_ = false;
     
     void InitRealSurface(RealSurface* surface);
 
@@ -1511,9 +1513,17 @@ private:
                 {
                     if(tokens.size() != 2)
                         continue;
-
+                    
                     if(tokens[1] == "On")
                         VSTMonitor_ = true;
+                }
+                else if(tokens[0] == FollowMCP)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "Yes")
+                        followMCP_ = true;
                 }
                 else if(tokens[0] == RealSurface_)
                 {
@@ -1599,7 +1609,8 @@ public:
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
-    
+    int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+       
     void OnTrackSelection(MediaTrack *track)
     {
         if(layouts_.size() > 0)

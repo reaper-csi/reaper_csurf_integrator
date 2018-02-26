@@ -156,13 +156,19 @@ public:
     
     static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
 
+    static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
+
     static int GetNumTracks() { return ::GetNumTracks(); };
 
+    
+    // GAW TBD This whole section has to be called through Manager with MCP/TCP context
+   
+    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
+    
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
     
     static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView);}
 
-    static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
     
     static string GetTrackGUIDAsString(int trackNumber)
     {
