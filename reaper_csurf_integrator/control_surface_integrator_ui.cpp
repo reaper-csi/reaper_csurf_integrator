@@ -449,6 +449,14 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 switch(LOWORD(wParam))
                 {
+                    case IDC_RADIO_MCP:
+                        CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                        break;
+                        
+                    case IDC_RADIO_TCP:
+                        CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                        break;
+                        
                     case IDC_LIST_Layouts:
                         if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
@@ -805,6 +813,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
                     }
+                    else if(tokens[0] == FollowMCP)
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "Yes")
+                            CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_CHECKED);
+                        else
+                            CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
+                    }
                     else if(tokens[0] == RealSurface_)
                     {
                         if(tokens.size() != 7)
@@ -871,21 +889,21 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             if(iniFile.is_open())
             {
-                string line = "MidiInMonitor ";
+                string line = MidiInMonitor + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiInMon))
                     line += "On";
                 else
                     line += "Off";
                 iniFile << line + "\n";
                 
-                line = "MidiOutMonitor ";
+                line = MidiOutMonitor + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiOutMon))
                     line += "On";
                 else
                     line += "Off";
                 iniFile << line + "\n";
                 
-                line = "VSTMonitor ";
+                line = VSTMonitor + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_VSTParamMon))
                     line += "On";
                 else
@@ -893,7 +911,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile << line + "\n";
                 
                 iniFile << "\n";
-            
+                
+                line = FollowMCP + " ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
+                    line += "Yes";
+                else
+                    line += "No";
+                iniFile << line + "\n";
+                
+                iniFile << "\n";
+                
                 for(auto surface : realSurfaces)
                 {
                     line = RealSurface_ + " ";
