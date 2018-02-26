@@ -85,7 +85,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
 
 bool CSurfIntegrator::GetTouchState(MediaTrack *track, int touchedControl)
 {
-    return manager_->GetTouchState(DAW::GetTrackGUIDAsString(DAW::CSurf_TrackToID(track, false)), touchedControl);
+    return manager_->GetTouchState(manager_->GetTrackGUIDAsString(track), touchedControl);
 }
 
 void CSurfIntegrator::Run()
