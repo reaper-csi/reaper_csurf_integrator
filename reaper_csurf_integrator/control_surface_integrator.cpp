@@ -21,8 +21,8 @@ Action* ActionFor(string name, Layout* layout)
     else if(name == "Play")  return new Play_Action(layout);
     else if(name == "Record")  return new Record_Action(layout);
     else if(name == "NextMap")  return new NextMap_Action(layout);
-    else if(name == "ImmobilizeSelectedTracks")  return new ImmobilizeSelectedTracks_Action(layout);
-    else if(name == "MobilizeSelectedTracks")  return new MobilizeSelectedTracks_Action(layout);
+    else if(name == "PinSelectedTracks")  return new PinSelectedTracks_Action(layout);
+    else if(name == "UnpinSelectedTracks")  return new UnpinSelectedTracks_Action(layout);
     else if(name == "Shift")  return new Shift_Action(layout);
     else if(name == "Option")  return new Option_Action(layout);
     else if(name == "Control")  return new Control_Action(layout);
@@ -415,7 +415,6 @@ void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
     surface->ForceUpdateWidgets();
 }
 
-
 void Zone::MapFXActions(string trackGUID, RealSurface* surface)
 {
     MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(trackGUID);
@@ -575,7 +574,7 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
     }
 }
 
-void Zone::ImmobilizeSelectedTracks()
+void Zone::PinSelectedTracks()
 {
     RealSurfaceChannel* channel = nullptr;
     
@@ -598,7 +597,7 @@ void Zone::ImmobilizeSelectedTracks()
     }
 }
 
-void Zone::MobilizeSelectedTracks()
+void Zone::UnpinSelectedTracks()
 {
     char buffer[BUFSZ];
     RealSurfaceChannel* channel = nullptr;

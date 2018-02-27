@@ -627,8 +627,8 @@ public:
     void RefreshLayout();
     void OnTrackSelection(MediaTrack* track);
     void MapFXToWidgets(MediaTrack *track, RealSurface* surface);
-    void ImmobilizeSelectedTracks();
-    void MobilizeSelectedTracks();
+    void PinSelectedTracks();
+    void UnpinSelectedTracks();
 
     void Init()
     {
@@ -782,7 +782,7 @@ public:
             surface->SetScrub(value);
     }
     
-    void SetImmobilizedTracks()
+    void SetPinnedTracks()
     {
         char buffer[BUFSZ];
         RealSurfaceChannel* channel = nullptr;
@@ -872,10 +872,10 @@ private:
     vector<string> mappedTrackGUIDs_;
     vector<string> touchedTracks_;
     
-    void SetImmobilizedTracks()
+    void SetPinnedTracks()
     {
         for(auto [name, zone] : zones_)
-            zone->SetImmobilizedTracks();
+            zone->SetPinnedTracks();
     }
     
 public:
@@ -967,7 +967,7 @@ public:
         for(auto [name, zone] : zones_)
             zone->Init();
         
-        SetImmobilizedTracks();
+        SetPinnedTracks();
         RefreshLayout();
     }
  
@@ -1039,16 +1039,16 @@ public:
         zones_[zoneName]->SetScrub(value);
     }
 
-    void ImmobilizeSelectedTracks()
+    void PinSelectedTracks()
     {
         for(auto [name, zone] : zones_)
-            zone->ImmobilizeSelectedTracks();
+            zone->PinSelectedTracks();
     }
     
-    void MobilizeSelectedTracks()
+    void UnpinSelectedTracks()
     {
         for(auto [name, zone] : zones_)
-            zone->MobilizeSelectedTracks();
+            zone->UnpinSelectedTracks();
     }
     
     // to Widgets ->
