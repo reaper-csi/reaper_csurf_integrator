@@ -326,19 +326,19 @@ void Zone::RefreshLayout()
                 pinnedChannelLayout.push_back("");
     
     // Layout channel GUIDs
-    int baseOffset = trackOffset_;
+    int offset = trackOffset_;
     
     for(int i = 0; i < pinnedChannelLayout.size(); i++)
     {
-        if(baseOffset < 0)
+        if(offset < 0)
         {
-            baseOffset++;
+            offset++;
             movableChannelLayout.push_back("");
         }
-        else if(baseOffset >= GetLayout()->GetManager()->GetNumTracks())
+        else if(offset >= GetLayout()->GetManager()->GetNumTracks())
             movableChannelLayout.push_back("");
         else
-            movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(baseOffset++));
+            movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(offset++));
     }
     
     // Remove the locked GUIDs
@@ -352,20 +352,20 @@ void Zone::RefreshLayout()
     }
     
     // Merge the layouts
-    baseOffset = 0;
+    offset = 0;
     for(int i = 0; i < pinnedChannelLayout.size(); i++)
     {
         if(pinnedChannelLayout[i] != "")
             channelLayout.push_back(pinnedChannelLayout[i]);
         else
-            channelLayout.push_back(movableChannelLayout[baseOffset++]);
+            channelLayout.push_back(movableChannelLayout[offset++]);
     }
     
     // Apply new layout
-    baseOffset = 0;
+    offset = 0;
     for(auto* surface : realSurfaces_)
         for(auto* channel : surface->GetBankableChannels())
-            channel->SetGUID(channelLayout[baseOffset++]);
+            channel->SetGUID(channelLayout[offset++]);
     
     for(auto* surface : realSurfaces_)
         surface->ForceUpdateWidgets();
