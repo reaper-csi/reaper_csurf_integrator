@@ -166,28 +166,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ImmobilizeSelectedTracks_Action : public Double_Action
+class PinSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ImmobilizeSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
+    PinSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-       GetLayout()->ImmobilizeSelectedTracks();
+       GetLayout()->PinSelectedTracks();
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MobilizeSelectedTracks_Action : public Double_Action
+class UnpinSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MobilizeSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
+    UnpinSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->MobilizeSelectedTracks();
+        GetLayout()->UnpinSelectedTracks();
     }
 };
 
