@@ -274,18 +274,43 @@ void Zone::AdjustTrackBank(int stride)
     if(trackOffset_ >  GetLayout()->GetManager()->GetNumTracks() - 1)
         trackOffset_ = GetLayout()->GetManager()->GetNumTracks() - 1;
     
-    if(trackOffset_ != previousTrackOffset)
-        RefreshLayout();
+    // Jump over any pinned channels
+    vector<string> pinnedChannels;
+    for(auto surface : realSurfaces_)
+        for(auto* channel : surface->GetBankableChannels())
+            if(channel->GetIsMovable() == false)
+                pinnedChannels.push_back(channel->GetGUID());
+    
+    bool foundPinnedChannel = false;
+    
+    while(trackOffset_ >= 0 && trackOffset_ < GetLayout()->GetManager()->GetNumTracks())
+    {
+        string trackGUID = GetLayout()->GetManager()->GetTrackGUIDAsString(trackOffset_);
+        
+        for(auto pinnedChannel : pinnedChannels)
+            if(pinnedChannel == trackGUID)
+            {
+                foundPinnedChannel = true;
+                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+            }
+
+        if(foundPinnedChannel)
+        {
+            foundPinnedChannel = false;
+            continue;
+        }
+        else
+            break;
+    }
+
+    RefreshLayout();
 }
 
 
 void Zone::RefreshLayout()
 {
-    static int previousTrackOffset = 99999999;
-    static vector<string> previousChannelLayout;
-    
-    vector<string> lockedChannelLayout;
-    vector<string> lockedChannels;
+    vector<string> pinnedChannelLayout;
+    vector<string> pinnedChannels;
     vector<string> movableChannelLayout;
     vector<string> channelLayout;
     
@@ -294,76 +319,46 @@ void Zone::RefreshLayout()
         for(auto* channel : surface->GetBankableChannels())
             if(channel->GetIsMovable() == false)
             {
-                lockedChannelLayout.push_back(channel->GetGUID());
-                lockedChannels.push_back(channel->GetGUID());
+                pinnedChannelLayout.push_back(channel->GetGUID());
+                pinnedChannels.push_back(channel->GetGUID());
             }
             else
-                
-                lockedChannelLayout.push_back("");
+                pinnedChannelLayout.push_back("");
     
-    int baseOffset = 0;
+    // Layout channel GUIDs
+    int baseOffset = trackOffset_;
     
-    for(;;)
+    for(int i = 0; i < pinnedChannelLayout.size(); i++)
     {
-        // Layout channel GUIDs
-        baseOffset = trackOffset_;
-        
-        for(int i = 0; i < lockedChannelLayout.size(); i++)
+        if(baseOffset < 0)
         {
-            if(baseOffset < 0)
-            {
-                baseOffset++;
-                movableChannelLayout.push_back("");
-            }
-            else if(baseOffset >= GetLayout()->GetManager()->GetNumTracks())
-                movableChannelLayout.push_back("");
-            else
-                movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(baseOffset++));
+            baseOffset++;
+            movableChannelLayout.push_back("");
         }
-        
-        // Remove the locked GUIDs
-        for(int i = 0; i < lockedChannels.size(); i++)
+        else if(baseOffset >= GetLayout()->GetManager()->GetNumTracks())
+            movableChannelLayout.push_back("");
+        else
+            movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(baseOffset++));
+    }
+    
+    // Remove the locked GUIDs
+    for(int i = 0; i < pinnedChannels.size(); i++)
+    {
+        auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
+        if(iter != movableChannelLayout.end())
         {
-            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), lockedChannels[i]);
-            if(iter != movableChannelLayout.end())
-            {
-                movableChannelLayout.erase(iter);
-            }
+            movableChannelLayout.erase(iter);
         }
-        
-        // Merge the layouts
-        baseOffset = 0;
-        for(int i = 0; i < lockedChannelLayout.size(); i++)
-        {
-            if(lockedChannelLayout[i] != "")
-                channelLayout.push_back(lockedChannelLayout[i]);
-            else
-                channelLayout.push_back(movableChannelLayout[baseOffset++]);
-        }
-        
-        // GAW NASTY -- Yucchy feedback servo correct algo
-        if(channelLayout.size() == previousChannelLayout.size())
-        {
-            bool identical = true;
-            
-            for(int i = 0; i < channelLayout.size(); i++)
-                if(channelLayout[i] != previousChannelLayout[i])
-                    identical = false;
-            
-            if(identical == true)
-            {
-                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-                movableChannelLayout.clear();
-                channelLayout.clear();
-                continue;
-            }
-        }
-        
-        previousTrackOffset = trackOffset_;
-        previousChannelLayout.clear();
-        for(auto GUID : channelLayout)
-            previousChannelLayout.push_back(GUID);
-        break;
+    }
+    
+    // Merge the layouts
+    baseOffset = 0;
+    for(int i = 0; i < pinnedChannelLayout.size(); i++)
+    {
+        if(pinnedChannelLayout[i] != "")
+            channelLayout.push_back(pinnedChannelLayout[i]);
+        else
+            channelLayout.push_back(movableChannelLayout[baseOffset++]);
     }
     
     // Apply new layout
