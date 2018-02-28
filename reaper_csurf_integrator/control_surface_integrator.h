@@ -870,7 +870,7 @@ private:
     map<string, Zone*> zones_;
     map<string, vector<Action*>> actions_;
     vector<string> mappedTrackGUIDs_;
-    vector<string> touchedTracks_;
+    vector<MediaTrack*> touchedTracks_;
     
     void SetPinnedTracks()
     {
@@ -885,21 +885,21 @@ public:
     CSurfManager* GetManager() { return manager_; }
     void OnTrackSelection(MediaTrack* track);
     
-    bool GetTouchState(string trackGUID, int touchedControl)
+    bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        for(string touchedGUID : touchedTracks_)
-            if(touchedGUID == trackGUID)
+        for(MediaTrack* touchedTrack : touchedTracks_)
+            if(touchedTrack == track)
                 return true;
         
         return false;
     }
    
-    void SetTouchState(string trackGUID,  bool state)
+    void SetTouchState(MediaTrack* track,  bool state)
     {
         if(state)
-            touchedTracks_.push_back(trackGUID);
+            touchedTracks_.push_back(track);
         else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), trackGUID), touchedTracks_.end());
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
     }
     
     void AddAction(string actionAddress, Action* action)
@@ -1398,10 +1398,10 @@ public:
         }
     }
 
-    bool GetTouchState(string trackGUID, int touchedControl)
+    bool GetTouchState(MediaTrack* track, int touchedControl)
     {
         if(layouts_.size() > 0)
-            return layouts_[currentLayoutIndex_]->GetTouchState(trackGUID, touchedControl);
+            return layouts_[currentLayoutIndex_]->GetTouchState(track, touchedControl);
         else
             return false;
     }

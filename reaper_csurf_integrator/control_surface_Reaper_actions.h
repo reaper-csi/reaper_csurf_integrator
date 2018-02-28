@@ -481,7 +481,7 @@ public:
 
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetTouchState(GetLayout()->GetManager()->GetTrackGUIDAsString(track_), value == 0 ? false : true);
+        GetLayout()->SetTouchState(track_, value == 0 ? false : true);
     }
 };
 
@@ -495,7 +495,7 @@ private:
     
     bool lastTouched_ = false;
     
-    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(GetLayout()->GetManager()->GetTrackGUIDAsString(track_), 0); }
+    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(track_, 0); }
     
 public:
     TrackTouchControlled_Action(string actionAddress, Layout* layout, MediaTrack* track, Action* action) : Track_Action(layout, track), action_(action), actionAddress_(actionAddress) {}
