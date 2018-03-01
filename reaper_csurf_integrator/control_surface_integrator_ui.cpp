@@ -32,6 +32,7 @@ struct VirtualSurfaceLine
 struct ZoneLine
 {
     string name = "";
+    bool followMCP = true;
     vector<VirtualSurfaceLine*> virtualSurfaces;
 };
 
@@ -141,6 +142,7 @@ static int dlgResult = 0;
 static char name[BUFSZ];
 static int numChannels = 0;
 static bool isBankable = true;
+static bool followMCP = true;
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
@@ -317,6 +319,11 @@ static WDL_DLGRET dlgProcZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     {
         case WM_INITDIALOG:
         {
+            if(followMCP)
+                CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
+
             if(editMode)
             {
                 editMode = false;
@@ -328,10 +335,22 @@ static WDL_DLGRET dlgProcZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             switch(LOWORD(wParam))
             {
+                case IDC_RADIO_MCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDC_RADIO_TCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                    break;
+
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName , name, sizeof(name));
+                        if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
+                            followMCP = true;
+                        else
+                            followMCP = false;
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -449,14 +468,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 switch(LOWORD(wParam))
                 {
-                    case IDC_RADIO_MCP:
-                        CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
-                        break;
-                        
-                    case IDC_RADIO_TCP:
-                        CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
-                        break;
-                        
                     case IDC_LIST_Layouts:
                         if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
@@ -543,11 +554,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(layoutIndex >= 0)
                             {
                                 dlgResult = false;
+                                followMCP = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Zone), hwndDlg, dlgProcZone);
                                 if(dlgResult == IDOK)
                                 {
                                     ZoneLine* zone = new ZoneLine();
                                     zone->name = name;
+                                    zone->followMCP = followMCP;
                                     layouts[layoutIndex]->zones.push_back(zone);
                                     AddListEntry(hwndDlg, name, IDC_LIST_Zones);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, layouts[layoutIndex]->zones.size() - 1, 0);
@@ -656,12 +669,14 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(layoutIndex >= 0 && index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                followMCP = layouts[layoutIndex]->zones[index]->followMCP;
                                 dlgResult = false;
                                 editMode = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Zone), hwndDlg, dlgProcZone);
                                 if(dlgResult == IDOK)
                                 {
                                     layouts[layoutIndex]->zones[index]->name = name;
+                                    layouts[layoutIndex]->zones[index]->followMCP = followMCP;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
                                     for(auto* zone: layouts[layoutIndex]->zones)
                                         AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
@@ -854,11 +869,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == Zone_)
                     {
-                        if(tokens.size() != 2)
+                        if(tokens.size() != 3)
                             continue;
  
                         ZoneLine* zone = new ZoneLine();
                         zone->name = tokens[1];
+                        if(tokens[2] == "Yes")
+                            zone->followMCP = true;
+                        else
+                            zone->followMCP = false;
                         layouts.back()->zones.push_back(zone);
                     }
                     else if(tokens[0] == VirtualSurface_)
@@ -945,7 +964,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     for(auto zone : layout->zones)
                     {
                         line = Zone_ + " ";
-                        line += zone->name + "\n";
+                        line += zone->name + " ";
+                        if(zone->followMCP)
+                            line += "Yes\n";
+                        else
+                            line += "No\n";
                         iniFile << line;
 
                         for(auto virtualSurface : zone->virtualSurfaces)

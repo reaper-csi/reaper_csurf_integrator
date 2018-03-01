@@ -650,7 +650,7 @@ void Zone::DoAction(double value, string GUID, string surfaceName, string action
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Layout::OnTrackSelection(MediaTrack* track)
 {
-    MapTrack(GetManager()->GetTrackGUIDAsString(track));
+    MapTrack(DAW::GetTrackGUIDAsString(track));
     
     for(auto const& [name, zone] : zones_)
         zone->OnTrackSelection(track);
