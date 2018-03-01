@@ -885,6 +885,14 @@ public:
     CSurfManager* GetManager() { return manager_; }
     void OnTrackSelection(MediaTrack* track);
     
+    Zone* GetZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName];
+        
+        return nullptr;
+    }
+    
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
         for(MediaTrack* touchedTrack : touchedTracks_)
@@ -1359,10 +1367,17 @@ public:
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
-    int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+    
+    // Only used in Zone
     string GetTrackGUIDAsString(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
     string GetTrackGUIDAsString(int trackNumber) { return DAW::GetTrackGUIDAsString(trackNumber, followMCP_); }
     MediaTrack *GetTrackFromGUID(string trackGUID) { return DAW::GetTrackFromGUID(trackGUID, followMCP_); }
+
+    
+    // Used in Reaper Actions and Zone
+    int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+    
+    // Used only in Reaper Actions
     MediaTrack* CSurf_TrackFromID(int idx) { return DAW::CSurf_TrackFromID(idx, followMCP_); }
     int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
 

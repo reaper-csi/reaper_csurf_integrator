@@ -196,6 +196,19 @@ public:
         }
     }
     
+    static string GetTrackGUIDAsString(MediaTrack* track)
+    {
+        if(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1)
+            return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
+        else
+        {
+            char pBuffer[BUFSZ];
+            memset(pBuffer, 0, sizeof(pBuffer));
+            guidToString(GetTrackGUID(track), pBuffer);
+            return pBuffer;
+        }
+    }
+    
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
         for(int i = 0; i < CSurf_NumTracks(mcpView) + 1; i++) // +1 is for Reaper Master Track
