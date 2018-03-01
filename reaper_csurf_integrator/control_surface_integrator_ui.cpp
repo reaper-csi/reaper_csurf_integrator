@@ -828,16 +828,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == FollowMCP)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "Yes")
-                            CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_CHECKED);
-                        else
-                            CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
-                    }
                     else if(tokens[0] == RealSurface_)
                     {
                         if(tokens.size() != 7)
@@ -930,16 +920,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile << line + "\n";
                 
                 iniFile << "\n";
-                
-                line = FollowMCP + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
-                    line += "Yes";
-                else
-                    line += "No";
-                iniFile << line + "\n";
-                
-                iniFile << "\n";
-                
+                        
                 for(auto surface : realSurfaces)
                 {
                     line = RealSurface_ + " ";
