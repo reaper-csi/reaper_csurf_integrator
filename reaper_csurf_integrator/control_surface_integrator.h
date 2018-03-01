@@ -628,6 +628,7 @@ public:
     void RefreshLayout();
     void OnTrackSelection(MediaTrack* track);
     void MapFXToWidgets(MediaTrack *track, RealSurface* surface);
+    void SetPinnedTracks();
     void PinSelectedTracks();
     void UnpinSelectedTracks();
 
@@ -790,26 +791,6 @@ public:
             surface->SetScrub(value);
     }
     
-    void SetPinnedTracks()
-    {
-        char buffer[BUFSZ];
-        RealSurfaceChannel* channel = nullptr;
-        
-        for(auto* surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
-            {
-                channel = surface->GetBankableChannels()[i];
-                
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
-                {
-                    channel->SetGUID(buffer);
-                    channel->SetIsMovable(false);
-                }
-            }
-        }
-    }
-
     // to Widgets ->
     void ForceUpdateWidgets()
     {
