@@ -134,11 +134,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NextMap_Action : public Double_Action
+class NextLayout_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NextMap_Action(Layout* layout) : Double_Action(layout)  {}
+    NextLayout_Action(Layout* layout) : Double_Action(layout)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
