@@ -403,13 +403,13 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        int selectedTrackNum = GetLayout()->GetManager()->CSurf_TrackToID(track_);
+        int selectedTrackNum = GetLayout()->GetZone(zoneName)->CSurf_TrackToID(track_);
         int otherSelectedTrackNum = 0;
 
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
-            for(int i = 0; i < GetLayout()->GetManager()->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(GetLayout()->GetManager()->CSurf_TrackFromID(i), "I_SELECTED"))
+            for(int i = 0; i < GetLayout()->GetZone(zoneName)->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i), "I_SELECTED"))
                 {
                     otherSelectedTrackNum = i;
                     break;
@@ -420,8 +420,8 @@ public:
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
-                DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(GetLayout()->GetManager()->CSurf_TrackFromID(i), 1), NULL);
-                GetLayout()->GetManager()->OnTrackSelection(GetLayout()->GetManager()->CSurf_TrackFromID(i));
+                DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i), 1), NULL);
+                GetLayout()->GetManager()->OnTrackSelection(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i));
             }
         }
     }
@@ -588,9 +588,9 @@ public:
     
     virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
     {
-        for(int i = 0; i < GetLayout()->GetManager()->GetNumTracks(); i++)
+        for(int i = 0; i < GetLayout()->GetZone(zoneName)->GetNumTracks(); i++)
         {
-            MediaTrack *track = GetLayout()->GetManager()->CSurf_TrackFromID(i);
+            MediaTrack *track = GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i);
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                 return DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
