@@ -306,7 +306,6 @@ void Zone::AdjustTrackBank(int stride)
     RefreshLayout();
 }
 
-
 void Zone::RefreshLayout()
 {
     vector<string> pinnedChannelLayout;
