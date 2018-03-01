@@ -531,6 +531,7 @@ class Zone
     Layout* layout_= nullptr;
     int numBankableChannels_ = 0;
     int trackOffset_ = 0;
+    bool followMCP_ = true;
     vector<RealSurface*> realSurfaces_;
     map<string, string> actionTemplateDirectory_;
     map<string, string> fxTemplateDirectory_;
@@ -542,7 +543,7 @@ class Zone
     bool option_ = false;
     bool control_ = false;
     bool alt_ = false;
-    
+
     void AddAction(string actionAddress, Action* action);
     void MapRealSurfaceActions(RealSurface* surface);
     void MapTrackActions(string trackGUID, RealSurface* surface);
@@ -615,7 +616,7 @@ class Zone
     }
 
 public:
-    Zone(string name, Layout* layout) : name_(name), layout_(layout) {}
+    Zone(string name, Layout* layout, bool followMCP) : name_(name), layout_(layout), followMCP_(followMCP) {}
     
     string GetName() { return name_; }
     Layout* GetLayout() { return layout_; }
@@ -629,6 +630,13 @@ public:
     void MapFXToWidgets(MediaTrack *track, RealSurface* surface);
     void PinSelectedTracks();
     void UnpinSelectedTracks();
+
+    string GetTrackGUIDAsString(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
+    string GetTrackGUIDAsString(int trackNumber) { return DAW::GetTrackGUIDAsString(trackNumber, followMCP_); }
+    MediaTrack *GetTrackFromGUID(string trackGUID) { return DAW::GetTrackFromGUID(trackGUID, followMCP_); }
+    int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+    MediaTrack* CSurf_TrackFromID(int index) { return DAW::CSurf_TrackFromID(index, followMCP_); }
+    int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
 
     void Init()
     {
@@ -1225,7 +1233,6 @@ private:
     bool isInitialized_ = false;
     int currentLayoutIndex_ = 0; 
     bool VSTMonitor_ = false;
-    bool followMCP_ = false;
     
     void InitRealSurface(RealSurface* surface);
 
@@ -1275,14 +1282,6 @@ private:
                     if(tokens[1] == "On")
                         VSTMonitor_ = true;
                 }
-                else if(tokens[0] == FollowMCP)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "Yes")
-                        followMCP_ = true;
-                }
                 else if(tokens[0] == RealSurface_)
                 {
                     if(tokens.size() != 7)
@@ -1306,10 +1305,10 @@ private:
                 }
                 else if(tokens[0] == Zone_ && currentLayout != nullptr)
                 {
-                    if(tokens.size() != 2)
+                    if(tokens.size() != 3)
                         continue;
-                    
-                    currentZone = new Zone(tokens[1], currentLayout);
+                               
+                    currentZone = new Zone(tokens[1], currentLayout, tokens[2] == "Yes" ? true : false);
                     currentLayout->AddZone(currentZone);
                 }
                 else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
@@ -1368,19 +1367,6 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
-    // Only used in Zone
-    string GetTrackGUIDAsString(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
-    string GetTrackGUIDAsString(int trackNumber) { return DAW::GetTrackGUIDAsString(trackNumber, followMCP_); }
-    MediaTrack *GetTrackFromGUID(string trackGUID) { return DAW::GetTrackFromGUID(trackGUID, followMCP_); }
-
-    
-    // Used in Reaper Actions and Zone
-    int GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
-    
-    // Used only in Reaper Actions
-    MediaTrack* CSurf_TrackFromID(int idx) { return DAW::CSurf_TrackFromID(idx, followMCP_); }
-    int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
-
     void OnTrackSelection(MediaTrack *track)
     {
         if(layouts_.size() > 0)
