@@ -568,6 +568,26 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
     }
 }
 
+void Zone::SetPinnedTracks()
+{
+    char buffer[BUFSZ];
+    RealSurfaceChannel* channel = nullptr;
+    
+    for(auto* surface : realSurfaces_)
+    {
+        for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+        {
+            channel = surface->GetBankableChannels()[i];
+            
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+            {
+                channel->SetGUID(buffer);
+                channel->SetIsMovable(false);
+            }
+        }
+    }
+}
+
 void Zone::PinSelectedTracks()
 {
     RealSurfaceChannel* channel = nullptr;
@@ -584,7 +604,7 @@ void Zone::PinSelectedTracks()
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsMovable(false);
-                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
                 DAW::MarkProjectDirty(nullptr);
             }
         }
@@ -608,9 +628,9 @@ void Zone::UnpinSelectedTracks()
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsMovable(true);
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
                 {
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (surface->GetName() +  channel->GetSuffix()).c_str(), "");
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), "");
                     DAW::MarkProjectDirty(nullptr);
                 }
             }
