@@ -169,7 +169,7 @@ RealSurface::RealSurface(const string name, string templateFilename, int numChan
 
 void RealSurface::MapTrackToWidgets(MediaTrack *track)
 {
-    string trackGUID = GetZone()->GetLayout()->GetManager()->GetTrackGUIDAsString(track);
+    string trackGUID = GetZone()->GetTrackGUIDAsString(track);
     
     for(auto* channel : channels_)
         channel->SetGUID(trackGUID);
@@ -218,7 +218,7 @@ void RealSurface::DoAction(string GUID, string actionName, string widgetName, do
 void Zone::OnTrackSelection(MediaTrack* track)
 {
     for(auto* surface : realSurfaces_)
-        DoAction(1.0, GetLayout()->GetManager()->GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
+        DoAction(1.0, GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
 }
 
 void Zone::TrackListChanged()
@@ -232,11 +232,11 @@ void Zone::TrackListChanged()
     int currentOffset = 0;
     bool shouldRefreshLayout = false;
     
-    for(int i = trackOffset_; i < GetLayout()->GetManager()->GetNumTracks() + 1 && currentOffset < channels.size(); i++)
+    for(int i = trackOffset_; i < GetNumTracks() + 1 && currentOffset < channels.size(); i++)
     {
         if(channels[currentOffset]->GetIsMovable() == false)
         {
-            if(GetLayout()->GetManager()->GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
+            if(GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
             {
                 channels[currentOffset]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
                 shouldRefreshLayout = true;
@@ -247,7 +247,7 @@ void Zone::TrackListChanged()
                 currentOffset++; // track exists, move on
             }
         }
-        else if(channels[currentOffset]->GetGUID() == GetLayout()->GetManager()->GetTrackGUIDAsString(i))
+        else if(channels[currentOffset]->GetGUID() == GetTrackGUIDAsString(i))
         {
             currentOffset++; // track exists and positions are in synch
         }
@@ -271,8 +271,8 @@ void Zone::AdjustTrackBank(int stride)
     if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
         trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
     
-    if(trackOffset_ >  GetLayout()->GetManager()->GetNumTracks() - 1)
-        trackOffset_ = GetLayout()->GetManager()->GetNumTracks() - 1;
+    if(trackOffset_ >  GetNumTracks() - 1)
+        trackOffset_ = GetNumTracks() - 1;
     
     // Jump over any pinned channels
     vector<string> pinnedChannels;
@@ -283,9 +283,9 @@ void Zone::AdjustTrackBank(int stride)
     
     bool foundPinnedChannel = false;
     
-    while(trackOffset_ >= 0 && trackOffset_ < GetLayout()->GetManager()->GetNumTracks())
+    while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
     {
-        string trackGUID = GetLayout()->GetManager()->GetTrackGUIDAsString(trackOffset_);
+        string trackGUID = GetTrackGUIDAsString(trackOffset_);
         
         for(auto pinnedChannel : pinnedChannels)
             if(pinnedChannel == trackGUID)
@@ -335,10 +335,10 @@ void Zone::RefreshLayout()
             offset++;
             movableChannelLayout.push_back("");
         }
-        else if(offset >= GetLayout()->GetManager()->GetNumTracks())
+        else if(offset >= GetNumTracks())
             movableChannelLayout.push_back("");
         else
-            movableChannelLayout.push_back(GetLayout()->GetManager()->GetTrackGUIDAsString(offset++));
+            movableChannelLayout.push_back(GetTrackGUIDAsString(offset++));
     }
     
     // Remove the locked GUIDs
@@ -380,7 +380,7 @@ void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
     DeleteFXWindows();
     surface->UnmapFXFromWidgets(track);
     
-    string trackGUID = GetLayout()->GetManager()->GetTrackGUIDAsString(track);
+    string trackGUID = GetTrackGUIDAsString(track);
     
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
@@ -412,7 +412,7 @@ void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
 
 void Zone::MapFXActions(string trackGUID, RealSurface* surface)
 {
-    MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(trackGUID);
+    MediaTrack* track = GetTrackFromGUID(trackGUID);
     if(track == nullptr)
         return;
     
@@ -472,7 +472,7 @@ void Zone::TrackFXListChanged(MediaTrack* track)
     }
     
     for(auto* surface : realSurfaces_)
-        MapFXActions(GetLayout()->GetManager()->GetTrackGUIDAsString(track), surface);
+        MapFXActions(GetTrackGUIDAsString(track), surface);
 }
 
 void Zone::AddAction(string actionAddress, Action* action)
@@ -514,7 +514,7 @@ void Zone::MapRealSurfaceActions(RealSurface* surface)
 
 void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
 {
-    MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(trackGUID);
+    MediaTrack* track = GetTrackFromGUID(trackGUID);
     if(track == nullptr)
         return;
 
@@ -578,7 +578,7 @@ void Zone::PinSelectedTracks()
         for(int i = 0; i < surface->GetBankableChannels().size(); i++)
         {
             channel = surface->GetBankableChannels()[i];
-            MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(channel->GetGUID());
+            MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
             if(track == nullptr)
                 continue;
             
@@ -602,7 +602,7 @@ void Zone::UnpinSelectedTracks()
         for(int i = 0; i < surface->GetBankableChannels().size(); i++)
         {
             channel = surface->GetBankableChannels()[i];
-            MediaTrack* track = GetLayout()->GetManager()->GetTrackFromGUID(channel->GetGUID());
+            MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
             if(track == nullptr)
                 continue;
             
