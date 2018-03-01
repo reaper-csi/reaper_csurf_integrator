@@ -20,7 +20,7 @@ Action* ActionFor(string name, Layout* layout)
     else if(name == "Stop")  return new Stop_Action(layout);
     else if(name == "Play")  return new Play_Action(layout);
     else if(name == "Record")  return new Record_Action(layout);
-    else if(name == "NextMap")  return new NextMap_Action(layout);
+    else if(name == "NextLayout")  return new NextLayout_Action(layout);
     else if(name == "PinSelectedTracks")  return new PinSelectedTracks_Action(layout);
     else if(name == "UnpinSelectedTracks")  return new UnpinSelectedTracks_Action(layout);
     else if(name == "Shift")  return new Shift_Action(layout);
