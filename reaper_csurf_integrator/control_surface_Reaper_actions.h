@@ -420,6 +420,8 @@ public:
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
+                // GAW TBD this must take MCP/TCP hidden tracks into account
+
                 DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i), 1), NULL);
                 GetLayout()->GetManager()->OnTrackSelection(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i));
             }

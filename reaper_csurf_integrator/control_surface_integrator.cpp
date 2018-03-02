@@ -223,6 +223,7 @@ void Zone::OnTrackSelection(MediaTrack* track)
 
 void Zone::TrackListChanged()
 {
+    // GAW TBD this must take MCP/TCP hidden tracks into account
     vector<RealSurfaceChannel*> channels;
     
     for(auto* surface : realSurfaces_)
@@ -308,6 +309,8 @@ void Zone::AdjustTrackBank(int stride)
 
 void Zone::RefreshLayout()
 {
+    // GAW TBD this must take MCP/TCP hidden tracks into account
+
     vector<string> pinnedChannelLayout;
     vector<string> pinnedChannels;
     vector<string> movableChannelLayout;
@@ -590,6 +593,8 @@ void Zone::SetPinnedTracks()
 
 void Zone::PinSelectedTracks()
 {
+    // GAW TBD this must take MCP/TCP hidden tracks into account
+
     RealSurfaceChannel* channel = nullptr;
     
     for(auto* surface : realSurfaces_)
@@ -613,6 +618,8 @@ void Zone::PinSelectedTracks()
 
 void Zone::UnpinSelectedTracks()
 {
+    // GAW TBD this must take MCP/TCP hidden tracks into account
+
     char buffer[BUFSZ];
     RealSurfaceChannel* channel = nullptr;
     
