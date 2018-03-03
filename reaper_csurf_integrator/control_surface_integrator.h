@@ -639,6 +639,18 @@ public:
     MediaTrack* CSurf_TrackFromID(int index) { return DAW::CSurf_TrackFromID(index, followMCP_); }
     int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
 
+    bool IsTrackVisible(MediaTrack* track)
+    {
+        if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
+            return true;
+        else if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+            return true;
+        else if(! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+            return true;
+        else
+            return false;
+    }
+    
     void Init()
     {
         for(auto* surface : realSurfaces_)
