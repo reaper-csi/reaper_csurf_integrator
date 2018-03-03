@@ -229,17 +229,16 @@ void Zone::TrackListChanged()
         for(auto* channel : surface->GetBankableChannels())
             channels.push_back(channel);
     
-    int currentOffset = 0;
+    int currentOffset = trackOffset_;
     bool shouldRefreshLayout = false;
     
-    // GAW TBD This loop  must iterate over channels, since invisible tracks must be skipped
-    for(int i = trackOffset_; i < GetNumTracks() + 1 && currentOffset < channels.size(); i++)
+    for(int i = 0; i < channels.size() && currentOffset < GetNumTracks() + 1 ; i++)
     {
-        if(channels[currentOffset]->GetIsMovable() == false)
+        if(channels[i]->GetIsMovable() == false)
         {
-            if(GetTrackFromGUID(channels[currentOffset]->GetGUID()) == nullptr) // track has been removed
+            if(GetTrackFromGUID(channels[i]->GetGUID()) == nullptr) // track has been removed
             {
-                channels[currentOffset]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
+                channels[i]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
                 shouldRefreshLayout = true;
                 break;
             }
@@ -249,7 +248,7 @@ void Zone::TrackListChanged()
             }
         }
         
-        else if(channels[currentOffset]->GetGUID() == GetTrackGUIDAsString(i)) // GAW TBD this must take MCP/TCP hidden tracks into account
+        else if(channels[i]->GetGUID() == GetTrackGUIDAsString(currentOffset))
         {
             currentOffset++; // track exists and positions are in synch
         }
@@ -259,7 +258,7 @@ void Zone::TrackListChanged()
             break;
         }
     }
-    
+
     if(shouldRefreshLayout)
         RefreshLayout();
 }
