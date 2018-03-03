@@ -105,7 +105,9 @@ public:
     static bool TrackFX_SetParam(MediaTrack* track, int fx, int param, double val) { return ::TrackFX_SetParam(track, fx, param, val); }
 
     static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname) { return ::GetMediaTrackInfo_Value(track, parmname); }
-    
+
+    static int GetMasterTrackVisibility() { return ::GetMasterTrackVisibility(); }
+
     static void* GetSetMediaTrackInfo(MediaTrack* tr, const char* parmname, void* setNewValue) { return ::GetSetMediaTrackInfo(tr, parmname, setNewValue); }
 
     static double CSurf_OnVolumeChange(MediaTrack* trackid, double volume, bool relative) { return ::CSurf_OnVolumeChange(trackid, volume, relative); }
