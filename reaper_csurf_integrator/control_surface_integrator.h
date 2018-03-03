@@ -642,13 +642,23 @@ public:
     bool IsTrackVisible(MediaTrack* track)
     {
         if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
-            return true;
-        else if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-            return true;
-        else if(! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-            return true;
+        {
+            if(followMCP_ && DAW::GetMasterTrackVisibility() < 2)
+                return true;
+            else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
+                return true;
+            else
+                return false;
+        }
         else
-            return false;
+        {
+            if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+                return true;
+            else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+                return true;
+            else
+                return false;
+        }
     }
     
     void Init()
