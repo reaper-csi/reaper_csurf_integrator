@@ -223,7 +223,6 @@ void Zone::OnTrackSelection(MediaTrack* track)
 
 void Zone::TrackListChanged()
 {
-    // GAW TBD this must take MCP/TCP hidden tracks into account
     vector<RealSurfaceChannel*> channels;
     
     for(auto* surface : realSurfaces_)
@@ -233,6 +232,7 @@ void Zone::TrackListChanged()
     int currentOffset = 0;
     bool shouldRefreshLayout = false;
     
+    // GAW TBD This loop  must iterate over channels, since invisible tracks must be skipped
     for(int i = trackOffset_; i < GetNumTracks() + 1 && currentOffset < channels.size(); i++)
     {
         if(channels[currentOffset]->GetIsMovable() == false)
@@ -248,7 +248,8 @@ void Zone::TrackListChanged()
                 currentOffset++; // track exists, move on
             }
         }
-        else if(channels[currentOffset]->GetGUID() == GetTrackGUIDAsString(i))
+        
+        else if(channels[currentOffset]->GetGUID() == GetTrackGUIDAsString(i)) // GAW TBD this must take MCP/TCP hidden tracks into account
         {
             currentOffset++; // track exists and positions are in synch
         }
@@ -309,8 +310,6 @@ void Zone::AdjustTrackBank(int stride)
 
 void Zone::RefreshLayout()
 {
-    // GAW TBD this must take MCP/TCP hidden tracks into account
-
     vector<string> pinnedChannelLayout;
     vector<string> pinnedChannels;
     vector<string> movableChannelLayout;
@@ -340,7 +339,7 @@ void Zone::RefreshLayout()
         else if(offset >= GetNumTracks())
             movableChannelLayout.push_back("");
         else
-            movableChannelLayout.push_back(GetTrackGUIDAsString(offset++));
+            movableChannelLayout.push_back(GetTrackGUIDAsString(offset++)); // GAW TBD this must take MCP/TCP hidden tracks into account
     }
     
     // Remove the locked GUIDs
@@ -593,8 +592,6 @@ void Zone::SetPinnedTracks()
 
 void Zone::PinSelectedTracks()
 {
-    // GAW TBD this must take MCP/TCP hidden tracks into account
-
     RealSurfaceChannel* channel = nullptr;
     
     for(auto* surface : realSurfaces_)
@@ -618,8 +615,6 @@ void Zone::PinSelectedTracks()
 
 void Zone::UnpinSelectedTracks()
 {
-    // GAW TBD this must take MCP/TCP hidden tracks into account
-
     char buffer[BUFSZ];
     RealSurfaceChannel* channel = nullptr;
     
