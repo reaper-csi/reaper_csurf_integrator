@@ -45,35 +45,35 @@ Action* ActionFor(string name, Layout* layout, string param)
     return new Action(layout);
 }
 
-Action* ActionFor(string name, Layout* layout, MediaTrack* track)
+Action* TrackActionFor(string name, Layout* layout, string trackGUID)
 {
-    if(name == "TrackVolume")  return new TrackVolume_Action(layout, track);
-    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layout, track);
-    else if(name == "TrackPan")  return new TrackPan_Action(layout, track);
-    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layout, track);
-    else if(name == "TrackTouch")  return new TrackTouch_Action(layout, track);
-    else if(name == "TrackMute")  return new TrackMute_Action(layout, track);
-    else if(name == "TrackSolo")  return new TrackSolo_Action(layout, track);
-    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(layout, track);
-    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(layout, track);
-    else if(name == "TrackSelect")  return new TrackSelect_Action(layout, track);
-    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(layout, track);
-    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layout, track);
-    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layout, track);
+    if(name == "TrackVolume")  return new TrackVolume_Action(layout, trackGUID);
+    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layout, trackGUID);
+    else if(name == "TrackPan")  return new TrackPan_Action(layout, trackGUID);
+    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layout, trackGUID);
+    else if(name == "TrackTouch")  return new TrackTouch_Action(layout, trackGUID);
+    else if(name == "TrackMute")  return new TrackMute_Action(layout, trackGUID);
+    else if(name == "TrackSolo")  return new TrackSolo_Action(layout, trackGUID);
+    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(layout, trackGUID);
+    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(layout, trackGUID);
+    else if(name == "TrackSelect")  return new TrackSelect_Action(layout, trackGUID);
+    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(layout, trackGUID);
+    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layout, trackGUID);
+    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layout, trackGUID);
     
     return new Action(layout);
 }
 
-Action* ActionFor(string name, Layout* layout, MediaTrack* track, string param)
+Action* TrackActionFor(string name, Layout* layout, string trackGUID, string param)
 {
-    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layout, track, param);
+    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layout, trackGUID, param);
     
     return new Action(layout);
 }
 
-Action* ActionFor(string name, string actionAddress, Layout* layout, MediaTrack* track, Action* baseAction)
+Action* TrackActionFor(string name, string actionAddress, Layout* layout, string trackGUID, Action* baseAction)
 {
-    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layout, track, baseAction);
+    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layout, trackGUID, baseAction);
     
     return new Action(layout);
 }
@@ -296,7 +296,7 @@ void Zone::AdjustTrackBank(int stride)
                 break;
             }
         
-        if(! IsTrackVisible(CSurf_TrackFromID(trackOffset_)))
+        if( ! IsTrackVisible(CSurf_TrackFromID(trackOffset_)))
         {
             skipThisChannel = true;
             previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
@@ -446,7 +446,7 @@ void Zone::MapFXActions(string trackGUID, RealSurface* surface)
             for(auto mapEntry : map->GetTemplateEntries())
             {
                 if(mapEntry.paramName == GainReductionDB)
-                    GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layout, track, fxGUID));
+                    GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layout, trackGUID, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -454,7 +454,7 @@ void Zone::MapFXActions(string trackGUID, RealSurface* surface)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layout, track, fxGUID, j));
+                            GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layout, trackGUID, fxGUID, j));
                     }
                 }
             }
@@ -552,19 +552,19 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
                     
                     if(tokens.size() == 2)
                     {
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, track));
+                        AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layout, trackGUID));
                     }
                     else if(tokens.size() == 3)
                     {
                         if(tokens[1] == "TrackTouchControlled")
                         {
                             string actionAddress = actionBaseAddress + tokens[0];
-                            Action* controlledAction = ActionFor(tokens[2], layout, track);
-                            AddAction(actionAddress, ActionFor(tokens[1], actionAddress, layout, track, controlledAction));
+                            Action* controlledAction = TrackActionFor(tokens[2], layout, trackGUID);
+                            AddAction(actionAddress, TrackActionFor(tokens[1], actionAddress, layout, trackGUID, controlledAction));
                         }
                         else
                         {
-                            AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, track, tokens[2]));
+                            AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layout, trackGUID, tokens[2]));
                         }
                     }
                     else if(tokens[1] == "Cycled" && tokens.size() > 4)
@@ -573,7 +573,7 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
                         AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
                         for(int i = 3 ; i < tokens.size(); i++)
-                            cycledAction->AddAction(ActionFor(tokens[i], layout, track));
+                            cycledAction->AddAction(TrackActionFor(tokens[i], layout, trackGUID));
                     }
                 }
             }
