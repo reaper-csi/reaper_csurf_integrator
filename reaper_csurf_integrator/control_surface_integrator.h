@@ -639,6 +639,17 @@ public:
     MediaTrack* CSurf_TrackFromID(int index) { return DAW::CSurf_TrackFromID(index, followMCP_); }
     int CSurf_TrackToID(MediaTrack* track) { return DAW::CSurf_TrackToID(track, followMCP_); }
 
+    string GetNextVisibleTrackGUID(int & offset)
+    {
+        while(! IsTrackVisible(CSurf_TrackFromID(offset)) && offset < GetNumTracks())
+            offset++;
+        
+        if(offset >= GetNumTracks())
+            return "";
+        else
+            return GetTrackGUIDAsString(offset);
+    }
+    
     bool IsTrackVisible(MediaTrack* track)
     {
         if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master

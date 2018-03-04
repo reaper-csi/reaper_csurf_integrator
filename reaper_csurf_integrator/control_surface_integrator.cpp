@@ -232,7 +232,7 @@ void Zone::TrackListChanged()
     int currentOffset = trackOffset_;
     bool shouldRefreshLayout = false;
     
-    for(int i = 0; i < channels.size() && currentOffset < GetNumTracks() + 1 ; i++)
+    for(int i = 0; i < channels.size() && currentOffset < GetNumTracks(); i++)
     {
         if(channels[i]->GetIsMovable() == false)
         {
@@ -248,7 +248,7 @@ void Zone::TrackListChanged()
             }
         }
         
-        else if(channels[i]->GetGUID() == GetTrackGUIDAsString(currentOffset))
+        else if(channels[i]->GetGUID() == GetNextVisibleTrackGUID(currentOffset))
         {
             currentOffset++; // track exists and positions are in synch
         }
@@ -274,6 +274,8 @@ void Zone::AdjustTrackBank(int stride)
     
     if(trackOffset_ >  GetNumTracks() - 1)
         trackOffset_ = GetNumTracks() - 1;
+    
+    // GAW TBD -- Jump over any invisible tracks
     
     // Jump over any pinned channels
     vector<string> pinnedChannels;
@@ -332,13 +334,18 @@ void Zone::RefreshLayout()
     {
         if(offset < 0)
         {
-            offset++;
             movableChannelLayout.push_back("");
+            offset++;
         }
         else if(offset >= GetNumTracks())
+        {
             movableChannelLayout.push_back("");
+        }
         else
-            movableChannelLayout.push_back(GetTrackGUIDAsString(offset++)); // GAW TBD this must take MCP/TCP hidden tracks into account
+        {
+            movableChannelLayout.push_back(GetNextVisibleTrackGUID(offset));
+            offset++;
+        }
     }
     
     // Remove the locked GUIDs
