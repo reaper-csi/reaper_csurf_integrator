@@ -275,16 +275,14 @@ void Zone::AdjustTrackBank(int stride)
     if(trackOffset_ >  GetNumTracks() - 1)
         trackOffset_ = GetNumTracks() - 1;
     
-    // GAW TBD -- Jump over any invisible tracks
-    
-    // Jump over any pinned channels
+    // Jump over any pinned channels and invisible tracks
     vector<string> pinnedChannels;
     for(auto surface : realSurfaces_)
         for(auto* channel : surface->GetBankableChannels())
             if(channel->GetIsMovable() == false)
                 pinnedChannels.push_back(channel->GetGUID());
     
-    bool foundPinnedChannel = false;
+    bool skipThisChannel = false;
     
     while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
     {
@@ -293,13 +291,20 @@ void Zone::AdjustTrackBank(int stride)
         for(auto pinnedChannel : pinnedChannels)
             if(pinnedChannel == trackGUID)
             {
-                foundPinnedChannel = true;
+                skipThisChannel = true;
                 previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+                break;
             }
-
-        if(foundPinnedChannel)
+        
+        if(! IsTrackVisible(CSurf_TrackFromID(trackOffset_)))
         {
-            foundPinnedChannel = false;
+            skipThisChannel = true;
+            previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+        }
+
+        if(skipThisChannel)
+        {
+            skipThisChannel = false;
             continue;
         }
         else
