@@ -13,33 +13,48 @@
 class Track_Action : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    string trackGUID_ = "";
 protected:
-    MediaTrack* track_;
-    
+    MediaTrack* GetTrack()
+    {
+        return DAW::GetTrackFromGUID(trackGUID_, false);
+    }
+
 public:
-    Track_Action(Layout* layout, MediaTrack* track) : Action(layout), track_(track) {}
+    Track_Action(Layout* layout, string trackGUID) : Action(layout), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackDouble_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    string trackGUID_ = "";
 protected:
-    MediaTrack* track_;
-    
+    MediaTrack* GetTrack(string zoneName)
+    {
+        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
+    }
+
 public:
-    TrackDouble_Action(Layout* layout, MediaTrack* track) : Double_Action(layout), track_(track) {}
+    TrackDouble_Action(Layout* layout, string trackGUID) : Double_Action(layout), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackString_Action : public String_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    string trackGUID_ = "";
 protected:
-    MediaTrack* track_;
+    MediaTrack* GetTrack(string zoneName)
+    {
+        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
+    }
     
 public:
-    TrackString_Action(Layout* layout, MediaTrack* track) : String_Action(layout), track_(track) {}
+    TrackString_Action(Layout* layout, string trackGUID) : String_Action(layout), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,7 +95,7 @@ private:
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(Layout* layout, MediaTrack* track, string fxGUID, int paramIndex) : TrackDouble_Action(layout, track), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
+    TrackFX_Action(Layout* layout, string trackGUID, string fxGUID, int paramIndex) : TrackDouble_Action(layout, trackGUID), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
     
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
@@ -91,12 +106,12 @@ public:
     {
         double min = 0;
         double max = 0;
-        return DAW::TrackFX_GetParam(track_, DAW::IndexFromFXGUID(track_, fxGUID_), paramIndex_, &min, &max);
+        return DAW::TrackFX_GetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, &min, &max);
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::TrackFX_SetParam(track_, DAW::IndexFromFXGUID(track_, fxGUID_), paramIndex_, value);
+        DAW::TrackFX_SetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, value);
     }
 };
 
@@ -105,14 +120,14 @@ class MapTrackAndFXToWidgets_Action  : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapTrackAndFXToWidgets_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    MapTrackAndFXToWidgets_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
-            GetLayout()->MapTrackAndFXToWidgets(track_, zoneName, surfaceName);
+            GetLayout()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
         else
-            GetLayout()->UnmapWidgetsFromTrack(track_, zoneName, surfaceName);
+            GetLayout()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
     }
 };
 
@@ -122,7 +137,7 @@ class TrackVolume_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackVolume_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
  
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
@@ -142,7 +157,7 @@ public:
         return volToNormalized(currentValue_);
     }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_VOL"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
@@ -150,7 +165,7 @@ public:
         //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
 
         //DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
-        DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value), false), NULL);
+        DAW::CSurf_SetSurfaceVolume(GetTrack(zoneName), DAW::CSurf_OnVolumeChange(GetTrack(zoneName), normalizedToVol(value), false), NULL);
     }
 };
 
@@ -162,7 +177,7 @@ private:
     int displayMode_ = 0;
     
 public:
-    TrackPan_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackPan_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
 
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
@@ -171,11 +186,11 @@ public:
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_PAN"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_PAN"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfacePan(track_, DAW::CSurf_OnPanChange(track_, normalizedToPan(value), false), NULL);
+        DAW::CSurf_SetSurfacePan(GetTrack(zoneName), DAW::CSurf_OnPanChange(GetTrack(zoneName), normalizedToPan(value), false), NULL);
     }
 };
 
@@ -193,15 +208,15 @@ protected:
     }
     
 public:
-    TrackPanWidth_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackPanWidth_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
 
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "D_WIDTH"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_WIDTH"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_OnWidthChange(track_, normalizedToPan(value), false);
+        DAW::CSurf_OnWidthChange(GetTrack(zoneName), normalizedToPan(value), false);
     }
 };
 
@@ -210,14 +225,14 @@ class TrackNameDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackNameDisplay_Action(Layout* layout, MediaTrack* track) : TrackString_Action(layout, track) {}
+    TrackNameDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
-        if(DAW::GetMediaTrackInfo_Value(track_, "IP_TRACKNUMBER") == -1)
+        if(DAW::GetMediaTrackInfo_Value(GetTrack(zoneName) , "IP_TRACKNUMBER") == -1)
             return "Master";
         else
-            return (char *)DAW::GetSetMediaTrackInfo(track_, "P_NAME", NULL);
+            return (char *)DAW::GetSetMediaTrackInfo(GetTrack(zoneName), "P_NAME", NULL);
     }
 };
 
@@ -226,12 +241,12 @@ class TrackVolumeDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolumeDisplay_Action(Layout* layout, MediaTrack* track) : TrackString_Action(layout, track) {}
+    TrackVolumeDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
         char buffer[128];
-        sprintf(buffer, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track_, "D_VOL")));
+        sprintf(buffer, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL")));
         return string(buffer);
     }
 };
@@ -365,14 +380,14 @@ class TrackSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED")), NULL);
-        GetLayout()->GetManager()->OnTrackSelection(track_);
+        DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
+        GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
     }
 };
 
@@ -381,14 +396,14 @@ class TrackUniqueSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackUniqueSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::SetOnlyTrackSelected(track_);
-        GetLayout()->GetManager()->OnTrackSelection(track_);
+        DAW::SetOnlyTrackSelected(GetTrack(zoneName));
+        GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
     }
 };
 
@@ -397,13 +412,13 @@ class TrackRangeSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRangeSelect_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackRangeSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        int selectedTrackNum = GetLayout()->GetZone(zoneName)->CSurf_TrackToID(track_);
+        int selectedTrackNum = GetLayout()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
         int otherSelectedTrackNum = 0;
 
         if(1 == DAW::CountSelectedTracks(nullptr))
@@ -424,7 +439,7 @@ public:
                 
                 if(GetLayout()->GetZone(zoneName)->IsTrackVisible(track))
                 {
-                    DAW::CSurf_SetSurfaceSelected(track_, DAW::CSurf_OnSelectedChange(track, 1), NULL);
+                    DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(track, 1), NULL);
                     GetLayout()->GetManager()->OnTrackSelection(track);
                 }
             }
@@ -437,13 +452,13 @@ class TrackRecordArm_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackRecordArm_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
    
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_RECARM"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceRecArm(track_, DAW::CSurf_OnRecArmChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_RECARM")), NULL);
+        DAW::CSurf_SetSurfaceRecArm(GetTrack(zoneName), DAW::CSurf_OnRecArmChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM")), NULL);
     }
 };
 
@@ -452,13 +467,13 @@ class TrackMute_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackMute_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "B_MUTE"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-         DAW::CSurf_SetSurfaceMute(track_, DAW::CSurf_OnMuteChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "B_MUTE")), NULL);
+         DAW::CSurf_SetSurfaceMute(GetTrack(zoneName), DAW::CSurf_OnMuteChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE")), NULL);
     }
 };
 
@@ -467,13 +482,13 @@ class TrackSolo_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackSolo_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(track_, "I_SOLO"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO"); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceSolo(track_, DAW::CSurf_OnSoloChange(track_, ! DAW::GetMediaTrackInfo_Value(track_, "I_SOLO")), NULL);
+        DAW::CSurf_SetSurfaceSolo(GetTrack(zoneName), DAW::CSurf_OnSoloChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO")), NULL);
     }
 };
 
@@ -482,11 +497,11 @@ class TrackTouch_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackTouch_Action(Layout* layout, MediaTrack* track) : TrackDouble_Action(layout, track) {}
+    TrackTouch_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
 
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetTouchState(track_, value == 0 ? false : true);
+        GetLayout()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
     }
 };
 
@@ -500,10 +515,10 @@ private:
     
     bool lastTouched_ = false;
     
-    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(track_, 0); }
+    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(GetTrack(), 0); }
     
 public:
-    TrackTouchControlled_Action(string actionAddress, Layout* layout, MediaTrack* track, Action* action) : Track_Action(layout, track), action_(action), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(string actionAddress, Layout* layout, string trackGUID, Action* action) : Track_Action(layout, trackGUID), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
@@ -661,12 +676,17 @@ protected:
     }
     
 public:
-    TrackOutputMeter_Action(Layout* layout, MediaTrack* track, string channelStr) : TrackDouble_Action(layout, track)
+    TrackOutputMeter_Action(Layout* layout, string trackGUID, string channelStr) : TrackDouble_Action(layout, trackGUID)
     {
         channel_ = atol(channelStr.c_str());
     }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return VAL2DB(DAW::Track_GetPeakInfo(track_, channel_)); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName) != nullptr)
+            return VAL2DB(DAW::Track_GetPeakInfo(GetTrack(zoneName), channel_));
+        else return 0.0;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -687,13 +707,18 @@ protected:
     }
     
 public:
-    TrackGainReductionMeter_Action(Layout* layout, MediaTrack* track, string fxGUID) : TrackDouble_Action(layout, track), fxGUID_(fxGUID)  {}
+    TrackGainReductionMeter_Action(Layout* layout, string trackGUID, string fxGUID) : TrackDouble_Action(layout, trackGUID), fxGUID_(fxGUID)  {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
         char buffer[BUFSZ];
-        if(DAW::TrackFX_GetNamedConfigParm(track_, DAW::IndexFromFXGUID(track_, fxGUID_), "GainReduction_dB", buffer, sizeof(buffer)))
-            return atof(buffer);
+        if(GetTrack(zoneName) != nullptr)
+        {
+            if(DAW::TrackFX_GetNamedConfigParm(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), "GainReduction_dB", buffer, sizeof(buffer)))
+                return atof(buffer);
+            else
+                return 0.0;
+        }
         else
             return 0.0;
     }
