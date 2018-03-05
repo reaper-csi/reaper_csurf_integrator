@@ -681,6 +681,14 @@ public:
         }
     }
     
+    void SetContext()
+    {
+        for(auto surface : realSurfaces_)
+            surface->SetZone(this);
+        
+        RefreshLayout();
+    }
+    
     void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
     {
         string resourcePath(DAW::GetResourcePath());
@@ -691,7 +699,6 @@ public:
 
         numBankableChannels_ += surface->GetBankableChannels().size();
         
-        surface->SetZone(this);
         realSurfaces_.push_back(surface);
     }
     
@@ -994,11 +1001,12 @@ public:
     
     void Init()
     {
+        SetContext();
+        
         for(auto [name, zone] : zones_)
             zone->Init();
         
         SetPinnedTracks();
-        RefreshLayout();
     }
  
     void MapTrack(string trackGUID)
@@ -1027,10 +1035,10 @@ public:
             zone->TrackListChanged();
     }
     
-    void RefreshLayout()
+    void SetContext()
     {
         for(auto const& [name, zone] : zones_)
-            zone->RefreshLayout();
+            zone->SetContext();
     }
     
     void RunAndUpdate()
@@ -1339,6 +1347,9 @@ private:
         
         for(auto layout : layouts_)
             layout->Init();
+        
+       if(layouts_.size() > 0)
+           layouts_[0]->SetContext();
     }
 
     void AddRealSurface(RealSurface* realSurface)
@@ -1399,9 +1410,6 @@ public:
         isInitialized_ = false;
         Init();
         isInitialized_ = true;
-
-        if(layouts_.size() > 0)
-            layouts_[currentLayoutIndex_]->RefreshLayout();
     }
     
     void NextLayout()
@@ -1409,7 +1417,7 @@ public:
         if(layouts_.size() > 0)
         {
             currentLayoutIndex_ = currentLayoutIndex_ == layouts_.size() - 1 ? 0 : ++currentLayoutIndex_;
-            layouts_[currentLayoutIndex_]->RefreshLayout();
+            layouts_[currentLayoutIndex_]->SetContext();
         }
     }
 
