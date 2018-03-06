@@ -13,9 +13,9 @@
 #define IDC_LIST_Layouts                1012
 #define IDC_BUTTON_AddLayout            1013
 #define IDC_BUTTON_EditLayout           1014
-#define IDC_EDIT_LayoutName             1014
+#define IDC_EDIT_LayoutName             1004
 #define IDC_BUTTON_RemoveLayout         1015
-#define IDC_EDIT_ZoneName               1015
+#define IDC_EDIT_ZoneName               1005
 #define IDC_COMBO_RealSurface           1016
 #define IDC_COMBO_ActionTemplates       1017
 #define IDC_COMBO_FXTemplates           1018
@@ -25,7 +25,7 @@
 #define IDC_EDIT_RealSurfaceName        1022
 #define IDC_EDIT_RealSurfaceNumChannels 1023
 #define IDC_LIST_Zones                  1024
-#define IDC_CHECK_IsBankable            1024
+#define IDC_CHECK_IsBankable            1006
 #define IDC_BUTTON_AddZone              1025
 #define IDC_BUTTON_EditZone             1026
 #define IDC_BUTTON_RemoveZone           1027
@@ -46,7 +46,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        105
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1037
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
