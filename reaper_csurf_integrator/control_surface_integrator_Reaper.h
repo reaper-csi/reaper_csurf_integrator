@@ -160,7 +160,7 @@ public:
 
     static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
    
-    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
+    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView) + 1; };
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
     
