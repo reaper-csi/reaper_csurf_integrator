@@ -474,6 +474,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Layouts, LB_GETCURSEL, 0, 0);
                             if (index >= 0)
                             {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
+
                                 for(auto* zone : layouts[index]->zones)
                                     AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
                             }
@@ -492,6 +495,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                             if (layoutIndex >= 0 && index >= 0)
                             {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
+
                                 for(auto* layout: layouts[layoutIndex]->zones[index]->virtualSurfaces)
                                     AddListEntry(hwndDlg, layout->realSurfaceName, IDC_LIST_VirtualSurfaces);
                             }
