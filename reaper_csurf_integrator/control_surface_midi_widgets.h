@@ -274,13 +274,72 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Display_MidiWidget : public MidiWidget
+class DisplayUpper_MidiWidget : public MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     int slotIndex_ = 0;
     
 public:
-    Display_MidiWidget(RealSurface* surface, string name, int slotIndex) : MidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayUpper_MidiWidget(RealSurface* surface, string name, int slotIndex) : MidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    
+    virtual void SetValueToZero() override
+    {
+        SetValue("");
+    }
+    
+    void SetValue(string displayText) override
+    {
+        if(slotIndex_ > 7) // GAW TDB -- this is a hack to prevent Fader 9 (Master) on MCU from displaying on lower row of channel 1
+            return;
+        
+        int pad = 7;
+        const char* text = displayText.c_str();
+        
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
+        
+        int l = strlen(text);
+        if (pad < l)
+            l = pad;
+        if (l > 200)
+            l = 200;
+        
+        int cnt = 0;
+        while (cnt < l)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+            cnt++;
+        }
+        
+        while (cnt++ < pad)
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        GetRealSurface()->SendMidiMessage(&midiSysExData.evt);
+    }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class DisplayLower_MidiWidget : public MidiWidget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    int slotIndex_ = 0;
+    
+public:
+    DisplayLower_MidiWidget(RealSurface* surface, string name, int slotIndex) : MidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
@@ -306,7 +365,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7 + 56;
         
         int l = strlen(text);
         if (pad < l)
