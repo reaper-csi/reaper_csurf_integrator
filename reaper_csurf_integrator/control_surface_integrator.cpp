@@ -93,7 +93,7 @@ double strToDouble(string valueStr)
 
 MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int index)
 {
-    if(widgetClass == "Display") return new Display_MidiWidget(surface, name, index);
+    if(widgetClass == "DisplayUpper") return new DisplayUpper_MidiWidget(surface, name, index);
     
     return new MidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
