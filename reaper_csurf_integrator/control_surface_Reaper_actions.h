@@ -255,6 +255,93 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanDisplay_Action : public TrackString_Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackPanDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    
+    virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        bool left = false;
+        
+        double panVal = DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_PAN");
+        
+        if(panVal < 0)
+        {
+            left = true;
+            panVal = -panVal;
+        }
+        
+        int panIntVal = int(panVal * 100.0);
+        string displayStr = "";
+        
+        if(left)
+        {
+            if(panIntVal == 100)
+                displayStr += "<";
+            else if(panIntVal < 100 && panIntVal > 9)
+                displayStr += "< ";
+            else
+                displayStr += "<  ";
+
+            displayStr += to_string(panIntVal);
+        }
+        else
+        {
+            displayStr += "   ";
+            
+            displayStr += to_string(panIntVal);
+
+            if(panIntVal == 100)
+                displayStr += ">";
+            else if(panIntVal < 100 && panIntVal > 9)
+                displayStr += " >";
+            else
+                displayStr += "  >";
+        }
+        
+        if(panIntVal == 0)
+            displayStr = "  <C>  ";
+        
+        return displayStr;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanWidthDisplay_Action : public TrackString_Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackPanWidthDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    
+    virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        bool reversed = false;
+        
+        double widthVal = DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_WIDTH");
+        
+        if(widthVal < 0)
+        {
+            reversed = true;
+            widthVal = -widthVal;
+        }
+        
+        int widthIntVal = int(widthVal * 100.0);
+        string displayStr = "";
+        
+        if(reversed)
+            displayStr += "Rev ";
+
+        displayStr += to_string(widthIntVal);
+        
+        if(widthIntVal == 0)
+            displayStr = " <Mno> ";
+        
+        return displayStr;
+    }
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Rewind_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
