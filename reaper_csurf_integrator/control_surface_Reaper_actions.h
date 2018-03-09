@@ -106,12 +106,16 @@ public:
     {
         double min = 0;
         double max = 0;
-        return DAW::TrackFX_GetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, &min, &max);
+        if(GetTrack(zoneName))
+            return DAW::TrackFX_GetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, &min, &max);
+        else
+            return 0.0;
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::TrackFX_SetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, value);
+        if(GetTrack(zoneName))
+            DAW::TrackFX_SetParam(GetTrack(zoneName), DAW::IndexFromFXGUID(GetTrack(zoneName), fxGUID_), paramIndex_, value);
     }
 };
 
@@ -124,10 +128,13 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr))
-            GetLayout()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
-        else
-            GetLayout()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
+        if(GetTrack(zoneName))
+        {
+            if(1 == DAW::CountSelectedTracks(nullptr))
+                GetLayout()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
+            else
+                GetLayout()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
+        }
     }
 };
 
@@ -157,7 +164,13 @@ public:
         return volToNormalized(currentValue_);
     }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
@@ -165,7 +178,8 @@ public:
         //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
 
         //DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
-        DAW::CSurf_SetSurfaceVolume(GetTrack(zoneName), DAW::CSurf_OnVolumeChange(GetTrack(zoneName), normalizedToVol(value), false), NULL);
+        if(GetTrack(zoneName))
+            DAW::CSurf_SetSurfaceVolume(GetTrack(zoneName), DAW::CSurf_OnVolumeChange(GetTrack(zoneName), normalizedToVol(value), false), NULL);
     }
 };
 
@@ -186,11 +200,18 @@ public:
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_PAN"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_PAN");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfacePan(GetTrack(zoneName), DAW::CSurf_OnPanChange(GetTrack(zoneName), normalizedToPan(value), false), NULL);
+        if(GetTrack(zoneName))
+            DAW::CSurf_SetSurfacePan(GetTrack(zoneName), DAW::CSurf_OnPanChange(GetTrack(zoneName), normalizedToPan(value), false), NULL);
     }
 };
 
@@ -212,11 +233,18 @@ public:
 
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_WIDTH"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_WIDTH");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_OnWidthChange(GetTrack(zoneName), normalizedToPan(value), false);
+        if(GetTrack(zoneName))
+            DAW::CSurf_OnWidthChange(GetTrack(zoneName), normalizedToPan(value), false);
     }
 };
 
@@ -249,7 +277,9 @@ public:
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
         char buffer[128];
-        sprintf(buffer, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL")));
+        memset(buffer, 0, sizeof(buffer));
+        if(GetTrack(zoneName))
+            sprintf(buffer, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_VOL")));
         return string(buffer);
     }
 };
@@ -263,6 +293,9 @@ public:
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
+        if(GetTrack(zoneName) == nullptr)
+            return "";
+        
         bool left = false;
         
         double panVal = DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_PAN");
@@ -317,6 +350,9 @@ public:
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
+        if(GetTrack(zoneName) == nullptr)
+            return "";
+
         bool reversed = false;
         
         double widthVal = DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "D_WIDTH");
@@ -472,12 +508,21 @@ class TrackSelect_Action : public TrackDouble_Action
 public:
     TrackSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
-        GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        if(GetTrack(zoneName))
+        {
+            DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
+            GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        }
     }
 };
 
@@ -488,12 +533,21 @@ class TrackUniqueSelect_Action : public TrackDouble_Action
 public:
     TrackUniqueSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::SetOnlyTrackSelected(GetTrack(zoneName));
-        GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        if(GetTrack(zoneName))
+        {
+            DAW::SetOnlyTrackSelected(GetTrack(zoneName));
+            GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        }
     }
 };
 
@@ -504,10 +558,19 @@ class TrackRangeSelect_Action : public TrackDouble_Action
 public:
     TrackRangeSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
+        if(GetTrack(zoneName) == nullptr)
+            return;
+        
         int selectedTrackNum = GetLayout()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
         int otherSelectedTrackNum = 0;
 
@@ -544,11 +607,18 @@ class TrackRecordArm_Action : public TrackDouble_Action
 public:
     TrackRecordArm_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
    
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceRecArm(GetTrack(zoneName), DAW::CSurf_OnRecArmChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM")), NULL);
+        if(GetTrack(zoneName))
+            DAW::CSurf_SetSurfaceRecArm(GetTrack(zoneName), DAW::CSurf_OnRecArmChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_RECARM")), NULL);
     }
 };
 
@@ -559,11 +629,18 @@ class TrackMute_Action : public TrackDouble_Action
 public:
     TrackMute_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-         DAW::CSurf_SetSurfaceMute(GetTrack(zoneName), DAW::CSurf_OnMuteChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE")), NULL);
+        if(GetTrack(zoneName))
+            DAW::CSurf_SetSurfaceMute(GetTrack(zoneName), DAW::CSurf_OnMuteChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "B_MUTE")), NULL);
     }
 };
 
@@ -574,11 +651,18 @@ class TrackSolo_Action : public TrackDouble_Action
 public:
     TrackSolo_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
     
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO"); }
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO");
+        else
+            return 0.0;
+    }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        DAW::CSurf_SetSurfaceSolo(GetTrack(zoneName), DAW::CSurf_OnSoloChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO")), NULL);
+        if(GetTrack(zoneName))
+            DAW::CSurf_SetSurfaceSolo(GetTrack(zoneName), DAW::CSurf_OnSoloChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SOLO")), NULL);
     }
 };
 
@@ -591,7 +675,8 @@ public:
 
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
+        if(GetTrack(zoneName))
+            GetLayout()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
     }
 };
 
@@ -605,7 +690,13 @@ private:
     
     bool lastTouched_ = false;
     
-    bool IsCurrentlyTouched(string zoneName) { return GetLayout()->GetTouchState(GetTrack(zoneName), 0); }
+    bool IsCurrentlyTouched(string zoneName)
+    {
+        if(GetTrack(zoneName))
+            return GetLayout()->GetTouchState(GetTrack(zoneName), 0);
+        else
+            return false;
+    }
     
 public:
     TrackTouchControlled_Action(string actionAddress, Layout* layout, string trackGUID, Action* action) : Track_Action(layout, trackGUID), action_(action), actionAddress_(actionAddress) {}
