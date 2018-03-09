@@ -71,8 +71,8 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_RESET)
     {
-        //ClearAllTouchStates();
-        //Initialize();
+        if(integrator)
+            integrator->GetManager()->ReInit();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
