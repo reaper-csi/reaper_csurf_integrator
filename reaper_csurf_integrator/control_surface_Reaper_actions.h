@@ -16,9 +16,9 @@ class Track_Action : public Action
 private:
     string trackGUID_ = "";
 protected:
-    MediaTrack* GetTrack()
+    MediaTrack* GetTrack(string zoneName)
     {
-        return DAW::GetTrackFromGUID(trackGUID_, false);
+        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
     }
 
 public:
@@ -605,14 +605,14 @@ private:
     
     bool lastTouched_ = false;
     
-    bool IsCurrentlyTouched() { return GetLayout()->GetTouchState(GetTrack(), 0); }
+    bool IsCurrentlyTouched(string zoneName) { return GetLayout()->GetTouchState(GetTrack(zoneName), 0); }
     
 public:
     TrackTouchControlled_Action(string actionAddress, Layout* layout, string trackGUID, Action* action) : Track_Action(layout, trackGUID), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
-        bool currentlyTouched = IsCurrentlyTouched();
+        bool currentlyTouched = IsCurrentlyTouched(zoneName);
         
         if(currentlyTouched)
         {
@@ -638,19 +638,19 @@ public:
     
     virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
     {
-        if(IsCurrentlyTouched())
+        if(IsCurrentlyTouched(zoneName))
             action_->ForceUpdate(zoneName, surfaceName, widgetName);
     }
     
     virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
     {
-        if(IsCurrentlyTouched())
+        if(IsCurrentlyTouched(zoneName))
             action_->Cycle(zoneName, surfaceName, widgetName);
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        if(IsCurrentlyTouched())
+        if(IsCurrentlyTouched(zoneName))
             action_->Do(value, zoneName, surfaceName, widgetName);
     }
 };
