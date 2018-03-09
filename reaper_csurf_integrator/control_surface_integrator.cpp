@@ -49,6 +49,8 @@ Action* TrackActionFor(string name, Layout* layout, string trackGUID)
 {
     if(name == "TrackVolume")  return new TrackVolume_Action(layout, trackGUID);
     else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layout, trackGUID);
+    else if(name == "TrackPanDisplay")  return new TrackPanDisplay_Action(layout, trackGUID);
+    else if(name == "TrackPanWidthDisplay")  return new TrackPanWidthDisplay_Action(layout, trackGUID);
     else if(name == "TrackPan")  return new TrackPan_Action(layout, trackGUID);
     else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layout, trackGUID);
     else if(name == "TrackTouch")  return new TrackTouch_Action(layout, trackGUID);
