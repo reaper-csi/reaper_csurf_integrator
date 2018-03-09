@@ -690,9 +690,7 @@ public:
     void SetContext()
     {
         for(auto surface : realSurfaces_)
-            surface->SetZone(this);
-        
-        RefreshLayout();
+            surface->SetZone(this);        
     }
     
     void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
