@@ -20,10 +20,10 @@ protected:
 
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
 
-    Double_Action(Layout* layout) : Action(layout)  {}
+    Double_Action(Layer* layer) : Action(layer)  {}
     
 public:
     ~Double_Action() {}
@@ -53,7 +53,7 @@ private:
     int currentIndex_ = 0;
     
 public:
-    Cycled_Action(Layout* layout) : Action(layout) {}
+    Cycled_Action(Layer* layer) : Action(layer) {}
     
     ~Cycled_Action() {}
     
@@ -97,10 +97,10 @@ protected:
     
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value) override
     {
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
     
-    String_Action(Layout* layout) : Action(layout) {}
+    String_Action(Layer* layer) : Action(layer) {}
 
 public:
     
