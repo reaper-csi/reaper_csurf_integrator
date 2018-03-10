@@ -18,11 +18,11 @@ private:
 protected:
     MediaTrack* GetTrack(string zoneName)
     {
-        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
+        return GetLayer()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
     }
 
 public:
-    Track_Action(Layout* layout, string trackGUID) : Action(layout), trackGUID_(trackGUID) {}
+    Track_Action(Layer* layer, string trackGUID) : Action(layer), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -34,11 +34,11 @@ private:
 protected:
     MediaTrack* GetTrack(string zoneName)
     {
-        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
+        return GetLayer()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
     }
 
 public:
-    TrackDouble_Action(Layout* layout, string trackGUID) : Double_Action(layout), trackGUID_(trackGUID) {}
+    TrackDouble_Action(Layer* layer, string trackGUID) : Double_Action(layer), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,11 +50,11 @@ private:
 protected:
     MediaTrack* GetTrack(string zoneName)
     {
-        return GetLayout()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
+        return GetLayer()->GetZone(zoneName)->GetTrackFromGUID(trackGUID_);
     }
     
 public:
-    TrackString_Action(Layout* layout, string trackGUID) : String_Action(layout), trackGUID_(trackGUID) {}
+    TrackString_Action(Layer* layer, string trackGUID) : String_Action(layer), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ private:
     int commandId_= 0;
     
 public:
-    Reaper_Action(Layout* layout, string commandStr) : Double_Action(layout)
+    Reaper_Action(Layer* layer, string commandStr) : Double_Action(layer)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -95,11 +95,11 @@ private:
     int paramIndex_ = 0;
     
 public:
-    TrackFX_Action(Layout* layout, string trackGUID, string fxGUID, int paramIndex) : TrackDouble_Action(layout, trackGUID), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
+    TrackFX_Action(Layer* layer, string trackGUID, string fxGUID, int paramIndex) : TrackDouble_Action(layer, trackGUID), fxGUID_(fxGUID), paramIndex_(paramIndex) {}
     
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
@@ -124,16 +124,16 @@ class MapTrackAndFXToWidgets_Action  : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapTrackAndFXToWidgets_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    MapTrackAndFXToWidgets_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         if(GetTrack(zoneName))
         {
             if(1 == DAW::CountSelectedTracks(nullptr))
-                GetLayout()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
+                GetLayer()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
             else
-                GetLayout()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
+                GetLayer()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
         }
     }
 };
@@ -144,21 +144,21 @@ class TrackVolume_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackVolume_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
  
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = Getlayer->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = Getlayer->GetWidgetMinDB(surfaceName, widgetName);
         
-        //GetLayout->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, volToNormalized(value));
+        //Getlayer->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(VAL2DB(value), widgetMaxDB, widgetMinDB));
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, volToNormalized(value));
     }
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override
     {
-        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = Getlayer->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = Getlayer->GetWidgetMinDB(surfaceName, widgetName);
 
         //return volToNormalized(currentValue_, widgetMaxDB, widgetMinDB);
         return volToNormalized(currentValue_);
@@ -174,8 +174,8 @@ public:
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        //double widgetMaxDB = GetLayout->GetWidgetMaxDB(surfaceName, widgetName);
-        //double widgetMinDB = GetLayout->GetWidgetMinDB(surfaceName, widgetName);
+        //double widgetMaxDB = Getlayer->GetWidgetMaxDB(surfaceName, widgetName);
+        //double widgetMinDB = Getlayer->GetWidgetMinDB(surfaceName, widgetName);
 
         //DAW::CSurf_SetSurfaceVolume(track_, DAW::CSurf_OnVolumeChange(track_, normalizedToVol(value, widgetMaxDB, widgetMinDB), false), NULL);
         if(GetTrack(zoneName))
@@ -191,11 +191,11 @@ private:
     int displayMode_ = 0;
     
 public:
-    TrackPan_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackPan_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
 
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, panToNormalized(value), displayMode_);
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, panToNormalized(value), displayMode_);
     }
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
@@ -225,11 +225,11 @@ private:
 protected:
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
-        GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, panToNormalized(value), displayMode_);
+        GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, panToNormalized(value), displayMode_);
     }
     
 public:
-    TrackPanWidth_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackPanWidth_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
 
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return panToNormalized(currentValue_); }
 
@@ -253,7 +253,7 @@ class TrackNameDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackNameDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    TrackNameDisplay_Action(Layer* layer, string trackGUID) : TrackString_Action(layer, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -272,7 +272,7 @@ class TrackVolumeDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolumeDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    TrackVolumeDisplay_Action(Layer* layer, string trackGUID) : TrackString_Action(layer, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -289,7 +289,7 @@ class TrackPanDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    TrackPanDisplay_Action(Layer* layer, string trackGUID) : TrackString_Action(layer, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -346,7 +346,7 @@ class TrackPanWidthDisplay_Action : public TrackString_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanWidthDisplay_Action(Layout* layout, string trackGUID) : TrackString_Action(layout, trackGUID) {}
+    TrackPanWidthDisplay_Action(Layer* layer, string trackGUID) : TrackString_Action(layer, trackGUID) {}
     
     virtual string GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -382,7 +382,7 @@ class Rewind_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind_Action(Layout* layout) : Double_Action(layout)  {}
+    Rewind_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
@@ -395,7 +395,7 @@ class FastForward_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward_Action(Layout* layout) : Double_Action(layout) {}
+    FastForward_Action(Layer* layer) : Double_Action(layer) {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
@@ -408,7 +408,7 @@ class Play_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play_Action(Layout* layout) : Double_Action(layout) {}
+    Play_Action(Layer* layer) : Double_Action(layer) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -429,7 +429,7 @@ class Stop_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop_Action(Layout* layout) : Double_Action(layout) {}
+    Stop_Action(Layer* layer) : Double_Action(layer) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -451,7 +451,7 @@ class Record_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record_Action(Layout* layout) : Double_Action(layout) {}
+    Record_Action(Layer* layer) : Double_Action(layer) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -481,7 +481,7 @@ private:
     bool pressed_ = false;
     
 public:
-    RepeatingArrow_Action(Layout* layout, int direction, double repeatRate) : Double_Action(layout), direction_(direction), repeatRate_(repeatRate) {}
+    RepeatingArrow_Action(Layer* layer, int direction, double repeatRate) : Double_Action(layer), direction_(direction), repeatRate_(repeatRate) {}
 
     virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
@@ -489,14 +489,14 @@ public:
         {
             lastRepeated = clock();
             // GAW TBD
-            //DAW::CSurf_OnArrow(direction_, GetLayout->GetRealSurfaceFor(surfaceName)->IsZoom());
+            //DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
         }
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         // GAW TBD
-        // DAW::CSurf_OnArrow(direction_, GetLayout->GetRealSurfaceFor(surfaceName)->IsZoom());
+        // DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
         pressed_ = value;
     }
 };
@@ -506,7 +506,7 @@ class TrackSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackSelect_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -521,7 +521,7 @@ public:
         if(GetTrack(zoneName))
         {
             DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
-            GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
         }
     }
 };
@@ -531,7 +531,7 @@ class TrackUniqueSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackUniqueSelect_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -546,7 +546,7 @@ public:
         if(GetTrack(zoneName))
         {
             DAW::SetOnlyTrackSelected(GetTrack(zoneName));
-            GetLayout()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
         }
     }
 };
@@ -556,7 +556,7 @@ class TrackRangeSelect_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRangeSelect_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackRangeSelect_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -571,13 +571,13 @@ public:
         if(GetTrack(zoneName) == nullptr)
             return;
         
-        int selectedTrackNum = GetLayout()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
+        int selectedTrackNum = GetLayer()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
         int otherSelectedTrackNum = 0;
 
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
-            for(int i = 0; i < GetLayout()->GetZone(zoneName)->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i), "I_SELECTED"))
+            for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i), "I_SELECTED"))
                 {
                     otherSelectedTrackNum = i;
                     break;
@@ -588,12 +588,12 @@ public:
             
             for(int i = lowerBound; i <= upperBound; i++)
             {
-                MediaTrack* track = GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i);
+                MediaTrack* track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
                 
-                if(GetLayout()->GetZone(zoneName)->IsTrackVisible(track))
+                if(GetLayer()->GetZone(zoneName)->IsTrackVisible(track))
                 {
                     DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(track, 1), NULL);
-                    GetLayout()->GetManager()->OnTrackSelection(track);
+                    GetLayer()->GetManager()->OnTrackSelection(track);
                 }
             }
         }
@@ -605,7 +605,7 @@ class TrackRecordArm_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackRecordArm_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
    
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -627,7 +627,7 @@ class TrackMute_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackMute_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -649,7 +649,7 @@ class TrackSolo_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackSolo_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {
@@ -671,12 +671,12 @@ class TrackTouch_Action : public TrackDouble_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackTouch_Action(Layout* layout, string trackGUID) : TrackDouble_Action(layout, trackGUID) {}
+    TrackTouch_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
 
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
         if(GetTrack(zoneName))
-            GetLayout()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
+            GetLayer()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
     }
 };
 
@@ -693,13 +693,13 @@ private:
     bool IsCurrentlyTouched(string zoneName)
     {
         if(GetTrack(zoneName))
-            return GetLayout()->GetTouchState(GetTrack(zoneName), 0);
+            return GetLayer()->GetTouchState(GetTrack(zoneName), 0);
         else
             return false;
     }
     
 public:
-    TrackTouchControlled_Action(string actionAddress, Layout* layout, string trackGUID, Action* action) : Track_Action(layout, trackGUID), action_(action), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(string actionAddress, Layer* layer, string trackGUID, Action* action) : Track_Action(layer, trackGUID), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
@@ -713,7 +713,7 @@ public:
         else if(lastTouched_ != currentlyTouched)
         {
             lastTouched_ = currentlyTouched;
-            GetLayout()->ForceUpdateAction(actionAddress_, zoneName, surfaceName, widgetName);
+            GetLayer()->ForceUpdateAction(actionAddress_, zoneName, surfaceName, widgetName);
         }
     }
 
@@ -754,7 +754,7 @@ protected:
     int autoMode_ = 0;
     
 public:
-    GlobalAutoMode_Action(Layout* layout, string autoModeStr) : Double_Action(layout)
+    GlobalAutoMode_Action(Layer* layer, string autoModeStr) : Double_Action(layer)
     {
         autoMode_ = atol(autoModeStr.c_str());
     }
@@ -785,13 +785,13 @@ class TrackAutoMode_Action : public GlobalAutoMode_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackAutoMode_Action(Layout* layout, string autoModeStr) : GlobalAutoMode_Action(layout, autoModeStr) {}
+    TrackAutoMode_Action(Layer* layer, string autoModeStr) : GlobalAutoMode_Action(layer, autoModeStr) {}
     
     virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
     {
-        for(int i = 0; i < GetLayout()->GetZone(zoneName)->GetNumTracks(); i++)
+        for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
         {
-            MediaTrack *track = GetLayout()->GetZone(zoneName)->CSurf_TrackFromID(i);
+            MediaTrack *track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
                 return DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
@@ -811,7 +811,7 @@ class CycleTimeline_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline_Action(Layout* layout) : Double_Action(layout)  {}
+    CycleTimeline_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override { return DAW::GetSetRepeatEx(nullptr, -1); }
     
@@ -826,7 +826,7 @@ class Cancel_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Cancel_Action(Layout* layout) : Double_Action(layout)  {}
+    Cancel_Action(Layer* layer) : Double_Action(layer)  {}
     // GAW TBD
 };
 
@@ -835,7 +835,7 @@ class Enter_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Enter_Action(Layout* layout) : Double_Action(layout)  {}
+    Enter_Action(Layer* layer) : Double_Action(layer)  {}
     // GAW TBD
 };
 
@@ -850,14 +850,14 @@ protected:
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-              GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName,
-                                                clampedAndNormalized(value, GetLayout()->GetWidgetMaxDB(zoneName, surfaceName, widgetName), GetLayout()->GetWidgetMinDB(zoneName, surfaceName, widgetName)));
+              GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName,
+                                                clampedAndNormalized(value, GetLayer()->GetWidgetMaxDB(zoneName, surfaceName, widgetName), GetLayer()->GetWidgetMinDB(zoneName, surfaceName, widgetName)));
         else
-            GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, 0.0);
+            GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, 0.0);
     }
     
 public:
-    TrackOutputMeter_Action(Layout* layout, string trackGUID, string channelStr) : TrackDouble_Action(layout, trackGUID)
+    TrackOutputMeter_Action(Layer* layer, string trackGUID, string channelStr) : TrackDouble_Action(layer, trackGUID)
     {
         channel_ = atol(channelStr.c_str());
     }
@@ -881,14 +881,14 @@ protected:
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            //GetLayout->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, GetLayout->GetWidgetMaxDB(surfaceName, widgetName), GetLayout->GetWidgetMinDB(surfaceName, widgetName)));
-            GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, -value / 20.0); // GAW TBD hacked for now
+            //Getlayer->SetWidgetValue(surfaceName, widgetName, clampedAndNormalized(-value, Getlayer->GetWidgetMaxDB(surfaceName, widgetName), Getlayer->GetWidgetMinDB(surfaceName, widgetName)));
+            GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, -value / 20.0); // GAW TBD hacked for now
         else
-            GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, 1.0);
+            GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, 1.0);
     }
     
 public:
-    TrackGainReductionMeter_Action(Layout* layout, string trackGUID, string fxGUID) : TrackDouble_Action(layout, trackGUID), fxGUID_(fxGUID)  {}
+    TrackGainReductionMeter_Action(Layer* layer, string trackGUID, string fxGUID) : TrackDouble_Action(layer, trackGUID), fxGUID_(fxGUID)  {}
     
     virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
     {

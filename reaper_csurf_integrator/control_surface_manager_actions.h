@@ -14,11 +14,11 @@ class Shift_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Shift_Action(Layout* layout) : Double_Action(layout)  {}
+    Shift_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetShift(zoneName, surfaceName, value);
+        GetLayer()->SetShift(zoneName, surfaceName, value);
     }
 };
 
@@ -27,11 +27,11 @@ class Option_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Option_Action(Layout* layout) : Double_Action(layout)  {}
+    Option_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetOption(zoneName, surfaceName, value);
+        GetLayer()->SetOption(zoneName, surfaceName, value);
     }
 };
 
@@ -40,11 +40,11 @@ class Control_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Control_Action(Layout* layout) : Double_Action(layout)  {}
+    Control_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetControl(zoneName, surfaceName, value);
+        GetLayer()->SetControl(zoneName, surfaceName, value);
     }
 };
 
@@ -53,11 +53,11 @@ class Alt_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Alt_Action(Layout* layout) : Double_Action(layout)  {}
+    Alt_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetAlt(zoneName, surfaceName, value);
+        GetLayer()->SetAlt(zoneName, surfaceName, value);
     }
 };
 
@@ -68,7 +68,7 @@ class Latched_Action : public Double_Action
 private:
     clock_t lastPressed_ = clock();
 public:
-    Latched_Action(Layout* layout) : Double_Action(layout)  {}
+    Latched_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void SetValue(string zoneName, string surfaceName, double value) {}
     
@@ -78,14 +78,14 @@ public:
         {
             lastPressed_ = clock();
             SetValue(zoneName, surfaceName, value);
-            GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
+            GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
         }
         else
         {
             if(clock() - lastPressed_ >  CLOCKS_PER_SEC / 4)
             {
                 SetValue(zoneName, surfaceName, value);
-                GetLayout()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
+                GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
             }
         }
     }
@@ -96,11 +96,11 @@ class LatchedZoom_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    LatchedZoom_Action(Layout* layout) : Latched_Action(layout)  {}
+    LatchedZoom_Action(Layer* layer) : Latched_Action(layer)  {}
     
     virtual void SetValue(string zoneName, string surfaceName, double value) override
     {
-        GetLayout()->SetZoom(zoneName, surfaceName, value);
+        GetLayer()->SetZoom(zoneName, surfaceName, value);
     }
 };
 
@@ -109,11 +109,11 @@ class LatchedScrub_Action : public Latched_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    LatchedScrub_Action(Layout* layout) : Latched_Action(layout)  {}
+    LatchedScrub_Action(Layer* layer) : Latched_Action(layer)  {}
     
     virtual void SetValue(string zoneName, string surfaceName, double value) override
     {
-        GetLayout()->SetScrub(zoneName, surfaceName, value);
+        GetLayer()->SetScrub(zoneName, surfaceName, value);
     }
 };
 
@@ -123,26 +123,26 @@ class SetShowFXWindows_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows_Action(Layout* layout) : Double_Action(layout)  {}
+    SetShowFXWindows_Action(Layer* layer) : Double_Action(layer)  {}
     
-    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override { return GetLayout()->IsShowFXWindows(zoneName, surfaceName); }
+    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override { return GetLayer()->IsShowFXWindows(zoneName, surfaceName); }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->SetShowFXWindows(zoneName, surfaceName, value);
+        GetLayer()->SetShowFXWindows(zoneName, surfaceName, value);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NextLayout_Action : public Double_Action
+class NextLayer_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NextLayout_Action(Layout* layout) : Double_Action(layout)  {}
+    NextLayer_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->GetManager()->NextLayout();
+        GetLayer()->GetManager()->NextLayer();
     }
 };
 
@@ -154,14 +154,14 @@ private:
     int stride_ = 0;
 
 public:
-    TrackBank_Action(Layout* layout, string paramStr) : Double_Action(layout)
+    TrackBank_Action(Layer* layer, string paramStr) : Double_Action(layer)
     {
         stride_ =  atol(paramStr.c_str());
     }
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->AdjustTrackBank(zoneName, surfaceName, stride_);
+        GetLayer()->AdjustTrackBank(zoneName, surfaceName, stride_);
     }
 };
 
@@ -170,11 +170,11 @@ class PinSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PinSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
+    PinSelectedTracks_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-       GetLayout()->PinSelectedTracks();
+       GetLayer()->PinSelectedTracks();
     }
 };
 
@@ -183,11 +183,11 @@ class UnpinSelectedTracks_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    UnpinSelectedTracks_Action(Layout* layout) : Double_Action(layout)  {}
+    UnpinSelectedTracks_Action(Layer* layer) : Double_Action(layer)  {}
     
     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
     {
-        GetLayout()->UnpinSelectedTracks();
+        GetLayer()->UnpinSelectedTracks();
     }
 };
 

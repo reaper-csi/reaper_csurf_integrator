@@ -40,7 +40,7 @@ const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string FollowMCP = "FollowMCP";
 const string RealSurface_ = "RealSurface";
-const string Layout_ = "Layout";
+const string Layer_ = "Layer";
 const string Zone_ = "Zone";
 const string VirtualSurface_ = "VirtualSurface";
 
@@ -161,7 +161,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Layout;
+class Layer;
 class Zone;
 class RealSurface;
 class RealSurfaceChannel;
@@ -170,14 +170,14 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Layout* layout_ = nullptr;
-    Layout* GetLayout() { return layout_; }
+    Layer* layer_ = nullptr;
+    Layer* GetLayer() { return layer_; }
     
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value) {}
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value) {}
     
 public:
-    Action(Layout* layout) : layout_(layout) {}
+    Action(Layer* layer) : layer_(layer) {}
     virtual ~Action() {}
     
     virtual int GetDisplayMode() { return 0; }
@@ -534,7 +534,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string name_ = "";
-    Layout* layout_= nullptr;
+    Layer* layer_= nullptr;
     int numBankableChannels_ = 0;
     int trackOffset_ = 0;
     bool followMCP_ = true;
@@ -622,10 +622,10 @@ class Zone
     }
 
 public:
-    Zone(string name, Layout* layout, bool followMCP) : name_(name), layout_(layout), followMCP_(followMCP) {}
+    Zone(string name, Layer* layout, bool followMCP) : name_(name), layer_(layout), followMCP_(followMCP) {}
     
     string GetName() { return name_; }
-    Layout* GetLayout() { return layout_; }
+    Layer* GetLayer() { return layer_; }
     bool IsShowFXWindows() { return showFXWindows_; }
     void MapFXActions(string trackGUID, RealSurface* surface);
     void TrackListChanged();
@@ -894,7 +894,7 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Layout
+class Layer
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -912,7 +912,7 @@ private:
     }
     
 public:
-    Layout(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
+    Layer(string name, CSurfManager* manager) : name_(name), manager_(manager) {}
 
     string GetName() { return name_; }
     CSurfManager* GetManager() { return manager_; }
@@ -1254,10 +1254,10 @@ class CSurfManager
 {
 private:
     MidiIOManager* midiIOManager_ = nullptr;
-    vector <Layout*> layouts_;
+    vector <Layer*> layers_;
     vector<RealSurface*> realSurfaces_;
     bool isInitialized_ = false;
-    int currentLayoutIndex_ = 0; 
+    int currentLayerIndex_ = 0; 
     bool VSTMonitor_ = false;
     
     void InitRealSurface(RealSurface* surface);
@@ -1268,7 +1268,7 @@ private:
         bool midiOutMonitor = false;
         VSTMonitor_ = false;
 
-        Layout* currentLayout = nullptr;
+        Layer* currentLayer = nullptr;
         Zone* currentZone = nullptr;
 
         ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
@@ -1320,22 +1320,22 @@ private:
         
                     AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
-                else if(tokens[0] == Layout_)
+                else if(tokens[0] == Layer_)
                 {
                     if(tokens.size() != 2)
                         continue;
                     
-                    currentLayout = new Layout(tokens[1], this);
-                    layouts_.push_back(currentLayout);
+                    currentLayer = new Layer(tokens[1], this);
+                    layers_.push_back(currentLayer);
                     
                 }
-                else if(tokens[0] == Zone_ && currentLayout != nullptr)
+                else if(tokens[0] == Zone_ && currentLayer != nullptr)
                 {
                     if(tokens.size() != 3)
                         continue;
                                
-                    currentZone = new Zone(tokens[1], currentLayout, tokens[2] == "Yes" ? true : false);
-                    currentLayout->AddZone(currentZone);
+                    currentZone = new Zone(tokens[1], currentLayer, tokens[2] == "Yes" ? true : false);
+                    currentLayer->AddZone(currentZone);
                 }
                 else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
                 {
@@ -1349,11 +1349,11 @@ private:
             }
         }
         
-        for(auto layout : layouts_)
-            layout->Init();
+        for(auto layer : layers_)
+            layer->Init();
         
-       if(layouts_.size() > 0)
-           layouts_[0]->SetContext();
+       if(layers_.size() > 0)
+           layers_[0]->SetContext();
     }
 
     void AddRealSurface(RealSurface* realSurface)
@@ -1370,8 +1370,8 @@ private:
             isInitialized_ = true;
         }
         
-        if(layouts_.size() > 0)
-            layouts_[currentLayoutIndex_]->RunAndUpdate();
+        if(layers_.size() > 0)
+            layers_[currentLayerIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -1398,8 +1398,8 @@ public:
     
     void OnTrackSelection(MediaTrack *track)
     {
-        if(layouts_.size() > 0)
-            layouts_[currentLayoutIndex_]->OnTrackSelection(track);
+        if(layers_.size() > 0)
+            layers_[currentLayerIndex_]->OnTrackSelection(track);
     }
     
     void Run()
@@ -1409,39 +1409,39 @@ public:
     
     void ReInit()
     {
-        layouts_.clear();
+        layers_.clear();
         realSurfaces_.clear();
         isInitialized_ = false;
         Init();
         isInitialized_ = true;
     }
     
-    void NextLayout()
+    void NextLayer()
     {
-        if(layouts_.size() > 0)
+        if(layers_.size() > 0)
         {
-            currentLayoutIndex_ = currentLayoutIndex_ == layouts_.size() - 1 ? 0 : ++currentLayoutIndex_;
-            layouts_[currentLayoutIndex_]->SetContext();
+            currentLayerIndex_ = currentLayerIndex_ == layers_.size() - 1 ? 0 : ++currentLayerIndex_;
+            layers_[currentLayerIndex_]->SetContext();
         }
     }
 
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        if(layouts_.size() > 0)
-            return layouts_[currentLayoutIndex_]->GetTouchState(track, touchedControl);
+        if(layers_.size() > 0)
+            return layers_[currentLayerIndex_]->GetTouchState(track, touchedControl);
         else
             return false;
     }
     
     void TrackListChanged()
     {
-        for(auto & layout : layouts_)
+        for(auto & layout : layers_)
             layout->TrackListChanged();
     }
 
     void TrackFXListChanged(MediaTrack* trackid)
     {
-        for(auto & layout : layouts_)
+        for(auto & layout : layers_)
             layout->TrackFXListChanged(trackid);
     }
 };
@@ -1453,7 +1453,7 @@ class OSCCSurf : public RealSurface
 public:
     virtual ~OSCCSurf() {};
     
-    OSCCSurf(const string name, string templateFilename, Layout* layout)
+    OSCCSurf(const string name, string templateFilename, Layer* layout)
     : RealSurface("OSC", templateFilename, 8, 8) {}
 };
 
@@ -1464,7 +1464,7 @@ class WebCSurf : public RealSurface
 public:
     virtual ~WebCSurf() {};
     
-    WebCSurf(const string name, string templateFilename, Layout* layout)
+    WebCSurf(const string name, string templateFilename, Layer* layout)
     : RealSurface("Web", templateFilename, 8, 8) {};
 };
 

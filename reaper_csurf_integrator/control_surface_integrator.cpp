@@ -12,72 +12,72 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reaper Actions available for mapping, this list will get added to substantially over time
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action* ActionFor(string name, Layout* layout)
+Action* ActionFor(string name, Layer* layer)
 {
-    if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(layout);
-    else if(name == "Rewind")  return new Rewind_Action(layout);
-    else if(name == "FastForward")  return new FastForward_Action(layout);
-    else if(name == "Stop")  return new Stop_Action(layout);
-    else if(name == "Play")  return new Play_Action(layout);
-    else if(name == "Record")  return new Record_Action(layout);
-    else if(name == "NextLayout")  return new NextLayout_Action(layout);
-    else if(name == "PinSelectedTracks")  return new PinSelectedTracks_Action(layout);
-    else if(name == "UnpinSelectedTracks")  return new UnpinSelectedTracks_Action(layout);
-    else if(name == "Shift")  return new Shift_Action(layout);
-    else if(name == "Option")  return new Option_Action(layout);
-    else if(name == "Control")  return new Control_Action(layout);
-    else if(name == "Alt")  return new Alt_Action(layout);
-    else if(name == "LatchedZoom")  return new LatchedZoom_Action(layout);
-    else if(name == "LatchedScrub")  return new LatchedScrub_Action(layout);
-    else if(name == "Cycled")  return new Cycled_Action(layout);
-    else if(name == "CycleTimeline")  return new CycleTimeline_Action(layout);
+    if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(layer);
+    else if(name == "Rewind")  return new Rewind_Action(layer);
+    else if(name == "FastForward")  return new FastForward_Action(layer);
+    else if(name == "Stop")  return new Stop_Action(layer);
+    else if(name == "Play")  return new Play_Action(layer);
+    else if(name == "Record")  return new Record_Action(layer);
+    else if(name == "NextLayer")  return new NextLayer_Action(layer);
+    else if(name == "PinSelectedTracks")  return new PinSelectedTracks_Action(layer);
+    else if(name == "UnpinSelectedTracks")  return new UnpinSelectedTracks_Action(layer);
+    else if(name == "Shift")  return new Shift_Action(layer);
+    else if(name == "Option")  return new Option_Action(layer);
+    else if(name == "Control")  return new Control_Action(layer);
+    else if(name == "Alt")  return new Alt_Action(layer);
+    else if(name == "LatchedZoom")  return new LatchedZoom_Action(layer);
+    else if(name == "LatchedScrub")  return new LatchedScrub_Action(layer);
+    else if(name == "Cycled")  return new Cycled_Action(layer);
+    else if(name == "CycleTimeline")  return new CycleTimeline_Action(layer);
     
-    return new Action(layout);
+    return new Action(layer);
 }
 
-Action* ActionFor(string name, Layout* layout, string param)
+Action* ActionFor(string name, Layer* layer, string param)
 {
-    if(name == "TrackBank")  return new TrackBank_Action(layout, param);
-    else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(layout, param);
-    else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(layout, param);
-    else if(name == "Reaper")  return new Reaper_Action(layout, param);
+    if(name == "TrackBank")  return new TrackBank_Action(layer, param);
+    else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(layer, param);
+    else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(layer, param);
+    else if(name == "Reaper")  return new Reaper_Action(layer, param);
     
-    return new Action(layout);
+    return new Action(layer);
 }
 
-Action* TrackActionFor(string name, Layout* layout, string trackGUID)
+Action* TrackActionFor(string name, Layer* layer, string trackGUID)
 {
-    if(name == "TrackVolume")  return new TrackVolume_Action(layout, trackGUID);
-    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layout, trackGUID);
-    else if(name == "TrackPanDisplay")  return new TrackPanDisplay_Action(layout, trackGUID);
-    else if(name == "TrackPanWidthDisplay")  return new TrackPanWidthDisplay_Action(layout, trackGUID);
-    else if(name == "TrackPan")  return new TrackPan_Action(layout, trackGUID);
-    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layout, trackGUID);
-    else if(name == "TrackTouch")  return new TrackTouch_Action(layout, trackGUID);
-    else if(name == "TrackMute")  return new TrackMute_Action(layout, trackGUID);
-    else if(name == "TrackSolo")  return new TrackSolo_Action(layout, trackGUID);
-    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(layout, trackGUID);
-    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(layout, trackGUID);
-    else if(name == "TrackSelect")  return new TrackSelect_Action(layout, trackGUID);
-    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(layout, trackGUID);
-    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layout, trackGUID);
-    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layout, trackGUID);
+    if(name == "TrackVolume")  return new TrackVolume_Action(layer, trackGUID);
+    else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layer, trackGUID);
+    else if(name == "TrackPanDisplay")  return new TrackPanDisplay_Action(layer, trackGUID);
+    else if(name == "TrackPanWidthDisplay")  return new TrackPanWidthDisplay_Action(layer, trackGUID);
+    else if(name == "TrackPan")  return new TrackPan_Action(layer, trackGUID);
+    else if(name == "TrackPanWidth")  return new TrackPanWidth_Action(layer, trackGUID);
+    else if(name == "TrackTouch")  return new TrackTouch_Action(layer, trackGUID);
+    else if(name == "TrackMute")  return new TrackMute_Action(layer, trackGUID);
+    else if(name == "TrackSolo")  return new TrackSolo_Action(layer, trackGUID);
+    else if(name == "TrackUniqueSelect")  return new TrackUniqueSelect_Action(layer, trackGUID);
+    else if(name == "TrackRangeSelect")  return new TrackRangeSelect_Action(layer, trackGUID);
+    else if(name == "TrackSelect")  return new TrackSelect_Action(layer, trackGUID);
+    else if(name == "TrackRecordArm")  return new TrackRecordArm_Action(layer, trackGUID);
+    else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layer, trackGUID);
+    else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layer, trackGUID);
     
-    return new Action(layout);
+    return new Action(layer);
 }
 
-Action* TrackActionFor(string name, Layout* layout, string trackGUID, string param)
+Action* TrackActionFor(string name, Layer* layer, string trackGUID, string param)
 {
-    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layout, trackGUID, param);
+    if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layer, trackGUID, param);
     
-    return new Action(layout);
+    return new Action(layer);
 }
 
-Action* TrackActionFor(string name, string actionAddress, Layout* layout, string trackGUID, Action* baseAction)
+Action* TrackActionFor(string name, string actionAddress, Layer* layer, string trackGUID, Action* baseAction)
 {
-    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layout, trackGUID, baseAction);
+    if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layer, trackGUID, baseAction);
     
-    return new Action(layout);
+    return new Action(layer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ void RealSurfaceChannel::SetGUID(string GUID)
     for (auto widgetName : widgetNames_)
         realSurface_->SetWidgetGUID(widgetName, GUID);
     
-    realSurface_->GetZone()->GetLayout()->MapTrack(GUID_);
+    realSurface_->GetZone()->GetLayer()->MapTrack(GUID_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ void  RealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
 
 void RealSurface::AddAction(string actionAddress, Action* action)
 {
-    GetZone()->GetLayout()->AddAction(actionAddress, action);
+    GetZone()->GetLayer()->AddAction(actionAddress, action);
 }
 
 // to Actions ->
@@ -431,7 +431,7 @@ void Zone::MapFXActions(string trackGUID, RealSurface* surface)
     if(track == nullptr)
         return;
     
-    Layout* layout = GetLayout();
+    Layer* layer = GetLayer();
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
     char fxGUID[BUFSZ];
@@ -449,7 +449,7 @@ void Zone::MapFXActions(string trackGUID, RealSurface* surface)
             for(auto mapEntry : map->GetTemplateEntries())
             {
                 if(mapEntry.paramName == GainReductionDB)
-                    GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layout, trackGUID, fxGUID));
+                    GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layer, trackGUID, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
@@ -457,7 +457,7 @@ void Zone::MapFXActions(string trackGUID, RealSurface* surface)
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
                         if(mapEntry.paramName == fxParamName)
-                            GetLayout()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layout, trackGUID, fxGUID, j));
+                            GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layer, trackGUID, fxGUID, j));
                     }
                 }
             }
@@ -474,7 +474,7 @@ void Zone::TrackFXListChanged(MediaTrack* track)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         
-        if(GetLayout()->GetManager()->GetVSTMonitor())
+        if(GetLayer()->GetManager()->GetVSTMonitor())
         {
             DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
             
@@ -492,12 +492,12 @@ void Zone::TrackFXListChanged(MediaTrack* track)
 
 void Zone::AddAction(string actionAddress, Action* action)
 {
-    GetLayout()->AddAction(actionAddress, action);
+    GetLayer()->AddAction(actionAddress, action);
 }
 
 void Zone::MapRealSurfaceActions(RealSurface* surface)
 {
-    Layout* layout = GetLayout();
+    Layer* layer = GetLayer();
     string actionBaseAddress = DefaultGUID + GetName() + surface->GetName();;
     string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
@@ -518,9 +518,9 @@ void Zone::MapRealSurfaceActions(RealSurface* surface)
                         tokens.push_back(token);
                     
                     if(tokens.size() == 2)
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout));
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layer));
                     else if(tokens.size() == 3)
-                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layout, tokens[2]));
+                        AddAction(actionBaseAddress + tokens[0], ActionFor(tokens[1], layer, tokens[2]));
                 }
             }
         }
@@ -533,7 +533,7 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
     if(track == nullptr)
         return;
 
-    Layout* layout = GetLayout();
+    Layer* layer = GetLayer();
     string actionBaseAddress = trackGUID + GetName() + surface->GetName();
     string templateDirectory = actionTemplateDirectory_[surface->GetName()];
     
@@ -555,28 +555,28 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
                     
                     if(tokens.size() == 2)
                     {
-                        AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layout, trackGUID));
+                        AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layer, trackGUID));
                     }
                     else if(tokens.size() == 3)
                     {
                         if(tokens[1] == "TrackTouchControlled")
                         {
                             string actionAddress = actionBaseAddress + tokens[0];
-                            Action* controlledAction = TrackActionFor(tokens[2], layout, trackGUID);
-                            AddAction(actionAddress, TrackActionFor(tokens[1], actionAddress, layout, trackGUID, controlledAction));
+                            Action* controlledAction = TrackActionFor(tokens[2], layer, trackGUID);
+                            AddAction(actionAddress, TrackActionFor(tokens[1], actionAddress, layer, trackGUID, controlledAction));
                         }
                         else
                         {
-                            AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layout, trackGUID, tokens[2]));
+                            AddAction(actionBaseAddress + tokens[0], TrackActionFor(tokens[1], layer, trackGUID, tokens[2]));
                         }
                     }
                     else if(tokens[1] == "Cycled" && tokens.size() > 4)
                     {
-                        Action* cycledAction = ActionFor(tokens[1], layout);
+                        Action* cycledAction = ActionFor(tokens[1], layer);
                         AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
                         for(int i = 3 ; i < tokens.size(); i++)
-                            cycledAction->AddAction(TrackActionFor(tokens[i], layout, trackGUID));
+                            cycledAction->AddAction(TrackActionFor(tokens[i], layer, trackGUID));
                     }
                 }
             }
@@ -595,7 +595,7 @@ void Zone::SetPinnedTracks()
         {
             channel = surface->GetBankableChannels()[i];
             
-            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
             {
                 channel->SetGUID(buffer);
                 channel->SetIsMovable(false);
@@ -620,7 +620,7 @@ void Zone::PinSelectedTracks()
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsMovable(false);
-                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
                 DAW::MarkProjectDirty(nullptr);
             }
         }
@@ -644,9 +644,9 @@ void Zone::UnpinSelectedTracks()
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsMovable(true);
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
                 {
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayout()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), "");
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), "");
                     DAW::MarkProjectDirty(nullptr);
                 }
             }
@@ -657,33 +657,33 @@ void Zone::UnpinSelectedTracks()
 // to Actions ->
 double Zone::GetActionCurrentNormalizedValue(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    return GetLayout()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    return GetLayer()->GetActionCurrentNormalizedValue(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void Zone::UpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLayout()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayer()->UpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void Zone::ForceUpdateAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLayout()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayer()->ForceUpdateAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void Zone::CycleAction(string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLayout()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
+    GetLayer()->CycleAction(ActionAddressFor(GUID, surfaceName, actionName), GetName(), surfaceName, widgetName);
 }
 
 void Zone::DoAction(double value, string GUID, string surfaceName, string actionName, string widgetName)
 {
-    GetLayout()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
+    GetLayer()->DoAction(ActionAddressFor(GUID, surfaceName, actionName), value, GetName(), surfaceName, widgetName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Layout
+// Layer
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Layout::OnTrackSelection(MediaTrack* track)
+void Layer::OnTrackSelection(MediaTrack* track)
 {
     MapTrack(DAW::GetTrackGUIDAsString(track));
     
