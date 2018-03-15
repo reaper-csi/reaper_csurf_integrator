@@ -18,9 +18,9 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButton_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release)  {}
+    PushButton_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release)  {}
     
-    PushButton_MidiWidget(RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), reverseSense_(reverseSense) {}
+    PushButton_MidiWidget(OldRealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
@@ -32,7 +32,7 @@ public:
         SetValue(reverseSense_ ? 1 : 0);
     }
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
@@ -53,9 +53,9 @@ protected:
     int reverseSense_ = 0;
     
 public:
-    PushButtonWithLatch_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release)  {}
+    PushButtonWithLatch_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release)  {}
     
-    PushButtonWithLatch_MidiWidget(RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), reverseSense_(reverseSense) {}
+    PushButtonWithLatch_MidiWidget(OldRealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), reverseSense_(reverseSense) {}
     
     void SetValue(double value) override
     {
@@ -67,7 +67,7 @@ public:
         SetValue(reverseSense_ ? 1 : 0);
     }
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
@@ -85,11 +85,11 @@ class PushButtonWithRelease_MidiWidget : public PushButton_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, press, release)  {}
+    PushButtonWithRelease_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, press, release)  {}
     
-    PushButtonWithRelease_MidiWidget(RealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, reverseSense, press, release) {}
+    PushButtonWithRelease_MidiWidget(OldRealSurface* surface, string name, int reverseSense, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, reverseSense, press, release) {}
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
@@ -110,7 +110,7 @@ class PushButtonCycler_MidiWidget : public PushButton_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonCycler_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, press, release)  {}
+    PushButtonCycler_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_MidiWidget(surface, name, press, release)  {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
@@ -128,7 +128,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_MidiWidget(RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_MidiWidget(OldRealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     double GetMinDB() override { return minDB_; }
     double GetMaxDB() override { return maxDB_; }
@@ -144,7 +144,7 @@ public:
         SetValue(0.0);
     }
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]), this);
@@ -161,7 +161,7 @@ class Fader7Bit_MidiWidget : public OldMidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release) {}
+    Fader7Bit_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release) {}
     
     virtual void SetValue(double value) override
     {
@@ -178,7 +178,7 @@ public:
         SetValue(0.0, 0x00);
     }
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
@@ -195,7 +195,7 @@ class Encoder_MidiWidget : public OldMidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release) {}
+    Encoder_MidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release) {}
     
     virtual void SetValue(double pan, int displayMode) override
     {
@@ -211,7 +211,7 @@ public:
         SetValue(0.0, 0x00);
     }
     
-    void AddToRealSurface(RealSurface* surface) override
+    void AddToRealSurface(OldRealSurface* surface) override
     {
         OldMidiWidget::AddToRealSurface(surface);
         surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
@@ -239,7 +239,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_MidiWidget(RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_MidiWidget(OldRealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : OldMidiWidget(surface, name, press, release), minDB_(minDB), maxDB_(maxDB){}
     
     double GetMinDB() override { return minDB_; }
     double GetMaxDB() override { return maxDB_; }
@@ -260,7 +260,7 @@ class GainReductionMeter_MidiWidget : public VUMeter_MidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_MidiWidget(RealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(surface, name, minDB, maxDB, press, release) {}
+    GainReductionMeter_MidiWidget(OldRealSurface* surface, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_MidiWidget(surface, name, minDB, maxDB, press, release) {}
 
     virtual void SetValueToZero() override
     {
@@ -280,7 +280,7 @@ class DisplayUpper_MidiWidget : public OldMidiWidget
     int slotIndex_ = 0;
     
 public:
-    DisplayUpper_MidiWidget(RealSurface* surface, string name, int slotIndex) : OldMidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayUpper_MidiWidget(OldRealSurface* surface, string name, int slotIndex) : OldMidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {
@@ -339,7 +339,7 @@ class DisplayLower_MidiWidget : public OldMidiWidget
     int slotIndex_ = 0;
     
 public:
-    DisplayLower_MidiWidget(RealSurface* surface, string name, int slotIndex) : OldMidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayLower_MidiWidget(OldRealSurface* surface, string name, int slotIndex) : OldMidiWidget(surface, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     virtual void SetValueToZero() override
     {

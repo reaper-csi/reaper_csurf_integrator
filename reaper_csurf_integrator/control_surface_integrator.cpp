@@ -93,7 +93,7 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int index)
+OldMidiWidget* WidgetFor(OldRealSurface* surface, string name, string widgetClass, int index)
 {
     if(widgetClass == "DisplayUpper") return new DisplayUpper_MidiWidget(surface, name, index);
     if(widgetClass == "DisplayLower") return new DisplayLower_MidiWidget(surface, name, index);
@@ -101,7 +101,7 @@ OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, 
     return new OldMidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
-OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(OldRealSurface* surface, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Button") return new PushButton_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -113,7 +113,7 @@ OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, 
     return new OldMidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(OldRealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "VUMeter") return new VUMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -121,7 +121,7 @@ OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, 
     return new OldMidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(OldRealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Fader14Bit") return new Fader14Bit_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
     
@@ -131,7 +131,7 @@ OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void OldMidiWidget::AddToRealSurface(RealSurface* surface)
+void OldMidiWidget::AddToRealSurface(OldRealSurface* surface)
 {
     surface->AddWidgetToNameMap(GetName(), this);
 }
@@ -164,13 +164,13 @@ void RealSurfaceChannel::SetGUID(string GUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-RealSurface::RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name),  templateFilename_(templateFilename), isBankable_(isBankable)
+OldRealSurface::OldRealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name),  templateFilename_(templateFilename), isBankable_(isBankable)
 {
     for(int i = 0; i < numChannels; i++)
         channels_.push_back(new RealSurfaceChannel(to_string(i + 1), this));
 }
 
-void RealSurface::MapTrackToWidgets(MediaTrack *track)
+void OldRealSurface::MapTrackToWidgets(MediaTrack *track)
 {
     string trackGUID = GetZone()->GetTrackGUIDAsString(track);
     
@@ -178,39 +178,39 @@ void RealSurface::MapTrackToWidgets(MediaTrack *track)
         channel->SetGUID(trackGUID);
 }
 
-void  RealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
+void  OldRealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
 {
     for(auto* channel : channels_)
         channel->SetGUID("");
 }
 
-void RealSurface::AddAction(string actionAddress, OldAction* action)
+void OldRealSurface::AddAction(string actionAddress, OldAction* action)
 {
     GetZone()->GetLayer()->AddAction(actionAddress, action);
 }
 
 // to Actions ->
-double RealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
+double OldRealSurface::GetActionCurrentNormalizedValue(string GUID, string actionName, string widgetName)
 {
     return GetZone()->GetActionCurrentNormalizedValue(GUID, GetName(), actionName, widgetName);
 }
 
-void RealSurface::UpdateAction(string GUID, string actionName, string widgetName)
+void OldRealSurface::UpdateAction(string GUID, string actionName, string widgetName)
 {
     GetZone()->UpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
-void RealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
+void OldRealSurface::ForceUpdateAction(string GUID, string actionName, string widgetName)
 {
     GetZone()->ForceUpdateAction(GUID, GetName(), actionName, widgetName);
 }
 
-void RealSurface::CycleAction(string GUID, string actionName, string widgetName)
+void OldRealSurface::CycleAction(string GUID, string actionName, string widgetName)
 {
     GetZone()->CycleAction(GUID, GetName(), actionName, widgetName);
 }
 
-void RealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
+void OldRealSurface::DoAction(string GUID, string actionName, string widgetName, double value)
 {
     GetZone()->DoAction(value, GUID, GetName(), actionName, widgetName);
 }
@@ -386,7 +386,7 @@ void Zone::RefreshLayout()
         surface->ForceUpdateWidgets();
 }
 
-void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
+void Zone::MapFXToWidgets(MediaTrack *track, OldRealSurface* surface)
 {
     char fxName[BUFSZ];
     char fxGUID[BUFSZ];
@@ -425,7 +425,7 @@ void Zone::MapFXToWidgets(MediaTrack *track, RealSurface* surface)
     surface->ForceUpdateWidgets();
 }
 
-void Zone::MapFXActions(string trackGUID, RealSurface* surface)
+void Zone::MapFXActions(string trackGUID, OldRealSurface* surface)
 {
     MediaTrack* track = GetTrackFromGUID(trackGUID);
     if(track == nullptr)
@@ -495,7 +495,7 @@ void Zone::AddAction(string actionAddress, OldAction* action)
     GetLayer()->AddAction(actionAddress, action);
 }
 
-void Zone::MapRealSurfaceActions(RealSurface* surface)
+void Zone::MapRealSurfaceActions(OldRealSurface* surface)
 {
     Layer* layer = GetLayer();
     string actionBaseAddress = DefaultGUID + GetName() + surface->GetName();;
@@ -527,7 +527,7 @@ void Zone::MapRealSurfaceActions(RealSurface* surface)
     }
 }
 
-void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
+void Zone::MapTrackActions(string trackGUID, OldRealSurface* surface)
 {
     MediaTrack* track = GetTrackFromGUID(trackGUID);
     if(track == nullptr)
@@ -694,7 +694,7 @@ void Layer::OnTrackSelection(MediaTrack* track)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSurfManager::InitRealSurface(RealSurface* surface)
+void CSurfManager::InitRealSurface(OldRealSurface* surface)
 {
     ifstream surfaceTemplateFile(surface->GetTemplateFilename());
     bool inChannel = false;
