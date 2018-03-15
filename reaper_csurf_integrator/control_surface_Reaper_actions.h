@@ -10,7 +10,7 @@
 #include "control_surface_base_actions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Track_Action : public Action
+class Track_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -22,7 +22,7 @@ protected:
     }
 
 public:
-    Track_Action(Layer* layer, string trackGUID) : Action(layer), trackGUID_(trackGUID) {}
+    Track_Action(Layer* layer, string trackGUID) : OldAction(layer), trackGUID_(trackGUID) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -685,7 +685,7 @@ class TrackTouchControlled_Action : public Track_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Action* action_= nullptr;
+    OldAction* action_= nullptr;
     string actionAddress_= nullptr;
     
     bool lastTouched_ = false;
@@ -699,7 +699,7 @@ private:
     }
     
 public:
-    TrackTouchControlled_Action(string actionAddress, Layer* layer, string trackGUID, Action* action) : Track_Action(layer, trackGUID), action_(action), actionAddress_(actionAddress) {}
+    TrackTouchControlled_Action(string actionAddress, Layer* layer, string trackGUID, OldAction* action) : Track_Action(layer, trackGUID), action_(action), actionAddress_(actionAddress) {}
     
     virtual void Update(string zoneName, string surfaceName, string widgetName) override
     {
