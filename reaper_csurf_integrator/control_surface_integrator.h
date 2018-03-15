@@ -44,6 +44,10 @@ const string Layer_ = "Layer";
 const string Zone_ = "Zone";
 const string VirtualSurface_ = "VirtualSurface";
 
+class Manager;
+static Manager* manager = nullptr;
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,12 +163,760 @@ public:
     }
 };
 
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page;
+class RealSurface;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MidiIOManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MidiChannelInput // inner struct
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+        int channel_ = 0;
+        midi_Input* midiInput_ = nullptr;
+        
+        MidiChannelInput(int channel, midi_Input* midiInput)
+        : channel_(channel), midiInput_(midiInput) {}
+    };
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    struct MidiChannelOutput // inner struct
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    {
+        int channel_ = 0;
+        midi_Output* midiOutput_ = nullptr;
+        
+        MidiChannelOutput(int channel, midi_Output* midiOutput)
+        : channel_(channel), midiOutput_(midiOutput) {}
+    };
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // class MidiIOManager starts here
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    vector<MidiChannelInput> inputs_;
+    vector<MidiChannelOutput> outputs_;
+    
+public:
+    MidiIOManager() {}
+    
+    midi_Input* GetMidiInputForChannel(int inputChannel)
+    {
+        for(auto input : inputs_)
+            if(input.channel_ == inputChannel)
+                return input.midiInput_; // return existing
+        
+        // make new
+        midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
+        
+        if(newInput)
+        {
+            newInput->start();
+            inputs_.push_back(MidiChannelInput(inputChannel, newInput));
+            return newInput;
+        }
+        
+        return nullptr;
+    }
+    
+    midi_Output* GetMidiOutputForChannel(int outputChannel)
+    {
+        for(auto output : outputs_)
+            if(output.channel_ == outputChannel)
+                return output.midiOutput_; // return existing
+        
+        // make new
+        midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
+        
+        if(newOutput)
+        {
+            outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
+            return newOutput;
+        }
+        
+        return nullptr;
+    }
+};
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+
+protected:
+    Page* GetPage() { return page_; }
+    
+public:
+    Action(Page* page) : page_(page) {}
+    virtual ~Action() {}
+    
+    virtual void Update(string widgetGUID) {}
+    virtual void Do(double value) {}
+    virtual void Do(string value) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string name_ = "";
+    string GUID_ = DefaultGUID;
+    
+protected:
+    double currentValue_ = 0.0;
+    string currentValueStr_ = "";
+
+public:
+    Widget(string name, string GUID) : name_(name), GUID_(GUID) {}
+    virtual ~Widget() {};
+    
+    string GetGUID() { return GUID_; }
+    string GetName() { return name_; }
+    
+    virtual void Update();
+    virtual void SetValue(double value) {}
+    virtual void SetValue(string value) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MidiWidget : Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    RealSurface* realSurface_ = nullptr;
+    MIDI_event_ex_t* midiPressMessage_ = nullptr;
+    MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
+    
+protected:
+    RealSurface* GetRealSurface() { return realSurface_; }
+    MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
+    MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
+    
+public:
+    MidiWidget(string name, string GUID, RealSurface* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, GUID),  realSurface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    virtual ~MidiWidget() {};
+    
+    virtual void AddToRealSurface(RealSurface* surface);
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string name_ = "";
+    Manager* manager_ = nullptr;
+    map<string, vector<Action*>> actions_;
+    
+    
+    //vector<string> mappedTrackGUIDs_;
+    //vector<MediaTrack*> touchedTracks_;
+    
+    void SetPinnedTracks()
+    {
+        /*
+        for(auto [name, zone] : zones_)
+            zone->SetPinnedTracks();
+         */
+    }
+    
+public:
+    Page(string name, Manager* manager) : name_(name), manager_(manager) {}
+    
+    
+    string GetName() { return name_; }
+    Manager* GetManager() { return manager_; }
+    
+    void OnTrackSelection(MediaTrack* track);
+    
+
+    void AddAction(string actionAddress, Action* action)
+    {
+        actions_[actionAddress].push_back(action);
+    }
+
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        /*
+         for(auto [name, zone] : zones_)
+         zone->TrackFXListChanged(track);
+         */
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        /*
+        for(MediaTrack* touchedTrack : touchedTracks_)
+            if(touchedTrack == track)
+                return true;
+         */
+        
+        return false;
+    }
+    
+    void SetTouchState(MediaTrack* track,  bool state)
+    {
+        /*
+        if(state)
+            touchedTracks_.push_back(track);
+        else
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+         */
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    void MapTrackAndFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    {
+        MapTrackToWidgets(track, zoneName, surfaceName);
+        MapFXToWidgets(track, zoneName, surfaceName);
+    }
+    
+    void MapTrackToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->MapTrackToWidgets(track, surfaceName);
+         */
+    }
+    
+    void UnmapWidgetsFromTrack(MediaTrack* track, string zoneName, string surfaceName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
+         */
+    }
+    
+    void MapFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->MapFXToWidgets(track, surfaceName);
+         */
+    }
+    
+    void UnmapWidgetsFromFX(MediaTrack* track, string zoneName, string surfaceName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
+         */
+    }
+    
+    void SetShowFXWindows(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetShowFXWindows(value);
+         */
+    }
+    
+    bool IsShowFXWindows(string zoneName, string surfaceName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->IsShowFXWindows();
+         */
+        
+        return false;
+    }
+    
+    
+    /*
+    void AddZone(Zone* zone)
+    {
+        zones_[zone->GetName()] = zone;
+    }
+    */
+    
+    void Init()
+    {
+        SetContext();
+        /*
+        for(auto [name, zone] : zones_)
+            zone->Init();
+        */
+        SetPinnedTracks();
+    }
+    
+    void MapTrack(string trackGUID)
+    {
+            /*
+        if(trackGUID == "")
+            return; // Nothing to map
+        
+        if(find(mappedTrackGUIDs_.begin(), mappedTrackGUIDs_.end(), trackGUID) != mappedTrackGUIDs_.end())
+            return; // Already did this track
+
+        for(auto [name, zone] : zones_)
+            zone->MapTrackAndFXActions(trackGUID);
+         
+        
+        mappedTrackGUIDs_.push_back(trackGUID);
+        */
+    }
+    
+    void AdjustTrackBank(string zoneName, string surfaceName, int stride)
+    {
+        /*
+        touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another zone is being touched it gets cleared too
+
+        zones_[zoneName]->AdjustTrackBank(stride);
+         */
+    }
+    
+    void TrackListChanged()
+    {
+        /*
+        for(auto const& [name, zone] : zones_)
+            zone->TrackListChanged();
+         */
+    }
+    
+    void SetContext()
+    {
+        /*
+        for(auto const& [name, zone] : zones_)
+            zone->SetContext();
+         */
+    }
+    
+    void RunAndUpdate()
+    {
+        /*
+        for(auto const& [name, zone] : zones_)
+            zone->RunAndUpdate();
+         */
+    }
+    
+    void SetShift(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetShift(value);
+        */
+    }
+    
+    void SetOption(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetOption(value);
+         */
+    }
+    
+    void SetControl(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetControl(value);
+         */
+    }
+    
+    void SetAlt(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetAlt(value);
+         */
+    }
+    
+    void SetZoom(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetZoom(value);
+         */
+    }
+    
+    void SetScrub(string zoneName, string surfaceName, bool value)
+    {
+        /*
+        zones_[zoneName]->SetScrub(value);
+         */
+    }
+    
+    void PinSelectedTracks()
+    {
+        /*
+        for(auto [name, zone] : zones_)
+            zone->PinSelectedTracks();
+         */
+    }
+    
+    void UnpinSelectedTracks()
+    {
+        /*
+        for(auto [name, zone] : zones_)
+            zone->UnpinSelectedTracks();
+         */
+    }
+    
+    // to Widgets ->
+    void ForceUpdateWidgets()
+    {
+        /*
+        for(auto [name, zone] : zones_)
+            zone->ForceUpdateWidgets();
+         */
+    }
+    
+    // to Actions ->
+    double GetActionCurrentNormalizedValue(string actionAddress, string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(actions_.count(actionAddress) > 0 && actions_[actionAddress].size() > 0)
+            return actions_[actionAddress][0]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName);
+        else
+         */
+            return 0.0;
+    }
+    
+    void UpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(actions_.count(actionAddress) > 0)
+            for(auto* action : actions_[actionAddress])
+                action->Update(zoneName, surfaceName, widgetName);
+         */
+    }
+    
+    void ForceUpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(actions_.count(actionAddress) > 0)
+            for(auto* action : actions_[actionAddress])
+                action->ForceUpdate(zoneName, surfaceName, widgetName);
+         */
+    }
+    
+    void CycleAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(actions_.count(actionAddress) > 0)
+            for(auto* action : actions_[actionAddress])
+                action->Cycle(zoneName, surfaceName, widgetName);
+         */
+    }
+    
+    void DoAction(string actionAddress, double value, string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(actions_.count(actionAddress) > 0)
+            for(auto* action : actions_[actionAddress])
+                action->Do(value, zoneName, surfaceName, widgetName);
+         */
+    }
+    
+    // to Widgets ->
+    double GetWidgetMaxDB(string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetWidgetMaxDB(surfaceName, widgetName);
+        */
+        
+        return 0.0;
+    }
+    
+    double GetWidgetMinDB(string zoneName, string surfaceName, string widgetName)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetWidgetMinDB(surfaceName, widgetName);
+         */
+        
+        return 0.0;
+    }
+    
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
+         */
+    }
+    
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value, int mode)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value, mode);
+         */
+    }
+    
+    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value)
+    {
+        /*
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
+         */
+    }
+};
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Manager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MidiIOManager* midiIOManager_ = nullptr;
+    vector <Page*> pages_;
+    vector<RealSurface*> realSurfaces_;
+    bool isInitialized_ = false;
+    int currentLayerIndex_ = 0;
+    bool VSTMonitor_ = false;
+    
+    void InitRealSurface(RealSurface* surface);
+    
+    void Init()
+    {
+        /*
+        bool midiInMonitor = false;
+        bool midiOutMonitor = false;
+        VSTMonitor_ = false;
+        
+        Layer* currentLayer = nullptr;
+        Zone* currentZone = nullptr;
+        
+        ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+        
+        for (string line; getline(iniFile, line) ; )
+        {
+            if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+            {
+                istringstream iss(line);
+                vector<string> tokens;
+                string token;
+                
+                while (iss >> quoted(token))
+                    tokens.push_back(token);
+                
+                if(tokens[0] == MidiInMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        midiInMonitor = true;
+                }
+                else if(tokens[0] == MidiOutMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        midiOutMonitor = true;
+                }
+                else if(tokens[0] == VSTMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        VSTMonitor_ = true;
+                }
+                else if(tokens[0] == RealSurface_)
+                {
+                    if(tokens.size() != 7)
+                        continue;
+                    
+                    int numChannels = atoi(tokens[2].c_str());
+                    bool isBankable = tokens[3] == "1" ? true : false;
+                    int channelIn = atoi(tokens[4].c_str());
+                    int channelOut = atoi(tokens[5].c_str());
+                    
+                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                }
+                else if(tokens[0] == Layer_)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    currentLayer = new Layer(tokens[1], this);
+                    layers_.push_back(currentLayer);
+                    
+                }
+                else if(tokens[0] == Zone_ && currentLayer != nullptr)
+                {
+                    if(tokens.size() != 3)
+                        continue;
+                    
+                    currentZone = new Zone(tokens[1], currentLayer, tokens[2] == "Yes" ? true : false);
+                    currentLayer->AddZone(currentZone);
+                }
+                else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
+                {
+                    if(tokens.size() != 4)
+                        continue;
+                    
+                    for(auto surface : realSurfaces_)
+                        if(surface->GetName() == tokens[1])
+                            currentZone->AddSurface(surface, tokens[2], tokens[3]);
+                }
+            }
+        }
+        
+        for(auto layer : layers_)
+            layer->Init();
+        
+        if(layers_.size() > 0)
+            layers_[0]->SetContext();
+         
+         */
+    }
+    
+    void AddRealSurface(RealSurface* realSurface)
+    {
+        InitRealSurface(realSurface);
+        realSurfaces_.push_back(realSurface);
+    }
+    
+    void RunAndUpdate()
+    {
+        if(!isInitialized_)
+        {
+            Init();
+            isInitialized_ = true;
+        }
+        
+        if(pages_.size() > 0)
+            pages_[currentLayerIndex_]->RunAndUpdate();
+    }
+    
+    double GetPrivateProfileDouble(string key)
+    {
+        char tmp[512];
+        memset(tmp, 0, sizeof(tmp));
+        
+        DAW::GetPrivateProfileString("REAPER", key.c_str() , "", tmp, sizeof(tmp), DAW::get_ini_file());
+        
+        return strtod (tmp, NULL);
+    }
+    
+public:
+    virtual ~Manager() {};
+    
+    Manager()
+    {
+        midiIOManager_ = new MidiIOManager();
+        manager = this;
+    }
+    
+    MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
+    bool GetVSTMonitor() { return isInitialized_ ? VSTMonitor_ : false; }
+    double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
+    double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
+    double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
+    double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
+    
+    void OnTrackSelection(MediaTrack *track)
+    {
+        if(pages_.size() > 0)
+            pages_[currentLayerIndex_]->OnTrackSelection(track);
+    }
+    
+    void Run()
+    {
+        RunAndUpdate();
+    }
+    
+    void ReInit()
+    {
+        pages_.clear();
+        realSurfaces_.clear();
+        isInitialized_ = false;
+        Init();
+        isInitialized_ = true;
+    }
+    
+    void NextLayer()
+    {
+        if(pages_.size() > 0)
+        {
+            currentLayerIndex_ = currentLayerIndex_ == pages_.size() - 1 ? 0 : ++currentLayerIndex_;
+            pages_[currentLayerIndex_]->SetContext();
+        }
+    }
+    
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        if(pages_.size() > 0)
+            return pages_[currentLayerIndex_]->GetTouchState(track, touchedControl);
+        else
+            return false;
+    }
+    
+    void TrackListChanged()
+    {
+        for(auto & layout : pages_)
+            layout->TrackListChanged();
+    }
+    
+    void TrackFXListChanged(MediaTrack* trackid)
+    {
+        for(auto & layout : pages_)
+            layout->TrackFXListChanged(trackid);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Layer;
 class Zone;
-class RealSurface;
+class OldRealSurface;
 class RealSurfaceChannel;
+class CSurfManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -196,19 +948,19 @@ class OldMidiWidget
 {
 private:
     string GUID_ = DefaultGUID;
-    RealSurface* realSurface_ = nullptr;
+    OldRealSurface* realSurface_ = nullptr;
     string suffix_= "";
     string name_ = "";
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 protected:
-    RealSurface* GetRealSurface() { return realSurface_; }
+    OldRealSurface* GetRealSurface() { return realSurface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
 public:
-    OldMidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    OldMidiWidget(OldRealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~OldMidiWidget() {};
     
     string GetGUID() { return GUID_; }
@@ -234,7 +986,7 @@ public:
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-    virtual void AddToRealSurface(RealSurface* surface);
+    virtual void AddToRealSurface(OldRealSurface* surface);
     void Update();
     void ForceUpdate();
     virtual void SetValue(double value) {}
@@ -244,7 +996,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RealSurface
+class OldRealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -262,10 +1014,10 @@ protected:
     bool zoom_ = false;
     bool scrub_ = false;
     
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable_);
+    OldRealSurface(const string name, string templateFilename, int numChannels, bool isBankable_);
 
 public:
-    virtual ~RealSurface() {};
+    virtual ~OldRealSurface() {};
     
     const string GetName() const { return name_; }
     string GetTemplateFilename() const { return templateFilename_; }
@@ -274,6 +1026,7 @@ public:
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
+    /*
     string GetWidgetGUID(string widgetName)
     {
         if(widgetsByName_.count(widgetName) > 0)
@@ -281,6 +1034,7 @@ public:
         
         return "";
     }
+     */
     
     vector<RealSurfaceChannel*> & GetBankableChannels()
     {
@@ -420,7 +1174,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiCSurf : public RealSurface
+class MidiCSurf : public OldRealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -468,7 +1222,7 @@ public:
     }
     
     MidiCSurf(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    : OldRealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
@@ -492,7 +1246,7 @@ public:
     virtual void RunAndUpdate() override
     {
         HandleMidiInput();
-        RealSurface::UpdateWidgets();
+        OldRealSurface::UpdateWidgets();
     }
 };
 
@@ -503,12 +1257,12 @@ class RealSurfaceChannel
 private:
     string suffix_= "";
     string GUID_ = DefaultGUID;
-    RealSurface* realSurface_= nullptr;
+    OldRealSurface* realSurface_= nullptr;
     bool isMovable_ = true;
     vector<string> widgetNames_;
     
 public:
-    RealSurfaceChannel(string suffix, RealSurface* surface) : suffix_(suffix), realSurface_(surface) {}
+    RealSurfaceChannel(string suffix, OldRealSurface* surface) : suffix_(suffix), realSurface_(surface) {}
    
     string GetSuffix() { return suffix_; }
     string GetGUID() { return GUID_; }
@@ -538,7 +1292,7 @@ class Zone
     int numBankableChannels_ = 0;
     int trackOffset_ = 0;
     bool followMCP_ = true;
-    vector<RealSurface*> realSurfaces_;
+    vector<OldRealSurface*> realSurfaces_;
     map<string, string> actionTemplateDirectory_;
     map<string, string> fxTemplateDirectory_;
     map<string, map<string, FXTemplate *>> fxTemplates_;
@@ -551,8 +1305,8 @@ class Zone
     bool alt_ = false;
 
     void AddAction(string actionAddress, OldAction* action);
-    void MapRealSurfaceActions(RealSurface* surface);
-    void MapTrackActions(string trackGUID, RealSurface* surface);
+    void MapRealSurfaceActions(OldRealSurface* surface);
+    void MapTrackActions(string trackGUID, OldRealSurface* surface);
 
     string CurrentModifers()
     {
@@ -580,7 +1334,7 @@ class Zone
         return GUID + GetName() + surfaceName + currentModifiers + actionName;
     }
     
-    void InitFXMaps(RealSurface* surface)
+    void InitFXMaps(OldRealSurface* surface)
     {
         FXTemplate* fxTemplate = nullptr;
         string templateDirectory = fxTemplateDirectory_[surface->GetName()];
@@ -627,13 +1381,13 @@ public:
     string GetName() { return name_; }
     Layer* GetLayer() { return layer_; }
     bool IsShowFXWindows() { return showFXWindows_; }
-    void MapFXActions(string trackGUID, RealSurface* surface);
+    void MapFXActions(string trackGUID, OldRealSurface* surface);
     void TrackListChanged();
     void TrackFXListChanged(MediaTrack* track);
     void AdjustTrackBank(int stride);
     void RefreshLayout();
     void OnTrackSelection(MediaTrack* track);
-    void MapFXToWidgets(MediaTrack *track, RealSurface* surface);
+    void MapFXToWidgets(MediaTrack *track, OldRealSurface* surface);
     void SetPinnedTracks();
     void PinSelectedTracks();
     void UnpinSelectedTracks();
@@ -693,7 +1447,7 @@ public:
             surface->SetZone(this);        
     }
     
-    void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
+    void AddSurface(OldRealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
@@ -890,9 +1644,6 @@ public:
     }
 };
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CSurfManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Layer
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1174,93 +1925,18 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiIOManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    struct MidiChannelInput // inner struct
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    {
-        int channel_ = 0;
-        midi_Input* midiInput_ = nullptr;
-        
-        MidiChannelInput(int channel, midi_Input* midiInput)
-        : channel_(channel), midiInput_(midiInput) {}
-    };
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    struct MidiChannelOutput // inner struct
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    {
-        int channel_ = 0;
-        midi_Output* midiOutput_ = nullptr;
-        
-        MidiChannelOutput(int channel, midi_Output* midiOutput)
-        : channel_(channel), midiOutput_(midiOutput) {}
-    };
-    
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // class MidiIOManager starts here
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    vector<MidiChannelInput> inputs_;
-    vector<MidiChannelOutput> outputs_;
-    
-public:
-    MidiIOManager() {}
-    
-    midi_Input* GetMidiInputForChannel(int inputChannel)
-    {
-        for(auto input : inputs_)
-            if(input.channel_ == inputChannel)
-                return input.midiInput_; // return existing
-        
-        // make new
-        midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
-        
-        if(newInput)
-        {
-            newInput->start();
-            inputs_.push_back(MidiChannelInput(inputChannel, newInput));
-            return newInput;
-        }
-        
-        return nullptr;
-    }
-    
-    midi_Output* GetMidiOutputForChannel(int outputChannel)
-    {
-        for(auto output : outputs_)
-            if(output.channel_ == outputChannel)
-                return output.midiOutput_; // return existing
-        
-        // make new
-        midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
-        
-        if(newOutput)
-        {
-            outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
-            return newOutput;
-        }
-        
-        return nullptr;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <Layer*> layers_;
-    vector<RealSurface*> realSurfaces_;
+    vector<OldRealSurface*> realSurfaces_;
     bool isInitialized_ = false;
     int currentLayerIndex_ = 0; 
     bool VSTMonitor_ = false;
     
-    void InitRealSurface(RealSurface* surface);
+    void InitRealSurface(OldRealSurface* surface);
 
     void Init()
     {
@@ -1356,7 +2032,7 @@ private:
            layers_[0]->SetContext();
     }
 
-    void AddRealSurface(RealSurface* realSurface)
+    void AddRealSurface(OldRealSurface* realSurface)
     {
         InitRealSurface(realSurface);
         realSurfaces_.push_back(realSurface);
@@ -1444,28 +2120,6 @@ public:
         for(auto & layout : layers_)
             layout->TrackFXListChanged(trackid);
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class OSCCSurf : public RealSurface
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~OSCCSurf() {};
-    
-    OSCCSurf(const string name, string templateFilename, Layer* layout)
-    : RealSurface("OSC", templateFilename, 8, 8) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WebCSurf : public RealSurface
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~WebCSurf() {};
-    
-    WebCSurf(const string name, string templateFilename, Layer* layout)
-    : RealSurface("Web", templateFilename, 8, 8) {};
 };
 
 #endif /* control_surface_integrator.h */
