@@ -166,7 +166,7 @@ class Zone;
 class RealSurface;
 class RealSurfaceChannel;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
+class OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -177,13 +177,13 @@ protected:
     virtual void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value) {}
     
 public:
-    Action(Layer* layer) : layer_(layer) {}
-    virtual ~Action() {}
+    OldAction(Layer* layer) : layer_(layer) {}
+    virtual ~OldAction() {}
     
     virtual int GetDisplayMode() { return 0; }
     virtual double GetCurrentNormalizedValue (string groupName, string surfaceName, string widgetName) { return 0.0; }
     
-    virtual void AddAction(Action* action) {}
+    virtual void AddAction(OldAction* action) {}
     virtual void Update(string zoneName, string surfaceName, string widgetName) {}
     virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) {}
     virtual void Cycle(string zoneName, string surfaceName, string widgetName) {}
@@ -191,7 +191,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiWidget
+class OldMidiWidget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -208,8 +208,8 @@ protected:
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
 public:
-    MidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
-    virtual ~MidiWidget() {};
+    OldMidiWidget(RealSurface* surface, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : realSurface_(surface), name_(name),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    virtual ~OldMidiWidget() {};
     
     string GetGUID() { return GUID_; }
     virtual double GetMinDB() { return 0.0; }
@@ -255,8 +255,8 @@ protected:
     
     vector<RealSurfaceChannel*> channels_;
     vector<RealSurfaceChannel*> emptyChannels_;
-    map<string, MidiWidget*> widgetsByName_;
-    map<string, MidiWidget*> widgetsByMessage_;
+    map<string, OldMidiWidget*> widgetsByName_;
+    map<string, OldMidiWidget*> widgetsByMessage_;
     map<string, string> remappedFXWidgets_;
     
     bool zoom_ = false;
@@ -290,7 +290,7 @@ public:
             return emptyChannels_;
     }
     
-    void AddAction(string actionAddress, Action* action);
+    void AddAction(string actionAddress, OldAction* action);
     void MapTrackToWidgets(MediaTrack *track);
     void UnmapWidgetsFromTrack(MediaTrack *track);
     
@@ -313,17 +313,17 @@ public:
         zone_ = zone;
     }
     
-    void AddWidget(MidiWidget* widget)
+    void AddWidget(OldMidiWidget* widget)
     {
         widget->AddToRealSurface(this);
     }
     
-    void AddWidgetToNameMap(string name, MidiWidget* widget)
+    void AddWidgetToNameMap(string name, OldMidiWidget* widget)
     {
         widgetsByName_[name] = widget;
     }
     
-    void AddWidgetToMessageMap(string message, MidiWidget* widget)
+    void AddWidgetToMessageMap(string message, OldMidiWidget* widget)
     {
         widgetsByMessage_[message] = widget;
     }
@@ -521,7 +521,7 @@ public:
         isMovable_ = isMovable;
     }
     
-    void AddWidget(MidiWidget* widget)
+    void AddWidget(OldMidiWidget* widget)
     {
         widget->SetSuffix(suffix_);
         widgetNames_.push_back(widget->GetName());
@@ -550,7 +550,7 @@ class Zone
     bool control_ = false;
     bool alt_ = false;
 
-    void AddAction(string actionAddress, Action* action);
+    void AddAction(string actionAddress, OldAction* action);
     void MapRealSurfaceActions(RealSurface* surface);
     void MapTrackActions(string trackGUID, RealSurface* surface);
 
@@ -901,7 +901,7 @@ private:
     string name_ = "";
     CSurfManager* manager_ = nullptr;
     map<string, Zone*> zones_;
-    map<string, vector<Action*>> actions_;
+    map<string, vector<OldAction*>> actions_;
     vector<string> mappedTrackGUIDs_;
     vector<MediaTrack*> touchedTracks_;
     
@@ -943,7 +943,7 @@ public:
             touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
     }
     
-    void AddAction(string actionAddress, Action* action)
+    void AddAction(string actionAddress, OldAction* action)
     {
         actions_[actionAddress].push_back(action);
     }

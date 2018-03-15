@@ -10,7 +10,7 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Double_Action : public Action
+class Double_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -23,7 +23,7 @@ protected:
         GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
 
-    Double_Action(Layer* layer) : Action(layer)  {}
+    Double_Action(Layer* layer) : OldAction(layer)  {}
     
 public:
     ~Double_Action() {}
@@ -45,21 +45,21 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Cycled_Action : public Action
+class Cycled_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<Action*> actions_;
+    vector<OldAction*> actions_;
     int currentIndex_ = 0;
     
 public:
-    Cycled_Action(Layer* layer) : Action(layer) {}
+    Cycled_Action(Layer* layer) : OldAction(layer) {}
     
     ~Cycled_Action() {}
     
     virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName); }
     
-    virtual void AddAction(Action* action) override
+    virtual void AddAction(OldAction* action) override
     {
         actions_.push_back(action);
     }
@@ -87,7 +87,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class String_Action : public Action
+class String_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -100,7 +100,7 @@ protected:
         GetLayer()->SetWidgetValue(zoneName, surfaceName, widgetName, value);
     }
     
-    String_Action(Layer* layer) : Action(layer) {}
+    String_Action(Layer* layer) : OldAction(layer) {}
 
 public:
     
