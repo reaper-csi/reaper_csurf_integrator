@@ -12,7 +12,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Reaper Actions available for mapping, this list will get added to substantially over time
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action* ActionFor(string name, Layer* layer)
+OldAction* ActionFor(string name, Layer* layer)
 {
     if(name == "SetShowFXWindows")  return new SetShowFXWindows_Action(layer);
     else if(name == "Rewind")  return new Rewind_Action(layer);
@@ -32,20 +32,20 @@ Action* ActionFor(string name, Layer* layer)
     else if(name == "Cycled")  return new Cycled_Action(layer);
     else if(name == "CycleTimeline")  return new CycleTimeline_Action(layer);
     
-    return new Action(layer);
+    return new OldAction(layer);
 }
 
-Action* ActionFor(string name, Layer* layer, string param)
+OldAction* ActionFor(string name, Layer* layer, string param)
 {
     if(name == "TrackBank")  return new TrackBank_Action(layer, param);
     else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(layer, param);
     else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(layer, param);
     else if(name == "Reaper")  return new Reaper_Action(layer, param);
     
-    return new Action(layer);
+    return new OldAction(layer);
 }
 
-Action* TrackActionFor(string name, Layer* layer, string trackGUID)
+OldAction* TrackActionFor(string name, Layer* layer, string trackGUID)
 {
     if(name == "TrackVolume")  return new TrackVolume_Action(layer, trackGUID);
     else if(name == "TrackVolumeDisplay")  return new TrackVolumeDisplay_Action(layer, trackGUID);
@@ -63,21 +63,21 @@ Action* TrackActionFor(string name, Layer* layer, string trackGUID)
     else if(name == "TrackNameDisplay")  return new TrackNameDisplay_Action(layer, trackGUID);
     else if(name == "MapTrackAndFXToWidgets")  return new MapTrackAndFXToWidgets_Action(layer, trackGUID);
     
-    return new Action(layer);
+    return new OldAction(layer);
 }
 
-Action* TrackActionFor(string name, Layer* layer, string trackGUID, string param)
+OldAction* TrackActionFor(string name, Layer* layer, string trackGUID, string param)
 {
     if(name == "TrackOutputMeter")  return new TrackOutputMeter_Action(layer, trackGUID, param);
     
-    return new Action(layer);
+    return new OldAction(layer);
 }
 
-Action* TrackActionFor(string name, string actionAddress, Layer* layer, string trackGUID, Action* baseAction)
+OldAction* TrackActionFor(string name, string actionAddress, Layer* layer, string trackGUID, OldAction* baseAction)
 {
     if(name == "TrackTouchControlled")  return new TrackTouchControlled_Action(actionAddress, layer, trackGUID, baseAction);
     
-    return new Action(layer);
+    return new OldAction(layer);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,15 +93,15 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int index)
+OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int index)
 {
     if(widgetClass == "DisplayUpper") return new DisplayUpper_MidiWidget(surface, name, index);
     if(widgetClass == "DisplayLower") return new DisplayLower_MidiWidget(surface, name, index);
 
-    return new MidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+    return new OldMidiWidget(surface, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Button") return new PushButton_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -110,39 +110,39 @@ MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, int
     else if(widgetClass == "Encoder") return new Encoder_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
-    return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new OldMidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "VUMeter") return new VUMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
   
-    return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new OldMidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-MidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
+OldMidiWidget* WidgetFor(RealSurface* surface, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
 {
     if(widgetClass == "Fader14Bit") return new Fader14Bit_MidiWidget(surface, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
     
-    return new MidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+    return new OldMidiWidget(surface, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void MidiWidget::AddToRealSurface(RealSurface* surface)
+void OldMidiWidget::AddToRealSurface(RealSurface* surface)
 {
     surface->AddWidgetToNameMap(GetName(), this);
 }
 
-void MidiWidget::Update()
+void OldMidiWidget::Update()
 {
     // this is the turnaround point, now we head back up the chain eventually leading to Action ->
     GetRealSurface()->UpdateAction(GetGUID(), GetActionName(), GetName());
 }
 
-void MidiWidget::ForceUpdate()
+void OldMidiWidget::ForceUpdate()
 {
     // this is the turnaround point, now we head back up the chain eventually leading to Action ->
     GetRealSurface()->ForceUpdateAction(GetGUID(), GetActionName(), GetName());
@@ -184,7 +184,7 @@ void  RealSurface::UnmapWidgetsFromTrack(MediaTrack *track)
         channel->SetGUID("");
 }
 
-void RealSurface::AddAction(string actionAddress, Action* action)
+void RealSurface::AddAction(string actionAddress, OldAction* action)
 {
     GetZone()->GetLayer()->AddAction(actionAddress, action);
 }
@@ -490,7 +490,7 @@ void Zone::TrackFXListChanged(MediaTrack* track)
         MapFXActions(GetTrackGUIDAsString(track), surface);
 }
 
-void Zone::AddAction(string actionAddress, Action* action)
+void Zone::AddAction(string actionAddress, OldAction* action)
 {
     GetLayer()->AddAction(actionAddress, action);
 }
@@ -562,7 +562,7 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
                         if(tokens[1] == "TrackTouchControlled")
                         {
                             string actionAddress = actionBaseAddress + tokens[0];
-                            Action* controlledAction = TrackActionFor(tokens[2], layer, trackGUID);
+                            OldAction* controlledAction = TrackActionFor(tokens[2], layer, trackGUID);
                             AddAction(actionAddress, TrackActionFor(tokens[1], actionAddress, layer, trackGUID, controlledAction));
                         }
                         else
@@ -572,7 +572,7 @@ void Zone::MapTrackActions(string trackGUID, RealSurface* surface)
                     }
                     else if(tokens[1] == "Cycled" && tokens.size() > 4)
                     {
-                        Action* cycledAction = ActionFor(tokens[1], layer);
+                        OldAction* cycledAction = ActionFor(tokens[1], layer);
                         AddAction(actionBaseAddress + tokens[0], cycledAction);
                         AddAction(actionBaseAddress + tokens[2], cycledAction);
                         for(int i = 3 ; i < tokens.size(); i++)
