@@ -697,8 +697,9 @@ private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <Page*> pages_;
     vector<RealSurface*> realSurfaces_;
+    
     bool isInitialized_ = false;
-    int currentLayerIndex_ = 0;
+    int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
     void InitRealSurface(RealSurface* surface);
@@ -815,7 +816,7 @@ private:
         }
         
         if(pages_.size() > 0)
-            pages_[currentLayerIndex_]->RunAndUpdate();
+            pages_[currentPageIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -847,7 +848,7 @@ public:
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
-            pages_[currentLayerIndex_]->OnTrackSelection(track);
+            pages_[currentPageIndex_]->OnTrackSelection(track);
     }
     
     void Run()
@@ -864,33 +865,33 @@ public:
         isInitialized_ = true;
     }
     
-    void NextLayer()
+    void NextPage()
     {
         if(pages_.size() > 0)
         {
-            currentLayerIndex_ = currentLayerIndex_ == pages_.size() - 1 ? 0 : ++currentLayerIndex_;
-            pages_[currentLayerIndex_]->SetContext();
+            currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
+            pages_[currentPageIndex_]->SetContext();
         }
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
         if(pages_.size() > 0)
-            return pages_[currentLayerIndex_]->GetTouchState(track, touchedControl);
+            return pages_[currentPageIndex_]->GetTouchState(track, touchedControl);
         else
             return false;
     }
     
     void TrackListChanged()
     {
-        for(auto & layout : pages_)
-            layout->TrackListChanged();
+        for(auto & page : pages_)
+            page->TrackListChanged();
     }
     
     void TrackFXListChanged(MediaTrack* trackid)
     {
-        for(auto & layout : pages_)
-            layout->TrackFXListChanged(trackid);
+        for(auto & page : pages_)
+            page->TrackFXListChanged(trackid);
     }
 };
 
