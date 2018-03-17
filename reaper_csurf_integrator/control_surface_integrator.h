@@ -43,86 +43,13 @@ const string RealSurface_ = "RealSurface";
 const string Layer_ = "Layer";
 const string Zone_ = "Zone";
 const string VirtualSurface_ = "VirtualSurface";
-
-class Manager;
-static Manager* manager = nullptr;
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FileSystem
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    static vector<string> GetDirectoryFilenames(const string& dir)
-    {
-        vector<string> filenames;
-        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
-        struct dirent *dirent_ptr;
-        
-        if(directory_ptr == nullptr)
-            return filenames;
-        
-        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
-            filenames.push_back(string(dirent_ptr->d_name));
-        
-        return filenames;
-    }
-
-    static vector<string> GetDirectoryFolderNames(const string& dir)
-    {
-        vector<string> folderNames;
-        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
-        struct dirent *dirent_ptr;
-        
-        if(directory_ptr == nullptr)
-            return folderNames;
-
-        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
-            if(dirent_ptr->d_type == DT_DIR)
-                folderNames.push_back(string(dirent_ptr->d_name));
-        
-        return folderNames;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                        THE RULES
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//
-// An ActionAddress allows a widget to access a particular action - e.g. "{ GUID }Zone1Mixer1Fader"
-// ActionAddress format = GUID + zoneName + realSurfaceName + modifiers + widgetName
-// Modifiers can be ""
-//
-
-// Modifiers
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-// Combos allowed -- ShiftControl -- OK
-// Dups disallowed -- ShiftShift -- no good
-//
-// Modifier Order matters !!
-// Please do not modify Zone::CurrentModifiers()
-//
-// Allowed -- ShiftControl -- OK
-// Disallowed -- ControlShift -- no good
-//
-// Modifier Order matters !!
-// Please do not modify Zone::CurrentModifiers()
-//
-// The modifiers, if present:
-//  must be contained in the modifier part of the action address
-//  must be contained only in the modifier part of the action address
-//  in the case of combos, must be in the same order as listed above -- e.g. "{ GUID }Zone1Mixer1ShiftOptionControlAltFader" for the full meal deal
-//
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//                                                        THE RULES
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class Manager;
+static Manager* manager = nullptr;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structs
@@ -163,18 +90,42 @@ public:
     }
 };
 
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page;
-class RealSurface;
+class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    static vector<string> GetDirectoryFilenames(const string& dir)
+    {
+        vector<string> filenames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        if(directory_ptr == nullptr)
+            return filenames;
+        
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            filenames.push_back(string(dirent_ptr->d_name));
+        
+        return filenames;
+    }
 
+    static vector<string> GetDirectoryFolderNames(const string& dir)
+    {
+        vector<string> folderNames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        if(directory_ptr == nullptr)
+            return folderNames;
 
-
-
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            if(dirent_ptr->d_type == DT_DIR)
+                folderNames.push_back(string(dirent_ptr->d_name));
+        
+        return folderNames;
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MidiIOManager
@@ -251,27 +202,20 @@ public:
     }
 };
 
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Page* page_ = nullptr;
-
-protected:
-    Page* GetPage() { return page_; }
-    
 public:
-    Action(Page* page) : page_(page) {}
+    Action() {}
     virtual ~Action() {}
     
-    virtual void Update(string widgetGUID) {}
+    virtual void RequestUpdate(string widgetGUID) {}
     virtual void Do(double value) {}
     virtual void Do(string value) {}
+    virtual void RequestUpdate(MediaTrack* track, string widgetGUID) {}
+    virtual void Do(MediaTrack* track, double value) {}
+    virtual void Do(MediaTrack* track, string value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,32 +237,309 @@ public:
     string GetGUID() { return GUID_; }
     string GetName() { return name_; }
     
-    virtual void Update();
+    void RequestUpdate();
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MidiWidget : Widget
+class Midi_RealSurface;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    RealSurface* realSurface_ = nullptr;
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 protected:
-    RealSurface* GetRealSurface() { return realSurface_; }
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
     
 public:
-    MidiWidget(string name, string GUID, RealSurface* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, GUID),  realSurface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
-    virtual ~MidiWidget() {};
+    Midi_Widget(string name, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, GUID),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    virtual ~Midi_Widget() {};
     
-    virtual void AddToRealSurface(RealSurface* surface);
+    virtual void AddToMidi_RealSurface(Midi_RealSurface* surface);
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class RealSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    const string name_ = "";
+    string templateFilename_ = "";
+    //Zone* zone_ = nullptr;
+    bool isBankable_ = true;
+    
+    //vector<RealSurfaceChannel*> channels_;
+    //vector<RealSurfaceChannel*> emptyChannels_;
+    //map<string, Midi_Widget*> widgetsByName_;
+    //map<string, Midi_Widget*> widgetsByMessage_;
+    map<string, string> remappedFXWidgets_;
+    
+    bool zoom_ = false;
+    bool scrub_ = false;
+    
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable_);
+    
+public:
+    virtual ~RealSurface() {};
+    
+    const string GetName() const { return name_; }
+    string GetTemplateFilename() const { return templateFilename_; }
+    //Zone* GetZone() { return zone_; }
+    //vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
+    bool IsZoom() { return zoom_; }
+    bool IsScrub() { return scrub_; }
+    
+    /*
+     string GetWidgetGUID(string widgetName)
+     {
+     if(widgetsByName_.count(widgetName) > 0)
+     return widgetsByName_[widgetName]->GetGUID();
+     
+     return "";
+     }
+     
+    
+    vector<RealSurfaceChannel*> & GetBankableChannels()
+    {
+        if(isBankable_)
+            return GetChannels();
+        else
+            return emptyChannels_;
+    }
+     */
+    
+    void AddAction(string actionAddress, Action* action);
+    void MapTrackToWidgets(MediaTrack *track);
+    void UnmapWidgetsFromTrack(MediaTrack *track);
+    
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
+    virtual void SendMidiMessage(int first, int second, int third) {}
+    
+    virtual void RunAndUpdate() {}
+    
+    void UnmapFXFromWidgets(MediaTrack *track)
+    {
+        /*
+        for(auto [widgetName, GUID] : remappedFXWidgets_)
+            if(widgetsByName_.count(widgetName) > 0)
+                widgetsByName_[widgetName]->SetGUID(GUID);
+        
+        remappedFXWidgets_.clear();
+         */
+    }
+    
+    /*
+    void SetZone(Zone* zone)
+    {
+        zone_ = zone;
+    }
+     */
+    
+    
+    
+    void SetWidgetGUID(string widgetName, string GUID)
+    {
+        /*
+        if(remappedFXWidgets_.count(widgetName) > 0)
+            remappedFXWidgets_[widgetName] = GUID;
+        else if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetGUID(GUID);
+         */
+    }
+    
+    void SetWidgetFXGUID(string widgetName, string GUID)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+        {
+            remappedFXWidgets_[widgetName] = widgetsByName_[widgetName]->GetGUID();
+            widgetsByName_[widgetName]->SetGUID(GUID);
+        }
+         */
+    }
+    
+    void SetZoom(bool value)
+    {
+        zoom_ = value;
+        ForceUpdateWidgets();
+    }
+    
+    void SetScrub(bool value)
+    {
+        scrub_ = value;
+        ForceUpdateWidgets();
+    }
+    
+    // to Widgets ->
+    virtual void UpdateWidgets()
+    {
+        /*
+        for(auto const& [name, widget] : widgetsByName_ )
+            widget->Update();
+         */
+    }
+    
+    virtual void ForceUpdateWidgets()
+    {
+        /*
+        for(auto const& [name, widget] : widgetsByName_ )
+            widget->ForceUpdate();
+         */
+    }
+    
+    // to Actions ->
+    double GetActionCurrentNormalizedValue(string surfaceName, string actionName, string widgetName);
+    void UpdateAction(string surfaceName, string actionName, string widgetName);
+    void ForceUpdateAction(string surfaceName, string actionName, string widgetName);
+    void CycleAction(string surfaceName, string actionName, string widgetName);
+    void DoAction(string surfaceName, string actionName, string widgetName, double value);
+    
+    // to Widgets ->
+    double GetWidgetMaxDB(string widgetName)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName]->GetMaxDB();
+         */
+        
+        return 0.0;
+    }
+    
+    double GetWidgetMinDB(string widgetName)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName]->GetMinDB();
+         */
+        
+        return 0.0;
+    }
+    
+    void SetWidgetValue(string widgetName, double value)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value);
+         */
+    }
+    
+    void SetWidgetValue(string widgetName, double value, int mode)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value, mode);
+         */
+    }
+    
+    void SetWidgetValue(string widgetName, string value)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+            widgetsByName_[widgetName]->SetValue(value);
+         */
+    }
+    
+    void SetWidgetValueToZero(string widgetName)
+    {
+        /*
+        if(widgetsByName_.count(widgetName) > 0)
+         */
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Midi_RealSurface : public RealSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    midi_Input* midiInput_ = nullptr;
+    midi_Output* midiOutput_ = nullptr;
+    bool midiInMonitor_ = false;
+    bool midiOutMonitor_ = false;
+    map<string, Midi_Widget*> widgetsByMessage_;
+
+    void HandleMidiInput()
+    {
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
+    }
+    
+    void ProcessMidiMessage(const MIDI_event_ex_t* evt)
+    {
+        // At this point we don't know how much of the message comprises the key, so try all three
+        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
+            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
+        
+        if(midiInMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+public:
+    virtual ~Midi_RealSurface()
+    {
+        if (midiInput_) delete midiInput_;
+        if(midiOutput_) delete midiOutput_;
+    }
+    
+    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    
+    void AddWidgetToMessageMap(string message, Midi_Widget* widget)
+    {
+        widgetsByMessage_[message] = widget;
+    }
+    
+    void AddWidget(Midi_Widget* widget)
+    {
+        widget->AddToMidi_RealSurface(this);
+    }
+    
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiOutput_)
+            midiOutput_->SendMsg(midiMessage, -1);
+    }
+    
+    virtual void SendMidiMessage(int first, int second, int third) override
+    {
+        if(midiOutput_)
+            midiOutput_->Send(first, second, third, -1);
+        
+        if(midiOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+    virtual void RunAndUpdate() override
+    {
+        HandleMidiInput();
+        RealSurface::UpdateWidgets();
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,8 +549,9 @@ class Page
 private:
     string name_ = "";
     Manager* manager_ = nullptr;
-    map<string, vector<Action*>> actions_;
-    
+    map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
+    map<string, Widget*> widgetsByGUID_;
+
     
     //vector<string> mappedTrackGUIDs_;
     //vector<MediaTrack*> touchedTracks_;
@@ -354,7 +576,7 @@ public:
 
     void AddAction(string actionAddress, Action* action)
     {
-        actions_[actionAddress].push_back(action);
+        //actions_[actionAddress].push_back(action);
     }
 
     void TrackFXListChanged(MediaTrack* track)
@@ -683,6 +905,20 @@ public:
             zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
          */
     }
+    
+    
+    
+    // Widgets ->  Actions
+    void DoAction(string widgetGUID, string name, double value) {}
+    void DoAction(string widgetGUID, string name, string value) {}
+    void RequestActionUpdate(string widgetGUID, string name) {}
+    void DoAction(string widgetGUID, string name, MediaTrack* track, double value) {}
+    void DoAction(string widgetGUID, string name, MediaTrack* track, string value) {}
+    void RequestActionUpdate(string widgetGUID, MediaTrack* track, string name) {}
+    
+    // Actions -> Widgets
+    void SetWidgetValue(string widgetGUID, double value) {}
+    void SetWidgetValue(string widgetGUID, string value) {}
 };
 
 
@@ -834,8 +1070,8 @@ public:
     
     Manager()
     {
-        midiIOManager_ = new MidiIOManager();
         manager = this;
+        midiIOManager_ = new MidiIOManager();
     }
     
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
@@ -893,12 +1129,52 @@ public:
         for(auto & page : pages_)
             page->TrackFXListChanged(trackid);
     }
+    
+    // Widgets ->  Actions
+    void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
+    void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
+    void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
+    void DoAction(string widgetGUID, string name, MediaTrack* track, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
+    void DoAction(string widgetGUID, string name, MediaTrack* track, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
+    void RequestActionUpdate(string widgetGUID, MediaTrack* track, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, track, name); }
+
+    // Actions -> Widgets
+    void SetWidgetValue(string widgetGUID, double value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
+    void SetWidgetValue(string widgetGUID, string value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
 };
 
 
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -1045,7 +1321,7 @@ public:
             return emptyChannels_;
     }
     
-    void AddAction(string actionAddress, OldAction* action);
+    //void AddAction(string actionAddress, OldAction* action);
     void MapTrackToWidgets(MediaTrack *track);
     void UnmapWidgetsFromTrack(MediaTrack *track);
     
