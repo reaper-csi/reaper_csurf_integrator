@@ -211,11 +211,14 @@ public:
     virtual ~Action() {}
     
     virtual void RequestUpdate(string widgetGUID) {}
+    virtual void RequestUpdate(string widgetGUID, string value) {}
+    virtual void RequestUpdate(string widgetGUID, MediaTrack* track) {}
+    virtual void RequestUpdate(string widgetGUID, MediaTrack* track, int fxIndex, int paramIndex) {}
     virtual void Do(double value) {}
     virtual void Do(string value) {}
-    virtual void RequestUpdate(MediaTrack* track, string widgetGUID) {}
     virtual void Do(MediaTrack* track, double value) {}
     virtual void Do(MediaTrack* track, string value) {}
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -567,7 +570,6 @@ private:
 public:
     Page(string name, Manager* manager) : name_(name), manager_(manager) {}
     
-    
     string GetName() { return name_; }
     Manager* GetManager() { return manager_; }
     
@@ -909,13 +911,16 @@ public:
     
     
     // Widgets ->  Actions
+    void RequestActionUpdate(string widgetGUID, string name) {}
+    void RequestActionUpdate(string widgetGUID, string name, string value) {}
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) {}
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) {}
     void DoAction(string widgetGUID, string name, double value) {}
     void DoAction(string widgetGUID, string name, string value) {}
-    void RequestActionUpdate(string widgetGUID, string name) {}
     void DoAction(string widgetGUID, string name, MediaTrack* track, double value) {}
     void DoAction(string widgetGUID, string name, MediaTrack* track, string value) {}
-    void RequestActionUpdate(string widgetGUID, MediaTrack* track, string name) {}
-    
+    void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) {}
     void SetWidgetValue(string widgetGUID, string value) {}
@@ -1131,12 +1136,15 @@ public:
     }
     
     // Widgets ->  Actions
+    void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
+    void RequestActionUpdate(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, value); }
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track); }
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, fxIndex, paramIndex); }
     void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
     void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
-    void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
     void DoAction(string widgetGUID, string name, MediaTrack* track, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
     void DoAction(string widgetGUID, string name, MediaTrack* track, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
-    void RequestActionUpdate(string widgetGUID, MediaTrack* track, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, track, name); }
+    void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, fxIndex, paramIndex, value); }
 
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }

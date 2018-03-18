@@ -71,7 +71,7 @@ OldAction* ActionFor(string name, Layer* layer, string param)
     if(name == "TrackBank")  return new TrackBank_Action(layer, param);
     else if(name == "TrackAutoMode")  return new TrackAutoMode_Action(layer, param);
     else if(name == "GlobalAutoMode")  return new GlobalAutoMode_Action(layer, param);
-    else if(name == "Reaper")  return new Reaper_Action(layer, param);
+    else if(name == "Reaper")  return new OldReaper_Action(layer, param);
     
     return new OldAction(layer);
 }
