@@ -207,12 +207,12 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Action() {}
     virtual ~Action() {}
     
     virtual void RequestUpdate(string widgetGUID) {}
     virtual void RequestUpdate(string widgetGUID, string value) {}
     virtual void RequestUpdate(string widgetGUID, MediaTrack* track) {}
+    virtual void RequestUpdate(string widgetGUID, MediaTrack* track, int param) {}
     virtual void RequestUpdate(string widgetGUID, MediaTrack* track, int fxIndex, int paramIndex) {}
     virtual void Do(double value) {}
     virtual void Do(string value) {}
@@ -914,6 +914,7 @@ public:
     void RequestActionUpdate(string widgetGUID, string name) {}
     void RequestActionUpdate(string widgetGUID, string name, string value) {}
     void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) {}
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int param) {}
     void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) {}
     void DoAction(string widgetGUID, string name, double value) {}
     void DoAction(string widgetGUID, string name, string value) {}
@@ -1139,6 +1140,7 @@ public:
     void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
     void RequestActionUpdate(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, value); }
     void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track); }
+    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int param) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, param); }
     void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, fxIndex, paramIndex); }
     void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
     void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
