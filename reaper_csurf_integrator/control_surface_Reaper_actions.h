@@ -306,6 +306,139 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class RepeatingArrow : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+private:
+    int direction_ = 0;
+    clock_t lastRepeated = clock();
+    double repeatRate_ = 0.0;
+    bool pressed_ = false;
+    
+public:
+    
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
+        {
+            lastRepeated = clock();
+            // GAW TBD
+            //DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
+        }
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        // GAW TBD
+        // DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
+        pressed_ = value;
+    }
+     */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSelect : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+public:
+    
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+        {
+            DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
+            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        }
+    }
+     */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackUniqueSelect : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+public:
+    
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+        {
+            DAW::SetOnlyTrackSelected(GetTrack(zoneName));
+            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
+        }
+    }
+     */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackRangeSelect : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+public:
+    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
+        else
+            return 0.0;
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName) == nullptr)
+            return;
+        
+        int selectedTrackNum = GetLayer()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
+        int otherSelectedTrackNum = 0;
+        
+        if(1 == DAW::CountSelectedTracks(nullptr))
+        {
+            for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i), "I_SELECTED"))
+                {
+                    otherSelectedTrackNum = i;
+                    break;
+                }
+            
+            int lowerBound = selectedTrackNum < otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
+            int upperBound = selectedTrackNum > otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
+            
+            for(int i = lowerBound; i <= upperBound; i++)
+            {
+                MediaTrack* track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
+                
+                if(GetLayer()->GetZone(zoneName)->IsTrackVisible(track))
+                {
+                    DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(track, 1), NULL);
+                    GetLayer()->GetManager()->OnTrackSelection(track);
+                }
+            }
+        }
+    }
+    */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackRecordArm : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -351,6 +484,144 @@ public:
     {
         DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackTouch : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+public:
+    TrackTouch_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetTrack(zoneName))
+            GetLayer()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
+    }
+     */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackTouchControlled : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    /*
+private:
+    OldAction* action_= nullptr;
+    string actionAddress_= nullptr;
+    
+    bool lastTouched_ = false;
+    
+    bool IsCurrentlyTouched(string zoneName)
+    {
+        if(GetTrack(zoneName))
+            return GetLayer()->GetTouchState(GetTrack(zoneName), 0);
+        else
+            return false;
+    }
+    
+public:
+    
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
+    {
+        bool currentlyTouched = IsCurrentlyTouched(zoneName);
+        
+        if(currentlyTouched)
+        {
+            lastTouched_ = currentlyTouched;
+            action_->Update(zoneName, surfaceName, widgetName);
+        }
+        else if(lastTouched_ != currentlyTouched)
+        {
+            lastTouched_ = currentlyTouched;
+            GetLayer()->ForceUpdateAction(actionAddress_, zoneName, surfaceName, widgetName);
+        }
+    }
+    
+    virtual int GetDisplayMode() override
+    {
+        return action_->GetDisplayMode();
+    }
+    
+    virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override
+    {
+        return action_->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName);
+    }
+    
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(IsCurrentlyTouched(zoneName))
+            action_->ForceUpdate(zoneName, surfaceName, widgetName);
+    }
+    
+    virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(IsCurrentlyTouched(zoneName))
+            action_->Cycle(zoneName, surfaceName, widgetName);
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        if(IsCurrentlyTouched(zoneName))
+            action_->Do(value, zoneName, surfaceName, widgetName);
+    }
+    */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GlobalAutoMode : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+/*
+    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override { return DAW::GetGlobalAutomationOverride(); }
+    
+    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
+    {
+        if(GetValue(zoneName, surfaceName, widgetName) == autoMode_)
+            SetWidgetValue(zoneName, surfaceName, widgetName, autoMode_);
+    }
+    
+    virtual void Update(string zoneName, string surfaceName, string widgetName) override
+    {
+        double newValue = GetValue(zoneName, surfaceName, widgetName);
+        if(currentValue_ != newValue)
+            SetWidgetValue(zoneName, surfaceName, widgetName, (currentValue_ = newValue) == autoMode_ ? 1 : 0);
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        DAW::SetGlobalAutomationOverride(autoMode_);
+    }
+ */
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackAutoMode : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+
+    /*
+    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
+    {
+        for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
+        {
+            MediaTrack *track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+                return DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+        }
+        
+        return 0.00;
+    }
+    
+    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    {
+        DAW::SetAutomationMode(autoMode_, true);
+    }
+     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -807,6 +1078,7 @@ public:
         return displayStr;
     }
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Rewind_Action : public Double_Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
