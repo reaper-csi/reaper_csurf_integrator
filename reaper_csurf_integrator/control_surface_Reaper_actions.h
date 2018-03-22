@@ -341,52 +341,33 @@ public:
 class TrackSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    /*
 public:
-    
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    void RequestUpdate(string widgetGUID, MediaTrack* track) override
     {
-        if(GetTrack(zoneName))
-            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
-        else
-            return 0.0;
+        manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    void Do(MediaTrack* track, double value) override
     {
-        if(GetTrack(zoneName))
-        {
-            DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(GetTrack(zoneName), ! DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED")), NULL);
-            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
-        }
+        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
     }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackUniqueSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    /*
 public:
-    
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    void RequestUpdate(string widgetGUID, MediaTrack* track) override
     {
-        if(GetTrack(zoneName))
-            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
-        else
-            return 0.0;
+        manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    void Do(MediaTrack* track, double value) override
     {
-        if(GetTrack(zoneName))
-        {
-            DAW::SetOnlyTrackSelected(GetTrack(zoneName));
-            GetLayer()->GetManager()->OnTrackSelection(GetTrack(zoneName));
-        }
+        DAW::SetOnlyTrackSelected(track);
+        manager->OnTrackSelection(track);
     }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -574,27 +555,15 @@ class GlobalAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-/*
-    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override { return DAW::GetGlobalAutomationOverride(); }
-    
-    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
+    void RequestUpdate(string widgetGUID) override
     {
-        if(GetValue(zoneName, surfaceName, widgetName) == autoMode_)
-            SetWidgetValue(zoneName, surfaceName, widgetName, autoMode_);
+        manager->SetWidgetValue(widgetGUID, DAW::GetGlobalAutomationOverride());
     }
     
-    virtual void Update(string zoneName, string surfaceName, string widgetName) override
+    void Do(double autoMode) override
     {
-        double newValue = GetValue(zoneName, surfaceName, widgetName);
-        if(currentValue_ != newValue)
-            SetWidgetValue(zoneName, surfaceName, widgetName, (currentValue_ = newValue) == autoMode_ ? 1 : 0);
+         DAW::SetGlobalAutomationOverride(autoMode);
     }
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        DAW::SetGlobalAutomationOverride(autoMode_);
-    }
- */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -602,7 +571,6 @@ class TrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-
     /*
     virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
     {
