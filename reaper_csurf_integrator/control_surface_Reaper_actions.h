@@ -374,49 +374,42 @@ public:
 class TrackRangeSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    /*
 public:
-    virtual double GetValue(string zoneName, string surfaceName, string widgetName) override
+    void RequestUpdate(string widgetGUID, MediaTrack* track) override
     {
-        if(GetTrack(zoneName))
-            return DAW::GetMediaTrackInfo_Value(GetTrack(zoneName), "I_SELECTED");
-        else
-            return 0.0;
+        manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+
+    virtual void Do(MediaTrack* track, vector<MediaTrack*> &tracks) override
     {
-        if(GetTrack(zoneName) == nullptr)
-            return;
+        int currentlySelectedCount = 0;
+        int selectedTrackIndex = 0;
+        int trackIndex = 0;
         
-        int selectedTrackNum = GetLayer()->GetZone(zoneName)->CSurf_TrackToID(GetTrack(zoneName));
-        int otherSelectedTrackNum = 0;
-        
-        if(1 == DAW::CountSelectedTracks(nullptr))
+        for(int i = 0; i < tracks.size(); i++)
         {
-            for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i), "I_SELECTED"))
-                {
-                    otherSelectedTrackNum = i;
-                    break;
-                }
+            if(tracks[i] == track)
+                trackIndex = i;
             
-            int lowerBound = selectedTrackNum < otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
-            int upperBound = selectedTrackNum > otherSelectedTrackNum ? selectedTrackNum : otherSelectedTrackNum;
-            
-            for(int i = lowerBound; i <= upperBound; i++)
+            if(DAW::GetMediaTrackInfo_Value(tracks[i], "I_SELECTED"))
             {
-                MediaTrack* track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
-                
-                if(GetLayer()->GetZone(zoneName)->IsTrackVisible(track))
-                {
-                    DAW::CSurf_SetSurfaceSelected(GetTrack(zoneName), DAW::CSurf_OnSelectedChange(track, 1), NULL);
-                    GetLayer()->GetManager()->OnTrackSelection(track);
-                }
+                selectedTrackIndex = i;
+                currentlySelectedCount++;
             }
         }
+        
+        if(currentlySelectedCount != 1)
+            return;
+        
+        int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
+        int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
+
+        for(int i = lowerBound; i <= upperBound; i++)
+        {
+            DAW::CSurf_SetSurfaceSelected(tracks[i], DAW::CSurf_OnSelectedChange(tracks[i], 1), NULL);
+            manager->OnTrackSelection(tracks[i]);
+        }
     }
-    */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
