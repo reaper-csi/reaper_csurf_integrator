@@ -218,6 +218,7 @@ public:
     virtual void Do(string value) {}
     virtual void Do(MediaTrack* track, double value) {}
     virtual void Do(MediaTrack* track, string value) {}
+    virtual void Do(MediaTrack* track, vector<MediaTrack*> &tracks) {}
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 };
 
@@ -920,6 +921,7 @@ public:
     void DoAction(string widgetGUID, string name, string value) {}
     void DoAction(string widgetGUID, string name, MediaTrack* track, double value) {}
     void DoAction(string widgetGUID, string name, MediaTrack* track, string value) {}
+    void DoAction(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) {}
     void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 
     // Actions -> Widgets
@@ -1144,6 +1146,7 @@ public:
     void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, fxIndex, paramIndex); }
     void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
     void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
+    void DoAction(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, tracks); }
     void DoAction(string widgetGUID, string name, MediaTrack* track, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
     void DoAction(string widgetGUID, string name, MediaTrack* track, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
     void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, fxIndex, paramIndex, value); }
