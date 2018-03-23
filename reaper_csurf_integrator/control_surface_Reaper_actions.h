@@ -464,16 +464,11 @@ public:
 class TrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    /*
 public:
-    TrackTouch_Action(Layer* layer, string trackGUID) : TrackDouble_Action(layer, trackGUID) {}
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    void Do(MediaTrack* track, double value) override
     {
-        if(GetTrack(zoneName))
-            GetLayer()->SetTouchState(GetTrack(zoneName), value == 0 ? false : true);
+        manager->SetTouchState(track, value == 0 ? false : true);
     }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -564,25 +559,17 @@ class TrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    /*
-    virtual double GetValue (string zoneName, string surfaceName, string widgetName) override
+    void RequestUpdate(string widgetGUID, MediaTrack* track, vector<MediaTrack*> &tracks) override
     {
-        for(int i = 0; i < GetLayer()->GetZone(zoneName)->GetNumTracks(); i++)
-        {
-            MediaTrack *track = GetLayer()->GetZone(zoneName)->CSurf_TrackFromID(i);
-            
-            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-                return DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-        }
-        
-        return 0.00;
+        for(int i = 0; i < tracks.size(); i++)
+            if(DAW::GetMediaTrackInfo_Value(tracks[i], "I_SELECTED"))
+                manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(tracks[i], "I_AUTOMODE"));
     }
     
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+    virtual void Do(double autoMode) override
     {
-        DAW::SetAutomationMode(autoMode_, true);
+        DAW::SetAutomationMode(autoMode, true);
     }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
