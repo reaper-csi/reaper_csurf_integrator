@@ -340,15 +340,6 @@ public:
          */
     }
     
-    /*
-    void SetZone(Zone* zone)
-    {
-        zone_ = zone;
-    }
-     */
-    
-    
-    
     void SetWidgetGUID(string widgetName, string GUID)
     {
         /*
@@ -373,90 +364,20 @@ public:
     void SetZoom(bool value)
     {
         zoom_ = value;
-        ForceUpdateWidgets();
     }
     
     void SetScrub(bool value)
     {
         scrub_ = value;
-        ForceUpdateWidgets();
     }
     
     // to Widgets ->
     virtual void UpdateWidgets()
     {
-        /*
-        for(auto const& [name, widget] : widgetsByName_ )
-            widget->Update();
-         */
+        //for(auto const& [name, widget] : widgetsByName_ )
+            //widget->Update();
     }
     
-    virtual void ForceUpdateWidgets()
-    {
-        /*
-        for(auto const& [name, widget] : widgetsByName_ )
-            widget->ForceUpdate();
-         */
-    }
-    
-    // to Actions ->
-    double GetActionCurrentNormalizedValue(string surfaceName, string actionName, string widgetName);
-    void UpdateAction(string surfaceName, string actionName, string widgetName);
-    void ForceUpdateAction(string surfaceName, string actionName, string widgetName);
-    void CycleAction(string surfaceName, string actionName, string widgetName);
-    void DoAction(string surfaceName, string actionName, string widgetName, double value);
-    
-    // to Widgets ->
-    double GetWidgetMaxDB(string widgetName)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-            return widgetsByName_[widgetName]->GetMaxDB();
-         */
-        
-        return 0.0;
-    }
-    
-    double GetWidgetMinDB(string widgetName)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-            return widgetsByName_[widgetName]->GetMinDB();
-         */
-        
-        return 0.0;
-    }
-    
-    void SetWidgetValue(string widgetName, double value)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-            widgetsByName_[widgetName]->SetValue(value);
-         */
-    }
-    
-    void SetWidgetValue(string widgetName, double value, int mode)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-            widgetsByName_[widgetName]->SetValue(value, mode);
-         */
-    }
-    
-    void SetWidgetValue(string widgetName, string value)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-            widgetsByName_[widgetName]->SetValue(value);
-         */
-    }
-    
-    void SetWidgetValueToZero(string widgetName)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-         */
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,7 +496,10 @@ public:
     string GetName() { return name_; }
     Manager* GetManager() { return manager_; }
     
-    void OnTrackSelection(MediaTrack* track);
+    void OnTrackSelection(MediaTrack* track)
+    {
+        
+    }
     
 
     void AddAction(string actionAddress, Action* action)
@@ -693,7 +617,7 @@ public:
     
     void Init()
     {
-        SetContext();
+        //SetContext();
         /*
         for(auto [name, zone] : zones_)
             zone->Init();
@@ -735,13 +659,13 @@ public:
          */
     }
     
+    /*
     void SetContext()
     {
-        /*
         for(auto const& [name, zone] : zones_)
             zone->SetContext();
-         */
     }
+    */
     
     void RunAndUpdate()
     {
@@ -809,107 +733,6 @@ public:
          */
     }
     
-    // to Widgets ->
-    void ForceUpdateWidgets()
-    {
-        /*
-        for(auto [name, zone] : zones_)
-            zone->ForceUpdateWidgets();
-         */
-    }
-    
-    // to Actions ->
-    double GetActionCurrentNormalizedValue(string actionAddress, string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(actions_.count(actionAddress) > 0 && actions_[actionAddress].size() > 0)
-            return actions_[actionAddress][0]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName);
-        else
-         */
-            return 0.0;
-    }
-    
-    void UpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(actions_.count(actionAddress) > 0)
-            for(auto* action : actions_[actionAddress])
-                action->Update(zoneName, surfaceName, widgetName);
-         */
-    }
-    
-    void ForceUpdateAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(actions_.count(actionAddress) > 0)
-            for(auto* action : actions_[actionAddress])
-                action->ForceUpdate(zoneName, surfaceName, widgetName);
-         */
-    }
-    
-    void CycleAction(string actionAddress, string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(actions_.count(actionAddress) > 0)
-            for(auto* action : actions_[actionAddress])
-                action->Cycle(zoneName, surfaceName, widgetName);
-         */
-    }
-    
-    void DoAction(string actionAddress, double value, string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(actions_.count(actionAddress) > 0)
-            for(auto* action : actions_[actionAddress])
-                action->Do(value, zoneName, surfaceName, widgetName);
-         */
-    }
-    
-    // to Widgets ->
-    double GetWidgetMaxDB(string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            return zones_[zoneName]->GetWidgetMaxDB(surfaceName, widgetName);
-        */
-        
-        return 0.0;
-    }
-    
-    double GetWidgetMinDB(string zoneName, string surfaceName, string widgetName)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            return zones_[zoneName]->GetWidgetMinDB(surfaceName, widgetName);
-         */
-        
-        return 0.0;
-    }
-    
-    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
-         */
-    }
-    
-    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, double value, int mode)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value, mode);
-         */
-    }
-    
-    void SetWidgetValue(string zoneName, string surfaceName, string widgetName, string value)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->SetWidgetValue(surfaceName, widgetName, value);
-         */
-    }
-    
     
     
     // Widgets ->  Actions
@@ -943,12 +766,13 @@ private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <Page*> pages_;
     vector<RealSurface*> realSurfaces_;
+    map<string, Action*> actions_;
     
     bool isInitialized_ = false;
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
-    void InitRealSurface(RealSurface* surface);
+    void InitActions();
     
     void Init()
     {
@@ -1049,7 +873,7 @@ private:
     
     void AddRealSurface(RealSurface* realSurface)
     {
-        InitRealSurface(realSurface);
+        //InitRealSurface(realSurface);
         realSurfaces_.push_back(realSurface);
     }
     
@@ -1081,6 +905,7 @@ public:
     Manager()
     {
         manager = this;
+        InitActions();
         midiIOManager_ = new MidiIOManager();
     }
     
@@ -1116,7 +941,7 @@ public:
         if(pages_.size() > 0)
         {
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            pages_[currentPageIndex_]->SetContext();
+            //pages_[currentPageIndex_]->SetContext();
         }
     }
     
