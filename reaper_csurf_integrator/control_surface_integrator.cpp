@@ -17,8 +17,51 @@ void Widget::RequestUpdate()
     manager->RequestActionUpdate(GetGUID(), GetName());
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Manager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Manager::InitActions()
+{
+    actions_["Reaper"] = new ReaperAction();
+    actions_["TrackFX"] = new TrackFX();
+    actions_["TrackVolume"] = new TrackVolume();
+    actions_["TrackPan"] = new TrackPan();
+    actions_["TrackPanWidth"] = new TrackPanWidth();
+    actions_["TrackNameDisplay"] = new TrackNameDisplay();
+    actions_["TrackVolumeDisplay"] = new TrackVolumeDisplay();
+    actions_["TrackPanDisplay"] = new TrackPanDisplay();
+    actions_["TrackPanWidthDisplay"] = new TrackPanWidthDisplay();
+    actions_["FastForward"] = new FastForward();
+    actions_["Play"] = new Play();
+    actions_["Stop"] = new Stop();
+    actions_["Record"] = new Record();
+    actions_["RepeatingArrow"] = new RepeatingArrow();
+    actions_["TrackSelect"] = new Record();
+    actions_["TrackUniqueSelect"] = new TrackUniqueSelect();
+    actions_["TrackRangeSelect"] = new TrackRangeSelect();
+    actions_["TrackRecordArm"] = new TrackRecordArm();
+    actions_["TrackMute"] = new TrackMute();
+    actions_["TrackSolo"] = new TrackSolo();
+    actions_["TrackTouch"] = new TrackTouch();
+    actions_["TrackTouchControlled"] = new TrackTouchControlled();
+    actions_["GlobalAutoMode"] = new GlobalAutoMode();
+    actions_["TrackAutoMode"] = new TrackAutoMode();
+    actions_["CycleTimeline"] = new CycleTimeline();
+    actions_["TrackOutputMeter"] = new TrackOutputMeter();
+    actions_["SetShowFXWindows"] = new SetShowFXWindows();
+    actions_["Shift"] = new class Shift();
+    actions_["Option"] = new class Option();
+    actions_["Control"] = new class Control();
+    actions_["Alt"] = new class Alt();
+    actions_["Latched"] = new Latched();
+    actions_["LatchedZoom"] = new LatchedZoom();
+    actions_["LatchedScrub"] = new LatchedScrub();
+    actions_["NextPage"] = new class NextPage();
+    actions_["TrackBank"] = new TrackBank();
+    actions_["PinSelectedTracks"] = new PinSelectedTracks();
+    actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
+    actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
