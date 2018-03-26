@@ -13,6 +13,13 @@
 class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+       
+    }
+
+    
     /*
      public:
      
@@ -33,6 +40,12 @@ class MapTrackAndFXToWidgets  : public Action
 class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
      public:
      
@@ -49,6 +62,12 @@ class SetShowFXWindows : public Action
 class Shift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -63,6 +82,12 @@ public:
 class Option : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -77,6 +102,12 @@ public:
 class Control : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -91,6 +122,12 @@ public:
 class Alt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -105,6 +142,12 @@ public:
 class Latched : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 private:
     clock_t lastPressed_ = clock();
@@ -136,6 +179,12 @@ public:
 class LatchedZoom : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -150,6 +199,12 @@ public:
 class LatchedScrub : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -165,7 +220,7 @@ class NextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(double value) override
+    void Do(string widgetGUID, double value) override
     {
         manager->NextPage();
     }
@@ -175,6 +230,12 @@ public:
 class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 private:
     int stride_ = 0;
@@ -192,6 +253,12 @@ public:
 class PinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
@@ -206,6 +273,12 @@ public:
 class UnpinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void Do(string widgetGUID, double value) override
+    {
+        
+    }
+
     /*
 public:
     
