@@ -210,17 +210,8 @@ public:
     virtual ~Action() {}
     
     virtual void RequestUpdate(string widgetGUID) {}
-    virtual void RequestUpdate(string widgetGUID, string value) {}
-    virtual void RequestUpdate(string widgetGUID, MediaTrack* track) {}
-    virtual void RequestUpdate(string widgetGUID, MediaTrack* track, int param) {}
-    virtual void RequestUpdate(string widgetGUID, MediaTrack* track, vector<MediaTrack*> &tracks) {}
-    virtual void RequestUpdate(string widgetGUID, MediaTrack* track, int fxIndex, int paramIndex) {}
-    virtual void Do(double value) {}
-    virtual void Do(string value) {}
-    virtual void Do(MediaTrack* track, double value) {}
-    virtual void Do(MediaTrack* track, string value) {}
-    virtual void Do(MediaTrack* track, vector<MediaTrack*> &tracks) {}
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    virtual void Do(string widgetGUID, double value) {}
+    virtual void Do(string widgetGUID, string value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -735,19 +726,43 @@ public:
     
     
     
+    
+    MediaTrack* GetTrack(string widgetGUID)
+    {
+        return nullptr;
+    }
+    
+    vector<MediaTrack*>& GetTracks(string widgetGUID)
+    {
+        vector<MediaTrack*> temp;
+        
+        return temp;
+    }
+    
+    int GetFXIndex(string widgetGUID)
+    {
+        return 0;
+    }
+    
+    int GetFXParamIndex(string widgetGUID)
+    {
+        return 0;
+    }
+    
+    int GetChannel(string widgetGUID)
+    {
+        return 0;
+    }
+    
+    string GetCommandString(string widgetGUID)
+    {
+        return "";
+    }
+    
     // Widgets ->  Actions
     void RequestActionUpdate(string widgetGUID, string name) {}
-    void RequestActionUpdate(string widgetGUID, string name, string value) {}
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) {}
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int param) {}
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) {}
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) {}
     void DoAction(string widgetGUID, string name, double value) {}
     void DoAction(string widgetGUID, string name, string value) {}
-    void DoAction(string widgetGUID, string name, MediaTrack* track, double value) {}
-    void DoAction(string widgetGUID, string name, MediaTrack* track, string value) {}
-    void DoAction(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) {}
-    void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) {}
@@ -772,7 +787,7 @@ private:
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
-    void InitActions();
+    void InitActionDictionary();
     
     void Init()
     {
@@ -905,7 +920,7 @@ public:
     Manager()
     {
         manager = this;
-        InitActions();
+        InitActionDictionary();
         midiIOManager_ = new MidiIOManager();
     }
     
@@ -967,19 +982,43 @@ public:
     
     void SetTouchState(MediaTrack* track, bool isTouched) { pages_[currentPageIndex_]->SetTouchState(track, isTouched); }
     
+    
+    
+    
+    MediaTrack* GetTrack(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetTrack(widgetGUID);
+    }
+    
+    vector<MediaTrack*>& GetSurfaceTracks(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetTracks(widgetGUID);
+    }
+    
+    int GetFXIndex(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetFXIndex(widgetGUID);
+    }
+    
+    int GetFXParamIndex(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetFXParamIndex(widgetGUID);
+    }
+    
+    int GetChannel(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetChannel(widgetGUID);
+    }
+
+    string GetCommandString(string widgetGUID)
+    {
+        return pages_[currentPageIndex_]->GetCommandString(widgetGUID);
+    }
+    
     // Widgets ->  Actions
     void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
-    void RequestActionUpdate(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, value); }
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track); }
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int param) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, param); }
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, tracks); }
-    void RequestActionUpdate(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name, track, fxIndex, paramIndex); }
     void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
     void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
-    void DoAction(string widgetGUID, string name, MediaTrack* track, vector<MediaTrack*> &tracks) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, tracks); }
-    void DoAction(string widgetGUID, string name, MediaTrack* track, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
-    void DoAction(string widgetGUID, string name, MediaTrack* track, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, value); }
-    void DoAction(string widgetGUID, string name, MediaTrack* track, int fxIndex, int paramIndex, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, track, fxIndex, paramIndex, value); }
 
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
