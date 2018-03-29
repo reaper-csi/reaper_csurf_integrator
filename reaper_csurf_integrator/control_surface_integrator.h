@@ -234,17 +234,16 @@ class Midi_Widget : public Widget
 private:
     string suffix_ = "";
     Midi_RealSurface* surface_ = nullptr;
-   
+    
+protected:
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
-    
+
 public:
     Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_;}
-    MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
 
     string GetNameWithSuffix() override { return GetName() + suffix_; }
     string GetFullPath() override ;
