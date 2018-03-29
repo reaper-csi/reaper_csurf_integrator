@@ -233,10 +233,8 @@ class Midi_Widget : public Widget
 {
 private:
     string suffix_ = "";
-    
-protected:
     Midi_RealSurface* surface_ = nullptr;
-    
+   
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
@@ -252,6 +250,8 @@ public:
     string GetFullPath() override ;
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    virtual void SendMidiMessage(int first, int second, int third);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
