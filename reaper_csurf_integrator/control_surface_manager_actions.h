@@ -14,7 +14,7 @@ class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
        
     }
@@ -41,7 +41,7 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -63,7 +63,7 @@ class Shift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -83,7 +83,7 @@ class Option : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -103,7 +103,7 @@ class Control : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -123,7 +123,7 @@ class Alt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -143,7 +143,7 @@ class Latched : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -180,7 +180,7 @@ class LatchedZoom : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -200,7 +200,7 @@ class LatchedScrub : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -220,7 +220,7 @@ class NextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         manager->NextPage();
     }
@@ -231,7 +231,7 @@ class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -254,7 +254,7 @@ class PinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }
@@ -274,7 +274,7 @@ class UnpinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(string widgetGUID, double value) override
+    void Do(Widget* widget, Page* page, double value) override
     {
         
     }

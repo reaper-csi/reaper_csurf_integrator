@@ -15,18 +15,14 @@ class PushButton_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButton_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release)  {}
+    PushButton_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    {
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
+    }
     
     void SetValue(double value) override
     {
         //GetRealSurface()->SendMidiMessage(value == 0 ? GetMidiReleaseMessage() : GetMidiPressMessage());
-    }
-    
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
-    {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -41,18 +37,15 @@ class PushButtonWithLatch_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithLatch_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release)  {}
+    PushButtonWithLatch_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    {
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
+        surface_->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
+    }
     
     void SetValue(double value) override
     {
         //GetRealSurface()->SendMidiMessage(value == reverseSense_ ? GetMidiReleaseMessage() : GetMidiPressMessage());
-    }
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
-    {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -62,17 +55,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButtonWithRelease_Midi_Widget : public Midi_Widget
+class PushButtonWithRelease_Midi_Widget : public PushButton_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release)  {}
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
+    PushButtonWithRelease_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, name, suffix, press, release)
     {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]) + to_string(GetMidiPressMessage()->midi_message[2]), this);
+        surface_->AddWidgetToMessageMap(to_string(GetMidiReleaseMessage()->midi_message[0]) + to_string(GetMidiReleaseMessage()->midi_message[1]) + to_string(GetMidiReleaseMessage()->midi_message[2]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -85,11 +75,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButtonCycler_Midi_Widget : public Midi_Widget
+class PushButtonCycler_Midi_Widget : public PushButton_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonCycler_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release)  {}
+    PushButtonCycler_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, name, suffix, press, release)  {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
@@ -107,18 +97,15 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_Midi_Widget(string name, string action, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB)
+    {
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]), this);
+    }
     
     virtual void SetValue(double volume) override
     {
-        int volint = volume * 16383.0;
+        //int volint = volume * 16383.0;
         //GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
-    }
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
-    {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -132,18 +119,14 @@ class Fader7Bit_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release) {}
+    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    {
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
+    }
     
     virtual void SetValue(double value) override
     {
         //GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1], value * 127.0);
-    }
-   
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
-    {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -157,7 +140,10 @@ class Encoder_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release) {}
+    Encoder_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    {
+        surface_->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
+    }
     
     virtual void SetValue(double pan) override
     {
@@ -168,12 +154,6 @@ public:
         int val = (1+((panch*11)>>7)) | displayMode; // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
         
         //GetRealSurface()->SendMidiMessage(GetMidiPressMessage()->midi_message[0], GetMidiPressMessage()->midi_message[1] + 0x20, val);
-    }
-    
-    void AddToRealSurface(Midi_RealSurface* surface) override
-    {
-        Midi_Widget::AddToRealSurface(surface);
-        surface->AddWidgetToMessageMap(to_string(GetMidiPressMessage()->midi_message[0]) + to_string(GetMidiPressMessage()->midi_message[1]), this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -198,7 +178,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_Midi_Widget(string name, string action, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(name, action, GUID, press, release), minDB_(minDB), maxDB_(maxDB){}
+    VUMeter_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     void SetValue(double value) override
     {
@@ -211,7 +191,7 @@ class GainReductionMeter_Midi_Widget : public VUMeter_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_Midi_Widget(string name, string action, string GUID, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(name, action, GUID, minDB, maxDB, press, release) {}
+    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(surface, name, suffix, minDB, maxDB, press, release) {}
     
     void SetValue(double value) override
     {
@@ -226,7 +206,7 @@ class DisplayUpper_Midi_Widget : public Midi_Widget
     int slotIndex_ = 0;
     
 public:
-    DisplayUpper_Midi_Widget(string name, string action, string GUID, int slotIndex) : Midi_Widget(name, action, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, name, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {
@@ -280,7 +260,7 @@ class DisplayLower_Midi_Widget : public Midi_Widget
     int slotIndex_ = 0;
     
 public:
-    DisplayLower_Midi_Widget(string name, string action, string GUID, int slotIndex) : Midi_Widget(name, action, GUID, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, name, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {
