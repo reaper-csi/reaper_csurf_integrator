@@ -35,9 +35,9 @@ public:
         manager->SetWidgetValue(widgetGUID, DAW::GetToggleCommandState(CommandId(manager->GetCommandString(widgetGUID))));
     }
     
-    void Do(string widgetGUID, string commandString) override
+    void Do(string widgetGUID, double value) override
     {
-        DAW::SendCommandMessage(CommandId(commandString));
+        DAW::SendCommandMessage(CommandId(manager->GetCommandString(widgetGUID)));
     }
 };
 
