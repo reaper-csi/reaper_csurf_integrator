@@ -40,13 +40,16 @@ const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string FollowMCP = "FollowMCP";
 const string RealSurface_ = "RealSurface";
-const string Layer_ = "Layer";
-const string Zone_ = "Zone";
-const string VirtualSurface_ = "VirtualSurface";
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
+
+
+const string Layer_ = "Layer";
+const string Zone_ = "Zone";
+const string VirtualSurface_ = "VirtualSurface";
+
 
 class Manager;
 static Manager* manager = nullptr;
@@ -203,36 +206,22 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Action() {}
-    
-    virtual void RequestUpdate(string widgetGUID) {}
-    virtual void Do(string widgetGUID, double value) {}
-    virtual void Do(string widgetGUID, string value) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string name_ = "";
+    string action_ = "";
     string GUID_ = DefaultGUID;
-    
-protected:
-    double currentValue_ = 0.0;
-    string currentValueStr_ = "";
 
 public:
-    Widget(string name, string GUID) : name_(name), GUID_(GUID) {}
+    Widget(string name, string action, string GUID) : name_(name), action_(action), GUID_(GUID) {}
     virtual ~Widget() {};
     
-    string GetGUID() { return GUID_; }
     string GetName() { return name_; }
-    
+    string GetAction() { return action_; }
+    string GetGUID() { return GUID_; }
+
     void RequestUpdate();
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
@@ -244,19 +233,21 @@ class Midi_RealSurface;
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
+    MIDI_event_ex_t* lastMessageSent = new MIDI_event_ex_t(0, 0, 0);
+    
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
-protected:
-    MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
-    MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_; }
-    
 public:
-    Midi_Widget(string name, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, GUID),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, action, GUID),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    virtual void AddToMidi_RealSurface(Midi_RealSurface* surface);
+    MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_;}
+    MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
+
+    
+    virtual void AddToRealSurface(Midi_RealSurface* surface);
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
@@ -268,107 +259,23 @@ class RealSurface
 protected:
     const string name_ = "";
     string templateFilename_ = "";
-    //Zone* zone_ = nullptr;
+    int numChannels_ = 0;
     bool isBankable_ = true;
-    
-    //vector<RealSurfaceChannel*> channels_;
-    //vector<RealSurfaceChannel*> emptyChannels_;
-    //map<string, Midi_Widget*> widgetsByName_;
-    //map<string, Midi_Widget*> widgetsByMessage_;
-    map<string, string> remappedFXWidgets_;
-    
-    bool zoom_ = false;
-    bool scrub_ = false;
-    
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable_);
+
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), numChannels_(numChannels), isBankable_(isBankable)  {}
     
 public:
     virtual ~RealSurface() {};
     
-    const string GetName() const { return name_; }
+    string GetName() const { return name_; }
     string GetTemplateFilename() const { return templateFilename_; }
-    //Zone* GetZone() { return zone_; }
-    //vector<RealSurfaceChannel*> & GetChannels() { return channels_; }
-    bool IsZoom() { return zoom_; }
-    bool IsScrub() { return scrub_; }
-    
-    /*
-     string GetWidgetGUID(string widgetName)
-     {
-     if(widgetsByName_.count(widgetName) > 0)
-     return widgetsByName_[widgetName]->GetGUID();
-     
-     return "";
-     }
-     
-    
-    vector<RealSurfaceChannel*> & GetBankableChannels()
-    {
-        if(isBankable_)
-            return GetChannels();
-        else
-            return emptyChannels_;
-    }
-     */
-    
-    void AddAction(string actionAddress, Action* action);
-    void MapTrackToWidgets(MediaTrack *track);
-    void UnmapWidgetsFromTrack(MediaTrack *track);
+    int GetNumChannels() { return numChannels_; }
+    bool IsBankable() { return isBankable_; }
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
     
     virtual void RunAndUpdate() {}
-    
-    void UnmapFXFromWidgets(MediaTrack *track)
-    {
-        /*
-        for(auto [widgetName, GUID] : remappedFXWidgets_)
-            if(widgetsByName_.count(widgetName) > 0)
-                widgetsByName_[widgetName]->SetGUID(GUID);
-        
-        remappedFXWidgets_.clear();
-         */
-    }
-    
-    void SetWidgetGUID(string widgetName, string GUID)
-    {
-        /*
-        if(remappedFXWidgets_.count(widgetName) > 0)
-            remappedFXWidgets_[widgetName] = GUID;
-        else if(widgetsByName_.count(widgetName) > 0)
-            widgetsByName_[widgetName]->SetGUID(GUID);
-         */
-    }
-    
-    void SetWidgetFXGUID(string widgetName, string GUID)
-    {
-        /*
-        if(widgetsByName_.count(widgetName) > 0)
-        {
-            remappedFXWidgets_[widgetName] = widgetsByName_[widgetName]->GetGUID();
-            widgetsByName_[widgetName]->SetGUID(GUID);
-        }
-         */
-    }
-    
-    void SetZoom(bool value)
-    {
-        zoom_ = value;
-    }
-    
-    void SetScrub(bool value)
-    {
-        scrub_ = value;
-    }
-    
-    // to Widgets ->
-    virtual void UpdateWidgets()
-    {
-        //for(auto const& [name, widget] : widgetsByName_ )
-            //widget->Update();
-    }
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,7 +337,7 @@ public:
     
     void AddWidget(Midi_Widget* widget)
     {
-        widget->AddToMidi_RealSurface(this);
+        widget->AddToRealSurface(this);
     }
     
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
@@ -455,8 +362,18 @@ public:
     virtual void RunAndUpdate() override
     {
         HandleMidiInput();
-        RealSurface::UpdateWidgets();
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~Action() {}
+    
+    virtual void RequestUpdate(string widgetGUID) {}
+    virtual void Do(string widgetGUID, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -469,6 +386,11 @@ private:
     map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
     map<string, Widget*> widgetsByGUID_;
 
+    
+    bool zoom_ = false;
+    bool scrub_ = false;
+
+    
     
     //vector<string> mappedTrackGUIDs_;
     //vector<MediaTrack*> touchedTracks_;
@@ -486,6 +408,24 @@ public:
     
     string GetName() { return name_; }
     Manager* GetManager() { return manager_; }
+    
+    bool IsZoom() { return zoom_; }
+    bool IsScrub() { return scrub_; }
+    
+    void SetZoom(bool value)
+    {
+        zoom_ = value;
+    }
+    
+    void SetScrub(bool value)
+    {
+        scrub_ = value;
+    }
+
+    
+    
+    
+    
     
     void OnTrackSelection(MediaTrack* track)
     {
@@ -762,7 +702,6 @@ public:
     // Widgets ->  Actions
     void RequestActionUpdate(string widgetGUID, string name) {}
     void DoAction(string widgetGUID, string name, double value) {}
-    void DoAction(string widgetGUID, string name, string value) {}
 
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) {}
@@ -1015,10 +954,9 @@ public:
         return pages_[currentPageIndex_]->GetCommandString(widgetGUID);
     }
     
-    // Widgets ->  Actions
+    // Widgets -> Actions
     void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
     void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
-    void DoAction(string widgetGUID, string name, string value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
 
     // Actions -> Widgets
     void SetWidgetValue(string widgetGUID, double value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
