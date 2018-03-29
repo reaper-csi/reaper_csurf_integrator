@@ -211,16 +211,14 @@ class Widget
 {
 private:
     string name_ = "";
-    string action_ = "";
-    string GUID_ = DefaultGUID;
 
 public:
-    Widget(string name, string action, string GUID) : name_(name), action_(action), GUID_(GUID) {}
+    Widget(string name) : name_(name) {}
     virtual ~Widget() {};
     
     string GetName() { return name_; }
-    string GetAction() { return action_; }
-    string GetGUID() { return GUID_; }
+    virtual string GetNameWithSuffix() { return name_; }
+    virtual string GetFullPath() { return name_; }
 
     void RequestUpdate();
     virtual void SetValue(double value) {}
@@ -233,21 +231,25 @@ class Midi_RealSurface;
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    MIDI_event_ex_t* lastMessageSent = new MIDI_event_ex_t(0, 0, 0);
+private:
+    string suffix_ = "";
     
+protected:
+    Midi_RealSurface* surface_ = nullptr;
+    
+    MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
     
 public:
-    Midi_Widget(string name, string action, string GUID, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, action, GUID),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     MIDI_event_ex_t* GetMidiPressMessage() { return midiPressMessage_;}
     MIDI_event_ex_t* GetMidiReleaseMessage() { return midiReleaseMessage_; }
 
-    
-    virtual void AddToRealSurface(Midi_RealSurface* surface);
+    string GetNameWithSuffix() override { return GetName() + suffix_; }
+    string GetFullPath() override ;
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
@@ -335,11 +337,6 @@ public:
         widgetsByMessage_[message] = widget;
     }
     
-    void AddWidget(Midi_Widget* widget)
-    {
-        widget->AddToRealSurface(this);
-    }
-    
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
         if(midiOutput_)
@@ -366,14 +363,16 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(string widgetGUID) {}
-    virtual void Do(string widgetGUID, double value) {}
+    virtual void RequestUpdate(Widget* widget, Page* page) {}
+    virtual void Do(Widget* widget, Page* page, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,7 +383,7 @@ private:
     string name_ = "";
     Manager* manager_ = nullptr;
     map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
-    map<string, Widget*> widgetsByGUID_;
+    map<string, Widget*> widgets_;
 
     
     bool zoom_ = false;
@@ -700,12 +699,8 @@ public:
     }
     
     // Widgets ->  Actions
-    void RequestActionUpdate(string widgetGUID, string name) {}
-    void DoAction(string widgetGUID, string name, double value) {}
-
-    // Actions -> Widgets
-    void SetWidgetValue(string widgetGUID, double value) {}
-    void SetWidgetValue(string widgetGUID, string value) {}
+    void RequestActionUpdate(Widget* widget) {}
+    void DoAction(Widget* widget, double value) {}
 };
 
 
@@ -919,48 +914,9 @@ public:
             page->TrackFXListChanged(trackid);
     }
     
-    void SetTouchState(MediaTrack* track, bool isTouched) { pages_[currentPageIndex_]->SetTouchState(track, isTouched); }
-    
-    
-    
-    
-    MediaTrack* GetTrack(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetTrack(widgetGUID);
-    }
-    
-    vector<MediaTrack*>& GetSurfaceTracks(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetTracks(widgetGUID);
-    }
-    
-    int GetFXIndex(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetFXIndex(widgetGUID);
-    }
-    
-    int GetFXParamIndex(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetFXParamIndex(widgetGUID);
-    }
-    
-    int GetChannel(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetChannel(widgetGUID);
-    }
-
-    string GetCommandString(string widgetGUID)
-    {
-        return pages_[currentPageIndex_]->GetCommandString(widgetGUID);
-    }
-    
     // Widgets -> Actions
-    void RequestActionUpdate(string widgetGUID, string name) { pages_[currentPageIndex_]->RequestActionUpdate(widgetGUID, name); }
-    void DoAction(string widgetGUID, string name, double value) { pages_[currentPageIndex_]->DoAction(widgetGUID, name, value); }
-
-    // Actions -> Widgets
-    void SetWidgetValue(string widgetGUID, double value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
-    void SetWidgetValue(string widgetGUID, string value) { pages_[currentPageIndex_]->SetWidgetValue(widgetGUID, value); }
+    void RequestActionUpdate(Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(widget); }
+    void DoAction(Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(widget, value); }
 };
 
 
