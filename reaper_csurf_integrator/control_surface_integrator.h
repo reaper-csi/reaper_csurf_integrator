@@ -210,15 +210,15 @@ class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_ = "";
+    string role_ = "";
 
 public:
-    Widget(string name) : name_(name) {}
+    Widget(string role) : role_(role) {}
     virtual ~Widget() {};
     
-    string GetName() { return name_; }
-    virtual string GetNameWithSuffix() { return name_; }
-    virtual string GetFullPath() { return name_; }
+    string GetRole() { return role_; }
+    virtual string GetName() { return GetRole(); }
+    virtual string GetPath() { return GetRole(); }
 
     void RequestUpdate();
     virtual void SetValue(double value) {}
@@ -245,8 +245,8 @@ public:
     virtual ~Midi_Widget() {};
     
 
-    string GetNameWithSuffix() override { return GetName() + suffix_; }
-    string GetFullPath() override ;
+    string GetName() override { return GetRole() + suffix_; }
+    string GetPath() override ;
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
@@ -821,7 +821,6 @@ private:
     
     void AddRealSurface(RealSurface* realSurface)
     {
-        //InitRealSurface(realSurface);
         realSurfaces_.push_back(realSurface);
     }
     

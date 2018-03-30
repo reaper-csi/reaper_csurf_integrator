@@ -20,9 +20,9 @@ void Widget::RequestUpdate()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Midi_Widget::GetFullPath()
+string Midi_Widget::GetPath()
 {
-    return surface_->GetName() + "_" + GetNameWithSuffix();
+    return surface_->GetName() + "_" + GetName();
 }
 
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
