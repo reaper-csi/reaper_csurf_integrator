@@ -15,7 +15,7 @@ class PushButton_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButton_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    PushButton_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
     }
@@ -40,7 +40,7 @@ class PushButtonWithLatch_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithLatch_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    PushButtonWithLatch_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
@@ -62,7 +62,7 @@ class PushButtonWithRelease_Midi_Widget : public PushButton_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonWithRelease_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, name, suffix, press, release)
+    PushButtonWithRelease_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, role, suffix, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
@@ -82,7 +82,7 @@ class PushButtonCycler_Midi_Widget : public PushButton_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PushButtonCycler_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, name, suffix, press, release)  {}
+    PushButtonCycler_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : PushButton_Midi_Widget(surface, role, suffix, press, release)  {}
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
@@ -100,7 +100,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB)
+    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release), minDB_(minDB), maxDB_(maxDB)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
     }
@@ -122,7 +122,7 @@ class Fader7Bit_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
@@ -143,7 +143,7 @@ class Encoder_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Encoder_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release)
+    Encoder_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
@@ -181,7 +181,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, suffix, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, suffix, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
     void SetValue(double value) override
     {
@@ -194,7 +194,7 @@ class GainReductionMeter_Midi_Widget : public VUMeter_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(surface, name, suffix, minDB, maxDB, press, release) {}
+    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(surface, role, suffix, minDB, maxDB, press, release) {}
     
     void SetValue(double value) override
     {
@@ -210,12 +210,14 @@ class DisplayUpper_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
     
 public:
-    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, name, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {
         if( displayText == lastStringSent_)
             return;
+        
+        lastStringSent_ = displayText;
         
         if(slotIndex_ > 7) // GAW TDB -- this is a hack to prevent Fader 9 (Master) on MCU from displaying on lower row of channel 1
             return;
@@ -260,6 +262,7 @@ public:
         SendMidiMessage(&midiSysExData.evt);
     }
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DisplayLower_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,13 +271,15 @@ class DisplayLower_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
 
 public:
-    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string name, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, name, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {
         if( displayText == lastStringSent_)
             return;
 
+        lastStringSent_ = displayText;
+        
         int pad = 7;
         const char* text = displayText.c_str();
         
