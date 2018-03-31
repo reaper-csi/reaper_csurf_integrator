@@ -158,7 +158,7 @@ void Manager::Init()
                 if(tokens.size() != 2)
                     continue;
                 
-                currentPage = new Page(tokens[1], this);
+                currentPage = new Page(tokens[1]);
                 pages_.push_back(currentPage);
                 
             }

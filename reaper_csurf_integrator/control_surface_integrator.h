@@ -391,9 +391,8 @@ class Page
 {
 private:
     string name_ = "";
-    Manager* manager_ = nullptr;
     vector<Midi_RealSurface*> midi_realSurfaces_;
-    map<string, Widget*> widgets_;
+    //map<string, Widget*> widgets_;
     int numBankableChannels_ = 0;
     map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
 
@@ -415,11 +414,10 @@ private:
     }
     
 public:
-    Page(string name, Manager* manager) : name_(name), manager_(manager) {}
+    Page(string name) : name_(name) {}
     
     string GetName() { return name_; }
-    Manager* GetManager() { return manager_; }
-    
+   
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
@@ -454,12 +452,6 @@ public:
         
     }
     
-
-    void AddAction(string actionAddress, Action* action)
-    {
-        //actions_[actionAddress].push_back(action);
-    }
-
     void TrackFXListChanged(MediaTrack* track)
     {
         /*
@@ -559,14 +551,6 @@ public:
         
         return false;
     }
-    
-    
-    /*
-    void AddZone(Zone* zone)
-    {
-        zones_[zone->GetName()] = zone;
-    }
-    */
     
     void Init()
     {
