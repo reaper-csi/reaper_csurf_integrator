@@ -92,6 +92,97 @@ void Manager::InitActionDictionary()
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
 }
 
+void Manager::Init()
+{
+    pages_.clear();
+    midi_realSurfaces_.clear();
+    allWidgets_.clear();
+    
+    bool midiInMonitor = false;
+    bool midiOutMonitor = false;
+    VSTMonitor_ = false;
+    
+    Page* currentPage = nullptr;
+    
+    ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+    
+    for (string line; getline(iniFile, line) ; )
+    {
+        if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+        {
+            istringstream iss(line);
+            vector<string> tokens;
+            string token;
+            
+            while (iss >> quoted(token))
+                tokens.push_back(token);
+            
+            if(tokens[0] == MidiInMonitor)
+            {
+                if(tokens.size() != 2)
+                    continue;
+                
+                if(tokens[1] == "On")
+                    midiInMonitor = true;
+            }
+            else if(tokens[0] == MidiOutMonitor)
+            {
+                if(tokens.size() != 2)
+                    continue;
+                
+                if(tokens[1] == "On")
+                    midiOutMonitor = true;
+            }
+            else if(tokens[0] == VSTMonitor)
+            {
+                if(tokens.size() != 2)
+                    continue;
+                
+                if(tokens[1] == "On")
+                    VSTMonitor_ = true;
+            }
+            else if(tokens[0] == RealSurface_)
+            {
+                if(tokens.size() != 7)
+                    continue;
+                
+                int numChannels = atoi(tokens[2].c_str());
+                bool isBankable = tokens[3] == "1" ? true : false;
+                int channelIn = atoi(tokens[4].c_str());
+                int channelOut = atoi(tokens[5].c_str());
+                
+                AddMidiRealSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+            }
+            else if(tokens[0] == Page_)
+            {
+                if(tokens.size() != 2)
+                    continue;
+                
+                currentPage = new Page(tokens[1], this);
+                pages_.push_back(currentPage);
+                
+            }
+            else if(tokens[0] == VirtualSurface_)
+            {
+                if(tokens.size() != 4)
+                    continue;
+                
+                for(auto surface : midi_realSurfaces_)
+                    if(surface->GetName() == tokens[1])
+                        currentPage->AddSurface(surface, tokens[2], tokens[3]);
+            }
+        }
+    }
+    
+    for(auto page : pages_)
+        page->Init();
+    
+    //if(pages_.size() > 0)
+    //pages_[0]->SetContext();
+    
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidgeta available for inclusion in Real Surface Templates, we will add widgets as necessary
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

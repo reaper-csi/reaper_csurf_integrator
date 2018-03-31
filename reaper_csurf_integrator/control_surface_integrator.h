@@ -45,6 +45,7 @@ const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 
+const string Page_ = "Page";
 
 const string Layer_ = "Layer";
 const string Zone_ = "Zone";
@@ -277,6 +278,7 @@ public:
     string GetName() const { return name_; }
     string GetTemplateFilename() const { return templateFilename_; }
     int GetNumChannels() { return numChannels_; }
+    int GetNumBankableChannels() { return isBankable_ ? numChannels_ : 0; }
     bool IsBankable() { return isBankable_; }
     
     virtual void Update() {}
@@ -303,19 +305,6 @@ private:
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
     map<string, Midi_Widget*> widgetsByMessage_;
-
-    void HandleMidiInput()
-    {
-        if(midiInput_)
-        {
-            DAW::SwapBufsPrecise(midiInput_);
-            MIDI_eventlist* list = midiInput_->GetReadBuf();
-            int bpos = 0;
-            MIDI_event_t* evt;
-            while ((evt = list->EnumItems(&bpos)))
-                ProcessMidiMessage((MIDI_event_ex_t*)evt);
-        }
-    }
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
@@ -345,9 +334,17 @@ public:
         if(midiOutput_) delete midiOutput_;
     }
     
-    virtual void Update() override
+    void HandleMidiInput()
     {
-        HandleMidiInput();
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
     }
     
     void AddWidgetToMessageMap(string message, Midi_Widget* widget)
@@ -395,8 +392,10 @@ class Page
 private:
     string name_ = "";
     Manager* manager_ = nullptr;
-    map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
+    vector<Midi_RealSurface*> midi_realSurfaces_;
     map<string, Widget*> widgets_;
+    int numBankableChannels_ = 0;
+    map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
 
     
     bool zoom_ = false;
@@ -435,7 +434,18 @@ public:
     }
 
     
-    
+    void AddSurface(Midi_RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
+    {
+        string resourcePath(DAW::GetResourcePath());
+        resourcePath += "/CSI/";
+        
+        //actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
+        //fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
+        
+        numBankableChannels_ += surface->GetNumBankableChannels();
+        
+        midi_realSurfaces_.push_back(surface);
+    }
     
     
     
@@ -494,13 +504,13 @@ public:
     
     
     
-    void MapTrackAndFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    void MapTrackAndFXToWidgets(MediaTrack* track)
     {
-        MapTrackToWidgets(track, zoneName, surfaceName);
-        MapFXToWidgets(track, zoneName, surfaceName);
+        //MapTrackToWidgets(track, zoneName, surfaceName);
+        //MapFXToWidgets(track, zoneName, surfaceName);
     }
     
-    void MapTrackToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    void MapTrackToWidgets(MediaTrack* track)
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -508,7 +518,7 @@ public:
          */
     }
     
-    void UnmapWidgetsFromTrack(MediaTrack* track, string zoneName, string surfaceName)
+    void UnmapWidgetsFromTrack(MediaTrack* track)
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -516,7 +526,7 @@ public:
          */
     }
     
-    void MapFXToWidgets(MediaTrack* track, string zoneName, string surfaceName)
+    void MapFXToWidgets(MediaTrack* track)
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -524,7 +534,7 @@ public:
          */
     }
     
-    void UnmapWidgetsFromFX(MediaTrack* track, string zoneName, string surfaceName)
+    void UnmapWidgetsFromFX(MediaTrack* track)
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -532,7 +542,7 @@ public:
          */
     }
     
-    void SetShowFXWindows(string zoneName, string surfaceName, bool value)
+    void SetShowFXWindows(bool value)
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -540,7 +550,7 @@ public:
          */
     }
     
-    bool IsShowFXWindows(string zoneName, string surfaceName)
+    bool IsShowFXWindows()
     {
         /*
         if(zones_.count(zoneName) > 0)
@@ -585,7 +595,7 @@ public:
         */
     }
     
-    void AdjustTrackBank(string zoneName, string surfaceName, int stride)
+    void AdjustTrackBank(int stride)
     {
         /*
         touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another zone is being touched it gets cleared too
@@ -610,56 +620,35 @@ public:
     }
     */
     
-    void RunAndUpdate()
-    {
-        /*
-        for(auto const& [name, zone] : zones_)
-            zone->RunAndUpdate();
-         */
-    }
-    
-    void SetShift(string zoneName, string surfaceName, bool value)
+   
+    void SetShift(bool value)
     {
         /*
         zones_[zoneName]->SetShift(value);
         */
     }
     
-    void SetOption(string zoneName, string surfaceName, bool value)
+    void SetOption(bool value)
     {
         /*
         zones_[zoneName]->SetOption(value);
          */
     }
     
-    void SetControl(string zoneName, string surfaceName, bool value)
+    void SetControl(bool value)
     {
         /*
         zones_[zoneName]->SetControl(value);
          */
     }
     
-    void SetAlt(string zoneName, string surfaceName, bool value)
+    void SetAlt(bool value)
     {
         /*
         zones_[zoneName]->SetAlt(value);
          */
     }
-    
-    void SetZoom(string zoneName, string surfaceName, bool value)
-    {
-        /*
-        zones_[zoneName]->SetZoom(value);
-         */
-    }
-    
-    void SetScrub(string zoneName, string surfaceName, bool value)
-    {
-        /*
-        zones_[zoneName]->SetScrub(value);
-         */
-    }
-    
+
     void PinSelectedTracks()
     {
         /*
@@ -679,34 +668,34 @@ public:
     
     
     
-    MediaTrack* GetTrack(string widgetGUID)
+    MediaTrack* GetTrack(Widget* widget)
     {
         return nullptr;
     }
     
-    vector<MediaTrack*>& GetTracks(string widgetGUID)
+    vector<MediaTrack*>& GetTracks(Widget* widget)
     {
         vector<MediaTrack*> temp;
         
         return temp;
     }
     
-    int GetFXIndex(string widgetGUID)
+    int GetFXIndex(Widget* widget)
     {
         return 0;
     }
     
-    int GetFXParamIndex(string widgetGUID)
+    int GetFXParamIndex(Widget* widget)
     {
         return 0;
     }
     
-    int GetChannel(string widgetGUID)
+    int GetChannel(Widget* widget)
     {
         return 0;
     }
     
-    string GetCommandString(string widgetGUID)
+    string GetCommandString(Widget* widget)
     {
         return "";
     }
@@ -726,10 +715,10 @@ class Manager
 {
 private:
     MidiIOManager* midiIOManager_ = nullptr;
-    vector <Page*> pages_;
-    vector<RealSurface*> midi_realSurfaces_;
-    vector<Widget*> allWidgets_;
     map<string, Action*> actions_;
+    vector <Page*> pages_;
+    vector<Midi_RealSurface*> midi_realSurfaces_;
+    vector<Widget*> allWidgets_;
     
     bool isInitialized_ = false;
     int currentPageIndex_ = 0;
@@ -738,119 +727,10 @@ private:
     void InitActionDictionary();
     void InitMidiRealSurface(Midi_RealSurface* surface);
     
-    void Init()
-    {
-        /*
-        bool midiInMonitor = false;
-        bool midiOutMonitor = false;
-        VSTMonitor_ = false;
-        
-        Layer* currentLayer = nullptr;
-        Zone* currentZone = nullptr;
-        
-        ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
-        
-        for (string line; getline(iniFile, line) ; )
-        {
-            if(line[0] != '/' && line != "") // ignore comment lines and blank lines
-            {
-                istringstream iss(line);
-                vector<string> tokens;
-                string token;
-                
-                while (iss >> quoted(token))
-                    tokens.push_back(token);
-                
-                if(tokens[0] == MidiInMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        midiInMonitor = true;
-                }
-                else if(tokens[0] == MidiOutMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        midiOutMonitor = true;
-                }
-                else if(tokens[0] == VSTMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        VSTMonitor_ = true;
-                }
-                else if(tokens[0] == RealSurface_)
-                {
-                    if(tokens.size() != 7)
-                        continue;
-                    
-                    int numChannels = atoi(tokens[2].c_str());
-                    bool isBankable = tokens[3] == "1" ? true : false;
-                    int channelIn = atoi(tokens[4].c_str());
-                    int channelOut = atoi(tokens[5].c_str());
-                    
-                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
-                }
-                else if(tokens[0] == Layer_)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    currentLayer = new Layer(tokens[1], this);
-                    layers_.push_back(currentLayer);
-                    
-                }
-                else if(tokens[0] == Zone_ && currentLayer != nullptr)
-                {
-                    if(tokens.size() != 3)
-                        continue;
-                    
-                    currentZone = new Zone(tokens[1], currentLayer, tokens[2] == "Yes" ? true : false);
-                    currentLayer->AddZone(currentZone);
-                }
-                else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
-                {
-                    if(tokens.size() != 4)
-                        continue;
-                    
-                    for(auto surface : realSurfaces_)
-                        if(surface->GetName() == tokens[1])
-                            currentZone->AddSurface(surface, tokens[2], tokens[3]);
-                }
-            }
-        }
-        
-        for(auto layer : layers_)
-            layer->Init();
-        
-        if(layers_.size() > 0)
-            layers_[0]->SetContext();
-         
-         */
-    }
-    
     void AddMidiRealSurface(Midi_RealSurface* realSurface)
     {
         InitMidiRealSurface(realSurface);
         midi_realSurfaces_.push_back(realSurface);
-    }
-    
-    void RunAndUpdate()
-    {
-        if(!isInitialized_)
-        {
-            Init();
-            isInitialized_ = true;
-        }
-        
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->RunAndUpdate();
     }
     
     double GetPrivateProfileDouble(string key)
@@ -873,6 +753,8 @@ public:
         midiIOManager_ = new MidiIOManager();
     }
     
+    void Init();
+    
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
     bool GetVSTMonitor() { return isInitialized_ ? VSTMonitor_ : false; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
@@ -893,16 +775,10 @@ public:
     
     void Run()
     {
-        RunAndUpdate();
-    }
-    
-    void ReInit()
-    {
-        pages_.clear();
-        midi_realSurfaces_.clear();
-        isInitialized_ = false;
-        Init();
-        isInitialized_ = true;
+        for(auto surface : midi_realSurfaces_)
+            surface->HandleMidiInput();
+        for(auto widget : allWidgets_)
+            widget->RequestUpdate();
     }
     
     void NextPage()
@@ -910,7 +786,6 @@ public:
         if(pages_.size() > 0)
         {
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            //pages_[currentPageIndex_]->SetContext();
         }
     }
     
@@ -2011,100 +1886,6 @@ private:
     
     void InitRealSurface(OldRealSurface* surface);
 
-    void Init()
-    {
-        bool midiInMonitor = false;
-        bool midiOutMonitor = false;
-        VSTMonitor_ = false;
-
-        Layer* currentLayer = nullptr;
-        Zone* currentZone = nullptr;
-
-        ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
-        
-        for (string line; getline(iniFile, line) ; )
-        {
-            if(line[0] != '/' && line != "") // ignore comment lines and blank lines
-            {
-                istringstream iss(line);
-                vector<string> tokens;
-                string token;
-                
-                while (iss >> quoted(token))
-                    tokens.push_back(token);
-                
-                if(tokens[0] == MidiInMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-
-                    if(tokens[1] == "On")
-                        midiInMonitor = true;
-                }
-                else if(tokens[0] == MidiOutMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-
-                    if(tokens[1] == "On")
-                        midiOutMonitor = true;
-                }
-                else if(tokens[0] == VSTMonitor)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        VSTMonitor_ = true;
-                }
-                else if(tokens[0] == RealSurface_)
-                {
-                    if(tokens.size() != 7)
-                        continue;
-                    
-                    int numChannels = atoi(tokens[2].c_str());
-                    bool isBankable = tokens[3] == "1" ? true : false;
-                    int channelIn = atoi(tokens[4].c_str());
-                    int channelOut = atoi(tokens[5].c_str());
-        
-                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
-                }
-                else if(tokens[0] == Layer_)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    currentLayer = new Layer(tokens[1], this);
-                    layers_.push_back(currentLayer);
-                    
-                }
-                else if(tokens[0] == Zone_ && currentLayer != nullptr)
-                {
-                    if(tokens.size() != 3)
-                        continue;
-                               
-                    currentZone = new Zone(tokens[1], currentLayer, tokens[2] == "Yes" ? true : false);
-                    currentLayer->AddZone(currentZone);
-                }
-                else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
-                {
-                    if(tokens.size() != 4)
-                        continue;
-
-                    for(auto surface : realSurfaces_)
-                        if(surface->GetName() == tokens[1])
-                            currentZone->AddSurface(surface, tokens[2], tokens[3]);
-                }
-            }
-        }
-        
-        for(auto layer : layers_)
-            layer->Init();
-        
-       if(layers_.size() > 0)
-           layers_[0]->SetContext();
-    }
-
     void AddRealSurface(OldRealSurface* realSurface)
     {
         InitRealSurface(realSurface);
@@ -2116,7 +1897,6 @@ private:
         if(!isInitialized_)
         {
             Init();
-            isInitialized_ = true;
         }
         
         if(layers_.size() > 0)
@@ -2138,6 +1918,107 @@ public:
     
     CSurfManager() { midiIOManager_ = new MidiIOManager(); }
     
+    void Init()
+    {
+        layers_.clear();
+        realSurfaces_.clear();
+        isInitialized_ = false;
+
+        bool midiInMonitor = false;
+        bool midiOutMonitor = false;
+        VSTMonitor_ = false;
+        
+        Layer* currentLayer = nullptr;
+        Zone* currentZone = nullptr;
+        
+        ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
+        
+        for (string line; getline(iniFile, line) ; )
+        {
+            if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+            {
+                istringstream iss(line);
+                vector<string> tokens;
+                string token;
+                
+                while (iss >> quoted(token))
+                    tokens.push_back(token);
+                
+                if(tokens[0] == MidiInMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        midiInMonitor = true;
+                }
+                else if(tokens[0] == MidiOutMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        midiOutMonitor = true;
+                }
+                else if(tokens[0] == VSTMonitor)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        VSTMonitor_ = true;
+                }
+                else if(tokens[0] == RealSurface_)
+                {
+                    if(tokens.size() != 7)
+                        continue;
+                    
+                    int numChannels = atoi(tokens[2].c_str());
+                    bool isBankable = tokens[3] == "1" ? true : false;
+                    int channelIn = atoi(tokens[4].c_str());
+                    int channelOut = atoi(tokens[5].c_str());
+                    
+                    AddRealSurface(new MidiCSurf(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                }
+                else if(tokens[0] == Layer_)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    currentLayer = new Layer(tokens[1], this);
+                    layers_.push_back(currentLayer);
+                    
+                }
+                else if(tokens[0] == Zone_ && currentLayer != nullptr)
+                {
+                    if(tokens.size() != 3)
+                        continue;
+                    
+                    currentZone = new Zone(tokens[1], currentLayer, tokens[2] == "Yes" ? true : false);
+                    currentLayer->AddZone(currentZone);
+                }
+                else if(tokens[0] == VirtualSurface_ && currentZone != nullptr)
+                {
+                    if(tokens.size() != 4)
+                        continue;
+                    
+                    for(auto surface : realSurfaces_)
+                        if(surface->GetName() == tokens[1])
+                            currentZone->AddSurface(surface, tokens[2], tokens[3]);
+                }
+            }
+        }
+        
+        for(auto layer : layers_)
+            layer->Init();
+        
+        if(layers_.size() > 0)
+            layers_[0]->SetContext();
+        
+        isInitialized_ = true;
+    }
+
+    
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
     bool GetVSTMonitor() { return isInitialized_ ? VSTMonitor_ : false; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
@@ -2154,15 +2035,6 @@ public:
     void Run()
     {
         RunAndUpdate();
-    }
-    
-    void ReInit()
-    {
-        layers_.clear();
-        realSurfaces_.clear();
-        isInitialized_ = false;
-        Init();
-        isInitialized_ = true;
     }
     
     void NextLayer()
