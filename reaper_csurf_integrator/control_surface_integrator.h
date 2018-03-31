@@ -392,18 +392,49 @@ class Page
 private:
     string name_ = "";
     vector<Midi_RealSurface*> midi_realSurfaces_;
-    //map<string, Widget*> widgets_;
     int numBankableChannels_ = 0;
-    map<string, map<string, vector<Action*>>> actions_; // actions_[GUID][Name]
-
+    vector<MediaTrack*> touchedTracks_;
     
+    map<string, string> actionTemplateDirectory_;
+    map<string, string> fxTemplateDirectory_;
+    map<string, map<string, FXTemplate *>> fxTemplates_;
+    vector<FXWindow> openFXWindows_;
+
     bool zoom_ = false;
     bool scrub_ = false;
 
+    bool showFXWindows_ = false;
+    
+    bool shift_ = false;
+    bool option_ = false;
+    bool control_ = false;
+    bool alt_ = false;
     
     
-    //vector<string> mappedTrackGUIDs_;
-    //vector<MediaTrack*> touchedTracks_;
+    string CurrentModifers()
+    {
+        string modifiers = "";
+        
+        if(shift_)
+            modifiers += Shift;
+        if(option_)
+            modifiers += Option;
+        if(control_)
+            modifiers +=  Control;
+        if(alt_)
+            modifiers += Alt;
+        
+        return modifiers;
+    }
+
+    
+    
+    
+    
+    
+    
+ 
+
     
     void SetPinnedTracks()
     {
@@ -417,7 +448,11 @@ public:
     Page(string name) : name_(name) {}
     
     string GetName() { return name_; }
-   
+    
+    // Widgets -> Actions
+    void RequestActionUpdate(Widget* widget) {}
+    void DoAction(Widget* widget, double value) {}
+    
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
@@ -430,23 +465,112 @@ public:
     {
         scrub_ = value;
     }
-
+    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = value;
+    }
+    
+    bool IsShowFXWindows()
+    {
+        return showFXWindows_;
+    }
+    
+    void SetShift(bool value)
+    {
+        shift_ = value;
+    }
+    
+    void SetOption(bool value)
+    {
+        option_ = value;
+    }
+    
+    void SetControl(bool value)
+    {
+        control_ = value;
+    }
+    
+    void SetAlt(bool value)
+    {
+        alt_ = value;
+    }
     
     void AddSurface(Midi_RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
         
-        //actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
-        //fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
+        actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
+        fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
         
         numBankableChannels_ += surface->GetNumBankableChannels();
         
         midi_realSurfaces_.push_back(surface);
     }
     
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        for(MediaTrack* touchedTrack : touchedTracks_)
+            if(touchedTrack == track)
+                return true;
+        
+        return false;
+    }
+    
+    void SetTouchState(MediaTrack* track,  bool touched)
+    {
+        if(touched)
+            touchedTracks_.push_back(track);
+        else
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+    }
+
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    vector<MediaTrack*>& GetTracks(Widget* widget)
+    {
+        vector<MediaTrack*> temp;
+        
+        return temp;
+    }
+
+    MediaTrack* GetTrack(Widget* widget)
+    {
+        return nullptr;
+    }
+    
+    int GetFXIndex(Widget* widget)
+    {
+        return 0;
+    }
+    
+    int GetFXParamIndex(Widget* widget)
+    {
+        return 0;
+    }
+    
+    int GetChannel(Widget* widget)
+    {
+        return 0;
+    }
+    
+    string GetCommandString(Widget* widget)
+    {
+        return "";
+    }
+
     void OnTrackSelection(MediaTrack* track)
     {
         
@@ -459,42 +583,6 @@ public:
          zone->TrackFXListChanged(track);
          */
     }
-
-    
-    
-    
-    
-    
-    
-    
-    bool GetTouchState(MediaTrack* track, int touchedControl)
-    {
-        /*
-        for(MediaTrack* touchedTrack : touchedTracks_)
-            if(touchedTrack == track)
-                return true;
-         */
-        
-        return false;
-    }
-    
-    void SetTouchState(MediaTrack* track,  bool touched)
-    {
-        /*
-        if(state)
-            touchedTracks_.push_back(track);
-        else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
-         */
-    }
-    
-    
-    
-    
-    
-    
-    
-    
     
     void MapTrackAndFXToWidgets(MediaTrack* track)
     {
@@ -532,24 +620,6 @@ public:
         if(zones_.count(zoneName) > 0)
             zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
          */
-    }
-    
-    void SetShowFXWindows(bool value)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->SetShowFXWindows(value);
-         */
-    }
-    
-    bool IsShowFXWindows()
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            return zones_[zoneName]->IsShowFXWindows();
-         */
-        
-        return false;
     }
     
     void Init()
@@ -596,42 +666,9 @@ public:
          */
     }
     
-    /*
-    void SetContext()
-    {
-        for(auto const& [name, zone] : zones_)
-            zone->SetContext();
-    }
-    */
+
     
-   
-    void SetShift(bool value)
-    {
-        /*
-        zones_[zoneName]->SetShift(value);
-        */
-    }
-    
-    void SetOption(bool value)
-    {
-        /*
-        zones_[zoneName]->SetOption(value);
-         */
-    }
-    
-    void SetControl(bool value)
-    {
-        /*
-        zones_[zoneName]->SetControl(value);
-         */
-    }
-    
-    void SetAlt(bool value)
-    {
-        /*
-        zones_[zoneName]->SetAlt(value);
-         */
-    }
+
 
     void PinSelectedTracks()
     {
@@ -652,41 +689,6 @@ public:
     
     
     
-    MediaTrack* GetTrack(Widget* widget)
-    {
-        return nullptr;
-    }
-    
-    vector<MediaTrack*>& GetTracks(Widget* widget)
-    {
-        vector<MediaTrack*> temp;
-        
-        return temp;
-    }
-    
-    int GetFXIndex(Widget* widget)
-    {
-        return 0;
-    }
-    
-    int GetFXParamIndex(Widget* widget)
-    {
-        return 0;
-    }
-    
-    int GetChannel(Widget* widget)
-    {
-        return 0;
-    }
-    
-    string GetCommandString(Widget* widget)
-    {
-        return "";
-    }
-    
-    // Widgets ->  Actions
-    void RequestActionUpdate(Widget* widget) {}
-    void DoAction(Widget* widget, double value) {}
 };
 
 
