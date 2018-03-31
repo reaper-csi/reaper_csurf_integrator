@@ -210,7 +210,7 @@ class DisplayUpper_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
     
 public:
-    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {
@@ -271,7 +271,7 @@ class DisplayLower_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
 
 public:
-    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, string GUID, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string suffix, int slotIndex) : Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
     
     void SetValue(string displayText) override
     {

@@ -213,7 +213,7 @@ private:
     string role_ = "";
 
 public:
-    Widget(string role) : role_(role) {}
+    Widget(string role);
     virtual ~Widget() {};
     
     string GetRole() { return role_; }
@@ -241,7 +241,7 @@ protected:
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string name, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
 
@@ -262,9 +262,15 @@ protected:
     string templateFilename_ = "";
     int numChannels_ = 0;
     bool isBankable_ = true;
-
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), numChannels_(numChannels), isBankable_(isBankable)  {}
+    vector<Widget*> widgets_;
+    vector<vector<Widget*>> channels_;
     
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), numChannels_(numChannels), isBankable_(isBankable)
+    {
+        for(int i = 0; i < numChannels; i++)
+            channels_.push_back(vector<Widget*>());
+    }
+
 public:
     virtual ~RealSurface() {};
     
@@ -273,10 +279,18 @@ public:
     int GetNumChannels() { return numChannels_; }
     bool IsBankable() { return isBankable_; }
     
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
-    virtual void SendMidiMessage(int first, int second, int third) {}
+    virtual void Update() {}
     
-    virtual void RunAndUpdate() {}
+    void AddWidget(Widget* widget)
+    {
+        widgets_.push_back(widget);
+    }
+    
+    void AddWidget(Widget* widget, int channelNum)
+    {
+        if(channelNum >= 0 && channelNum < numChannels_)
+            channels_[channelNum].push_back(widget);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -322,27 +336,32 @@ private:
     }
     
 public:
+    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+
     virtual ~Midi_RealSurface()
     {
         if (midiInput_) delete midiInput_;
         if(midiOutput_) delete midiOutput_;
     }
     
-    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    virtual void Update() override
+    {
+        HandleMidiInput();
+    }
     
     void AddWidgetToMessageMap(string message, Midi_Widget* widget)
     {
         widgetsByMessage_[message] = widget;
     }
     
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage)
     {
         if(midiOutput_)
             midiOutput_->SendMsg(midiMessage, -1);
     }
     
-    virtual void SendMidiMessage(int first, int second, int third) override
+    virtual void SendMidiMessage(int first, int second, int third)
     {
         if(midiOutput_)
             midiOutput_->Send(first, second, third, -1);
@@ -353,11 +372,6 @@ public:
             sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
             DAW::ShowConsoleMsg(buffer);
         }
-    }
-    
-    virtual void RunAndUpdate() override
-    {
-        HandleMidiInput();
     }
 };
 
@@ -713,7 +727,8 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     vector <Page*> pages_;
-    vector<RealSurface*> realSurfaces_;
+    vector<RealSurface*> midi_realSurfaces_;
+    vector<Widget*> allWidgets_;
     map<string, Action*> actions_;
     
     bool isInitialized_ = false;
@@ -721,6 +736,7 @@ private:
     bool VSTMonitor_ = false;
     
     void InitActionDictionary();
+    void InitMidiRealSurface(Midi_RealSurface* surface);
     
     void Init()
     {
@@ -819,9 +835,10 @@ private:
          */
     }
     
-    void AddRealSurface(RealSurface* realSurface)
+    void AddMidiRealSurface(Midi_RealSurface* realSurface)
     {
-        realSurfaces_.push_back(realSurface);
+        InitMidiRealSurface(realSurface);
+        midi_realSurfaces_.push_back(realSurface);
     }
     
     void RunAndUpdate()
@@ -863,6 +880,11 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
+    void AddWidget(Widget* widget)
+    {
+        allWidgets_.push_back(widget);
+    }
+    
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
@@ -877,7 +899,7 @@ public:
     void ReInit()
     {
         pages_.clear();
-        realSurfaces_.clear();
+        midi_realSurfaces_.clear();
         isInitialized_ = false;
         Init();
         isInitialized_ = true;
