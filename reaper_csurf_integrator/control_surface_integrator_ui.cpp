@@ -72,7 +72,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     if(call == CSURF_EXT_RESET)
     {
         if(integrator)
-            integrator->GetManager()->ReInit();
+            integrator->GetManager()->Init();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
@@ -973,7 +973,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
             
             if(integrator)
-                integrator->GetManager()->ReInit();
+                integrator->GetManager()->Init();
         }
         break;
     }

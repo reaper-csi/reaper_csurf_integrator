@@ -16,24 +16,17 @@ class MapTrackAndFXToWidgets  : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
+        MediaTrack* track = page->GetTrack(widget);
        
-    }
+        if(track)
+        {
+            if(1 == DAW::CountSelectedTracks(nullptr))
+                page->MapTrackAndFXToWidgets(track);
+            else
+                page->UnmapWidgetsFromTrack(track);
+        }
 
-    
-    /*
-     public:
-     
-     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-     {
-     if(GetTrack(zoneName))
-     {
-     if(1 == DAW::CountSelectedTracks(nullptr))
-     GetLayer()->MapTrackAndFXToWidgets(GetTrack(zoneName), zoneName, surfaceName);
-     else
-     GetLayer()->UnmapWidgetsFromTrack(GetTrack(zoneName), zoneName, surfaceName);
-     }
-     }
-     */
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,19 +36,8 @@ class SetShowFXWindows : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->SetShowFXWindows(value);
     }
-
-    /*
-     public:
-     
-     virtual double GetValue (string zoneName, string surfaceName, string widgetName) override { return GetLayer()->IsShowFXWindows(zoneName, surfaceName); }
-     
-     virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-     {
-     GetLayer()->SetShowFXWindows(zoneName, surfaceName, value);
-     }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,17 +47,8 @@ class Shift : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->SetShift(value);
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->SetShift(zoneName, surfaceName, value);
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,17 +58,8 @@ class Option : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->SetOption(value);
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->SetOption(zoneName, surfaceName, value);
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,17 +69,8 @@ class Control : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->SetControl(value);
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->SetControl(zoneName, surfaceName, value);
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,17 +80,8 @@ class Alt : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+                page->SetAlt(value);
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->SetAlt(zoneName, surfaceName, value);
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,20 +179,8 @@ class TrackBank : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->AdjustTrackBank(value);
     }
-
-    /*
-private:
-    int stride_ = 0;
-    
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->AdjustTrackBank(zoneName, surfaceName, stride_);
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,17 +190,8 @@ class PinSelectedTracks : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->PinSelectedTracks();
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->PinSelectedTracks();
-    }
-     */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,17 +201,8 @@ class UnpinSelectedTracks : public Action
 public:
     void Do(Widget* widget, Page* page, double value) override
     {
-        
+        page->UnpinSelectedTracks();
     }
-
-    /*
-public:
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        GetLayer()->UnpinSelectedTracks();
-    }
-     */
 };
 
 
