@@ -67,30 +67,30 @@ struct FXWindow
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXTemplateEntry
+struct TemplateEntry
 {
-    string widgetName;
-    string paramName;
+    string widgetRole;
+    vector<string> params;
     
-    FXTemplateEntry(string aWidgetName, string aParamName) : widgetName(aWidgetName), paramName(aParamName) {}
+    TemplateEntry(string aWidgetRole, vector<string> aParamsCollcrion) : widgetRole(aWidgetRole), params(aParamsCollcrion) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXTemplate
+struct Template
 {
 private:
     string name;
-    vector<FXTemplateEntry> entries_;
+    vector<TemplateEntry> entries_;
     
 public:
-    FXTemplate(string aName) : name(aName) {}
+    Template(string aName) : name(aName) {}
     
     string GetName() { return name; }
-    vector<FXTemplateEntry>& GetTemplateEntries() { return entries_; }
+    vector<TemplateEntry>& GetTemplateEntries() { return entries_; }
     
-    void AddEntry(string widgetName, string paramName)
+    void AddEntry(string widgetRole, vector<string> params)
     {
-        entries_.push_back(FXTemplateEntry(widgetName, paramName));
+        entries_.push_back(TemplateEntry(widgetRole, params));
     }
 };
 
@@ -245,7 +245,7 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-
+    Midi_RealSurface* GetSurface() { return surface_; }
     string GetName() override { return GetRole() + suffix_; }
     string GetPath() override ;
     
@@ -397,7 +397,7 @@ private:
     
     map<string, string> actionTemplateDirectory_;
     map<string, string> fxTemplateDirectory_;
-    map<string, map<string, FXTemplate *>> fxTemplates_;
+    map<string, map<string, Template *>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
 
     bool zoom_ = false;
@@ -409,7 +409,6 @@ private:
     bool option_ = false;
     bool control_ = false;
     bool alt_ = false;
-    
     
     string CurrentModifers()
     {
@@ -450,8 +449,15 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget) {}
-    void DoAction(Widget* widget, double value) {}
+    void RequestActionUpdate(Widget* widget)
+    {
+        
+    }
+    
+    void DoAction(Widget* widget, double value)
+    {
+        
+    }
     
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
@@ -500,6 +506,9 @@ public:
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
+        
+        
+        // GAW TBD build the Templates right here, right now, no need to defer anymore !
         
         actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
         fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
@@ -1229,7 +1238,7 @@ class Zone
     vector<OldRealSurface*> realSurfaces_;
     map<string, string> actionTemplateDirectory_;
     map<string, string> fxTemplateDirectory_;
-    map<string, map<string, FXTemplate *>> fxTemplates_;
+    map<string, map<string, Template *>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
@@ -1270,7 +1279,7 @@ class Zone
     
     void InitFXMaps(OldRealSurface* surface)
     {
-        FXTemplate* fxTemplate = nullptr;
+        Template* fxTemplate = nullptr;
         string templateDirectory = fxTemplateDirectory_[surface->GetName()];
         
         for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
@@ -1281,7 +1290,7 @@ class Zone
                 
                 string firstLine;
                 getline(fxTemplateFile, firstLine);
-                fxTemplate = new FXTemplate(firstLine);
+                fxTemplate = new Template(firstLine);
                 
                 for (string line; getline(fxTemplateFile, line) ; )
                 {
@@ -1298,7 +1307,7 @@ class Zone
                             if(fxTemplate != nullptr)
                             {
                                 replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
-                                fxTemplate->AddEntry(tokens[0], tokens[1]);
+                                fxTemplate->AddEntry(tokens[0], {tokens[1]});
                             }
                         }
                     }

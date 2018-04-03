@@ -65,7 +65,7 @@ void Manager::InitActionDictionary()
     actions_["Stop"] = new Stop();
     actions_["Record"] = new Record();
     actions_["RepeatingArrow"] = new RepeatingArrow();
-    actions_["TrackSelect"] = new Record();
+    actions_["TrackSelect"] = new TrackSelect();
     actions_["TrackUniqueSelect"] = new TrackUniqueSelect();
     actions_["TrackRangeSelect"] = new TrackRangeSelect();
     actions_["TrackRecordArm"] = new TrackRecordArm();
@@ -691,16 +691,16 @@ void Zone::MapFXToWidgets(MediaTrack *track, OldRealSurface* surface)
         
         if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
         {
-            FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
+            Template* map = fxTemplates_[surface->GetName()][fxName];
             
             for(auto mapEntry : map->GetTemplateEntries())
             {
-                if(mapEntry.paramName == GainReductionDB)
-                    surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                if(mapEntry.params[0] == GainReductionDB)
+                    surface->SetWidgetFXGUID(mapEntry.widgetRole, trackGUID + fxGUID);
                 else
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
-                        if(mapEntry.paramName == fxParamName)
-                            surface->SetWidgetFXGUID(mapEntry.widgetName, trackGUID + fxGUID);
+                        if(mapEntry.params[0] == fxParamName)
+                            surface->SetWidgetFXGUID(mapEntry.widgetRole, trackGUID + fxGUID);
             }
             
             AddFXWindow(FXWindow(track, fxGUID));
@@ -729,22 +729,22 @@ void Zone::MapFXActions(string trackGUID, OldRealSurface* surface)
         
         if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
         {
-            FXTemplate* map = fxTemplates_[surface->GetName()][fxName];
+            Template* map = fxTemplates_[surface->GetName()][fxName];
             DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
             string actionBaseAddress = trackGUID + fxGUID + GetName() + surface->GetName();
             
             for(auto mapEntry : map->GetTemplateEntries())
             {
-                if(mapEntry.paramName == GainReductionDB)
-                    GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackGainReductionMeter_Action(layer, trackGUID, fxGUID));
+                if(mapEntry.params[0] == GainReductionDB)
+                    GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetRole, new TrackGainReductionMeter_Action(layer, trackGUID, fxGUID));
                 else
                 {
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                     {
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         
-                        if(mapEntry.paramName == fxParamName)
-                            GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetName, new TrackFX_Action(layer, trackGUID, fxGUID, j));
+                        if(mapEntry.params[0] == fxParamName)
+                            GetLayer()->AddAction(actionBaseAddress + mapEntry.widgetRole, new TrackFX_Action(layer, trackGUID, fxGUID, j));
                     }
                 }
             }
