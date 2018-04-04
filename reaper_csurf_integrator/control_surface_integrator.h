@@ -396,7 +396,7 @@ private:
     vector<MediaTrack*> touchedTracks_;
     
     map<string, map<string, vector<string>>> actionTemplates_;
-    map<string, map<string, Template *>> fxTemplates_;
+    map<string, map<string, map<string, vector<string>>>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
 
     bool zoom_ = false;
@@ -543,8 +543,6 @@ public:
     
     void InitFXTemplates(Midi_RealSurface* surface, string templateDirectory)
     {
-        Template* fxTemplate = nullptr;
-        
         for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
         {
             if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
@@ -553,7 +551,8 @@ public:
                 
                 string firstLine;
                 getline(fxTemplateFile, firstLine);
-                fxTemplate = new Template(firstLine);
+                
+                fxTemplates_[firstLine][surface->GetName()] = map<string, vector<string>>();
                 
                 for (string line; getline(fxTemplateFile, line) ; )
                 {
@@ -569,16 +568,11 @@ public:
 
                         if(tokens.size() == 2)
                         {
-                            if(fxTemplate != nullptr)
-                            {
-                                replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
-                                fxTemplate->AddEntry(tokens[0], {tokens[1]});
-                            }
+                            replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
+                            fxTemplates_[firstLine][surface->GetName()][tokens[0]].push_back(tokens[1]);
                         }
                     }
                 }
-                
-                fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
             }
         }
     }
