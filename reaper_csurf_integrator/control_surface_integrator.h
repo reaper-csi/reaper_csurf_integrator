@@ -353,8 +353,8 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(Widget* widget, Page* page) {}
-    virtual void Do(Widget* widget, Page* page, double value) {}
+    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> params) {}
+    virtual void Do(Widget* widget, Page* page, vector<string> params, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
