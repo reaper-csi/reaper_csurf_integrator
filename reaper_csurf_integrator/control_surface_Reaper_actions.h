@@ -30,12 +30,12 @@ private:
     }
     
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetToggleCommandState(CommandId(manager->GetCommandString(widgetGUID))));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //DAW::SendCommandMessage(CommandId(manager->GetCommandString(widgetGUID)));
     }
@@ -46,13 +46,13 @@ class TrackFX : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {   
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         double min, max = 0;
         //manager->SetWidgetValue(widgetGUID, DAW::TrackFX_GetParam(manager->GetTrack(widgetGUID), manager->GetFXIndex(widgetGUID), manager->GetFXParamIndex(widgetGUID), &min, &max));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //DAW::TrackFX_SetParam(manager->GetTrack(widgetGUID), manager->GetFXIndex(widgetGUID), manager->GetFXParamIndex(widgetGUID), value);
     }
@@ -63,12 +63,12 @@ class TrackVolume : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, volToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_VOL")));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //MediaTrack* track =manager->GetTrack(widgetGUID);
         //DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
@@ -80,12 +80,12 @@ class TrackPan : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, panToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_PAN")));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //MediaTrack* track = manager->GetTrack(widgetGUID);
         //DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
@@ -97,12 +97,12 @@ class TrackPanWidth : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, panToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_WIDTH")));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //DAW::CSurf_OnWidthChange(manager->GetTrack(widgetGUID), normalizedToPan(value), false);
     }
@@ -113,7 +113,7 @@ class TrackNameDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         string trackName = "";
@@ -132,7 +132,7 @@ class TrackVolumeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);manager->GetTrack(widgetGUID);
         char trackVolume[128];
@@ -146,7 +146,7 @@ class TrackPanDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         bool left = false;
         
@@ -198,7 +198,7 @@ class TrackPanWidthDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         bool reversed = false;
         
@@ -230,7 +230,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -241,7 +241,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value)
+    void Do(Widget* widget, Page* page, vector<string> params, double value)
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -252,7 +252,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         int playState = DAW::GetPlayState();
         if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
@@ -261,7 +261,7 @@ public:
         //manager->SetWidgetValue(widgetGUID, playState);
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -272,7 +272,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         int stopState = DAW::GetPlayState();
         if(stopState == 0 || stopState == 2 || stopState == 6) // stopped or paused or paused whilst recording
@@ -282,7 +282,7 @@ public:
         //manager->SetWidgetValue(widgetGUID, stopState);
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         DAW::CSurf_OnStop();
     }
@@ -293,7 +293,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         int recordState = DAW::GetPlayState();
         if(recordState == 5 || recordState == 6) // recording or paused whilst recording
@@ -303,7 +303,7 @@ public:
         //manager->SetWidgetValue(widgetGUID, recordState);
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         DAW::CSurf_OnRecord();
     }
@@ -346,12 +346,12 @@ class TrackSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
@@ -363,12 +363,12 @@ class TrackUniqueSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::SetOnlyTrackSelected(track);
@@ -381,12 +381,12 @@ class TrackRangeSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
     }
 
-    virtual void Do(Widget* widget, Page* page, double value) override
+    virtual void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         vector<MediaTrack*> tracks; //manager->GetSurfaceTracks(widgetGUID);
@@ -426,12 +426,12 @@ class TrackRecordArm : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_RECARM"));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
@@ -443,12 +443,12 @@ class TrackMute : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "B_MUTE"));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
@@ -460,12 +460,12 @@ class TrackSolo : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SOLO"));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
@@ -477,7 +477,7 @@ class TrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         //manager->SetTouchState(manager->GetTrack(widgetGUID), value == 0 ? false : true);
     }
@@ -555,12 +555,12 @@ class GlobalAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetGlobalAutomationOverride());
     }
     
-    void Do(Widget* widget, Page* page, double autoMode) override
+    void Do(Widget* widget, Page* page, vector<string> params, double autoMode) override
     {
          DAW::SetGlobalAutomationOverride(autoMode);
     }
@@ -571,7 +571,7 @@ class TrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //vector<MediaTrack*> tracks = manager->GetSurfaceTracks(widgetGUID);
         
@@ -580,7 +580,7 @@ public:
                 //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(tracks[i], "I_AUTOMODE"));
     }
     
-    virtual void Do(Widget* widget, Page* page, double autoMode) override
+    virtual void Do(Widget* widget, Page* page, vector<string> params, double autoMode) override
     {
         DAW::SetAutomationMode(autoMode, true);
     }
@@ -591,12 +591,12 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //manager->SetWidgetValue(widgetGUID, DAW::GetSetRepeatEx(nullptr, -1));
     }
     
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
@@ -607,7 +607,7 @@ class TrackOutputMeter : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         //if(DAW::GetPlayState() & 0x01) // if playing
             //manager->SetWidgetValue(widgetGUID, VAL2DB(DAW::Track_GetPeakInfo(manager->GetTrack(widgetGUID), manager->GetChannel(widgetGUID))));
@@ -621,7 +621,7 @@ class TrackGainReductionMeter : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page) override
+    void RequestUpdate(Widget* widget, Page* page, vector<string> params) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
         {

@@ -14,7 +14,7 @@ class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         MediaTrack* track = page->GetTrack(widget);
        
@@ -34,7 +34,7 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->SetShowFXWindows(value);
     }
@@ -45,7 +45,7 @@ class Shift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->SetShift(value);
     }
@@ -56,7 +56,7 @@ class Option : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->SetOption(value);
     }
@@ -67,7 +67,7 @@ class Control : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->SetControl(value);
     }
@@ -78,7 +78,7 @@ class Alt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
                 page->SetAlt(value);
     }
@@ -89,7 +89,7 @@ class Latched : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         
     }
@@ -126,7 +126,7 @@ class LatchedZoom : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         
     }
@@ -146,7 +146,7 @@ class LatchedScrub : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         
     }
@@ -166,7 +166,7 @@ class NextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         manager->NextPage();
     }
@@ -177,7 +177,7 @@ class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->AdjustTrackBank(value);
     }
@@ -188,7 +188,7 @@ class PinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->PinSelectedTracks();
     }
@@ -199,7 +199,7 @@ class UnpinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, double value) override
+    void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
         page->UnpinSelectedTracks();
     }
