@@ -524,7 +524,7 @@ public:
                 string firstLine;
                 getline(fxTemplateFile, firstLine);
                 
-                fxTemplates_[firstLine][surface->GetName()] = map<string, vector<string>>();
+                fxTemplates_[surface->GetName()][firstLine] = map<string, vector<string>>();
                 
                 for (string line; getline(fxTemplateFile, line) ; )
                 {
@@ -541,7 +541,12 @@ public:
                         if(tokens.size() == 2)
                         {
                             replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
-                            fxTemplates_[firstLine][surface->GetName()][tokens[0]].push_back(tokens[1]);
+                            
+                            if(tokens[1] == "GainReductionDB")
+                                fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("GainReductionDB");
+                            else
+                                fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("TrackFX");
+                            fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(tokens[1]);
                         }
                     }
                 }
