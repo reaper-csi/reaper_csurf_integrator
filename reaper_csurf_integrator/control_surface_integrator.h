@@ -67,34 +67,6 @@ struct FXWindow
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct TemplateEntry
-{
-    string widgetRole;
-    vector<string> params;
-    
-    TemplateEntry(string aWidgetRole, vector<string> aParamsCollcrion) : widgetRole(aWidgetRole), params(aParamsCollcrion) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct Template
-{
-private:
-    string name;
-    vector<TemplateEntry> entries_;
-    
-public:
-    Template(string aName) : name(aName) {}
-    
-    string GetName() { return name; }
-    vector<TemplateEntry>& GetTemplateEntries() { return entries_; }
-    
-    void AddEntry(string widgetRole, vector<string> params)
-    {
-        entries_.push_back(TemplateEntry(widgetRole, params));
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -904,6 +876,33 @@ public:
 
 
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct TemplateEntry
+{
+    string widgetRole;
+    vector<string> params;
+    
+    TemplateEntry(string aWidgetRole, vector<string> aParamsCollcrion) : widgetRole(aWidgetRole), params(aParamsCollcrion) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct Template
+{
+private:
+    string name;
+    vector<TemplateEntry> entries_;
+    
+public:
+    Template(string aName) : name(aName) {}
+    
+    string GetName() { return name; }
+    vector<TemplateEntry>& GetTemplateEntries() { return entries_; }
+    
+    void AddEntry(string widgetRole, vector<string> params)
+    {
+        entries_.push_back(TemplateEntry(widgetRole, params));
+    }
+};
 
 
 
