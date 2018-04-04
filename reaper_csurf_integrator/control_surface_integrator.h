@@ -44,7 +44,6 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-
 const string Page_ = "Page";
 
 const string Layer_ = "Layer";
@@ -179,6 +178,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Midi_RealSurface;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -191,15 +192,13 @@ public:
     
     string GetRole() { return role_; }
     virtual string GetName() { return GetRole(); }
-    virtual string GetPath() { return GetRole(); }
+    virtual Midi_RealSurface* GetSurface() { return nullptr; }
 
     void RequestUpdate();
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_RealSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -217,9 +216,8 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    Midi_RealSurface* GetSurface() { return surface_; }
     string GetName() override { return GetRole() + suffix_; }
-    string GetPath() override ;
+    Midi_RealSurface* GetSurface() override { return surface_; }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
@@ -233,12 +231,12 @@ class RealSurface
 protected:
     const string name_ = "";
     string templateFilename_ = "";
-    int numChannels_ = 0;
+
     bool isBankable_ = true;
     vector<Widget*> widgets_;
     vector<vector<Widget*>> channels_;
     
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), numChannels_(numChannels), isBankable_(isBankable)
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), isBankable_(isBankable)
     {
         for(int i = 0; i < numChannels; i++)
             channels_.push_back(vector<Widget*>());
@@ -249,8 +247,8 @@ public:
     
     string GetName() const { return name_; }
     string GetTemplateFilename() const { return templateFilename_; }
-    int GetNumChannels() { return numChannels_; }
-    int GetNumBankableChannels() { return isBankable_ ? numChannels_ : 0; }
+    int GetNumChannels() { return channels_.size(); }
+    int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
     bool IsBankable() { return isBankable_; }
     
     virtual void Update() {}
@@ -262,7 +260,7 @@ public:
     
     void AddWidget(Widget* widget, int channelNum)
     {
-        if(channelNum >= 0 && channelNum < numChannels_)
+        if(channelNum >= 0 && channelNum < channels_.size())
             channels_[channelNum].push_back(widget);
     }
 };
