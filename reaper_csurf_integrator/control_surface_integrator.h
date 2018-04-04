@@ -395,8 +395,7 @@ private:
     int numBankableChannels_ = 0;
     vector<MediaTrack*> touchedTracks_;
     
-    map<string, string> actionTemplateDirectory_;
-    map<string, string> fxTemplateDirectory_;
+    map<string, map<string, vector<string>>> actionTemplates_;
     map<string, map<string, Template *>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
 
@@ -506,16 +505,82 @@ public:
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
-        
-        
-        // GAW TBD build the Templates right here, right now, no need to defer anymore !
-        
-        actionTemplateDirectory_[surface->GetName()] = resourcePath + "axt/" + actionTemplateDirectory;
-        fxTemplateDirectory_[surface->GetName()] = resourcePath + "fxt/" + fxTemplateDirectory;
-        
+   
+        InitActionTemplate(surface, resourcePath + "axt/" + actionTemplateDirectory);
+        InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         numBankableChannels_ += surface->GetNumBankableChannels();
-        
         midi_realSurfaces_.push_back(surface);
+    }
+    
+    void InitActionTemplate(Midi_RealSurface* surface, string templateDirectory)
+    {
+        for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
+        {
+            if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+            {
+                ifstream actionTemplateFile(string(templateDirectory + "/" + filename));
+
+                for (string line; getline(actionTemplateFile, line) ; )
+                {
+                    if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                    {
+                        istringstream iss(line);
+                        vector<string> tokens;
+                        string token;
+                        while (iss >> quoted(token))
+                            tokens.push_back(token);
+                        
+                        vector<string> params;
+                        for(int i = 1; i < tokens.size(); i++)
+                            params.push_back(tokens[i]);
+                        
+                        actionTemplates_[surface->GetName()][tokens[0]] = params;
+                    }
+                }
+            }
+        }
+    }
+    
+    void InitFXTemplates(Midi_RealSurface* surface, string templateDirectory)
+    {
+        Template* fxTemplate = nullptr;
+        
+        for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
+        {
+            if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+            {
+                ifstream fxTemplateFile(string(templateDirectory + "/" + filename));
+                
+                string firstLine;
+                getline(fxTemplateFile, firstLine);
+                fxTemplate = new Template(firstLine);
+                
+                for (string line; getline(fxTemplateFile, line) ; )
+                {
+                    if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                    {
+                        istringstream iss(line);
+                        vector<string> tokens;
+                        string token;
+                        while (iss >> quoted(token))
+                            tokens.push_back(token);
+                        
+                        // GAW TBD fix this mess, the first token is the Widget role, the reat is the FX param, possibly with spaces.
+
+                        if(tokens.size() == 2)
+                        {
+                            if(fxTemplate != nullptr)
+                            {
+                                replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
+                                fxTemplate->AddEntry(tokens[0], {tokens[1]});
+                            }
+                        }
+                    }
+                }
+                
+                fxTemplates_[surface->GetName()][fxTemplate->GetName()] = fxTemplate;
+            }
+        }
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
