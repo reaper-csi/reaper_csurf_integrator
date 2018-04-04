@@ -53,6 +53,7 @@ void Manager::InitActionDictionary()
 {
     actions_["Reaper"] = new ReaperAction();
     actions_["TrackFX"] = new TrackFX();
+    actions_["GainReductionDB"] = new TrackGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
     actions_["TrackPan"] = new TrackPan();
     actions_["TrackPanWidth"] = new TrackPanWidth();
