@@ -145,10 +145,10 @@ void Manager::Init()
             }
             else if(tokens[0] == Page_)
             {
-                if(tokens.size() != 2)
+                if(tokens.size() != 3)
                     continue;
                 
-                currentPage = new Page(tokens[1]);
+                currentPage = new Page(tokens[1], tokens[2] == "Yes" ? true : false);
                 pages_.push_back(currentPage);
                 
             }
