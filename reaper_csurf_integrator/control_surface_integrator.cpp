@@ -14,12 +14,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::RequestUpdate()
 {
-    Manager::Instance().RequestActionUpdate(GetRole(), this);
-}
-
-void Widget::RequestUpdate(string suffix)
-{
-    Manager::Instance().RequestActionUpdate(GetRole() + suffix, this);
+    Manager::Instance().RequestActionUpdate(GetSurface(), this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
