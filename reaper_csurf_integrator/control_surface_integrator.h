@@ -434,14 +434,16 @@ public:
     // Widgets -> Actions
     void RequestActionUpdate(Widget* widget)
     {
-        string target = widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+        string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
         
     }
     
     void DoAction(Widget* widget, double value)
     {
-        string target = widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+        string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
 
+        
+        
     }
     
     bool IsZoom() { return zoom_; }
@@ -683,11 +685,10 @@ public:
     
     void Init()
     {
-        //SetContext();
-        /*
-        for(auto [name, zone] : zones_)
-            zone->Init();
-        */
+        // GAW TBD -- build the maps using the templates and real surface widgets
+
+        // GAW TBD -- set the widget / Track contexts
+        
         SetPinnedTracks();
     }
     
