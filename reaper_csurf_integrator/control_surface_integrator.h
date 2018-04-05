@@ -228,6 +228,7 @@ protected:
     bool isBankable_ = true;
     vector<Widget*> widgets_;
     vector<vector<Widget*>> channels_;
+    map<Widget*, string> suffixes_;
     
     RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), isBankable_(isBankable)
     {
@@ -244,6 +245,14 @@ public:
     int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
     bool IsBankable() { return isBankable_; }
     
+    string GetWidgetSuffix(Widget* widget)
+    {
+        if(suffixes_.count(widget) > 0)
+            return suffixes_[widget];
+        
+        return "";
+    }
+    
     void RequestUpdate()
     {
         for(auto widget : widgets_)
@@ -257,12 +266,16 @@ public:
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
+        suffixes_[widget] = "";
     }
     
     void AddWidget(Widget* widget, int channelNum)
     {
         if(channelNum >= 0 && channelNum < channels_.size())
+        {
             channels_[channelNum].push_back(widget);
+            suffixes_[widget] = to_string(channelNum + 1);
+        }
     }
 };
 
@@ -419,12 +432,12 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget, string target)
+    void RequestActionUpdate(string target, Widget* widget)
     {
         
     }
     
-    void DoAction(Widget* widget, double value)
+    void DoAction(string target, Widget* widget, double value)
     {
         
     }
@@ -839,8 +852,8 @@ public:
     }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget, string target) { pages_[currentPageIndex_]->RequestActionUpdate(widget, target); }
-    void DoAction(Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(widget, value); }
+    void RequestActionUpdate(Widget* widget, string target) { pages_[currentPageIndex_]->RequestActionUpdate(target, widget); }
+    void DoAction(RealSurface* surface, Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(surface->GetWidgetSuffix(widget), widget, value); }
 };
 
 
