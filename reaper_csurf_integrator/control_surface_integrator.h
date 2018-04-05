@@ -852,7 +852,7 @@ public:
     }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget, string target) { pages_[currentPageIndex_]->RequestActionUpdate(target, widget); }
+    void RequestActionUpdate(string target, Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(target, widget); }
     void DoAction(RealSurface* surface, Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(surface->GetWidgetSuffix(widget), widget, value); }
 };
 
