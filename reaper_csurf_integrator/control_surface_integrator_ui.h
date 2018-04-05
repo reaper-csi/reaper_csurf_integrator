@@ -16,17 +16,13 @@ class CSurfIntegrator : public IReaperControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfManager* manager_ = nullptr;
-    
     WDL_String descspace;
     char configtmp[1024];
     
 public:
-    virtual ~CSurfIntegrator();
+    ~CSurfIntegrator() {}
     
     CSurfIntegrator();
-
-    CSurfManager* GetManager() { return manager_; }
     
     virtual void OnTrackSelection(MediaTrack *trackid) override;
     virtual int Extended(int call, void *parm1, void *parm2, void *parm3) override;
