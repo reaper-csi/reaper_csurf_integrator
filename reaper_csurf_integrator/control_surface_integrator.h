@@ -49,11 +49,6 @@ const string Page_ = "Page";
 const string Layer_ = "Layer";
 const string Zone_ = "Zone";
 const string VirtualSurface_ = "VirtualSurface";
-
-
-class Manager;
-static Manager* manager = nullptr;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -753,6 +748,12 @@ private:
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
+    Manager()
+    {
+        InitActionDictionary();
+        midiIOManager_ = new MidiIOManager();
+    }
+    
     void InitActionDictionary();
     void InitMidiRealSurface(Midi_RealSurface* surface);
     
@@ -773,13 +774,12 @@ private:
     }
     
 public:
-    virtual ~Manager() {};
+    ~Manager() {};
     
-    Manager()
+    static auto Instance()
     {
-        manager = this;
-        InitActionDictionary();
-        midiIOManager_ = new MidiIOManager();
+        static Manager manager;
+        return manager;
     }
     
     void Init();

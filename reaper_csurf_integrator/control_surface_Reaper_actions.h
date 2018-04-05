@@ -372,7 +372,7 @@ public:
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::SetOnlyTrackSelected(track);
-        manager->OnTrackSelection(track);
+        Manager::Instance().OnTrackSelection(track);
     }
 };
 
@@ -416,7 +416,7 @@ public:
         for(int i = lowerBound; i <= upperBound; i++)
         {
             DAW::CSurf_SetSurfaceSelected(tracks[i], DAW::CSurf_OnSelectedChange(tracks[i], 1), NULL);
-            manager->OnTrackSelection(tracks[i]);
+            Manager::Instance().OnTrackSelection(tracks[i]);
         }
     }
 };

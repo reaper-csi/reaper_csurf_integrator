@@ -14,12 +14,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Widget::Widget(string role) : role_(role)
 {
-    manager->AddWidget(this);
+    Manager::Instance().AddWidget(this);
 }
 
 void Widget::RequestUpdate()
 {
-    manager->RequestActionUpdate(this);
+    Manager::Instance().RequestActionUpdate(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ void Manager::Init()
                 
                 AddMidiRealSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
             }
-            else if(tokens[0] == Page_)
+            else if(tokens[0] == Layer_)
             {
                 if(tokens.size() != 2)
                     continue;
