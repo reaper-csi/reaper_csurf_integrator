@@ -375,7 +375,7 @@ class Page
 {
 private:
     string name_ = "";
-    vector<Midi_RealSurface*> midi_realSurfaces_;
+    vector<RealSurface*> realSurfaces_;
     int numBankableChannels_ = 0;
     vector<MediaTrack*> touchedTracks_;
     
@@ -485,7 +485,7 @@ public:
         alt_ = value;
     }
     
-    void AddSurface(Midi_RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
+    void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
@@ -493,10 +493,10 @@ public:
         InitActionTemplate(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         numBankableChannels_ += surface->GetNumBankableChannels();
-        midi_realSurfaces_.push_back(surface);
+        realSurfaces_.push_back(surface);
     }
     
-    void InitActionTemplate(Midi_RealSurface* surface, string templateDirectory)
+    void InitActionTemplate(RealSurface* surface, string templateDirectory)
     {
         for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
         {
@@ -525,7 +525,7 @@ public:
         }
     }
     
-    void InitFXTemplates(Midi_RealSurface* surface, string templateDirectory)
+    void InitFXTemplates(RealSurface* surface, string templateDirectory)
     {
         for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
         {
