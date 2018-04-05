@@ -182,14 +182,14 @@ private:
     string role_ = "";
 
 public:
-    Widget(string role);
+    Widget(string role) : role_(role) {}
     virtual ~Widget() {};
     
     string GetRole() { return role_; }
-    virtual string GetName() { return GetRole(); }
     virtual Midi_RealSurface* GetSurface() { return nullptr; }
 
     void RequestUpdate();
+    void RequestUpdate(string suffix);
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
 };
@@ -199,7 +199,6 @@ class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string suffix_ = "";
     Midi_RealSurface* surface_ = nullptr;
     
 protected:
@@ -208,10 +207,9 @@ protected:
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string role, string suffix, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface), suffix_(suffix),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    string GetName() override { return GetRole() + suffix_; }
     Midi_RealSurface* GetSurface() override { return surface_; }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
@@ -246,7 +244,15 @@ public:
     int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
     bool IsBankable() { return isBankable_; }
     
-    virtual void Update() {}
+    void RequestUpdate()
+    {
+        for(auto widget : widgets_)
+            widget->RequestUpdate();
+        
+        for(int i = 0; i < channels_.size(); i++)
+            for(auto widget : channels_[i])
+                widget->RequestUpdate(to_string(i + 1));
+    }
     
     void AddWidget(Widget* widget)
     {
@@ -413,7 +419,7 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget)
+    void RequestActionUpdate(Widget* widget, string target)
     {
         
     }
@@ -742,7 +748,6 @@ private:
     map<string, Action*> actions_;
     vector <Page*> pages_;
     vector<Midi_RealSurface*> midi_realSurfaces_;
-    vector<Widget*> allWidgets_;
     
     bool isInitialized_ = false;
     int currentPageIndex_ = 0;
@@ -791,11 +796,6 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
-    void AddWidget(Widget* widget)
-    {
-        allWidgets_.push_back(widget);
-    }
-    
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
@@ -806,8 +806,8 @@ public:
     {
         for(auto surface : midi_realSurfaces_)
             surface->HandleMidiInput();
-        for(auto widget : allWidgets_)
-            widget->RequestUpdate();
+        for(auto surface : midi_realSurfaces_)
+            surface->RequestUpdate();
     }
     
     void NextPage()
@@ -839,7 +839,7 @@ public:
     }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(widget); }
+    void RequestActionUpdate(Widget* widget, string target) { pages_[currentPageIndex_]->RequestActionUpdate(widget, target); }
     void DoAction(Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(widget, value); }
 };
 
