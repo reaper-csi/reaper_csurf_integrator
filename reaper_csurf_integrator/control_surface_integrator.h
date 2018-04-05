@@ -370,6 +370,7 @@ class Page
 {
 private:
     string name_ = "";
+    bool followMCP_ = true;
     vector<RealSurface*> realSurfaces_;
     int numBankableChannels_ = 0;
     vector<MediaTrack*> touchedTracks_;
@@ -422,7 +423,7 @@ private:
     }
     
 public:
-    Page(string name) : name_(name) {}
+    Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     
     string GetName() { return name_; }
     
