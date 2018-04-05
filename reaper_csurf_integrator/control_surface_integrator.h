@@ -427,15 +427,15 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(RealSurface* surface, Widget* widget)
+    void RequestActionUpdate(Widget* widget)
     {
-        string target = widget->GetRole() + surface->GetWidgetSuffix(widget);
+        string target = widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
         
     }
     
-    void DoAction(RealSurface* surface, Widget* widget, double value)
+    void DoAction(Widget* widget, double value)
     {
-        string target = widget->GetRole() + surface->GetWidgetSuffix(widget);
+        string target = widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
 
     }
     
@@ -849,8 +849,8 @@ public:
     }
     
     // Widgets -> Actions
-    void RequestActionUpdate(RealSurface* surface, Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(surface, widget); }
-    void DoAction(RealSurface* surface, Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(surface, widget, value); }
+    void RequestActionUpdate(Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(widget); }
+    void DoAction(Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(widget, value); }
 };
 
 
