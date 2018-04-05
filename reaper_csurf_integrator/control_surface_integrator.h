@@ -45,10 +45,6 @@ const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 const string Page_ = "Page";
-
-const string Layer_ = "Layer";
-const string Zone_ = "Zone";
-const string VirtualSurface_ = "VirtualSurface";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Structs
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,7 +185,6 @@ public:
     virtual Midi_RealSurface* GetSurface() { return nullptr; }
 
     void RequestUpdate();
-    void RequestUpdate(string suffix);
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
 };
@@ -258,9 +253,9 @@ public:
         for(auto widget : widgets_)
             widget->RequestUpdate();
         
-        for(int i = 0; i < channels_.size(); i++)
-            for(auto widget : channels_[i])
-                widget->RequestUpdate(to_string(i + 1));
+        for(auto channel : channels_)
+            for(auto widget : channel)
+                widget->RequestUpdate();
     }
     
     void AddWidget(Widget* widget)
@@ -432,14 +427,16 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(string target, Widget* widget)
+    void RequestActionUpdate(RealSurface* surface, Widget* widget)
     {
+        string target = widget->GetRole() + surface->GetWidgetSuffix(widget);
         
     }
     
-    void DoAction(string target, Widget* widget, double value)
+    void DoAction(RealSurface* surface, Widget* widget, double value)
     {
-        
+        string target = widget->GetRole() + surface->GetWidgetSuffix(widget);
+
     }
     
     bool IsZoom() { return zoom_; }
@@ -852,8 +849,8 @@ public:
     }
     
     // Widgets -> Actions
-    void RequestActionUpdate(string target, Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(target, widget); }
-    void DoAction(RealSurface* surface, Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(surface->GetWidgetSuffix(widget), widget, value); }
+    void RequestActionUpdate(RealSurface* surface, Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(surface, widget); }
+    void DoAction(RealSurface* surface, Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(surface, widget, value); }
 };
 
 
@@ -889,6 +886,10 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+const string Layer_ = "Layer";
+const string Zone_ = "Zone";
+const string VirtualSurface_ = "VirtualSurface";
 
 
 
