@@ -14,12 +14,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::RequestUpdate()
 {
-    Manager::Instance().RequestActionUpdate(this, GetRole());
+    Manager::Instance().RequestActionUpdate(GetRole(), this);
 }
 
 void Widget::RequestUpdate(string suffix)
 {
-    Manager::Instance().RequestActionUpdate(this, GetRole() + suffix);
+    Manager::Instance().RequestActionUpdate(GetRole() + suffix, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
