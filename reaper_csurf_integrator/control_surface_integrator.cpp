@@ -12,14 +12,14 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Widget::Widget(string role) : role_(role)
-{
-    Manager::Instance().AddWidget(this);
-}
-
 void Widget::RequestUpdate()
 {
-    Manager::Instance().RequestActionUpdate(this);
+    Manager::Instance().RequestActionUpdate(this, GetRole());
+}
+
+void Widget::RequestUpdate(string suffix)
+{
+    Manager::Instance().RequestActionUpdate(this, GetRole() + suffix);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,6 @@ void Manager::Init()
 {
     pages_.clear();
     midi_realSurfaces_.clear();
-    allWidgets_.clear();
     
     bool midiInMonitor = false;
     bool midiOutMonitor = false;
@@ -149,7 +148,7 @@ void Manager::Init()
                 
                 AddMidiRealSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
             }
-            else if(tokens[0] == Layer_)
+            else if(tokens[0] == Page_)
             {
                 if(tokens.size() != 2)
                     continue;
@@ -192,39 +191,39 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string suffix, string widgetClass, int index)
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClass, int index)
 {
-    if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role,  suffix, index);
-    if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, suffix, index);
+    if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role, index);
+    if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, index);
     
-    return new Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+    return new Midi_Widget(surface, role, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string suffix, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
 {
-    if(widgetClass == "Button") return new PushButton_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "ButtonCycler") return new PushButtonCycler_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
+    if(widgetClass == "Button") return new PushButton_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "ButtonCycler") return new PushButtonCycler_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
-    return new Midi_Widget(surface, role, "", new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string suffix, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
-    if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, suffix, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_Midi_Widget(surface, role, suffix, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_Midi_Widget(surface, role, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     
-    return new Midi_Widget(surface, role, suffix,  new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new Midi_Widget(surface, role,  new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string suffix, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
 {
-    if(widgetClass == "Fader14Bit") return new Fader14Bit_Midi_Widget(surface, role, suffix, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+    if(widgetClass == "Fader14Bit") return new Fader14Bit_Midi_Widget(surface, role, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
     
-    return new Midi_Widget(surface, role, suffix, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+    return new Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
 }
 
 void Manager::InitMidiRealSurface(Midi_RealSurface* surface)
@@ -253,31 +252,31 @@ void Manager::InitMidiRealSurface(Midi_RealSurface* surface)
             {
                 if(inChannel)
                     for(int i = 0; i < surface->GetNumChannels(); i++)
-                        surface->AddWidget(WidgetFor(surface, tokens[0], to_string(i + 1), tokens[1], i), i);
+                        surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], i), i);
             }
             else if(tokens.size() == 6)
             {
                 if(inChannel)
                     for(int i = 0; i < surface->GetNumChannels(); i++)
-                        surface->AddWidget(WidgetFor(surface, tokens[0], to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5])), i);
+                        surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5])), i);
                 else
-                    surface->AddWidget(WidgetFor(surface, tokens[0], "", tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
             }
             else if(tokens.size() == 8)
             {
                 if(inChannel)
                     for(int i = 0; i < surface->GetNumChannels(); i++)
-                        surface->AddWidget(WidgetFor(surface, tokens[0], to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])), i);
+                        surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])), i);
                 else
-                    surface->AddWidget(WidgetFor(surface, tokens[0], "", tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
             }
             else if(tokens.size() == 9)
             {
                 if(inChannel)
                     for(int i = 0; i < surface->GetNumChannels(); i++)
-                        surface->AddWidget(WidgetFor(surface, tokens[0], to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])), i);
+                        surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])), i);
                 else
-                    surface->AddWidget(WidgetFor(surface, tokens[0], "", tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+                    surface->AddWidget(WidgetFor(surface, tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
             }
         }
     }
