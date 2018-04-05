@@ -371,6 +371,7 @@ class Page
 private:
     string name_ = "";
     bool followMCP_ = true;
+    int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
     int numBankableChannels_ = 0;
     vector<MediaTrack*> touchedTracks_;
@@ -402,6 +403,9 @@ private:
         if(alt_)
             modifiers += Alt;
         
+        if(modifiers != "")
+            modifiers += "_";
+
         return modifiers;
     }
 
