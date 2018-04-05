@@ -45,21 +45,14 @@ struct LayerLine
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-static CSurfIntegrator* integrator = nullptr;
-
 CSurfIntegrator::CSurfIntegrator()
 {
-    manager_ = new CSurfManager();
-}
-
-CSurfIntegrator::~CSurfIntegrator()
-{
-    delete manager_;
+    Manager::Instance();
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
 {
-    manager_->OnTrackSelection(trackid);
+    Manager::Instance().OnTrackSelection(trackid);
 }
 
 int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
@@ -71,14 +64,13 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_RESET)
     {
-        if(integrator)
-            integrator->GetManager()->Init();
+        Manager::Instance().Init();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
     {
         // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-        manager_->TrackFXListChanged((MediaTrack*)parm1);
+        Manager::Instance().TrackFXListChanged((MediaTrack*)parm1);
     }
 
     return 1;
@@ -86,17 +78,17 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
 
 bool CSurfIntegrator::GetTouchState(MediaTrack *track, int touchedControl)
 {
-    return manager_->GetTouchState(track, touchedControl);
+    return Manager::Instance().GetTouchState(track, touchedControl);
 }
 
 void CSurfIntegrator::Run()
 {
-    manager_->Run();
+    Manager::Instance().Run();
 }
 
 void CSurfIntegrator::SetTrackListChange()
 {
-    manager_->TrackListChanged();
+    Manager::Instance().TrackListChanged();
 }
 
 const char *CSurfIntegrator::GetTypeString()
@@ -118,8 +110,7 @@ const char *CSurfIntegrator::GetConfigString() // string of configuration data
 
 static IReaperControlSurface *createFunc(const char *type_string, const char *configString, int *errStats)
 {
-    integrator = new CSurfIntegrator();
-    return integrator;
+    return new CSurfIntegrator();
 }
 
 void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
@@ -972,8 +963,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile.close();
             }
             
-            if(integrator)
-                integrator->GetManager()->Init();
+            Manager::Instance().Init();
         }
         break;
     }

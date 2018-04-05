@@ -168,7 +168,7 @@ class NextPage : public Action
 public:
     void Do(Widget* widget, Page* page, vector<string> params, double value) override
     {
-        manager->NextPage();
+        Manager::Instance().NextPage();
     }
 };
 
