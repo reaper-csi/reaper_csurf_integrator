@@ -402,9 +402,6 @@ private:
             modifiers +=  Control;
         if(alt_)
             modifiers += Alt;
-        
-        if(modifiers != "")
-            modifiers += "_";
 
         return modifiers;
     }
