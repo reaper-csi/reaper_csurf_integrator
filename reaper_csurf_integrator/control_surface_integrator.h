@@ -218,14 +218,13 @@ class RealSurface
 {
 protected:
     const string name_ = "";
-    string templateFilename_ = "";
 
     bool isBankable_ = true;
     vector<Widget*> widgets_;
     vector<vector<Widget*>> channels_;
     map<Widget*, string> suffixes_;
     
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), templateFilename_(templateFilename), isBankable_(isBankable)
+    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), isBankable_(isBankable)
     {
         for(int i = 0; i < numChannels; i++)
             channels_.push_back(vector<Widget*>());
@@ -235,7 +234,6 @@ public:
     virtual ~RealSurface() {};
     
     string GetName() const { return name_; }
-    string GetTemplateFilename() const { return templateFilename_; }
     int GetNumChannels() { return channels_.size(); }
     int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
     bool IsBankable() { return isBankable_; }
@@ -264,7 +262,7 @@ public:
         suffixes_[widget] = "";
     }
     
-    void AddWidget(Widget* widget, int channelNum)
+    void AddWidget(int channelNum, Widget* widget)
     {
         if(channelNum >= 0 && channelNum < channels_.size())
         {
@@ -304,8 +302,7 @@ private:
     }
     
 public:
-    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor) {}
+    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_RealSurface()
     {
@@ -437,50 +434,8 @@ public:
     string GetName() { return name_; }
     
     // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget)
-    {
-        if(widgetModes_.count(widget) > 0)
-        {
-            if(widgetModes_[widget] == WidgetMode::Track)
-            {
-                
-                
-            }
-            else if(widgetModes_[widget] == WidgetMode::FX)
-            {
-                string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
-                
-            }
-            
-            
-        }
-
-        
-        
-        
-    }
-    
-    void DoAction(Widget* widget, double value)
-    {
-        if(widgetModes_.count(widget) > 0)
-        {
-            if(widgetModes_[widget] == WidgetMode::Track)
-            {
-                
-                
-            }
-            else if(widgetModes_[widget] == WidgetMode::FX)
-            {
-                string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
-
-            }
-
-        
-        }
-
-        
-        
-    }
+    void RequestActionUpdate(Widget* widget);
+    void DoAction(Widget* widget, double value);
     
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
@@ -801,24 +756,10 @@ private:
     vector <Page*> pages_;
     vector<Midi_RealSurface*> midi_realSurfaces_;
     
-    bool isInitialized_ = false;
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
-    Manager()
-    {
-        InitActionDictionary();
-        midiIOManager_ = new MidiIOManager();
-    }
-    
     void InitActionDictionary();
-    void InitMidiRealSurface(Midi_RealSurface* surface);
-    
-    void AddMidiRealSurface(Midi_RealSurface* realSurface)
-    {
-        InitMidiRealSurface(realSurface);
-        midi_realSurfaces_.push_back(realSurface);
-    }
     
     double GetPrivateProfileDouble(string key)
     {
@@ -832,21 +773,28 @@ private:
     
 public:
     ~Manager() {};
-    
-    static auto Instance()
+    Manager()
     {
-        static Manager manager;
-        return manager;
+        InitActionDictionary();
+        midiIOManager_ = new MidiIOManager();
     }
     
     void Init();
     
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
-    bool GetVSTMonitor() { return isInitialized_ ? VSTMonitor_ : false; }
+    bool GetVSTMonitor() { return VSTMonitor_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
+    
+    Action* GetAction(string actionName)
+    {
+        if(actions_.count(actionName) > 0)
+            return actions_[actionName];
+        
+        return nullptr;
+    }
     
     void OnTrackSelection(MediaTrack *track)
     {

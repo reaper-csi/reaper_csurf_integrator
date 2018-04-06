@@ -10,6 +10,8 @@
 #include "control_surface_integrator.h"
 #include "handy_reaper_functions.h"
 
+extern Manager* TheManager;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class PushButton_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +33,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiPressMessage_->IsEqualTo(midiMessage))
-            Manager::Instance().DoAction(this, 1.0);
+            TheManager->DoAction(this, 1.0);
     }
 };
 
@@ -53,7 +55,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        Manager::Instance().DoAction(this, 1.0);
+        TheManager->DoAction(this, 1.0);
     }
 };
 
@@ -71,9 +73,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiPressMessage_->IsEqualTo(midiMessage))
-            Manager::Instance().DoAction(this, 1.0);
+            TheManager->DoAction(this, 1.0);
         else if(midiReleaseMessage_->IsEqualTo(midiMessage))
-            Manager::Instance().DoAction(this, 0.0);
+            TheManager->DoAction(this, 0.0);
     }
 };
 
@@ -113,7 +115,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        Manager::Instance().DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        TheManager->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -134,7 +136,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        Manager::Instance().DoAction(this, midiMessage->midi_message[2] / 127.0);
+        TheManager->DoAction(this, midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -168,7 +170,7 @@ public:
         
         value += lastMessageSent_->midi_message[2];
 
-        Manager::Instance().DoAction(this, panToNormalized(value));
+        TheManager->DoAction(this, panToNormalized(value));
     }
 };
 
