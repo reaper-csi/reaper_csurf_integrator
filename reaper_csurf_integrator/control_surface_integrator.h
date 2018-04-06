@@ -438,10 +438,9 @@ public:
     void Init()
     {
         // GAW TBD Get all the widgets from all surfaees and build the widgetModes_ dictionary
-
         for(auto * surface : realSurfaces_)
             for(auto * widget : surface->GetAllWidgets())
-                widgetModes_[widget] = WidgetMode::Track;
+                widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
         
         
         // GAW TBD -- build the maps using the templates and real surface widgets
