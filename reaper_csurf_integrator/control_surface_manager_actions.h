@@ -9,6 +9,8 @@
 
 #include "control_surface_base_actions.h"
 
+extern Manager* TheManager;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +170,7 @@ class NextPage : public Action
 public:
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        Manager::Instance().NextPage();
+        TheManager->NextPage();
     }
 };
 

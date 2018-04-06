@@ -9,6 +9,8 @@
 
 #include "control_surface_base_actions.h"
 
+extern Manager* TheManager;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -372,7 +374,7 @@ public:
     {
         MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
         DAW::SetOnlyTrackSelected(track);
-        Manager::Instance().OnTrackSelection(track);
+        TheManager->OnTrackSelection(track);
     }
 };
 
@@ -416,7 +418,7 @@ public:
         for(int i = lowerBound; i <= upperBound; i++)
         {
             DAW::CSurf_SetSurfaceSelected(tracks[i], DAW::CSurf_OnSelectedChange(tracks[i], 1), NULL);
-            Manager::Instance().OnTrackSelection(tracks[i]);
+            TheManager->OnTrackSelection(tracks[i]);
         }
     }
 };
