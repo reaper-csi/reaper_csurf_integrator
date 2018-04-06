@@ -360,8 +360,8 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> params) {}
-    virtual void Do(Widget* widget, Page* page, vector<string> params, double value) {}
+    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
+    virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -369,6 +369,11 @@ class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    enum class WidgetMode {
+        Track,
+        FX
+    };
+    
     string name_ = "";
     bool followMCP_ = true;
     int trackOffset_ = 0;
@@ -380,6 +385,9 @@ private:
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
     vector<FXWindow> openFXWindows_;
 
+    map<Widget*, WidgetMode> widgetModes_;
+    
+    
     bool zoom_ = false;
     bool scrub_ = false;
 
@@ -431,13 +439,44 @@ public:
     // Widgets -> Actions
     void RequestActionUpdate(Widget* widget)
     {
-        string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+        if(widgetModes_.count(widget) > 0)
+        {
+            if(widgetModes_[widget] == WidgetMode::Track)
+            {
+                
+                
+            }
+            else if(widgetModes_[widget] == WidgetMode::FX)
+            {
+                string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+                
+            }
+            
+            
+        }
+
+        
+        
         
     }
     
     void DoAction(Widget* widget, double value)
     {
-        string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+        if(widgetModes_.count(widget) > 0)
+        {
+            if(widgetModes_[widget] == WidgetMode::Track)
+            {
+                
+                
+            }
+            else if(widgetModes_[widget] == WidgetMode::FX)
+            {
+                string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+
+            }
+
+        
+        }
 
         
         
