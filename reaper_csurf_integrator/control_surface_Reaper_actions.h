@@ -260,7 +260,7 @@ public:
         if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
             playState = 1;
         else playState = 0;
-        //manager->SetWidgetValue(widgetGUID, playState);
+        widget->SetValue(playState);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -281,7 +281,7 @@ public:
             stopState = 1;
         else stopState = 0;
         
-        //manager->SetWidgetValue(widgetGUID, stopState);
+        widget->SetValue(stopState);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -302,7 +302,7 @@ public:
             recordState = 1;
         else recordState = 0;
         
-        //manager->SetWidgetValue(widgetGUID, recordState);
+        widget->SetValue(recordState);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
