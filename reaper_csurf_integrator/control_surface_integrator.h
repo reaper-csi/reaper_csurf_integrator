@@ -221,6 +221,7 @@ protected:
 
     bool isBankable_ = true;
     vector<Widget*> widgets_;
+    vector<Widget*> allWidgets_;
     vector<vector<Widget*>> channels_;
     map<Widget*, string> suffixes_;
     
@@ -237,6 +238,7 @@ public:
     int GetNumChannels() { return channels_.size(); }
     int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
     bool IsBankable() { return isBankable_; }
+    vector<Widget*> & GetAllWidgets() { return allWidgets_; }
     
     string GetWidgetSuffix(Widget* widget)
     {
@@ -259,6 +261,7 @@ public:
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
+        allWidgets_.push_back(widget);
         suffixes_[widget] = "";
     }
     
@@ -267,6 +270,7 @@ public:
         if(channelNum >= 0 && channelNum < channels_.size())
         {
             channels_[channelNum].push_back(widget);
+            allWidgets_.push_back(widget);
             suffixes_[widget] = to_string(channelNum + 1);
         }
     }
@@ -429,6 +433,28 @@ private:
     }
     
 public:
+    
+    
+    void Init()
+    {
+        // GAW TBD Get all the widgets from all surfaees and build the widgetModes_ dictionary
+
+        for(auto * surface : realSurfaces_)
+            for(auto * widget : surface->GetAllWidgets())
+                widgetModes_[widget] = WidgetMode::Track;
+        
+        
+        // GAW TBD -- build the maps using the templates and real surface widgets
+        
+        // GAW TBD -- set the widget / Track contexts
+        
+        
+        SetPinnedTracks();
+    }
+
+    
+    
+    
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     
     string GetName() { return name_; }
@@ -673,16 +699,7 @@ public:
             zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
          */
     }
-    
-    void Init()
-    {
-        // GAW TBD -- build the maps using the templates and real surface widgets
-
-        // GAW TBD -- set the widget / Track contexts
         
-        SetPinnedTracks();
-    }
-    
     void MapTrack(string trackGUID)
     {
             /*
