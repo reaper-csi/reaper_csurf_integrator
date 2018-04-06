@@ -8,6 +8,7 @@
 #include "control_surface_integrator_ui.h"
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
+Manager* TheManager = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // structs
@@ -45,9 +46,14 @@ struct LayerLine
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+CSurfIntegrator::CSurfIntegrator()
+{
+    TheManager = new Manager();
+}
+
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
 {
-    Manager::Instance().OnTrackSelection(trackid);
+    TheManager->OnTrackSelection(trackid);
 }
 
 int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
@@ -59,13 +65,13 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_RESET)
     {
-        Manager::Instance().Init();
+       TheManager->Init();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
     {
         // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-        Manager::Instance().TrackFXListChanged((MediaTrack*)parm1);
+        TheManager->TrackFXListChanged((MediaTrack*)parm1);
     }
 
     return 1;
@@ -73,17 +79,17 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
 
 bool CSurfIntegrator::GetTouchState(MediaTrack *track, int touchedControl)
 {
-    return Manager::Instance().GetTouchState(track, touchedControl);
+    return TheManager->GetTouchState(track, touchedControl);
 }
 
 void CSurfIntegrator::Run()
 {
-    Manager::Instance().Run();
+    TheManager->Run();
 }
 
 void CSurfIntegrator::SetTrackListChange()
 {
-    Manager::Instance().TrackListChanged();
+    TheManager->TrackListChanged();
 }
 
 const char *CSurfIntegrator::GetTypeString()
@@ -958,7 +964,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile.close();
             }
             
-            Manager::Instance().Init();
+            TheManager->Init();
         }
         break;
     }
