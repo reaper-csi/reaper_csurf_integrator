@@ -30,17 +30,11 @@ struct VirtualSurfaceLine
     string FXTemplateFolder = "";
 };
 
-struct ZoneLine
+struct PageLine
 {
     string name = "";
     bool followMCP = true;
     vector<VirtualSurfaceLine*> virtualSurfaces;
-};
-
-struct LayerLine
-{
-    string name = "";
-    vector<ZoneLine*> zones;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +120,7 @@ void AddListEntry(HWND hwndDlg, string buf, int comboId)
 }
 
 vector<RealSurfaceLine*> realSurfaces;
-vector<LayerLine*> layers;
+vector<PageLine*> pages;
 
 bool editMode = false;
 static int dlgResult = 0;
@@ -140,55 +134,6 @@ static int midiOut = 0;
 static char templateFilename[BUFSZ];
 static char actionTemplateFolder[BUFSZ];
 static char FXTemplateFolder[BUFSZ];
-
-static WDL_DLGRET dlgProcLayer(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            if(editMode)
-            {
-                editMode = false;
-                SetDlgItemText(hwndDlg, IDC_EDIT_LayerName, name);
-            }
-        }
-            
-        case WM_COMMAND:
-            {
-                switch(LOWORD(wParam))
-                {
-                    case IDOK:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            GetDlgItemText(hwndDlg, IDC_EDIT_LayerName, name, sizeof(name));
-                            dlgResult = IDOK;
-                            EndDialog(hwndDlg, 0);
-                        }
-                        break ;
-                        
-                    case IDCANCEL:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                            EndDialog(hwndDlg, 0);
-                        break ;
-                }
-            }
-            break ;
-            
-        case WM_CLOSE:
-            DestroyWindow(hwndDlg);
-            break ;
-            
-        case WM_DESTROY:
-            EndDialog(hwndDlg, 0);
-            break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
-    }
-    
-    return 0 ;
-}
 
 static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -305,7 +250,7 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
     return 0 ;
 }
 
-static WDL_DLGRET dlgProcZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -319,7 +264,7 @@ static WDL_DLGRET dlgProcZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             if(editMode)
             {
                 editMode = false;
-                SetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_PageName, name);
             }
         }
 
@@ -338,7 +283,7 @@ static WDL_DLGRET dlgProcZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName , name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_PageName , name, sizeof(name));
                         if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
                             followMCP = true;
                         else
@@ -460,37 +405,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 switch(LOWORD(wParam))
                 {
-                    case IDC_LIST_Layers:
+                    case IDC_LIST_Pages:
                         if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            if (index >= 0)
-                            {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-
-                                for(auto* zone : layers[index]->zones)
-                                    AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
-                            }
-                            else
-                            {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                            }
-                        }
-                        break;
-                        
-                    case IDC_LIST_Zones:
-                        if (HIWORD(wParam) == LBN_SELCHANGE)
-                        {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
-                            if (layerIndex >= 0 && index >= 0)
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if (index >= 0 && index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
 
-                                for(auto* layer: layers[layerIndex]->zones[index]->virtualSurfaces)
-                                    AddListEntry(hwndDlg, layer->realSurfaceName, IDC_LIST_VirtualSurfaces);
+                                for(auto* page: pages[index]->virtualSurfaces)
+                                    AddListEntry(hwndDlg, page->realSurfaceName, IDC_LIST_VirtualSurfaces);
                             }
                             else
                             {
@@ -527,63 +451,45 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_VirtualSurface), hwndDlg, dlgProcVirtualSurface);
                             if(dlgResult == IDOK)
                             {
-                                int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                                int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                                int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                                 
-                                if(layerIndex >= 0 && zoneIndex >= 0)
+                                if(index >= 0)
                                 {
                                     VirtualSurfaceLine* surface = new VirtualSurfaceLine();
                                     surface->realSurfaceName = name;
                                     surface->actionTemplateFolder = actionTemplateFolder;
                                     surface->FXTemplateFolder = FXTemplateFolder;
-                                    layers[layerIndex]->zones[zoneIndex]->virtualSurfaces.push_back(surface);
+                                    pages[index]->virtualSurfaces.push_back(surface);
                                     AddListEntry(hwndDlg, name, IDC_LIST_VirtualSurfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, layers[layerIndex]->zones[zoneIndex]->virtualSurfaces.size() - 1, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, pages[index]->virtualSurfaces.size() - 1, 0);
                                 }
                             }
                         }
                         break ;
                         
-                    case IDC_BUTTON_AddZone:
+                    case IDC_BUTTON_AddPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            if(layerIndex >= 0)
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
                             {
                                 dlgResult = false;
                                 followMCP = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Zone), hwndDlg, dlgProcZone);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
                                 if(dlgResult == IDOK)
                                 {
-                                    ZoneLine* zone = new ZoneLine();
-                                    zone->name = name;
-                                    zone->followMCP = followMCP;
-                                    layers[layerIndex]->zones.push_back(zone);
-                                    AddListEntry(hwndDlg, name, IDC_LIST_Zones);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, layers[layerIndex]->zones.size() - 1, 0);
+                                    PageLine* page = new PageLine();
+                                    page->name = name;
+                                    page->followMCP = followMCP;
+                                    pages.push_back(page);
+                                    AddListEntry(hwndDlg, name, IDC_LIST_Pages);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 }
                             }
                         }
                         break ;
                         
-                    case IDC_BUTTON_AddLayer:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            dlgResult = false;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Layer), hwndDlg, dlgProcLayer);
-                            if(dlgResult == IDOK)
-                            {
-                                LayerLine* layer = new LayerLine();
-                                layer->name = name;
-                                layers.push_back(layer);
-                                AddListEntry(hwndDlg, name, IDC_LIST_Layers);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_SETCURSEL, layers.size() - 1, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                            }
-                        }
-                        break ;
                         
                     case IDC_BUTTON_EditRealSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -621,17 +527,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_BUTTON_EditVirtualSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                            int pageIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_VirtualSurfaces, LB_GETCURSEL, 0, 0);
                             
                             VirtualSurfaceLine* surfaceLine = nullptr;
                             
-                            if(layerIndex >= 0 && zoneIndex >= 0 && index >= 0)
+                            if(pageIndex >= 0 && index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 
-                                for(auto* surface : layers[layerIndex]->zones[zoneIndex]->virtualSurfaces)
+                                for(auto* surface : pages[pageIndex]->virtualSurfaces)
                                     if(surface->realSurfaceName == name)
                                     {
                                         surfaceLine = surface;
@@ -650,7 +555,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surfaceLine->FXTemplateFolder = FXTemplateFolder;
                                     
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                                    for(auto* surface: layers[layerIndex]->zones[zoneIndex]->virtualSurfaces)
+                                    for(auto* surface: pages[pageIndex]->virtualSurfaces)
                                         AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, index, 0);
                                 }
@@ -658,48 +563,25 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break ;
 
-                    case IDC_BUTTON_EditZone:
+                    case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
-                            if(layerIndex >= 0 && index >= 0)
-                            {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                followMCP = layers[layerIndex]->zones[index]->followMCP;
-                                dlgResult = false;
-                                editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Zone), hwndDlg, dlgProcZone);
-                                if(dlgResult == IDOK)
-                                {
-                                    layers[layerIndex]->zones[index]->name = name;
-                                    layers[layerIndex]->zones[index]->followMCP = followMCP;
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                    for(auto* zone: layers[layerIndex]->zones)
-                                        AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, index, 0);
-                                }
-                            }
-                        }
-                        break ;
-
-                    case IDC_BUTTON_EditLayer:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                followMCP = pages[index]->followMCP;
                                 dlgResult = false;
                                 editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Layer), hwndDlg, dlgProcLayer);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
                                 if(dlgResult == IDOK)
                                 {
-                                    layers[index]->name = name;
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_RESETCONTENT, 0, 0);
-                                    for(auto* layer: layers)
-                                        AddListEntry(hwndDlg, layer->name, IDC_LIST_Layers);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_SETCURSEL, index, 0);
+                                    pages[index]->name = name;
+                                    pages[index]->followMCP = followMCP;
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
+                                    for(auto* page :  pages)
+                                        AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                                 }
                             }
                         }
@@ -725,57 +607,35 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_BUTTON_RemoveVirtualSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                            int pageIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_VirtualSurfaces, LB_GETCURSEL, 0, 0);
                             
-                            if(layerIndex >= 0 && zoneIndex >= 0 && index >= 0)
+                            if(pageIndex >= 0 && index >= 0)
                             {
-                                layers[layerIndex]->zones[zoneIndex]->virtualSurfaces.erase(layers[layerIndex]->zones[zoneIndex]->virtualSurfaces.begin() + index);
+                                pages[pageIndex]->virtualSurfaces.erase(pages[pageIndex]->virtualSurfaces.begin() + index);
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                                for(auto* surface: layers[layerIndex]->zones[zoneIndex]->virtualSurfaces)
+                                for(auto* surface: pages[pageIndex]->virtualSurfaces)
                                     AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, index, 0);
                             }
                         }
                         break ;
                         
-                    case IDC_BUTTON_RemoveZone:
+                    case IDC_BUTTON_RemovePage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int layerIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
-                            if(layerIndex >= 0 && index >= 0)
-                            {
-                                layers[layerIndex]->zones.erase(layers[layerIndex]->zones.begin() + index);
-                                
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                                
-                                for(auto* zone: layers[layerIndex]->zones)
-                                    AddListEntry(hwndDlg, zone->name, IDC_LIST_Zones);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, index, 0);
-                            }
-                        }
-                        break ;
-
-                    case IDC_BUTTON_RemoveLayer:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Layers, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                layers.erase(layers.begin() + index);
+                                pages.erase(pages.begin() + index);
                                 
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 
-                                for(auto* layer: layers)
-                                    AddListEntry(hwndDlg, layer->name, IDC_LIST_Layers);
-                                
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_SETCURSEL, 0, 0);
+                                for(auto* page: pages)
+                                    AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                             }
                         }
                         break ;
@@ -786,7 +646,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
         case WM_INITDIALOG:
         {
             realSurfaces.clear();
-            layers.clear();
+            pages.clear();
             
             ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
             
@@ -842,30 +702,18 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
                         
                     }
-                    else if(tokens[0] == Layer_)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        LayerLine* layer = new LayerLine();
-                        layer->name = tokens[1];
-                        layers.push_back(layer);
-                        
-                        AddListEntry(hwndDlg, layer->name, IDC_LIST_Layers);
-
-                    }
-                    else if(tokens[0] == Zone_)
+                    else if(tokens[0] == Page_)
                     {
                         if(tokens.size() != 3)
                             continue;
  
-                        ZoneLine* zone = new ZoneLine();
-                        zone->name = tokens[1];
+                        PageLine* page = new PageLine();
+                        page->name = tokens[1];
                         if(tokens[2] == "Yes")
-                            zone->followMCP = true;
+                            page->followMCP = true;
                         else
-                            zone->followMCP = false;
-                        layers.back()->zones.push_back(zone);
+                            page->followMCP = false;
+                        pages.push_back(page);
                     }
                     else if(tokens[0] == VirtualSurface_)
                     {
@@ -876,14 +724,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         virtualSurface->realSurfaceName = tokens[1];
                         virtualSurface->actionTemplateFolder = tokens[2];
                         virtualSurface->FXTemplateFolder = tokens[3];
-                        layers.back()->zones.back()->virtualSurfaces.push_back(virtualSurface);
+                        pages.back()->virtualSurfaces.push_back(virtualSurface);
                     }
                 }
             }
             
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Layers), LB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, 0, 0);
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, 0, 0);
 
         }
@@ -931,35 +778,27 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     iniFile << line;
                 }
 
-                for(auto layer : layers)
+                for(auto page : pages)
                 {
-                    iniFile << "\n";
-                    
-                    line = Layer_ + " ";
-                    line += layer->name + "\n";
+                    line = Page_ + " ";
+                    line += page->name + " ";
+                    if(page->followMCP)
+                        line += "Yes\n";
+                    else
+                        line += "No\n";
                     iniFile << line;
-                    
-                    for(auto zone : layer->zones)
-                    {
-                        line = Zone_ + " ";
-                        line += zone->name + " ";
-                        if(zone->followMCP)
-                            line += "Yes\n";
-                        else
-                            line += "No\n";
-                        iniFile << line;
 
-                        for(auto virtualSurface : zone->virtualSurfaces)
-                        {
-                            line = VirtualSurface_ + " ";
-                            line += virtualSurface->realSurfaceName + " ";
-                            line += virtualSurface->actionTemplateFolder + " " ;
-                            line += virtualSurface->FXTemplateFolder + "\n";
-                            
-                            iniFile << line;
-                        }
+                    for(auto virtualSurface : page->virtualSurfaces)
+                    {
+                        line = VirtualSurface_ + " ";
+                        line += virtualSurface->realSurfaceName + " ";
+                        line += virtualSurface->actionTemplateFolder + " " ;
+                        line += virtualSurface->FXTemplateFolder + "\n";
+                        
+                        iniFile << line;
                     }
                 }
+
                 
                 iniFile.close();
             }
