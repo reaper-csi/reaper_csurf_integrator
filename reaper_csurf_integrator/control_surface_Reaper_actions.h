@@ -21,9 +21,9 @@ private:
         int commandId =  atol(commandStr.c_str());
         
         if(commandId != 0)
-            return commandId;
+            return commandId; // successful conversion to number
         
-        commandId = DAW::NamedCommandLookup(commandStr.c_str());
+        commandId = DAW::NamedCommandLookup(commandStr.c_str()); // Look up by string
         
         if(commandId == 0) // can't find it
             commandId = 65535; // no-op
@@ -34,12 +34,14 @@ private:
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetToggleCommandState(CommandId(manager->GetCommandString(widgetGUID))));
+        if(params.size() > 1)
+            widget->SetValue(DAW::GetToggleCommandState(CommandId(params[1])));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //DAW::SendCommandMessage(CommandId(manager->GetCommandString(widgetGUID)));
+        if(params.size() > 1)
+            DAW::SendCommandMessage(CommandId(params[1]));
     }
 };
 

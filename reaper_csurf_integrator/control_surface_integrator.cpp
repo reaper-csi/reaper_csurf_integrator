@@ -88,7 +88,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Page
+// Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
@@ -147,25 +147,28 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Page
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widgets -> Actions
 void Page::RequestActionUpdate(Widget* widget)
 {
     if(widgetModes_.count(widget) > 0)
     {
-        //if(widgetModes_[widget] == WidgetMode::Track)
-        //{
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(widget->GetRole()) > 0)
+        if(widgetModes_[widget] == WidgetMode::Track)
+        {
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][widget->GetRole()][0]);
+                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()][0]);
                 if(action)
-                    action->RequestUpdate(widget, this, actionTemplates_[widget->GetSurface()->GetName()][widget->GetRole()]);
+                    action->RequestUpdate(widget, this, actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()]);
             }
-        //}
-        //else if(widgetModes_[widget] == WidgetMode::FX)
-        //{
-            //string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+        }
+        else if(widgetModes_[widget] == WidgetMode::FX)
+        {
+            //string target = CurrentModifers(widget) + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
             
-        //}
+        }
     }
 }
 
@@ -173,20 +176,20 @@ void Page::DoAction(Widget* widget, double value)
 {
     if(widgetModes_.count(widget) > 0)
     {
-        //if(widgetModes_[widget] == WidgetMode::Track)
-        //{
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(widget->GetRole()) > 0)
+        if(widgetModes_[widget] == WidgetMode::Track)
+        {
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][widget->GetRole()][0]);
+                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()][0]);
                 if(action)
-                    action->Do(widget, this, actionTemplates_[widget->GetSurface()->GetName()][widget->GetRole()], value);
+                    action->Do(widget, this, actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()], value);
             }
-        //}
-        //else if(widgetModes_[widget] == WidgetMode::FX)
-        //{
+        }
+        else if(widgetModes_[widget] == WidgetMode::FX)
+        {
             //string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
             
-        //}
+        }
     }
 }
 

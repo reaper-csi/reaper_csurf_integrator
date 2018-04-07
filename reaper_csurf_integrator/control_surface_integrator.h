@@ -399,9 +399,12 @@ private:
     bool control_ = false;
     bool alt_ = false;
     
-    string CurrentModifers()
+    string CurrentModifers(Widget* widget)
     {
         string modifiers = "";
+     
+        if(widget->GetRole() == Shift || widget->GetRole() == Option || widget->GetRole() == Control || widget->GetRole() == Alt)
+            return modifiers;
         
         if(shift_)
             modifiers += Shift;
