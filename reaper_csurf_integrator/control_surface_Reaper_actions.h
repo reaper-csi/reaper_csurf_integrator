@@ -598,7 +598,7 @@ class CycleTimeline : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetSetRepeatEx(nullptr, -1));
+        widget->SetValue(DAW::GetSetRepeatEx(nullptr, -1));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
