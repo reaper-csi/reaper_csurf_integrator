@@ -176,9 +176,11 @@ class Widget
 {
 private:
     string role_ = "";
+    
+protected:
+    Widget(string role) : role_(role) {}
 
 public:
-    Widget(string role) : role_(role) {}
     virtual ~Widget() {};
     
     string GetRole() { return role_; }
@@ -564,11 +566,6 @@ public:
     }
     
     int GetFXParamIndex(Widget* widget)
-    {
-        return 0;
-    }
-    
-    int GetChannel(Widget* widget)
     {
         return 0;
     }
