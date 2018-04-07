@@ -436,8 +436,12 @@ private:
     }
     
 public:
+    Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
+    string GetName() { return name_; }
     
-    
+    void InitActionTemplates(RealSurface* surface, string templateDirectory);
+    void InitFXTemplates(RealSurface* surface, string templateDirectory);
+
     void Init()
     {
         // GAW TBD Get all the widgets from all surfaees and build the widgetModes_ dictionary
@@ -453,15 +457,8 @@ public:
         
         SetPinnedTracks();
     }
-
     
-    
-    
-    Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
-    
-    string GetName() { return name_; }
-    
-    // Widgets -> Actions
+    // Widgets -> Actions -- this is the grand switchboard that does all the heavy lifting wrt routing and context
     void RequestActionUpdate(Widget* widget);
     void DoAction(Widget* widget, double value);
     
@@ -513,80 +510,10 @@ public:
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
-        InitActionTemplate(surface, resourcePath + "axt/" + actionTemplateDirectory);
+        InitActionTemplates(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         numBankableChannels_ += surface->GetNumBankableChannels();
         realSurfaces_.push_back(surface);
-    }
-    
-    void InitActionTemplate(RealSurface* surface, string templateDirectory)
-    {
-        for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
-        {
-            if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
-            {
-                ifstream actionTemplateFile(string(templateDirectory + "/" + filename));
-
-                for (string line; getline(actionTemplateFile, line) ; )
-                {
-                    if(line[0] != '/' && line != "") // ignore comment lines and blank lines
-                    {
-                        istringstream iss(line);
-                        vector<string> tokens;
-                        string token;
-                        while (iss >> quoted(token))
-                            tokens.push_back(token);
-                        
-                        vector<string> params;
-                        for(int i = 1; i < tokens.size(); i++)
-                            params.push_back(tokens[i]);
-                        
-                        actionTemplates_[surface->GetName()][tokens[0]] = params;
-                    }
-                }
-            }
-        }
-    }
-    
-    void InitFXTemplates(RealSurface* surface, string templateDirectory)
-    {
-        for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
-        {
-            if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
-            {
-                ifstream fxTemplateFile(string(templateDirectory + "/" + filename));
-                
-                string firstLine;
-                getline(fxTemplateFile, firstLine);
-                
-                fxTemplates_[surface->GetName()][firstLine] = map<string, vector<string>>();
-                
-                for (string line; getline(fxTemplateFile, line) ; )
-                {
-                    if(line[0] != '/' && line != "") // ignore comment lines and blank lines
-                    {
-                        istringstream iss(line);
-                        vector<string> tokens;
-                        string token;
-                        while (iss >> quoted(token))
-                            tokens.push_back(token);
-                        
-                        // GAW TBD fix this mess, the first token is the Widget role, the reat is the FX param, possibly with spaces.
-
-                        if(tokens.size() == 2)
-                        {
-                            replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
-                            
-                            if(tokens[1] == "GainReductionDB")
-                                fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("GainReductionDB");
-                            else
-                                fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("TrackFX");
-                            fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(tokens[1]);
-                        }
-                    }
-                }
-            }
-        }
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
@@ -644,11 +571,6 @@ public:
     int GetChannel(Widget* widget)
     {
         return 0;
-    }
-    
-    string GetCommandString(Widget* widget)
-    {
-        return "";
     }
 
     void OnTrackSelection(MediaTrack* track)
