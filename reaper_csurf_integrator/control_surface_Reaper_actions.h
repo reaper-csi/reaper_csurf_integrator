@@ -23,7 +23,7 @@ private:
         if(commandId != 0)
             return commandId; // successful conversion to number
         
-        commandId = DAW::NamedCommandLookup(commandStr.c_str()); // Look up by string
+        commandId = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
         
         if(commandId == 0) // can't find it
             commandId = 65535; // no-op
