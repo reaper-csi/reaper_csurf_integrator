@@ -561,12 +561,13 @@ class GlobalAutoMode : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetGlobalAutomationOverride());
+        widget->SetValue(DAW::GetGlobalAutomationOverride());
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double autoMode) override
     {
-         DAW::SetGlobalAutomationOverride(autoMode);
+        if(params.size() > 1)
+            DAW::SetGlobalAutomationOverride(atol(params[1].c_str()));
     }
 };
 
