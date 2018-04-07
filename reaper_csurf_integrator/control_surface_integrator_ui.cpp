@@ -11,33 +11,6 @@ extern REAPER_PLUGIN_HINSTANCE g_hInst;
 Manager* TheManager = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// structs
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct RealSurfaceLine
-{
-    string name = "";
-    int numChannels = 0;
-    bool isBankable = true;
-    int midiIn = 0;
-    int midiOut = 0;
-    string templateFilename = "";
-};
-
-struct VirtualSurfaceLine
-{
-    string realSurfaceName = "";
-    string actionTemplateFolder = "";
-    string FXTemplateFolder = "";
-};
-
-struct PageLine
-{
-    string name = "";
-    bool followMCP = true;
-    vector<VirtualSurfaceLine*> virtualSurfaces;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 CSurfIntegrator::CSurfIntegrator()
@@ -119,12 +92,36 @@ void AddListEntry(HWND hwndDlg, string buf, int comboId)
     SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
 }
 
-vector<RealSurfaceLine*> realSurfaces;
-vector<PageLine*> pages;
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// structs
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct RealSurfaceLine
+{
+    string name = "";
+    int numChannels = 0;
+    bool isBankable = true;
+    int midiIn = 0;
+    int midiOut = 0;
+    string templateFilename = "";
+};
 
-bool editMode = false;
+struct VirtualSurfaceLine
+{
+    string realSurfaceName = "";
+    string actionTemplateFolder = "";
+    string FXTemplateFolder = "";
+};
+
+struct PageLine
+{
+    string name = "";
+    bool followMCP = true;
+    vector<VirtualSurfaceLine*> virtualSurfaces;
+};
+
+// Scratch pad to get in and out of dialogs easily
+static bool editMode = false;
 static int dlgResult = 0;
-
 static char name[BUFSZ];
 static int numChannels = 0;
 static bool isBankable = true;
@@ -134,6 +131,10 @@ static int midiOut = 0;
 static char templateFilename[BUFSZ];
 static char actionTemplateFolder[BUFSZ];
 static char FXTemplateFolder[BUFSZ];
+
+
+static vector<RealSurfaceLine*> realSurfaces;
+static vector<PageLine*> pages;
 
 static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
