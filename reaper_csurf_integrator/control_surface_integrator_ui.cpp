@@ -413,8 +413,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
 
-                                for(auto* page: pages[index]->virtualSurfaces)
-                                    AddListEntry(hwndDlg, page->realSurfaceName, IDC_LIST_VirtualSurfaces);
+                                for(auto* surface : pages[index]->virtualSurfaces)
+                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
                             }
                             else
                             {
@@ -714,6 +714,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else
                             page->followMCP = false;
                         pages.push_back(page);
+                        
+                        AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                     }
                     else if(tokens[0] == VirtualSurface_)
                     {
@@ -778,6 +780,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     iniFile << line;
                 }
 
+                iniFile << "\n";
+
                 for(auto page : pages)
                 {
                     line = Page_ + " ";
@@ -797,9 +801,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         iniFile << line;
                     }
+                    
+                    iniFile << "\n";
                 }
 
-                
                 iniFile.close();
             }
             
