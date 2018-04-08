@@ -381,10 +381,13 @@ public:
     
     vector<Widget*> & GetWidgets() { return widgets_; }
     bool GetIsPinned() { return isPinned_; }
+    string GetGUID() { return GUID_; }
+    
     void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
     }
+    
     void SetGUID(string GUID)
     {
         GUID_ = GUID;
