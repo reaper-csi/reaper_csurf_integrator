@@ -238,7 +238,7 @@ public:
     
     string GetName() const { return name_; }
     int GetNumChannels() { return channels_.size(); }
-    int GetNumBankableChannels() { return isBankable_ ? channels_.size() : 0; }
+    vector<vector<Widget*>> GetBankableChannels() { return isBankable_ ? channels_ : vector<vector<Widget*>>() ; }
     bool IsBankable() { return isBankable_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
     
@@ -381,21 +381,21 @@ private:
     bool followMCP_ = true;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
-    int numBankableChannels_ = 0;
-    vector<MediaTrack*> touchedTracks_;
-    
+    vector<vector<Widget*>> bankableChannels_;
+    map<Widget*, string> widgetGUIDs_;
+    map<Widget*, WidgetMode> widgetModes_;
+
     map<string, map<string, vector<string>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
-    vector<FXWindow> openFXWindows_;
 
-    map<Widget*, WidgetMode> widgetModes_;
-    
-    
+    vector<MediaTrack*> touchedTracks_;
+
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
+
     bool zoom_ = false;
     bool scrub_ = false;
 
-    bool showFXWindows_ = false;
-    
     bool shift_ = false;
     bool option_ = false;
     bool control_ = false;
@@ -451,11 +451,13 @@ public:
             for(auto * widget : surface->GetAllWidgets())
                 widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
         
-        
-        // GAW TBD -- build the maps using the templates and real surface widgets
-        
         // GAW TBD -- set the widget / Track contexts
-        
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+        {
+            string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
+            for(auto widget : bankableChannels_[i])
+                widgetGUIDs_[widget] = trackGUID;
+        }
         
         SetPinnedTracks();
     }
@@ -514,7 +516,8 @@ public:
    
         InitActionTemplates(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
-        numBankableChannels_ += surface->GetNumBankableChannels();
+        for(auto channel : surface->GetBankableChannels())
+            bankableChannels_.push_back(channel);
         realSurfaces_.push_back(surface);
     }
     
@@ -557,6 +560,9 @@ public:
 
     MediaTrack* GetTrack(Widget* widget)
     {
+        if(widgetGUIDs_.count(widget) > 0)
+            return DAW::GetTrackFromGUID(widgetGUIDs_[widget], followMCP_);
+
         return nullptr;
     }
     
