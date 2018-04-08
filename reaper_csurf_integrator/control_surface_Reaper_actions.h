@@ -69,13 +69,14 @@ class TrackVolume : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, volToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_VOL")));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //MediaTrack* track =manager->GetTrack(widgetGUID);
-        //DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -119,15 +120,17 @@ class TrackNameDisplay : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        string trackName = "";
-        
-        if(DAW::GetMediaTrackInfo_Value(track , "IP_TRACKNUMBER") == -1)
-            trackName = "Master";
-        else
-            trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+        {
+            string trackName = "";
+            
+            if(DAW::GetMediaTrackInfo_Value(track , "IP_TRACKNUMBER") == -1)
+                trackName = "Master";
+            else
+                trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
 
-        //manager->SetWidgetValue(widgetGUID, trackName);
+            widget->SetValue(trackName);
+        }
     }
 };
 
