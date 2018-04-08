@@ -18,16 +18,13 @@ class MapTrackAndFXToWidgets  : public Action
 public:
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = page->GetTrack(widget);
-       
-        if(track)
+        if(MediaTrack* track = page->GetTrack(widget))
         {
             if(1 == DAW::CountSelectedTracks(nullptr))
                 page->MapTrackAndFXToWidgets(track);
             else
                 page->UnmapWidgetsFromTrack(track);
         }
-
     }
 };
 
