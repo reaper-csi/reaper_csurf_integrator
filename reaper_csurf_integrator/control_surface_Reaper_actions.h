@@ -1,4 +1,4 @@
-   //
+//
 //  control_surface_Reaper_actions.h
 //  reaper_csurf_integrator
 //
@@ -105,12 +105,14 @@ class TrackPanWidth : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, panToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_WIDTH")));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //DAW::CSurf_OnWidthChange(manager->GetTrack(widgetGUID), normalizedToPan(value), false);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
 };
 
@@ -162,7 +164,7 @@ public:
         {
             bool left = false;
             
-            double panVal = 0.0; //DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_PAN");
+            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
             
             if(panVal < 0)
             {
@@ -217,7 +219,7 @@ public:
         {
             bool reversed = false;
             
-            double widthVal = 0.0; //DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_WIDTH");
+            double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
             
             if(widthVal < 0)
             {
@@ -509,7 +511,8 @@ class TrackTouch : public Action
 public:
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //manager->SetTouchState(manager->GetTrack(widgetGUID), value == 0 ? false : true);
+        if(MediaTrack* track = page->GetTrack(widget))
+           page->SetTouchState(track, value == 0 ? false : true);
     }
 };
 
@@ -615,9 +618,10 @@ public:
         }
     }
     
-    virtual void Do(Widget* widget, Page* page, vector<string> & params, double autoMode) override
+    virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        DAW::SetAutomationMode(autoMode, true);
+        if(params.size() > 1)
+            DAW::SetAutomationMode(atol(params[1].c_str()), true);
     }
 };
 

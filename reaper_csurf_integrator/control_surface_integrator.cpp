@@ -279,6 +279,7 @@ void Manager::InitActionDictionary()
     actions_["TrackVolumeDisplay"] = new TrackVolumeDisplay();
     actions_["TrackPanDisplay"] = new TrackPanDisplay();
     actions_["TrackPanWidthDisplay"] = new TrackPanWidthDisplay();
+    actions_["Rewind"] = new Rewind();
     actions_["FastForward"] = new FastForward();
     actions_["Play"] = new Play();
     actions_["Stop"] = new Stop();
