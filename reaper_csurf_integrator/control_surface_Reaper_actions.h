@@ -69,14 +69,14 @@ class TrackVolume : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
-            widget->SetValue(volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        //if(MediaTrack* track = page->GetTrack(widget))
+            //widget->SetValue(volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
-            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        //if(MediaTrack* track = page->GetTrack(widget))
+            //DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -87,13 +87,14 @@ class TrackPan : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, panToNormalized(DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "D_PAN")));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //MediaTrack* track = manager->GetTrack(widgetGUID);
-        //DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
 };
 
@@ -355,13 +356,14 @@ class TrackSelect : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
     }
 };
 
@@ -372,14 +374,17 @@ class TrackUniqueSelect : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        DAW::SetOnlyTrackSelected(track);
-        TheManager->OnTrackSelection(track);
+        if(MediaTrack* track = page->GetTrack(widget))
+        {
+            DAW::SetOnlyTrackSelected(track);
+            TheManager->OnTrackSelection(track);
+        }
     }
 };
 
@@ -442,13 +447,14 @@ class TrackRecordArm : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_RECARM"));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
     }
 };
 
@@ -459,13 +465,14 @@ class TrackMute : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "B_MUTE"));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "B_MUTE"));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
     }
 };
 
@@ -476,13 +483,14 @@ class TrackSolo : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SOLO"));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
     }
 };
 
