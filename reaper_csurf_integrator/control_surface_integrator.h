@@ -694,6 +694,22 @@ public:
     void PinSelectedTracks()
     {
         /*
+        char buffer[BUFSZ];
+        
+        for(int i = 0; i < bankableChannels_.size(); i++)
+        {
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+            {
+                bankableChannels_[i]->SetGUID(buffer);
+                bankableChannels_[i]->SetIsPinned(true);
+            }
+        }
+*/
+        
+        
+        
+        
+        /*
         RealSurfaceChannel* channel = nullptr;
         
         for(auto* surface : realSurfaces_)
