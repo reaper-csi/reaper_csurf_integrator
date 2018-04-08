@@ -368,6 +368,30 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class BankableChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    bool isPinned_ = false;
+    string GUID_ = "";
+    vector<Widget*> widgets_;
+    
+public:
+    BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
+    
+    vector<Widget*> & GetWidgets() { return widgets_; }
+    bool GetIsPinned() { return isPinned_; }
+    void SetIsPinned(bool pinned)
+    {
+        isPinned_ = pinned;
+    }
+    void SetGUID(string GUID)
+    {
+        GUID_ = GUID;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -381,8 +405,8 @@ private:
     bool followMCP_ = true;
     int trackOffset_ = 0;
     vector<RealSurface*> realSurfaces_;
-    vector<vector<Widget*>> bankableChannels_;
-    map<Widget*, string> widgetGUIDs_;
+    vector<BankableChannel*> bankableChannels_;
+    map<Widget*, string> widgetTrackGUIDs_;
     map<Widget*, WidgetMode> widgetModes_;
 
     map<string, map<string, vector<string>>> actionTemplates_;
@@ -405,7 +429,8 @@ private:
     {
         string modifiers = "";
      
-        if(widget->GetRole() == Shift || widget->GetRole() == Option || widget->GetRole() == Control || widget->GetRole() == Alt)
+        string role = widget->GetRole();
+        if(role == Shift || role == Option || role == Control || role == Alt)
             return modifiers;
         
         if(shift_)
@@ -420,21 +445,18 @@ private:
         return modifiers;
     }
 
-    
-    
-    
-    
-    
-    
- 
-
-    
     void SetPinnedTracks()
     {
-        /*
-        for(auto [name, zone] : zones_)
-            zone->SetPinnedTracks();
-         */
+        char buffer[BUFSZ];
+        
+        for(int i = 0; i < bankableChannels_.size(); i++)
+        {
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+            {
+                bankableChannels_[i]->SetGUID(buffer);
+                bankableChannels_[i]->SetIsPinned(true);
+            }
+        }
     }
     
 public:
@@ -446,17 +468,18 @@ public:
 
     void Init()
     {
-        // GAW TBD Get all the widgets from all surfaees and build the widgetModes_ dictionary
+        // Get all the widgets from all surfaees and build the widgetModes_ dictionary
         for(auto * surface : realSurfaces_)
             for(auto * widget : surface->GetAllWidgets())
                 widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
         
-        // GAW TBD -- set the widget / Track contexts
+        // Set the initial Widget / Track contexts
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
         {
             string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
-            for(auto widget : bankableChannels_[i])
-                widgetGUIDs_[widget] = trackGUID;
+            bankableChannels_[i]->SetGUID(trackGUID);
+            for(auto widget : bankableChannels_[i]->GetWidgets())
+                widgetTrackGUIDs_[widget] = trackGUID;
         }
         
         SetPinnedTracks();
@@ -517,7 +540,7 @@ public:
         InitActionTemplates(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         for(auto channel : surface->GetBankableChannels())
-            bankableChannels_.push_back(channel);
+            bankableChannels_.push_back(new BankableChannel(channel));
         realSurfaces_.push_back(surface);
     }
     
@@ -551,20 +574,23 @@ public:
     
     
     
-    vector<MediaTrack*>& GetTracks(Widget* widget)
+    bool GetFollowMCP()
     {
-        vector<MediaTrack*> temp;
-        
-        return temp;
+        return followMCP_;
     }
 
     MediaTrack* GetTrack(Widget* widget)
     {
-        if(widgetGUIDs_.count(widget) > 0)
-            return DAW::GetTrackFromGUID(widgetGUIDs_[widget], followMCP_);
+        if(widgetTrackGUIDs_.count(widget) > 0)
+            return DAW::GetTrackFromGUID(widgetTrackGUIDs_[widget], followMCP_);
 
         return nullptr;
     }
+    
+    
+    
+    
+    
     
     int GetFXIndex(Widget* widget)
     {
@@ -668,17 +694,56 @@ public:
     void PinSelectedTracks()
     {
         /*
-        for(auto [name, zone] : zones_)
-            zone->PinSelectedTracks();
-         */
+        RealSurfaceChannel* channel = nullptr;
+        
+        for(auto* surface : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+            {
+                channel = surface->GetBankableChannels()[i];
+                MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
+                if(track == nullptr)
+                    continue;
+                
+                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+                {
+                    channel->SetIsMovable(false);
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
+                    DAW::MarkProjectDirty(nullptr);
+                }
+            }
+        }
+*/
+
     }
     
     void UnpinSelectedTracks()
     {
-        /*
-        for(auto [name, zone] : zones_)
-            zone->UnpinSelectedTracks();
-         */
+/*
+        char buffer[BUFSZ];
+        RealSurfaceChannel* channel = nullptr;
+        
+        for(auto* surface : realSurfaces_)
+        {
+            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+            {
+                channel = surface->GetBankableChannels()[i];
+                MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
+                if(track == nullptr)
+                    continue;
+                
+                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+                {
+                    channel->SetIsMovable(true);
+                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
+                    {
+                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), "");
+                        DAW::MarkProjectDirty(nullptr);
+                    }
+                }
+            }
+        }
+        */
     }
     
     
