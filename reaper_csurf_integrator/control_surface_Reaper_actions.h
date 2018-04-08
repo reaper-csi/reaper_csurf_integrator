@@ -390,40 +390,47 @@ class TrackRangeSelect : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //manager->SetWidgetValue(widgetGUID, DAW::GetMediaTrackInfo_Value(manager->GetTrack(widgetGUID), "I_SELECTED"));
+        if(MediaTrack* track = page->GetTrack(widget))
+        {
+            widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        }
     }
 
     virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        MediaTrack* track = nullptr; //manager->GetTrack(widgetGUID);
-        vector<MediaTrack*> tracks; //manager->GetSurfaceTracks(widgetGUID);
-        
-        int currentlySelectedCount = 0;
-        int selectedTrackIndex = 0;
-        int trackIndex = 0;
-        
-        for(int i = 0; i < tracks.size(); i++)
+        if(MediaTrack* track = page->GetTrack(widget))
         {
-            if(tracks[i] == track)
-                trackIndex = i;
+            int currentlySelectedCount = 0;
+            int selectedTrackIndex = 0;
+            int trackIndex = 0;
             
-            if(DAW::GetMediaTrackInfo_Value(tracks[i], "I_SELECTED"))
+            for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
             {
-                selectedTrackIndex = i;
-                currentlySelectedCount++;
+               MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                
+                if(currentTrack == track)
+                    trackIndex = i;
+                
+                if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
+                {
+                    selectedTrackIndex = i;
+                    currentlySelectedCount++;
+                }
             }
-        }
-        
-        if(currentlySelectedCount != 1)
-            return;
-        
-        int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
-        int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
+            
+            if(currentlySelectedCount != 1)
+                return;
+            
+            int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
+            int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
 
-        for(int i = lowerBound; i <= upperBound; i++)
-        {
-            DAW::CSurf_SetSurfaceSelected(tracks[i], DAW::CSurf_OnSelectedChange(tracks[i], 1), NULL);
-            TheManager->OnTrackSelection(tracks[i]);
+            for(int i = lowerBound; i <= upperBound; i++)
+            {
+                MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                
+                DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
+                TheManager->OnTrackSelection(currentTrack);
+            }
         }
     }
 };
