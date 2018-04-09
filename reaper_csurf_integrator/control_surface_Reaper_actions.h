@@ -523,70 +523,11 @@ class TrackTouchControlled : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //widget->SetValue("");
+        if(MediaTrack* track = page->GetTrack(widget))
+            if(params.size() > 1 && page->GetTouchState(track, 0))
+                if(Action* action = TheManager->GetAction(params[1]))
+                    action->RequestUpdate(widget, page, params);
     }
-
-    /*
-private:
-    OldAction* action_= nullptr;
-    string actionAddress_= nullptr;
-    
-    bool lastTouched_ = false;
-    
-    bool IsCurrentlyTouched(string zoneName)
-    {
-        if(GetTrack(zoneName))
-            return GetLayer()->GetTouchState(GetTrack(zoneName), 0);
-        else
-            return false;
-    }
-    
-public:
-    
-    virtual void Update(string zoneName, string surfaceName, string widgetName) override
-    {
-        bool currentlyTouched = IsCurrentlyTouched(zoneName);
-        
-        if(currentlyTouched)
-        {
-            lastTouched_ = currentlyTouched;
-            action_->Update(zoneName, surfaceName, widgetName);
-        }
-        else if(lastTouched_ != currentlyTouched)
-        {
-            lastTouched_ = currentlyTouched;
-            GetLayer()->ForceUpdateAction(actionAddress_, zoneName, surfaceName, widgetName);
-        }
-    }
-    
-    virtual int GetDisplayMode() override
-    {
-        return action_->GetDisplayMode();
-    }
-    
-    virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override
-    {
-        return action_->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
-    {
-        if(IsCurrentlyTouched(zoneName))
-            action_->ForceUpdate(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
-    {
-        if(IsCurrentlyTouched(zoneName))
-            action_->Cycle(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        if(IsCurrentlyTouched(zoneName))
-            action_->Do(value, zoneName, surfaceName, widgetName);
-    }
-    */
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
