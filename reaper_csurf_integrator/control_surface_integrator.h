@@ -604,12 +604,7 @@ public:
     {
         return 0;
     }
-
-    void OnTrackSelection(MediaTrack* track)
-    {
-        
-    }
-    
+   
     void TrackFXListChanged(MediaTrack* track)
     {
         /*
@@ -673,27 +668,6 @@ public:
         */
     }
     
-    void AdjustTrackBank(int stride)
-    {
-        /*
-        touchedTracks_.clear(); // GAW TBD -- in case anyone is touching a fader -- this is slightly pessimistic, if a fader from another zone is being touched it gets cleared too
-
-        zones_[zoneName]->AdjustTrackBank(stride);
-         */
-    }
-    
-    void TrackListChanged()
-    {
-        /*
-        for(auto const& [name, zone] : zones_)
-            zone->TrackListChanged();
-         */
-    }
-    
-
-    
-
-
     void PinSelectedTracks()
     {
         /*
@@ -766,8 +740,181 @@ public:
     }
     
     
+    void OnTrackSelection(MediaTrack* track)
+    {
+        //for(auto* surface : realSurfaces_)
+            //DoAction(1.0, GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
+    }
     
+    void TrackListChanged()
+    {
+        /*
+        vector<RealSurfaceChannel*> channels;
+        
+        for(auto* surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                channels.push_back(channel);
+        
+        int currentOffset = trackOffset_;
+        bool shouldRefreshLayout = false;
+        
+        for(int i = 0; i < channels.size() && currentOffset < GetNumTracks(); i++)
+        {
+            if(channels[i]->GetIsMovable() == false)
+            {
+                if(GetTrackFromGUID(channels[i]->GetGUID()) == nullptr) // track has been removed
+                {
+                    channels[i]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
+                    shouldRefreshLayout = true;
+                    break;
+                }
+                else
+                {
+                    currentOffset++; // track exists, move on
+                }
+            }
+            
+            else if(channels[i]->GetGUID() == GetNextVisibleTrackGUID(currentOffset))
+            {
+                currentOffset++; // track exists and positions are in synch
+            }
+            else
+            {
+                shouldRefreshLayout = true;
+                break;
+            }
+        }
+        
+        if(shouldRefreshLayout)
+            RefreshLayout();
+         */
+    }
     
+    void AdjustTrackBank(int stride)
+    {
+        /*
+        int previousTrackOffset = trackOffset_;
+        
+        trackOffset_ += stride;
+        
+        if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
+            trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
+        
+        if(trackOffset_ >  GetNumTracks() - 1)
+            trackOffset_ = GetNumTracks() - 1;
+        
+        // Jump over any pinned channels and invisible tracks
+        vector<string> pinnedChannels;
+        for(auto surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                if(channel->GetIsMovable() == false)
+                    pinnedChannels.push_back(channel->GetGUID());
+        
+        bool skipThisChannel = false;
+        
+        while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
+        {
+            string trackGUID = GetTrackGUIDAsString(trackOffset_);
+            
+            for(auto pinnedChannel : pinnedChannels)
+                if(pinnedChannel == trackGUID)
+                {
+                    skipThisChannel = true;
+                    previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+                    break;
+                }
+            
+            if( ! IsTrackVisible(CSurf_TrackFromID(trackOffset_)))
+            {
+                skipThisChannel = true;
+                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+            }
+            
+            if(skipThisChannel)
+            {
+                skipThisChannel = false;
+                continue;
+            }
+            else
+                break;
+        }
+        
+        RefreshLayout();
+         */
+    }
+    
+    void RefreshLayout()
+    {
+        /*
+        vector<string> pinnedChannelLayout;
+        vector<string> pinnedChannels;
+        vector<string> movableChannelLayout;
+        vector<string> channelLayout;
+        
+        // Layout locked channel GUIDs
+        for(auto surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                if(channel->GetIsMovable() == false)
+                {
+                    pinnedChannelLayout.push_back(channel->GetGUID());
+                    pinnedChannels.push_back(channel->GetGUID());
+                }
+                else
+                    pinnedChannelLayout.push_back("");
+        
+        // Layout channel GUIDs
+        int offset = trackOffset_;
+        
+        for(int i = 0; i < pinnedChannelLayout.size(); i++)
+        {
+            if(offset < 0)
+            {
+                movableChannelLayout.push_back("");
+                offset++;
+            }
+            else if(offset >= GetNumTracks())
+            {
+                movableChannelLayout.push_back("");
+            }
+            else
+            {
+                movableChannelLayout.push_back(GetNextVisibleTrackGUID(offset));
+                offset++;
+            }
+        }
+        
+        // Remove the locked GUIDs
+        for(int i = 0; i < pinnedChannels.size(); i++)
+        {
+            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
+            if(iter != movableChannelLayout.end())
+            {
+                movableChannelLayout.erase(iter);
+            }
+        }
+        
+        // Merge the layouts
+        offset = 0;
+        for(int i = 0; i < pinnedChannelLayout.size(); i++)
+        {
+            if(pinnedChannelLayout[i] != "")
+                channelLayout.push_back(pinnedChannelLayout[i]);
+            else
+                channelLayout.push_back(movableChannelLayout[offset++]);
+        }
+        
+        // Apply new layout
+        offset = 0;
+        for(auto* surface : realSurfaces_)
+            for(auto* channel : surface->GetBankableChannels())
+                channel->SetGUID(channelLayout[offset++]);
+        
+        for(auto* surface : realSurfaces_)
+            surface->ForceUpdateWidgets();
+         */
+    }
+
+
 };
 
 
