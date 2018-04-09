@@ -172,7 +172,7 @@ void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    actionTemplates_[surface->GetName()][tokens[0]] = params;
+                    actionTemplates_[surface->GetName()][tokens[0]].push_back(params);
                 }
             }
         }
@@ -229,9 +229,9 @@ void Page::RequestActionUpdate(Widget* widget)
         {
             if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()][0]);
-                if(action)
-                    action->RequestUpdate(widget, this, actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()]);
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                        action->RequestUpdate(widget, this, paramBundle);
             }
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
@@ -250,9 +250,9 @@ void Page::DoAction(Widget* widget, double value)
         {
             if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                Action* action = TheManager->GetAction(actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()][0]);
-                if(action)
-                    action->Do(widget, this, actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()], value);
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                        action->Do(widget, this, paramBundle, value);
             }
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
