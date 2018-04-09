@@ -36,6 +36,8 @@ public:
     {
         if(params.size() > 1)
             widget->SetValue(DAW::GetToggleCommandState(CommandId(params[1])));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -69,14 +71,16 @@ class TrackVolume : public Action
 public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
-        //if(MediaTrack* track = page->GetTrack(widget))
-            //widget->SetValue(volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //if(MediaTrack* track = page->GetTrack(widget))
-            //DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -89,6 +93,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -107,6 +113,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -134,6 +142,8 @@ public:
 
             widget->SetValue(trackName);
         }
+        else
+            widget->SetValue("");
     }
 };
 
@@ -150,6 +160,8 @@ public:
             sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
             widget->SetValue(string(trackVolume));
         }
+        else
+            widget->SetValue("");
     }
 };
 
@@ -368,6 +380,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -386,6 +400,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -406,9 +422,9 @@ public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
         if(MediaTrack* track = page->GetTrack(widget))
-        {
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        }
+        else
+            widget->SetValue(0.0);
     }
 
     virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -459,6 +475,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -477,6 +495,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "B_MUTE"));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -495,6 +515,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
             widget->SetValue(DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
+        else
+            widget->SetValue(0.0);
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
@@ -513,6 +535,8 @@ public:
     {
         if(MediaTrack* track = page->GetTrack(widget))
            page->SetTouchState(track, value == 0 ? false : true);
+        else
+            widget->SetValue(0.0);
     }
 };
 
@@ -563,6 +587,8 @@ public:
                         widget->SetValue(DAW::GetMediaTrackInfo_Value(currentTrack, "I_AUTOMODE"));
             }
         }
+        else
+            widget->SetValue(0.0);
     }
     
     virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) override
