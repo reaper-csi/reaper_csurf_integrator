@@ -46,17 +46,6 @@ const string Control = "Control";
 const string Alt = "Alt";
 const string Page_ = "Page";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Structs
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXWindow
-{
-    MediaTrack* track = nullptr;;
-    string fxGUID = "";
-    
-    FXWindow(MediaTrack* aTrack, string anFxGUID) : track(aTrack), fxGUID(anFxGUID) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -395,6 +384,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FXWindow
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct FXWindow
+{
+    MediaTrack* track = nullptr;;
+    string fxGUID = "";
+    
+    FXWindow(MediaTrack* aTrack, string anFxGUID) : track(aTrack), fxGUID(anFxGUID) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -573,9 +573,11 @@ public:
     
     
     
-    
-    
-    
+    void OnTrackSelection(MediaTrack* track)
+    {
+        //for(auto* surface : realSurfaces_)
+        //DoAction(1.0, GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
+    }
     
     bool GetFollowMCP()
     {
@@ -739,32 +741,18 @@ public:
         */
     }
     
-    
-    void OnTrackSelection(MediaTrack* track)
-    {
-        //for(auto* surface : realSurfaces_)
-            //DoAction(1.0, GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
-    }
-    
     void TrackListChanged()
     {
-        /*
-        vector<RealSurfaceChannel*> channels;
-        
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                channels.push_back(channel);
-        
         int currentOffset = trackOffset_;
         bool shouldRefreshLayout = false;
         
-        for(int i = 0; i < channels.size() && currentOffset < GetNumTracks(); i++)
+        for(int i = 0; i < bankableChannels_.size() && currentOffset < GetNumTracks(); i++)
         {
-            if(channels[i]->GetIsMovable() == false)
+            if(bankableChannels_[i]->GetIsPinned())
             {
-                if(GetTrackFromGUID(channels[i]->GetGUID()) == nullptr) // track has been removed
+                if(DAW::GetTrackFromGUID(bankableChannels_[i]->GetGUID(), followMCP_) == nullptr) // track has been removed
                 {
-                    channels[i]->SetIsMovable(true); // unlock this, since there is no longer a track to lock to
+                    bankableChannels_[i]->SetIsPinned(false); // unlock this, since there is no longer a track to lock to
                     shouldRefreshLayout = true;
                     break;
                 }
@@ -774,7 +762,7 @@ public:
                 }
             }
             
-            else if(channels[i]->GetGUID() == GetNextVisibleTrackGUID(currentOffset))
+            else if(bankableChannels_[i]->GetGUID() == GetNextVisibleTrackGUID(currentOffset))
             {
                 currentOffset++; // track exists and positions are in synch
             }
@@ -787,7 +775,6 @@ public:
         
         if(shouldRefreshLayout)
             RefreshLayout();
-         */
     }
     
     void AdjustTrackBank(int stride)
@@ -845,22 +832,22 @@ public:
     
     void RefreshLayout()
     {
-        /*
         vector<string> pinnedChannelLayout;
         vector<string> pinnedChannels;
         vector<string> movableChannelLayout;
         vector<string> channelLayout;
         
         // Layout locked channel GUIDs
-        for(auto surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                if(channel->GetIsMovable() == false)
-                {
-                    pinnedChannelLayout.push_back(channel->GetGUID());
-                    pinnedChannels.push_back(channel->GetGUID());
-                }
-                else
-                    pinnedChannelLayout.push_back("");
+        for(auto* channel : bankableChannels_)
+        {
+            if(channel->GetIsPinned())
+            {
+                pinnedChannelLayout.push_back(channel->GetGUID());
+                pinnedChannels.push_back(channel->GetGUID());
+            }
+            else
+                pinnedChannelLayout.push_back("");
+        }
         
         // Layout channel GUIDs
         int offset = trackOffset_;
@@ -905,21 +892,47 @@ public:
         
         // Apply new layout
         offset = 0;
-        for(auto* surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                channel->SetGUID(channelLayout[offset++]);
-        
-        for(auto* surface : realSurfaces_)
-            surface->ForceUpdateWidgets();
-         */
+        for(auto* channel : bankableChannels_)
+        {
+            for(auto widget : channel->GetWidgets())
+                widgetTrackGUIDs_[widget] = channelLayout[offset];
+            channel->SetGUID(channelLayout[offset++]);
+        }
     }
 
+    string GetNextVisibleTrackGUID(int & offset)
+    {
+        while(! IsTrackVisible(DAW::CSurf_TrackFromID(offset, followMCP_)) && offset < DAW::CSurf_NumTracks(followMCP_))
+            offset++;
+        
+        if(offset >= DAW::CSurf_NumTracks(followMCP_))
+            return "";
+        else
+            return DAW::GetTrackGUIDAsString(offset, followMCP_);
+    }
 
+    bool IsTrackVisible(MediaTrack* track)
+    {
+        if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
+        {
+            if(followMCP_ && DAW::GetMasterTrackVisibility() < 2)
+                return true;
+            else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
+                return true;
+            else
+                return false;
+        }
+        else
+        {
+            if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+                return true;
+            else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+                return true;
+            else
+                return false;
+        }
+    }
 };
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Manager
