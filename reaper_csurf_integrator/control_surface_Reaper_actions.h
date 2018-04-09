@@ -520,6 +520,12 @@ public:
 class TrackTouchControlled : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    {
+        //widget->SetValue("");
+    }
+
     /*
 private:
     OldAction* action_= nullptr;

@@ -412,7 +412,7 @@ private:
     map<Widget*, string> widgetTrackGUIDs_;
     map<Widget*, WidgetMode> widgetModes_;
 
-    map<string, map<string, vector<string>>> actionTemplates_;
+    map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
 
     vector<MediaTrack*> touchedTracks_;
