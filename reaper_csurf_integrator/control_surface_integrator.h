@@ -779,13 +779,12 @@ public:
     
     void AdjustTrackBank(int stride)
     {
-        /*
         int previousTrackOffset = trackOffset_;
         
         trackOffset_ += stride;
         
-        if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
-            trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
+        if(trackOffset_ < 1 - bankableChannels_.size() + GetNumLockedTracks())
+            trackOffset_ = 1 - bankableChannels_.size() + GetNumLockedTracks();
         
         if(trackOffset_ >  GetNumTracks() - 1)
             trackOffset_ = GetNumTracks() - 1;
@@ -793,15 +792,15 @@ public:
         // Jump over any pinned channels and invisible tracks
         vector<string> pinnedChannels;
         for(auto surface : realSurfaces_)
-            for(auto* channel : surface->GetBankableChannels())
-                if(channel->GetIsMovable() == false)
+            for(auto* channel : bankableChannels_)
+                if(channel->GetIsPinned())
                     pinnedChannels.push_back(channel->GetGUID());
         
         bool skipThisChannel = false;
         
         while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
         {
-            string trackGUID = GetTrackGUIDAsString(trackOffset_);
+            string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
             
             for(auto pinnedChannel : pinnedChannels)
                 if(pinnedChannel == trackGUID)
@@ -811,7 +810,7 @@ public:
                     break;
                 }
             
-            if( ! IsTrackVisible(CSurf_TrackFromID(trackOffset_)))
+            if( ! IsTrackVisible(DAW::CSurf_TrackFromID(trackOffset_, followMCP_)))
             {
                 skipThisChannel = true;
                 previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
@@ -827,7 +826,6 @@ public:
         }
         
         RefreshLayout();
-         */
     }
     
     void RefreshLayout()
@@ -899,7 +897,17 @@ public:
             channel->SetGUID(channelLayout[offset++]);
         }
     }
-
+    int GetNumLockedTracks()
+    {
+        int numLockedTracks = 0;
+        
+        for(auto* channel : bankableChannels_)
+            if(channel->GetIsPinned())
+                numLockedTracks++;
+        
+        return numLockedTracks;
+    }
+    
     string GetNextVisibleTrackGUID(int & offset)
     {
         while(! IsTrackVisible(DAW::CSurf_TrackFromID(offset, followMCP_)) && offset < DAW::CSurf_NumTracks(followMCP_))
