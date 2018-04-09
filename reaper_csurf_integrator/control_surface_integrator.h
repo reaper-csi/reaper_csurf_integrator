@@ -746,7 +746,7 @@ public:
         int currentOffset = trackOffset_;
         bool shouldRefreshLayout = false;
         
-        for(int i = 0; i < bankableChannels_.size() && currentOffset < GetNumTracks(); i++)
+        for(int i = 0; i < bankableChannels_.size() && currentOffset < DAW::CSurf_NumTracks(followMCP_); i++)
         {
             if(bankableChannels_[i]->GetIsPinned())
             {
@@ -783,22 +783,25 @@ public:
         
         trackOffset_ += stride;
         
-        if(trackOffset_ < 1 - bankableChannels_.size() + GetNumLockedTracks())
-            trackOffset_ = 1 - bankableChannels_.size() + GetNumLockedTracks();
+        int bottom = 1 - bankableChannels_.size() + GetNumLockedTracks();
         
-        if(trackOffset_ >  GetNumTracks() - 1)
-            trackOffset_ = GetNumTracks() - 1;
+        if(trackOffset_ <  bottom)
+            trackOffset_ =  bottom;
+        
+        int top = DAW::CSurf_NumTracks(followMCP_) - 1;
+        
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
         
         // Jump over any pinned channels and invisible tracks
         vector<string> pinnedChannels;
-        for(auto surface : realSurfaces_)
-            for(auto* channel : bankableChannels_)
-                if(channel->GetIsPinned())
-                    pinnedChannels.push_back(channel->GetGUID());
+        for(auto* channel : bankableChannels_)
+            if(channel->GetIsPinned())
+                pinnedChannels.push_back(channel->GetGUID());
         
         bool skipThisChannel = false;
         
-        while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
+        while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
         {
             string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
             
@@ -857,7 +860,7 @@ public:
                 movableChannelLayout.push_back("");
                 offset++;
             }
-            else if(offset >= GetNumTracks())
+            else if(offset >= DAW::CSurf_NumTracks(followMCP_))
             {
                 movableChannelLayout.push_back("");
             }

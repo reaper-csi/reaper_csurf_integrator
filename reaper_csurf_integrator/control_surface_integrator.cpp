@@ -633,7 +633,7 @@ void Zone::TrackListChanged()
     int currentOffset = trackOffset_;
     bool shouldRefreshLayout = false;
     
-    for(int i = 0; i < channels.size() && currentOffset < GetNumTracks(); i++)
+    for(int i = 0; i < channels.size() && currentOffset < DAW::CSurf_NumTracks(followMCP_); i++)
     {
         if(channels[i]->GetIsMovable() == false)
         {
@@ -673,8 +673,8 @@ void Zone::AdjustTrackBank(int stride)
     if(trackOffset_ < 1 - numBankableChannels_ + GetNumLockedTracks())
         trackOffset_ = 1 - numBankableChannels_ + GetNumLockedTracks();
     
-    if(trackOffset_ >  GetNumTracks() - 1)
-        trackOffset_ = GetNumTracks() - 1;
+    if(trackOffset_ >  DAW::CSurf_NumTracks(followMCP_) - 1)
+        trackOffset_ = DAW::CSurf_NumTracks(followMCP_) - 1;
     
     // Jump over any pinned channels and invisible tracks
     vector<string> pinnedChannels;
@@ -685,7 +685,7 @@ void Zone::AdjustTrackBank(int stride)
     
     bool skipThisChannel = false;
     
-    while(trackOffset_ >= 0 && trackOffset_ < GetNumTracks())
+    while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
     {
         string trackGUID = GetTrackGUIDAsString(trackOffset_);
         
@@ -743,7 +743,7 @@ void Zone::RefreshLayout()
             movableChannelLayout.push_back("");
             offset++;
         }
-        else if(offset >= GetNumTracks())
+        else if(offset >= DAW::CSurf_NumTracks(followMCP_))
         {
             movableChannelLayout.push_back("");
         }
