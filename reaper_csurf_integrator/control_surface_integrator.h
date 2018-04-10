@@ -354,6 +354,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
     virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
+    virtual void Do(MediaTrack* track, Page* page) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +470,8 @@ public:
     
     void InitActionTemplates(RealSurface* surface, string templateDirectory);
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
-
+    void OnTrackSelection(MediaTrack* track);    
+    
     void Init()
     {
         currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
@@ -565,21 +567,6 @@ public:
         else
             touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    void OnTrackSelection(MediaTrack* track)
-    {
-        //for(auto* surface : realSurfaces_)
-        //DoAction(1.0, GetTrackGUIDAsString(track), surface->GetName(), TrackOnSelection, TrackOnSelection);
-    }
     
     bool GetFollowMCP()
     {
@@ -654,24 +641,7 @@ public:
             zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
          */
     }
-        
-    void MapTrack(string trackGUID)
-    {
-            /*
-        if(trackGUID == "")
-            return; // Nothing to map
-        
-        if(find(mappedTrackGUIDs_.begin(), mappedTrackGUIDs_.end(), trackGUID) != mappedTrackGUIDs_.end())
-            return; // Already did this track
-
-        for(auto [name, zone] : zones_)
-            zone->MapTrackAndFXActions(trackGUID);
-         
-        
-        mappedTrackGUIDs_.push_back(trackGUID);
-        */
-    }
-    
+            
     void PinSelectedTracks()
     {
         BankableChannel* channel = nullptr;
