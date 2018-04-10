@@ -674,73 +674,48 @@ public:
     
     void PinSelectedTracks()
     {
-        /*
-        char buffer[BUFSZ];
+        BankableChannel* channel = nullptr;
         
         for(int i = 0; i < bankableChannels_.size(); i++)
         {
-            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+            channel = bankableChannels_[i];
+            
+            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID(), followMCP_);
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
-                bankableChannels_[i]->SetGUID(buffer);
-                bankableChannels_[i]->SetIsPinned(true);
+                channel->SetIsPinned(true);
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), channel->GetGUID().c_str());
+                DAW::MarkProjectDirty(nullptr);
             }
         }
-*/
-        
-        
-        
-        
-        /*
-        RealSurfaceChannel* channel = nullptr;
-        
-        for(auto* surface : realSurfaces_)
-        {
-            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
-            {
-                channel = surface->GetBankableChannels()[i];
-                MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
-                if(track == nullptr)
-                    continue;
-                
-                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-                {
-                    channel->SetIsMovable(false);
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), channel->GetGUID().c_str());
-                    DAW::MarkProjectDirty(nullptr);
-                }
-            }
-        }
-*/
-
     }
     
     void UnpinSelectedTracks()
     {
-/*
+        BankableChannel* channel = nullptr;
         char buffer[BUFSZ];
-        RealSurfaceChannel* channel = nullptr;
         
-        for(auto* surface : realSurfaces_)
+        for(int i = 0; i < bankableChannels_.size(); i++)
         {
-            for(int i = 0; i < surface->GetBankableChannels().size(); i++)
+            channel = bankableChannels_[i];
+            
+            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID(), followMCP_);
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
-                channel = surface->GetBankableChannels()[i];
-                MediaTrack* track = GetTrackFromGUID(channel->GetGUID());
-                if(track == nullptr)
-                    continue;
-                
-                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+                channel->SetIsPinned(false);
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
                 {
-                    channel->SetIsMovable(true);
-                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), buffer, sizeof(buffer)))
-                    {
-                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetLayer()->GetName() + GetName() + surface->GetName() + channel->GetSuffix()).c_str(), "");
-                        DAW::MarkProjectDirty(nullptr);
-                    }
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), "");
+                    DAW::MarkProjectDirty(nullptr);
                 }
             }
         }
-        */
     }
     
     void TrackListChanged()
