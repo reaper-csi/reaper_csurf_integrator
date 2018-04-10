@@ -908,6 +908,7 @@ public:
             channel->SetGUID(channelLayout[offset++]);
         }
     }
+    
     int GetNumLockedTracks()
     {
         int numLockedTracks = 0;

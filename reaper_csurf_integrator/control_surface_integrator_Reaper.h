@@ -187,6 +187,7 @@ public:
         }
     }
     
+    // GAW TBD -- dump this
     static string GetTrackGUIDAsString(MediaTrack* track, bool mcpView)
     {
         int trackNumber = CSurf_TrackToID(track, mcpView);
@@ -204,6 +205,8 @@ public:
         }
     }
     
+    
+    // GAW TBD -- dump this 
     static string GetTrackGUIDAsString(MediaTrack* track)
     {
         if(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1)
@@ -237,6 +240,8 @@ public:
             return nullptr;
     }
     
+    
+    // GAW TBD -- dump this
     static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
     {
         char fxGUID[BUFSZ];
