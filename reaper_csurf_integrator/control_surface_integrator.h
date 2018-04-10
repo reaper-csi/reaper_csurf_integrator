@@ -344,20 +344,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Action() {}
-    
-    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
-    virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
-    virtual void Do(MediaTrack* track, Page* page) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class BankableChannel
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -382,6 +368,20 @@ public:
     {
         GUID_ = GUID;
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~Action() {}
+    
+    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
+    virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
+    virtual void Do(MediaTrack* track, Page* page) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -412,15 +412,17 @@ private:
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     map<Widget*, string> widgetTrackGUIDs_;
+    map<Widget*, string> widgetFXGUIDs_;
+    map<Widget*, int> widgetFXIndices_;
+    map<Widget*, int> widgetFXParamIndices_;
     map<Widget*, WidgetMode> widgetModes_;
-
+    map<string, Widget*> widgetsByName_;
+    map<Widget*, vector<string>> widgetParamBundle_;
+    
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
 
     vector<MediaTrack*> touchedTracks_;
-
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
 
     bool zoom_ = false;
     bool scrub_ = false;
@@ -464,6 +466,34 @@ private:
         }
     }
     
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
+    bool IsShowFXWindows() { return showFXWindows_; }
+    
+    void AddFXWindow(FXWindow fxWindow)
+    {
+        openFXWindows_.push_back(fxWindow);
+    }
+    
+    void OpenFXWindows()
+    {
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
+    }
+    
+    void DeleteFXWindows()
+    {
+        CloseFXWindows();
+        openFXWindows_.clear();
+    }
+    
 public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
@@ -475,10 +505,15 @@ public:
     void Init()
     {
         currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-        // Get all the widgets from all surfaees and build the widgetModes_ dictionary
+        
         for(auto * surface : realSurfaces_)
+        {
             for(auto * widget : surface->GetAllWidgets())
+            {
+                widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
                 widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
+            }
+        }
         
         // Set the initial Widget / Track contexts
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
@@ -511,14 +546,14 @@ public:
     
     void SetShowFXWindows(bool value)
     {
-        showFXWindows_ = value;
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
     }
-    
-    bool IsShowFXWindows()
-    {
-        return showFXWindows_;
-    }
-    
+
     void SetShift(bool value)
     {
         shift_ = value;
@@ -586,14 +621,49 @@ public:
     
     
     
+    
+    
+    
+    
     int GetFXIndex(Widget* widget)
     {
-        return 0;
+        if(widgetFXIndices_.count(widget) > 0)
+            return widgetFXIndices_[widget];
+        else
+            return 0;
     }
     
     int GetFXParamIndex(Widget* widget)
     {
-        return 0;
+        if(widgetFXParamIndices_.count(widget) < 1)
+        {
+            if(MediaTrack* track = GetTrack(widget))
+            {
+                char fxName[BUFSZ];
+                char fxGUID[BUFSZ];
+                char fxParamName[BUFSZ];
+                
+                RealSurface* surface = widget->GetSurface();
+                
+                for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+                {
+                    DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+                    DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+                    
+                    if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+                        for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
+                            if(widget->GetRole() + surface->GetWidgetSuffix(widget) == widgetName)
+                                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); DAW::TrackFX_GetParamName(track, i, j++, fxParamName, sizeof(fxParamName)))
+                                    if(paramBundle[0] == fxParamName)
+                                        widgetFXParamIndices_[widget] = j;
+                }
+            }
+        }
+
+        if(widgetFXParamIndices_.count(widget) > 0)
+            return widgetFXParamIndices_[widget];
+        else
+            return 0;
     }
    
     void TrackFXListChanged(MediaTrack* track)
@@ -604,11 +674,17 @@ public:
          */
     }
     
+    
+    
+    // called by MapTrackAndFXToWidgets action
     void MapTrackAndFXToWidgets(MediaTrack* track)
     {
         //MapTrackToWidgets(track, zoneName, surfaceName);
-        //MapFXToWidgets(track, zoneName, surfaceName);
+        MapFXToWidgets(track);
     }
+    
+    
+    
     
     void MapTrackToWidgets(MediaTrack* track)
     {
@@ -628,20 +704,49 @@ public:
     
     void MapFXToWidgets(MediaTrack* track)
     {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->MapFXToWidgets(track, surfaceName);
-         */
+        char fxName[BUFSZ];
+        char fxGUID[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        DeleteFXWindows();
+        
+        for(auto surface : realSurfaces_)
+        {
+            string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
+            
+            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+            {
+                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+                
+                if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+                {
+                    for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
+                    {
+                        if(widgetsByName_.count(widgetName) > 0)
+                        {
+                            Widget* widget = widgetsByName_[widgetName];
+                            widgetFXGUIDs_[widget] = fxGUID;
+                            widgetModes_[widget] = WidgetMode::FX;
+                            widgetFXIndices_[widget] = i;
+                            widgetParamBundle_[widget] = paramBundle;
+                        }
+                    }
+                    
+                    AddFXWindow(FXWindow(track, fxGUID));
+                }
+            }
+        }
+        
+        OpenFXWindows();
     }
     
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->UnmapWidgetsFromFX(track, surfaceName);
-         */
+        for(auto [widget, mode] : widgetModes_)
+            mode = WidgetMode::Track;
     }
-            
+    
     void PinSelectedTracks()
     {
         BankableChannel* channel = nullptr;

@@ -59,7 +59,6 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClas
     return new Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -236,8 +235,15 @@ void Page::RequestActionUpdate(Widget* widget)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            //string target = CurrentModifers(widget) + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
+            Action* action = nullptr;
             
+            if(widgetParamBundle_[widget][0] == GainReductionDB)
+                action = TheManager->GetAction(GainReductionDB);
+            else
+                action = TheManager->GetAction("TrackFX");
+
+            if(action)
+                action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
         }
     }
 }
