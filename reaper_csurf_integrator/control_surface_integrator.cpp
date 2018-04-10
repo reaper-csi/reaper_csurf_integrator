@@ -263,6 +263,14 @@ void Page::DoAction(Widget* widget, double value)
     }
 }
 
+void Page::OnTrackSelection(MediaTrack* track)
+{
+    for(auto surface : realSurfaces_)
+        if(actionTemplates_.count(surface->GetName()) > 0 && actionTemplates_[surface->GetName()].count(TrackOnSelection) > 0)
+            for(auto paramBundle : actionTemplates_[surface->GetName()][TrackOnSelection])
+                if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    action->Do(track, this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Manager
