@@ -407,6 +407,7 @@ private:
     string name_ = "";
     bool followMCP_ = true;
     int trackOffset_ = 0;
+    int currentNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     map<Widget*, string> widgetTrackGUIDs_;
@@ -471,6 +472,7 @@ public:
 
     void Init()
     {
+        currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
         // Get all the widgets from all surfaees and build the widgetModes_ dictionary
         for(auto * surface : realSurfaces_)
             for(auto * widget : surface->GetAllWidgets())
@@ -743,6 +745,12 @@ public:
     
     void TrackListChanged()
     {
+        if(currentNumTracks_ != DAW::CSurf_NumTracks(followMCP_))
+        {
+            DAW::ClearCache();
+            currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
+        }
+        
         int currentOffset = trackOffset_;
         bool shouldRefreshLayout = false;
         

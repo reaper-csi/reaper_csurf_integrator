@@ -41,11 +41,17 @@ struct MIDI_event_ex_t : MIDI_event_t
     }
 };
 
+static map<string, MediaTrack*> GUIDTracks_;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    static void ClearCache()
+    {
+        GUIDTracks_.clear();
+    }
  
     static void SwapBufsPrecise(midi_Input* midiInput)
     {
@@ -213,11 +219,22 @@ public:
     
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
-        for(int i = 0; i < CSurf_NumTracks(mcpView) + 1; i++) // +1 is for Reaper Master Track
-            if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
-                return CSurf_TrackFromID(i, false);
+        if(GUIDTracks_.count(trackGUID) < 1)
+        {
+            for(int i = 0; i < CSurf_NumTracks(mcpView) + 1; i++) // +1 is for Reaper Master Track
+            {
+                if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
+                {
+                    GUIDTracks_[trackGUID] = CSurf_TrackFromID(i, mcpView);
+                    break;
+                }
+            }
+        }
         
-        return nullptr;
+        if(GUIDTracks_.count(trackGUID) > 0)
+            return GUIDTracks_[trackGUID];
+        else
+            return nullptr;
     }
     
     static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
