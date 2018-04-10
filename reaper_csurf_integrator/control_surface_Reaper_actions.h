@@ -55,12 +55,15 @@ public:
     void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
     {
         double min, max = 0;
-        //manager->SetWidgetValue(widgetGUID, DAW::TrackFX_GetParam(manager->GetTrack(widgetGUID), manager->GetFXIndex(widgetGUID), manager->GetFXParamIndex(widgetGUID), &min, &max));
+
+        if(MediaTrack* track = page->GetTrack(widget))
+            widget->SetValue(DAW::TrackFX_GetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget), &min, &max));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
-        //DAW::TrackFX_SetParam(manager->GetTrack(widgetGUID), manager->GetFXIndex(widgetGUID), manager->GetFXParamIndex(widgetGUID), value);
+        if(MediaTrack* track = page->GetTrack(widget))
+            DAW::TrackFX_SetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget), value);
     }
 };
 
