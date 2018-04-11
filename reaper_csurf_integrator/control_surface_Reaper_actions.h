@@ -57,13 +57,13 @@ public:
         double min, max = 0;
 
         if(MediaTrack* track = page->GetTrack(widget))
-            widget->SetValue(DAW::TrackFX_GetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget), &min, &max));
+            widget->SetValue(DAW::TrackFX_GetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget, track, page->GetFXIndex(widget)), &min, &max));
     }
     
     void Do(Widget* widget, Page* page, vector<string> & params, double value) override
     {
         if(MediaTrack* track = page->GetTrack(widget))
-            DAW::TrackFX_SetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget), value);
+            DAW::TrackFX_SetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget, track, page->GetFXIndex(widget)), value);
     }
 };
 
