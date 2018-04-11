@@ -382,7 +382,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
     virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
-    virtual void Do(MediaTrack* track, Page* page) {}
+    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +688,7 @@ public:
          */
     }
     
-    void UnmapWidgetsFromTrack(MediaTrack* track)
+    void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
     {
         int blah = 0;
         /*
@@ -698,24 +698,22 @@ public:
     }
 
     
-    void MapTrackAndFXToWidgets(MediaTrack* track)
+    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
-        MapTrackToWidgets(track);
-        MapFXToWidgets(track);
+        MapTrackToWidgets(surface, track);
+        MapFXToWidgets(surface, track);
     }
     
-    void MapTrackToWidgets(MediaTrack* track)
+    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
 
-        for(auto surface : realSurfaces_)
-            if(surface->GetName() == "Console1")
-                for(auto channel : surface->GetChannels())
-                    for(auto widget : channel)
-                        widgetTrackGUIDs_[widget] = trackGUID;
+        for(auto channel : surface->GetChannels())
+            for(auto widget : channel)
+                widgetTrackGUIDs_[widget] = trackGUID;
     }
 
-    void MapFXToWidgets(MediaTrack* track)
+    void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
         char fxName[BUFSZ];
         char fxGUID[BUFSZ];
@@ -724,29 +722,26 @@ public:
         
         string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
         
-        for(auto surface : realSurfaces_)
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
         {
-            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+            
+            if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
             {
-                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-                
-                if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+                for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
                 {
-                    for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
+                    if(widgetsByName_.count(widgetName) > 0)
                     {
-                        if(widgetsByName_.count(widgetName) > 0)
-                        {
-                            Widget* widget = widgetsByName_[widgetName];
-                            widgetTrackGUIDs_[widget] = trackGUID;
-                            widgetFXGUIDs_[widget] = fxGUID;
-                            widgetModes_[widget] = WidgetMode::FX;
-                            widgetParamBundle_[widget] = paramBundle;
-                        }
+                        Widget* widget = widgetsByName_[widgetName];
+                        widgetTrackGUIDs_[widget] = trackGUID;
+                        widgetFXGUIDs_[widget] = fxGUID;
+                        widgetModes_[widget] = WidgetMode::FX;
+                        widgetParamBundle_[widget] = paramBundle;
                     }
-                    
-                    AddFXWindow(FXWindow(track, fxGUID));
                 }
+                
+                AddFXWindow(FXWindow(track, fxGUID));
             }
         }
         
