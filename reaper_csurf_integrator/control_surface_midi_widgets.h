@@ -131,7 +131,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[0], value * 127.0);
+        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], value * 127.0);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
