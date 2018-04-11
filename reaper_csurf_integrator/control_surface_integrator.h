@@ -227,6 +227,7 @@ public:
     
     string GetName() const { return name_; }
     int GetNumChannels() { return channels_.size(); }
+    vector<vector<Widget*>> GetChannels() { return channels_; }
     vector<vector<Widget*>> GetBankableChannels() { return isBankable_ ? channels_ : vector<vector<Widget*>>() ; }
     bool IsBankable() { return isBankable_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
@@ -422,10 +423,9 @@ private:
 
     //FX
     vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = true;
+    bool showFXWindows_ = false;
     map<Widget*, string> widgetFXGUIDs_;
     map<Widget*, int> widgetFXParamIndices_;
-
 
     bool zoom_ = false;
     bool scrub_ = false;
@@ -671,51 +671,68 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         /*
-         for(auto [name, zone] : zones_)
-         zone->TrackFXListChanged(track);
-         */
-    }
-    
-    
-    
-    // called by MapTrackAndFXToWidgets action
-    void MapTrackAndFXToWidgets(MediaTrack* track)
-    {
-        //MapTrackToWidgets(track, zoneName, surfaceName);
-        MapFXToWidgets(track);
-    }
-    
-    
-    
-    
-    void MapTrackToWidgets(MediaTrack* track)
-    {
-        /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->MapTrackToWidgets(track, surfaceName);
+        char fxName[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(GetLayer()->GetManager()->GetVSTMonitor())
+            {
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
+            }
+        }
+        
+        for(auto* surface : realSurfaces_)
+            MapFXActions(GetTrackGUIDAsString(track), surface);
          */
     }
     
     void UnmapWidgetsFromTrack(MediaTrack* track)
     {
         /*
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
+         if(zones_.count(zoneName) > 0)
+         zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
          */
     }
+
     
+    void MapTrackAndFXToWidgets(MediaTrack* track)
+    {
+        MapTrackToWidgets(track);
+        MapFXToWidgets(track);
+    }
+    
+    
+    void MapTrackToWidgets(MediaTrack* track)
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
+
+        for(auto surface : realSurfaces_)
+            if(surface->GetName() == "Console1")
+                for(auto channel : surface->GetChannels())
+                    for(auto widget : channel)
+                        widgetTrackGUIDs_[widget] = trackGUID;
+    }
+
     void MapFXToWidgets(MediaTrack* track)
     {
         char fxName[BUFSZ];
         char fxGUID[BUFSZ];
-        char fxParamName[BUFSZ];
         
         DeleteFXWindows();
         
+        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
+        
         for(auto surface : realSurfaces_)
         {
-            string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-            
             for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
