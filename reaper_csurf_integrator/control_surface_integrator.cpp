@@ -211,6 +211,7 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                             fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("GainReductionDB");
                         else
                             fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("TrackFX");
+                        
                         fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(tokens[1]);
                     }
                 }
@@ -235,14 +236,7 @@ void Page::RequestActionUpdate(Widget* widget)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            Action* action = nullptr;
-            
-            if(widgetParamBundle_[widget][0] == GainReductionDB)
-                action = TheManager->GetAction(GainReductionDB);
-            else
-                action = TheManager->GetAction("TrackFX");
-
-            if(action)
+            if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
                 action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
         }
     }
@@ -263,8 +257,8 @@ void Page::DoAction(Widget* widget, double value)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            //string target = CurrentModifers() + widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget);
-            
+            if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
+                action->Do(widget, this, widgetParamBundle_[widget], value);
         }
     }
 }
