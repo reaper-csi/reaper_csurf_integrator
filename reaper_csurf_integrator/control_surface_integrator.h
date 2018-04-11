@@ -421,7 +421,6 @@ private:
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
 
-    //FX
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     map<Widget*, string> widgetFXGUIDs_;
@@ -468,7 +467,6 @@ private:
         }
     }
 
-    // FX
     bool IsShowFXWindows() { return showFXWindows_; }
 
     void AddFXWindow(FXWindow fxWindow)
