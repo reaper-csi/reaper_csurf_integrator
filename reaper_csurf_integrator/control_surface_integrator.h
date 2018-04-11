@@ -710,7 +710,6 @@ public:
         MapFXToWidgets(track);
     }
     
-    
     void MapTrackToWidgets(MediaTrack* track)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);

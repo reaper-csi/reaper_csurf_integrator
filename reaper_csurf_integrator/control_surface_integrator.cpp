@@ -228,11 +228,9 @@ void Page::RequestActionUpdate(Widget* widget)
         if(widgetModes_[widget] == WidgetMode::Track)
         {
             if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
-            {
                 for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                         action->RequestUpdate(widget, this, paramBundle);
-            }
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
@@ -249,11 +247,9 @@ void Page::DoAction(Widget* widget, double value)
         if(widgetModes_[widget] == WidgetMode::Track)
         {
             if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
-            {
                 for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                         action->Do(widget, this, paramBundle, value);
-            }
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
