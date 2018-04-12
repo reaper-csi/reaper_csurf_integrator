@@ -149,6 +149,33 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Page::TrackFXListChanged(MediaTrack* track)
+{
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        
+        if(TheManager->GetVSTMonitor())
+        {
+            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+            }
+        }
+    }
+    
+    /*
+     for(auto* surface : realSurfaces_)
+     MapFXActions(GetTrackGUIDAsString(track), surface);
+     */
+}
+
 void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
 {
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
@@ -201,18 +228,26 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    // GAW TBD fix this mess, the first token is the Widget role, the reat is the FX param, possibly with spaces.
+                    // GAW the first token is the Widget role, the reat is the FX param, possibly with spaces.
+                    string fxParameter = "";
                     
-                    if(tokens.size() == 2)
+                    if(tokens.size() > 2)
                     {
-                        replace(tokens[1].begin(), tokens[1].end(), '_', ' ');
-                        
-                        if(tokens[1] == "GainReductionDB")
+                        fxParameter = line.substr(tokens[0].size() + 1, line.size());
+                    }
+                    else if(tokens.size() == 2)
+                    {
+                        fxParameter = tokens[1];
+                    }
+                    
+                    if(tokens.size() > 1)
+                    {
+                        if(fxParameter == "GainReductionDB")
                             fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("GainReductionDB");
                         else
                             fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("TrackFX");
                         
-                        fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(tokens[1]);
+                        fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(fxParameter);
                     }
                 }
             }

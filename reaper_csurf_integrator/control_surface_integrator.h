@@ -500,7 +500,8 @@ public:
     void InitActionTemplates(RealSurface* surface, string templateDirectory);
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
     void OnTrackSelection(MediaTrack* track);    
-    
+    void TrackFXListChanged(MediaTrack* track);
+
     void Init()
     {
         currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
@@ -655,35 +656,6 @@ public:
         }
 
         return 0;
-    }
-   
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        int blah = 0;
-        
-        /*
-        char fxName[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            
-            if(GetLayer()->GetManager()->GetVSTMonitor())
-            {
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-                }
-            }
-        }
-        
-        for(auto* surface : realSurfaces_)
-            MapFXActions(GetTrackGUIDAsString(track), surface);
-         */
     }
     
     void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
