@@ -252,6 +252,35 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
     }
 }
 
+int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string paramName)
+{
+    char fxName[BUFSZ];
+    DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+    
+    if(TheManager->GetFXParamIndices().count(fxName) > 0 && TheManager->GetFXParamIndices()[fxName].count(paramName) > 0)
+        return TheManager->GetFXParamIndices()[fxName][paramName];
+    
+    char fxParamName[BUFSZ];
+    RealSurface* surface = widget->GetSurface();
+    string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
+    
+    if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
+    {
+        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        {
+            DAW::TrackFX_GetParamName(track, fxIndex, i, fxParamName, sizeof(fxParamName));
+            if(fxTemplates_[surface->GetName()][fxName][widgetName][1] == fxParamName)
+            {
+                TheManager->GetFXParamIndices()[fxName][paramName] = i;
+                return i;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -285,9 +314,7 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                     
                     
                     widgetTrackGUIDs_[widget] = DAW::GetTrackGUIDAsString(track, followMCP_);
-                    widgetFXGUIDs_[widget] = fxGUID;
                     widgetModes_[widget] = WidgetMode::FX;
-                    widgetParamBundle_[widget] = paramBundle;
                 }
             }
             

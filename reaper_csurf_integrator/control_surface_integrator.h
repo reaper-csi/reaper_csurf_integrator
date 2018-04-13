@@ -454,18 +454,10 @@ private:
 
 
     map<Widget*, WidgetContext> widgetContexts_;
-
-    
-    
+   
     map<Widget*, string> widgetTrackGUIDs_;
-    map<Widget*, string> widgetFXGUIDs_;
     map<Widget*, WidgetMode> widgetModes_;
-    map<Widget*, vector<string>> widgetParamBundle_;
-    
-    
-    
-    
-
+ 
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
@@ -540,7 +532,7 @@ private:
 public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
-    
+    int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string paramName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
     void InitActionTemplates(RealSurface* surface, string templateDirectory);
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
@@ -666,32 +658,6 @@ public:
     MediaTrack* GetTrack(string trackGUID)
     {
        return DAW::GetTrackFromGUID(trackGUID, followMCP_);
-    }
-    
-    int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex)
-    {
-        char fxName[BUFSZ];
-        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
-
-        
-        
-        char fxParamName[BUFSZ];
-        RealSurface* surface = widget->GetSurface();
-         string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
-        
-        if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
-        {
-            for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
-            {
-                DAW::TrackFX_GetParamName(track, fxIndex, i, fxParamName, sizeof(fxParamName));
-                if(fxTemplates_[surface->GetName()][fxName][widgetName][1] == fxParamName)
-                {
-                    return i;
-                }
-            }
-        }
-
-        return 0;
     }
     
     void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
@@ -990,6 +956,7 @@ private:
     map<string, Action*> actions_;
     vector <Page*> pages_;
     vector<Midi_RealSurface*> midi_realSurfaces_;
+    map<string, map<string, int>> fxParamIndices_;
     
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
@@ -1022,6 +989,8 @@ public:
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
+    
+    map<string, map<string, int>> & GetFXParamIndices() { return fxParamIndices_; }
     
     Action* GetAction(string actionName)
     {
