@@ -668,32 +668,16 @@ public:
        return DAW::GetTrackFromGUID(trackGUID, followMCP_);
     }
     
-    int GetFXIndex(Widget* widget)
-    {
-        if(MediaTrack* track = GetTrack(widget))
-        {
-            char fxGUID[BUFSZ];
-            
-            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-            {
-                DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-                if(widgetFXGUIDs_.count(widget) > 0 && widgetFXGUIDs_[widget] == fxGUID)
-                {
-                    return i;
-                }
-            }
-        }
-
-        return 0;
-    }
-    
     int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex)
     {
         char fxName[BUFSZ];
+        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+
+        
+        
         char fxParamName[BUFSZ];
         RealSurface* surface = widget->GetSurface();
-        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
-        string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
+         string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
         
         if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
         {

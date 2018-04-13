@@ -62,8 +62,8 @@ public:
     
     void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
-            DAW::TrackFX_SetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex), value);
+        if(MediaTrack* track = page->GetTrack(context.GetContextInfo()->trackGUID))
+            DAW::TrackFX_SetParam(track, context.GetContextInfo()->fxIndex, page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex), value);
     }
 };
 
