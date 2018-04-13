@@ -170,10 +170,7 @@ void Page::TrackFXListChanged(MediaTrack* track)
         }
     }
     
-    /*
-     for(auto* surface : realSurfaces_)
-     MapFXActions(GetTrackGUIDAsString(track), surface);
-     */
+    // GAW TBD -- clear all fx items and rebuild
 }
 
 void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
@@ -228,7 +225,7 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    // GAW the first token is the Widget role, the reat is the FX param, possibly with spaces.
+                    // GAW -- the first token is the Widget role, the reat is the FX param, possibly with spaces.
                     string fxParameter = "";
                     
                     if(tokens.size() > 2)
@@ -255,7 +252,54 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
     }
 }
 
-// Widgets -> Actions -- this is the grand switchboard that does all the heavy lifting wrt routing and context 
+void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
+{
+    char fxName[BUFSZ];
+    char fxGUID[BUFSZ];
+    
+    DeleteFXWindows();
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
+        
+        if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+        {
+            for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
+            {
+                if(widgetsByName_.count(widgetName) > 0)
+                {
+                    Widget* widget = widgetsByName_[widgetName];
+                    
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    {
+                        WidgetContext & context = widgetContexts_[widget];
+                        context.SetContext(WidgetMode::FX);
+                        context.GetContextInfo()->action = action;
+                        context.GetContextInfo()->paramBundle = paramBundle;
+                        context.GetContextInfo()->trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
+                        context.GetContextInfo()->fxIndex = i;
+                    }
+                
+                    
+                    
+                    
+                    widgetTrackGUIDs_[widget] = DAW::GetTrackGUIDAsString(track, followMCP_);
+                    widgetFXGUIDs_[widget] = fxGUID;
+                    widgetModes_[widget] = WidgetMode::FX;
+                    widgetParamBundle_[widget] = paramBundle;
+                }
+            }
+            
+            AddFXWindow(FXWindow(track, fxGUID));
+        }
+    }
+    
+    OpenFXWindows();
+}
+
+// Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context 
 void Page::RequestActionUpdate(Widget* widget)
 {
     if(widgetModes_.count(widget) > 0)
@@ -269,8 +313,11 @@ void Page::RequestActionUpdate(Widget* widget)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
-                action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
+            //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionWithParams)
+                widgetContexts_[widget].GetContextInfo()->action->RequestUpdate(widget, this, widgetContexts_[widget]);
+            
+            //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
+                //action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
         }
     }
 }
@@ -288,8 +335,11 @@ void Page::DoAction(Widget* widget, double value)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
-                action->Do(widget, this, widgetParamBundle_[widget], value);
+            //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionWithParams)
+                widgetContexts_[widget].GetContextInfo()->action->Do(widget, this, widgetContexts_[widget], value);
+
+            //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
+                //action->Do(widget, this, widgetParamBundle_[widget], value);
         }
     }
 }

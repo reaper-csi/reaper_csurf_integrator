@@ -52,7 +52,7 @@ class TrackFX : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {   
 public:
-    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) override
     {
         double min, max = 0;
 
@@ -60,7 +60,7 @@ public:
             widget->SetValue(DAW::TrackFX_GetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget, track, page->GetFXIndex(widget)), &min, &max));
     }
     
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         if(MediaTrack* track = page->GetTrack(widget))
             DAW::TrackFX_SetParam(track, page->GetFXIndex(widget), page->GetFXParamIndex(widget, track, page->GetFXIndex(widget)), value);
