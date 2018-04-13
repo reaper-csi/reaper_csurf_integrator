@@ -538,33 +538,7 @@ public:
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
     void OnTrackSelection(MediaTrack* track);    
     void TrackFXListChanged(MediaTrack* track);
-
-    void Init()
-    {
-        currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-        
-        for(auto * surface : realSurfaces_)
-        {
-            for(auto * widget : surface->GetAllWidgets())
-            {
-                widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
-                widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
-                
-                widgetContexts_[widget] = WidgetContext();
-            }
-        }
-        
-        // Set the initial Widget / Track contexts
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-        {
-            string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
-            bankableChannels_[i]->SetGUID(trackGUID);
-            for(auto widget : bankableChannels_[i]->GetWidgets())
-                widgetTrackGUIDs_[widget] = trackGUID;
-        }
-        
-        SetPinnedTracks();
-    }
+    void Init();
     
     // Widgets -> Actions -- this is the grand switchboard that does all the heavy lifting wrt routing and context
     void RequestActionUpdate(Widget* widget);
