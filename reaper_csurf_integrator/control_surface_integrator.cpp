@@ -280,7 +280,6 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
     return 0;
 }
 
-
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -341,9 +340,6 @@ void Page::RequestActionUpdate(Widget* widget)
         {
             for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
                 action->RequestUpdate(widget, this, widgetContexts_[widget]);
-            
-            //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
-                //action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
         }
     }
 }
@@ -363,9 +359,6 @@ void Page::DoAction(Widget* widget, double value)
         {
             for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
                 action->Do(widget, this, widgetContexts_[widget], value);
-
-            //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
-                //action->Do(widget, this, widgetParamBundle_[widget], value);
         }
     }
 }
