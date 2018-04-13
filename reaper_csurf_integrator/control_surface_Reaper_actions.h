@@ -57,13 +57,13 @@ public:
         double min, max = 0;
 
         if(MediaTrack* track = page->GetTrack(context.GetContextInfo()->trackGUID))
-            widget->SetValue(DAW::TrackFX_GetParam(track, context.GetContextInfo()->fxIndex, page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex), &min, &max));
+            widget->SetValue(DAW::TrackFX_GetParam(track, context.GetContextInfo()->fxIndex, page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex, context.GetContextInfo()->actionsWithParamBundle[0].second[1]), &min, &max));
     }
     
     void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         if(MediaTrack* track = page->GetTrack(context.GetContextInfo()->trackGUID))
-            DAW::TrackFX_SetParam(track, context.GetContextInfo()->fxIndex, page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex), value);
+            DAW::TrackFX_SetParam(track, context.GetContextInfo()->fxIndex, page->GetFXParamIndex(widget, track, context.GetContextInfo()->fxIndex, context.GetContextInfo()->actionsWithParamBundle[0].second[1]), value);
     }
 };
 
