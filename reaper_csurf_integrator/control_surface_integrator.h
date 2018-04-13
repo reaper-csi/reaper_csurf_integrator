@@ -451,13 +451,8 @@ private:
     vector<MediaTrack*> touchedTracks_;
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
-
-
     map<Widget*, WidgetContext> widgetContexts_;
-   
-    map<Widget*, string> widgetTrackGUIDs_;
-    map<Widget*, WidgetMode> widgetModes_;
- 
+  
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
@@ -532,6 +527,7 @@ private:
 public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
+    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track);
     int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string paramName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
     void InitActionTemplates(RealSurface* surface, string templateDirectory);
@@ -623,8 +619,6 @@ public:
 
     MediaTrack* GetTrack(Widget* widget)
     {
-        if(widgetTrackGUIDs_.count(widget) > 0)
-            return DAW::GetTrackFromGUID(widgetTrackGUIDs_[widget], followMCP_);
         
         return nullptr;
     }
@@ -649,19 +643,8 @@ public:
         MapFXToWidgets(surface, track);
     }
     
-    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
-    {
-        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-
-        for(auto channel : surface->GetChannels())
-            for(auto widget : channel)
-                widgetTrackGUIDs_[widget] = trackGUID;
-    }
-    
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
-        for(auto [widget, mode] : widgetModes_)
-            mode = WidgetMode::Track;
     }
     
     void PinSelectedTracks()
@@ -871,7 +854,7 @@ public:
         for(auto* channel : bankableChannels_)
         {
             for(auto widget : channel->GetWidgets())
-                widgetTrackGUIDs_[widget] = channelLayout[offset];
+                widgetContexts_[widget].GetContextInfo()->trackGUID = channelLayout[offset];
             channel->SetGUID(channelLayout[offset++]);
         }
     }
