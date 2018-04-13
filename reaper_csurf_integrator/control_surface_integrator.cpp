@@ -149,6 +149,54 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Page::Init()
+{
+    currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
+    
+    for(auto * surface : realSurfaces_)
+    {
+        for(auto * widget : surface->GetAllWidgets())
+        {
+            widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
+            widgetContexts_[widget] = WidgetContext();
+
+            widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
+        }
+    }
+    
+    // Set the initial Widget / Track contexts
+    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
+        bankableChannels_[i]->SetGUID(trackGUID);
+        for(auto widget : bankableChannels_[i]->GetWidgets())
+        {
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
+            {
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                {
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    {
+                        widgetContexts_[widget].SetContext(WidgetMode::Track);
+                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
+                        widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+                    }
+                }
+            }
+
+
+            
+            
+            
+            
+            
+            widgetTrackGUIDs_[widget] = trackGUID;
+        }
+    }
+    
+    SetPinnedTracks();
+}
+
 void Page::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -312,7 +360,6 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                     
                     
                     
-                    widgetTrackGUIDs_[widget] = DAW::GetTrackGUIDAsString(track, followMCP_);
                     widgetModes_[widget] = WidgetMode::FX;
                 }
             }
