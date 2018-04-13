@@ -159,8 +159,18 @@ void Page::Init()
         {
             widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
             widgetContexts_[widget] = WidgetContext();
-
-            widgetModes_[widget] = WidgetMode::Track; // Set to Track mode at startup
+            
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
+            {
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                {
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    {
+                        widgetContexts_[widget].SetContext(WidgetMode::Track);
+                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
+                    }
+                }
+            }
         }
     }
     
@@ -183,14 +193,6 @@ void Page::Init()
                     }
                 }
             }
-
-
-            
-            
-            
-            
-            
-            widgetTrackGUIDs_[widget] = trackGUID;
         }
     }
     
@@ -328,6 +330,30 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
     return 0;
 }
 
+void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+{
+    string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
+    
+    for(auto channel : surface->GetChannels())
+    {
+        for(auto widget : channel)
+        {
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
+            {
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                {
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    {
+                        widgetContexts_[widget].SetContext(WidgetMode::Track);
+                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
+                        widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -356,11 +382,6 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                         context.GetContextInfo()->trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
                         context.GetContextInfo()->fxIndex = i;
                     }
-                
-                    
-                    
-                    
-                    widgetModes_[widget] = WidgetMode::FX;
                 }
             }
             
@@ -374,40 +395,14 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context 
 void Page::RequestActionUpdate(Widget* widget)
 {
-    if(widgetModes_.count(widget) > 0)
-    {
-        if(widgetModes_[widget] == WidgetMode::Track)
-        {
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                        action->RequestUpdate(widget, this, paramBundle);
-        }
-        else if(widgetModes_[widget] == WidgetMode::FX)
-        {
-            for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-                action->RequestUpdate(widget, this, widgetContexts_[widget]);
-        }
-    }
+    for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+        action->RequestUpdate(widget, this, widgetContexts_[widget]);
 }
 
 void Page::DoAction(Widget* widget, double value)
 {
-    if(widgetModes_.count(widget) > 0)
-    {
-        if(widgetModes_[widget] == WidgetMode::Track)
-        {
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                        action->Do(widget, this, paramBundle, value);
-        }
-        else if(widgetModes_[widget] == WidgetMode::FX)
-        {
-            for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-                action->Do(widget, this, widgetContexts_[widget], value);
-        }
-    }
+    for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+        action->Do(widget, this, widgetContexts_[widget], value);
 }
 
 void Page::OnTrackSelection(MediaTrack* track)
