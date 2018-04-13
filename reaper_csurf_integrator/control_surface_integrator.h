@@ -659,8 +659,13 @@ public:
     {
         if(widgetTrackGUIDs_.count(widget) > 0)
             return DAW::GetTrackFromGUID(widgetTrackGUIDs_[widget], followMCP_);
-
+        
         return nullptr;
+    }
+    
+    MediaTrack* GetTrack(string trackGUID)
+    {
+       return DAW::GetTrackFromGUID(trackGUID, followMCP_);
     }
     
     int GetFXIndex(Widget* widget)
