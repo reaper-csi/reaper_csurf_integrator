@@ -263,7 +263,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -274,7 +274,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, vector<string> & params, double value)
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value)
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -285,7 +285,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) override
     {
         int playState = DAW::GetPlayState();
         if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
@@ -294,7 +294,7 @@ public:
         widget->SetValue(playState);
     }
     
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -305,7 +305,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) override
     {
         int stopState = DAW::GetPlayState();
         if(stopState == 0 || stopState == 2 || stopState == 6) // stopped or paused or paused whilst recording
@@ -315,7 +315,7 @@ public:
         widget->SetValue(stopState);
     }
     
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         DAW::CSurf_OnStop();
     }
@@ -326,7 +326,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) override
     {
         int recordState = DAW::GetPlayState();
         if(recordState == 5 || recordState == 6) // recording or paused whilst recording
@@ -336,7 +336,7 @@ public:
         widget->SetValue(recordState);
     }
     
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         DAW::CSurf_OnRecord();
     }
@@ -606,12 +606,12 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Widget* widget, Page* page, vector<string> & params) override
+    void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) override
     {
         widget->SetValue(DAW::GetSetRepeatEx(nullptr, -1));
     }
     
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
