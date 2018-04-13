@@ -276,8 +276,7 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                     {
                         WidgetContext & context = widgetContexts_[widget];
                         context.SetContext(WidgetMode::FX);
-                        context.GetContextInfo()->action = action;
-                        context.GetContextInfo()->paramBundle = paramBundle;
+                        context.GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
                         context.GetContextInfo()->trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
                         context.GetContextInfo()->fxIndex = i;
                     }
@@ -313,8 +312,8 @@ void Page::RequestActionUpdate(Widget* widget)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionWithParams)
-                widgetContexts_[widget].GetContextInfo()->action->RequestUpdate(widget, this, widgetContexts_[widget]);
+            for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+                action->RequestUpdate(widget, this, widgetContexts_[widget]);
             
             //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
                 //action->RequestUpdate(widget, this, widgetParamBundle_[widget]);
@@ -335,8 +334,8 @@ void Page::DoAction(Widget* widget, double value)
         }
         else if(widgetModes_[widget] == WidgetMode::FX)
         {
-            //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionWithParams)
-                widgetContexts_[widget].GetContextInfo()->action->Do(widget, this, widgetContexts_[widget], value);
+            for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+                action->Do(widget, this, widgetContexts_[widget], value);
 
             //if(Action* action = TheManager->GetAction(widgetParamBundle_[widget][0]) )
                 //action->Do(widget, this, widgetParamBundle_[widget], value);
