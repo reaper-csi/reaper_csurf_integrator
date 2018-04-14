@@ -430,9 +430,7 @@ public:
     virtual ~Action() {}
     
     virtual void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) {}
-    virtual void RequestUpdate(Widget* widget, Page* page, vector<string> & params) {}
     virtual void Do(Widget* widget, Page* page, WidgetContext & context, double value) {}
-    virtual void Do(Widget* widget, Page* page, vector<string> & params, double value) {}
     virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
 };
 
@@ -536,10 +534,6 @@ public:
     void TrackFXListChanged(MediaTrack* track);
     void Init();
     
-    // Widgets -> Actions -- this is the grand switchboard that does all the heavy lifting wrt routing and context
-    void RequestActionUpdate(Widget* widget);
-    void DoAction(Widget* widget, double value);
-    
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
@@ -616,12 +610,6 @@ public:
     {
         return followMCP_;
     }
-
-    MediaTrack* GetTrack(Widget* widget)
-    {
-        
-        return nullptr;
-    }
     
     MediaTrack* GetTrack(string trackGUID)
     {
@@ -645,6 +633,19 @@ public:
     
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
+    }
+    
+    // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context
+    void RequestActionUpdate(Widget* widget)
+    {
+        for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+            action->RequestUpdate(widget, this, widgetContexts_[widget]);
+    }
+    
+    void DoAction(Widget* widget, double value)
+    {
+        for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+            action->Do(widget, this, widgetContexts_[widget], value);
     }
     
     void PinSelectedTracks()
