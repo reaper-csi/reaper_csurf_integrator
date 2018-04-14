@@ -173,10 +173,12 @@ class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, vector<string> & params, double value) override
+    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
     {
+        /*
         if(params.size() > 1)
             page->AdjustTrackBank(atol(params[1].c_str()));
+         */
     }
 };
 

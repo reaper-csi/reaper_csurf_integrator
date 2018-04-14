@@ -153,6 +153,7 @@ void Page::Init()
 {
     currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
     
+    // Set the initial Widget / Track contexts
     for(auto * surface : realSurfaces_)
     {
         for(auto * widget : surface->GetAllWidgets())
@@ -180,20 +181,7 @@ void Page::Init()
         string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
         bankableChannels_[i]->SetGUID(trackGUID);
         for(auto widget : bankableChannels_[i]->GetWidgets())
-        {
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
-            {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
-                {
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    {
-                        widgetContexts_[widget].SetContext(WidgetMode::Track);
-                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                        widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
-                    }
-                }
-            }
-        }
+            widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
     }
     
     SetPinnedTracks();
@@ -390,19 +378,6 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
     }
     
     OpenFXWindows();
-}
-
-// Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context 
-void Page::RequestActionUpdate(Widget* widget)
-{
-    for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-        action->RequestUpdate(widget, this, widgetContexts_[widget]);
-}
-
-void Page::DoAction(Widget* widget, double value)
-{
-    for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-        action->Do(widget, this, widgetContexts_[widget], value);
 }
 
 void Page::OnTrackSelection(MediaTrack* track)
