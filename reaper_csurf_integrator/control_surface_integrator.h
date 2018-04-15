@@ -431,17 +431,23 @@ public:
     virtual ~Action() {}
     
     virtual void RequestUpdate(Widget* widget) {}
+    virtual void RequestUpdate(Widget* widget, int commandId) {}
     virtual void RequestUpdate(Widget* widget, MediaTrack* track) {}
+    virtual void RequestUpdate(Widget* widget, MediaTrack* track, int param) {}
+    virtual void RequestUpdate(Widget* widget, MediaTrack* track, Page* page, int param) {}
     virtual void RequestUpdate(Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {}
+    virtual void RequestUpdate(Widget* widget, MediaTrack* track, bool followMCP) {}
 
     virtual void Do() {}
+    virtual void Do(double value) {}
+    virtual void Do(Page* page) {}
+    virtual void Do(Page* page, double value) {}
+    virtual void Do(MediaTrack* track) {}
+    virtual void Do(MediaTrack* track, bool followMCP) {}
     virtual void Do(MediaTrack* track, double value) {}
+    virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
     virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
-
-    // GAW TBD -- remove these after redesign complete
-    virtual void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) {}
-    virtual void Do(Widget* widget, Page* page, WidgetContext & context, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -664,14 +670,14 @@ public:
     // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context
     void RequestActionUpdate(Widget* widget)
     {
-        for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-            action->RequestUpdate(widget, this, widgetContexts_[widget]);
+        //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+            //action->RequestUpdate(widget, this, widgetContexts_[widget]);
     }
     
     void DoAction(Widget* widget, double value)
     {
-        for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-            action->Do(widget, this, widgetContexts_[widget], value);
+        //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
+            //action->Do(widget, this, widgetContexts_[widget], value);
     }
     
     void PinSelectedTracks()
