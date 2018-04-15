@@ -30,7 +30,7 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double value) override
     {
         page->SetShowFXWindows(value);
     }
@@ -41,7 +41,7 @@ class Shift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double value) override
     {
         page->SetShift(value);
     }
@@ -52,7 +52,7 @@ class Option : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double value) override
     {
         page->SetOption(value);
     }
@@ -63,7 +63,7 @@ class Control : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double value) override
     {
         page->SetControl(value);
     }
@@ -74,7 +74,7 @@ class Alt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double value) override
     {
         page->SetAlt(value);
     }
@@ -85,7 +85,7 @@ class Latched : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do() override
     {
         
     }
@@ -122,7 +122,7 @@ class LatchedZoom : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do() override
     {
         
     }
@@ -142,7 +142,7 @@ class LatchedScrub : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do() override
     {
         
     }
@@ -162,7 +162,7 @@ class NextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do() override
     {
         TheManager->NextPage();
     }
@@ -173,12 +173,9 @@ class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page, double stride) override
     {
-        /*
-        if(params.size() > 1)
-            page->AdjustTrackBank(atol(params[1].c_str()));
-         */
+         page->AdjustTrackBank(stride);
     }
 };
 
@@ -187,7 +184,7 @@ class PinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page) override
     {
         page->PinSelectedTracks();
     }
@@ -198,7 +195,7 @@ class UnpinSelectedTracks : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Widget* widget, Page* page, WidgetContext & context, double value) override
+    void Do(Page* page) override
     {
         page->UnpinSelectedTracks();
     }
