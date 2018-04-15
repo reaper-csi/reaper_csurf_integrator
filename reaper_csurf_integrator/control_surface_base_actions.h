@@ -9,6 +9,129 @@
 
 #include "control_surface_integrator.h"
 
+// GAW TBD -- use this for Action Contexts
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string trackGUID_ = "";
+    
+public:
+    TrackContext(Action* action, string trackGUID) : ActionContext(action), trackGUID_(trackGUID) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string trackGUID_ = "";
+
+public:
+    FXContext(Action* action, string trackGUID) : ActionContext(action), trackGUID_(trackGUID) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ReaperActionContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int commandId_ = 0;
+    
+public:
+    ReaperActionContext(Action* action, string commandStr) : ActionContext(action)
+    {
+        commandId_ =  atol(commandStr.c_str());
+        
+        if(commandId_ == 0) // unsuccessful conversion to number
+        {
+        
+        commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
+        
+        if(commandId_ == 0) // can't find it
+            commandId_ = 65535; // no-op
+        }
+    }
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class IntParamContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int param_ = 0;
+    
+public:
+    IntParamContext(Action* action, int param) : ActionContext(action), param_(param) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PageContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    
+public:
+    PageContext(Action* action, Page* page) : ActionContext(action), page_(page) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+
+
+
+/*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Double_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,5 +242,7 @@ public:
         SetWidgetValue(zoneName, surfaceName, widgetName, GetValue(zoneName, surfaceName, widgetName));
     }
 };
+ 
+ */
 
 #endif /* control_surface_base_actions_h */

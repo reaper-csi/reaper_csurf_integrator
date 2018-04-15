@@ -40,6 +40,7 @@ const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string FollowMCP = "FollowMCP";
 const string RealSurface_ = "RealSurface";
+const string VirtualSurface_ = "VirtualSurface";
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
@@ -429,9 +430,34 @@ class Action
 public:
     virtual ~Action() {}
     
+    virtual void RequestUpdate(Widget* widget) {}
+    virtual void RequestUpdate(Widget* widget, MediaTrack* track) {}
+    virtual void RequestUpdate(Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {}
+
+    virtual void Do() {}
+    virtual void Do(MediaTrack* track, double value) {}
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
+
+    // GAW TBD -- remove these after redesign complete
     virtual void RequestUpdate(Widget* widget, Page* page, WidgetContext & context) {}
     virtual void Do(Widget* widget, Page* page, WidgetContext & context, double value) {}
-    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Action * action_ = nullptr;
+    
+public:
+    ActionContext(Action* action) : action_(action) {}
+    virtual ~ActionContext() {}
+    
+    Action * GetAction() { return action_; }
+    virtual void RequestActionUpdate(Page* page, Widget* widget) {}
+    virtual void DoAction(Page* page, Widget* widget, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1038,10 +1064,10 @@ public:
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
 
 const string Layer_ = "Layer";
 const string Zone_ = "Zone";
-const string VirtualSurface_ = "VirtualSurface";
 
 
 
@@ -1196,7 +1222,7 @@ public:
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
-    /*
+
     string GetWidgetGUID(string widgetName)
     {
         if(widgetsByName_.count(widgetName) > 0)
@@ -1204,7 +1230,7 @@ public:
         
         return "";
     }
-     */
+
     
     vector<RealSurfaceChannel*> & GetBankableChannels()
     {
@@ -2288,5 +2314,5 @@ public:
             layout->TrackFXListChanged(trackid);
     }
 };
-
+*/
 #endif /* control_surface_integrator.h */
