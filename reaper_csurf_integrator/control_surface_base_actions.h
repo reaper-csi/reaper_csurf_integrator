@@ -15,11 +15,8 @@
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    string trackGUID_ = "";
-    
 public:
-    TrackContext(Action* action, string trackGUID) : ActionContext(action), trackGUID_(trackGUID) {}
+    TrackContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -37,10 +34,10 @@ class FXContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string trackGUID_ = "";
-
+    string fxName_ = "";
+    int fxIndex_ = 0;
 public:
-    FXContext(Action* action, string trackGUID) : ActionContext(action), trackGUID_(trackGUID) {}
+    FXContext(Action* action, string fxName, int fxIndex) : ActionContext(action), fxName_(fxName), fxIndex_(fxIndex) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -111,11 +108,8 @@ public:
 class PageContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Page* page_ = nullptr;
-    
 public:
-    PageContext(Action* action, Page* page) : ActionContext(action), page_(page) {}
+    PageContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
