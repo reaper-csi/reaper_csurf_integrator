@@ -381,6 +381,13 @@ enum class WidgetMode
     FX
 };
 
+
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -410,6 +417,14 @@ public:
         currentContext_ = widgetContexts_[mode];
     }
 };
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
@@ -481,8 +496,22 @@ private:
     vector<MediaTrack*> touchedTracks_;
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, vector<string>>>> fxTemplates_;
+    
+    
+    
+    
+    
+    map<Widget*, WidgetMode> widgetModes_;
+    map<Widget*, string> widgetGUIDs_;
+
+    
+    
     map<Widget*, WidgetContext> widgetContexts_;
-  
+
+    
+    
+    
+    
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
@@ -494,7 +523,7 @@ private:
     bool control_ = false;
     bool alt_ = false;
     
-    string CurrentModifers(Widget* widget)
+    string GetCurrentModifers(Widget* widget)
     {
         string modifiers = "";
      
@@ -569,6 +598,22 @@ public:
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
     
+    WidgetMode GetWidgetMode(Widget* widget)
+    {
+        if(widgetModes_.count(widget) > 0)
+            return widgetModes_[widget];
+        else
+            return WidgetMode::Track;
+    }
+    
+    MediaTrack* GetTrack(Widget* widget)
+    {
+        if(widgetGUIDs_.count(widget))
+            return DAW::GetTrackFromGUID(widgetGUIDs_[widget], followMCP_);
+        else
+            return nullptr;
+    }
+
     void SetZoom(bool value)
     {
         zoom_ = value;
@@ -643,11 +688,6 @@ public:
         return followMCP_;
     }
     
-    MediaTrack* GetTrack(string trackGUID)
-    {
-       return DAW::GetTrackFromGUID(trackGUID, followMCP_);
-    }
-    
     void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
     {
         int blah = 0;
@@ -665,6 +705,9 @@ public:
     
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
+        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
+        for(auto [widget, mode] : widgetModes_)
+            mode = WidgetMode::Track;
     }
     
     // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context
@@ -887,7 +930,10 @@ public:
         for(auto* channel : bankableChannels_)
         {
             for(auto widget : channel->GetWidgets())
+            {
                 widgetContexts_[widget].GetContextInfo()->trackGUID = channelLayout[offset];
+                widgetGUIDs_[widget] = channelLayout[offset];
+            }
             channel->SetGUID(channelLayout[offset++]);
         }
     }
