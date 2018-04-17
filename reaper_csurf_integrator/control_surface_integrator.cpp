@@ -330,7 +330,7 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
     RealSurface* surface = widget->GetSurface();
     string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
     
-    if(yfxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
+    if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
     {
         for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
         {
