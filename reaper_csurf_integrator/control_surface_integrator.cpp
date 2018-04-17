@@ -161,9 +161,12 @@ void Page::Init()
             widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
             widgetContexts_[widget] = WidgetContext();
             
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
+            widgetModes_[widget] = WidgetMode::Track;
+
+            
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
                 {
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                     {
@@ -181,7 +184,10 @@ void Page::Init()
         string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
         bankableChannels_[i]->SetGUID(trackGUID);
         for(auto widget : bankableChannels_[i]->GetWidgets())
+        {
             widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+            widgetGUIDs_[widget] = trackGUID;
+        }
     }
     
     SetPinnedTracks();
@@ -248,10 +254,10 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
         {
             ifstream fxTemplateFile(string(templateDirectory + "/" + filename));
             
-            string firstLine;
-            getline(fxTemplateFile, firstLine);
+            string fxName;
+            getline(fxTemplateFile, fxName);
             
-            fxTemplates_[surface->GetName()][firstLine] = map<string, vector<string>>();
+            fxTemplates_[surface->GetName()][fxName] = map<string, vector<string>>();
             
             for (string line; getline(fxTemplateFile, line) ; )
             {
@@ -263,7 +269,29 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    // GAW -- the first token is the Widget role, the reat is the FX param, possibly with spaces.
+                    // GAW -- the first token is the (possibly decorated with modifiers) Widget role, the rest is the FX param, possibly with spaces.
+                    
+                    string modifiers = "";
+                    string role = "";
+                    
+                    if(tokens.size() > 0)
+                    {
+                        istringstream modified_role(tokens[0]);
+                        vector<string> modifier_tokens;
+                        string modifier_token;
+                        
+                        while (getline(modified_role, modifier_token, '+'))
+                            modifier_tokens.push_back(modifier_token);
+
+                        role = modifier_tokens[modifier_tokens.size() - 1];
+
+                        if(modifier_tokens.size() > 1)
+                        {
+                            // GAW TDB -- fancy algo to place modifiers in correct order
+                            
+                        }
+                    }
+                    
                     string fxParameter = "";
                     
                     if(tokens.size() > 2)
@@ -278,11 +306,11 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     if(tokens.size() > 1)
                     {
                         if(fxParameter == "GainReductionDB")
-                            fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("GainReductionDB");
+                            fxTemplates_[surface->GetName()][fxName][role].push_back("GainReductionDB");
                         else
-                            fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back("TrackFX");
+                            fxTemplates_[surface->GetName()][fxName][role].push_back("TrackFX");
                         
-                        fxTemplates_[surface->GetName()][firstLine][tokens[0]].push_back(fxParameter);
+                        fxTemplates_[surface->GetName()][fxName][role].push_back(fxParameter);
                     }
                 }
             }
@@ -302,7 +330,7 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
     RealSurface* surface = widget->GetSurface();
     string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
     
-    if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
+    if(yfxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
     {
         for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
         {
@@ -326,15 +354,16 @@ void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     {
         for(auto widget : channel)
         {
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(CurrentModifers(widget) + widget->GetRole()) > 0)
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][CurrentModifers(widget) + widget->GetRole()])
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
                 {
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                     {
                         widgetContexts_[widget].SetContext(WidgetMode::Track);
                         widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
                         widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+                        widgetGUIDs_[widget] = trackGUID;
                     }
                 }
             }
@@ -364,6 +393,9 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                     
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                     {
+                        
+                        widgetModes_[widget] = WidgetMode::FX;
+                        
                         WidgetContext & context = widgetContexts_[widget];
                         context.SetContext(WidgetMode::FX);
                         context.GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
