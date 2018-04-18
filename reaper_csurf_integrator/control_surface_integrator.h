@@ -431,9 +431,9 @@ struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     MediaTrack* track = nullptr;;
-    string fxGUID = "";
+    int fxIndex = 0;
     
-    FXWindow(MediaTrack* aTrack, string anFxGUID) : track(aTrack), fxGUID(anFxGUID) {}
+    FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -568,13 +568,13 @@ private:
     {
         if(showFXWindows_)
             for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 3);
+                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
     }
     
     void CloseFXWindows()
     {
         for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, DAW::IndexFromFXGUID(fxWindow.track, fxWindow.fxGUID), 2);
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
     }
     
     void DeleteFXWindows()

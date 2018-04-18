@@ -269,10 +269,10 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    // GAW -- the first token is the (possibly decorated with modifiers) Widget role, the rest is the FX param, possibly with spaces.
+                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name, the rest is the FX param, possibly with spaces.
                     
                     string modifiers = "";
-                    string role = "";
+                    string widgetName = "";
                     
                     if(tokens.size() > 0)
                     {
@@ -283,34 +283,44 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                         while (getline(modified_role, modifier_token, '+'))
                             modifier_tokens.push_back(modifier_token);
 
-                        role = modifier_tokens[modifier_tokens.size() - 1];
+                        widgetName = modifier_tokens[modifier_tokens.size() - 1];
 
                         if(modifier_tokens.size() > 1)
                         {
-                            // GAW TDB -- fancy algo to place modifiers in correct order
+                            vector<string> modifierSlots = { "", "", "", "" };
                             
+                            for(int i = 0; i < modifier_tokens.size() - 1; i++)
+                            {
+                                if(modifier_tokens[i] == "Shift")
+                                    modifierSlots[0] = "Shift";
+                                else if(modifier_tokens[i] == "Option")
+                                    modifierSlots[1] = "Option";
+                                else if(modifier_tokens[i] == "Control")
+                                    modifierSlots[2] = "Control";
+                                else if(modifier_tokens[i] == "Alt")
+                                    modifierSlots[3] = "Alt";
+                            }
+                            
+                            modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                         }
                     }
                     
-                    string fxParameter = "";
+                    string fxParamName = "";
                     
-                    if(tokens.size() > 2)
+                    if(tokens.size() >= 2)
                     {
-                        fxParameter = line.substr(tokens[0].size() + 1, line.size());
-                    }
-                    else if(tokens.size() == 2)
-                    {
-                        fxParameter = tokens[1];
+                        fxParamName = line.substr(tokens[0].size(), line.size());
+                        fxParamName.erase(0, fxParamName.find_first_not_of(" "));
                     }
                     
                     if(tokens.size() > 1)
                     {
-                        if(fxParameter == "GainReductionDB")
-                            fxTemplates_[surface->GetName()][fxName][role].push_back("GainReductionDB");
+                        if(fxParamName == "GainReductionDB")
+                            fxTemplates_[surface->GetName()][fxName][widgetName].push_back("GainReductionDB");
                         else
-                            fxTemplates_[surface->GetName()][fxName][role].push_back("TrackFX");
+                            fxTemplates_[surface->GetName()][fxName][widgetName].push_back("TrackFX");
                         
-                        fxTemplates_[surface->GetName()][fxName][role].push_back(fxParameter);
+                        fxTemplates_[surface->GetName()][fxName][widgetName].push_back(fxParamName);
                     }
                 }
             }
@@ -405,7 +415,7 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                 }
             }
             
-            AddFXWindow(FXWindow(track, fxGUID));
+            AddFXWindow(FXWindow(track, i));
         }
     }
     

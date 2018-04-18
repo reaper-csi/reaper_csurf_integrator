@@ -186,8 +186,7 @@ public:
             return pBuffer;
         }
     }
-    
-    // GAW TBD -- dump this
+
     static string GetTrackGUIDAsString(MediaTrack* track, bool mcpView)
     {
         int trackNumber = CSurf_TrackToID(track, mcpView);
@@ -205,7 +204,7 @@ public:
         }
     }
     
-    
+    /*
     // GAW TBD -- dump this 
     static string GetTrackGUIDAsString(MediaTrack* track)
     {
@@ -219,6 +218,7 @@ public:
             return pBuffer;
         }
     }
+    */
     
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
@@ -240,7 +240,7 @@ public:
             return nullptr;
     }
     
-    
+ /*
     // GAW TBD -- dump this
     static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
     {
@@ -255,6 +255,7 @@ public:
         
         return 0;
     }
+  */
 };
 
 #endif /* control_surface_integrator_Reaper_h */
