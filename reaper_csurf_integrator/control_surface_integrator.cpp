@@ -149,74 +149,6 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Page::Init()
-{
-    currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-    
-    // Set the initial Widget / Track contexts
-    for(auto * surface : realSurfaces_)
-    {
-        for(auto * widget : surface->GetAllWidgets())
-        {
-            widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
-            widgetContexts_[widget] = WidgetContext();
-            
-            widgetModes_[widget] = WidgetMode::Track;
-
-            
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
-            {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
-                {
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    {
-                        widgetContexts_[widget].SetContext(WidgetMode::Track);
-                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                    }
-                }
-            }
-        }
-    }
-    
-    // Set the initial Widget / Track contexts
-    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-    {
-        string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
-        bankableChannels_[i]->SetGUID(trackGUID);
-        for(auto widget : bankableChannels_[i]->GetWidgets())
-        {
-            widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
-            widgetGUIDs_[widget] = trackGUID;
-        }
-    }
-    
-    SetPinnedTracks();
-}
-
-void Page::TrackFXListChanged(MediaTrack* track)
-{
-    char fxName[BUFSZ];
-    char fxParamName[BUFSZ];
-    
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        
-        if(TheManager->GetVSTMonitor())
-        {
-            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-            
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-            {
-                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-            }
-        }
-    }
-    
-    // GAW TBD -- clear all fx items and rebuild
-}
-
 void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
 {
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
@@ -239,6 +171,8 @@ void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
+                    // GAW TBD -- get all the widgets for this surface mapped here !
+                    
                     actionTemplates_[surface->GetName()][tokens[0]].push_back(params);
                 }
             }
@@ -256,8 +190,6 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
             
             string fxName;
             getline(fxTemplateFile, fxName);
-            
-            fxTemplates_[surface->GetName()][fxName] = map<string, vector<string>>();
             
             for (string line; getline(fxTemplateFile, line) ; )
             {
@@ -282,9 +214,9 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                         
                         while (getline(modified_role, modifier_token, '+'))
                             modifier_tokens.push_back(modifier_token);
-
+                        
                         widgetName = modifier_tokens[modifier_tokens.size() - 1];
-
+                        
                         if(modifier_tokens.size() > 1)
                         {
                             vector<string> modifierSlots = { "", "", "", "" };
@@ -316,11 +248,9 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     if(tokens.size() > 1)
                     {
                         if(fxParamName == "GainReductionDB")
-                            fxTemplates_[surface->GetName()][fxName][widgetName].push_back("GainReductionDB");
+                            fxTemplates_[surface->GetName()][fxName][widgetName][modifiers]["GainReductionDB"].push_back(fxParamName);
                         else
-                            fxTemplates_[surface->GetName()][fxName][widgetName].push_back("TrackFX");
-                        
-                        fxTemplates_[surface->GetName()][fxName][widgetName].push_back(fxParamName);
+                            fxTemplates_[surface->GetName()][fxName][widgetName][modifiers]["TrackFX"].push_back(fxParamName);
                     }
                 }
             }
@@ -328,32 +258,47 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
     }
 }
 
-int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string paramName)
+void Page::Init()
 {
-    char fxName[BUFSZ];
-    DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+    currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
     
-    if(TheManager->GetFXParamIndices().count(fxName) > 0 && TheManager->GetFXParamIndices()[fxName].count(paramName) > 0)
-        return TheManager->GetFXParamIndices()[fxName][paramName];
-    
-    char fxParamName[BUFSZ];
-    RealSurface* surface = widget->GetSurface();
-    string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
-    
-    if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0)
+    // Set the initial Widget / Track contexts
+    for(auto * surface : realSurfaces_)
     {
-        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        for(auto * widget : surface->GetAllWidgets())
         {
-            DAW::TrackFX_GetParamName(track, fxIndex, i, fxParamName, sizeof(fxParamName));
-            if(fxTemplates_[surface->GetName()][fxName][widgetName][1] == fxParamName)
+            widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
+            widgetContexts_[widget] = WidgetContext();
+            
+            widgetModes_[widget] = WidgetMode::Track;
+
+            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
             {
-                TheManager->GetFXParamIndices()[fxName][paramName] = i;
-                return i;
+                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
+                {
+                    if(Action* action = TheManager->GetAction(paramBundle[0]))
+                    {
+                        widgetContexts_[widget].SetContext(WidgetMode::Track);
+                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
+                    }
+                }
             }
         }
     }
     
-    return 0;
+    // Set the initial Widget / Track contexts
+    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
+        bankableChannels_[i]->SetGUID(trackGUID);
+        for(auto widget : bankableChannels_[i]->GetWidgets())
+        {
+            widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+            widgetGUIDs_[widget] = trackGUID;
+        }
+    }
+    
+    SetPinnedTracks();
 }
 
 void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
@@ -395,7 +340,31 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
         
         if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
         {
-            for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName])
+            // GAW TBD -- with new model, you can't MapFXToWidgets directly at this popint
+            // You can map the vector (Unmodified, Shift, Alt, etc.), but you will still have to decide at call time which vector of actions to invoke based on current modifiers
+            // See OnTrackSelection
+            /*
+            for(auto [widgetName, modifiedActions] : fxTemplates_[surface->GetName()][fxName])
+                if(widgetsByName_.count(widgetName) > 0)
+                    for(auto [modifier, actions] : modifiedActions)
+                        for(auto action : actions)
+                            if(ActionContext* actionContext = TheManager->GetActionContext(fxTemplates_[surface->GetName()][fxName][widgetName][modifier][action], fxName, i))
+                                if(widgetsByName_.count(widgetName) > 0)
+                                actionContexts_[widgetsByName_[widgetName]][modifier].push_back(actionContext);
+
+
+
+            */
+            
+            
+            
+            
+            
+            
+            
+            
+            /*
+            for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName][GetCurrentModifers(widget)])
             {
                 if(widgetsByName_.count(widgetName) > 0)
                 {
@@ -414,6 +383,7 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
                     }
                 }
             }
+            */
             
             AddFXWindow(FXWindow(track, i));
         }
@@ -424,11 +394,67 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 
 void Page::OnTrackSelection(MediaTrack* track)
 {
+    // GAW TBD -- with new model, you can't MapFXToWidgets directly at this popint
+    // You can map the vector (Unmodified, Shift, Alt, etc.), but you will still have to decide at call time which vector of actions to invoke based on current modifiers
+    // See MapFXToWidgets
+
     for(auto surface : realSurfaces_)
         if(actionTemplates_.count(surface->GetName()) > 0 && actionTemplates_[surface->GetName()].count(TrackOnSelection) > 0)
             for(auto paramBundle : actionTemplates_[surface->GetName()][TrackOnSelection])
                 if(Action* action = TheManager->GetAction(paramBundle[0]))
                     action->Do(surface, track, this);
+}
+
+
+void Page::TrackFXListChanged(MediaTrack* track)
+{
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+    {
+        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+        
+        if(TheManager->GetVSTMonitor())
+        {
+            DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
+            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+            {
+                DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+            }
+        }
+    }
+    
+    // GAW TBD -- clear all fx items and rebuild
+}
+
+int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string fxName, string paramName)
+{
+    if(TheManager->GetFXParamIndices().count(fxName) > 0 && TheManager->GetFXParamIndices()[fxName].count(paramName) > 0)
+        return TheManager->GetFXParamIndices()[fxName][paramName];
+    
+    char fxParamName[BUFSZ];
+    RealSurface* surface = widget->GetSurface();
+    string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
+    
+    if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0
+       && fxTemplates_[surface->GetName()][fxName][widgetName].count(GetCurrentModifers(widget)) > 0 && fxTemplates_[surface->GetName()][fxName][widgetName][GetCurrentModifers(widget)].count("TrackFX") > 0
+       && fxTemplates_[surface->GetName()][fxName][widgetName][GetCurrentModifers(widget)]["TrackFX"].size() > 0)
+    {
+        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        {
+            DAW::TrackFX_GetParamName(track, fxIndex, i, fxParamName, sizeof(fxParamName));
+            if(fxTemplates_[surface->GetName()][fxName][widgetName][GetCurrentModifers(widget)]["TrackFX"][0] == fxParamName)
+            {
+                TheManager->GetFXParamIndices()[fxName][paramName] = i;
+                return i;
+            }
+        }
+    }
+    
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
