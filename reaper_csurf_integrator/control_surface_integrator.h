@@ -438,6 +438,7 @@ struct FXWindow
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page;
+class ActionContext;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,13 +446,13 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(Widget* widget) {}
-    virtual void RequestUpdate(Widget* widget, int commandId) {}
-    virtual void RequestUpdate(Widget* widget, MediaTrack* track) {}
-    virtual void RequestUpdate(Widget* widget, MediaTrack* track, int param) {}
-    virtual void RequestUpdate(Widget* widget, MediaTrack* track, Page* page, int param) {}
-    virtual void RequestUpdate(Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {}
-    virtual void RequestUpdate(Widget* widget, MediaTrack* track, bool followMCP) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, int commandId) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, Page* page, int param) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {}
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, bool followMCP) {}
 
     virtual void Do() {}
     virtual void Do(double value) {}
@@ -471,14 +472,23 @@ class ActionContext
 {
 private:
     Action * action_ = nullptr;
+    bool isInverted_ = false;
     
 public:
     ActionContext(Action* action) : action_(action) {}
+    ActionContext(Action* action, bool isInverted) : action_(action), isInverted_(isInverted) {}
     virtual ~ActionContext() {}
     
-    Action * GetAction() { return action_; }
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
+    
     virtual void DoAction(Page* page, Widget* widget, double value) {}
+    
+    void SetWidgetValue(Widget* widget, double value)
+    {
+        isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
+    }
+    
+    virtual void SetWidgetValue(Widget* widget, string value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -491,19 +501,18 @@ private:
     int trackOffset_ = 0;
     int currentNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
-    map<string, Widget*> widgetsByName_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
+    
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
-    map<string, map<string, map<string, vector<string>>>> fxTemplates_;
-    
-    
-    
+    map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
+    map<string, Widget*> widgetsByName_;
+
     
     
     map<Widget*, WidgetMode> widgetModes_;
     map<Widget*, string> widgetGUIDs_;
-
+    map<Widget*, map<string, vector<ActionContext*>>> actionContexts_;
     
     
     map<Widget*, WidgetContext> widgetContexts_;
@@ -587,7 +596,7 @@ public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track);
-    int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string paramName);
+    int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string fxName, string paramName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
     void InitActionTemplates(RealSurface* surface, string templateDirectory);
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
@@ -1035,6 +1044,13 @@ public:
         
         return nullptr;
     }
+    
+    ActionContext* GetActionContext(string actionName, string fxName, int fxIndex)
+    {
+        
+        return nullptr;
+    }
+    
     
     void OnTrackSelection(MediaTrack *track)
     {

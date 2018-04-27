@@ -9,8 +9,6 @@
 
 #include "control_surface_integrator.h"
 
-// GAW TBD -- use this for Action Contexts
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,10 +120,71 @@ public:
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CycleContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    CycleContext(Action* action) : ActionContext(action) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
 
 
 
 /*
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ class Cycled_Action : public OldAction
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ {
+ private:
+ vector<OldAction*> actions_;
+ int currentIndex_ = 0;
+ 
+ public:
+ Cycled_Action(Layer* layer) : OldAction(layer) {}
+ 
+ ~Cycled_Action() {}
+ 
+ virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName); }
+ 
+ virtual void AddAction(OldAction* action) override
+ {
+ actions_.push_back(action);
+ }
+ 
+ virtual void Update(string zoneName, string surfaceName, string widgetName) override
+ {
+ actions_[currentIndex_]->Update(zoneName, surfaceName, widgetName);
+ }
+ 
+ virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
+ {
+ actions_[currentIndex_]->ForceUpdate(zoneName, surfaceName, widgetName);
+ }
+ 
+ virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
+ {
+ currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
+ actions_[currentIndex_]->Cycle(zoneName, surfaceName, widgetName);
+ }
+ 
+ virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
+ {
+ actions_[currentIndex_]->Do(value, zoneName, surfaceName, widgetName);
+ }
+ };
+ 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Double_Action : public OldAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,48 +217,6 @@ public:
     virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
     {
         SetWidgetValue(zoneName, surfaceName, widgetName, GetValue(zoneName, surfaceName, widgetName));
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Cycled_Action : public OldAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<OldAction*> actions_;
-    int currentIndex_ = 0;
-    
-public:
-    Cycled_Action(Layer* layer) : OldAction(layer) {}
-    
-    ~Cycled_Action() {}
-    
-    virtual double GetCurrentNormalizedValue(string zoneName, string surfaceName, string widgetName) override { return actions_[currentIndex_]->GetCurrentNormalizedValue(zoneName, surfaceName, widgetName); }
-    
-    virtual void AddAction(OldAction* action) override
-    {
-        actions_.push_back(action);
-    }
-   
-    virtual void Update(string zoneName, string surfaceName, string widgetName) override
-    {
-        actions_[currentIndex_]->Update(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void ForceUpdate(string zoneName, string surfaceName, string widgetName) override
-    {
-        actions_[currentIndex_]->ForceUpdate(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void Cycle(string zoneName, string surfaceName, string widgetName) override
-    {
-        currentIndex_ = currentIndex_ == actions_.size() - 1 ? 0 : ++currentIndex_;
-        actions_[currentIndex_]->Cycle(zoneName, surfaceName, widgetName);
-    }
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        actions_[currentIndex_]->Do(value, zoneName, surfaceName, widgetName);
     }
 };
 
