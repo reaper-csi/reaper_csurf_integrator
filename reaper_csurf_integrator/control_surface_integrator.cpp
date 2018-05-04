@@ -6,6 +6,7 @@
 
 #include "control_surface_integrator.h"
 #include "control_surface_midi_widgets.h"
+#include "control_surface_base_actions.h"
 #include "control_surface_Reaper_actions.h"
 #include "control_surface_manager_actions.h"
 
@@ -167,13 +168,51 @@ void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
+                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
+                    
+                    string modifiers = "";
+                    string widgetRole = "";
+                    
+                    if(tokens.size() > 0)
+                    {
+                        istringstream modified_role(tokens[0]);
+                        vector<string> modifier_tokens;
+                        string modifier_token;
+                        
+                        while (getline(modified_role, modifier_token, '+'))
+                            modifier_tokens.push_back(modifier_token);
+                        
+                        widgetRole = modifier_tokens[modifier_tokens.size() - 1];
+                        
+                        if(modifier_tokens.size() > 1)
+                        {
+                            vector<string> modifierSlots = { "", "", "", "" };
+                            
+                            for(int i = 0; i < modifier_tokens.size() - 1; i++)
+                            {
+                                if(modifier_tokens[i] == "Shift")
+                                    modifierSlots[0] = "Shift";
+                                else if(modifier_tokens[i] == "Option")
+                                    modifierSlots[1] = "Option";
+                                else if(modifier_tokens[i] == "Control")
+                                    modifierSlots[2] = "Control";
+                                else if(modifier_tokens[i] == "Alt")
+                                    modifierSlots[3] = "Alt";
+                            }
+                            
+                            modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+                        }
+                    }
+
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    // GAW TBD -- get all the widgets for this surface mapped here !
-                    
-                    actionTemplates_[surface->GetName()][tokens[0]].push_back(params);
+                    if(tokens.size() > 1)
+                        for(auto * widget : surface->GetAllWidgets())
+                            if(widget->GetRole() == widgetRole)
+                                if(ActionContext* context = TheManager->GetActionContext(params))
+                                    trackModeActionContexts_[widget][modifiers].push_back(context);
                 }
             }
         }
@@ -503,6 +542,13 @@ void Manager::InitActionDictionary()
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
+}
+
+void Manager::InitActionContextDictionary()
+{
+    InitActionDictionary();
+    
+    actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
 }
 
 void Manager::Init()
