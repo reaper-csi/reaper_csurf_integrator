@@ -504,19 +504,22 @@ private:
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
     
+    
+    
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
     map<string, Widget*> widgetsByName_;
+    map<Widget*, WidgetContext> widgetContexts_;
 
     
     
     map<Widget*, WidgetMode> widgetModes_;
     map<Widget*, string> widgetGUIDs_;
-    map<Widget*, map<string, vector<ActionContext*>>> actionContexts_;
-    
-    
-    map<Widget*, WidgetContext> widgetContexts_;
+    map<Widget*, map<string, vector<ActionContext*>>> trackModeActionContexts_;
+    map<Widget*, map<string, vector<ActionContext*>>> fxModeActionContexts_;
 
+    
+ 
     
     
     
@@ -999,6 +1002,7 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     map<string, Action*> actions_;
+    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     vector<Midi_RealSurface*> midi_realSurfaces_;
     map<string, map<string, int>> fxParamIndices_;
@@ -1007,7 +1011,8 @@ private:
     bool VSTMonitor_ = false;
     
     void InitActionDictionary();
-    
+    void InitActionContextDictionary();
+
     double GetPrivateProfileDouble(string key)
     {
         char tmp[512];
@@ -1022,12 +1027,12 @@ public:
     ~Manager() {};
     Manager()
     {
-        InitActionDictionary();
+        InitActionContextDictionary();
         midiIOManager_ = new MidiIOManager();
     }
     
     void Init();
-    
+
     MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
     bool GetVSTMonitor() { return VSTMonitor_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
@@ -1045,12 +1050,13 @@ public:
         return nullptr;
     }
     
-    ActionContext* GetActionContext(string actionName, string fxName, int fxIndex)
-    {
+    ActionContext* GetActionContext(vector<string> params)
+    {     
+        if(actionContexts_.count(params[0]) > 0)
+            return actionContexts_[params[0]](params);
         
         return nullptr;
     }
-    
     
     void OnTrackSelection(MediaTrack *track)
     {
