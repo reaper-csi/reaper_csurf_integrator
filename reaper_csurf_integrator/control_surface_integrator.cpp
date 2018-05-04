@@ -549,6 +549,33 @@ void Manager::InitActionContextDictionary()
     InitActionDictionary();
     
     actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
+    //actionContexts_["TrackFX"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
+    actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackNameDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPanDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPanWidthDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["Rewind"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["FastForward"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Play"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Stop"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Record"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    //actionContexts_["RepeatingArrow"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackUniqueSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackRangeSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackRecordArm"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackMute"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackSolo"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackTouch"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackTouchControlled"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["GlobalAutoMode"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackAutoMode"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
 }
 
 void Manager::Init()

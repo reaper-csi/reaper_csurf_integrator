@@ -10,11 +10,47 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GlobalContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    GlobalContext(Action* action) : ActionContext(action) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     TrackContext(Action* action) : ActionContext(action) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackParamContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackParamContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -92,24 +128,6 @@ private:
     
 public:
     IntParamContext(Action* action, int param) : ActionContext(action), param_(param) {}
-    
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
-    {
-        
-    }
-    
-    virtual void DoAction(Page* page, Widget* widget, double value) override
-    {
-        
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PageContext : public ActionContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    PageContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
