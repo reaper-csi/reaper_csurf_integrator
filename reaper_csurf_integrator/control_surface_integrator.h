@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <fstream>
+#include <functional>
 
 #include "control_surface_integrator_Reaper.h"
 
@@ -446,24 +447,16 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, int commandId) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, Page* page, int param) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {}
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, bool followMCP) {}
+    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) {}                                     // GlobalContext
+    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, int commandId) {}                      // ReaperActionContext
+    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) {}                  // TrackContext
+    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}       // TrackParamContext
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
-    virtual void Do() {}
-    virtual void Do(double value) {}
-    virtual void Do(Page* page) {}
-    virtual void Do(Page* page, double value) {}
-    virtual void Do(MediaTrack* track) {}
-    virtual void Do(MediaTrack* track, bool followMCP) {}
-    virtual void Do(MediaTrack* track, double value) {}
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
-    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}
+    virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
+    virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
+    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}                                                     
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
