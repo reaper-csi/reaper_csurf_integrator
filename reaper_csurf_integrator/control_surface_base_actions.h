@@ -35,7 +35,9 @@ private:
     string fxName_ = "";
     int fxIndex_ = 0;
 public:
-    FXContext(Action* action, string fxName, int fxIndex) : ActionContext(action), fxName_(fxName), fxIndex_(fxIndex) {}
+    FXContext(Action* action, string fxName) : ActionContext(action), fxName_(fxName) {}
+    
+    void SetIndex(int index) { fxIndex_ = index; }
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
