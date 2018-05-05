@@ -18,12 +18,12 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        action_->RequestUpdate(page, this, widget);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        action_->Do(page, isInverted_ == false ? value : 1.0 - value);
     }
 };
 

@@ -150,7 +150,7 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Page::InitActionTemplates(RealSurface* surface, string templateDirectory)
+void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
 {
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
     {
@@ -301,40 +301,16 @@ void Page::Init()
 {
     currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
     
-    // Set the initial Widget / Track contexts
     for(auto * surface : realSurfaces_)
-    {
         for(auto * widget : surface->GetAllWidgets())
-        {
-            widgetsByName_[widget->GetRole() + surface->GetWidgetSuffix(widget)] = widget;
-            widgetContexts_[widget] = WidgetContext();
-            
             widgetModes_[widget] = WidgetMode::Track;
-
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
-            {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
-                {
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    {
-                        widgetContexts_[widget].SetContext(WidgetMode::Track);
-                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                    }
-                }
-            }
-        }
-    }
     
-    // Set the initial Widget / Track contexts
     for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
         bankableChannels_[i]->SetGUID(trackGUID);
         for(auto widget : bankableChannels_[i]->GetWidgets())
-        {
-            widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
             widgetGUIDs_[widget] = trackGUID;
-        }
     }
     
     SetPinnedTracks();
@@ -354,9 +330,9 @@ void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
                 {
                     if(Action* action = TheManager->GetAction(paramBundle[0]))
                     {
-                        widgetContexts_[widget].SetContext(WidgetMode::Track);
-                        widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                        widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
+                        //widgetContexts_[widget].SetContext(WidgetMode::Track);
+                        //widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
+                        //widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
                         widgetGUIDs_[widget] = trackGUID;
                     }
                 }
