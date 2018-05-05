@@ -36,12 +36,16 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        if(MediaTrack* track = page->GetTrack(widget))
+            action_->RequestUpdate(page, this, widget, track);
+        else
+            widget->SetValue(0.0);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        if(MediaTrack* track = page->GetTrack(widget))
+            action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
