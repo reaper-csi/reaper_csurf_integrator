@@ -467,9 +467,10 @@ private:
     Action * action_ = nullptr;
     bool isInverted_ = false;
     
-public:
-    ActionContext(Action* action) : action_(action) {}
+protected:
     ActionContext(Action* action, bool isInverted) : action_(action), isInverted_(isInverted) {}
+    
+public:
     virtual ~ActionContext() {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
