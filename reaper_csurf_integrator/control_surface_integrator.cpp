@@ -549,7 +549,7 @@ void Manager::InitActionContextDictionary()
     InitActionDictionary();
     
     actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
-    //actionContexts_["TrackFX"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
+    actionContexts_["TrackFX"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
@@ -576,6 +576,19 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackAutoMode"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Shift"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Option"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Latched"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["LatchedZoom"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["LatchedScrub"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["PinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
 }
 
 void Manager::Init()
