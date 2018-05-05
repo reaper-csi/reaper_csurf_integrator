@@ -382,51 +382,6 @@ enum class WidgetMode
     FX
 };
 
-
-
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetContextInfo
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    vector<pair<Action *, vector<string>>> actionsWithParamBundle;
-    string trackGUID = "";
-    int fxIndex = 0;
-    int fxParamIndex;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    map<WidgetMode, WidgetContextInfo*> widgetContexts_ = { {WidgetMode::Track, new WidgetContextInfo()}, {WidgetMode::FX, new WidgetContextInfo()} } ;
-    WidgetContextInfo* currentContext_ = widgetContexts_[WidgetMode::Track];
-
-public:
-    WidgetContextInfo* GetContextInfo() { return currentContext_; }
-    
-    void SetContext(WidgetMode mode)
-    {
-        currentContext_ = widgetContexts_[mode];
-    }
-};
-
-
-
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -463,11 +418,10 @@ public:
 class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     Action * action_ = nullptr;
     bool isInverted_ = false;
-    
-protected:
+
     ActionContext(Action* action, bool isInverted) : action_(action), isInverted_(isInverted) {}
     
 public:
@@ -502,8 +456,6 @@ private:
     
     map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
-    map<string, Widget*> widgetsByName_;
-    map<Widget*, WidgetContext> widgetContexts_;
 
     
     
@@ -595,7 +547,7 @@ public:
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track);
     int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string fxName, string paramName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
-    void InitActionTemplates(RealSurface* surface, string templateDirectory);
+    void InitActionContexts(RealSurface* surface, string templateDirectory);
     void InitFXTemplates(RealSurface* surface, string templateDirectory);
     void OnTrackSelection(MediaTrack* track);    
     void TrackFXListChanged(MediaTrack* track);
@@ -665,7 +617,7 @@ public:
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
-        InitActionTemplates(surface, resourcePath + "axt/" + actionTemplateDirectory);
+        InitActionContexts(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         for(auto channel : surface->GetBankableChannels())
             bankableChannels_.push_back(new BankableChannel(channel));
@@ -719,14 +671,40 @@ public:
     // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context
     void RequestActionUpdate(Widget* widget)
     {
-        //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-            //action->RequestUpdate(widget, this, widgetContexts_[widget]);
+        if(widgetModes_.count(widget) > 0)
+        {
+            string modifiers = GetCurrentModifers(widget);
+
+            if(widgetModes_[widget] == WidgetMode::Track)
+            {
+                if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(modifiers))
+                    for(auto actionContext : trackModeActionContexts_[widget][modifiers])
+                        actionContext->RequestActionUpdate(this, widget);
+            }
+            else if(widgetModes_[widget] == WidgetMode::FX)
+            {
+                
+            }
+        }
     }
     
     void DoAction(Widget* widget, double value)
     {
-        //for(auto [action, paramBundle] : widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle)
-            //action->Do(widget, this, widgetContexts_[widget], value);
+        if(widgetModes_.count(widget) > 0)
+        {
+            string modifiers = GetCurrentModifers(widget);
+
+            if(widgetModes_[widget] == WidgetMode::Track)
+            {
+                if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(modifiers))
+                    for(auto actionContext : trackModeActionContexts_[widget][modifiers])
+                        actionContext->DoAction(this, widget, value);
+            }
+            else if(widgetModes_[widget] == WidgetMode::FX)
+            {
+                
+            }
+        }
     }
     
     void PinSelectedTracks()
@@ -937,7 +915,7 @@ public:
         {
             for(auto widget : channel->GetWidgets())
             {
-                widgetContexts_[widget].GetContextInfo()->trackGUID = channelLayout[offset];
+                //widgetContexts_[widget].GetContextInfo()->trackGUID = channelLayout[offset];
                 widgetGUIDs_[widget] = channelLayout[offset];
             }
             channel->SetGUID(channelLayout[offset++]);
