@@ -36,14 +36,12 @@ public:
     {
         double min, max = 0;
 
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
+        actionContext->SetWidgetValue(widget, DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
     }
     
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value)
     {
-        if(track)
-            DAW::TrackFX_SetParam(track, fxIndex, paramIndex, value);
+        DAW::TrackFX_SetParam(track, fxIndex, paramIndex, value);
     }
 };
 
@@ -54,16 +52,12 @@ class TrackVolume : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+         DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -74,16 +68,12 @@ class TrackPan : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
 };
 
@@ -94,16 +84,12 @@ class TrackPanWidth : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
+        DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
 };
 
@@ -114,19 +100,14 @@ class TrackNameDisplay : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-        {
-            string trackName = "";
-            
-            if(DAW::GetMediaTrackInfo_Value(track , "IP_TRACKNUMBER") == -1)
-                trackName = "Master";
-            else
-                trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
-
-            actionContext->SetWidgetValue(widget, trackName);
-        }
+        string trackName = "";
+        
+        if(DAW::GetMediaTrackInfo_Value(track , "IP_TRACKNUMBER") == -1)
+            trackName = "Master";
         else
-            actionContext->SetWidgetValue(widget, "");
+            trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
+
+        actionContext->SetWidgetValue(widget, trackName);
     }
 };
 
@@ -137,14 +118,9 @@ class TrackVolumeDisplay : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-        {
-            char trackVolume[128];
-            sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-            actionContext->SetWidgetValue(widget, string(trackVolume));
-        }
-        else
-            actionContext->SetWidgetValue(widget, "");
+        char trackVolume[128];
+        sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        actionContext->SetWidgetValue(widget, string(trackVolume));
     }
 };
 
@@ -155,51 +131,48 @@ class TrackPanDisplay : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
+        bool left = false;
+        
+        double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
+        
+        if(panVal < 0)
         {
-            bool left = false;
-            
-            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
-            
-            if(panVal < 0)
-            {
-                left = true;
-                panVal = -panVal;
-            }
-            
-            int panIntVal = int(panVal * 100.0);
-            string trackPan = "";
-            
-            if(left)
-            {
-                if(panIntVal == 100)
-                    trackPan += "<";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += "< ";
-                else
-                    trackPan += "<  ";
-                
-                trackPan += to_string(panIntVal);
-            }
-            else
-            {
-                trackPan += "   ";
-                
-                trackPan += to_string(panIntVal);
-                
-                if(panIntVal == 100)
-                    trackPan += ">";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += " >";
-                else
-                    trackPan += "  >";
-            }
-            
-            if(panIntVal == 0)
-                trackPan = "  <C>  ";
-            
-            actionContext->SetWidgetValue(widget, string(trackPan));
+            left = true;
+            panVal = -panVal;
         }
+        
+        int panIntVal = int(panVal * 100.0);
+        string trackPan = "";
+        
+        if(left)
+        {
+            if(panIntVal == 100)
+                trackPan += "<";
+            else if(panIntVal < 100 && panIntVal > 9)
+                trackPan += "< ";
+            else
+                trackPan += "<  ";
+            
+            trackPan += to_string(panIntVal);
+        }
+        else
+        {
+            trackPan += "   ";
+            
+            trackPan += to_string(panIntVal);
+            
+            if(panIntVal == 100)
+                trackPan += ">";
+            else if(panIntVal < 100 && panIntVal > 9)
+                trackPan += " >";
+            else
+                trackPan += "  >";
+        }
+        
+        if(panIntVal == 0)
+            trackPan = "  <C>  ";
+        
+        actionContext->SetWidgetValue(widget, string(trackPan));
     }
 };
 
@@ -210,31 +183,28 @@ class TrackPanWidthDisplay : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
+        bool reversed = false;
+        
+        double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
+        
+        if(widthVal < 0)
         {
-            bool reversed = false;
-            
-            double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
-            
-            if(widthVal < 0)
-            {
-                reversed = true;
-                widthVal = -widthVal;
-            }
-            
-            int widthIntVal = int(widthVal * 100.0);
-            string trackPanWidth = "";
-            
-            if(reversed)
-                trackPanWidth += "Rev ";
-            
-            trackPanWidth += to_string(widthIntVal);
-            
-            if(widthIntVal == 0)
-                trackPanWidth = " <Mno> ";
-
-            actionContext->SetWidgetValue(widget, string(trackPanWidth));
+            reversed = true;
+            widthVal = -widthVal;
         }
+        
+        int widthIntVal = int(widthVal * 100.0);
+        string trackPanWidth = "";
+        
+        if(reversed)
+            trackPanWidth += "Rev ";
+        
+        trackPanWidth += to_string(widthIntVal);
+        
+        if(widthIntVal == 0)
+            trackPanWidth = " <Mno> ";
+
+        actionContext->SetWidgetValue(widget, string(trackPanWidth));
     }
 };
 
@@ -361,16 +331,12 @@ class TrackSelect : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
+        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
     }
 };
 
@@ -381,19 +347,13 @@ class TrackUniqueSelect : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-        {
-            DAW::SetOnlyTrackSelected(track);
-            TheManager->OnTrackSelection(track);
-        }
+        DAW::SetOnlyTrackSelected(track);
+        TheManager->OnTrackSelection(track);
     }
 };
 
@@ -404,47 +364,41 @@ class TrackRangeSelect : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
 
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
+        int currentlySelectedCount = 0;
+        int selectedTrackIndex = 0;
+        int trackIndex = 0;
+        
+        for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
         {
-            int currentlySelectedCount = 0;
-            int selectedTrackIndex = 0;
-            int trackIndex = 0;
+           MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
             
-            for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
+            if(currentTrack == track)
+                trackIndex = i;
+            
+            if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
             {
-               MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
-                
-                if(currentTrack == track)
-                    trackIndex = i;
-                
-                if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
-                {
-                    selectedTrackIndex = i;
-                    currentlySelectedCount++;
-                }
+                selectedTrackIndex = i;
+                currentlySelectedCount++;
             }
-            
-            if(currentlySelectedCount != 1)
-                return;
-            
-            int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
-            int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
+        }
+        
+        if(currentlySelectedCount != 1)
+            return;
+        
+        int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
+        int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
 
-            for(int i = lowerBound; i <= upperBound; i++)
-            {
-                MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
-                
-                DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-                TheManager->OnTrackSelection(currentTrack);
-            }
+        for(int i = lowerBound; i <= upperBound; i++)
+        {
+            MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+            
+            DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
+            TheManager->OnTrackSelection(currentTrack);
         }
     }
 };
@@ -456,16 +410,12 @@ class TrackRecordArm : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
+        DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
     }
 };
 
@@ -476,16 +426,12 @@ class TrackMute : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "B_MUTE"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "B_MUTE"));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
+        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
     }
 };
 
@@ -496,16 +442,12 @@ class TrackSolo : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
-            actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
+        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-            DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
+        DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
     }
 };
 
@@ -516,10 +458,7 @@ class TrackTouch : public Action
 public:
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        if(track)
-           page->SetTouchState(track, value == 0 ? false : true);
-        else
-            widget->SetValue(0.0);
+       page->SetTouchState(track, value == 0 ? false : true);
     }
 };
 
@@ -562,17 +501,12 @@ class TrackAutoMode : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        if(track)
+        for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
         {
-            for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
-            {
-                if(MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP()))
-                    if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
-                        actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(currentTrack, "I_AUTOMODE"));
-            }
+            if(MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP()))
+                if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
+                    actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(currentTrack, "I_AUTOMODE"));
         }
-        else
-            actionContext->SetWidgetValue(widget, 0.0);
     }
     
     virtual void Do(Page* page, double autoMode) override
@@ -604,13 +538,10 @@ class TrackOutputMeter : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) override
     {
-        if(track)
-        {
-            if(DAW::GetPlayState() & 0x01) // if playing
-                actionContext->SetWidgetValue(widget, VAL2DB(DAW::Track_GetPeakInfo(track, param)));
-            else
-                actionContext->SetWidgetValue(widget, 0.0);
-        }
+        if(DAW::GetPlayState() & 0x01) // if playing
+            actionContext->SetWidgetValue(widget, VAL2DB(DAW::Track_GetPeakInfo(track, param)));
+        else
+            actionContext->SetWidgetValue(widget, 0.0);
     }
 };
 
@@ -623,18 +554,15 @@ public:
     {
         if(DAW::GetPlayState() & 0x01) // if playing
         {
-            if(track)
-            {
-                char buffer[BUFSZ];
+            char buffer[BUFSZ];
 
-                // GAW TBD fx Index
-                int fxIndex = 0;
-                
-                if(DAW::TrackFX_GetNamedConfigParm(track, fxIndex, "GainReduction_dB", buffer, sizeof(buffer)))
-                   actionContext->SetWidgetValue(widget, -atof(buffer)/20.0);
-                else
-                   actionContext->SetWidgetValue(widget, 0.0);
-            }
+            // GAW TBD fx Index
+            int fxIndex = 0;
+            
+            if(DAW::TrackFX_GetNamedConfigParm(track, fxIndex, "GainReduction_dB", buffer, sizeof(buffer)))
+               actionContext->SetWidgetValue(widget, -atof(buffer)/20.0);
+            else
+               actionContext->SetWidgetValue(widget, 0.0);
         }
         else
             actionContext->SetWidgetValue(widget, 1.0);
