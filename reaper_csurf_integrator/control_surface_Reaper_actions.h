@@ -107,7 +107,7 @@ public:
         else
             trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
 
-        actionContext->SetWidgetValue(widget, trackName);
+        widget->SetValue(trackName);
     }
 };
 
@@ -120,7 +120,7 @@ public:
     {
         char trackVolume[128];
         sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-        actionContext->SetWidgetValue(widget, string(trackVolume));
+        widget->SetValue(string(trackVolume));
     }
 };
 
@@ -172,7 +172,7 @@ public:
         if(panIntVal == 0)
             trackPan = "  <C>  ";
         
-        actionContext->SetWidgetValue(widget, string(trackPan));
+        widget->SetValue(string(trackPan));
     }
 };
 
@@ -204,7 +204,7 @@ public:
         if(widthIntVal == 0)
             trackPanWidth = " <Mno> ";
 
-        actionContext->SetWidgetValue(widget, string(trackPanWidth));
+        widget->SetValue(string(trackPanWidth));
     }
 };
 
