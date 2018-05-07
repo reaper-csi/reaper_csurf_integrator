@@ -435,8 +435,6 @@ public:
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
     }
-    
-    virtual void SetWidgetValue(Widget* widget, string value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
