@@ -55,11 +55,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackParamContext : public ActionContext
+class TrackAutoModeContextWithIntParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    int param_ = 0;
+    
 public:
-    TrackParamContext(Action* action, bool isInverted = false) : ActionContext(action, isInverted) {}
+    TrackAutoModeContextWithIntParam(Action* action, int param, bool isInverted = false) : ActionContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -68,7 +71,7 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        action_->Do(page, param_);
     }
 };
 
