@@ -122,12 +122,12 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        action_->RequestUpdate(page, this, widget, commandId_);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        action_->Do(page, commandId_);
     }
 };
 
