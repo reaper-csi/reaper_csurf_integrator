@@ -549,7 +549,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackTouch"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackTouchControlled"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["GlobalAutoMode"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackAutoMode"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackAutoMode"] = [this](vector<string> params) { return new TrackAutoModeContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
