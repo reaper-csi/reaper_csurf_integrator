@@ -561,7 +561,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["LatchedZoom"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["LatchedScrub"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };

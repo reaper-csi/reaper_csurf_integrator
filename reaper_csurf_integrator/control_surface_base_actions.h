@@ -37,9 +37,14 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = page->GetTrack(widget))
+        {
             action_->RequestUpdate(page, this, widget, track);
+        }
         else
+        {
             widget->SetValue(0.0);
+            widget->SetValue("");
+        }
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -124,14 +129,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class IntParamContext : public ActionContext
+class GlobalContextWithIntParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
     
 public:
-    IntParamContext(Action* action, int param, bool isInverted = false) : ActionContext(action, isInverted), param_(param) {}
+    GlobalContextWithIntParam(Action* action, int param, bool isInverted = false) : ActionContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -140,7 +145,7 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        action_->Do(page, param_);
     }
 };
 
