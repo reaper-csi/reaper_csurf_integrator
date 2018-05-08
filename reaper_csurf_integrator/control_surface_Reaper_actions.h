@@ -502,11 +502,9 @@ public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
-        {
             if(MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP()))
                 if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
                     actionContext->SetWidgetValue(widget, DAW::GetMediaTrackInfo_Value(currentTrack, "I_AUTOMODE"));
-        }
     }
     
     virtual void Do(Page* page, double autoMode) override
