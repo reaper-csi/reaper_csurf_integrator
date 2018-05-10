@@ -172,6 +172,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                     
                     string modifiers = "";
                     string widgetRole = "";
+                    bool isInverted = false;
                     
                     if(tokens.size() > 0)
                     {
@@ -198,6 +199,8 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                     modifierSlots[2] = "Control";
                                 else if(modifier_tokens[i] == "Alt")
                                     modifierSlots[3] = "Alt";
+                                else if(modifier_tokens[i] == "Invert")
+                                    isInverted = true;
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
@@ -211,7 +214,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                     if(tokens.size() > 1)
                         for(auto * widget : surface->GetAllWidgets())
                             if(widget->GetRole() == widgetRole)
-                                if(ActionContext* context = TheManager->GetActionContext(params))
+                                if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
                                     trackModeActionContexts_[widget][modifiers].push_back(context);
                 }
             }
@@ -524,47 +527,47 @@ void Manager::InitActionContextDictionary()
 {
     InitActionDictionary();
     
-    actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
-    actionContexts_["TrackFX"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
-    actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackNameDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPanDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPanWidthDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["Rewind"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["FastForward"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Play"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Stop"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Record"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    //actionContexts_["RepeatingArrow"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackUniqueSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackRangeSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackRecordArm"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackMute"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackSolo"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackTouch"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackTouchControlled"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["GlobalAutoMode"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackAutoMode"] = [this](vector<string> params) { return new TrackAutoModeContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Shift"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Option"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["Latched"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["LatchedZoom"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["LatchedScrub"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["PinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Reaper"] = [this](vector<string> params, bool isInverted) { return new ReaperActionContext(actions_[params[0]], params[1], isInverted); };
+    actionContexts_["TrackFX"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
+    actionContexts_["GainReductionDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackVolume"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackPan"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackPanWidth"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackNameDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackPanDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackPanWidthDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["Rewind"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["FastForward"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Play"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Stop"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Record"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    //actionContexts_["RepeatingArrow"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackUniqueSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackRangeSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackRecordArm"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackMute"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackSolo"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackTouch"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["GlobalAutoMode"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["TrackAutoMode"] = [this](vector<string> params, bool isInverted) { return new TrackAutoModeContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Shift"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Option"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Control"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Alt"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["Latched"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["LatchedZoom"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["LatchedScrub"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["NextPage"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
 }
 
 void Manager::Init()

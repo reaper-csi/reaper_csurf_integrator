@@ -972,7 +972,7 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(vector<string>, bool isInverted)>> actionContexts_;
     vector <Page*> pages_;
     vector<Midi_RealSurface*> midi_realSurfaces_;
     map<string, map<string, int>> fxParamIndices_;
@@ -1020,10 +1020,10 @@ public:
         return nullptr;
     }
     
-    ActionContext* GetActionContext(vector<string> params)
+    ActionContext* GetActionContext(vector<string> params, bool isInverted)
     {     
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](params);
+            return actionContexts_[params[0]](params, isInverted);
         
         return nullptr;
     }

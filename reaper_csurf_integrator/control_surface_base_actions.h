@@ -14,7 +14,7 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(Action* action, bool isInverted = false) : ActionContext(action, isInverted) {}
+    GlobalContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -32,7 +32,7 @@ class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackContext(Action* action, bool isInverted = false) : ActionContext(action, isInverted) {}
+    TrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -62,7 +62,7 @@ private:
     int param_ = 0;
     
 public:
-    TrackAutoModeContextWithIntParam(Action* action, int param, bool isInverted = false) : ActionContext(action, isInverted), param_(param) {}
+    TrackAutoModeContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -83,7 +83,7 @@ private:
     string fxName_ = "";
     int fxIndex_ = 0;
 public:
-    FXContext(Action* action, string fxName, bool isInverted = false) : ActionContext(action, isInverted), fxName_(fxName) {}
+    FXContext(Action* action, string fxName, bool isInverted) : ActionContext(action, isInverted), fxName_(fxName) {}
     
     void SetIndex(int index) { fxIndex_ = index; }
     
@@ -106,7 +106,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Action* action, string commandStr, bool isInverted = false) : ActionContext(action, isInverted)
+    ReaperActionContext(Action* action, string commandStr, bool isInverted) : ActionContext(action, isInverted)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -139,7 +139,7 @@ private:
     int param_ = 0;
     
 public:
-    GlobalContextWithIntParam(Action* action, int param, bool isInverted = false) : ActionContext(action, isInverted), param_(param) {}
+    GlobalContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -157,7 +157,7 @@ class CycleContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleContext(Action* action, bool isInverted = false) : ActionContext(action, isInverted) {}
+    CycleContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
