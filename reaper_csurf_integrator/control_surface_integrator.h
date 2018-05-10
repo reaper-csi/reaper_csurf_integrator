@@ -749,6 +749,8 @@ public:
                 }
             }
         }
+        
+        RefreshLayout();
     }
     
     void TrackListChanged()
