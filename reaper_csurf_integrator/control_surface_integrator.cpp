@@ -207,8 +207,8 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                         }
                     }
                     
-                    // GAW TBD -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface
-                    // Timing is important here, it must be present BEFORE the widget->GetRole() == widgetRole comparison below
+                    // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can add ActionContexts
+                    // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
                     if(widgetRole == "TrackOnSelection")
                         surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
 
@@ -557,9 +557,9 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackTouch"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["GlobalAutoMode"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
-    actionContexts_["TrackAutoMode"] = [this](vector<string> params, bool isInverted) { return new TrackAutoModeContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["TrackAutoMode"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Shift"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Option"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
