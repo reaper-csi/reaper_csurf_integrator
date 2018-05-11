@@ -55,18 +55,26 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackAutoModeContextWithIntParam : public ActionContext
+class TrackContextWithIntParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
     
 public:
-    TrackAutoModeContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
+    TrackContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        if(MediaTrack* track = page->GetTrack(widget))
+        {
+            action_->RequestUpdate(page, this, widget, track, param_);
+        }
+        else
+        {
+            widget->SetValue(0.0);
+            widget->SetValue("");
+        }
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
