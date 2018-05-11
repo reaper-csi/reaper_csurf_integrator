@@ -1023,7 +1023,15 @@ public:
     }
     
     ActionContext* GetActionContext(vector<string> params, bool isInverted)
-    {     
+    {
+        if(actionContexts_.count(params[0]) > 0)
+            return actionContexts_[params[0]](params, isInverted);
+        
+        return nullptr;
+    }
+    
+    ActionContext* GetFXActionContext(vector<string> params, bool isInverted)
+    {
         if(actionContexts_.count(params[0]) > 0)
             return actionContexts_[params[0]](params, isInverted);
         

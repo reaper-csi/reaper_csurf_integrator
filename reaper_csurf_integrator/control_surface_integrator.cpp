@@ -247,14 +247,15 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                     
                     string modifiers = "";
                     string widgetName = "";
-                    
+                    bool isInverted = false;
+
                     if(tokens.size() > 0)
                     {
-                        istringstream modified_role(tokens[0]);
+                        istringstream modified_name(tokens[0]);
                         vector<string> modifier_tokens;
                         string modifier_token;
                         
-                        while (getline(modified_role, modifier_token, '+'))
+                        while (getline(modified_name, modifier_token, '+'))
                             modifier_tokens.push_back(modifier_token);
                         
                         widgetName = modifier_tokens[modifier_tokens.size() - 1];
@@ -273,6 +274,8 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                                     modifierSlots[2] = "Control";
                                 else if(modifier_tokens[i] == "Alt")
                                     modifierSlots[3] = "Alt";
+                                else if(modifier_tokens[i] == "Invert")
+                                    isInverted = true;
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
@@ -287,13 +290,29 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                         fxParamName.erase(0, fxParamName.find_first_not_of(" "));
                     }
                     
+                    vector<string> params;
+                    
+                    if(fxParamName == "GainReductionDB")
+                        params.push_back(fxParamName);
+                    else params.push_back("TrackFX");
+                    params.push_back(fxParamName);
+                    params.push_back(fxName);
+
                     if(tokens.size() > 1)
-                    {
-                        if(fxParamName == "GainReductionDB")
-                            fxTemplates_[surface->GetName()][fxName][widgetName][modifiers]["GainReductionDB"].push_back(fxParamName);
-                        else
-                            fxTemplates_[surface->GetName()][fxName][widgetName][modifiers]["TrackFX"].push_back(fxParamName);
-                    }
+                        for(auto * widget : surface->GetAllWidgets())
+                            if(widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget) == widgetName)
+                                if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
+                                    fxModeActionContexts_[widget][modifiers].push_back(context);
+
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    
                 }
             }
         }
@@ -324,24 +343,9 @@ void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
     
     for(auto channel : surface->GetChannels())
-    {
         for(auto widget : channel)
-        {
-            if(actionTemplates_.count(widget->GetSurface()->GetName()) > 0 && actionTemplates_[widget->GetSurface()->GetName()].count(GetCurrentModifers(widget) + widget->GetRole()) > 0)
-            {
-                for(auto paramBundle : actionTemplates_[widget->GetSurface()->GetName()][GetCurrentModifers(widget) + widget->GetRole()])
-                {
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    {
-                        //widgetContexts_[widget].SetContext(WidgetMode::Track);
-                        //widgetContexts_[widget].GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                        //widgetContexts_[widget].GetContextInfo()->trackGUID = trackGUID;
-                        widgetGUIDs_[widget] = trackGUID;
-                    }
-                }
-            }
-        }
-    }
+            if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(GetCurrentModifers(widget)) > 0)
+                widgetGUIDs_[widget] = trackGUID;
 }
 
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -417,10 +421,9 @@ void Page::OnTrackSelection(MediaTrack* track)
     // See MapFXToWidgets
 
     for(auto surface : realSurfaces_)
-        if(actionTemplates_.count(surface->GetName()) > 0 && actionTemplates_[surface->GetName()].count(TrackOnSelection) > 0)
-            for(auto paramBundle : actionTemplates_[surface->GetName()][TrackOnSelection])
-                if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    action->Do(surface, track, this);
+        if(surface->GetName() == "Console1")
+            if(Action* action = TheManager->GetAction("MapTrackAndFXToWidgets"))
+                action->Do(surface, track, this);
 }
 
 
