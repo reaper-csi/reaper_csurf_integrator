@@ -411,7 +411,7 @@ public:
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
-    virtual void Do(RealSurface* surface, MediaTrack* track, Page* page) {}                                                     
+    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,6 +430,8 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     
     virtual void DoAction(Page* page, Widget* widget, double value) {}
+    
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
     
     void SetWidgetValue(Widget* widget, double value)
     {
@@ -452,7 +454,7 @@ private:
     
     
     
-    map<string, map<string, vector<vector<string>>>> actionTemplates_;
+    //map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
 
     

@@ -206,6 +206,11 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                         }
                     }
+                    
+                    // GAW TBD -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface
+                    // Timing is important here, it must be present BEFORE the widget->GetRole() == widgetRole comparison below
+                    if(widgetRole == "TrackOnSelection")
+                        surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
 
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
@@ -416,14 +421,11 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 
 void Page::OnTrackSelection(MediaTrack* track)
 {
-    // GAW TBD -- with new model, you can't MapFXToWidgets directly at this popint
-    // You can map the vector (Unmodified, Shift, Alt, etc.), but you will still have to decide at call time which vector of actions to invoke based on current modifiers
-    // See MapFXToWidgets
-
     for(auto surface : realSurfaces_)
-        if(surface->GetName() == "Console1")
-            if(Action* action = TheManager->GetAction("MapTrackAndFXToWidgets"))
-                action->Do(surface, track, this);
+        for(auto widget : surface->GetAllWidgets())
+            if(widget->GetRole() == "TrackOnSelection" && trackModeActionContexts_.count(widget) > 0)
+                    for(auto context : trackModeActionContexts_[widget][GetCurrentModifers(widget)])
+                        context->DoAction(this, surface, track);
 }
 
 
@@ -570,7 +572,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
 }
 
 void Manager::Init()
