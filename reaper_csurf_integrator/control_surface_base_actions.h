@@ -170,6 +170,19 @@ public:
     }
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PageSurfaceTrackContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PageSurfaceTrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) override
+    {
+        action_->Do(page, surface, track);
+    }
+};
+
 
 
 

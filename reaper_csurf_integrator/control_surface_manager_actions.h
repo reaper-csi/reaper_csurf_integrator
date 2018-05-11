@@ -16,7 +16,7 @@ class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(RealSurface* surface, MediaTrack* track, Page* page) override
+    void Do(Page* page, RealSurface* surface, MediaTrack* track) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
             page->MapTrackAndFXToWidgets(surface, track);
