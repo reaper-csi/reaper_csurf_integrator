@@ -61,11 +61,32 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClas
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ContextManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ContextManager::RequestActionUpdate(Widget* widget)
+{
+    if(currentWidgetContext_)
+    {
+        for(auto context : *currentWidgetContext_->GetActionContexts())
+            context->RequestActionUpdate(currentPage_, widget);
+    }
+}
+
+void ContextManager::DoAction(Widget* widget, double value)
+{
+    if(currentWidgetContext_)
+    {
+        for(auto context : *currentWidgetContext_->GetActionContexts())
+            context->DoAction(currentPage_, widget, value);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::RequestUpdate()
 {
-    TheManager->RequestActionUpdate(this);
+    contextManager_.RequestActionUpdate(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -220,7 +241,14 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                         for(auto * widget : surface->GetAllWidgets())
                             if(widget->GetRole() == widgetRole)
                                 if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
-                                    trackModeActionContexts_[widget][modifiers].push_back(context);
+                                {
+                                    if(widgetContexts_.count(widget) < 1)
+                                        widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
+                                    
+                                    widget->SetPageContext(this);
+                                    widgetContexts_[widget]->AddActionContext(WidgetMode::Track, modifiers, context);
+                                    widgetContexts_[widget]->SetCurrentActionContexts(WidgetMode::Track, modifiers);
+                                }
                 }
             }
         }
