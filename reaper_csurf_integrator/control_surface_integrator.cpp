@@ -245,7 +245,6 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                     if(widgetContexts_.count(widget) < 1)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
-                                    widget->SetPageContext(this);
                                     widgetContexts_[widget]->AddActionContext(WidgetMode::Track, modifiers, context);
                                     widgetContexts_[widget]->SetCurrentActionContexts(WidgetMode::Track, modifiers);
                                 }
@@ -683,6 +682,13 @@ void Manager::Init()
     
     for(auto page : pages_)
         page->Init();
+
+    currentPageIndex_ = 0;
+   
+    if(pages_.size() > 0)
+        for(auto surface : midi_realSurfaces_)
+            for(auto widget : surface->GetAllWidgets() )
+                widget->SetPageContext(pages_[currentPageIndex_]);
 }
 
 
