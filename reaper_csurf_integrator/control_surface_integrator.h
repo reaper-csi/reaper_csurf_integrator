@@ -240,6 +240,7 @@ protected:
 public:
     virtual ~Widget() {};
     
+    MediaTrack* GetTrack() { return track_; }
     string GetRole() { return role_; }
     virtual Midi_RealSurface* GetSurface() { return nullptr; }
     void RequestUpdate();
@@ -428,7 +429,7 @@ class BankableChannel
 {
 private:
     bool isPinned_ = false;
-    string GUID_ = "";
+    MediaTrack* track_ = nullptr;
     vector<Widget*> widgets_;
     
 public:
@@ -436,16 +437,18 @@ public:
     
     vector<Widget*> & GetWidgets() { return widgets_; }
     bool GetIsPinned() { return isPinned_; }
-    string GetGUID() { return GUID_; }
+    MediaTrack* GetTrack() { return track_; }
     
     void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
     }
     
-    void SetGUID(string GUID)
+    void SetTrack(MediaTrack* track)
     {
-        GUID_ = GUID;
+        track_ = track;
+        for(auto widget : widgets_)
+            widget->SetTrack(track);
     }
 };
 
@@ -518,16 +521,17 @@ private:
     
     
     
-    //map<string, map<string, vector<vector<string>>>> actionTemplates_;
     map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
 
     
     
-    map<Widget*, WidgetMode> widgetModes_;
-    map<Widget*, string> widgetGUIDs_;
-    map<Widget*, map<string, vector<ActionContext*>>> trackModeActionContexts_;
+
+    //map<Widget*, map<string, vector<ActionContext*>>> trackModeActionContexts_;
     map<Widget*, map<string, vector<ActionContext*>>> fxModeActionContexts_;
 
+    
+    
+    map<Widget*, WidgetMode> widgetModes_;
     map<Widget*, WidgetContext*> widgetContexts_;
 
  
@@ -574,7 +578,7 @@ private:
         {
             if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
             {
-                bankableChannels_[i]->SetGUID(buffer);
+                bankableChannels_[i]->SetTrack(DAW::GetTrackFromGUID(buffer, followMCP_));
                 bankableChannels_[i]->SetIsPinned(true);
             }
         }
@@ -629,14 +633,6 @@ public:
             return WidgetMode::Track;
     }
     
-    MediaTrack* GetTrack(Widget* widget)
-    {
-        if(widgetGUIDs_.count(widget))
-            return DAW::GetTrackFromGUID(widgetGUIDs_[widget], followMCP_);
-        else
-            return nullptr;
-    }
-
     void SetZoom(bool value)
     {
         zoom_ = value;
@@ -733,45 +729,6 @@ public:
             mode = WidgetMode::Track;
     }
     
-    // Widgets -> Actions -- this is the grand switchboard that does all the realtime heavy lifting wrt routing and context
-    void RequestActionUpdate(Widget* widget)
-    {
-        if(widgetModes_.count(widget) > 0)
-        {
-            string modifiers = GetCurrentModifers(widget);
-
-            if(widgetModes_[widget] == WidgetMode::Track)
-            {
-                if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(modifiers))
-                    for(auto actionContext : trackModeActionContexts_[widget][modifiers])
-                        actionContext->RequestActionUpdate(this, widget);
-            }
-            else if(widgetModes_[widget] == WidgetMode::FX)
-            {
-                
-            }
-        }
-    }
-    
-    void DoAction(Widget* widget, double value)
-    {
-        if(widgetModes_.count(widget) > 0)
-        {
-            string modifiers = GetCurrentModifers(widget);
-
-            if(widgetModes_[widget] == WidgetMode::Track)
-            {
-                if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(modifiers))
-                    for(auto actionContext : trackModeActionContexts_[widget][modifiers])
-                        actionContext->DoAction(this, widget, value);
-            }
-            else if(widgetModes_[widget] == WidgetMode::FX)
-            {
-                
-            }
-        }
-    }
-    
     void PinSelectedTracks()
     {
         BankableChannel* channel = nullptr;
@@ -780,14 +737,14 @@ public:
         {
             channel = bankableChannels_[i];
             
-            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID(), followMCP_);
+            MediaTrack* track = channel->GetTrack();
             if(track == nullptr)
                 continue;
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsPinned(true);
-                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), channel->GetGUID().c_str());
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), DAW::GetTrackGUIDAsString(channel->GetTrack(), followMCP_).c_str());
                 DAW::MarkProjectDirty(nullptr);
             }
         }
@@ -802,7 +759,7 @@ public:
         {
             channel = bankableChannels_[i];
             
-            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetGUID(), followMCP_);
+            MediaTrack* track = channel->GetTrack();
             if(track == nullptr)
                 continue;
             
@@ -835,7 +792,7 @@ public:
         {
             if(bankableChannels_[i]->GetIsPinned())
             {
-                if(DAW::GetTrackFromGUID(bankableChannels_[i]->GetGUID(), followMCP_) == nullptr) // track has been removed
+                if(bankableChannels_[i]->GetTrack() == nullptr) // track has been removed
                 {
                     bankableChannels_[i]->SetIsPinned(false); // unlock this, since there is no longer a track to lock to
                     shouldRefreshLayout = true;
@@ -847,7 +804,7 @@ public:
                 }
             }
             
-            else if(bankableChannels_[i]->GetGUID() == GetNextVisibleTrackGUID(currentOffset))
+            else if(DAW::GetTrackGUIDAsString(bankableChannels_[i]->GetTrack(), followMCP_) == GetNextVisibleTrackGUID(currentOffset))
             {
                 currentOffset++; // track exists and positions are in synch
             }
@@ -882,7 +839,7 @@ public:
         vector<string> pinnedChannels;
         for(auto* channel : bankableChannels_)
             if(channel->GetIsPinned())
-                pinnedChannels.push_back(channel->GetGUID());
+                pinnedChannels.push_back(DAW::GetTrackGUIDAsString(channel->GetTrack(), followMCP_));
         
         bool skipThisChannel = false;
         
@@ -928,8 +885,10 @@ public:
         {
             if(channel->GetIsPinned())
             {
-                pinnedChannelLayout.push_back(channel->GetGUID());
-                pinnedChannels.push_back(channel->GetGUID());
+                string GUID = DAW::GetTrackGUIDAsString(channel->GetTrack(), followMCP_);
+                
+                pinnedChannelLayout.push_back(GUID);
+                pinnedChannels.push_back(GUID);
             }
             else
                 pinnedChannelLayout.push_back("");
@@ -979,14 +938,7 @@ public:
         // Apply new layout
         offset = 0;
         for(auto* channel : bankableChannels_)
-        {
-            for(auto widget : channel->GetWidgets())
-            {
-                //widgetContexts_[widget].GetContextInfo()->trackGUID = channelLayout[offset];
-                widgetGUIDs_[widget] = channelLayout[offset];
-            }
-            channel->SetGUID(channelLayout[offset++]);
-        }
+            channel->SetTrack(DAW::GetTrackFromGUID(channelLayout[offset++], followMCP_));
     }
     
     int GetNumLockedTracks()
@@ -1146,10 +1098,6 @@ public:
         for(auto & page : pages_)
             page->TrackFXListChanged(trackid);
     }
-    
-    // Widgets -> Actions
-    void RequestActionUpdate(Widget* widget) { pages_[currentPageIndex_]->RequestActionUpdate(widget); }
-    void DoAction(Widget* widget, double value) { pages_[currentPageIndex_]->DoAction(widget, value); }
 };
 
 
