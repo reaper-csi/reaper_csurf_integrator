@@ -361,24 +361,19 @@ void Page::Init()
             widgetModes_[widget] = WidgetMode::Track;
     
     for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-    {
-        string trackGUID = DAW::GetTrackGUIDAsString(i, followMCP_);
-        bankableChannels_[i]->SetGUID(trackGUID);
-        for(auto widget : bankableChannels_[i]->GetWidgets())
-            widgetGUIDs_[widget] = trackGUID;
-    }
-    
+        bankableChannels_[i]->SetTrack(DAW::CSurf_TrackFromID(i, followMCP_));
+
     SetPinnedTracks();
 }
 
 void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
 {
-    string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-    
+    /*
     for(auto channel : surface->GetChannels())
         for(auto widget : channel)
             if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(GetCurrentModifers(widget)) > 0)
-                widgetGUIDs_[widget] = trackGUID;
+                widget->SetTrack(track);
+     */
 }
 
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -449,11 +444,13 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 
 void Page::OnTrackSelection(MediaTrack* track)
 {
+    /*
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
             if(widget->GetRole() == "TrackOnSelection" && trackModeActionContexts_.count(widget) > 0)
                     for(auto context : trackModeActionContexts_[widget][GetCurrentModifers(widget)])
                         context->DoAction(this, surface, track);
+     */
 }
 
 

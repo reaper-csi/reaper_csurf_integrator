@@ -36,7 +36,7 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
+        if(MediaTrack* track = widget->GetTrack())
         {
             action_->RequestUpdate(page, this, widget, track);
         }
@@ -49,7 +49,7 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
+        if(MediaTrack* track = widget->GetTrack())
             action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
@@ -66,7 +66,7 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = page->GetTrack(widget))
+        if(MediaTrack* track = widget->GetTrack())
         {
             action_->RequestUpdate(page, this, widget, track, param_);
         }
