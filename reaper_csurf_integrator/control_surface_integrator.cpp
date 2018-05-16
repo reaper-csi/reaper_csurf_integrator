@@ -246,7 +246,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
                                     widgetContexts_[widget]->AddActionContext(WidgetMode::Track, modifiers, context);
-                                    widgetContexts_[widget]->SetCurrentActionContexts(WidgetMode::Track, modifiers);
+                                    widgetContexts_[widget]->SetCurrentActionContexts(WidgetMode::Track, modifiers); // initialize to Track context
                                 }
                 }
             }
@@ -367,12 +367,9 @@ void Page::Init()
 
 void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
 {
-    /*
     for(auto channel : surface->GetChannels())
         for(auto widget : channel)
-            if(trackModeActionContexts_.count(widget) > 0 && trackModeActionContexts_[widget].count(GetCurrentModifers(widget)) > 0)
-                widget->SetTrack(track);
-     */
+            widget->SetTrack(track);
 }
 
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -443,13 +440,13 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 
 void Page::OnTrackSelection(MediaTrack* track)
 {
-    /*
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == "TrackOnSelection" && trackModeActionContexts_.count(widget) > 0)
-                    for(auto context : trackModeActionContexts_[widget][GetCurrentModifers(widget)])
-                        context->DoAction(this, surface, track);
-     */
+            if(widget->GetRole() == "TrackOnSelection")
+            {
+                widget->SetTrack(track);
+                widget->DoAction(widget, 1.0);
+            }
 }
 
 
