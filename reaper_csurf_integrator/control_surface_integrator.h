@@ -46,8 +46,9 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-const string Page_ = "Page";
+const string PageToken = "Page";
 
+const string TrackProtocol = "TrackProtocol";
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,34 +166,26 @@ class Widget;
 class Page;
 class ActionContext;
 class Midi_RealSurface;
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-enum class WidgetMode
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    Track,
-    FX
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    map<WidgetMode, map<string, vector<ActionContext*>>> actionContexts_;
+    map<string, map<string, vector<ActionContext*>>> actionContexts_;
     vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
     vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
 
 public:
     vector<ActionContext*> * GetActionContexts() { return currentActioncontexts_; }
     
-    void AddActionContext(WidgetMode mode, string modifiers, ActionContext* context)
+    void AddActionContext(string protocol, string modifiers, ActionContext* context)
     {
-        actionContexts_[mode][modifiers].push_back(context);
+        actionContexts_[protocol][modifiers].push_back(context);
     }
     
-    void SetCurrentActionContexts(WidgetMode mode, string modifiers)
+    void SetCurrentActionContexts(string protocol, string modifiers)
     {
-        if(actionContexts_.count(mode) > 0 && actionContexts_[mode].count(modifiers) > 0)
-            currentActioncontexts_ = &actionContexts_[mode][modifiers];
+        if(actionContexts_.count(protocol) > 0 && actionContexts_[protocol].count(modifiers) > 0)
+            currentActioncontexts_ = &actionContexts_[protocol][modifiers];
         else
             currentActioncontexts_ = emptyActioncontexts_;
     }
@@ -524,26 +517,8 @@ private:
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
-    
-    
-    
-    map<string, map<string, map<string, map<string, map<string, vector<string>>>>>> fxTemplates_;
 
-    
-    
-
-    //map<Widget*, map<string, vector<ActionContext*>>> trackModeActionContexts_;
-    map<Widget*, map<string, vector<ActionContext*>>> fxModeActionContexts_;
-
-    
-    
-    map<Widget*, WidgetMode> widgetModes_;
     map<Widget*, WidgetContext*> widgetContexts_;
-
- 
-    
-    
-    
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -623,21 +598,13 @@ public:
     int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string fxName, string paramName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
     void InitActionContexts(RealSurface* surface, string templateDirectory);
-    void InitFXTemplates(RealSurface* surface, string templateDirectory);
+    void InitFXContexts(RealSurface* surface, string templateDirectory);
     void OnTrackSelection(MediaTrack* track);    
     void TrackFXListChanged(MediaTrack* track);
     void Init();
     
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
-    
-    WidgetMode GetWidgetMode(Widget* widget)
-    {
-        if(widgetModes_.count(widget) > 0)
-            return widgetModes_[widget];
-        else
-            return WidgetMode::Track;
-    }
     
     void SetZoom(bool value)
     {
@@ -685,7 +652,7 @@ public:
         resourcePath += "/CSI/";
    
         InitActionContexts(surface, resourcePath + "axt/" + actionTemplateDirectory);
-        InitFXTemplates(surface, resourcePath + "fxt/" + fxTemplateDirectory);
+        InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
         for(auto channel : surface->GetBankableChannels())
             bankableChannels_.push_back(new BankableChannel(channel));
         realSurfaces_.push_back(surface);
@@ -731,8 +698,8 @@ public:
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
         // GAW TBD -- this could be smarter and only unmap Widgets for this Track
-        for(auto [widget, mode] : widgetModes_)
-            mode = WidgetMode::Track;
+        //for(auto [widget, mode] : widgetModes_)
+            //mode = WidgetMode::Track;
     }
     
     void PinSelectedTracks()

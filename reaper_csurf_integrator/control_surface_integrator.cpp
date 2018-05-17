@@ -227,6 +227,9 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                         }
                     }
+                
+    
+                    
                     
                     // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can add ActionContexts
                     // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
@@ -245,8 +248,8 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                     if(widgetContexts_.count(widget) < 1)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
-                                    widgetContexts_[widget]->AddActionContext(WidgetMode::Track, modifiers, context);
-                                    widgetContexts_[widget]->SetCurrentActionContexts(WidgetMode::Track, modifiers); // initialize to Track context
+                                    widgetContexts_[widget]->AddActionContext(TrackProtocol, modifiers, context);
+                                    widgetContexts_[widget]->SetCurrentActionContexts(TrackProtocol, modifiers); // initialize to Track context
                                 }
                 }
             }
@@ -254,7 +257,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
     }
 }
 
-void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
+void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
 {
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
     {
@@ -314,6 +317,10 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                         }
                     }
                     
+                    
+                    
+                    
+                    
                     string fxParamName = "";
                     
                     if(tokens.size() >= 2)
@@ -334,17 +341,13 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
                         for(auto * widget : surface->GetAllWidgets())
                             if(widget->GetRole() + widget->GetSurface()->GetWidgetSuffix(widget) == widgetName)
                                 if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
-                                    fxModeActionContexts_[widget][modifiers].push_back(context);
-
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+                                {
+                                    if(widgetContexts_.count(widget) < 1)
+                                        widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
+                                    
+                                    widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
+                                    // GAW TBD -- add Widget to fxName->widget dictionary
+                                }
                 }
             }
         }
@@ -354,11 +357,7 @@ void Page::InitFXTemplates(RealSurface* surface, string templateDirectory)
 void Page::Init()
 {
     currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-    
-    for(auto * surface : realSurfaces_)
-        for(auto * widget : surface->GetAllWidgets())
-            widgetModes_[widget] = WidgetMode::Track;
-    
+
     for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
         bankableChannels_[i]->SetTrack(DAW::CSurf_TrackFromID(i, followMCP_));
 
@@ -384,8 +383,8 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
         DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
         
-        if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
-        {
+        //if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
+        //{
             // GAW TBD -- with new model, you can't MapFXToWidgets directly at this popint
             // You can map the vector (Unmodified, Shift, Alt, etc.), but you will still have to decide at call time which vector of actions to invoke based on current modifiers
             // See OnTrackSelection
@@ -431,8 +430,8 @@ void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
             }
             */
             
-            AddFXWindow(FXWindow(track, i));
-        }
+            //AddFXWindow(FXWindow(track, i));
+        //}
     }
     
     OpenFXWindows();
@@ -482,7 +481,7 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
     char fxParamName[BUFSZ];
     RealSurface* surface = widget->GetSurface();
     string widgetName = widget->GetRole() + surface->GetWidgetSuffix(widget);
-    
+    /*
     if(fxTemplates_.count(surface->GetName()) > 0  && fxTemplates_[surface->GetName()].count(fxName) > 0 && fxTemplates_[surface->GetName()][fxName].count(widgetName) > 0
        && fxTemplates_[surface->GetName()][fxName][widgetName].count(GetCurrentModifers(widget)) > 0 && fxTemplates_[surface->GetName()][fxName][widgetName][GetCurrentModifers(widget)].count("TrackFX") > 0
        && fxTemplates_[surface->GetName()][fxName][widgetName][GetCurrentModifers(widget)]["TrackFX"].size() > 0)
@@ -497,7 +496,7 @@ int Page::GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string
             }
         }
     }
-    
+    */
     return 0;
 }
 
@@ -656,7 +655,7 @@ void Manager::Init()
                 
                 midi_realSurfaces_.push_back(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
             }
-            else if(tokens[0] == Page_)
+            else if(tokens[0] == PageToken)
             {
                 if(tokens.size() != 3)
                     continue;
