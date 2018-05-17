@@ -46,9 +46,10 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
+const string Invert = "Invert";
 const string PageToken = "Page";
-
 const string TrackProtocol = "TrackProtocol";
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,15 +178,15 @@ class WidgetContext
 public:
     vector<ActionContext*> * GetActionContexts() { return currentActioncontexts_; }
     
-    void AddActionContext(string protocol, string modifiers, ActionContext* context)
+    void AddActionContext(string name, string modifiers, ActionContext* context)
     {
-        actionContexts_[protocol][modifiers].push_back(context);
+        actionContexts_[name][modifiers].push_back(context);
     }
     
-    void SetCurrentActionContexts(string protocol, string modifiers)
+    void SetCurrentActionContexts(string name, string modifiers)
     {
-        if(actionContexts_.count(protocol) > 0 && actionContexts_[protocol].count(modifiers) > 0)
-            currentActioncontexts_ = &actionContexts_[protocol][modifiers];
+        if(actionContexts_.count(name) > 0 && actionContexts_[name].count(modifiers) > 0)
+            currentActioncontexts_ = &actionContexts_[name][modifiers];
         else
             currentActioncontexts_ = emptyActioncontexts_;
     }
@@ -517,9 +518,8 @@ private:
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
-
     map<Widget*, WidgetContext*> widgetContexts_;
-    
+    map <string, vector<Widget*>> fxWidgets_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
