@@ -703,7 +703,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
                         
                     }
-                    else if(tokens[0] == Page_)
+                    else if(tokens[0] == PageToken)
                     {
                         if(tokens.size() != 3)
                             continue;
@@ -785,7 +785,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 for(auto page : pages)
                 {
-                    line = Page_ + " ";
+                    line = PageToken + " ";
                     line += page->name + " ";
                     if(page->followMCP)
                         line += "Yes\n";
