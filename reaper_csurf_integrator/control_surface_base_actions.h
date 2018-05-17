@@ -88,10 +88,10 @@ class FXContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string fxName_ = "";
+    string fxParamName_ = "";
     int fxIndex_ = 0;
 public:
-    FXContext(Action* action, string fxName, bool isInverted) : ActionContext(action, isInverted), fxName_(fxName) {}
+    FXContext(Action* action, string fxParamName, bool isInverted) : ActionContext(action, isInverted), fxParamName_(fxParamName) {}
     
     void SetIndex(int index) { fxIndex_ = index; }
     
