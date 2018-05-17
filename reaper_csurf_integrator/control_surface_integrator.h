@@ -484,6 +484,8 @@ protected:
 public:
     virtual ~ActionContext() {}
     
+    virtual void SetIndex(int index) {}
+    
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     
     virtual void DoAction(Page* page, Widget* widget, double value) {}
@@ -595,7 +597,7 @@ public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track);
-    int GetFXParamIndex(Widget* widget, MediaTrack* track, int fxIndex, string fxName, string paramName);
+    int GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName);
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
     void InitActionContexts(RealSurface* surface, string templateDirectory);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
