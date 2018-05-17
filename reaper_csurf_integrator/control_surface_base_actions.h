@@ -93,16 +93,16 @@ private:
 public:
     FXContext(Action* action, string fxParamName, bool isInverted) : ActionContext(action, isInverted), fxParamName_(fxParamName) {}
     
-    void SetIndex(int index) { fxIndex_ = index; }
+    void SetIndex(int index) override { fxIndex_ = index; }
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        action_->RequestUpdate(this, widget, widget->GetTrack(), fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_));
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        action_->Do(widget->GetTrack(), fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_), value);
     }
 };
 
