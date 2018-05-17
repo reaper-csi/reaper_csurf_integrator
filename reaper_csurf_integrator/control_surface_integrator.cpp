@@ -212,25 +212,22 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                             
                             for(int i = 0; i < modifier_tokens.size() - 1; i++)
                             {
-                                if(modifier_tokens[i] == "Shift")
-                                    modifierSlots[0] = "Shift";
-                                else if(modifier_tokens[i] == "Option")
-                                    modifierSlots[1] = "Option";
-                                else if(modifier_tokens[i] == "Control")
-                                    modifierSlots[2] = "Control";
-                                else if(modifier_tokens[i] == "Alt")
-                                    modifierSlots[3] = "Alt";
-                                else if(modifier_tokens[i] == "Invert")
+                                if(modifier_tokens[i] == Shift)
+                                    modifierSlots[0] = Shift;
+                                else if(modifier_tokens[i] == Option)
+                                    modifierSlots[1] = Option;
+                                else if(modifier_tokens[i] == Control)
+                                    modifierSlots[2] = Control;
+                                else if(modifier_tokens[i] == Alt)
+                                    modifierSlots[3] = Alt;
+                                else if(modifier_tokens[i] == Invert)
                                     isInverted = true;
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                         }
                     }
-                
-    
-                    
-                    
+
                     // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can add ActionContexts
                     // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
                     if(widgetRole == "TrackOnSelection")
@@ -301,25 +298,21 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                             
                             for(int i = 0; i < modifier_tokens.size() - 1; i++)
                             {
-                                if(modifier_tokens[i] == "Shift")
-                                    modifierSlots[0] = "Shift";
-                                else if(modifier_tokens[i] == "Option")
-                                    modifierSlots[1] = "Option";
-                                else if(modifier_tokens[i] == "Control")
-                                    modifierSlots[2] = "Control";
-                                else if(modifier_tokens[i] == "Alt")
-                                    modifierSlots[3] = "Alt";
-                                else if(modifier_tokens[i] == "Invert")
+                                if(modifier_tokens[i] == Shift)
+                                    modifierSlots[0] = Shift;
+                                else if(modifier_tokens[i] == Option)
+                                    modifierSlots[1] = Option;
+                                else if(modifier_tokens[i] == Control)
+                                    modifierSlots[2] = Control;
+                                else if(modifier_tokens[i] == Alt)
+                                    modifierSlots[3] = Alt;
+                                else if(modifier_tokens[i] == Invert)
                                     isInverted = true;
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                         }
                     }
-                    
-                    
-                    
-                    
                     
                     string fxParamName = "";
                     
@@ -346,7 +339,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
                                     widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
-                                    // GAW TBD -- add Widget to fxName->widget dictionary
+                                    fxWidgets_[fxName].push_back(widget);
                                 }
                 }
             }
@@ -374,64 +367,24 @@ void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
 void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
 {
     char fxName[BUFSZ];
-    char fxGUID[BUFSZ];
     
     DeleteFXWindows();
     
     for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
     {
         DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
         
-        //if(fxTemplates_.count(surface->GetName()) > 0 && fxTemplates_[surface->GetName()].count(fxName) > 0)
-        //{
-            // GAW TBD -- with new model, you can't MapFXToWidgets directly at this popint
-            // You can map the vector (Unmodified, Shift, Alt, etc.), but you will still have to decide at call time which vector of actions to invoke based on current modifiers
-            // See OnTrackSelection
-            /*
-            for(auto [widgetName, modifiedActions] : fxTemplates_[surface->GetName()][fxName])
-                if(widgetsByName_.count(widgetName) > 0)
-                    for(auto [modifier, actions] : modifiedActions)
-                        for(auto action : actions)
-                            if(ActionContext* actionContext = TheManager->GetActionContext(fxTemplates_[surface->GetName()][fxName][widgetName][modifier][action], fxName, i))
-                                if(widgetsByName_.count(widgetName) > 0)
-                                actionContexts_[widgetsByName_[widgetName]][modifier].push_back(actionContext);
-
-
-
-            */
-            
-            
-            
-            
-            
-            
-            
-            
-            /*
-            for(auto [widgetName, paramBundle] : fxTemplates_[surface->GetName()][fxName][GetCurrentModifers(widget)])
+        if(fxWidgets_.count(fxName) > 0)
+        {
+            for(auto widget : fxWidgets_[fxName])
             {
-                if(widgetsByName_.count(widgetName) > 0)
-                {
-                    Widget* widget = widgetsByName_[widgetName];
-                    
-                    if(Action* action = TheManager->GetAction(paramBundle[0]))
-                    {
-                        
-                        widgetModes_[widget] = WidgetMode::FX;
-                        
-                        WidgetContext & context = widgetContexts_[widget];
-                        context.SetContext(WidgetMode::FX);
-                        context.GetContextInfo()->actionsWithParamBundle.push_back(make_pair(action, paramBundle));
-                        context.GetContextInfo()->trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-                        context.GetContextInfo()->fxIndex = i;
-                    }
-                }
+                widget->SetTrack(track);
+                widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifers(widget));
             }
-            */
             
-            //AddFXWindow(FXWindow(track, i));
-        //}
+            AddFXWindow(FXWindow(track, i));
+        }
+        
     }
     
     OpenFXWindows();
@@ -447,7 +400,6 @@ void Page::OnTrackSelection(MediaTrack* track)
                 widget->DoAction(widget, 1.0);
             }
 }
-
 
 void Page::TrackFXListChanged(MediaTrack* track)
 {
