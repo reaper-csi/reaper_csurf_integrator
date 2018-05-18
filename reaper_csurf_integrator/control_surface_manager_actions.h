@@ -21,7 +21,7 @@ public:
         if(1 == DAW::CountSelectedTracks(nullptr))
             page->MapTrackAndFXToWidgets(surface, track);
         else
-            page->UnmapWidgetsFromTrack(surface, track);
+            page->UnmapWidgetsFromTrackAndFX(surface, track);
     }
 };
 
