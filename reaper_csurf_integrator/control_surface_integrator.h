@@ -31,7 +31,6 @@
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
-const string DefaultGUID = "Control Surface Integrator GUID";
 const string GainReductionDB = "GainReductionDB";
 const string TrackOnSelection = "TrackOnSelection";
 const string Channel = "Channel";
@@ -48,7 +47,7 @@ const string Control = "Control";
 const string Alt = "Alt";
 const string Invert = "Invert";
 const string PageToken = "Page";
-const string TrackProtocol = "TrackProtocol";
+const string Track = "Track";
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
@@ -178,15 +177,15 @@ class WidgetContext
 public:
     vector<ActionContext*> * GetActionContexts() { return currentActioncontexts_; }
     
-    void AddActionContext(string name, string modifiers, ActionContext* context)
+    void AddActionContext(string mode, string modifiers, ActionContext* context)
     {
-        actionContexts_[name][modifiers].push_back(context);
+        actionContexts_[mode][modifiers].push_back(context);
     }
     
-    void SetCurrentActionContexts(string name, string modifiers)
+    void SetCurrentActionContexts(string mode, string modifiers)
     {
-        if(actionContexts_.count(name) > 0 && actionContexts_[name].count(modifiers) > 0)
-            currentActioncontexts_ = &actionContexts_[name][modifiers];
+        if(actionContexts_.count(mode) > 0 && actionContexts_[mode].count(modifiers) > 0)
+            currentActioncontexts_ = &actionContexts_[mode][modifiers];
         else
             currentActioncontexts_ = emptyActioncontexts_;
     }
@@ -237,16 +236,19 @@ public:
     MediaTrack* GetTrack() { return track_; }
     string GetRole() { return role_; }
     virtual Midi_RealSurface* GetSurface() { return nullptr; }
-    void RequestUpdate();
     void SetTrack(MediaTrack* track) { track_ = track; }
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
-    
-    void DoAction(Widget* widget, double value)
+
+    void RequestUpdate()
     {
-        contextManager_.DoAction(widget, value);
+        contextManager_.RequestActionUpdate(this);
     }
 
+    void DoAction(double value)
+    {
+        contextManager_.DoAction(this, value);
+    }
     
     void AddWidgetContext(Page* page, WidgetContext* widgetContext)
     {
@@ -295,7 +297,7 @@ protected:
     vector<vector<Widget*>> channels_;
     map<Widget*, string> suffixes_;
     
-    RealSurface(const string name, string templateFilename, int numChannels, bool isBankable) : name_(name), isBankable_(isBankable)
+    RealSurface(const string name, int numChannels, bool isBankable) : name_(name), isBankable_(isBankable)
     {
         for(int i = 0; i < numChannels; i++)
             channels_.push_back(vector<Widget*>());
@@ -533,6 +535,9 @@ private:
     bool control_ = false;
     bool alt_ = false;
     
+    void InitActionContexts(RealSurface* surface, string templateDirectory);
+    void InitFXContexts(RealSurface* surface, string templateDirectory);
+
     string GetCurrentModifers(Widget* widget)
     {
         string modifiers = "";
@@ -593,17 +598,59 @@ private:
         openFXWindows_.clear();
     }
     
+    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        for(auto channel : surface->GetChannels())
+            for(auto widget : channel)
+                widget->SetTrack(track);
+    }
+    
+    void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        char fxName[BUFSZ];
+        
+        DeleteFXWindows();
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(fxWidgets_.count(fxName) > 0)
+            {
+                for(auto widget : fxWidgets_[fxName])
+                {
+                    widget->SetTrack(track);
+                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifers(widget));
+                    for(auto context : *widgetContexts_[widget]->GetActionContexts())
+                        context->SetIndex(i);
+                }
+                
+                AddFXWindow(FXWindow(track, i));
+            }
+        }
+        
+        OpenFXWindows();
+    }
+    
+    void UnmapWidgetsFromTrack(MediaTrack* track)
+    {
+        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
+        //for(auto [widget, mode] : widgetModes_)
+        //mode = WidgetMode::Track;
+    }
+    
+    void UnmapWidgetsFromFX(MediaTrack* track)
+    {
+        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
+        //for(auto [widget, mode] : widgetModes_)
+        //mode = WidgetMode::Track;
+    }
+
 public:
     Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
     string GetName() { return name_; }
-    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track);
     int GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName);
-    void MapFXToWidgets(RealSurface* surface, MediaTrack* track);
-    void InitActionContexts(RealSurface* surface, string templateDirectory);
-    void InitFXContexts(RealSurface* surface, string templateDirectory);
-    void OnTrackSelection(MediaTrack* track);    
     void TrackFXListChanged(MediaTrack* track);
-    void Init();
     
     bool IsZoom() { return zoom_; }
     bool IsScrub() { return scrub_; }
@@ -682,28 +729,39 @@ public:
         return followMCP_;
     }
     
-    void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
-    {
-        int blah = 0;
-        /*
-         if(zones_.count(zoneName) > 0)
-         zones_[zoneName]->UnmapWidgetsFromTrack(track, surfaceName);
-         */
-    }
-
     void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
         MapTrackToWidgets(surface, track);
         MapFXToWidgets(surface, track);
     }
     
-    void UnmapWidgetsFromFX(MediaTrack* track)
+    void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
     {
-        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
-        //for(auto [widget, mode] : widgetModes_)
-            //mode = WidgetMode::Track;
+        UnmapWidgetsFromTrack(track);
+        UnmapWidgetsFromFX(track);
     }
     
+    void Init()
+    {
+        currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
+        
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+            bankableChannels_[i]->SetTrack(DAW::CSurf_TrackFromID(i, followMCP_));
+        
+        SetPinnedTracks();
+    }
+    
+    void OnTrackSelection(MediaTrack* track)
+    {
+        for(auto surface : realSurfaces_)
+            for(auto widget : surface->GetAllWidgets())
+                if(widget->GetRole() == "TrackOnSelection")
+                {
+                    widget->SetTrack(track);
+                    widget->DoAction(1.0);
+                }
+    }
+      
     void PinSelectedTracks()
     {
         BankableChannel* channel = nullptr;

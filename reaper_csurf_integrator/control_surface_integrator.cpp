@@ -82,14 +82,6 @@ void ContextManager::DoAction(Widget* widget, double value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Widget
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Widget::RequestUpdate()
-{
-    contextManager_.RequestActionUpdate(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
@@ -112,7 +104,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-: RealSurface(name, templateFilename, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+: RealSurface(name, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(templateFilename);
     bool inChannel = false;
@@ -245,8 +237,8 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                     if(widgetContexts_.count(widget) < 1)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
-                                    widgetContexts_[widget]->AddActionContext(TrackProtocol, modifiers, context);
-                                    widgetContexts_[widget]->SetCurrentActionContexts(TrackProtocol, modifiers); // initialize to Track context
+                                    widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                                    widgetContexts_[widget]->SetCurrentActionContexts(Track, modifiers); // initialize to Track context
                                 }
                 }
             }
@@ -347,61 +339,6 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
     }
 }
 
-void Page::Init()
-{
-    currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-
-    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-        bankableChannels_[i]->SetTrack(DAW::CSurf_TrackFromID(i, followMCP_));
-
-    SetPinnedTracks();
-}
-
-void Page::MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
-{
-    for(auto channel : surface->GetChannels())
-        for(auto widget : channel)
-            widget->SetTrack(track);
-}
-
-void Page::MapFXToWidgets(RealSurface* surface, MediaTrack* track)
-{
-    char fxName[BUFSZ];
-    
-    DeleteFXWindows();
-    
-    for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-    {
-        DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-        
-        if(fxWidgets_.count(fxName) > 0)
-        {
-            for(auto widget : fxWidgets_[fxName])
-            {
-                widget->SetTrack(track);
-                widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifers(widget));
-                for(auto context : *widgetContexts_[widget]->GetActionContexts())
-                    context->SetIndex(i);
-            }
-            
-            AddFXWindow(FXWindow(track, i));
-        }
-    }
-    
-    OpenFXWindows();
-}
-
-void Page::OnTrackSelection(MediaTrack* track)
-{
-    for(auto surface : realSurfaces_)
-        for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == "TrackOnSelection")
-            {
-                widget->SetTrack(track);
-                widget->DoAction(widget, 1.0);
-            }
-}
-
 void Page::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -425,7 +362,6 @@ void Page::TrackFXListChanged(MediaTrack* track)
     
     // GAW TBD -- clear all fx items and rebuild
 }
-
 int Page::GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName)
 {
     char fxName[BUFSZ];
