@@ -169,8 +169,6 @@ public:
     static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView) + 1; };
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
-    
-    static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView);}
 
     static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
@@ -204,22 +202,6 @@ public:
         }
     }
     
-    /*
-    // GAW TBD -- dump this 
-    static string GetTrackGUIDAsString(MediaTrack* track)
-    {
-        if(GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1)
-            return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
-        else
-        {
-            char pBuffer[BUFSZ];
-            memset(pBuffer, 0, sizeof(pBuffer));
-            guidToString(GetTrackGUID(track), pBuffer);
-            return pBuffer;
-        }
-    }
-    */
-    
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
         if(GUIDTracks_.count(trackGUID) < 1)
@@ -239,23 +221,6 @@ public:
         else
             return nullptr;
     }
-    
- /*
-    // GAW TBD -- dump this
-    static int IndexFromFXGUID(MediaTrack* track, string anFxGUID)
-    {
-        char fxGUID[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::guidToString(DAW::TrackFX_GetFXGUID(track, i), fxGUID);
-            if(string(fxGUID) == anFxGUID)
-                return i;
-        }
-        
-        return 0;
-    }
-  */
 };
 
 #endif /* control_surface_integrator_Reaper_h */

@@ -41,6 +41,9 @@ public:
 class PushButtonWithLatch_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    int currentValue = 0;
+    
 public:
     PushButtonWithLatch_Midi_Widget(Midi_RealSurface* surface, string role, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, press, release)
     {
@@ -50,12 +53,13 @@ public:
     
     void SetValue(double value) override
     {
-        SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
+        SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        contextManager_.DoAction(this, 1.0);
+        currentValue = ! currentValue;
+        contextManager_.DoAction(this, currentValue);
     }
 };
 
