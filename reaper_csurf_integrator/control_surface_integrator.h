@@ -173,6 +173,7 @@ class WidgetContext
     map<string, map<string, vector<ActionContext*>>> actionContexts_;
     vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
     vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
+    string curentMode_ = Track;
 
 public:
     vector<ActionContext*> * GetActionContexts() { return currentActioncontexts_; }
@@ -185,7 +186,20 @@ public:
     void SetCurrentActionContexts(string mode, string modifiers)
     {
         if(actionContexts_.count(mode) > 0 && actionContexts_[mode].count(modifiers) > 0)
+        {
             currentActioncontexts_ = &actionContexts_[mode][modifiers];
+            curentMode_ = mode;
+        }
+        else
+            currentActioncontexts_ = emptyActioncontexts_;
+    }
+    
+    void SetCurrentActionContexts(string modifiers)
+    {
+        if(actionContexts_.count(curentMode_) > 0 && actionContexts_[curentMode_].count(modifiers) > 0)
+        {
+            currentActioncontexts_ = &actionContexts_[curentMode_][modifiers];
+        }
         else
             currentActioncontexts_ = emptyActioncontexts_;
     }
@@ -538,7 +552,7 @@ private:
     void InitActionContexts(RealSurface* surface, string templateDirectory);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
 
-    string GetCurrentModifers(Widget* widget)
+    string GetCurrentModifiers(Widget* widget)
     {
         string modifiers = "";
      
@@ -620,7 +634,7 @@ private:
                 for(auto widget : fxWidgets_[fxName])
                 {
                     widget->SetTrack(track);
-                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifers(widget));
+                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers(widget));
                     for(auto context : *widgetContexts_[widget]->GetActionContexts())
                         context->SetIndex(i);
                 }
@@ -678,21 +692,31 @@ public:
     void SetShift(bool value)
     {
         shift_ = value;
+        SetModifiers();
     }
     
     void SetOption(bool value)
     {
         option_ = value;
+        SetModifiers();
     }
     
     void SetControl(bool value)
     {
         control_ = value;
+        SetModifiers();
     }
     
     void SetAlt(bool value)
     {
         alt_ = value;
+        SetModifiers();
+    }
+    
+    void SetModifiers()
+    {
+        for(auto [widget, widgetContext] : widgetContexts_)
+            widgetContext->SetCurrentActionContexts(GetCurrentModifiers(widget));
     }
     
     void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
@@ -748,6 +772,9 @@ public:
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
             bankableChannels_[i]->SetTrack(DAW::CSurf_TrackFromID(i, followMCP_));
         
+        for(auto [widget, context] : widgetContexts_)
+            context->SetCurrentActionContexts(Track, GetCurrentModifiers(widget)); // initialize to Track and CurrentModifiers context
+
         SetPinnedTracks();
     }
     

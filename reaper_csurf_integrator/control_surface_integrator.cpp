@@ -238,7 +238,6 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
                                     widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                                    widgetContexts_[widget]->SetCurrentActionContexts(Track, modifiers); // initialize to Track context
                                 }
                 }
             }
