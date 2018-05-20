@@ -469,12 +469,9 @@ class TrackTouchControlled : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) override
     {
-        /*
-        if(MediaTrack* track = page->GetTrack(context.GetContextInfo()->trackGUID))
-            if(params.size() > 1 && page->GetTouchState(track, 0))
-                if(Action* action = TheManager->GetAction(params[1]))
-                    action->RequestUpdate(widget, page, params);
-         */
+        if(MediaTrack* track = widget->GetTrack())
+            if(page->GetTouchState(track, 0))
+                actionContext->RequestActionUpdate(page, widget);
     }
 };
 
