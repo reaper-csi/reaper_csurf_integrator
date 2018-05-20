@@ -97,7 +97,8 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        action_->RequestUpdate(this, widget, widget->GetTrack(), fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_));
+        if(MediaTrack* track = widget->GetTrack())
+            action_->RequestUpdate(this, widget, track, fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_));
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
