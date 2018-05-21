@@ -809,7 +809,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 iniFile.close();
             }
             
-            TheManager->Init();
+            if(TheManager)
+                TheManager->Init();
         }
         break;
     }
