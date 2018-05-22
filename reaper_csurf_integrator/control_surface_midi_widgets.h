@@ -148,6 +148,9 @@ public:
 class Encoder_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    double lastNormalizedValue_ = 0.0;
+    
 public:
     Encoder_Midi_Widget(Midi_RealSurface* surface, string role, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, press, release)
     {
@@ -156,7 +159,9 @@ public:
     
     virtual void SetValue(double pan) override
     {
-        int displayMode = 1;
+        lastNormalizedValue_ = pan;
+        
+        int displayMode = 0;
         
         unsigned char panch = pan * 127.0;
         
@@ -171,10 +176,8 @@ public:
         
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
-        
-        value += lastMessageSent_->midi_message[2];
 
-        contextManager_.DoAction(this, panToNormalized(value));
+        contextManager_.DoAction(this, value + lastNormalizedValue_);
     }
 };
 
