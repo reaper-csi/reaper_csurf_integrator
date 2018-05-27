@@ -174,7 +174,8 @@ public:
     TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : ActionContext(action, isInverted)
     {
         for(int i = 2; i < params.size(); i++)
-            actions_.push_back(availableActions[params[i]]);
+            if(Action* availableAction = availableActions[params[i]])
+                actions_.push_back(availableAction);
     }
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
