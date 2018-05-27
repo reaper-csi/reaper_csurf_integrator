@@ -162,20 +162,44 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycleContext : public ActionContext
+class TrackCycleContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    Widget* cyclerWidget_ = nullptr;
+    int index = 0;
+    vector<Action*> actions_;
+    
 public:
-    CycleContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : ActionContext(action, isInverted)
+    {
+        for(int i = 2; i < params.size(); i++)
+            actions_.push_back(availableActions[params[i]]);
+    }
+    
+    virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        
+        if(MediaTrack* track = widget->GetTrack())
+        {
+            if(actions_[index])
+                actions_[index]->RequestUpdate(page, this, widget, track);
+        }
+        else
+        {
+            widget->SetValue(0.0);
+            widget->SetValue("");
+        }
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        
+        if(widget && widget == cyclerWidget_)
+            index = index < actions_.size() - 1 ? index + 1 : 0;
+        else if(actions_[index])
+            if(MediaTrack* track = widget->GetTrack())
+                actions_[index]->Do(page, widget, track, value);
     }
 };
 

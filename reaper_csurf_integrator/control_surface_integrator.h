@@ -308,6 +308,7 @@ protected:
     bool isBankable_ = true;
     vector<Widget*> widgets_;
     vector<Widget*> allWidgets_;
+    vector<Widget*> emptyWidgets_;
     vector<vector<Widget*>> channels_;
     map<Widget*, string> suffixes_;
     
@@ -326,6 +327,7 @@ public:
     vector<vector<Widget*>> GetBankableChannels() { return isBankable_ ? channels_ : vector<vector<Widget*>>() ; }
     bool IsBankable() { return isBankable_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
+
     
     string GetWidgetSuffix(Widget* widget)
     {
@@ -333,6 +335,17 @@ public:
             return suffixes_[widget];
         
         return "";
+    }
+    
+    vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
+    {
+        for(int i = 0; i < GetNumChannels(); i++)
+            for(int j = 0; j < channels_[i].size(); j++)
+                if(channels_[i][j] == aChannelWidget)
+                    return channels_[i];
+        
+        
+        return emptyWidgets_;
     }
     
     void RequestUpdate()
@@ -501,6 +514,8 @@ public:
     virtual ~ActionContext() {}
     
     virtual void SetIndex(int index) {}
+    
+    virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     
