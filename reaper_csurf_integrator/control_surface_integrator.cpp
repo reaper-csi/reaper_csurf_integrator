@@ -220,7 +220,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                         }
                     }
 
-                    // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can add ActionContexts
+                    // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can attach ActionContexts
                     // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
                     if(widgetRole == "TrackOnSelection")
                         surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
@@ -238,6 +238,20 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                         widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
                                     
                                     widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                                    
+                                    if(params[0] == "TrackCycle")
+                                    {
+                                        for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
+                                            if(cyclerWidget->GetRole() == params[1])
+                                            {
+                                                if(widgetContexts_.count(cyclerWidget) < 1)
+                                                    cyclerWidget->AddWidgetContext(this, widgetContexts_[cyclerWidget] = new WidgetContext());
+                                                
+                                                widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                                context->SetCyclerWidget(cyclerWidget);
+                                            }
+
+                                    }
                                 }
                 }
             }
@@ -481,6 +495,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackCycle"] = [this](vector<string> params, bool isInverted) { return new TrackCycleContext(actions_, params, actions_[params[0]], isInverted); };
 }
 
 void Manager::Init()

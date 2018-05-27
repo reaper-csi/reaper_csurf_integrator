@@ -104,6 +104,7 @@ class Fader14Bit_Midi_Widget : public Midi_Widget
 private:
     double minDB_ = 0.0;
     double maxDB_ = 0.0;
+    //db = 20*log10(X/0xFFFF)
     
 public:
     Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string role, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, press, release), minDB_(minDB), maxDB_(maxDB)
