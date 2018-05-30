@@ -38,7 +38,6 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string widgetClas
     if(widgetClass == "Button") return new PushButton_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "ButtonCycler") return new PushButtonCycler_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
