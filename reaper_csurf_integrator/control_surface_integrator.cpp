@@ -559,10 +559,10 @@ void Manager::Init()
             }
             else if(tokens[0] == PageToken)
             {
-                if(tokens.size() != 3)
+                if(tokens.size() != 7)
                     continue;
                 
-                currentPage = new Page(tokens[1], tokens[2] == "Yes" ? true : false);
+                currentPage = new Page(tokens[1], tokens[2] == "Yes" ? true : false, tokens[3] == "Yes" ? true : false, atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
                 pages_.push_back(currentPage);
                 
             }

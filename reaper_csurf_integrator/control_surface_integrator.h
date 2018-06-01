@@ -358,6 +358,12 @@ public:
                 widget->RequestUpdate();
     }
     
+    void SetPageContext(Page* page)
+    {
+        for(auto widget : allWidgets_)
+            widget->SetPageContext(page);
+    }
+    
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
@@ -546,6 +552,10 @@ class Page
 private:
     string name_ = "";
     bool followMCP_ = true;
+    bool colourTracks_ = false;
+    int trackColourRedValue_ = 0;
+    int trackColourGreenValue_ = 0;
+    int trackColourBlueValue_ = 0;
     int trackOffset_ = 0;
     int currentNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
@@ -676,7 +686,7 @@ private:
     }
 
 public:
-    Page(string name, bool followMCP) : name_(name), followMCP_(followMCP) {}
+    Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
     int GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName);
     void TrackFXListChanged(MediaTrack* track);
@@ -692,6 +702,12 @@ public:
     void SetScrub(bool value)
     {
         scrub_ = value;
+    }
+    
+    void SetContext()
+    {
+        for(auto surface : realSurfaces_)
+            surface->SetPageContext(this);
     }
     
     void SetShowFXWindows(bool value)
@@ -1010,10 +1026,28 @@ public:
                 channelLayout.push_back(movableChannelLayout[offset++]);
         }
         
+        if(colourTracks_)
+        {
+            // reset track colors
+            int defaultColor = 0;
+            for(auto* channel : bankableChannels_)
+                if(MediaTrack* track = channel->GetTrack())
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+        }
+        
         // Apply new layout
         offset = 0;
         for(auto* channel : bankableChannels_)
             channel->SetTrack(DAW::GetTrackFromGUID(channelLayout[offset++], followMCP_));
+        
+        if(colourTracks_)
+        {
+            // color tracks
+            int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
+            for(auto trackGUID : channelLayout)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, followMCP_))
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
+        }
     }
     
     int GetNumLockedTracks()
@@ -1151,6 +1185,14 @@ public:
         if(pages_.size() > 0)
         {
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
+            pages_[currentPageIndex_]->SetContext();
+            
+            int defaultColour = 0;
+            for(int i = 0; i < DAW::CountTracks(); i++)
+                if(MediaTrack* track = DAW::GetTrack(i))
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColour);
+            
+            pages_[currentPageIndex_]->RefreshLayout();
         }
     }
     
