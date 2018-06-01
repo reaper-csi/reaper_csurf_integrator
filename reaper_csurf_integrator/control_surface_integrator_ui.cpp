@@ -116,6 +116,10 @@ struct PageLine
 {
     string name = "";
     bool followMCP = true;
+    bool trackColouring = false;
+    int red = 0;
+    int green = 0;
+    int blue = 0;
     vector<VirtualSurfaceLine*> virtualSurfaces;
 };
 
@@ -126,6 +130,10 @@ static char name[BUFSZ];
 static int numChannels = 0;
 static bool isBankable = true;
 static bool followMCP = true;
+static bool trackColouring = false;
+static int red = 0;
+static int green = 0;
+static int blue = 0;
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
@@ -261,11 +269,20 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_CHECKED);
             else
                 CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
-
+            
             if(editMode)
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_PageName, name);
+                
+                if(trackColouring)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
+
+                SetDlgItemText(hwndDlg, IDC_EDIT_Red, to_string(red).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_Green, to_string(green).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_Blue, to_string(blue).c_str());
             }
         }
 
@@ -289,6 +306,23 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                             followMCP = true;
                         else
                             followMCP = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
+                            trackColouring = true;
+                        else
+                            trackColouring = false;
+
+                        char tempBuf[BUFSZ];
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_Red, tempBuf, sizeof(tempBuf));
+                        red = atoi(tempBuf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_Green, tempBuf, sizeof(tempBuf));
+                        green = atoi(tempBuf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_Blue, tempBuf, sizeof(tempBuf));
+                        blue = atoi(tempBuf);
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -572,6 +606,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 followMCP = pages[index]->followMCP;
+                                trackColouring = pages[index]->trackColouring;
+                                red = pages[index]->red;
+                                green = pages[index]->green;
+                                blue = pages[index]->blue;
                                 dlgResult = false;
                                 editMode = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
@@ -579,6 +617,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     pages[index]->name = name;
                                     pages[index]->followMCP = followMCP;
+                                    pages[index]->trackColouring = trackColouring;
+                                    pages[index]->red = red;
+                                    pages[index]->green = green;
+                                    pages[index]->blue = blue;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                     for(auto* page :  pages)
                                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
@@ -705,15 +747,26 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == PageToken)
                     {
-                        if(tokens.size() != 3)
+                        if(tokens.size() != 7)
                             continue;
  
                         PageLine* page = new PageLine();
                         page->name = tokens[1];
+                        
                         if(tokens[2] == "Yes")
                             page->followMCP = true;
                         else
                             page->followMCP = false;
+                        
+                        if(tokens[3] == "Yes")
+                            page->trackColouring = true;
+                        else
+                            page->trackColouring = false;
+                        
+                        page->red = atoi(tokens[4].c_str());
+                        page->green = atoi(tokens[5].c_str());
+                        page->blue = atoi(tokens[6].c_str());
+                        
                         pages.push_back(page);
                         
                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
@@ -788,9 +841,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     line = PageToken + " ";
                     line += page->name + " ";
                     if(page->followMCP)
-                        line += "Yes\n";
+                        line += "Yes ";
                     else
-                        line += "No\n";
+                        line += "No ";
+                    
+                    if(page->trackColouring)
+                        line += "Yes ";
+                    else
+                        line += "No ";
+
+                    line += to_string(page->red) + " ";
+                    line += to_string(page->green) + " ";
+                    line += to_string(page->blue) + "\n";
+
                     iniFile << line;
 
                     for(auto virtualSurface : page->virtualSurfaces)
