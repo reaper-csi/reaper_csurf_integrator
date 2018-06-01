@@ -74,6 +74,8 @@ public:
     
     static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
+    static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
+
     static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }
 
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
@@ -166,7 +168,11 @@ public:
 
     static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
    
-    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView) + 1; };
+    static int CountTracks() { return ::CountTracks(0); }
+    
+    static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
+
+    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
 

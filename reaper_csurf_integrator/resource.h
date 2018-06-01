@@ -9,7 +9,12 @@
 #define IDC_CHECK_MidiInMon             1000
 #define IDC_CHECK_MidiOutMon            1001
 #define IDC_CHECK_VSTParamMon           1002
+#define IDC_EDIT_PageName               1003
+#define IDC_EDIT_Blue                   1004
+#define IDC_EDIT_Green                  1005
 #define IDC_CHECK_IsBankable            1006
+#define IDC_EDIT_Red                    1007
+#define IDC_CHECK_ColourTracks          1008
 #define IDC_COMBO_RealSurface           1016
 #define IDC_COMBO_ActionTemplates       1017
 #define IDC_COMBO_FXTemplates           1018
@@ -17,7 +22,6 @@
 #define IDC_COMBO_MidiIn                1020
 #define IDC_COMBO_MidiOut               1021
 #define IDC_EDIT_RealSurfaceName        1022
-#define IDC_EDIT_PageName				1003
 #define IDC_EDIT_RealSurfaceNumChannels 1023
 #define IDC_LIST_Pages                  1024
 #define IDC_BUTTON_AddPage              1025
