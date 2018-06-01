@@ -573,7 +573,8 @@ void Manager::Init()
                 
                 for(auto surface : midi_realSurfaces_)
                     if(surface->GetName() == tokens[1])
-                        currentPage->AddSurface(surface, tokens[2], tokens[3]);
+                        if(currentPage)
+                            currentPage->AddSurface(surface, tokens[2], tokens[3]);
             }
         }
     }
