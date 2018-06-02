@@ -707,6 +707,18 @@ public:
         scrub_ = value;
     }
     
+    void LeavePage()
+    {
+        if(colourTracks_)
+        {
+            // reset track colors
+            int defaultColor = 0;
+            for(auto* channel : bankableChannels_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+        }
+    }
+    
     void SetContext()
     {
         for(auto surface : realSurfaces_)
@@ -1181,14 +1193,10 @@ public:
     {
         if(pages_.size() > 0)
         {
+            pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
             pages_[currentPageIndex_]->SetContext();
-            
-            int defaultColour = 0;
-            for(int i = 0; i < DAW::CountTracks(); i++)
-                if(MediaTrack* track = DAW::GetTrack(i))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColour);
-            
+                       
             pages_[currentPageIndex_]->RefreshLayout();
         }
     }
