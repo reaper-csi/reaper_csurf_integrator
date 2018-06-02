@@ -469,7 +469,7 @@ class TrackTouchControlled : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) override
     {
-        if(MediaTrack* track = widget->GetTrack())
+        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID()))
             if(page->GetTouchState(track, 0))
                 actionContext->RequestActionUpdate(page, widget);
     }

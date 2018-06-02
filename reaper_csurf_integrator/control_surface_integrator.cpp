@@ -378,7 +378,7 @@ int Page::GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName)
 {
     char fxName[BUFSZ];
 
-    MediaTrack* track = widget->GetTrack();
+    MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID());
     
     DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
     
