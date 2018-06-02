@@ -868,7 +868,7 @@ public:
         RefreshLayout();
     }
     
-    void TrackListChanged()
+    bool TrackListChanged()
     {
         if(currentNumTracks_ != DAW::CSurf_NumTracks(followMCP_))
         {
@@ -906,8 +906,7 @@ public:
             }
         }
         
-        if(shouldRefreshLayout)
-            RefreshLayout();
+        return shouldRefreshLayout;
     }
     
     void AdjustTrackBank(int stride)
@@ -1207,7 +1206,8 @@ public:
     void TrackListChanged()
     {
         for(auto & page : pages_)
-            page->TrackListChanged();
+            if(page->TrackListChanged() && page == pages_[currentPageIndex_])
+                page->RefreshLayout();
     }
     
     void TrackFXListChanged(MediaTrack* trackid)
