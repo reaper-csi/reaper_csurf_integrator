@@ -557,7 +557,6 @@ private:
     int trackColourGreenValue_ = 0;
     int trackColourBlueValue_ = 0;
     int trackOffset_ = 0;
-    int currentNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
@@ -802,10 +801,8 @@ public:
     
     void Init()
     {
-        currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-        
-        for(int i = 0; i < DAW::CountTracks() && i < bankableChannels_.size(); i++)
-            bankableChannels_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i));
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+            bankableChannels_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
         
         for(auto [widget, context] : widgetContexts_)
             context->SetCurrentActionContexts(Track, GetCurrentModifiers(widget)); // initialize to Track and CurrentModifiers context
@@ -834,7 +831,7 @@ public:
         {
             channel = bankableChannels_[i];
             
-            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID());
+            MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_);
             if(track == nullptr)
                 continue;
             
@@ -856,7 +853,7 @@ public:
         {
             channel = bankableChannels_[i];
             
-            MediaTrack* track =  DAW::GetTrackFromGUID(channel->GetTrackGUID());
+            MediaTrack* track =  DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_);
             if(track == nullptr)
                 continue;
             
@@ -876,11 +873,7 @@ public:
     
     bool TrackListChanged()
     {
-        if(currentNumTracks_ != DAW::CSurf_NumTracks(followMCP_))
-        {
-            DAW::ClearCache();
-            currentNumTracks_ = DAW::CSurf_NumTracks(followMCP_);
-        }
+        DAW::ClearCache();
         
         int currentOffset = trackOffset_;
         bool shouldRefreshLayout = false;
@@ -941,7 +934,7 @@ public:
         
         while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
         {
-            string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_);
+            string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
             
             for(auto pinnedChannel : pinnedChannels)
                 if(pinnedChannel == trackGUID)
@@ -1034,7 +1027,7 @@ public:
             // reset track colors
             int defaultColor = 0;
             for(auto* channel : bankableChannels_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID()))
+                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
         }
         
@@ -1048,7 +1041,7 @@ public:
             // color tracks
             int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
             for(auto trackGUID : channelLayout)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID))
+                if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
         }
          
@@ -1073,7 +1066,7 @@ public:
         if(offset >= DAW::CSurf_NumTracks(followMCP_))
             return "";
         else
-            return DAW::GetTrackGUIDAsString(offset);
+            return DAW::GetTrackGUIDAsString(offset, followMCP_);
     }
 
     bool IsTrackVisible(MediaTrack* track)
