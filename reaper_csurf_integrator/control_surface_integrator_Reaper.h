@@ -176,9 +176,9 @@ public:
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
 
-    static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
+    static string GetTrackGUIDAsString(int trackNumber)
     {
-        if(trackNumber < 0 || trackNumber > CSurf_NumTracks(mcpView))
+        if(trackNumber < 0 || trackNumber > CountTracks())
             return "";
         else if(0 == trackNumber)
             return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
@@ -186,7 +186,7 @@ public:
         {
             char pBuffer[BUFSZ];
             memset(pBuffer, 0, sizeof(pBuffer));
-            guidToString(GetTrackGUID(CSurf_TrackFromID(trackNumber, mcpView)), pBuffer);
+            guidToString(GetTrackGUID(GetTrack(trackNumber)), pBuffer);
             return pBuffer;
         }
     }
@@ -207,16 +207,19 @@ public:
             return pBuffer;
         }
     }
-    
-    static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
+
+    static MediaTrack *GetTrackFromGUID(string trackGUID)
     {
+        if(trackGUID == "ReaperMasterTrackGUID")
+            return CSurf_TrackFromID(0, true);
+        
         if(GUIDTracks_.count(trackGUID) < 1)
         {
-            for(int i = 0; i < CSurf_NumTracks(mcpView) + 1; i++) // +1 is for Reaper Master Track
+            for(int i = 0; i < CountTracks(); i++) // +1 is for Reaper Master Track
             {
-                if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
+                if(GetTrackGUIDAsString(i) == trackGUID)
                 {
-                    GUIDTracks_[trackGUID] = CSurf_TrackFromID(i, mcpView);
+                    GUIDTracks_[trackGUID] = GetTrack(i);
                     break;
                 }
             }
