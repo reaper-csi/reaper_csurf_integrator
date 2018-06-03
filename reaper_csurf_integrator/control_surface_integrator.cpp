@@ -164,6 +164,8 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
 {
+    bool trackOnSelectionWidgetAdded_ = false;
+    
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
     {
         if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
@@ -221,8 +223,11 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
 
                     // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can attach ActionContexts
                     // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
-                    if(widgetRole == "TrackOnSelection")
+                    if(widgetRole == "TrackOnSelection" && ! trackOnSelectionWidgetAdded_)
+                    {
+                        trackOnSelectionWidgetAdded_ = true;
                         surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
+                    }
 
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
@@ -249,7 +254,6 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                                 widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                                 context->SetCyclerWidget(cyclerWidget);
                                             }
-
                                     }
                                 }
                 }
