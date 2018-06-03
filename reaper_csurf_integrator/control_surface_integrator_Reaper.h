@@ -197,7 +197,10 @@ public:
     }
 
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
-    {     
+    {
+        if(trackGUID == "")
+            return nullptr;
+        
         if(GUIDTracks_.count(trackGUID) < 1)
         {
             for(int i = 0; i < CSurf_NumTracks(mcpView); i++)
