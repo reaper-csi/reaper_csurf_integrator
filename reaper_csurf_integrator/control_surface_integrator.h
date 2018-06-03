@@ -1196,7 +1196,6 @@ public:
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
             pages_[currentPageIndex_]->SetContext();
-                       
             pages_[currentPageIndex_]->RefreshLayout();
         }
     }
