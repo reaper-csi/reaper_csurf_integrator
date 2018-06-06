@@ -515,9 +515,7 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     
     virtual void DoAction(Page* page, Widget* widget, double value) {}
-    
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
-    
+       
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
