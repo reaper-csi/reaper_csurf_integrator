@@ -339,16 +339,6 @@ public:
         return emptyWidgets_;
     }
     
-    void RequestUpdate()
-    {
-        for(auto widget : widgets_)
-            widget->RequestUpdate();
-        
-        for(auto channel : channels_)
-            for(auto widget : channel)
-                widget->RequestUpdate();
-    }
-    
     void SetPageContext(Page* page)
     {
         for(auto widget : allWidgets_)
@@ -704,6 +694,13 @@ public:
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
         }
+    }
+    
+    void RequestUpdate()
+    {
+        for(auto [widget, widgetContext] : widgetContexts_)
+            for(auto actionContext : *widgetContext->GetActionContexts())
+                actionContext->RequestActionUpdate(this, widget);
     }
    
     void DoAction(Widget* widget, double value)
@@ -1193,8 +1190,9 @@ public:
     {
         for(auto surface : midi_realSurfaces_)
             surface->HandleMidiInput();
-        for(auto surface : midi_realSurfaces_)
-            surface->RequestUpdate();
+        
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->RequestUpdate();
     }
     
     void NextPage()
