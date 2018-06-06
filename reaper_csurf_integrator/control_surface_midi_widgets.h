@@ -33,7 +33,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiPressMessage_->IsEqualTo(midiMessage))
-            contextManager_.DoAction(this, 1.0);
+            TheManager->DoAction(this, 1.0);
     }
 };
 
@@ -59,7 +59,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         currentValue = ! currentValue;
-        contextManager_.DoAction(this, currentValue);
+        TheManager->DoAction(this, currentValue);
     }
 };
 
@@ -82,9 +82,9 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(midiPressMessage_->IsEqualTo(midiMessage))
-            contextManager_.DoAction(this, 1.0);
+            TheManager->DoAction(this, 1.0);
         else if(midiReleaseMessage_->IsEqualTo(midiMessage))
-            contextManager_.DoAction(this, 0.0);
+            TheManager->DoAction(this, 0.0);
     }
 };
 
@@ -111,7 +111,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        contextManager_.DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        TheManager->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -132,7 +132,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        contextManager_.DoAction(this, midiMessage->midi_message[2] / 127.0);
+        TheManager->DoAction(this, midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -169,7 +169,7 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
 
-        contextManager_.DoAction(this, value + lastNormalizedValue_);
+        TheManager->DoAction(this, value + lastNormalizedValue_);
     }
 };
 
