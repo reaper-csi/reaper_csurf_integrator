@@ -252,7 +252,6 @@ public:
     string GetTrackGUID() { return trackGUID_; }
     string GetRole() { return role_; }
     string GetName() { return name_; }
-    virtual Midi_RealSurface* GetSurface() { return nullptr; }
     void SetTrackGUID(string trackGUID) { trackGUID_ = trackGUID; }
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
@@ -290,15 +289,14 @@ protected:
     MIDI_event_ex_t* midiPressMessage_ = nullptr;
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
 
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    virtual void SendMidiMessage(int first, int second, int third);
+
 public:
     Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    Midi_RealSurface* GetSurface() override { return surface_; }
-    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
-    virtual void SendMidiMessage(int first, int second, int third);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -313,7 +311,6 @@ protected:
     vector<Widget*> allWidgets_;
     vector<Widget*> emptyWidgets_;
     vector<vector<Widget*>> channels_;
-    map<Widget*, string> suffixes_;
     
     RealSurface(const string name, int numChannels, bool isBankable) : name_(name), isBankable_(isBankable)
     {
@@ -331,15 +328,6 @@ public:
     bool IsBankable() { return isBankable_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
 
-    
-    string GetWidgetSuffix(Widget* widget)
-    {
-        if(suffixes_.count(widget) > 0)
-            return suffixes_[widget];
-        
-        return "";
-    }
-    
     vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
     {
         for(int i = 0; i < GetNumChannels(); i++)
@@ -371,7 +359,6 @@ public:
     {
         widgets_.push_back(widget);
         allWidgets_.push_back(widget);
-        suffixes_[widget] = "";
     }
     
     void AddWidget(int channelNum, Widget* widget)
@@ -380,7 +367,6 @@ public:
         {
             channels_[channelNum].push_back(widget);
             allWidgets_.push_back(widget);
-            suffixes_[widget] = to_string(channelNum + 1);
         }
     }
 };
@@ -506,7 +492,7 @@ public:
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
-    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
+    virtual void Do(Page* page, MediaTrack* track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -802,16 +788,24 @@ public:
         return followMCP_;
     }
     
-    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void MapTrackAndFXToWidgets(MediaTrack* track)
     {
-        MapTrackToWidgets(surface, track);
-        MapFXToWidgets(surface, track);
+        for(auto surface : realSurfaces_)
+            if(surface->GetName() == "Console1")
+            {
+                MapTrackToWidgets(surface, track);
+                MapFXToWidgets(surface, track);
+            }
     }
     
-    void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
+    void UnmapWidgetsFromTrackAndFX(MediaTrack* track)
     {
-        UnmapWidgetsFromTrack(track);
-        UnmapWidgetsFromFX(track);
+        for(auto surface : realSurfaces_)
+            if(surface->GetName() == "Console1")
+            {
+                UnmapWidgetsFromTrack(track);
+                UnmapWidgetsFromFX(track);
+            }
     }
     
     void Init()
