@@ -16,12 +16,12 @@ class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* track) override
+    void Do(Page* page, MediaTrack* track) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
-            page->MapTrackAndFXToWidgets(surface, track);
+            page->MapTrackAndFXToWidgets(track);
         else
-            page->UnmapWidgetsFromTrackAndFX(surface, track);
+            page->UnmapWidgetsFromTrackAndFX(track);
     }
 };
 
