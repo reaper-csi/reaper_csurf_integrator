@@ -707,6 +707,13 @@ public:
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
         }
     }
+   
+    void DoAction(Widget* widget, double value)
+    {
+        if(widgetContexts_.count(widget) > 0)
+            for(auto actionContext : *widgetContexts_[widget]->GetActionContexts())
+                actionContext->DoAction(this, widget, value);
+    }
     
     void SetContext()
     {
@@ -1170,6 +1177,12 @@ public:
             return actionContexts_[params[0]](params, isInverted);
         
         return nullptr;
+    }
+    
+    void DoAction(Widget* widget, double value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->DoAction(widget, value);
     }
     
     void OnTrackSelection(MediaTrack *track)
