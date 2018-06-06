@@ -213,7 +213,7 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        action_->Do(page, widget->GetSurface(), DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()));
+        action_->Do(page, DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()));
     }
 };
 
