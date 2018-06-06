@@ -238,17 +238,20 @@ class Widget
 {
 private:
     string role_ = "";
+    string name_ = "";
+    
     string trackGUID_ = "";
     
 protected:
     ContextManager contextManager_;
-    Widget(string role) : role_(role) {}
+    Widget(string role, string name) : role_(role), name_(name) {}
 
 public:
     virtual ~Widget() {};
     
     string GetTrackGUID() { return trackGUID_; }
     string GetRole() { return role_; }
+    string GetName() { return name_; }
     virtual Midi_RealSurface* GetSurface() { return nullptr; }
     void SetTrackGUID(string trackGUID) { trackGUID_ = trackGUID; }
     virtual void SetValue(double value) {}
@@ -288,7 +291,7 @@ protected:
     MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string role, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     Midi_RealSurface* GetSurface() override { return surface_; }
