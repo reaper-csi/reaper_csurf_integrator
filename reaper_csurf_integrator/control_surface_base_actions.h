@@ -31,14 +31,22 @@ public:
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+protected:
+    MediaTrack* track_ = nullptr;
+    
 public:
     TrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
+    virtual void  SetTrack(MediaTrack* track) override
+    {
+        track_ = track;
+    }
+
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
+        if(track_)
         {
-            action_->RequestUpdate(page, this, widget, track);
+            action_->RequestUpdate(page, this, widget, track_);
         }
         else
         {
@@ -49,26 +57,26 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
-            action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+        if(track_)
+            action_->Do(page, widget, track_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackContextWithIntParam : public ActionContext
+class TrackContextWithIntParam : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
+    TrackContextWithIntParam(Action* action, int param, bool isInverted) : TrackContext(action, isInverted), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
+        if(track_)
         {
-            action_->RequestUpdate(page, this, widget, track, param_);
+            action_->RequestUpdate(page, this, widget, track_, param_);
         }
         else
         {
@@ -84,26 +92,28 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXContext : public ActionContext
+class FXContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string fxParamName_ = "";
     int fxIndex_ = 0;
+    
 public:
-    FXContext(Action* action, string fxParamName, bool isInverted) : ActionContext(action, isInverted), fxParamName_(fxParamName) {}
+    FXContext(Action* action, string fxParamName, bool isInverted) : TrackContext(action, isInverted), fxParamName_(fxParamName) {}
     
     void SetIndex(int index) override { fxIndex_ = index; }
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
-            action_->RequestUpdate(this, widget, track, fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_));
+        if(track_ )
+            action_->RequestUpdate(this, widget, track_, fxIndex_, page->GetFXParamIndex(track_, widget, fxIndex_, fxParamName_));
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        action_->Do(DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()), fxIndex_, page->GetFXParamIndex(widget, fxIndex_, fxParamName_), value);
+        if(track_)
+            action_->Do(track_, fxIndex_, page->GetFXParamIndex(track_, widget, fxIndex_, fxParamName_), value);
     }
 };
 
@@ -162,7 +172,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackCycleContext : public ActionContext
+class TrackCycleContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -171,7 +181,7 @@ private:
     vector<Action*> actions_;
     
 public:
-    TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : ActionContext(action, isInverted)
+    TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : TrackContext(action, isInverted)
     {
         for(int i = 2; i < params.size(); i++)
             if(Action* availableAction = availableActions[params[i]])
@@ -182,10 +192,10 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
+        if(track_)
         {
             if(actions_[index])
-                actions_[index]->RequestUpdate(page, this, widget, track);
+                actions_[index]->RequestUpdate(page, this, widget, track_);
         }
         else
         {
@@ -199,8 +209,8 @@ public:
         if(widget && widget == cyclerWidget_)
             index = index < actions_.size() - 1 ? index + 1 : 0;
         else if(actions_[index])
-            if(MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()))
-                actions_[index]->Do(page, widget, track, value);
+            if(track_)
+                actions_[index]->Do(page, widget, track_, value);
     }
 };
 
@@ -211,9 +221,10 @@ class PageSurfaceTrackContext : public ActionContext
 public:
     PageSurfaceTrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(Page* page, MediaTrack* track_, Widget* widget, double value) override
     {
-        action_->Do(page, DAW::GetTrackFromGUID(widget->GetTrackGUID(), page->GetFollowMCP()));
+        //if(track_)
+            //action_->Do(page, track_, page->GetFollowMCP()));
     }
 };
 

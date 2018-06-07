@@ -60,27 +60,6 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ContextManager
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ContextManager::RequestActionUpdate(Widget* widget)
-{
-    if(currentWidgetContext_)
-    {
-        for(auto context : *currentWidgetContext_->GetActionContexts())
-            context->RequestActionUpdate(currentPage_, widget);
-    }
-}
-
-void ContextManager::DoAction(Widget* widget, double value)
-{
-    if(currentWidgetContext_)
-    {
-        for(auto context : *currentWidgetContext_->GetActionContexts())
-            context->DoAction(currentPage_, widget, value);
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
@@ -157,6 +136,20 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
             }
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// BankableChannel
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
+{
+    trackGUID_ = trackGUID;
+    
+    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, page->GetFollowMCP());
+    
+    for(auto widget : widgets_)
+        if(WidgetContext* widgetContext = page->GetWidgetContext(widget))
+            widgetContext->SetTrack(track);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -239,7 +232,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                 if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
                                 {
                                     if(widgetContexts_.count(widget) < 1)
-                                        widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
+                                        widgetContexts_[widget] = new WidgetContext();
                                     
                                     widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
                                     
@@ -248,11 +241,11 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                         for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
                                             if(cyclerWidget->GetRole() == params[1])
                                             {
-                                                if(widgetContexts_.count(cyclerWidget) < 1)
-                                                    cyclerWidget->AddWidgetContext(this, widgetContexts_[cyclerWidget] = new WidgetContext());
+                                                //if(widgetContexts_.count(cyclerWidget) < 1)
+                                                    //cyclerWidget->AddWidgetContext(this, widgetContexts_[cyclerWidget] = new WidgetContext());
                                                 
-                                                widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                                context->SetCyclerWidget(cyclerWidget);
+                                                //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                                //context->SetCyclerWidget(cyclerWidget);
                                             }
                                     }
                                 }
@@ -344,7 +337,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                 if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
                                 {
                                     if(widgetContexts_.count(widget) < 1)
-                                        widget->AddWidgetContext(this, widgetContexts_[widget] = new WidgetContext());
+                                        widgetContexts_[widget] = new WidgetContext();
                                     
                                     widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
                                     fxWidgets_[fxName].push_back(widget);
@@ -378,11 +371,9 @@ void Page::TrackFXListChanged(MediaTrack* track)
     
     // GAW TBD -- clear all fx items and rebuild
 }
-int Page::GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName)
+int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
 {
     char fxName[BUFSZ];
-
-    MediaTrack* track = DAW::GetTrackFromGUID(widget->GetTrackGUID(), followMCP_);
     
     DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
     
@@ -439,10 +430,6 @@ void Manager::InitActionDictionary()
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
-    actions_["Shift"] = new class Shift();
-    actions_["Option"] = new class Option();
-    actions_["Control"] = new class Control();
-    actions_["Alt"] = new class Alt();
     actions_["Latched"] = new Latched();
     actions_["LatchedZoom"] = new LatchedZoom();
     actions_["LatchedScrub"] = new LatchedScrub();
@@ -486,10 +473,6 @@ void Manager::InitActionContextDictionary()
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["Shift"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["Option"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["Control"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["Alt"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Latched"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["LatchedZoom"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["LatchedScrub"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
@@ -587,9 +570,4 @@ void Manager::Init()
         page->Init();
 
     currentPageIndex_ = 0;
-   
-    if(pages_.size() > 0)
-        for(auto surface : midi_realSurfaces_)
-            for(auto widget : surface->GetAllWidgets() )
-                widget->SetPageContext(pages_[currentPageIndex_]);
 }
