@@ -162,121 +162,27 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Widget;
-class Page;
-class ActionContext;
-class Midi_RealSurface;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    map<string, map<string, vector<ActionContext*>>> actionContexts_;
-    vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
-    vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
-    string curentMode_ = Track;
-
-public:
-    vector<ActionContext*> * GetActionContexts() { return currentActioncontexts_; }
-    
-    void AddActionContext(string mode, string modifiers, ActionContext* context)
-    {
-        actionContexts_[mode][modifiers].push_back(context);
-    }
-    
-    void SetCurrentActionContexts(string mode, string modifiers)
-    {
-        if(actionContexts_.count(mode) > 0 && actionContexts_[mode].count(modifiers) > 0)
-        {
-            currentActioncontexts_ = &actionContexts_[mode][modifiers];
-            curentMode_ = mode;
-        }
-        else
-            currentActioncontexts_ = emptyActioncontexts_;
-    }
-    
-    void SetCurrentActionContexts(string modifiers)
-    {
-        if(actionContexts_.count(curentMode_) > 0 && actionContexts_[curentMode_].count(modifiers) > 0)
-        {
-            currentActioncontexts_ = &actionContexts_[curentMode_][modifiers];
-        }
-        else
-            currentActioncontexts_ = emptyActioncontexts_;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ContextManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    map<Page*, WidgetContext*> widgetContexts_;
-    Page* currentPage_ = nullptr;
-    WidgetContext* currentWidgetContext_ = nullptr;
-    
-public:
-    void RequestActionUpdate(Widget* widget);
-    void DoAction(Widget* widget, double value);
-    
-    void SetPageContext(Page* page)
-    {
-        if(widgetContexts_.count(page) > 0)
-        {
-            currentPage_ = page;
-            currentWidgetContext_ = widgetContexts_[page];
-        }
-    }
-    
-    void AddWidgetContext(Page* page, WidgetContext* widgetContext)
-    {
-        widgetContexts_[page] = widgetContext;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string role_ = "";
     string name_ = "";
-    
-    string trackGUID_ = "";
-    
+
 protected:
-    ContextManager contextManager_;
     Widget(string role, string name) : role_(role), name_(name) {}
 
 public:
     virtual ~Widget() {};
     
-    string GetTrackGUID() { return trackGUID_; }
     string GetRole() { return role_; }
     string GetName() { return name_; }
-    void SetTrackGUID(string trackGUID) { trackGUID_ = trackGUID; }
     virtual void SetValue(double value) {}
     virtual void SetValue(string value) {}
-
-    void RequestUpdate()
-    {
-        contextManager_.RequestActionUpdate(this);
-    }
-
-    void DoAction(double value)
-    {
-        contextManager_.DoAction(this, value);
-    }
-    
-    void AddWidgetContext(Page* page, WidgetContext* widgetContext)
-    {
-        contextManager_.AddWidgetContext(page, widgetContext);
-    }
-    
-    void SetPageContext(Page* page)
-    {
-        contextManager_.SetPageContext(page);
-    }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Midi_RealSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -338,13 +244,7 @@ public:
         
         return emptyWidgets_;
     }
-    
-    void SetPageContext(Page* page)
-    {
-        for(auto widget : allWidgets_)
-            widget->SetPageContext(page);
-    }
-    
+
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
@@ -438,34 +338,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class BankableChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    bool isPinned_ = false;
-    string trackGUID_ = "";
-    vector<Widget*> widgets_;
-    
-public:
-    BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
-    
-    vector<Widget*> & GetWidgets() { return widgets_; }
-    bool GetIsPinned() { return isPinned_; }
-    string GetTrackGUID() { return trackGUID_; }
-    
-    void SetIsPinned(bool pinned)
-    {
-        isPinned_ = pinned;
-    }
-    
-    void SetTrackGUID(string trackGUID)
-    {
-        trackGUID_ = trackGUID;
-        for(auto widget : widgets_)
-            widget->SetTrackGUID(trackGUID);
-    }
-};
-
+class ActionContext;
+class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -498,17 +372,64 @@ protected:
 public:
     virtual ~ActionContext() {}
     
+    virtual void SetTrack(MediaTrack* track) {}
     virtual void SetIndex(int index) {}
-    
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
-    
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
-    
+    virtual void RequestActionUpdate(Page* page, MediaTrack* track, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
-       
+    virtual void DoAction(Page* page, MediaTrack* track, Widget* widget, double value) {}
+
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class WidgetContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    map<string, map<string, vector<ActionContext*>>> actionContexts_;
+    vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
+    vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
+    string curentMode_ = Track;
+    
+public:
+    vector<ActionContext*> * GetCurrentActionContexts() { return currentActioncontexts_; }
+    
+    void AddActionContext(string component, string modifiers, ActionContext* context)
+    {
+        actionContexts_[component][modifiers].push_back(context);
+    }
+    
+    void SetTrack(MediaTrack* track)
+    {
+        if(actionContexts_.count(Track) > 0)
+            for(auto [modifier, actionContexts] : actionContexts_[Track])
+                for(auto actionContext : actionContexts)
+                    actionContext->SetTrack(track);
+    }
+    
+    void SetCurrentActionContexts(string component, string modifiers)
+    {
+        if(actionContexts_.count(component) > 0 && actionContexts_[component].count(modifiers) > 0)
+        {
+            currentActioncontexts_ = &actionContexts_[component][modifiers];
+            curentMode_ = component;
+        }
+        else
+            currentActioncontexts_ = emptyActioncontexts_;
+    }
+    
+    void SetCurrentActionContexts(string modifiers)
+    {
+        if(actionContexts_.count(curentMode_) > 0 && actionContexts_[curentMode_].count(modifiers) > 0)
+        {
+            currentActioncontexts_ = &actionContexts_[curentMode_][modifiers];
+        }
+        else
+            currentActioncontexts_ = emptyActioncontexts_;
     }
 };
 
@@ -520,6 +441,30 @@ struct FXWindow
     int fxIndex = 0;
     
     FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class BankableChannel
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    bool isPinned_ = false;
+    string trackGUID_ = "";
+    vector<Widget*> widgets_;
+    
+public:
+    BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
+    
+    vector<Widget*> & GetWidgets() { return widgets_; }
+    bool GetIsPinned() { return isPinned_; }
+    string GetTrackGUID() { return trackGUID_; }
+    
+    void SetIsPinned(bool pinned)
+    {
+        isPinned_ = pinned;
+    }
+    
+    void SetTrackGUID(Page* page, string trackGUID);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -553,13 +498,9 @@ private:
     void InitActionContexts(RealSurface* surface, string templateDirectory);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
 
-    string GetCurrentModifiers(Widget* widget)
+    string GetCurrentModifiers()
     {
         string modifiers = "";
-     
-        string role = widget->GetRole();
-        if(role == Shift || role == Option || role == Control || role == Alt)
-            return modifiers;
         
         if(shift_)
             modifiers += Shift;
@@ -572,7 +513,7 @@ private:
 
         return modifiers;
     }
-
+    
     void SetPinnedTracks()
     {
         char buffer[BUFSZ];
@@ -581,7 +522,7 @@ private:
         {
             if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
             {
-                bankableChannels_[i]->SetTrackGUID(buffer);
+                bankableChannels_[i]->SetTrackGUID(this, buffer);
                 bankableChannels_[i]->SetIsPinned(true);
             }
         }
@@ -617,9 +558,9 @@ private:
     {
         string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
         
-        for(auto channel : surface->GetChannels())
-            for(auto widget : channel)
-                widget->SetTrackGUID(trackGUID);
+        //for(auto channel : surface->GetChannels())
+            //for(auto widget : channel)
+                //widget->SetTrackGUID(trackGUID);
     }
     
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -638,9 +579,9 @@ private:
             {
                 for(auto widget : fxWidgets_[fxName])
                 {
-                    widget->SetTrackGUID(trackGUID);
-                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers(widget));
-                    for(auto context : *widgetContexts_[widget]->GetActionContexts())
+                    //widget->SetTrackGUID(trackGUID);
+                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers());
+                    for(auto context : *widgetContexts_[widget]->GetCurrentActionContexts())
                         context->SetIndex(i);
                 }
                 
@@ -668,7 +609,7 @@ private:
 public:
     Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
-    int GetFXParamIndex(Widget* widget, int fxIndex, string fxParamName);
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     void TrackFXListChanged(MediaTrack* track);
     
     bool IsZoom() { return zoom_; }
@@ -696,24 +637,34 @@ public:
         }
     }
     
+    WidgetContext* GetWidgetContext(Widget* widget)
+    {
+        if(widgetContexts_.count(widget) > 0)
+            return widgetContexts_[widget];
+        else
+            return nullptr;
+    }
+    
     void RequestUpdate()
     {
         for(auto [widget, widgetContext] : widgetContexts_)
-            for(auto actionContext : *widgetContext->GetActionContexts())
+            for(auto actionContext : *widgetContext->GetCurrentActionContexts())
                 actionContext->RequestActionUpdate(this, widget);
     }
    
     void DoAction(Widget* widget, double value)
     {
-        if(widgetContexts_.count(widget) > 0)
-            for(auto actionContext : *widgetContexts_[widget]->GetActionContexts())
+        if(widget->GetRole() == Shift)
+            SetShift(value);
+        else if(widget->GetRole() == Option)
+            SetOption(value);
+        else if(widget->GetRole() == Control)
+            SetControl(value);
+        else if(widget->GetRole() == Alt)
+            SetAlt(value);
+        else if(widgetContexts_.count(widget) > 0)
+            for(auto actionContext : *widgetContexts_[widget]->GetCurrentActionContexts())
                 actionContext->DoAction(this, widget, value);
-    }
-    
-    void SetContext()
-    {
-        for(auto surface : realSurfaces_)
-            surface->SetPageContext(this);
     }
     
     void SetShowFXWindows(bool value)
@@ -753,7 +704,7 @@ public:
     void SetModifiers()
     {
         for(auto [widget, widgetContext] : widgetContexts_)
-            widgetContext->SetCurrentActionContexts(GetCurrentModifiers(widget));
+            widgetContext->SetCurrentActionContexts(GetCurrentModifiers());
     }
     
     void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
@@ -813,10 +764,10 @@ public:
     void Init()
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-            bankableChannels_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
+            bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
         
         for(auto [widget, context] : widgetContexts_)
-            context->SetCurrentActionContexts(Track, GetCurrentModifiers(widget)); // initialize to Track and CurrentModifiers context
+            context->SetCurrentActionContexts(Track, GetCurrentModifiers()); // initialize to Track and CurrentModifiers context
 
         SetPinnedTracks();
     }
@@ -829,8 +780,8 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 if(widget->GetRole() == "TrackOnSelection")
                 {
-                    widget->SetTrackGUID(trackGUID);
-                    widget->DoAction(1.0);
+                    //widget->SetTrackGUID(trackGUID);
+                    //widget->DoAction(1.0);
                 }
     }
       
@@ -1045,7 +996,7 @@ public:
         // Apply new layout
         offset = 0;
         for(auto* channel : bankableChannels_)
-            channel->SetTrackGUID(channelLayout[offset++]);
+            channel->SetTrackGUID(this, channelLayout[offset++]);
         
         if(colourTracks_)
         {
@@ -1201,7 +1152,7 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            pages_[currentPageIndex_]->SetContext();
+            //pages_[currentPageIndex_]->SetContext();
             pages_[currentPageIndex_]->RefreshLayout();
         }
     }
