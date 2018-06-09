@@ -629,11 +629,13 @@ public:
     {
         if(colourTracks_)
         {
+            DAW::PreventUIRefresh(1);
             // reset track colors
             int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+            DAW::PreventUIRefresh(-1);
         }
     }
     
@@ -994,6 +996,7 @@ public:
         
         if(colourTracks_)
         {
+            DAW::PreventUIRefresh(1);
             // reset track colors
             int defaultColor = 0;
             for(auto* channel : bankableChannels_)
@@ -1013,8 +1016,8 @@ public:
             for(auto trackGUID : channelLayout)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
+            DAW::PreventUIRefresh(-1);
         }
-         
     }
     
 private:
