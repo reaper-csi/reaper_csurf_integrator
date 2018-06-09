@@ -837,6 +837,11 @@ public:
     {
         DAW::ClearCache();
         
+        vector<string> visibleTrackGUIDs;
+        
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+            visibleTrackGUIDs.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
+        
         int currentOffset = trackOffset_;
         bool shouldRefreshLayout = false;
         
@@ -856,7 +861,7 @@ public:
                 }
             }
             
-            else if(bankableChannels_[i]->GetTrackGUID() == GetNextVisibleTrackGUID(currentOffset))
+            else if(bankableChannels_[i]->GetTrackGUID() == visibleTrackGUIDs[currentOffset])
             {
                 currentOffset++; // track exists and positions are in synch
             }
@@ -930,6 +935,10 @@ public:
         vector<string> pinnedChannels;
         vector<string> movableChannelLayout;
         vector<string> channelLayout;
+        vector<string> visibleTrackGUIDs;
+        
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+            visibleTrackGUIDs.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
         
         // Layout locked channel GUIDs
         for(auto* channel : bankableChannels_)
@@ -959,8 +968,7 @@ public:
             }
             else
             {
-                movableChannelLayout.push_back(GetNextVisibleTrackGUID(offset));
-                offset++;
+                movableChannelLayout.push_back(visibleTrackGUIDs[offset++]);
             }
         }
         
@@ -1009,6 +1017,7 @@ public:
          
     }
     
+private:
     int GetNumLockedTracks()
     {
         int numLockedTracks = 0;
@@ -1020,17 +1029,6 @@ public:
         return numLockedTracks;
     }
     
-    string GetNextVisibleTrackGUID(int & offset)
-    {
-        while(! IsTrackVisible(DAW::CSurf_TrackFromID(offset, followMCP_)) && offset < DAW::CSurf_NumTracks(followMCP_))
-            offset++;
-        
-        if(offset >= DAW::CSurf_NumTracks(followMCP_))
-            return "";
-        else
-            return DAW::GetTrackGUIDAsString(offset, followMCP_);
-    }
-
     bool IsTrackVisible(MediaTrack* track)
     {
         if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
