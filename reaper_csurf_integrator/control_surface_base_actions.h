@@ -221,10 +221,9 @@ class PageSurfaceTrackContext : public ActionContext
 public:
     PageSurfaceTrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
-    virtual void DoAction(Page* page, MediaTrack* track_, Widget* widget, double value) override
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) override
     {
-        //if(track_)
-            //action_->Do(page, track_, page->GetFollowMCP()));
+            action_->Do(page, surface, track);
     }
 };
 

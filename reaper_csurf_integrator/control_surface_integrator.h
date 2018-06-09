@@ -357,6 +357,7 @@ public:
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void Do(Page* page, MediaTrack* track) {}
+    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -379,6 +380,7 @@ public:
     virtual void RequestActionUpdate(Page* page, MediaTrack* track, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
     virtual void DoAction(Page* page, MediaTrack* track, Widget* widget, double value) {}
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
 
     void SetWidgetValue(Widget* widget, double value)
     {
@@ -403,10 +405,10 @@ public:
         actionContexts_[component][modifiers].push_back(context);
     }
     
-    void SetTrack(MediaTrack* track)
+    void SetComponentTrackContext(string component, MediaTrack* track)
     {
-        if(actionContexts_.count(Track) > 0)
-            for(auto [modifier, actionContexts] : actionContexts_[Track])
+        if(actionContexts_.count(component) > 0)
+            for(auto [modifier, actionContexts] : actionContexts_[component])
                 for(auto actionContext : actionContexts)
                     actionContext->SetTrack(track);
     }
@@ -558,9 +560,10 @@ private:
     {
         string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
         
-        //for(auto channel : surface->GetChannels())
-            //for(auto widget : channel)
-                //widget->SetTrackGUID(trackGUID);
+        for(auto channel : surface->GetChannels())
+            for(auto widget : channel)
+                if(widgetContexts_.count(widget) > 0)
+                    widgetContexts_[widget]->SetComponentTrackContext(Track, track);
     }
     
     void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -579,10 +582,13 @@ private:
             {
                 for(auto widget : fxWidgets_[fxName])
                 {
-                    //widget->SetTrackGUID(trackGUID);
-                    widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers());
-                    for(auto context : *widgetContexts_[widget]->GetCurrentActionContexts())
-                        context->SetIndex(i);
+                    if(widgetContexts_.count(widget) > 0)
+                    {
+                        widgetContexts_[widget]->SetComponentTrackContext(fxName, track);
+                        widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers());
+                        for(auto context : *widgetContexts_[widget]->GetCurrentActionContexts())
+                            context->SetIndex(i);
+                    }
                 }
                 
                 AddFXWindow(FXWindow(track, i));
@@ -743,24 +749,16 @@ public:
         return followMCP_;
     }
     
-    void MapTrackAndFXToWidgets(MediaTrack* track)
+    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
-        for(auto surface : realSurfaces_)
-            if(surface->GetName() == "Console1")
-            {
-                MapTrackToWidgets(surface, track);
-                MapFXToWidgets(surface, track);
-            }
+            MapTrackToWidgets(surface, track);
+            MapFXToWidgets(surface, track);
     }
     
-    void UnmapWidgetsFromTrackAndFX(MediaTrack* track)
+    void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
     {
-        for(auto surface : realSurfaces_)
-            if(surface->GetName() == "Console1")
-            {
-                UnmapWidgetsFromTrack(track);
-                UnmapWidgetsFromFX(track);
-            }
+            UnmapWidgetsFromTrack(track);
+            UnmapWidgetsFromFX(track);
     }
     
     void Init()
@@ -781,10 +779,9 @@ public:
         for(auto surface : realSurfaces_)
             for(auto widget : surface->GetAllWidgets())
                 if(widget->GetRole() == "TrackOnSelection")
-                {
-                    //widget->SetTrackGUID(trackGUID);
-                    //widget->DoAction(1.0);
-                }
+                    if(widgetContexts_.count(widget) > 0)
+                        for(auto actionContext : *widgetContexts_[widget]->GetCurrentActionContexts())
+                            actionContext->DoAction(this, surface, track);
     }
       
     void PinSelectedTracks()
