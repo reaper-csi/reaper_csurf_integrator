@@ -149,7 +149,7 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
     
     for(auto widget : widgets_)
         if(WidgetContext* widgetContext = page->GetWidgetContext(widget))
-            widgetContext->SetTrack(track);
+            widgetContext->SetComponentTrackContext(Track, track);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
