@@ -168,6 +168,8 @@ public:
 
     static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
    
+    static  void PreventUIRefresh(int prevent_count) { ::PreventUIRefresh(prevent_count); }
+    
     static int CountTracks() { return ::CountTracks(0); }
     
     static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
