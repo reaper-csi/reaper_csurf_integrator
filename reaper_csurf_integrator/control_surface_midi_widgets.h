@@ -149,19 +149,22 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
     
-    virtual void SetValue(double pan) override
+    virtual void SetValue(double value) override
     {
-        lastNormalizedValue_ = pan;
+        SetValue(0, value);
+    }
+    
+    virtual void SetValue(int displayMode, double value) override
+    {
+        lastNormalizedValue_ = value;
         
-        int displayMode = 0;
+        int valueInt = value * 127;
         
-        unsigned char panch = pan * 127.0;
-        
-        int val = (1+((panch*11)>>7)) | displayMode; // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
+        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
         
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1] + 0x20, val);
     }
-    
+
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
