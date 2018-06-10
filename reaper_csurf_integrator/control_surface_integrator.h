@@ -566,10 +566,8 @@ private:
                     widgetContexts_[widget]->SetComponentTrackContext(Track, track);
     }
     
-    void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void MapFXToWidgets(MediaTrack* track)
     {
-        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-
         char fxName[BUFSZ];
         
         DeleteFXWindows();
@@ -598,18 +596,40 @@ private:
         OpenFXWindows();
     }
     
-    void UnmapWidgetsFromTrack(MediaTrack* track)
+    void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
     {
-        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
-        //for(auto [widget, mode] : widgetModes_)
-        //mode = WidgetMode::Track;
+        for(auto channel : surface->GetChannels())
+            for(auto widget : channel)
+                if(widgetContexts_.count(widget) > 0)
+                {
+                    widget->SetValue(0.0);
+                    widgetContexts_[widget]->SetComponentTrackContext(Track, nullptr);
+                }
     }
     
     void UnmapWidgetsFromFX(MediaTrack* track)
     {
-        // GAW TBD -- this could be smarter and only unmap Widgets for this Track
-        //for(auto [widget, mode] : widgetModes_)
-        //mode = WidgetMode::Track;
+        char fxName[BUFSZ];
+        
+        DeleteFXWindows();
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(fxWidgets_.count(fxName) > 0)
+            {
+                for(auto widget : fxWidgets_[fxName])
+                {
+                    if(widgetContexts_.count(widget) > 0)
+                    {
+                        widget->SetValue(0.0);
+                        widgetContexts_[widget]->SetComponentTrackContext(fxName, nullptr);
+                        widgetContexts_[widget]->SetCurrentActionContexts(Track, GetCurrentModifiers());
+                    }
+                }
+            }
+        }
     }
 
 public:
@@ -752,12 +772,12 @@ public:
     void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
             MapTrackToWidgets(surface, track);
-            MapFXToWidgets(surface, track);
+            MapFXToWidgets(track);
     }
     
     void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
     {
-            UnmapWidgetsFromTrack(track);
+            UnmapWidgetsFromTrack(surface, track);
             UnmapWidgetsFromFX(track);
     }
     
