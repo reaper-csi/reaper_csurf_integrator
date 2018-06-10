@@ -22,7 +22,7 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
     }
     
-    void SetValue(double value) override
+    void SetValue(int displayMode, double value) override
     {
         if(value != 0)
             SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
@@ -51,7 +51,7 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
     }
     
-    void SetValue(double value) override
+    void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
     }
@@ -74,7 +74,7 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
     }
     
-    void SetValue(double value) override
+    void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
     }
@@ -103,7 +103,7 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
     }
     
-    virtual void SetValue(double volume) override
+    virtual void SetValue(int displayMode, double volume) override
     {
         int volint = volume * 16383.0;
         SendMidiMessage(midiPressMessage_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
@@ -125,7 +125,7 @@ public:
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
     
-    virtual void SetValue(double value) override
+    virtual void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], value * 127.0);
     }
@@ -147,11 +147,6 @@ public:
     Encoder_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
-    }
-    
-    virtual void SetValue(double value) override
-    {
-        SetValue(0, value);
     }
     
     virtual void SetValue(int displayMode, double value) override
@@ -187,7 +182,7 @@ private:
 public:
     VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
     
-    void SetValue(double value) override
+    void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], value * 127.0);
     }
@@ -200,7 +195,7 @@ class GainReductionMeter_Midi_Widget : public VUMeter_Midi_Widget
 public:
     GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, press, release) {}
     
-    void SetValue(double value) override
+    void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], fabs(1.0 - value) * 127.0);
     }
