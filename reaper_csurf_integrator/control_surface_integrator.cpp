@@ -241,11 +241,11 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                         for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
                                             if(cyclerWidget->GetRole() == params[1])
                                             {
-                                                //if(widgetContexts_.count(cyclerWidget) < 1)
-                                                    //cyclerWidget->AddWidgetContext(this, widgetContexts_[cyclerWidget] = new WidgetContext());
+                                                if(widgetContexts_.count(cyclerWidget) < 1)
+                                                    widgetContexts_[cyclerWidget]= new WidgetContext();
                                                 
-                                                //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                                //context->SetCyclerWidget(cyclerWidget);
+                                                widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                                context->SetCyclerWidget(cyclerWidget);
                                             }
                                     }
                                 }
