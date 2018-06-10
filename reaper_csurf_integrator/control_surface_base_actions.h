@@ -50,7 +50,7 @@ public:
         }
         else
         {
-            widget->SetValue(0.0);
+            widget->SetValue(0, 0.0);
             widget->SetValue("");
         }
     }
@@ -88,7 +88,7 @@ public:
         }
         else
         {
-            widget->SetValue(0.0);
+            widget->SetValue(0, 0.0);
             widget->SetValue("");
         }
     }
@@ -119,7 +119,7 @@ public:
         }
         else
         {
-            widget->SetValue(0.0);
+            widget->SetValue(0, 0.0);
             widget->SetValue("");
         }
     }
@@ -238,7 +238,7 @@ public:
         }
         else
         {
-            widget->SetValue(0.0);
+            widget->SetValue(0, 0.0);
             widget->SetValue("");
         }
     }

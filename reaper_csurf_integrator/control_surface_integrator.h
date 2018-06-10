@@ -177,7 +177,6 @@ public:
     
     string GetRole() { return role_; }
     string GetName() { return name_; }
-    virtual void SetValue(double value) {}
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -382,11 +381,6 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) {}
     virtual void DoAction(Page* page, MediaTrack* track, Widget* widget, double value) {}
     virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
-
-    void SetWidgetValue(Widget* widget, double value)
-    {
-        isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
-    }
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -608,7 +602,7 @@ private:
             for(auto widget : channel)
                 if(widgetContexts_.count(widget) > 0)
                 {
-                    widget->SetValue(0.0);
+                    widget->SetValue(0, 0.0);
                     widgetContexts_[widget]->SetComponentTrackContext(Track, nullptr);
                 }
     }
@@ -629,7 +623,7 @@ private:
                 {
                     if(widgetContexts_.count(widget) > 0)
                     {
-                        widget->SetValue(0.0);
+                        widget->SetValue(0, 0.0);
                         widgetContexts_[widget]->SetComponentTrackContext(fxName, nullptr);
                         widgetContexts_[widget]->SetCurrentActionContexts(Track, GetCurrentModifiers());
                     }
