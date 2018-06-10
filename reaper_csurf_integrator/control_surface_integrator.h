@@ -178,6 +178,7 @@ public:
     string GetRole() { return role_; }
     string GetName() { return name_; }
     virtual void SetValue(double value) {}
+    virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
 
@@ -385,6 +386,11 @@ public:
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
+    }
+
+    void SetWidgetValue(Widget* widget, int displayMode, double value)
+    {
+        isInverted_ == false ? widget->SetValue(displayMode, value) : widget->SetValue(displayMode, 1.0 - value);
     }
 };
 
