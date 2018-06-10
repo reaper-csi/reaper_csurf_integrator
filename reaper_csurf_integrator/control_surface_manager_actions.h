@@ -15,11 +15,17 @@ extern Manager* TheManager;
 class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    MediaTrack* previousTrack_ = nullptr;
+    
 public:
     void Do(Page* page, RealSurface* surface, MediaTrack* track) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr))
-            page->MapTrackAndFXToWidgets(surface, track);
+        if(1 == DAW::CountSelectedTracks(nullptr) && previousTrack_ != track)
+        {
+            page->UnmapWidgetsFromTrackAndFX(surface, previousTrack_);
+            page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
+        }
         else
             page->UnmapWidgetsFromTrackAndFX(surface, track);
     }
