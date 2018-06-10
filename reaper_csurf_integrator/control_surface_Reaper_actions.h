@@ -120,12 +120,9 @@ public:
     {
         if(track)
         {
-            if(page->GetTouchState(track, 0))
-            {
-                char trackVolume[128];
-                sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-                widget->SetValue(string(trackVolume));
-            }
+            char trackVolume[128];
+            sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+            widget->SetValue(string(trackVolume));
         }
     }
 };

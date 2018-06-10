@@ -41,7 +41,7 @@ public:
     {
         track_ = track;
     }
-
+    
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(track_)
@@ -59,6 +59,45 @@ public:
     {
         if(track_)
             action_->Do(page, widget, track_, isInverted_ == false ? value : 1.0 - value);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackTouchControlledContext : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    MediaTrack* track_ = nullptr;
+    
+public:
+    TrackTouchControlledContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    
+    virtual void  SetTrack(MediaTrack* track) override
+    {
+        track_ = track;
+    }
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        if(track_)
+        {
+            if(page->GetTouchState(track_, 0))
+            {
+                action_->RequestUpdate(page, this, widget, track_);
+            }
+        }
+        else
+        {
+            widget->SetValue(0.0);
+            widget->SetValue("");
+        }
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        if(track_)
+            if(page->GetTouchState(track_, 0))
+                action_->Do(page, widget, track_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
