@@ -395,7 +395,8 @@ class WidgetContext
     map<string, map<string, vector<ActionContext*>>> actionContexts_;
     vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
     vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
-    string curentMode_ = Track;
+    string currentMode_ = Track;
+    string currentModifiers_ = "";
     
 public:
     vector<ActionContext*> * GetCurrentActionContexts() { return currentActioncontexts_; }
@@ -403,6 +404,12 @@ public:
     void AddActionContext(string component, string modifiers, ActionContext* context)
     {
         actionContexts_[component][modifiers].push_back(context);
+    }
+    
+    void RequestUpdate(Page* page, Widget*widget)
+    {
+        for(auto actionContext : actionContexts_[currentMode_][currentModifiers_])
+            actionContext->RequestActionUpdate(page, widget);
     }
     
     void SetComponentTrackContext(string component, MediaTrack* track)
@@ -418,7 +425,8 @@ public:
         if(actionContexts_.count(component) > 0 && actionContexts_[component].count(modifiers) > 0)
         {
             currentActioncontexts_ = &actionContexts_[component][modifiers];
-            curentMode_ = component;
+            currentMode_ = component;
+            currentModifiers_ = modifiers;
         }
         else
             currentActioncontexts_ = emptyActioncontexts_;
@@ -426,9 +434,9 @@ public:
     
     void SetCurrentActionContexts(string modifiers)
     {
-        if(actionContexts_.count(curentMode_) > 0 && actionContexts_[curentMode_].count(modifiers) > 0)
+        if(actionContexts_.count(currentMode_) > 0 && actionContexts_[currentMode_].count(modifiers) > 0)
         {
-            currentActioncontexts_ = &actionContexts_[curentMode_][modifiers];
+            currentActioncontexts_ = &actionContexts_[currentMode_][modifiers];
         }
         else
             currentActioncontexts_ = emptyActioncontexts_;
@@ -676,8 +684,7 @@ public:
     void RequestUpdate()
     {
         for(auto [widget, widgetContext] : widgetContexts_)
-            for(auto actionContext : *widgetContext->GetCurrentActionContexts())
-                actionContext->RequestActionUpdate(this, widget);
+            widgetContext->RequestUpdate(this, widget);
     }
    
     void DoAction(Widget* widget, double value)
