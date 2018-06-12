@@ -776,16 +776,26 @@ public:
         return followMCP_;
     }
     
+    void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        MapFXToWidgets(track);
+    }
+    
+    void UnmapWidgetsFromFX(RealSurface* surface, MediaTrack* track)
+    {
+        UnmapWidgetsFromFX(track);
+    }
+    
     void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
-            MapTrackToWidgets(surface, track);
-            MapFXToWidgets(track);
+        MapTrackToWidgets(surface, track);
+        MapFXToWidgets(track);
     }
     
     void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
     {
-            UnmapWidgetsFromTrack(surface, track);
-            UnmapWidgetsFromFX(track);
+        UnmapWidgetsFromTrack(surface, track);
+        UnmapWidgetsFromFX(track);
     }
     
     void Init()
