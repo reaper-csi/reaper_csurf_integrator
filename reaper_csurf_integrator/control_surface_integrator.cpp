@@ -438,6 +438,7 @@ void Manager::InitActionDictionary()
     actions_["TrackBank"] = new TrackBank();
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
+    actions_["MapFXToWidgets"] = new MapFXToWidgets();
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
 }
 
@@ -481,6 +482,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["MapFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
     actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackCycle"] = [this](vector<string> params, bool isInverted) { return new TrackCycleContext(actions_, params, actions_[params[0]], isInverted); };
 }
