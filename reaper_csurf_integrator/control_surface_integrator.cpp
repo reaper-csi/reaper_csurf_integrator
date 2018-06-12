@@ -31,7 +31,8 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, name, index);
     if(widgetClass == "XTDisplayUpper") return new XTDisplayUpper_Midi_Widget(surface, role, name, index);
     if(widgetClass == "XTDisplayLower") return new XTDisplayLower_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "C4Display") return new C4Display_Midi_Widget(surface, role, name, index);
+    if(widgetClass == "C4DisplayUpper") return new C4DisplayUpper_Midi_Widget(surface, role, name, index);
+    if(widgetClass == "C4DisplayLower") return new C4DisplayLower_Midi_Widget(surface, role, name, index);
 
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
