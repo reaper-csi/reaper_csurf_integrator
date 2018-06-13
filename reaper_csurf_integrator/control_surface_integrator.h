@@ -1036,31 +1036,16 @@ public:
     {
         currentlyRefreshingLayout_ = true;
         
-        vector<string> pinnedChannelLayout;
-        vector<string> pinnedChannels;
-        vector<string> movableChannelLayout;
-        vector<string> channelLayout;
-        vector<string> visibleTrackGUIDs;
+        vector<MediaTrack*> visibleTracks;
         
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
-            visibleTrackGUIDs.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
-        
-        // Layout locked channel GUIDs
-        for(auto* channel : bankableChannels_)
-        {
-            if(channel->GetIsPinned())
-            {
-                pinnedChannelLayout.push_back(channel->GetTrackGUID());
-                pinnedChannels.push_back(channel->GetTrackGUID());
-            }
-            else
-                pinnedChannelLayout.push_back("");
-        }
+            visibleTracks.push_back(DAW::CSurf_TrackFromID(i, followMCP_));
         
         // Layout channel GUIDs
         int offset = trackOffset_;
-        
-        for(int i = 0; i < pinnedChannelLayout.size(); i++)
+        vector<string> movableChannelLayout;
+
+        for(auto* channel : bankableChannels_)
         {
             if(offset < 0)
             {
@@ -1073,26 +1058,19 @@ public:
             }
             else
             {
-                movableChannelLayout.push_back(visibleTrackGUIDs[offset++]);
+                if(! channel->GetIsPinned())
+                    movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
             }
         }
         
-        // Remove the locked GUIDs
-        for(int i = 0; i < pinnedChannels.size(); i++)
-        {
-            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
-            if(iter != movableChannelLayout.end())
-            {
-                movableChannelLayout.erase(iter);
-            }
-        }
-        
-        // Merge the layouts
+        // Merge in the Pinned Channels
         offset = 0;
-        for(int i = 0; i < pinnedChannelLayout.size(); i++)
+        vector<string> channelLayout;
+        
+        for(auto* channel : bankableChannels_)
         {
-            if(pinnedChannelLayout[i] != "")
-                channelLayout.push_back(pinnedChannelLayout[i]);
+            if(channel->GetIsPinned())
+                channelLayout.push_back(channel->GetTrackGUID());
             else
                 channelLayout.push_back(movableChannelLayout[offset++]);
         }
