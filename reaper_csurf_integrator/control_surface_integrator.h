@@ -891,6 +891,19 @@ public:
                 previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
             
             DAW::ClearCache();
+            
+            for(auto channel : bankableChannels_)
+            {
+                if(channel->GetIsPinned())
+                {
+                    if( DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
+                    {
+                        channel->SetIsPinned(false);
+                        channel->SetTrackGUID(this, "");
+                    }
+                }
+            }
+            
             return true;
         }
         else if(currentNumTracks == previousNumTracks_)
