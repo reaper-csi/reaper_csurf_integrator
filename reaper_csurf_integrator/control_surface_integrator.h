@@ -494,6 +494,7 @@ private:
     vector<MediaTrack*> touchedTracks_;
     map<Widget*, WidgetContext*> widgetContexts_;
     map <string, vector<Widget*>> fxWidgets_;
+    bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
@@ -871,6 +872,10 @@ public:
     
     bool TrackListChanged()
     {
+        if(currentlyRefreshingLayout_)
+            return false;
+        
+        
         DAW::ClearCache();
         
         vector<string> visibleTrackGUIDs;
@@ -967,6 +972,8 @@ public:
     
     void RefreshLayout()
     {
+        currentlyRefreshingLayout_ = true;
+        
         vector<string> pinnedChannelLayout;
         vector<string> pinnedChannels;
         vector<string> movableChannelLayout;
@@ -1027,7 +1034,7 @@ public:
             else
                 channelLayout.push_back(movableChannelLayout[offset++]);
         }
-        
+
         if(colourTracks_)
         {
             DAW::PreventUIRefresh(1);
@@ -1052,6 +1059,8 @@ public:
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
             DAW::PreventUIRefresh(-1);
         }
+        
+        currentlyRefreshingLayout_ = false;
     }
     
 private:
