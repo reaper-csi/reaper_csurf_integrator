@@ -612,7 +612,7 @@ private:
                 if(widgetContexts_.count(widget) > 0)
                 {
                     widget->SetValue(0, 0.0);
-                    widgetContexts_[widget]->SetComponentTrackContext(Track, nullptr);
+                    widgetContexts_[widget]->SetComponentTrackContext(Track, "");
                 }
     }
     
@@ -633,7 +633,7 @@ private:
                     if(widgetContexts_.count(widget) > 0)
                     {
                         widget->SetValue(0, 0.0);
-                        widgetContexts_[widget]->SetComponentTrackContext(fxName, nullptr);
+                        widgetContexts_[widget]->SetComponentTrackContext(fxName, "");
                         widgetContexts_[widget]->SetCurrentActionContexts(Track, GetCurrentModifiers());
                     }
                 }
