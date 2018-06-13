@@ -489,6 +489,8 @@ private:
     int trackColourGreenValue_ = 0;
     int trackColourBlueValue_ = 0;
     int trackOffset_ = 0;
+    MediaTrack **previousTrackList_ = nullptr;
+    int previousNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
@@ -875,8 +877,52 @@ public:
         if(currentlyRefreshingLayout_)
             return false;
         
+        int currentNumTracks = DAW::CSurf_NumTracks(followMCP_);
+
+        if(currentNumTracks != previousNumTracks_)
+        {
+            if(previousTrackList_ != nullptr)
+                delete[] previousTrackList_;
+
+            previousNumTracks_ = currentNumTracks;
+            previousTrackList_ = new MediaTrack* [currentNumTracks];
+            
+            for(int i = 0; i < currentNumTracks; i++)
+                previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            DAW::ClearCache();
+            return true;
+        }
+        else if(currentNumTracks == previousNumTracks_)
+        {
+            MediaTrack **currentTrackList = new MediaTrack* [currentNumTracks];
+            for(int i = 0; i < currentNumTracks; i++)
+                currentTrackList[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+
+            if(memcmp(previousTrackList_, currentTrackList, currentNumTracks * sizeof(MediaTrack*)))
+            {
+                if(previousTrackList_ != nullptr)
+                    delete[] previousTrackList_;
+                previousTrackList_ = currentTrackList;
+                
+                DAW::ClearCache();
+                return true;
+            }
+            else
+            {
+                delete[]currentTrackList;
+                return false;
+            }
+        }
+
+        return false;
         
-        DAW::ClearCache();
+        
+        
+  
+        
+        
+        /*
         
         vector<string> visibleTrackGUIDs;
         
@@ -894,6 +940,7 @@ public:
                 {
                     bankableChannels_[i]->SetIsPinned(false); // unlock this, since there is no longer a track to lock to
                     shouldRefreshLayout = true;
+                    DAW::ClearCache();
                     break;
                 }
                 else
@@ -909,11 +956,13 @@ public:
             else
             {
                 shouldRefreshLayout = true;
+                DAW::ClearCache();
                 break;
             }
         }
         
         return shouldRefreshLayout;
+         */
     }
     
     void AdjustTrackBank(int stride)
