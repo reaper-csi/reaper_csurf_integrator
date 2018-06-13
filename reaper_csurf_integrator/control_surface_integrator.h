@@ -373,7 +373,7 @@ protected:
 public:
     virtual ~ActionContext() {}
     
-    virtual void SetTrack(MediaTrack* track) {}
+    virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
@@ -412,12 +412,12 @@ public:
             actionContext->RequestActionUpdate(page, widget);
     }
     
-    void SetComponentTrackContext(string component, MediaTrack* track)
+    void SetComponentTrackContext(string component, string trackGUID)
     {
         if(actionContexts_.count(component) > 0)
             for(auto [modifier, actionContexts] : actionContexts_[component])
                 for(auto actionContext : actionContexts)
-                    actionContext->SetTrack(track);
+                    actionContext->SetTrack(trackGUID);
     }
     
     void SetCurrentActionContexts(string component, string modifiers)
@@ -569,12 +569,10 @@ private:
     
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     {
-        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-        
         for(auto channel : surface->GetChannels())
             for(auto widget : channel)
                 if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->SetComponentTrackContext(Track, track);
+                    widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
     }
     
     void MapFXToWidgets(MediaTrack* track)
@@ -593,7 +591,7 @@ private:
                 {
                     if(widgetContexts_.count(widget) > 0)
                     {
-                        widgetContexts_[widget]->SetComponentTrackContext(fxName, track);
+                        widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
                         widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers());
                         for(auto context : *widgetContexts_[widget]->GetCurrentActionContexts())
                             context->SetIndex(i);

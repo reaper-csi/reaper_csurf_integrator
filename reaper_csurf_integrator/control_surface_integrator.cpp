@@ -150,11 +150,9 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 {
     trackGUID_ = trackGUID;
     
-    MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, page->GetFollowMCP());
-    
     for(auto widget : widgets_)
         if(WidgetContext* widgetContext = page->GetWidgetContext(widget))
-            widgetContext->SetComponentTrackContext(Track, track);
+            widgetContext->SetComponentTrackContext(Track, trackGUID);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
