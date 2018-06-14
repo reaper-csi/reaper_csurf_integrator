@@ -231,7 +231,6 @@ public:
     int GetNumChannels() { return channels_.size(); }
     vector<vector<Widget*>> GetChannels() { return channels_; }
     vector<vector<Widget*>> GetBankableChannels() { return isBankable_ ? channels_ : vector<vector<Widget*>>() ; }
-    bool IsBankable() { return isBankable_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
 
     vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
@@ -356,7 +355,6 @@ public:
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
-    virtual void Do(Page* page, MediaTrack* track) {}
     virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
 };
 
@@ -377,9 +375,7 @@ public:
     virtual void SetIndex(int index) {}
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
-    virtual void RequestActionUpdate(Page* page, MediaTrack* track, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
-    virtual void DoAction(Page* page, MediaTrack* track, Widget* widget, double value) {}
     virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
@@ -461,17 +457,23 @@ private:
     bool isPinned_ = false;
     string trackGUID_ = "";
     vector<Widget*> widgets_;
+    int colour_ = 0;
     
 public:
     BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
     
-    vector<Widget*> & GetWidgets() { return widgets_; }
     bool GetIsPinned() { return isPinned_; }
     string GetTrackGUID() { return trackGUID_; }
+    int *GetColour() { return &colour_; }
     
     void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
+    }
+    
+    void SetColour(int colour)
+    {
+        colour_ = colour;
     }
     
     void SetTrackGUID(Page* page, string trackGUID);
@@ -540,8 +542,6 @@ private:
             }
         }
     }
-
-    bool IsShowFXWindows() { return showFXWindows_; }
 
     void AddFXWindow(FXWindow fxWindow)
     {
@@ -666,10 +666,9 @@ public:
         {
             DAW::PreventUIRefresh(1);
             // reset track colors
-            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", channel->GetColour());
             DAW::PreventUIRefresh(-1);
         }
     }
@@ -802,7 +801,10 @@ public:
     void Init()
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
+        {
             bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
+            bankableChannels_[i]->SetColour(GetTrackColor(DAW::CSurf_TrackFromID(i, followMCP_)));
+        }
         
         for(auto [widget, context] : widgetContexts_)
             context->SetCurrentActionContexts(Track, GetCurrentModifiers()); // initialize to Track and CurrentModifiers context
@@ -1077,10 +1079,9 @@ public:
         {
             DAW::PreventUIRefresh(1);
             // reset track colors
-            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", channel->GetColour());
         }
         
         // Apply new layout
@@ -1090,10 +1091,15 @@ public:
         
         if(colourTracks_)
         {
+            // save current track colours
+            for(auto* channel : bankableChannels_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+                    channel->SetColour(DAW::GetTrackColor(track));
+            
             // color tracks
             int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
-            for(auto trackGUID : channelLayout)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID, followMCP_))
+            for(auto* channel : bankableChannels_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
             DAW::PreventUIRefresh(-1);
         }
