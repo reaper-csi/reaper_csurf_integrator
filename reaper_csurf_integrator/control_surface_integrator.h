@@ -1027,12 +1027,23 @@ public:
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
             visibleTracks.push_back(DAW::CSurf_TrackFromID(i, followMCP_));
         
-        // Layout channel GUIDs
+        vector<string> pinnedChannelLayout;
+        vector<string> pinnedChannels;
         int offset = trackOffset_;
         vector<string> movableChannelLayout;
 
         for(auto* channel : bankableChannels_)
         {
+            // Layout Pinned GUIDs
+            if(channel->GetIsPinned())
+            {
+                pinnedChannelLayout.push_back(channel->GetTrackGUID());
+                pinnedChannels.push_back(channel->GetTrackGUID());
+            }
+            else
+                pinnedChannelLayout.push_back("");
+            
+            // Layout Channel GUIDs
             if(offset < 0)
             {
                 movableChannelLayout.push_back("");
@@ -1044,19 +1055,26 @@ public:
             }
             else
             {
-                if(! channel->GetIsPinned())
-                    movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
+                movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
             }
         }
         
-        // Merge in the Pinned Channels
+        // Remove Pinned Channels
+        for(int i = 0; i < pinnedChannels.size(); i++)
+        {
+            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
+                if(iter != movableChannelLayout.end())
+                    movableChannelLayout.erase(iter);
+        }
+        
+        // Merge the layouts
         offset = 0;
         vector<string> channelLayout;
         
-        for(auto* channel : bankableChannels_)
+        for(int i = 0; i < bankableChannels_.size(); i++)
         {
-            if(channel->GetIsPinned())
-                channelLayout.push_back(channel->GetTrackGUID());
+            if(pinnedChannelLayout[i] != "")
+                channelLayout.push_back(pinnedChannelLayout[i]);
             else
                 channelLayout.push_back(movableChannelLayout[offset++]);
         }
