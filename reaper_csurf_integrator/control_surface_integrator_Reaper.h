@@ -178,6 +178,8 @@ public:
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
 
+    static int GetTrackColor(MediaTrack* track) { return ::GetTrackColor(track); }
+
     static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
         if(trackNumber < 0 || trackNumber > CSurf_NumTracks(mcpView))
