@@ -970,7 +970,7 @@ public:
         
         trackOffset_ += stride;
         
-        int bottom = 1 - bankableChannels_.size() + GetNumLockedTracks();
+        int bottom = 1 - bankableChannels_.size() + GetNumPinnedTracks();
         
         if(trackOffset_ <  bottom)
             trackOffset_ =  bottom;
@@ -1112,15 +1112,15 @@ public:
     }
     
 private:
-    int GetNumLockedTracks()
+    int GetNumPinnedTracks()
     {
-        int numLockedTracks = 0;
+        int numPinnedTracks = 0;
         
         for(auto* channel : bankableChannels_)
             if(channel->GetIsPinned())
-                numLockedTracks++;
+                numPinnedTracks++;
         
-        return numLockedTracks;
+        return numPinnedTracks;
     }
     
     bool IsTrackVisible(MediaTrack* track)
