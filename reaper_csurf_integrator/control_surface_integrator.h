@@ -389,23 +389,41 @@ class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     map<string, map<string, vector<ActionContext*>>> actionContexts_;
-    vector<ActionContext*> * emptyActioncontexts_ = new vector<ActionContext*>() ;
-    vector<ActionContext*> * currentActioncontexts_ = new vector<ActionContext*>();
-    string currentMode_ = Track;
-    string currentModifiers_ = "";
+    string component_ = Track;
     
 public:
-    vector<ActionContext*> * GetCurrentActionContexts() { return currentActioncontexts_; }
-    
     void AddActionContext(string component, string modifiers, ActionContext* context)
     {
         actionContexts_[component][modifiers].push_back(context);
     }
     
-    void RequestUpdate(Page* page, Widget*widget)
+    void RequestUpdate(Page* page, string modifiers, Widget*widget)
     {
-        for(auto actionContext : actionContexts_[currentMode_][currentModifiers_])
-            actionContext->RequestActionUpdate(page, widget);
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->RequestActionUpdate(page, widget);
+    }
+    
+    void DoAction(Page* page, string modifiers, Widget*widget, double value)
+    {
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->DoAction(page, widget, value);
+    }
+    
+    void DoAction(Page* page, string modifiers, RealSurface* surface, MediaTrack* track)
+    {
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->DoAction(page, surface, track);
+    }
+    
+    void SetIndex(int index)
+    {
+        if(actionContexts_.count(component_) > 0)
+            for(auto [modifier, actionContexts] : actionContexts_[component_])
+                for(auto actionContext : actionContexts)
+                    actionContext->SetIndex(index);
     }
     
     void SetComponentTrackContext(string component, string trackGUID)
@@ -416,26 +434,10 @@ public:
                     actionContext->SetTrack(trackGUID);
     }
     
-    void SetCurrentActionContexts(string component, string modifiers)
+    void SetComponent(string component)
     {
-        if(actionContexts_.count(component) > 0 && actionContexts_[component].count(modifiers) > 0)
-        {
-            currentActioncontexts_ = &actionContexts_[component][modifiers];
-            currentMode_ = component;
-            currentModifiers_ = modifiers;
-        }
-        else
-            currentActioncontexts_ = emptyActioncontexts_;
-    }
-    
-    void SetCurrentActionContexts(string modifiers)
-    {
-        if(actionContexts_.count(currentMode_) > 0 && actionContexts_[currentMode_].count(modifiers) > 0)
-        {
-            currentActioncontexts_ = &actionContexts_[currentMode_][modifiers];
-        }
-        else
-            currentActioncontexts_ = emptyActioncontexts_;
+        if(actionContexts_.count(component) > 0)
+            component_ = component;
     }
 };
 
@@ -525,10 +527,10 @@ private:
             modifiers +=  Control;
         if(alt_)
             modifiers += Alt;
-
+        
         return modifiers;
     }
-    
+
     void SetPinnedTracks()
     {
         char buffer[BUFSZ];
@@ -592,9 +594,8 @@ private:
                     if(widgetContexts_.count(widget) > 0)
                     {
                         widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
-                        widgetContexts_[widget]->SetCurrentActionContexts(fxName, GetCurrentModifiers());
-                        for(auto context : *widgetContexts_[widget]->GetCurrentActionContexts())
-                            context->SetIndex(i);
+                        widgetContexts_[widget]->SetComponent(fxName);
+                        widgetContexts_[widget]->SetIndex(i);
                     }
                 }
                 
@@ -634,7 +635,7 @@ private:
                     {
                         widget->SetValue(0, 0.0);
                         widgetContexts_[widget]->SetComponentTrackContext(fxName, "");
-                        widgetContexts_[widget]->SetCurrentActionContexts(Track, GetCurrentModifiers());
+                        widgetContexts_[widget]->SetComponent(Track);
                     }
                 }
             }
@@ -684,7 +685,7 @@ public:
     void RequestUpdate()
     {
         for(auto [widget, widgetContext] : widgetContexts_)
-            widgetContext->RequestUpdate(this, widget);
+            widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
     }
    
     void DoAction(Widget* widget, double value)
@@ -698,8 +699,7 @@ public:
         else if(widget->GetRole() == Alt)
             SetAlt(value);
         else if(widgetContexts_.count(widget) > 0)
-            for(auto actionContext : *widgetContexts_[widget]->GetCurrentActionContexts())
-                actionContext->DoAction(this, widget, value);
+            widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
     }
     
     void SetShowFXWindows(bool value)
@@ -715,31 +715,21 @@ public:
     void SetShift(bool value)
     {
         shift_ = value;
-        SetModifiers();
     }
     
     void SetOption(bool value)
     {
         option_ = value;
-        SetModifiers();
     }
     
     void SetControl(bool value)
     {
         control_ = value;
-        SetModifiers();
     }
     
     void SetAlt(bool value)
     {
         alt_ = value;
-        SetModifiers();
-    }
-    
-    void SetModifiers()
-    {
-        for(auto [widget, widgetContext] : widgetContexts_)
-            widgetContext->SetCurrentActionContexts(GetCurrentModifiers());
     }
     
     void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
@@ -805,9 +795,6 @@ public:
             bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
             bankableChannels_[i]->SetColour(GetTrackColor(DAW::CSurf_TrackFromID(i, followMCP_)));
         }
-        
-        for(auto [widget, context] : widgetContexts_)
-            context->SetCurrentActionContexts(Track, GetCurrentModifiers()); // initialize to Track and CurrentModifiers context
 
         SetPinnedTracks();
     }
@@ -820,8 +807,7 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 if(widget->GetRole() == "TrackOnSelection")
                     if(widgetContexts_.count(widget) > 0)
-                        for(auto actionContext : *widgetContexts_[widget]->GetCurrentActionContexts())
-                            actionContext->DoAction(this, surface, track);
+                        widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
     }
       
     void PinSelectedTracks()
