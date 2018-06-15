@@ -459,26 +459,18 @@ private:
     bool isPinned_ = false;
     string trackGUID_ = "";
     vector<Widget*> widgets_;
-    int colour_ = 0;
     
 public:
     BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
     
     bool GetIsPinned() { return isPinned_; }
     string GetTrackGUID() { return trackGUID_; }
-    int *GetColour() { return &colour_; }
-    
+    void SetTrackGUID(Page* page, string trackGUID);
+
     void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
     }
-    
-    void SetColour(int colour)
-    {
-        colour_ = colour;
-    }
-    
-    void SetTrackGUID(Page* page, string trackGUID);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -667,9 +659,10 @@ public:
         {
             DAW::PreventUIRefresh(1);
             // reset track colors
+            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", channel->GetColour());
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
             DAW::PreventUIRefresh(-1);
         }
     }
@@ -791,10 +784,7 @@ public:
     void Init()
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-        {
             bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
-            bankableChannels_[i]->SetColour(GetTrackColor(DAW::CSurf_TrackFromID(i, followMCP_)));
-        }
 
         SetPinnedTracks();
     }
@@ -1082,10 +1072,12 @@ public:
         if(colourTracks_)
         {
             DAW::PreventUIRefresh(1);
+            
             // reset track colors
+            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", channel->GetColour());
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
         }
         
         // Apply new layout
@@ -1095,16 +1087,12 @@ public:
         
         if(colourTracks_)
         {
-            // save current track colours
-            for(auto* channel : bankableChannels_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    channel->SetColour(DAW::GetTrackColor(track));
-            
             // color tracks
             int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
+            
             DAW::PreventUIRefresh(-1);
         }
         
