@@ -484,6 +484,7 @@ private:
     int trackColourRedValue_ = 0;
     int trackColourGreenValue_ = 0;
     int trackColourBlueValue_ = 0;
+    map<string, int> trackColours_;
     int trackOffset_ = 0;
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumTracks_ = 0;
@@ -659,14 +660,25 @@ public:
         {
             DAW::PreventUIRefresh(1);
             // reset track colors
-            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+                    if(trackColours_.count(channel->GetTrackGUID()) > 0)
+                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
             DAW::PreventUIRefresh(-1);
         }
     }
     
+    void EnterPage()
+    {
+        if(colourTracks_)
+        {
+            // capture track colors
+            for(auto* channel : bankableChannels_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+                    trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
+        }
+    }
+
     WidgetContext* GetWidgetContext(Widget* widget)
     {
         if(widgetContexts_.count(widget) > 0)
@@ -1074,10 +1086,10 @@ public:
             DAW::PreventUIRefresh(1);
             
             // reset track colors
-            int defaultColor = 0;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &defaultColor);
+                    if(trackColours_.count(channel->GetTrackGUID()) > 0)
+                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
         }
         
         // Apply new layout
@@ -1091,7 +1103,10 @@ public:
             int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
             for(auto* channel : bankableChannels_)
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+                {
+                    trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
+                }
             
             DAW::PreventUIRefresh(-1);
         }
@@ -1232,7 +1247,7 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            //pages_[currentPageIndex_]->SetContext();
+            pages_[currentPageIndex_]->EnterPage();
             pages_[currentPageIndex_]->RefreshLayout();
         }
     }
