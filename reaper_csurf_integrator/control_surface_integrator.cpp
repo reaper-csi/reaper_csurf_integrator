@@ -235,7 +235,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                 if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
                                 {
                                     if(widgetContexts_.count(widget) < 1)
-                                        widgetContexts_[widget] = new WidgetContext();
+                                        widgetContexts_[widget] = new WidgetContext(widget);
                                     
                                     widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
                                     
@@ -245,7 +245,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                             if(cyclerWidget->GetRole() == params[1])
                                             {
                                                 if(widgetContexts_.count(cyclerWidget) < 1)
-                                                    widgetContexts_[cyclerWidget]= new WidgetContext();
+                                                    widgetContexts_[cyclerWidget]= new WidgetContext(cyclerWidget);
                                                 
                                                 widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                                 context->SetCyclerWidget(cyclerWidget);
@@ -340,7 +340,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                 if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
                                 {
                                     if(widgetContexts_.count(widget) < 1)
-                                        widgetContexts_[widget] = new WidgetContext();
+                                        widgetContexts_[widget] = new WidgetContext(widget);
                                     
                                     widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
                                     fxWidgets_[fxName].push_back(widget);
@@ -484,8 +484,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["MapFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
-    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceTrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["MapFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceContext(actions_[params[0]], isInverted); };
+    actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackCycle"] = [this](vector<string> params, bool isInverted) { return new TrackCycleContext(actions_, params, actions_[params[0]], isInverted); };
 }
 
