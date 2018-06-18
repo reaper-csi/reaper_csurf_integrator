@@ -39,15 +39,27 @@ private:
     MediaTrack* previousTrack_ = nullptr;
     
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* track) override
+    void Do(Page* page, RealSurface* surface, MediaTrack* oldTrack) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr) && previousTrack_ != track)
+        if(1 == DAW::CountSelectedTracks(nullptr)) //&& previousTrack_ != track)
         {
-            page->UnmapWidgetsFromTrackAndFX(surface, previousTrack_);
-            page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
+            MediaTrack* track = nullptr;
+            
+            for(int i = 0; i < CSurf_NumTracks(page->GetFollowMCP()); i++)
+                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+                {
+                    track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                    break;
+                }
+            
+            if(track)
+            {
+                page->UnmapWidgetsFromTrackAndFX(surface, previousTrack_);
+                page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
+            }
         }
         else
-            page->UnmapWidgetsFromTrackAndFX(surface, track);
+            page->UnmapWidgetsFromTrackAndFX(surface, oldTrack);
     }
 };
 

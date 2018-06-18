@@ -160,7 +160,8 @@ public:
         return nullptr;
     }
 };
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class RealSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +178,7 @@ public:
     
     string GetRole() { return role_; }
     string GetName() { return name_; }
+    virtual RealSurface* GetRealSurface() { return nullptr; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -202,6 +204,7 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
+    virtual RealSurface* GetRealSurface() { return (RealSurface*)surface_; }
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
@@ -294,8 +297,11 @@ public:
 
     virtual ~Midi_RealSurface()
     {
+        // GAW TBD -- removing this temporarily to see what happens wioth windows users crash when loading other projects
+        /*
         if (midiInput_) delete midiInput_;
         if(midiOutput_) delete midiOutput_;
+         */
     }
     
     void HandleMidiInput()
@@ -803,8 +809,6 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
-        string trackGUID = DAW::GetTrackGUIDAsString(track, followMCP_);
-        
         for(auto surface : realSurfaces_)
             for(auto widget : surface->GetAllWidgets())
                 if(widget->GetRole() == "TrackOnSelection")
