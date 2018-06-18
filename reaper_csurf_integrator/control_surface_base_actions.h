@@ -193,7 +193,7 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        // GAW TBD
+        action_->RequestUpdate(page, this, widget);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
