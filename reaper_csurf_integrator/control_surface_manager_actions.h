@@ -19,15 +19,27 @@ private:
     MediaTrack* previousTrack_ = nullptr;
     
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* track) override
+    void Do(Page* page, RealSurface* surface) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr) && previousTrack_ != track)
+        if(1 == DAW::CountSelectedTracks(nullptr))
         {
-            page->UnmapWidgetsFromFX(surface, previousTrack_);
-            page->MapFXToWidgets(surface, previousTrack_ = track);
+            MediaTrack* track = nullptr;
+            
+            for(int i = 0; i < CSurf_NumTracks(page->GetFollowMCP()); i++)
+                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+                {
+                    track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                    break;
+                }
+            
+            if(track && previousTrack_ != track)
+            {
+                page->UnmapWidgetsFromTrackAndFX();
+                page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
+            }
         }
         else
-            page->UnmapWidgetsFromFX(surface, track);
+            page->UnmapWidgetsFromTrackAndFX();
     }
 };
 
@@ -39,9 +51,9 @@ private:
     MediaTrack* previousTrack_ = nullptr;
     
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* oldTrack) override
+    void Do(Page* page, RealSurface* surface) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr)) //&& previousTrack_ != track)
+        if(1 == DAW::CountSelectedTracks(nullptr))
         {
             MediaTrack* track = nullptr;
             
@@ -52,14 +64,14 @@ public:
                     break;
                 }
             
-            if(track)
+            if(track && previousTrack_ != track)
             {
-                page->UnmapWidgetsFromTrackAndFX(surface, previousTrack_);
+                page->UnmapWidgetsFromTrackAndFX();
                 page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
             }
         }
         else
-            page->UnmapWidgetsFromTrackAndFX(surface, oldTrack);
+            page->UnmapWidgetsFromTrackAndFX();
     }
 };
 

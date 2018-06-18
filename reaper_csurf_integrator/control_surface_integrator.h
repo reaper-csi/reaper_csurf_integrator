@@ -361,7 +361,7 @@ public:
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
-    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
+    virtual void Do(Page* page, RealSurface* surface) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -382,7 +382,7 @@ public:
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
+    virtual void DoAction(Page* page, RealSurface* surface) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -394,10 +394,15 @@ public:
 class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    Widget* widget_ = nullptr;
     map<string, map<string, vector<ActionContext*>>> actionContexts_;
     string component_ = Track;
     
 public:
+    WidgetContext(Widget* widget) : widget_(widget) {}
+    
+    Widget* GetWidget() { return widget_; }
+    
     void AddActionContext(string component, string modifiers, ActionContext* context)
     {
         actionContexts_[component][modifiers].push_back(context);
@@ -421,7 +426,7 @@ public:
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, surface, track);
+                actionContext->DoAction(page, surface);
     }
     
     void SetIndex(int index)
@@ -438,6 +443,15 @@ public:
             for(auto [modifier, actionContexts] : actionContexts_[component])
                 for(auto actionContext : actionContexts)
                     actionContext->SetTrack(trackGUID);
+    }
+    
+    void ClearAllButTrackContexts()
+    {
+        for(auto [component, modifiedActionContexts] : actionContexts_)
+            if(component != Track)
+                for(auto [modifier, actionContexts] : actionContexts_[component])
+                    for(auto actionContext : actionContexts)
+                        actionContext->SetTrack("");
     }
     
     void SetComponent(string component)
@@ -498,6 +512,8 @@ private:
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
     map<Widget*, WidgetContext*> widgetContexts_;
+    vector<WidgetContext*> widgetContextsMappedToTracks_;
+    vector<WidgetContext*> widgetContextsMappedToFX_;
     map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
@@ -570,77 +586,26 @@ private:
     
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     {
+        widgetContextsMappedToTracks_.clear();
+        
         for(auto channel : surface->GetChannels())
             for(auto widget : channel)
                 if(widgetContexts_.count(widget) > 0)
+                {
                     widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
+                    widgetContextsMappedToTracks_.push_back(widgetContexts_[widget]);
+                }
     }
     
-    void MapFXToWidgets(MediaTrack* track)
+    void UnmapWidgetsFromTrack()
     {
-        char fxName[BUFSZ];
-        
-        DeleteFXWindows();
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        for(auto widgetContext : widgetContextsMappedToTracks_)
         {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            
-            if(fxWidgets_.count(fxName) > 0)
-            {
-                for(auto widget : fxWidgets_[fxName])
-                {
-                    if(widgetContexts_.count(widget) > 0)
-                    {
-                        widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
-                        widgetContexts_[widget]->SetComponent(fxName);
-                        widgetContexts_[widget]->SetIndex(i);
-                    }
-                }
-                
-                AddFXWindow(FXWindow(track, i));
-            }
-        }
-        
-        OpenFXWindows();
-    }
-    
-    void UnmapWidgetsFromTrack(RealSurface* surface, MediaTrack* track)
-    {
-        for(auto channel : surface->GetChannels())
-            for(auto widget : channel)
-                if(widgetContexts_.count(widget) > 0)
-                {
-                    widget->SetValue(0, 0.0);
-                    widgetContexts_[widget]->SetComponentTrackContext(Track, "");
-                }
-    }
-    
-    void UnmapWidgetsFromFX(MediaTrack* track)
-    {
-        char fxName[BUFSZ];
-        
-        DeleteFXWindows();
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            
-            if(fxWidgets_.count(fxName) > 0)
-            {
-                for(auto widget : fxWidgets_[fxName])
-                {
-                    if(widgetContexts_.count(widget) > 0)
-                    {
-                        widget->SetValue(0, 0.0);
-                        widgetContexts_[widget]->SetComponentTrackContext(fxName, "");
-                        widgetContexts_[widget]->SetComponent(Track);
-                    }
-                }
-            }
+            widgetContext->GetWidget()->SetValue(0, 0.0);
+            widgetContext->SetComponentTrackContext(Track, "");
         }
     }
-
+    
 public:
     Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
@@ -777,14 +742,46 @@ public:
         return followMCP_;
     }
     
-    void MapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void MapFXToWidgets(MediaTrack* track)
     {
-        MapFXToWidgets(track);
+        char fxName[BUFSZ];
+        
+        DeleteFXWindows();
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(fxWidgets_.count(fxName) > 0)
+            {
+                for(auto widget : fxWidgets_[fxName])
+                {
+                    if(widgetContexts_.count(widget) > 0)
+                    {
+                        widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
+                        widgetContexts_[widget]->SetComponent(fxName);
+                        widgetContexts_[widget]->SetIndex(i);
+                        widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
+                    }
+                }
+                
+                AddFXWindow(FXWindow(track, i));
+            }
+        }
+        
+        OpenFXWindows();
     }
     
-    void UnmapWidgetsFromFX(RealSurface* surface, MediaTrack* track)
+    void UnmapWidgetsFromFX()
     {
-        UnmapWidgetsFromFX(track);
+        DeleteFXWindows();
+        
+        for(auto widgetContext : widgetContextsMappedToFX_)
+        {
+            widgetContext->GetWidget()->SetValue(0, 0.0);
+            widgetContext->ClearAllButTrackContexts();
+            widgetContext->SetComponent(Track);
+        }
     }
     
     void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
@@ -793,10 +790,10 @@ public:
         MapFXToWidgets(track);
     }
     
-    void UnmapWidgetsFromTrackAndFX(RealSurface* surface, MediaTrack* track)
+    void UnmapWidgetsFromTrackAndFX()
     {
-        UnmapWidgetsFromTrack(surface, track);
-        UnmapWidgetsFromFX(track);
+        UnmapWidgetsFromTrack();
+        UnmapWidgetsFromFX();
     }
     
     void Init()
