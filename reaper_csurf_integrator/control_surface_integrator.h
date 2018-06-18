@@ -178,7 +178,7 @@ public:
     
     string GetRole() { return role_; }
     string GetName() { return name_; }
-    virtual RealSurface* GetRealSurface() { return nullptr; }
+    virtual RealSurface* GetSurface() { return nullptr; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -204,7 +204,7 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
-    virtual RealSurface* GetRealSurface() { return (RealSurface*)surface_; }
+    virtual RealSurface* GetSurface() { return (RealSurface*)surface_; }
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
@@ -362,6 +362,7 @@ public:
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void Do(Page* page, RealSurface* surface) {}
+    virtual void Do(Page* page, RealSurface* surface, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -604,6 +605,8 @@ private:
             widgetContext->GetWidget()->SetValue(0, 0.0);
             widgetContext->SetComponentTrackContext(Track, "");
         }
+        
+        widgetContextsMappedToTracks_.clear();
     }
     
 public:
@@ -782,12 +785,31 @@ public:
             widgetContext->ClearAllButTrackContexts();
             widgetContext->SetComponent(Track);
         }
+        
+        widgetContextsMappedToFX_.clear();
     }
     
     void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
         MapTrackToWidgets(surface, track);
         MapFXToWidgets(track);
+    }
+    
+    void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        if(widgetContextsMappedToTracks_.size() > 0)
+            UnmapWidgetsFromTrack();
+        else
+            MapTrackToWidgets(surface, track);
+
+        ToggleMapFXToWidgets(surface, track);
+    }
+    
+    void ToggleMapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        if(widgetContextsMappedToFX_.size() > 0)
+            UnmapWidgetsFromFX();
+        else  MapFXToWidgets(track);
     }
     
     void UnmapWidgetsFromTrackAndFX()

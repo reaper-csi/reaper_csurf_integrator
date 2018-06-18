@@ -257,9 +257,10 @@ public:
             action_->Do(page, surface);
     }
     
-    // GAW TBD -- implement     virtual void DoAction(Page* page, Widget* widget, double value) override
-    // so that any widget can trigger this
-
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        action_->Do(page, widget->GetSurface(), value);
+    }
 };
 
 #endif /* control_surface_base_actions_h */
