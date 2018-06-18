@@ -246,16 +246,20 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PageSurfaceTrackContext : public ActionContext
+class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PageSurfaceTrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    PageSurfaceContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
     
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) override
+    virtual void DoAction(Page* page, RealSurface* surface) override
     {
-            action_->Do(page, surface, track);
+            action_->Do(page, surface);
     }
+    
+    // GAW TBD -- implement     virtual void DoAction(Page* page, Widget* widget, double value) override
+    // so that any widget can trigger this
+
 };
 
 #endif /* control_surface_base_actions_h */
