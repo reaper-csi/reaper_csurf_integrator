@@ -611,7 +611,6 @@ public:
         
         memset(bla,0,sizeof(bla));
         
-        
         int *tmodeptr=(int*)projectconfig_var_addr(NULL,__g_projectconfig_timemode2);
         
         int tmode=0;
