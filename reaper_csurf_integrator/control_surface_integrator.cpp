@@ -25,6 +25,13 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass)
+{
+    if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name);
+    
+    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+}
+
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int index)
 {
     if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role, name, index);
@@ -33,7 +40,8 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     if(widgetClass == "XTDisplayLower") return new XTDisplayLower_Midi_Widget(surface, role, name, index);
     if(widgetClass == "C4DisplayUpper") return new C4DisplayUpper_Midi_Widget(surface, role, name, index);
     if(widgetClass == "C4DisplayLower") return new C4DisplayLower_Midi_Widget(surface, role, name, index);
-
+    if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name);
+    
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
@@ -114,6 +122,8 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
                 if(inChannel)
                     for(int i = 0; i < GetNumChannels(); i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0], tokens[1], i));
+                else
+                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1]));
             }
             else if(tokens.size() == 6)
             {
@@ -414,6 +424,7 @@ void Manager::InitActionDictionary()
     actions_["TrackVolumeDisplay"] = new TrackVolumeDisplay();
     actions_["TrackPanDisplay"] = new TrackPanDisplay();
     actions_["TrackPanWidthDisplay"] = new TrackPanWidthDisplay();
+    actions_["TimeDisplay"] = new TimeDisplay();
     actions_["Rewind"] = new Rewind();
     actions_["FastForward"] = new FastForward();
     actions_["Play"] = new Play();
@@ -458,6 +469,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackPanDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackPanWidthDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TimeDisplay"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Rewind"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["FastForward"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Play"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
