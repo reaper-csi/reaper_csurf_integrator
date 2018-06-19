@@ -50,7 +50,6 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     if(widgetClass == "Button") return new PushButton_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithLatch") return new PushButtonWithLatch_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "PushButtonWithResendOnRelease") return new PushButtonWithResendOnRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
@@ -463,6 +462,7 @@ void Manager::InitActionDictionary()
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
+    actions_["CycleTimeDisplayModes"] = new CycleTimeDisplayModes();
     actions_["Latched"] = new Latched();
     actions_["LatchedZoom"] = new LatchedZoom();
     actions_["LatchedScrub"] = new LatchedScrub();
@@ -508,6 +508,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Latched"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["LatchedZoom"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["LatchedScrub"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
