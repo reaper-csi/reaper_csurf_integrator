@@ -57,6 +57,14 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
 }
 
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
+{
+    if(widgetClass == "PushButtonWithResendOnRelease")
+        return new PushButtonWithResendOnRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    else
+        return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte1, byte2, byte3));
+}
+
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
     if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
@@ -135,11 +143,22 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
             }
             else if(tokens.size() == 8)
             {
-                if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])));
+                if(tokens[1] == "PushButtonWithResendOnRelease")
+                {
+                    if(inChannel)
+                        for(int i = 0; i < GetNumChannels(); i++)
+                            AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]) + i, strToHex(tokens[7])));
+                    else
+                        AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+                }
                 else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+                {
+                    if(inChannel)
+                        for(int i = 0; i < GetNumChannels(); i++)
+                            AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6]), strToHex(tokens[7])));
+                    else
+                        AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+                }
             }
             else if(tokens.size() == 9)
             {
