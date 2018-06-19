@@ -49,6 +49,8 @@ const string Invert = "Invert";
 const string PageToken = "Page";
 const string Track = "Track";
 
+extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -816,6 +818,28 @@ public:
     {
         UnmapWidgetsFromTrack();
         UnmapWidgetsFromFX();
+    }
+    
+    void CycleTimeDisplayModes()
+    {
+        int *tmodeptr = &__g_projectconfig_timemode2;
+        if (tmodeptr && *tmodeptr>=0)
+        {
+            (*tmodeptr)++;
+            if ((*tmodeptr)>5)
+                (*tmodeptr)=0;
+        }
+        else
+        {
+            tmodeptr = &__g_projectconfig_timemode;
+            
+            if (tmodeptr)
+            {
+                (*tmodeptr)++;
+                if ((*tmodeptr)>5)
+                    (*tmodeptr)=0;
+            }
+        }
     }
     
     void Init()

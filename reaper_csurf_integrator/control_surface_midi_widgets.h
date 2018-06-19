@@ -13,15 +13,6 @@
 
 extern Manager* TheManager;
 
-
-int __g_projectconfig_timemode2, __g_projectconfig_timemode;
-int __g_projectconfig_measoffs;
-int __g_projectconfig_timeoffs; // double
-
-char m_mackie_lasttime[10];
-int m_mackie_lasttime_mode;
-DWORD m_mcu_timedisp_lastforce, m_mcu_meter_lastrun;
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class PushButton_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -590,6 +581,15 @@ public:
     }
 };
 
+
+int __g_projectconfig_timemode2, __g_projectconfig_timemode;
+int __g_projectconfig_measoffs;
+int __g_projectconfig_timeoffs; // double
+
+char m_mackie_lasttime[10];
+int m_mackie_lasttime_mode;
+DWORD m_mcu_timedisp_lastforce, m_mcu_meter_lastrun;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MCU_TimeDisplay_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -611,14 +611,14 @@ public:
         
         memset(bla,0,sizeof(bla));
         
-        int *tmodeptr=(int*)projectconfig_var_addr(NULL,__g_projectconfig_timemode2);
+        int *tmodeptr=&__g_projectconfig_timemode2;
         
         int tmode=0;
         
         if (tmodeptr && (*tmodeptr)>=0) tmode = *tmodeptr;
         else
         {
-            tmodeptr=(int*)projectconfig_var_addr(NULL,__g_projectconfig_timemode);
+            tmodeptr=&__g_projectconfig_timemode;
             if (tmodeptr)
                 tmode=*tmodeptr;
         }
