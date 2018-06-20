@@ -667,6 +667,10 @@ public:
     {
         for(auto [widget, widgetContext] : widgetContexts_)
             widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
+        
+        // if no tracks selected unmap tracks and FX
+        if(0 == DAW::CountSelectedTracks(nullptr))
+            UnmapWidgetsFromTrackAndFX();
     }
    
     void DoAction(Widget* widget, double value)
@@ -749,6 +753,8 @@ public:
     
     void MapFXToWidgets(MediaTrack* track)
     {
+        widgetContextsMappedToFX_.clear();
+        
         char fxName[BUFSZ];
         
         DeleteFXWindows();
