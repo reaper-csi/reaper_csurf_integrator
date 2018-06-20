@@ -15,9 +15,6 @@ extern Manager* TheManager;
 class MapFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MediaTrack* previousTrack_ = nullptr;
-    
 public:
     void Do(Page* page, RealSurface* surface) override
     {
@@ -32,7 +29,7 @@ public:
                     break;
                 }
             
-            if(track && previousTrack_ != track)
+            if(track)
             {
                 page->UnmapWidgetsFromFX();
                 page->MapFXToWidgets(track);
@@ -69,9 +66,6 @@ public:
 class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MediaTrack* previousTrack_ = nullptr;
-    
 public:
     void Do(Page* page, RealSurface* surface) override
     {
@@ -86,10 +80,10 @@ public:
                     break;
                 }
             
-            if(track && previousTrack_ != track)
+            if(track)
             {
                 page->UnmapWidgetsFromTrackAndFX();
-                page->MapTrackAndFXToWidgets(surface, previousTrack_ = track);
+                page->MapTrackAndFXToWidgets(surface, track);
             }
         }
         else
