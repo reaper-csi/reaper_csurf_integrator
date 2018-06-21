@@ -551,9 +551,9 @@ public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            actionContext->SetWidgetValue(widget, 0, volToNormalized(DAW::Track_GetPeakInfo(track, param)));
+            actionContext->SetWidgetValue(widget, 0, VAL2DB(DAW::Track_GetPeakInfo(track, param)));
         else
-            actionContext->SetWidgetValue(widget, 0, 0.0);
+            actionContext->SetWidgetValue(widget, 0, TheManager->GetVUMinDB());
     }
 };
 

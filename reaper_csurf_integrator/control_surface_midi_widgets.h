@@ -213,7 +213,16 @@ public:
     
     void SetValue(int displayMode, double value) override
     {
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], value * 127.0);
+        int midiValue = 0;
+        
+        if(value < minDB_)
+            midiValue = 0;
+        else if(value > maxDB_)
+            midiValue = 127;
+        else
+            midiValue = ((value - minDB_) / (maxDB_ - minDB_)) * 127;
+        
+        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiValue);
     }
 };
 
@@ -721,7 +730,6 @@ public:
             m_mackie_lasttime_mode=tmode;
             SendMidiMessage(0x90, 0x71, tmode==5?0x7F:0); // set smpte light
             SendMidiMessage(0x90, 0x72, m_mackie_lasttime_mode>0 && tmode<3?0x7F:0); // set beats light
-            
         }
         
         if (memcmp(m_mackie_lasttime,bla,sizeof(bla)))
