@@ -79,6 +79,13 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
 }
 
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max, int byte1ZeroDB, int byte2ZeroDB)
+{
+    if(widgetClass == "Fader14BitDB") return new Fader14BitDB_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min), byte1ZeroDB, byte2ZeroDB);
+    
+    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +171,14 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
                 if(inChannel)
                     for(int i = 0; i < GetNumChannels(); i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+                else
+                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
+            }
+            else if(tokens.size() == 11)
+            {
+                if(inChannel)
+                    for(int i = 0; i < GetNumChannels(); i++)
+                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9]), strToHex(tokens[10])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
             }
@@ -436,6 +451,7 @@ void Manager::InitActionDictionary()
     actions_["TrackFX"] = new TrackFX();
     actions_["GainReductionDB"] = new TrackGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
+    actions_["TrackVolumeDB"] = new TrackVolumeDB();
     actions_["TrackPan"] = new TrackPan();
     actions_["TrackPanWidth"] = new TrackPanWidth();
     actions_["TrackNameDisplay"] = new TrackNameDisplay();
@@ -482,6 +498,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackFX"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackVolume"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackVolumeDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackPan"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackPanWidth"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackNameDisplay"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
