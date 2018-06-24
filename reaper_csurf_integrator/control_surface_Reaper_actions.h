@@ -57,7 +57,23 @@ public:
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-         DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackVolumeDB : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
+    {
+        actionContext->SetWidgetValue(widget, 0, VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+    }
+    
+    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    {
+        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
     }
 };
 
