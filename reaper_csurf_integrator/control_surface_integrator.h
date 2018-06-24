@@ -941,6 +941,7 @@ public:
                     {
                         channel->SetIsPinned(false);
                         channel->SetTrackGUID(this, "");
+                        // GAW TBD remove this from pinned tracks list in project
                     }
                 }
             }
