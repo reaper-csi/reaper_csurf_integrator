@@ -933,15 +933,25 @@ public:
             
             DAW::ClearCache();
             
-            for(auto channel : bankableChannels_)
+            BankableChannel* channel = nullptr;
+            char buffer[BUFSZ];
+            for(int i = 0; i < bankableChannels_.size(); i++)
             {
+                channel = bankableChannels_[i];
+
                 if(channel->GetIsPinned())
                 {
-                    if( DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
+                    if(DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
                     {
                         channel->SetIsPinned(false);
                         channel->SetTrackGUID(this, "");
-                        // GAW TBD remove this from pinned tracks list in project
+
+                        // GAW remove this from pinned tracks list in project
+                        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+                        {
+                            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), "");
+                            DAW::MarkProjectDirty(nullptr);
+                        }
                     }
                 }
             }
