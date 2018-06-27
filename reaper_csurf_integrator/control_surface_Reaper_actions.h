@@ -81,13 +81,10 @@ public:
 class TrackPan : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int displayMode_ = 0x00;
-
 public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int displayMode) override
     {
-        actionContext->SetWidgetValue(widget, displayMode_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
+        actionContext->SetWidgetValue(widget, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
@@ -100,13 +97,10 @@ public:
 class TrackPanWidth : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int displayMode_ = 0x01;
-    
 public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int displayMode) override
     {
-        actionContext->SetWidgetValue(widget, displayMode_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        actionContext->SetWidgetValue(widget, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
