@@ -32,16 +32,16 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int index)
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int channel)
 {
-    if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "XTDisplayUpper") return new XTDisplayUpper_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "XTDisplayLower") return new XTDisplayLower_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "C4DisplayUpper") return new C4DisplayUpper_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "C4DisplayLower") return new C4DisplayLower_Midi_Widget(surface, role, name, index);
-    if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name);
-    
+    if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "XTDisplayUpper") return new XTDisplayUpper_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "XTDisplayLower") return new XTDisplayLower_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "C4DisplayUpper") return new C4DisplayUpper_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "C4DisplayLower") return new C4DisplayLower_Midi_Widget(surface, role, name, channel);
+    else if(widgetClass == "MCUVUMeter") return new MCUVUMeter_Midi_Widget(surface, role, name, channel);
+
     return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
 }
 

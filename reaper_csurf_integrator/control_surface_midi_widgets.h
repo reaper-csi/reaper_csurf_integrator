@@ -240,7 +240,7 @@ public:
         
         int valueInt = value * 127;
         
-        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. pan width)
+        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. Q)
         
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1] + 0x20, val);
     }
@@ -286,13 +286,16 @@ public:
 class MCUVUMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public:
-    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
+private:
+    int channel_ = 0;
     
-    void SetValue(int track, double value) override
+public:
+    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, int channel) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), channel_(channel) {}
+    
+    void SetValue(int param, double value) override
     {
-        //D0 yx    : update VU meter, y=track, x=0..d=volume, e=clip on, f=clip off
-        SendMidiMessage(0xd0, (track << 4) | ((int)(value * 0x0d)), 0);
+        //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
+        SendMidiMessage(0xd0, (channel_ << 4) | ((int)(value * 0x0d)), 0);
     }
 };
 
