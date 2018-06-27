@@ -210,13 +210,33 @@ private:
     Widget* cyclerWidget_ = nullptr;
     int index = 0;
     vector<Action*> actions_;
+    map<Action*, int> actionParams_;
     
 public:
     TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : TrackContext(action, isInverted)
     {
         for(int i = 2; i < params.size(); i++)
-            if(Action* availableAction = availableActions[params[i]])
-                actions_.push_back(availableAction);
+        {
+            istringstream iss(params[i]);
+            vector<string> tokens;
+            string token;
+            while (iss >> quoted(token))
+                tokens.push_back(token);
+
+            if(tokens.size() == 1)
+            {
+                if(Action* availableAction = availableActions[params[i]])
+                    actions_.push_back(availableAction);
+            }
+            else if(tokens.size() == 2)
+            {
+                if(Action* availableAction = availableActions[tokens[0]])
+                {
+                    actions_.push_back(availableAction);
+                    actionParams_[availableAction] = atol(tokens[1].c_str());
+                }
+            }
+        }
     }
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
@@ -226,7 +246,12 @@ public:
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
         {
             if(actions_[index])
+            {
+                if(actionParams_.count(actions_[index]) > 0)
+                    actions_[index]->RequestUpdate(page, this, widget, track, actionParams_[actions_[index]]);
+            else
                 actions_[index]->RequestUpdate(page, this, widget, track);
+            }
         }
         else
         {
