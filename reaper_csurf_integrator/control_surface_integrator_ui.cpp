@@ -279,10 +279,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
-
-                SetDlgItemText(hwndDlg, IDC_EDIT_Red, to_string(red).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_Green, to_string(green).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_Blue, to_string(blue).c_str());
             }
         }
 
@@ -290,6 +286,15 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             switch(LOWORD(wParam))
             {
+                case IDCHOOSECOLOUR:
+                {
+                    int colorOut = DAW::ColorToNative(red, green, blue);
+                    
+                    if(DAW::GR_SelectColor(hwndDlg, &colorOut))
+                        DAW::ColorFromNative(colorOut, &red, &green, &blue);
+                    break;
+                }
+                    
                 case IDC_RADIO_MCP:
                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
                     break;
@@ -312,17 +317,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                         else
                             trackColouring = false;
 
-                        char tempBuf[BUFSZ];
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_Red, tempBuf, sizeof(tempBuf));
-                        red = atoi(tempBuf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_Green, tempBuf, sizeof(tempBuf));
-                        green = atoi(tempBuf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_Blue, tempBuf, sizeof(tempBuf));
-                        blue = atoi(tempBuf);
-                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }

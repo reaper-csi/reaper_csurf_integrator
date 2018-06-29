@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by res.rc
 //
+#define IDCHOOSECOLOUR                  4
 #define IDD_DIALOG_Page                 103
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_VirtualSurface       266
@@ -10,10 +11,7 @@
 #define IDC_CHECK_MidiOutMon            1001
 #define IDC_CHECK_VSTParamMon           1002
 #define IDC_EDIT_PageName               1003
-#define IDC_EDIT_Blue                   1004
-#define IDC_EDIT_Green                  1005
 #define IDC_CHECK_IsBankable            1006
-#define IDC_EDIT_Red                    1007
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_COMBO_RealSurface           1016
 #define IDC_COMBO_ActionTemplates       1017
