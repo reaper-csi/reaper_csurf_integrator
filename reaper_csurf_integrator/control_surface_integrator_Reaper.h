@@ -74,8 +74,6 @@ public:
     
     static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
-    static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
-
     static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }
 
     static void SendCommandMessage(WPARAM wparam) { ::SendMessage(g_hwnd, WM_COMMAND, wparam, 0); }
@@ -180,7 +178,12 @@ public:
 
     static int GetTrackColor(MediaTrack* track) { return ::GetTrackColor(track); }
     
+    // Runs the system color chooser dialog.  Returns 0 if the user cancels the dialog.
+    static int GR_SelectColor(HWND hwnd, int* colorOut) { return ::GR_SelectColor(hwnd, colorOut); }
+
     static void ColorFromNative(int col, int* rOut, int* gOut, int* bOut) { ::ColorFromNative(col, rOut, gOut, bOut); }
+
+    static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
 
     static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
