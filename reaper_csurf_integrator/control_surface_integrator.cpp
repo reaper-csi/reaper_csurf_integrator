@@ -623,6 +623,9 @@ void Manager::Init()
     
     for(auto page : pages_)
         page->Init();
+    
+    char buffer[BUFSZ];
+    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", buffer, sizeof(buffer)))
+        currentPageIndex_ = atol(buffer);
 
-    currentPageIndex_ = 0;
 }
