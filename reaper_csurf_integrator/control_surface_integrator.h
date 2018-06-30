@@ -217,13 +217,12 @@ class RealSurface
 protected:
     const string name_ = "";
 
-    bool isBankable_ = true;
     vector<Widget*> widgets_;
     vector<Widget*> allWidgets_;
     vector<Widget*> emptyWidgets_;
     vector<vector<Widget*>> channels_;
     
-    RealSurface(const string name, int numChannels, bool isBankable) : name_(name), isBankable_(isBankable)
+    RealSurface(const string name, int numChannels) : name_(name)
     {
         for(int i = 0; i < numChannels; i++)
             channels_.push_back(vector<Widget*>());
@@ -235,7 +234,6 @@ public:
     string GetName() const { return name_; }
     int GetNumChannels() { return channels_.size(); }
     vector<vector<Widget*>> GetChannels() { return channels_; }
-    vector<vector<Widget*>> GetBankableChannels() { return isBankable_ ? channels_ : vector<vector<Widget*>>() ; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
 
     vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
@@ -295,7 +293,7 @@ private:
     }
     
 public:
-    Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_RealSurface(const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_RealSurface()
     {
@@ -717,15 +715,16 @@ public:
         alt_ = value;
     }
     
-    void AddSurface(RealSurface* surface, string actionTemplateDirectory, string fxTemplateDirectory)
+    void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateDirectory, string fxTemplateDirectory)
     {
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
         InitActionContexts(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
-        for(auto channel : surface->GetBankableChannels())
-            bankableChannels_.push_back(new BankableChannel(channel));
+        if(isBankable)
+            for(auto channel : surface->GetChannels())
+                bankableChannels_.push_back(new BankableChannel(channel));
         realSurfaces_.push_back(surface);
     }
     

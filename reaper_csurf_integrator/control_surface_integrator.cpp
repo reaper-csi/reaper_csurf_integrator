@@ -108,8 +108,8 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, int numChannels, bool isBankable, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-: RealSurface(name, numChannels, isBankable), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+: RealSurface(name, numChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(templateFilename);
     bool inChannel = false;
@@ -588,15 +588,14 @@ void Manager::Init()
             }
             else if(tokens[0] == RealSurface_)
             {
-                if(tokens.size() != 7)
+                if(tokens.size() != 6)
                     continue;
                 
                 int numChannels = atoi(tokens[2].c_str());
-                bool isBankable = tokens[3] == "1" ? true : false;
-                int channelIn = atoi(tokens[4].c_str());
-                int channelOut = atoi(tokens[5].c_str());
+                int channelIn = atoi(tokens[3].c_str());
+                int channelOut = atoi(tokens[4].c_str());
                 
-                midi_realSurfaces_.push_back(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, isBankable, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                midi_realSurfaces_.push_back(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[5], numChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
             }
             else if(tokens[0] == PageToken)
             {
@@ -609,13 +608,15 @@ void Manager::Init()
             }
             else if(tokens[0] == VirtualSurface_)
             {
-                if(tokens.size() != 4)
+                if(tokens.size() != 5)
                     continue;
                 
+                bool isBankable = tokens[1] == "1" ? true : false;
+
                 for(auto surface : midi_realSurfaces_)
-                    if(surface->GetName() == tokens[1])
+                    if(surface->GetName() == tokens[2])
                         if(currentPage)
-                            currentPage->AddSurface(surface, tokens[2], tokens[3]);
+                            currentPage->AddSurface(surface, isBankable, tokens[3], tokens[4]);
             }
         }
     }

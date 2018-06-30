@@ -99,7 +99,6 @@ struct RealSurfaceLine
 {
     string name = "";
     int numChannels = 0;
-    bool isBankable = true;
     int midiIn = 0;
     int midiOut = 0;
     string templateFilename = "";
@@ -108,6 +107,7 @@ struct RealSurfaceLine
 struct VirtualSurfaceLine
 {
     string realSurfaceName = "";
+    bool isBankable = true;
     string actionTemplateFolder = "";
     string FXTemplateFolder = "";
 };
@@ -188,21 +188,13 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, to_string(numChannels).c_str());
-                
-                if(isBankable)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
 
-                
-                
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
             }
             else
             {
-                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
@@ -220,8 +212,6 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         char tempBuf[BUFSZ];
                         GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, tempBuf, sizeof(tempBuf));
                         numChannels = atoi(tempBuf);
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
-                            isBankable = true;
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
@@ -379,9 +369,16 @@ static WDL_DLGRET dlgProcVirtualSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
                 index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_FINDSTRING, -1, (LPARAM)FXTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, index, 0);
+                
+                
+                if(isBankable)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
             }
             else
             {
+                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
@@ -395,6 +392,10 @@ static WDL_DLGRET dlgProcVirtualSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, 
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
+                            isBankable = true;
+                        else
+                            isBankable = false;
                         GetDlgItemText(hwndDlg, IDC_COMBO_RealSurface , name, sizeof(name));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ActionTemplates , actionTemplateFolder, sizeof(actionTemplateFolder));
                         GetDlgItemText(hwndDlg, IDC_COMBO_FXTemplates , FXTemplateFolder, sizeof(FXTemplateFolder));
@@ -462,7 +463,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 RealSurfaceLine* surface = new RealSurfaceLine();
                                 surface->name = name;
                                 surface->numChannels = numChannels;
-                                surface->isBankable = isBankable;
                                 surface->midiIn = midiIn;
                                 surface->midiOut = midiOut;
                                 surface->templateFilename = templateFilename;
@@ -486,6 +486,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     VirtualSurfaceLine* surface = new VirtualSurfaceLine();
                                     surface->realSurfaceName = name;
+                                    surface->isBankable = isBankable;
                                     surface->actionTemplateFolder = actionTemplateFolder;
                                     surface->FXTemplateFolder = FXTemplateFolder;
                                     pages[index]->virtualSurfaces.push_back(surface);
@@ -528,7 +529,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 numChannels = realSurfaces[index]->numChannels;
-                                isBankable = realSurfaces[index]->isBankable;
                                 midiIn = realSurfaces[index]->midiIn;
                                 midiOut = realSurfaces[index]->midiOut;
                                 strcpy(templateFilename, realSurfaces[index]->templateFilename.c_str());
@@ -539,7 +539,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     realSurfaces[index]->name = name;
                                     realSurfaces[index]->numChannels = numChannels;
-                                    realSurfaces[index]->isBankable = isBankable;
                                     realSurfaces[index]->midiIn = midiIn;
                                     realSurfaces[index]->midiOut = midiOut;
                                     realSurfaces[index]->templateFilename = templateFilename;
@@ -569,7 +568,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     if(surface->realSurfaceName == name)
                                     {
                                         surfaceLine = surface;
-                                        
+                                        isBankable = surfaceLine->isBankable;
+
                                         strcpy(actionTemplateFolder, surface->actionTemplateFolder.c_str());
                                         strcpy(FXTemplateFolder, surface->FXTemplateFolder.c_str());
                                     }
@@ -580,6 +580,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 if(dlgResult == IDOK)
                                 {
                                     surfaceLine->realSurfaceName = name;
+                                    surfaceLine->isBankable = isBankable;
                                     surfaceLine->actionTemplateFolder = actionTemplateFolder;
                                     surfaceLine->FXTemplateFolder = FXTemplateFolder;
                                     
@@ -724,16 +725,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == RealSurface_)
                     {
-                        if(tokens.size() != 7)
+                        if(tokens.size() != 6)
                             continue;
                     
                         RealSurfaceLine* surface = new RealSurfaceLine();
                         surface->name = tokens[1];
                         surface->numChannels = atoi(tokens[2].c_str());
-                        surface->isBankable = tokens[3] == "1" ? true : false;
-                        surface->midiIn = atoi(tokens[4].c_str());
-                        surface->midiOut = atoi(tokens[5].c_str());
-                        surface->templateFilename = tokens[6];
+                        surface->midiIn = atoi(tokens[3].c_str());
+                        surface->midiOut = atoi(tokens[4].c_str());
+                        surface->templateFilename = tokens[5];
                         realSurfaces.push_back(surface);
                         
                         AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
@@ -767,13 +767,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == VirtualSurface_)
                     {
-                        if(tokens.size() != 4)
+                        if(tokens.size() != 5)
                             continue;
                         
                         VirtualSurfaceLine* virtualSurface = new VirtualSurfaceLine();
-                        virtualSurface->realSurfaceName = tokens[1];
-                        virtualSurface->actionTemplateFolder = tokens[2];
-                        virtualSurface->FXTemplateFolder = tokens[3];
+                        virtualSurface->isBankable = tokens[1] == "1" ? true : false;
+
+                        virtualSurface->realSurfaceName = tokens[2];
+                        virtualSurface->actionTemplateFolder = tokens[3];
+                        virtualSurface->FXTemplateFolder = tokens[4];
                         pages.back()->virtualSurfaces.push_back(virtualSurface);
                     }
                 }
@@ -820,7 +822,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     line = RealSurface_ + " ";
                     line += surface->name + " ";
                     line += to_string(surface->numChannels) + " ";
-                    line += surface->isBankable ? "1 " : "0 ";
                     line += to_string(surface->midiIn) + " " ;
                     line += to_string(surface->midiOut) + " " ;
                     line += surface->templateFilename + "\n";
@@ -853,6 +854,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     for(auto virtualSurface : page->virtualSurfaces)
                     {
                         line = VirtualSurface_ + " ";
+                        line += virtualSurface->isBankable ? "1 " : "0 ";
                         line += virtualSurface->realSurfaceName + " ";
                         line += virtualSurface->actionTemplateFolder + " " ;
                         line += virtualSurface->FXTemplateFolder + "\n";
