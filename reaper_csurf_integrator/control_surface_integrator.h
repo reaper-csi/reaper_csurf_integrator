@@ -853,6 +853,10 @@ public:
             bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
 
         SetPinnedTracks();
+        
+        char buffer[BUFSZ];
+        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), buffer, sizeof(buffer)))
+            trackOffset_ = atol(buffer);
     }
     
     void OnTrackSelection(MediaTrack* track)
@@ -1078,6 +1082,12 @@ public:
             }
             else
                 break;
+        }
+        
+        if(previousTrackOffset != trackOffset_)
+        {
+            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
+            DAW::MarkProjectDirty(nullptr);
         }
         
         RefreshLayout();
@@ -1310,6 +1320,8 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
+            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", to_string(currentPageIndex_).c_str());
+            DAW::MarkProjectDirty(nullptr);
             pages_[currentPageIndex_]->EnterPage();
             pages_[currentPageIndex_]->RefreshLayout();
         }
