@@ -76,9 +76,6 @@ public:
 class PushButtonWithLatch_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int currentValue = 0;
-    
 public:
     PushButtonWithLatch_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
     {
@@ -93,8 +90,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        currentValue = ! currentValue;
-        TheManager->DoAction(this, currentValue);
+        TheManager->DoAction(this, lastMessageSent_->midi_message[2]);
     }
 };
 
