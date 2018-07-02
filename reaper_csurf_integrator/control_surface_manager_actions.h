@@ -118,6 +118,11 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) override
+    {
+        actionContext->SetWidgetValue(widget, 0, page->GetShowFXWindows());
+    }
+
     void Do(Page* page, double value) override
     {
         page->SetShowFXWindows(value);

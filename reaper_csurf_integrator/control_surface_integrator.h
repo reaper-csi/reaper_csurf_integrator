@@ -613,6 +613,8 @@ public:
     Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
+    bool GetShowFXWindows() { return showFXWindows_; }
+
     void TrackFXListChanged(MediaTrack* track);
     
     bool IsZoom() { return zoom_; }
