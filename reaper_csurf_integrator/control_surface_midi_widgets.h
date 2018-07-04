@@ -87,13 +87,7 @@ public:
         if(midiPressMessage_->IsEqualTo(midiMessage))
             TheManager->DoAction(this, 1.0);
         else if(midiReleaseMessage_->IsEqualTo(midiMessage))
-        {
-            lastMessageSent_->midi_message[0] = 0;
-            lastMessageSent_->midi_message[1] = 0;
-            lastMessageSent_->midi_message[2] = 0;
-
-            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-        }
+            ClearCache();
     }
 };
 
