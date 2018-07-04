@@ -181,6 +181,7 @@ public:
     string GetRole() { return role_; }
     string GetName() { return name_; }
     virtual RealSurface* GetSurface() { return nullptr; }
+    virtual bool SupportsFeedback() { return false; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -208,6 +209,12 @@ public:
     
     virtual RealSurface* GetSurface() { return (RealSurface*)surface_; }
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+    void ClearCache()
+    {
+        lastMessageSent_->midi_message[0] = 0;
+        lastMessageSent_->midi_message[1] = 0;
+        lastMessageSent_->midi_message[2] = 0;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
