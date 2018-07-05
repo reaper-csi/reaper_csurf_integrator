@@ -280,7 +280,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release), minDB_(minDB), maxDB_(maxDB) {}
+    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, press), minDB_(minDB), maxDB_(maxDB) {}
     
     void SetValue(int displayMode, double value) override
     {
@@ -305,7 +305,7 @@ private:
     int channel_ = 0;
     
 public:
-    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, int channel) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), channel_(channel) {}
+    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, int channel) : Midi_Widget(surface, role, name), channel_(channel) {}
     
     void SetValue(int param, double value) override
     {
@@ -332,7 +332,7 @@ class GainReductionMeter_Midi_Widget : public VUMeter_Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, press, release) {}
+    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press) : VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, press) {}
     
     void SetValue(int displayMode, double value) override
     {
@@ -341,14 +341,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class DisplayUpper_Midi_Widget : public Midi_Widget
+class MCUDisplay_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    int slotIndex_ = 0;
+    int offset_ = 0;
+    int displayType_ = 0x14;
+    int displayRow_ = 0x12;
+    int channel_ = 0;
     string lastStringSent_ = "";
     
 public:
-    DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
+    MCUDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, role, name), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
     
     void SetValue(string displayText) override
     {
@@ -357,7 +360,7 @@ public:
         
         lastStringSent_ = displayText;
         
-        if(slotIndex_ > 7) // GAW TDB -- this is a hack to prevent Fader 9 (Master) on MCU from displaying on lower row of channel 1
+        if(channel_ > 7) // GAW TDB -- this is a hack to prevent Fader 9 (Master) on MCU from displaying on lower row of channel 1
             return;
         
         int pad = 7;
@@ -374,10 +377,10 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayRow_;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_ * 7 + offset_;
         
         int l = strlen(text);
         if (pad < l)
@@ -400,297 +403,6 @@ public:
         SendMidiMessage(&midiSysExData.evt);
     }
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class DisplayLower_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int slotIndex_ = 0;
-    string lastStringSent_ = "";
-    
-public:
-    DisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    void SetValue(string displayText) override
-    {
-        if( displayText == lastStringSent_)
-            return;
-        
-        lastStringSent_ = displayText;
-        
-        int pad = 7;
-        const char* text = displayText.c_str();
-        
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[512];
-        } midiSysExData;
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7 + 56;
-        
-        int l = strlen(text);
-        if (pad < l)
-            l = pad;
-        if (l > 200)
-            l = 200;
-        
-        int cnt = 0;
-        while (cnt < l)
-        {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
-        }
-        
-        while (cnt++ < pad)
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
-        SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class XTDisplayUpper_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int slotIndex_ = 0;
-    string lastStringSent_ = "";
-    
-public:
-    XTDisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    void SetValue(string displayText) override
-    {
-        if( displayText == lastStringSent_)
-            return;
-        
-        lastStringSent_ = displayText;
-        
-        int pad = 7;
-        const char* text = displayText.c_str();
-        
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[512];
-        } midiSysExData;
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x15;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
-        
-        int l = strlen(text);
-        if (pad < l)
-            l = pad;
-        if (l > 200)
-            l = 200;
-        
-        int cnt = 0;
-        while (cnt < l)
-        {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
-        }
-        
-        while (cnt++ < pad)
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
-        SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class XTDisplayLower_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int slotIndex_ = 0;
-    string lastStringSent_ = "";
-    
-public:
-    XTDisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    void SetValue(string displayText) override
-    {
-        if( displayText == lastStringSent_)
-            return;
-        
-        lastStringSent_ = displayText;
-        
-        int pad = 7;
-        const char* text = displayText.c_str();
-        
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[512];
-        } midiSysExData;
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x15;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7 + 56;
-        
-        int l = strlen(text);
-        if (pad < l)
-            l = pad;
-        if (l > 200)
-            l = 200;
-        
-        int cnt = 0;
-        while (cnt < l)
-        {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
-        }
-        
-        while (cnt++ < pad)
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
-        SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class C4DisplayUpper_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int slotIndex_ = 0;
-    string lastStringSent_ = "";
-    
-public:
-    C4DisplayUpper_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    void SetValue(string displayText) override
-    {
-        if( displayText == lastStringSent_)
-            return;
-        
-        lastStringSent_ = displayText;
-        
-        int pad = 7;
-        const char* text = displayText.c_str();
-        
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[512];
-        } midiSysExData;
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x17;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x30;
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7;
-        
-        int l = strlen(text);
-        if (pad < l)
-            l = pad;
-        if (l > 200)
-            l = 200;
-        
-        int cnt = 0;
-        while (cnt < l)
-        {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
-        }
-        
-        while (cnt++ < pad)
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
-        SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class C4DisplayLower_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int slotIndex_ = 0;
-    string lastStringSent_ = "";
-    
-public:
-    C4DisplayLower_Midi_Widget(Midi_RealSurface* surface, string role, string name, int slotIndex) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)), slotIndex_(slotIndex) {}
-    
-    void SetValue(string displayText) override
-    {
-        if( displayText == lastStringSent_)
-            return;
-        
-        lastStringSent_ = displayText;
-        
-        int pad = 7;
-        const char* text = displayText.c_str();
-        
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[512];
-        } midiSysExData;
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x17;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x30;
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = slotIndex_ * 7 + 56;
-        
-        int l = strlen(text);
-        if (pad < l)
-            l = pad;
-        if (l > 200)
-            l = 200;
-        
-        int cnt = 0;
-        while (cnt < l)
-        {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
-        }
-        
-        while (cnt++ < pad)
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
-        
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
-        SendMidiMessage(&midiSysExData.evt);
-    }
-};
-
 
 int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 int __g_projectconfig_measoffs;
