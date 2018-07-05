@@ -204,6 +204,8 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
+    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget(role, name), surface_(surface) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press) : Widget(role, name), surface_(surface),  midiPressMessage_(press) {}
     Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
@@ -333,6 +335,13 @@ public:
     {
         if(midiOutput_)
             midiOutput_->SendMsg(midiMessage, -1);
+        
+        if(midiOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s SysEx \n", GetName().c_str());
+            DAW::ShowConsoleMsg(buffer);
+        }
     }
     
     virtual void SendMidiMessage(int first, int second, int third)
