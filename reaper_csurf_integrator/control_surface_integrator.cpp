@@ -29,20 +29,26 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 {
     if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name);
     
-    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+    return new Midi_Widget(surface, role, name);
 }
 
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int channel)
 {
-    if(widgetClass == "DisplayUpper") return new DisplayUpper_Midi_Widget(surface, role, name, channel);
-    else if(widgetClass == "DisplayLower") return new DisplayLower_Midi_Widget(surface, role, name, channel);
-    else if(widgetClass == "XTDisplayUpper") return new XTDisplayUpper_Midi_Widget(surface, role, name, channel);
-    else if(widgetClass == "XTDisplayLower") return new XTDisplayLower_Midi_Widget(surface, role, name, channel);
-    else if(widgetClass == "C4DisplayUpper") return new C4DisplayUpper_Midi_Widget(surface, role, name, channel);
-    else if(widgetClass == "C4DisplayLower") return new C4DisplayLower_Midi_Widget(surface, role, name, channel);
+    if(widgetClass == "MCUDisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, 0, 0x14, 0x12, channel);
+    else if(widgetClass == "MCUDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, 1, 0x14, 0x12, channel);
+    else if(widgetClass == "MCUXTDisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, 0, 0x15, 0x12, channel);
+    else if(widgetClass == "MCUXTDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, 1, 0x15, 0x12, channel);
     else if(widgetClass == "MCUVUMeter") return new MCUVUMeter_Midi_Widget(surface, role, name, channel);
+    
+    return new Midi_Widget(surface, role, name);
+}
 
-    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00));
+Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int displayRow, int channel)
+{
+    if(widgetClass == "C4DisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, 0, 0x17, displayRow + 0x30, channel);
+    else if(widgetClass == "C4DisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, 1, 0x17, displayRow + 0x30, channel);
+    
+    return new Midi_Widget(surface, role, name);
 }
 
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3Min, int byte3Max)
@@ -54,7 +60,7 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
-    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new Midi_Widget(surface, role, name);
 }
 
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
@@ -62,15 +68,15 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     if(widgetClass == "PushButtonWithResendOnRelease")
         return new PushButtonWithResendOnRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else
-        return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte1, byte2, byte3));
+        return new Midi_Widget(surface, role, name);
 }
 
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3Min, int byte3Max)
 {
-    if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max));
+    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3Max));
     
-    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
+    return new Midi_Widget(surface, role, name);
 }
 
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2Min, int byte2Max, int byte3Min, int byte3Max)
@@ -84,7 +90,7 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 {
     if(widgetClass == "Fader14BitDB") return new Fader14BitDB_Midi_Widget(surface, role, name, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min), byte1ZeroDB, byte2ZeroDB);
     
-    return new Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2Max, byte3Max), new MIDI_event_ex_t(byte1, byte2Min, byte3Min));
+    return new Midi_Widget(surface, role, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
