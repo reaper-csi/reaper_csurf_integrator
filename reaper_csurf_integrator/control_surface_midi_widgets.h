@@ -310,7 +310,20 @@ public:
     void SetValue(int param, double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
-        SendMidiMessage(0xd0, (channel_ << 4) | ((int)(value * 0x0d)), 0);
+        
+        int midiValue = 0;
+        
+        double minDB = TheManager->GetVUMinDB();
+        double maxDB = TheManager->GetVUMaxDB();
+
+        if(value < minDB)
+            midiValue = 0x00;
+        else if(value > maxDB)
+            midiValue = 0x0d;
+        else
+            midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
+
+        SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
     }
 };
 
@@ -841,16 +854,5 @@ public:
         }
     }
 };
-
-
-
-
-
-
-
-
-
-
-
 
 #endif /* control_surface_midi_widgets_h */
