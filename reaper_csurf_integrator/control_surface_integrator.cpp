@@ -56,7 +56,6 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     if(widgetClass == "Button") return new PushButton_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ToggleButton") return new ToggleButton_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Console1PushButton") return new Console1PushButton_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
-    else if(widgetClass == "PressFB") return new PressFB_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "ButtonWithRelease") return new PushButtonWithRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Max), new MIDI_event_ex_t(byte1, byte2, byte3Min));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3Min), new MIDI_event_ex_t(byte1, byte2, byte3Max));
@@ -68,6 +67,8 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 {
     if(widgetClass == "PushButtonWithResendOnRelease")
         return new PushButtonWithResendOnRelease_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    if(widgetClass == "PressFB")
+        return new PressFB_Midi_Widget(surface, role, name, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else
         return new Midi_Widget(surface, role, name);
 }
@@ -157,7 +158,7 @@ Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, i
             }
             else if(tokens.size() == 8)
             {
-                if(tokens[1] == "PushButtonWithResendOnRelease")
+                if(tokens[1] == "PushButtonWithResendOnRelease" || tokens[1] == "PressFB")
                 {
                     if(inChannel)
                         for(int i = 0; i < GetNumChannels(); i++)
