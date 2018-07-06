@@ -181,7 +181,7 @@ public:
     string GetRole() { return role_; }
     string GetName() { return name_; }
     virtual RealSurface* GetSurface() { return nullptr; }
-    virtual bool SupportsFeedback() { return false; }
+    virtual bool WantsFeedback() { return true; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -306,7 +306,7 @@ public:
 
     virtual ~Midi_RealSurface()
     {
-        // GAW TBD -- removing this temporarily to see what happens wioth windows users crash when loading other projects
+        // GAW TBD -- removing this temporarily to see what happens with windows users crash when loading other projects
         /*
         if (midiInput_) delete midiInput_;
         if(midiOutput_) delete midiOutput_;
@@ -425,9 +425,9 @@ public:
         actionContexts_[component][modifiers].push_back(context);
     }
     
-    void RequestUpdate(Page* page, string modifiers, Widget*widget)
+    void RequestUpdate(Page* page, string modifiers, Widget* widget)
     {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+         if(widget->WantsFeedback() && actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->RequestActionUpdate(page, widget);
     }
@@ -684,6 +684,7 @@ public:
         for(auto [widget, widgetContext] : widgetContexts_)
             widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
         
+        // GAW TBD -- move this hack to appropriate class
         // if no tracks selected unmap tracks and FX
         if(0 == DAW::CountSelectedTracks(nullptr))
             UnmapWidgetsFromTrackAndFX();
