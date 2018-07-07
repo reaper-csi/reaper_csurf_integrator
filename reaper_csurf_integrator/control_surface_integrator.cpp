@@ -72,7 +72,8 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
 {
     if(widgetClass == "PushButtonWithResendOnRelease") return new PushButtonWithResendOnRelease_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "PressFB") return new PressFB_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    else if(widgetClass == "Latch") return new Latch_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    else if(widgetClass == "LatchFB") return new Latch_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "Fader7BitFB") return new Fader7Bit_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
 
