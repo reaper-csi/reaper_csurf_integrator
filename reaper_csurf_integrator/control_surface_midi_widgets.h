@@ -14,11 +14,11 @@
 extern Manager* TheManager;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PressFB_Midi_Widget : public Midi_Widget
+class Latch_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PressFB_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    Latch_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
