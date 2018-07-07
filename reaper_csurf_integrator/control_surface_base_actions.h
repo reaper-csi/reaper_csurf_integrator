@@ -144,7 +144,7 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->Do(track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), value);
+           action_->Do(track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -284,7 +284,7 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        action_->Do(page, widget->GetSurface(), value);
+        action_->Do(page, widget->GetSurface(), isInverted_ == false ? value : 1.0 - value);
     }
 };
 
