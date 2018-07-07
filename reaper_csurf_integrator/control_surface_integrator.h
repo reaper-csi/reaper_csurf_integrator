@@ -171,9 +171,10 @@ class Widget
 private:
     string role_ = "";
     string name_ = "";
+    bool wantsFeedback_ = false;
 
 protected:
-    Widget(string role, string name) : role_(role), name_(name) {}
+    Widget(string role, string name, bool wantsFeedback) : role_(role), name_(name), wantsFeedback_(wantsFeedback) {}
 
 public:
     virtual ~Widget() {};
@@ -181,7 +182,7 @@ public:
     string GetRole() { return role_; }
     string GetName() { return name_; }
     virtual RealSurface* GetSurface() { return nullptr; }
-    virtual bool WantsFeedback() { return true; }
+    virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
 };
@@ -204,9 +205,9 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget(role, name), surface_(surface) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press) : Widget(role, name), surface_(surface),  midiPressMessage_(press) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Widget(role, name, wantsFeedback), surface_(surface) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     virtual RealSurface* GetSurface() { return (RealSurface*)surface_; }

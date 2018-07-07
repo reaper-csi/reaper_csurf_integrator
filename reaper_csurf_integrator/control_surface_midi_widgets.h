@@ -18,7 +18,7 @@ class PressFB_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PressFB_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
+    PressFB_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
@@ -34,136 +34,8 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
+        ClearCache();
         TheManager->DoAction(this, midiMessage->midi_message[2] == 0 ? 0.0 : 1.0);
-    }
-};
-
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButton_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    PushButton_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-    }
-    
-    void SetValue(int displayMode, double value) override
-    {
-        if(value != 0)
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
-        else
-            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiPressMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, 1.0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleButton_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    ToggleButton_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-    }
-    
-    void SetValue(int displayMode, double value) override
-    {
-        if(value != 0)
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
-        else
-            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiPressMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, ! lastMessageSent_->midi_message[2]);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButtonWithResendOnRelease_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    PushButtonWithResendOnRelease_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
-    }
-    
-    void SetValue(int displayMode, double value) override
-    {
-        if(value != 0)
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
-        else
-            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiPressMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, 1.0);
-        else if(midiReleaseMessage_->IsEqualTo(midiMessage))
-            ClearCache();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Console1PushButton_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    Console1PushButton_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
-    }
-    
-    void SetValue(int displayMode, double value) override
-    {
-        SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        TheManager->DoAction(this, lastMessageSent_->midi_message[2]);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PushButtonWithRelease_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    PushButtonWithRelease_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
-    }
-    
-    void SetValue(int displayMode, double value) override
-    {
-        SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
-    }
-
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        if(midiPressMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, 1.0);
-        else if(midiReleaseMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, 0.0);
     }
 };
 
@@ -177,7 +49,7 @@ private:
     //db = 20*log10(X/0xFFFF)
     
 public:
-    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release), minDB_(minDB), maxDB_(maxDB)
+    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release), minDB_(minDB), maxDB_(maxDB)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
     }
@@ -195,61 +67,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader14BitDB_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    double minDB_ = 0.0;
-    double maxDB_ = 0.0;
-    int zeroDBFaderPosition_ = 0;
-    
-public:
-    Fader14BitDB_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release, int byte1ZeroDB, int byte2ZeroDB) : Midi_Widget(surface, role, name, press, release), minDB_(minDB), maxDB_(maxDB), zeroDBFaderPosition_(byte1ZeroDB | (byte2ZeroDB << 7))
-
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
-    }
-    
-    virtual void SetValue(int displayMode, double volume) override
-    {
-        int volint = 0;
-        
-        if(volume < minDB_)
-            volint = 0;
-        else if(volume > maxDB_)
-            volint = 16383.0;
-        else
-        {
-            if(volume >= 0.0)
-                volint = volume / maxDB_ * (16383 - zeroDBFaderPosition_) + zeroDBFaderPosition_;
-            else
-                volint = zeroDBFaderPosition_ - (volume / minDB_ * zeroDBFaderPosition_);
-        }
-
-        SendMidiMessage(midiPressMessage_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
-    }
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        double faderPosition = midiMessage->midi_message[1] | (midiMessage->midi_message[2] << 7);
-        
-        double dbValue = 0.0;
-        
-        if(faderPosition >= zeroDBFaderPosition_)
-            dbValue = ((faderPosition - zeroDBFaderPosition_) / (16383.0 - zeroDBFaderPosition_)) * maxDB_;
-        else
-            dbValue = ((zeroDBFaderPosition_ - faderPosition) / zeroDBFaderPosition_) * minDB_;
-
-        TheManager->DoAction(this, dbValue);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Fader7Bit_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
+    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
@@ -266,41 +88,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Encoder_Midi_Widget : public Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    double lastNormalizedValue_ = 0.0;
-    
-public:
-    Encoder_Midi_Widget(Midi_RealSurface* surface, string role, string name, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, press, release)
-    {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
-    }
-    
-    virtual void SetValue(int displayMode, double value) override
-    {
-        lastNormalizedValue_ = value;
-        
-        int valueInt = value * 127;
-        
-        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. Q)
-        
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1] + 0x20, val);
-    }
-
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
-    {
-        double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
-        
-        if (midiMessage->midi_message[2] & 0x40)
-            value = -value;
-
-        TheManager->DoAction(this, value + lastNormalizedValue_);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class VUMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -309,7 +96,7 @@ private:
     double maxDB_ = 0.0;
     
 public:
-    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, press), minDB_(minDB), maxDB_(maxDB) {}
+    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, wantsFeedback, press), minDB_(minDB), maxDB_(maxDB) {}
     
     void SetValue(int displayMode, double value) override
     {
@@ -327,6 +114,23 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GainReductionMeter_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    double minDB_ = 0.0;
+    double maxDB_ = 0.0;
+    
+public:
+    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, wantsFeedback, press), minDB_(minDB), maxDB_(maxDB) {}
+
+    void SetValue(int displayMode, double value) override
+    {
+        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], fabs(1.0 - value) * 127.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MCUVUMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -334,7 +138,7 @@ private:
     int channel_ = 0;
     
 public:
-    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, int channel) : Midi_Widget(surface, role, name), channel_(channel) {}
+    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, int channel) : Midi_Widget(surface, role, name, wantsFeedback), channel_(channel) {}
     
     void SetValue(int param, double value) override
     {
@@ -344,28 +148,15 @@ public:
         
         double minDB = TheManager->GetVUMinDB();
         double maxDB = TheManager->GetVUMaxDB();
-
+        
         if(value < minDB)
             midiValue = 0x00;
         else if(value > maxDB)
             midiValue = 0x0d;
         else
             midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
-
+        
         SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GainReductionMeter_Midi_Widget : public VUMeter_Midi_Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, double minDB, double maxDB, MIDI_event_ex_t* press) : VUMeter_Midi_Widget(surface, role, name, minDB, maxDB, press) {}
-    
-    void SetValue(int displayMode, double value) override
-    {
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], fabs(1.0 - value) * 127.0);
     }
 };
 
@@ -380,7 +171,7 @@ class MCUDisplay_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
     
 public:
-    MCUDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, role, name), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
+    MCUDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, role, name, wantsFeedback), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
     
     void SetValue(string displayText) override
     {
@@ -446,8 +237,8 @@ class MCU_TimeDisplay_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MCU_TimeDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name) : Midi_Widget(surface, role, name, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
-
+    MCU_TimeDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Midi_Widget(surface, role, name, wantsFeedback, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
+    
     void SetValue(int mode, double value) override
     {
         
@@ -456,7 +247,7 @@ public:
 #else
         DWORD now = timeGetTime();
 #endif
-
+        
         double pp=(GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition();
         unsigned char bla[10];
         
@@ -582,7 +373,7 @@ public:
                 m_mcu_timedisp_lastforce=now+2000;
                 force=true;
             }
-
+            
             for (int x =0 ; x < sizeof(bla) ; x ++)
             {
                 int idx=sizeof(bla)-x-1;
@@ -593,6 +384,200 @@ public:
                 }
             }
         }
+    }
+};
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PushButton_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PushButton_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+    }
+    
+    void SetValue(int displayMode, double value) override
+    {
+        if(value != 0)
+            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
+        else
+            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiPressMessage_->IsEqualTo(midiMessage))
+            TheManager->DoAction(this, 1.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ToggleButton_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ToggleButton_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+    }
+    
+    void SetValue(int displayMode, double value) override
+    {
+        if(value != 0)
+            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
+        else
+            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiPressMessage_->IsEqualTo(midiMessage))
+            TheManager->DoAction(this, ! lastMessageSent_->midi_message[2]);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PushButtonWithResendOnRelease_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PushButtonWithResendOnRelease_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
+    }
+    
+    void SetValue(int displayMode, double value) override
+    {
+        if(value != 0)
+            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
+        else
+            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiPressMessage_->IsEqualTo(midiMessage))
+            TheManager->DoAction(this, 1.0);
+        else if(midiReleaseMessage_->IsEqualTo(midiMessage))
+            ClearCache();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PushButtonWithRelease_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    PushButtonWithRelease_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
+    }
+    
+    void SetValue(int displayMode, double value) override
+    {
+        SendMidiMessage(midiPressMessage_->midi_message[0],midiPressMessage_->midi_message[1], value);
+    }
+
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        if(midiPressMessage_->IsEqualTo(midiMessage))
+            TheManager->DoAction(this, 1.0);
+        else if(midiReleaseMessage_->IsEqualTo(midiMessage))
+            TheManager->DoAction(this, 0.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Fader14BitDB_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    double minDB_ = 0.0;
+    double maxDB_ = 0.0;
+    int zeroDBFaderPosition_ = 0;
+    
+public:
+    Fader14BitDB_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release, int byte1ZeroDB, int byte2ZeroDB) : Midi_Widget(surface, role, name, wantsFeedback, press, release), minDB_(minDB), maxDB_(maxDB), zeroDBFaderPosition_(byte1ZeroDB | (byte2ZeroDB << 7))
+
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
+    }
+    
+    virtual void SetValue(int displayMode, double volume) override
+    {
+        int volint = 0;
+        
+        if(volume < minDB_)
+            volint = 0;
+        else if(volume > maxDB_)
+            volint = 16383.0;
+        else
+        {
+            if(volume >= 0.0)
+                volint = volume / maxDB_ * (16383 - zeroDBFaderPosition_) + zeroDBFaderPosition_;
+            else
+                volint = zeroDBFaderPosition_ - (volume / minDB_ * zeroDBFaderPosition_);
+        }
+
+        SendMidiMessage(midiPressMessage_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        double faderPosition = midiMessage->midi_message[1] | (midiMessage->midi_message[2] << 7);
+        
+        double dbValue = 0.0;
+        
+        if(faderPosition >= zeroDBFaderPosition_)
+            dbValue = ((faderPosition - zeroDBFaderPosition_) / (16383.0 - zeroDBFaderPosition_)) * maxDB_;
+        else
+            dbValue = ((zeroDBFaderPosition_ - faderPosition) / zeroDBFaderPosition_) * minDB_;
+
+        TheManager->DoAction(this, dbValue);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Encoder_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    double lastNormalizedValue_ = 0.0;
+    
+public:
+    Encoder_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    {
+        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
+    }
+    
+    virtual void SetValue(int displayMode, double value) override
+    {
+        lastNormalizedValue_ = value;
+        
+        int valueInt = value * 127;
+        
+        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. Q)
+        
+        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1] + 0x20, val);
+    }
+
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
+        
+        if (midiMessage->midi_message[2] & 0x40)
+            value = -value;
+
+        TheManager->DoAction(this, value + lastNormalizedValue_);
     }
 };
 
