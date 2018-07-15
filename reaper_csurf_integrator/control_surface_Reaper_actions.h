@@ -32,16 +32,23 @@ class TrackFX : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {   
 public:
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex)
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) override
     {
         double min, max = 0;
 
         actionContext->SetWidgetValue(widget, 0, DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
     }
     
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value)
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) override
     {
         DAW::TrackFX_SetParam(track, fxIndex, paramIndex, value);
+    }
+    
+    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) override
+    {
+        double min, max = 0;
+
+        DAW::TrackFX_SetParam(track, fxIndex, paramIndex, ! DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
     }
 };
 
@@ -240,7 +247,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, double value)
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnFwd(1);
     }
