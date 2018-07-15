@@ -263,10 +263,15 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
         if(widget && widget == cyclerWidget_)
-            index = index < actions_.size() - 1 ? index + 1 : 0;
+        {
+            if(value)
+                index = index < actions_.size() - 1 ? index + 1 : 0;
+        }
         else if(actions_[index])
+        {
             if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
                 actions_[index]->Do(page, widget, track, value);
+        }
     }
 };
 
