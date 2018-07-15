@@ -46,6 +46,7 @@ const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 const string Invert = "Invert";
+const string Toggle = "Toggle";
 const string PageToken = "Page";
 const string Track = "Track";
 
@@ -379,6 +380,7 @@ public:
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
+    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void Do(Page* page, RealSurface* surface) {}
     virtual void Do(Page* page, RealSurface* surface, double value) {}
 };
@@ -390,11 +392,14 @@ class ActionContext
 protected:
     Action * action_ = nullptr;
     bool isInverted_ = false;
+    bool shouldToggle_ = false;
 
     ActionContext(Action* action, bool isInverted) : action_(action), isInverted_(isInverted) {}
     
 public:
     virtual ~ActionContext() {}
+    
+    void SetShouldtoggle() { shouldToggle_ = true; }
     
     virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}

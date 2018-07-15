@@ -279,7 +279,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
                                             if(cyclerWidget->GetRole() == params[1])
                                             {
                                                 if(widgetContexts_.count(cyclerWidget) < 1)
-                                                    widgetContexts_[cyclerWidget]= new WidgetContext(cyclerWidget);
+                                                    widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
                                                 
                                                 widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                                 context->SetCyclerWidget(cyclerWidget);
@@ -318,6 +318,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     string modifiers = "";
                     string widgetName = "";
                     bool isInverted = false;
+                    bool shouldToggle = false;
 
                     if(tokens.size() > 0)
                     {
@@ -346,6 +347,8 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                     modifierSlots[3] = Alt;
                                 else if(modifier_tokens[i] == Invert)
                                     isInverted = true;
+                                else if(modifier_tokens[i] == Toggle)
+                                    shouldToggle = true;
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
@@ -373,6 +376,9 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                             if(widget->GetName() == widgetName)
                                 if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
                                 {
+                                    if(shouldToggle)
+                                        context->SetShouldtoggle();
+                                    
                                     if(widgetContexts_.count(widget) < 1)
                                         widgetContexts_[widget] = new WidgetContext(widget);
                                     
