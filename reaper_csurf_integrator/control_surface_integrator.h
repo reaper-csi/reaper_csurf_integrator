@@ -205,6 +205,7 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
+    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget(role, name, true), surface_(surface) {}
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Widget(role, name, wantsFeedback), surface_(surface) {}
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press) {}
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
@@ -400,6 +401,7 @@ public:
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
+    virtual void DoRelativeAction(Page* page, Widget* widget, double value) {}
     virtual void DoAction(Page* page, RealSurface* surface) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
@@ -432,7 +434,14 @@ public:
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->RequestActionUpdate(page, widget);
     }
-    
+   
+    void DoRelativeAction(Page* page, string modifiers, Widget* widget, double value)
+    {
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->DoRelativeAction(page, widget, value);
+    }
+
     void DoAction(Page* page, string modifiers, Widget*widget, double value)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
@@ -705,6 +714,11 @@ public:
             widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
     }
     
+    void DoRelativeAction(Widget* widget, double value)
+    {
+        widgetContexts_[widget]->DoRelativeAction(this, GetCurrentModifiers(), widget, value);
+    }
+
     void SetShowFXWindows(bool value)
     {
         showFXWindows_ = ! showFXWindows_;
@@ -1319,6 +1333,12 @@ public:
             pages_[currentPageIndex_]->DoAction(widget, value);
     }
     
+    void DoRelativeAction(Widget* widget, double value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->DoRelativeAction(widget, value);
+    }
+
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
