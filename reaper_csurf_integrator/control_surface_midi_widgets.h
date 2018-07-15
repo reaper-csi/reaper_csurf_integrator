@@ -30,11 +30,10 @@ public:
 
     void SetValue(int displayMode, double value) override
     {
-        if(value == 1.0)
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
-        else
+        if(value == 0.0)
             SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-        
+        else
+            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
     }
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -57,11 +56,10 @@ public:
     
     void SetValue(int displayMode, double value) override
     {
-        if(value == 1.0)
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
-        else
+        if(value == 0.0)
             SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-
+        else
+            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
      }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
