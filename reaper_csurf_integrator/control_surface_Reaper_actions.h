@@ -89,11 +89,16 @@ class TrackPan : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
+    {
+        actionContext->SetWidgetValue(widget, 0, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
+    }
+    
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int displayMode) override
     {
         actionContext->SetWidgetValue(widget, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
     }
-    
+
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
