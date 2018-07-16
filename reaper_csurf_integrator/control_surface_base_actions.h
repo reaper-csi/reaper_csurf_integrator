@@ -63,37 +63,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchControlledContext : public TrackContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackTouchControlledContext(Action* action, bool isInverted) : TrackContext(action, isInverted) {}
-
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
-    {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-        {
-            if(page->GetTouchState(track, 0))
-            {
-                action_->RequestUpdate(page, this, widget, track);
-            }
-        }
-        else
-        {
-            widget->SetValue(0, 0.0);
-            widget->SetValue("");
-        }
-    }
-    
-    virtual void DoAction(Page* page, Widget* widget, double value) override
-    {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            if(page->GetTouchState(track, 0))
-                action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContextWithIntParam : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -206,6 +175,43 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
         action_->Do(page, param_);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackTouchControlledContext : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Action* touchAction_ = nullptr;
+public:
+    TrackTouchControlledContext(Action* action, Action* touchAction, bool isInverted) : TrackContext(action, isInverted), touchAction_(touchAction) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        {
+            if(page->GetTouchState(track, 0))
+                touchAction_->RequestUpdate(page, this, widget, track);
+            else
+                action_->RequestUpdate(page, this, widget, track);
+        }
+        else
+        {
+            widget->SetValue(0, 0.0);
+            widget->SetValue("");
+        }
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        {
+            if(page->GetTouchState(track, 0))
+                touchAction_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+            else
+                action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+        }
     }
 };
 
