@@ -399,7 +399,7 @@ protected:
 public:
     virtual ~ActionContext() {}
     
-    void SetShouldtoggle() { shouldToggle_ = true; }
+    virtual void SetShouldtoggle() {}
     
     virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
