@@ -305,7 +305,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
             
             for (string line; getline(fxTemplateFile, line) ; )
             {
-                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
                 {
                     istringstream iss(line);
                     vector<string> tokens;
@@ -313,7 +313,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name, the rest is the FX param, possibly with spaces.
+                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name
                     
                     string modifiers = "";
                     string widgetName = "";
@@ -355,13 +355,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                         }
                     }
                     
-                    string fxParamName = "";
-                    
-                    if(tokens.size() >= 2)
-                    {
-                        fxParamName = line.substr(tokens[0].size(), line.size());
-                        fxParamName.erase(0, fxParamName.find_first_not_of(" "));
-                    }
+                    string fxParamName = tokens[1];
                     
                     vector<string> params;
                     
