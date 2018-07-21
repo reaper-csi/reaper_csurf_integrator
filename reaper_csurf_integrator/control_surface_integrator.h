@@ -186,6 +186,7 @@ public:
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
+    virtual void Reset() {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1296,6 +1297,13 @@ public:
     {
         InitActionContextDictionary();
         midiIOManager_ = new MidiIOManager();
+    }
+    
+    void ResetAllWidgets()
+    {
+        for(auto surface : midi_realSurfaces_)
+            for(auto widget : surface->GetAllWidgets())
+                widget->Reset();
     }
     
     void Init();
