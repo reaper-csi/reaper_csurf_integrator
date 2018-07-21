@@ -21,6 +21,7 @@ private:
     
 public:
     CSurfIntegrator();
+    ~CSurfIntegrator();
     virtual void OnTrackSelection(MediaTrack *trackid) override;
     virtual int Extended(int call, void *parm1, void *parm2, void *parm3) override;
     virtual bool GetTouchState(MediaTrack *trackid, int touchedControl) override;
