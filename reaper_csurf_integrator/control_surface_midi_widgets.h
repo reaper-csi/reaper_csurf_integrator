@@ -268,10 +268,10 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x14; //displayType_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12; //displayRow_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayRow_;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_ * 7; // + offset_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_ * 7 + offset_;
         
         int l = strlen(text);
         if (pad < l)
