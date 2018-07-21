@@ -45,14 +45,9 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-        {
             action_->RequestUpdate(page, this, widget, track);
-        }
         else
-        {
-            widget->SetValue(0, 0.0);
-            widget->SetValue("");
-        }
+            widget->Reset();
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -75,14 +70,9 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-        {
             action_->RequestUpdate(page, this, widget, track, param_);
-        }
         else
-        {
-            widget->SetValue(0, 0.0);
-            widget->SetValue("");
-        }
+            widget->Reset();
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -110,6 +100,8 @@ public:
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()) )
             action_->RequestUpdate(this, widget, track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
+        else
+            widget->Reset();
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -197,10 +189,7 @@ public:
                 action_->RequestUpdate(page, this, widget, track);
         }
         else
-        {
-            widget->SetValue(0, 0.0);
-            widget->SetValue("");
-        }
+            widget->Reset();
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -267,10 +256,7 @@ public:
             }
         }
         else
-        {
-            widget->SetValue(0, 0.0);
-            widget->SetValue("");
-        }
+            widget->Reset();
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
@@ -297,7 +283,7 @@ public:
     
     virtual void DoAction(Page* page, RealSurface* surface) override
     {
-            action_->Do(page, surface);
+        action_->Do(page, surface);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override

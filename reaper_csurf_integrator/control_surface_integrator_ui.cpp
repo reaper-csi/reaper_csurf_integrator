@@ -18,6 +18,12 @@ CSurfIntegrator::CSurfIntegrator()
     TheManager = new Manager();
 }
 
+CSurfIntegrator::~CSurfIntegrator()
+{
+    if(TheManager)
+        TheManager->ResetAllWidgets();
+}
+
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
 {
     TheManager->OnTrackSelection(trackid);
