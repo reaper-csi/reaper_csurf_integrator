@@ -274,7 +274,7 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 if(trackColouring)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
                 else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_UNCHECKED);
             }
         }
 
