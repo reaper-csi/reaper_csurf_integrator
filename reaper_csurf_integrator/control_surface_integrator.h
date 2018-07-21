@@ -721,7 +721,8 @@ public:
     
     void DoRelativeAction(Widget* widget, double value)
     {
-        widgetContexts_[widget]->DoRelativeAction(this, GetCurrentModifiers(), widget, value);
+        if(widgetContexts_.count(widget) > 0)
+            widgetContexts_[widget]->DoRelativeAction(this, GetCurrentModifiers(), widget, value);
     }
 
     void SetShowFXWindows(bool value)
