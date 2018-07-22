@@ -88,12 +88,7 @@ public:
 class TrackPan : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
-    {
-        actionContext->SetWidgetValue(widget, 0, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
-    }
-    
+public: 
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int displayMode) override
     {
         actionContext->SetWidgetValue(widget, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
@@ -524,7 +519,7 @@ class TrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) override
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
             if(MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP()))
