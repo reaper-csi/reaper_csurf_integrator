@@ -77,7 +77,8 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        action_->Do(page, param_);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+            action_->Do(page, widget, track, value);
     }
 };
 
@@ -211,11 +212,10 @@ class TrackCycleContext : public TrackContext
 private:
     Widget* cyclerWidget_ = nullptr;
     int index = 0;
-    vector<Action*> actions_;
-    map<Action*, int> actionParams_;
+    vector<ActionContext*> actionContexts_;
     
 public:
-    TrackCycleContext(map<string, Action*>& availableActions, vector<string> params, Action* action, bool isInverted) : TrackContext(action, isInverted)
+    TrackCycleContext(vector<string> params, Action* action, bool isInverted) : TrackContext(action, isInverted)
     {
         for(int i = 2; i < params.size(); i++)
         {
@@ -225,20 +225,19 @@ public:
             while (iss >> quoted(token))
                 tokens.push_back(token);
 
-            if(tokens.size() == 1)
+            if(ActionContext* context = TheManager->GetActionContext(tokens, isInverted))
             {
-                if(Action* availableAction = availableActions[params[i]])
-                    actions_.push_back(availableAction);
-            }
-            else if(tokens.size() == 2)
-            {
-                if(Action* availableAction = availableActions[tokens[0]])
-                {
-                    actions_.push_back(availableAction);
-                    actionParams_[availableAction] = atol(tokens[1].c_str());
-                }
+                context->SetTrack(trackGUID_);
+                actionContexts_.push_back(context);
             }
         }
+    }
+    
+    virtual void  SetTrack(string trackGUID) override
+    {
+        trackGUID_ = trackGUID;
+        for(auto context : actionContexts_)
+            context->SetTrack(trackGUID_);
     }
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
@@ -246,15 +245,7 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-        {
-            if(actions_[index])
-            {
-                if(actionParams_.count(actions_[index]) > 0)
-                    actions_[index]->RequestUpdate(page, this, widget, track, actionParams_[actions_[index]]);
-            else
-                actions_[index]->RequestUpdate(page, this, widget, track);
-            }
-        }
+            actionContexts_[index]->RequestActionUpdate(page, widget);
         else
             widget->Reset();
     }
@@ -264,12 +255,12 @@ public:
         if(widget && widget == cyclerWidget_)
         {
             if(value)
-                index = index < actions_.size() - 1 ? index + 1 : 0;
+                index = index < actionContexts_.size() - 1 ? index + 1 : 0;
         }
-        else if(actions_[index])
+        else if(actionContexts_[index])
         {
             if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-                actions_[index]->Do(page, widget, track, value);
+                actionContexts_[index]->DoAction(page, widget, value);
         }
     }
 };
