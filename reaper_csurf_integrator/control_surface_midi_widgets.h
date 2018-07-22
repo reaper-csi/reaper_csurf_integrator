@@ -43,6 +43,8 @@ public:
         {
             if(midiReleaseMessage_)
                 SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
+            else
+                SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], 0x00);
         }
         else
             SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], midiPressMessage_->midi_message[2]);
@@ -50,6 +52,7 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
+        ClearCache();
         if(midiPressMessage_->IsEqualTo(midiMessage))
             TheManager->DoAction(this, 1.0);
     }
