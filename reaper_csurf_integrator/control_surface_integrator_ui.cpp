@@ -286,13 +286,7 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 {
                     int colorOut = DAW::ColorToNative(red, green, blue);
                     
-                    #ifdef _WIN32
-                    
-                    char buf[BUFSZ];
-                    sprintf(buf, "Current values for %s: \n\nRed = %d \nGreen = %d \nBlue = %d \n\nPlease edit these directly in CSI.ini for now", name, red, green, blue);
-                    MessageBox(hwndDlg, buf, "Color Picker Not Currently Available in Windows", MB_OK);
-                    
-                    #else
+                    #ifndef _WIN32
                 
                     if(DAW::GR_SelectColor(hwndDlg, &colorOut))
                         DAW::ColorFromNative(colorOut, &red, &green, &blue);
