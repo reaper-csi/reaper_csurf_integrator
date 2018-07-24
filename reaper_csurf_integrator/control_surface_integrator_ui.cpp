@@ -105,6 +105,7 @@ struct RealSurfaceLine
 {
     string name = "";
     int numChannels = 0;
+    bool isBankable = true;
     int midiIn = 0;
     int midiOut = 0;
     string templateFilename = "";
@@ -113,7 +114,7 @@ struct RealSurfaceLine
 struct VirtualSurfaceLine
 {
     string realSurfaceName = "";
-    bool isBankable = true;
+
     string actionTemplateFolder = "";
     string FXTemplateFolder = "";
 };
@@ -150,7 +151,110 @@ static char FXTemplateFolder[BUFSZ];
 static vector<RealSurfaceLine*> realSurfaces;
 static vector<PageLine*> pages;
 
-static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+
+
+
+
+
+
+static WDL_DLGRET dlgProcVirtualSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            //for(auto* surface :  realSurfaces)
+                //AddComboEntry(hwndDlg, 0, (char *)surface->name.c_str(), IDC_COMBO_RealSurface);
+            
+            string resourcePath(DAW::GetResourcePath());
+            resourcePath += "/CSI/";
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
+            
+            if(editMode)
+            {
+                editMode = false;
+                //int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_FINDSTRING, -1, (LPARAM)name);
+                //if(index >= 0)
+                    //SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, index, 0);
+                
+                //index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_FINDSTRING, -1, (LPARAM)actionTemplateFolder);
+                //if(index >= 0)
+                    //SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, index, 0);
+                
+                //index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_FINDSTRING, -1, (LPARAM)FXTemplateFolder);
+                //if(index >= 0)
+                    //SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, index, 0);
+                
+                
+                if(isBankable)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
+            }
+            else
+            {
+                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
+                //SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
+            }
+        }
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
+                            isBankable = true;
+                        else
+                            isBankable = false;
+                        //GetDlgItemText(hwndDlg, IDC_COMBO_RealSurface , name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_ActionTemplates , actionTemplateFolder, sizeof(actionTemplateFolder));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_FXTemplates , FXTemplateFolder, sizeof(FXTemplateFolder));
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+
+
+
+
+
+static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -189,11 +293,24 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     currentIndex++;
                 }
             
+            string resourcePath(DAW::GetResourcePath());
+            resourcePath += "/CSI/";
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
+
+            
+            
             if(editMode)
             {
                 editMode = false;
-                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name);
-                SetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, to_string(numChannels).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceNumChannels, to_string(numChannels).c_str());
 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
@@ -214,9 +331,9 @@ static WDL_DLGRET dlgProcRealSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceName, name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
                         char tempBuf[BUFSZ];
-                        GetDlgItemText(hwndDlg, IDC_EDIT_RealSurfaceNumChannels, tempBuf, sizeof(tempBuf));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceNumChannels, tempBuf, sizeof(tempBuf));
                         numChannels = atoi(tempBuf);
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         
@@ -346,97 +463,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     return 0 ;
 }
 
-static WDL_DLGRET dlgProcVirtualSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            for(auto* surface :  realSurfaces)
-                AddComboEntry(hwndDlg, 0, (char *)surface->name.c_str(), IDC_COMBO_RealSurface);
-            
-            string resourcePath(DAW::GetResourcePath());
-            resourcePath += "/CSI/";
-            
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
-                if(foldername[0] != '.')
-                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
-
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
-                if(foldername[0] != '.')
-                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
-            
-            if(editMode)
-            {
-                editMode = false;
-                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_FINDSTRING, -1, (LPARAM)name);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, index, 0);
-                
-                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_FINDSTRING, -1, (LPARAM)actionTemplateFolder);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, index, 0);
-                
-                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_FINDSTRING, -1, (LPARAM)FXTemplateFolder);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, index, 0);
-                
-                
-                if(isBankable)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
-            }
-            else
-            {
-                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_RealSurface), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
-            }
-        }
-            
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                    {
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
-                            isBankable = true;
-                        else
-                            isBankable = false;
-                        GetDlgItemText(hwndDlg, IDC_COMBO_RealSurface , name, sizeof(name));
-                        GetDlgItemText(hwndDlg, IDC_COMBO_ActionTemplates , actionTemplateFolder, sizeof(actionTemplateFolder));
-                        GetDlgItemText(hwndDlg, IDC_COMBO_FXTemplates , FXTemplateFolder, sizeof(FXTemplateFolder));
-                        dlgResult = IDOK;
-                        EndDialog(hwndDlg, 0);
-                    }
-                    break ;
-                    
-                case IDCANCEL:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                        EndDialog(hwndDlg, 0);
-                    break ;
-            }
-        }
-            break ;
-            
-        case WM_CLOSE:
-            DestroyWindow(hwndDlg) ;
-            break ;
-            
-        case WM_DESTROY:
-            EndDialog(hwndDlg, 0);
-            break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
-    }
-    
-    return 0 ;
-}
 
 static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -452,23 +478,23 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             if (index >= 0 && index >= 0)
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
+                                //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
 
-                                for(auto* surface : pages[index]->virtualSurfaces)
-                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
+                                //for(auto* surface : pages[index]->virtualSurfaces)
+                                    //AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
                             }
                             else
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
+                                //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                             }
                         }
                         break;
                         
-                    case IDC_BUTTON_AddRealSurface:
+                    case IDC_BUTTON_AddMidiSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
                             dlgResult = false;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
+                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                             if(dlgResult == IDOK)
                             {
                                 RealSurfaceLine* surface = new RealSurfaceLine();
@@ -478,35 +504,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 surface->midiOut = midiOut;
                                 surface->templateFilename = templateFilename;
                                 realSurfaces.push_back(surface);
-                                AddListEntry(hwndDlg, name, IDC_LIST_RealSurfaces);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, realSurfaces.size() - 1, 0);
+                                AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, realSurfaces.size() - 1, 0);
                             }
                         }
                         break ;
                         
-                    case IDC_BUTTON_AddVirtualSurface:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            dlgResult = false;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_VirtualSurface), hwndDlg, dlgProcVirtualSurface);
-                            if(dlgResult == IDOK)
-                            {
-                                int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                                
-                                if(index >= 0)
-                                {
-                                    VirtualSurfaceLine* surface = new VirtualSurfaceLine();
-                                    surface->realSurfaceName = name;
-                                    surface->isBankable = isBankable;
-                                    surface->actionTemplateFolder = actionTemplateFolder;
-                                    surface->FXTemplateFolder = FXTemplateFolder;
-                                    pages[index]->virtualSurfaces.push_back(surface);
-                                    AddListEntry(hwndDlg, name, IDC_LIST_VirtualSurfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, pages[index]->virtualSurfaces.size() - 1, 0);
-                                }
-                            }
-                        }
-                        break ;
                         
                     case IDC_BUTTON_AddPage:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -525,27 +528,26 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages.push_back(page);
                                     AddListEntry(hwndDlg, name, IDC_LIST_Pages);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 }
                             }
                         }
                         break ;
                         
                         
-                    case IDC_BUTTON_EditRealSurface:
+                    case IDC_BUTTON_EditSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 numChannels = realSurfaces[index]->numChannels;
                                 midiIn = realSurfaces[index]->midiIn;
                                 midiOut = realSurfaces[index]->midiOut;
                                 strcpy(templateFilename, realSurfaces[index]->templateFilename.c_str());
                                 dlgResult = false;
                                 editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_RealSurface), hwndDlg, dlgProcRealSurface);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                                 if(dlgResult == IDOK)
                                 {
                                     realSurfaces[index]->name = name;
@@ -554,55 +556,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     realSurfaces[index]->midiOut = midiOut;
                                     realSurfaces[index]->templateFilename = templateFilename;
                                     
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_RESETCONTENT, 0, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
                                     for(auto* surface: realSurfaces)
-                                        AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, index, 0);
+                                        AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
                                 }
                             }
                         }
                         break ;
-                        
-                    case IDC_BUTTON_EditVirtualSurface:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int pageIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_VirtualSurfaces, LB_GETCURSEL, 0, 0);
-                            
-                            VirtualSurfaceLine* surfaceLine = nullptr;
-                            
-                            if(pageIndex >= 0 && index >= 0)
-                            {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                
-                                for(auto* surface : pages[pageIndex]->virtualSurfaces)
-                                    if(surface->realSurfaceName == name)
-                                    {
-                                        surfaceLine = surface;
-                                        isBankable = surfaceLine->isBankable;
-
-                                        strcpy(actionTemplateFolder, surface->actionTemplateFolder.c_str());
-                                        strcpy(FXTemplateFolder, surface->FXTemplateFolder.c_str());
-                                    }
-                            
-                                dlgResult = false;
-                                editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_VirtualSurface), hwndDlg, dlgProcVirtualSurface);
-                                if(dlgResult == IDOK)
-                                {
-                                    surfaceLine->realSurfaceName = name;
-                                    surfaceLine->isBankable = isBankable;
-                                    surfaceLine->actionTemplateFolder = actionTemplateFolder;
-                                    surfaceLine->FXTemplateFolder = FXTemplateFolder;
-                                    
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                                    for(auto* surface: pages[pageIndex]->virtualSurfaces)
-                                        AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, index, 0);
-                                }
-                            }
-                        }
-                        break ;
+                    
 
                     case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
@@ -636,37 +598,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break ;
 
-                    case IDC_BUTTON_RemoveRealSurface:
+                    case IDC_BUTTON_RemoveSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_RealSurfaces, LB_GETCURSEL, 0, 0);
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
                             
                             if(index >= 0)
                             {
                                 realSurfaces.erase(realSurfaces.begin() + index);
                                 
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
                                 for(auto* surface: realSurfaces)
-                                    AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, index, 0);
-                            }
-                        }
-                        break ;
-                        
-                    case IDC_BUTTON_RemoveVirtualSurface:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int pageIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_VirtualSurfaces, LB_GETCURSEL, 0, 0);
-                            
-                            if(pageIndex >= 0 && index >= 0)
-                            {
-                                pages[pageIndex]->virtualSurfaces.erase(pages[pageIndex]->virtualSurfaces.begin() + index);
-                                
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
-                                for(auto* surface: pages[pageIndex]->virtualSurfaces)
-                                    AddListEntry(hwndDlg, surface->realSurfaceName, IDC_LIST_VirtualSurfaces);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, index, 0);
+                                    AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
                             }
                         }
                         break ;
@@ -680,7 +624,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 pages.erase(pages.begin() + index);
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_RESETCONTENT, 0, 0);
                                 
                                 for(auto* page: pages)
                                     AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
@@ -742,12 +685,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         RealSurfaceLine* surface = new RealSurfaceLine();
                         surface->name = tokens[1];
                         surface->numChannels = atoi(tokens[2].c_str());
+                        surface->isBankable = true;
                         surface->midiIn = atoi(tokens[3].c_str());
                         surface->midiOut = atoi(tokens[4].c_str());
                         surface->templateFilename = tokens[5];
                         realSurfaces.push_back(surface);
                         
-                        AddListEntry(hwndDlg, surface->name, IDC_LIST_RealSurfaces);
+                        AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
                         
                     }
                     else if(tokens[0] == PageToken)
@@ -758,12 +702,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         PageLine* page = new PageLine();
                         page->name = tokens[1];
                         
-                        if(tokens[2] == "Yes")
+                        if(tokens[2] == "FollowMCP")
                             page->followMCP = true;
                         else
                             page->followMCP = false;
                         
-                        if(tokens[3] == "Yes")
+                        if(tokens[3] == "UseTrackColoring")
                             page->trackColouring = true;
                         else
                             page->trackColouring = false;
@@ -782,7 +726,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             continue;
                         
                         VirtualSurfaceLine* virtualSurface = new VirtualSurfaceLine();
-                        virtualSurface->isBankable = tokens[1] == "1" ? true : false;
+                        //virtualSurface->isBankable = tokens[1] == "Bankable" ? true : false;
 
                         virtualSurface->realSurfaceName = tokens[2];
                         virtualSurface->actionTemplateFolder = tokens[3];
@@ -792,9 +736,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 }
             }
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_RealSurfaces), LB_SETCURSEL, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, 0, 0);
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_VirtualSurfaces), LB_SETCURSEL, 0, 0);
 
         }
         break;
@@ -847,14 +790,14 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     line = PageToken + " ";
                     line += page->name + " ";
                     if(page->followMCP)
-                        line += "Yes ";
+                        line += "FollowMCP ";
                     else
-                        line += "No ";
+                        line += "FollowTCP ";
                     
                     if(page->trackColouring)
-                        line += "Yes ";
+                        line += "UseTrackColoring ";
                     else
-                        line += "No ";
+                        line += "NoTrackColoring ";
 
                     line += to_string(page->red) + " ";
                     line += to_string(page->green) + " ";
@@ -865,7 +808,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     for(auto virtualSurface : page->virtualSurfaces)
                     {
                         line = VirtualSurface_ + " ";
-                        line += virtualSurface->isBankable ? "1 " : "0 ";
+                        //line += virtualSurface->isBankable ? "Bankable " : "NonBankable ";
                         line += virtualSurface->realSurfaceName + " ";
                         line += virtualSurface->actionTemplateFolder + " " ;
                         line += virtualSurface->FXTemplateFolder + "\n";
