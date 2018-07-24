@@ -186,6 +186,7 @@ public:
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
+    virtual void ClearCache() {}
     virtual void Reset() {}
 };
 
@@ -212,10 +213,11 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press) {}
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
-    
-    virtual RealSurface* GetSurface() { return (RealSurface*)surface_; }
+
+    virtual RealSurface* GetSurface() override { return (RealSurface*)surface_; }
+
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-    void ClearCache()
+    virtual void ClearCache() override
     {
         lastMessageSent_->midi_message[0] = 0;
         lastMessageSent_->midi_message[1] = 0;
@@ -698,6 +700,10 @@ public:
                 if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
                     trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
         }
+        
+        for(auto surface : realSurfaces_)
+            for(auto widget : surface->GetAllWidgets())
+                widget->ClearCache();
     }
 
     WidgetContext* GetWidgetContext(Widget* widget)
@@ -775,15 +781,16 @@ public:
     
     void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateDirectory, string fxTemplateDirectory)
     {
+        if(isBankable)
+            for(auto channel : surface->GetChannels())
+                bankableChannels_.push_back(new BankableChannel(channel));
+        realSurfaces_.push_back(surface);
+        
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
         InitActionContexts(surface, resourcePath + "axt/" + actionTemplateDirectory);
         InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
-        if(isBankable)
-            for(auto channel : surface->GetChannels())
-                bankableChannels_.push_back(new BankableChannel(channel));
-        realSurfaces_.push_back(surface);
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
@@ -1323,7 +1330,6 @@ public:
     
     void Init();
 
-    MidiIOManager* GetMidiIOManager() { return midiIOManager_; }
     bool GetVSTMonitor() { return VSTMonitor_; }
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
@@ -1331,14 +1337,6 @@ public:
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
     map<string, map<string, int>> & GetFXParamIndices() { return fxParamIndices_; }
-    
-    Action* GetAction(string actionName)
-    {
-        if(actions_.count(actionName) > 0)
-            return actions_[actionName];
-        
-        return nullptr;
-    }
     
     ActionContext* GetActionContext(vector<string> params, bool isInverted)
     {
