@@ -260,16 +260,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
     {
         case WM_INITDIALOG:
         {
-            string path(DAW::GetResourcePath());
-            path += "/CSI/rst/";
-            int i = 0;
-            for(auto filename : FileSystem::GetDirectoryFilenames(path))
-            {
-                int length = filename.length();
-                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'r' && filename[length - 2] == 's' &&filename[length - 1] == 't')
-                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
-            }
-
             char buf[BUFSZ];
             int currentIndex = 0;
 
@@ -294,13 +284,19 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 }
             
             string resourcePath(DAW::GetResourcePath());
-            resourcePath += "/CSI/";
+            int i = 0;
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/rst/"))
+            {
+                int length = filename.length();
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'r' && filename[length - 2] == 's' &&filename[length - 1] == 't')
+                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
+            }
             
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "axt/"))
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/axt/"))
                 if(foldername[0] != '.')
                     AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
             
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "fxt/"))
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/fxt/"))
                 if(foldername[0] != '.')
                     AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
 
@@ -720,7 +716,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                     }
-                    else if(tokens[0] == VirtualSurface_)
+                    else if(tokens[0] == MidiSurface_)
                     {
                         if(tokens.size() != 5)
                             continue;
@@ -807,7 +803,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     for(auto virtualSurface : page->virtualSurfaces)
                     {
-                        line = VirtualSurface_ + " ";
+                        line = MidiSurface_ + " ";
                         //line += virtualSurface->isBankable ? "Bankable " : "NonBankable ";
                         line += virtualSurface->realSurfaceName + " ";
                         line += virtualSurface->actionTemplateFolder + " " ;

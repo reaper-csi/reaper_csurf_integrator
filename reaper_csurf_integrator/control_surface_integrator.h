@@ -40,7 +40,7 @@ const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string FollowMCP = "FollowMCP";
 const string RealSurface_ = "RealSurface";
-const string VirtualSurface_ = "VirtualSurface";
+const string MidiSurface_ = "MidiSurface";
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
@@ -244,6 +244,8 @@ protected:
 public:
     virtual ~RealSurface() {};
     
+    virtual void HandleMidiInput() {}
+
     string GetName() const { return name_; }
     int GetNumChannels() { return channels_.size(); }
     vector<vector<Widget*>> GetChannels() { return channels_; }
@@ -317,7 +319,7 @@ public:
          */
     }
     
-    void HandleMidiInput()
+    virtual void HandleMidiInput() override
     {
         if(midiInput_)
         {
@@ -641,6 +643,17 @@ private:
         widgetContextsMappedToTracks_.clear();
     }
     
+    void RequestUpdate()
+    {
+        for(auto [widget, widgetContext] : widgetContexts_)
+            widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
+        
+        // GAW TBD -- move this hack to appropriate class
+        // if no tracks selected unmap tracks and FX
+        if(0 == DAW::CountSelectedTracks(nullptr))
+            UnmapWidgetsFromTrackAndFX();
+    }
+    
 public:
     Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
@@ -695,17 +708,21 @@ public:
             return nullptr;
     }
     
-    void RequestUpdate()
+    void Run()
     {
-        for(auto [widget, widgetContext] : widgetContexts_)
-            widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
-        
-        // GAW TBD -- move this hack to appropriate class
-        // if no tracks selected unmap tracks and FX
-        if(0 == DAW::CountSelectedTracks(nullptr))
-            UnmapWidgetsFromTrackAndFX();
+        for(auto surface : realSurfaces_)
+            surface->HandleMidiInput();
+
+        RequestUpdate();
     }
-   
+    
+    void ResetAllWidgets()
+    {
+        for(auto surface : realSurfaces_)
+            for(auto widget : surface->GetAllWidgets())
+                widget->Reset();
+    }
+
     void DoAction(Widget* widget, double value)
     {
         if(widget->GetRole() == Shift)
@@ -1272,7 +1289,6 @@ private:
     map<string, Action*> actions_;
     map<string , function<ActionContext*(vector<string>, bool isInverted)>> actionContexts_;
     vector <Page*> pages_;
-    vector<Midi_RealSurface*> midi_realSurfaces_;
     map<string, map<string, int>> fxParamIndices_;
     
     int currentPageIndex_ = 0;
@@ -1301,9 +1317,8 @@ public:
     
     void ResetAllWidgets()
     {
-        for(auto surface : midi_realSurfaces_)
-            for(auto widget : surface->GetAllWidgets())
-                widget->Reset();
+        for(auto page : pages_)
+            page->ResetAllWidgets();
     }
     
     void Init();
@@ -1361,11 +1376,8 @@ public:
     
     void Run()
     {
-        for(auto surface : midi_realSurfaces_)
-            surface->HandleMidiInput();
-        
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->RequestUpdate();
+            pages_[currentPageIndex_]->Run();
     }
     
     void NextPage()
