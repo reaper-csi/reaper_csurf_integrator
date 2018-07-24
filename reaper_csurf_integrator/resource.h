@@ -2,39 +2,39 @@
 // Microsoft Visual C++ generated include file.
 // Used by res.rc
 //
-#define IDCHOOSECOLOUR                  4
-#define IDD_DIALOG_Page                 103
 #define IDD_SURFACEEDIT_CSI             265
-#define IDD_DIALOG_VirtualSurface       266
-#define IDD_DIALOG_RealSurface          268
+
 #define IDC_CHECK_MidiInMon             1000
 #define IDC_CHECK_MidiOutMon            1001
 #define IDC_CHECK_VSTParamMon           1002
-#define IDC_EDIT_PageName               1003
-#define IDC_CHECK_IsBankable            1006
-#define IDC_CHECK_ColourTracks          1008
-#define IDC_COMBO_RealSurface           1016
-#define IDC_COMBO_ActionTemplates       1017
-#define IDC_COMBO_FXTemplates           1018
-#define IDC_COMBO_SurfaceTemplate       1019
-#define IDC_COMBO_MidiIn                1020
-#define IDC_COMBO_MidiOut               1021
-#define IDC_EDIT_RealSurfaceName        1022
-#define IDC_EDIT_RealSurfaceNumChannels 1023
+
 #define IDC_LIST_Pages                  1024
 #define IDC_BUTTON_AddPage              1025
 #define IDC_BUTTON_EditPage             1026
 #define IDC_BUTTON_RemovePage           1027
-#define IDC_LIST_VirtualSurfaces        1028
-#define IDC_BUTTON_AddVirtualSurface    1029
-#define IDC_BUTTON_EditVirtualSurface   1030
-#define IDC_BUTTON_RemoveVirtualSurface 1031
-#define IDC_LIST_RealSurfaces           1032
-#define IDC_BUTTON_AddRealSurface       1033
-#define IDC_BUTTON_EditRealSurface      1034
-#define IDC_BUTTON_RemoveRealSurface    1035
+#define IDCHOOSECOLOUR                  4
+
+#define IDD_DIALOG_Page                 103
+#define IDC_EDIT_PageName               1003
 #define IDC_RADIO_MCP                   1036
 #define IDC_RADIO_TCP                   1037
+#define IDC_CHECK_ColourTracks          1008
+
+#define IDC_LIST_Surfaces               1032
+#define IDC_BUTTON_AddMidiSurface       1033
+#define IDC_BUTTON_AddOSCSurface        1036
+#define IDC_BUTTON_EditSurface          1034
+#define IDC_BUTTON_RemoveSurface        1035
+
+#define IDD_DIALOG_MidiSurface          268
+#define IDC_EDIT_MidiSurfaceName        1022
+#define IDC_EDIT_MidiSurfaceNumChannels 1023
+#define IDC_CHECK_IsBankable            1006
+#define IDC_COMBO_MidiIn                1020
+#define IDC_COMBO_MidiOut               1021
+#define IDC_COMBO_ActionTemplates       1017
+#define IDC_COMBO_FXTemplates           1018
+#define IDC_COMBO_SurfaceTemplate       1019
 
 // Next default values for new objects
 // 
