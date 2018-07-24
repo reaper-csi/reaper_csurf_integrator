@@ -581,7 +581,7 @@ void Manager::Init()
                 if(tokens.size() != 7)
                     continue;
                 
-                currentPage = new Page(tokens[1], tokens[2] == "Yes" ? true : false, tokens[3] == "Yes" ? true : false, atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
+                currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "UseTrackColoring" ? true : false, atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
                 pages_.push_back(currentPage);
                 
             }
@@ -596,7 +596,7 @@ void Manager::Init()
                 int channelOut = atoi(tokens[5].c_str());
 
                 if(currentPage)
-                    currentPage->AddSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, GetMidiIOManager()->GetMidiInputForChannel(channelIn), GetMidiIOManager()->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
+                    currentPage->AddSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
             }
         }
     }

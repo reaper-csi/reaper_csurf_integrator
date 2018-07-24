@@ -294,6 +294,11 @@ public:
         SetValue("");
     }
     
+    virtual void ClearCache() override
+    {
+        Reset();
+    }
+    
     virtual void SetValue(string displayText) override
     {
         if( displayText == lastStringSent_)
