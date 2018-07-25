@@ -585,7 +585,7 @@ void Manager::Init()
                 pages_.push_back(currentPage);
                 
             }
-            else if(tokens[0] == MidiSurface_)
+            else if(tokens[0] == MidiSurface)
             {
                 if(tokens.size() != 9)
                     continue;
