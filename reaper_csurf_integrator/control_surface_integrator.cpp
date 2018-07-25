@@ -110,8 +110,8 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Midi_RealSurface::Midi_RealSurface(const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-: RealSurface(name, numChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+: RealSurface(page, name, numChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(templateFilename);
     bool inChannel = false;
@@ -596,7 +596,7 @@ void Manager::Init()
                 int channelOut = atoi(tokens[5].c_str());
 
                 if(currentPage)
-                    currentPage->AddSurface(new Midi_RealSurface(tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
+                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
             }
         }
     }
