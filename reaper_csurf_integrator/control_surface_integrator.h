@@ -39,7 +39,6 @@ const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
 const string FollowMCP = "FollowMCP";
-const string RealSurface_ = "RealSurface";
 const string MidiSurface_ = "MidiSurface";
 const string Shift = "Shift";
 const string Option = "Option";
@@ -1324,8 +1323,8 @@ public:
     
     void ResetAllWidgets()
     {
-        for(auto page : pages_)
-            page->ResetAllWidgets();
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ResetAllWidgets();
     }
     
     void Init();
