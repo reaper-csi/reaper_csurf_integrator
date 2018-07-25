@@ -406,6 +406,24 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break;
                         
+                    case IDC_BUTTON_AddPage:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            dlgResult = false;
+                            followMCP = true;
+                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                            if(dlgResult == IDOK)
+                            {
+                                PageLine* page = new PageLine();
+                                page->name = name;
+                                page->followMCP = followMCP;
+                                pages.push_back(page);
+                                AddListEntry(hwndDlg, name, IDC_LIST_Pages);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
+                            }
+                        }
+                        break ;
+                        
                     case IDC_BUTTON_AddMidiSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
@@ -427,34 +445,40 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->FXTemplateFolder = FXTemplateFolder;
                                     
                                     pages[pageIndex]->midiSurfaces.push_back(surface);
-
+                                    
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
                                 }
                             }
                         }
                         break ;
-                        
-                        
-                    case IDC_BUTTON_AddPage:
+
+                    case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            dlgResult = false;
-                            followMCP = true;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
-                            if(dlgResult == IDOK)
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
                             {
-                                PageLine* page = new PageLine();
-                                page->name = name;
-                                page->followMCP = followMCP;
-                                pages.push_back(page);
-                                AddListEntry(hwndDlg, name, IDC_LIST_Pages);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
+                                followMCP = pages[index]->followMCP;
+                                trackColouring = pages[index]->trackColouring;
+                                dlgResult = false;
+                                editMode = true;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                                if(dlgResult == IDOK)
+                                {
+                                    pages[index]->name = name;
+                                    pages[index]->followMCP = followMCP;
+                                    pages[index]->trackColouring = trackColouring;
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
+                                    for(auto* page :  pages)
+                                        AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
+                                }
                             }
                         }
                         break ;
-                        
-                        
+
                     case IDC_BUTTON_EditSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
@@ -487,29 +511,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break ;
                     
-
-                    case IDC_BUTTON_EditPage:
+                    case IDC_BUTTON_RemovePage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                followMCP = pages[index]->followMCP;
-                                trackColouring = pages[index]->trackColouring;
-                                dlgResult = false;
-                                editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
-                                if(dlgResult == IDOK)
-                                {
-                                    pages[index]->name = name;
-                                    pages[index]->followMCP = followMCP;
-                                    pages[index]->trackColouring = trackColouring;
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
-                                    for(auto* page :  pages)
-                                        AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
-                                }
+                                pages.erase(pages.begin() + index);
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
+                                
+                                for(auto* page: pages)
+                                    AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                             }
                         }
                         break ;
@@ -526,23 +540,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 for(auto* surface: pages[pageIndex]->midiSurfaces)
                                     AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
-                            }
-                        }
-                        break ;
-                        
-                    case IDC_BUTTON_RemovePage:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            if(index >= 0)
-                            {
-                                pages.erase(pages.begin() + index);
-                                
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
-                                
-                                for(auto* page: pages)
-                                    AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                             }
                         }
                         break ;
