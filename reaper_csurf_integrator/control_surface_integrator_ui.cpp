@@ -167,6 +167,10 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_UNCHECKED);
             }
+            else
+            {
+                CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
+            }
         }
             
         case WM_COMMAND:
@@ -405,24 +409,28 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_BUTTON_AddMidiSurface:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            dlgResult = false;
-                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
-                            if(dlgResult == IDOK)
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
                             {
-                                MidiSurfaceLine* surface = new MidiSurfaceLine();
-                                surface->name = name;
-                                surface->numChannels = numChannels;
-                                surface->isBankable = isBankable;
-                                surface->midiIn = midiIn;
-                                surface->midiOut = midiOut;
-                                surface->templateFilename = templateFilename;
-                                surface->actionTemplateFolder = actionTemplateFolder;
-                                surface->FXTemplateFolder = FXTemplateFolder;
-                                
-                                pages[pageIndex]->midiSurfaces.push_back(surface);
+                                dlgResult = false;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    MidiSurfaceLine* surface = new MidiSurfaceLine();
+                                    surface->name = name;
+                                    surface->numChannels = numChannels;
+                                    surface->isBankable = isBankable;
+                                    surface->midiIn = midiIn;
+                                    surface->midiOut = midiOut;
+                                    surface->templateFilename = templateFilename;
+                                    surface->actionTemplateFolder = actionTemplateFolder;
+                                    surface->FXTemplateFolder = FXTemplateFolder;
+                                    
+                                    pages[pageIndex]->midiSurfaces.push_back(surface);
 
-                                AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
+                                    AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
+                                }
                             }
                         }
                         break ;
@@ -431,21 +439,17 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_BUTTON_AddPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            if(index >= 0)
+                            dlgResult = false;
+                            followMCP = true;
+                            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                            if(dlgResult == IDOK)
                             {
-                                dlgResult = false;
-                                followMCP = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
-                                if(dlgResult == IDOK)
-                                {
-                                    PageLine* page = new PageLine();
-                                    page->name = name;
-                                    page->followMCP = followMCP;
-                                    pages.push_back(page);
-                                    AddListEntry(hwndDlg, name, IDC_LIST_Pages);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
-                                }
+                                PageLine* page = new PageLine();
+                                page->name = name;
+                                page->followMCP = followMCP;
+                                pages.push_back(page);
+                                AddListEntry(hwndDlg, name, IDC_LIST_Pages);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
                             }
                         }
                         break ;
@@ -514,7 +518,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
-                            
                             if(index >= 0)
                             {
                                 pages[pageIndex]->midiSurfaces.erase(pages[pageIndex]->midiSurfaces.begin() + index);
