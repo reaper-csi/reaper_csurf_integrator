@@ -164,6 +164,7 @@ public:
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface;
+class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,6 +230,7 @@ class RealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    Page* page_ = nullptr;
     const string name_ = "";
 
     vector<Widget*> widgets_;
@@ -236,7 +238,7 @@ protected:
     vector<Widget*> emptyWidgets_;
     vector<vector<Widget*>> channels_;
     
-    RealSurface(const string name, int numChannels) : name_(name)
+    RealSurface(Page* page, const string name, int numChannels) : page_(page), name_(name)
     {
         for(int i = 0; i < numChannels; i++)
             channels_.push_back(vector<Widget*>());
@@ -247,6 +249,7 @@ public:
     
     virtual void HandleMidiInput() {}
 
+    Page* GetPage() { return page_; }
     string GetName() const { return name_; }
     int GetNumChannels() { return channels_.size(); }
     vector<vector<Widget*>> GetChannels() { return channels_; }
@@ -309,7 +312,7 @@ private:
     }
     
 public:
-    Midi_RealSurface(const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_RealSurface()
     {
@@ -367,7 +370,6 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ActionContext;
-class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1353,18 +1355,6 @@ public:
         return nullptr;
     }
     
-    void DoAction(Widget* widget, double value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->DoAction(widget, value);
-    }
-    
-    void DoRelativeAction(Widget* widget, double value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->DoRelativeAction(widget, value);
-    }
-
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)

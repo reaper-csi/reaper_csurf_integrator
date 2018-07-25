@@ -54,7 +54,7 @@ public:
     {
         ClearCache();
         if(midiPressMessage_->IsEqualTo(midiMessage))
-            TheManager->DoAction(this, 1.0);
+            GetSurface()->GetPage()->DoAction(this, 1.0);
     }
 };
 
@@ -85,7 +85,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         ClearCache();
-        TheManager->DoAction(this, midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
+        GetSurface()->GetPage()->DoAction(this, midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
     }
 };
 
@@ -117,7 +117,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        TheManager->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        GetSurface()->GetPage()->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -143,7 +143,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        TheManager->DoAction(this, midiMessage->midi_message[2] / 127.0);
+        GetSurface()->GetPage()->DoAction(this, midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -186,10 +186,10 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        TheManager->DoRelativeAction(this, value);
+        GetSurface()->GetPage()->DoRelativeAction(this, value);
         
         if(WantsFeedback())
-            TheManager->DoAction(this, value + lastNormalizedValue_);
+            GetSurface()->GetPage()->DoAction(this, value + lastNormalizedValue_);
     }
 };
 
