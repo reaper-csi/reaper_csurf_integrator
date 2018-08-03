@@ -295,6 +295,13 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
+        if(midiInMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+            DAW::ShowConsoleMsg(buffer);
+        }
+
         // At this point we don't know how much of the message comprises the key, so try all three
         if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
             widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
@@ -302,13 +309,6 @@ private:
             widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
         else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
             widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
-        
-        if(midiInMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
-            DAW::ShowConsoleMsg(buffer);
-        }
     }
     
 public:
