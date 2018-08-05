@@ -69,9 +69,16 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
 {
     if(widgetClass == "Press") return new Press_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    
     else if(widgetClass == "PressFB") return new Press_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "PressRelease") return new PressRelease_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "PressReleaseFB") return new PressRelease_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    
+    // Special for X Touch Compact
+    else if(widgetClass == "PressFBR") return new PressWithResendOnRelease_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    else if(widgetClass == "PressReleaseR") return new PressWithResendOnRelease_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    else if(widgetClass == "PressReleaseFBR") return new PressWithResendOnRelease_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
+    
     else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "Fader7BitFB") return new Fader7Bit_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
     else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
@@ -433,6 +440,160 @@ int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string
     return 0;
 }
 
+void Page::AdjustTrackBank(int stride)
+{
+    int previousTrackOffset = trackOffset_;
+    
+    trackOffset_ += stride;
+    
+    int bottom = 1 - bankableChannels_.size() + GetNumPinnedTracks();
+    
+    if(trackOffset_ <  bottom)
+        trackOffset_ =  bottom;
+    
+    int top = DAW::CSurf_NumTracks(followMCP_) - 1;
+    
+    if(trackOffset_ >  top)
+        trackOffset_ = top;
+    
+    // Jump over any pinned channels and invisible tracks
+    vector<string> pinnedChannels;
+    for(auto* channel : bankableChannels_)
+        if(channel->GetIsPinned())
+            pinnedChannels.push_back(channel->GetTrackGUID());
+    
+    bool skipThisChannel = false;
+    
+    while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
+        
+        for(auto pinnedChannel : pinnedChannels)
+            if(pinnedChannel == trackGUID)
+            {
+                skipThisChannel = true;
+                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+                break;
+            }
+        
+        if( ! IsTrackVisible(DAW::CSurf_TrackFromID(trackOffset_, followMCP_)))
+        {
+            skipThisChannel = true;
+            previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+        }
+        
+        if(skipThisChannel)
+        {
+            skipThisChannel = false;
+            continue;
+        }
+        else
+            break;
+    }
+    
+    if(previousTrackOffset != trackOffset_)
+    {
+        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
+        DAW::MarkProjectDirty(nullptr);
+    }
+    
+    RefreshLayout();        
+}
+
+void Page::RefreshLayout()
+{
+    currentlyRefreshingLayout_ = true;
+    
+    vector<MediaTrack*> visibleTracks;
+    
+    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+        visibleTracks.push_back(DAW::CSurf_TrackFromID(i, followMCP_));
+    
+    vector<string> pinnedChannelLayout;
+    vector<string> pinnedChannels;
+    int offset = trackOffset_;
+    vector<string> movableChannelLayout;
+    
+    for(auto* channel : bankableChannels_)
+    {
+        // Layout Pinned GUIDs
+        if(channel->GetIsPinned())
+        {
+            pinnedChannelLayout.push_back(channel->GetTrackGUID());
+            pinnedChannels.push_back(channel->GetTrackGUID());
+        }
+        else
+            pinnedChannelLayout.push_back("");
+        
+        // Layout Channel GUIDs
+        if(offset < 0)
+        {
+            movableChannelLayout.push_back("");
+            offset++;
+        }
+        else if(offset >= DAW::CSurf_NumTracks(followMCP_))
+        {
+            movableChannelLayout.push_back("");
+        }
+        else
+        {
+            movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
+        }
+    }
+    
+    // Remove Pinned Channels
+    for(int i = 0; i < pinnedChannels.size(); i++)
+    {
+        auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
+        if(iter != movableChannelLayout.end())
+            movableChannelLayout.erase(iter);
+    }
+    
+    // Merge the layouts
+    offset = 0;
+    vector<string> channelLayout;
+    
+    for(int i = 0; i < bankableChannels_.size(); i++)
+    {
+        if(pinnedChannelLayout[i] != "")
+            channelLayout.push_back(pinnedChannelLayout[i]);
+        else
+            channelLayout.push_back(movableChannelLayout[offset++]);
+    }
+    
+    if(colourTracks_ && TheManager->GetCurrentPage() == this)
+    {
+        DAW::PreventUIRefresh(1);
+        
+        // reset track colors
+        for(auto* channel : bankableChannels_)
+            if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+                if(trackColours_.count(channel->GetTrackGUID()) > 0)
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
+    }
+    
+    // Apply new layout
+    offset = 0;
+    for(auto* channel : bankableChannels_)
+        channel->SetTrackGUID(this, channelLayout[offset++]);
+    
+    if(colourTracks_ && TheManager->GetCurrentPage() == this)
+    {
+        // color tracks
+        int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
+        for(auto* channel : bankableChannels_)
+            if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+            {
+                trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
+                DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
+            }
+        
+        DAW::PreventUIRefresh(-1);
+    }
+    
+    currentlyRefreshingLayout_ = false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Manager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -578,10 +739,10 @@ void Manager::Init()
             }
             else if(tokens[0] == PageToken)
             {
-                if(tokens.size() != 7)
+                if(tokens.size() != 8)
                     continue;
                 
-                currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "UseTrackColoring" ? true : false, atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
+                currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseTrackColoring" ? true : false, atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), atoi(tokens[7].c_str()));
                 pages_.push_back(currentPage);
                 
             }

@@ -235,7 +235,7 @@ class TrackBank : public Action
 public:
     void Do(Page* page, double stride) override
     {
-         page->AdjustTrackBank(stride);
+         TheManager->AdjustTrackBank(page, stride);
     }
 };
 
