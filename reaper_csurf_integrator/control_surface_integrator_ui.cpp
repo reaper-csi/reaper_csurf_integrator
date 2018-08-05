@@ -118,6 +118,7 @@ struct PageLine
 {
     string name = "";
     bool followMCP = true;
+    bool synchPages = false;
     bool trackColouring = false;
     int red = 0;
     int green = 0;
@@ -141,6 +142,7 @@ static char actionTemplateFolder[BUFSZ];
 static char FXTemplateFolder[BUFSZ];
 
 static bool followMCP = true;
+static bool synchPages = false;
 static bool trackColouring = false;
 
 static vector<PageLine*> pages;
@@ -161,6 +163,11 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                     CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
+                
+                if(synchPages)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_SynchPages, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_SynchPages, BST_UNCHECKED);
                 
                 if(trackColouring)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
@@ -194,6 +201,11 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                             followMCP = true;
                         else
                             followMCP = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SynchPages))
+                            synchPages = true;
+                        else
+                            synchPages = false;
                         
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
                             trackColouring = true;
@@ -417,6 +429,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 PageLine* page = new PageLine();
                                 page->name = name;
                                 page->followMCP = followMCP;
+                                page->synchPages = synchPages;
+                                page->trackColouring = trackColouring;
                                 pages.push_back(page);
                                 AddListEntry(hwndDlg, name, IDC_LIST_Pages);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
@@ -461,6 +475,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 followMCP = pages[index]->followMCP;
+                                synchPages = pages[index]->synchPages;
                                 trackColouring = pages[index]->trackColouring;
                                 dlgResult = false;
                                 editMode = true;
@@ -469,6 +484,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     pages[index]->name = name;
                                     pages[index]->followMCP = followMCP;
+                                    pages[index]->synchPages = synchPages;
                                     pages[index]->trackColouring = trackColouring;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                     for(auto* page :  pages)
@@ -590,7 +606,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == PageToken)
                     {
-                        if(tokens.size() != 7)
+                        if(tokens.size() != 8)
                             continue;
  
                         PageLine* page = new PageLine();
@@ -601,14 +617,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else
                             page->followMCP = false;
                         
-                        if(tokens[3] == "UseTrackColoring")
+                        if(tokens[3] == "SynchPages")
+                            page->synchPages = true;
+                        else
+                            page->synchPages = false;
+                        
+                        if(tokens[4] == "UseTrackColoring")
                             page->trackColouring = true;
                         else
                             page->trackColouring = false;
                         
-                        page->red = atoi(tokens[4].c_str());
-                        page->green = atoi(tokens[5].c_str());
-                        page->blue = atoi(tokens[6].c_str());
+                        page->red = atoi(tokens[5].c_str());
+                        page->green = atoi(tokens[6].c_str());
+                        page->blue = atoi(tokens[7].c_str());
                         
                         pages.push_back(page);
                         
@@ -679,11 +700,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     else
                         line += "FollowTCP ";
                     
+                    if(page->synchPages)
+                        line += "SynchPages ";
+                    else
+                        line += "NoSynchPages ";
+                    
                     if(page->trackColouring)
                         line += "UseTrackColoring ";
                     else
                         line += "NoTrackColoring ";
-
+                    
                     line += to_string(page->red) + " ";
                     line += to_string(page->green) + " ";
                     line += to_string(page->blue) + "\n";
