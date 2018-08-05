@@ -201,8 +201,8 @@ private:
     
 protected:
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
-    MIDI_event_ex_t* midiPressMessage_ = nullptr;
-    MIDI_event_ex_t* midiReleaseMessage_ = nullptr;
+    MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
+    MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
 
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     virtual void SendMidiMessage(int first, int second, int third);
@@ -538,6 +538,7 @@ class Page
 private:
     string name_ = "";
     bool followMCP_ = true;
+    bool synchPages_ = false;
     bool colourTracks_ = false;
     int trackColourRedValue_ = 0;
     int trackColourGreenValue_ = 0;
@@ -657,12 +658,47 @@ private:
             UnmapWidgetsFromTrackAndFX();
     }
     
+    int GetNumPinnedTracks()
+    {
+        int numPinnedTracks = 0;
+        
+        for(auto* channel : bankableChannels_)
+            if(channel->GetIsPinned())
+                numPinnedTracks++;
+        
+        return numPinnedTracks;
+    }
+    
+    bool IsTrackVisible(MediaTrack* track)
+    {
+        if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
+        {
+            if(followMCP_ && DAW::GetMasterTrackVisibility() < 2)
+                return true;
+            else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
+                return true;
+            else
+                return false;
+        }
+        else
+        {
+            if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+                return true;
+            else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+                return true;
+            else
+                return false;
+        }
+    }
+
 public:
-    Page(string name, bool followMCP, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     string GetName() { return name_; }
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     bool GetShowFXWindows() { return showFXWindows_; }
-
+    bool GetSynchPages() { return synchPages_; }
+    void AdjustTrackBank(int stride);
+    void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
     
     bool IsZoom() { return zoom_; }
@@ -1098,194 +1134,6 @@ public:
         return shouldRefreshLayout;
          */
     }
-    
-    void AdjustTrackBank(int stride)
-    {
-        int previousTrackOffset = trackOffset_;
-        
-        trackOffset_ += stride;
-        
-        int bottom = 1 - bankableChannels_.size() + GetNumPinnedTracks();
-        
-        if(trackOffset_ <  bottom)
-            trackOffset_ =  bottom;
-        
-        int top = DAW::CSurf_NumTracks(followMCP_) - 1;
-        
-        if(trackOffset_ >  top)
-            trackOffset_ = top;
-        
-        // Jump over any pinned channels and invisible tracks
-        vector<string> pinnedChannels;
-        for(auto* channel : bankableChannels_)
-            if(channel->GetIsPinned())
-                pinnedChannels.push_back(channel->GetTrackGUID());
-        
-        bool skipThisChannel = false;
-        
-        while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
-        {
-            string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
-            
-            for(auto pinnedChannel : pinnedChannels)
-                if(pinnedChannel == trackGUID)
-                {
-                    skipThisChannel = true;
-                    previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-                    break;
-                }
-            
-            if( ! IsTrackVisible(DAW::CSurf_TrackFromID(trackOffset_, followMCP_)))
-            {
-                skipThisChannel = true;
-                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-            }
-            
-            if(skipThisChannel)
-            {
-                skipThisChannel = false;
-                continue;
-            }
-            else
-                break;
-        }
-        
-        if(previousTrackOffset != trackOffset_)
-        {
-            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
-            DAW::MarkProjectDirty(nullptr);
-        }
-        
-        RefreshLayout();
-    }
-    
-    void RefreshLayout()
-    {
-        currentlyRefreshingLayout_ = true;
-        
-        vector<MediaTrack*> visibleTracks;
-        
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
-            visibleTracks.push_back(DAW::CSurf_TrackFromID(i, followMCP_));
-        
-        vector<string> pinnedChannelLayout;
-        vector<string> pinnedChannels;
-        int offset = trackOffset_;
-        vector<string> movableChannelLayout;
-
-        for(auto* channel : bankableChannels_)
-        {
-            // Layout Pinned GUIDs
-            if(channel->GetIsPinned())
-            {
-                pinnedChannelLayout.push_back(channel->GetTrackGUID());
-                pinnedChannels.push_back(channel->GetTrackGUID());
-            }
-            else
-                pinnedChannelLayout.push_back("");
-            
-            // Layout Channel GUIDs
-            if(offset < 0)
-            {
-                movableChannelLayout.push_back("");
-                offset++;
-            }
-            else if(offset >= DAW::CSurf_NumTracks(followMCP_))
-            {
-                movableChannelLayout.push_back("");
-            }
-            else
-            {
-                movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
-            }
-        }
-        
-        // Remove Pinned Channels
-        for(int i = 0; i < pinnedChannels.size(); i++)
-        {
-            auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
-                if(iter != movableChannelLayout.end())
-                    movableChannelLayout.erase(iter);
-        }
-        
-        // Merge the layouts
-        offset = 0;
-        vector<string> channelLayout;
-        
-        for(int i = 0; i < bankableChannels_.size(); i++)
-        {
-            if(pinnedChannelLayout[i] != "")
-                channelLayout.push_back(pinnedChannelLayout[i]);
-            else
-                channelLayout.push_back(movableChannelLayout[offset++]);
-        }
-
-        if(colourTracks_)
-        {
-            DAW::PreventUIRefresh(1);
-            
-            // reset track colors
-            for(auto* channel : bankableChannels_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                    if(trackColours_.count(channel->GetTrackGUID()) > 0)
-                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
-        }
-        
-        // Apply new layout
-        offset = 0;
-        for(auto* channel : bankableChannels_)
-            channel->SetTrackGUID(this, channelLayout[offset++]);
-        
-        if(colourTracks_)
-        {
-            // color tracks
-            int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
-            for(auto* channel : bankableChannels_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                {
-                    trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
-                }
-            
-            DAW::PreventUIRefresh(-1);
-        }
-        
-        currentlyRefreshingLayout_ = false;
-    }
-    
-private:
-    int GetNumPinnedTracks()
-    {
-        int numPinnedTracks = 0;
-        
-        for(auto* channel : bankableChannels_)
-            if(channel->GetIsPinned())
-                numPinnedTracks++;
-        
-        return numPinnedTracks;
-    }
-    
-    bool IsTrackVisible(MediaTrack* track)
-    {
-        if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
-        {
-            if(followMCP_ && DAW::GetMasterTrackVisibility() < 2)
-                return true;
-            else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
-                return true;
-            else
-                return false;
-        }
-        else
-        {
-            if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-                return true;
-            else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-                return true;
-            else
-                return false;
-        }
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1339,6 +1187,14 @@ public:
     
     map<string, map<string, int>> & GetFXParamIndices() { return fxParamIndices_; }
     
+    Page* GetCurrentPage()
+    {
+        if(pages_.size() > 0)
+            return pages_[currentPageIndex_];
+        else
+            return nullptr;
+    }
+    
     ActionContext* GetActionContext(vector<string> params, bool isInverted)
     {
         if(actionContexts_.count(params[0]) > 0)
@@ -1365,6 +1221,16 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
+    }
+    
+    void AdjustTrackBank(Page* sendingPage, int stride)
+    {
+        if(! sendingPage->GetSynchPages())
+            sendingPage->AdjustTrackBank(stride);
+        else
+            for(auto page: pages_)
+                if(page->GetSynchPages())
+                    page->AdjustTrackBank(stride);
     }
     
     void NextPage()
