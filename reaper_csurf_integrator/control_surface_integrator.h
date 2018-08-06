@@ -537,6 +537,7 @@ class Page
 {
 private:
     string name_ = "";
+    int number_ = 0;
     bool followMCP_ = true;
     bool synchPages_ = false;
     bool colourTracks_ = false;
@@ -591,7 +592,7 @@ private:
         
         for(int i = 0; i < bankableChannels_.size(); i++)
         {
-            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
             {
                 bankableChannels_[i]->SetTrackGUID(this, buffer);
                 bankableChannels_[i]->SetIsPinned(true);
@@ -692,8 +693,11 @@ private:
     }
 
 public:
-    Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), number_(number), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    
     string GetName() { return name_; }
+    int GetNumber() { return number_; }
+    string GetNumberString() { return "Page" + to_string(number_); }
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     bool GetShowFXWindows() { return showFXWindows_; }
     bool GetSynchPages() { return synchPages_; }
@@ -957,7 +961,7 @@ public:
         SetPinnedTracks();
         
         char buffer[BUFSZ];
-        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), buffer, sizeof(buffer)))
+        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), buffer, sizeof(buffer)))
             trackOffset_ = atol(buffer);
     }
     
@@ -985,7 +989,7 @@ public:
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsPinned(true);
-                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), channel->GetTrackGUID().c_str());
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), channel->GetTrackGUID().c_str());
                 DAW::MarkProjectDirty(nullptr);
             }
         }
@@ -1007,9 +1011,9 @@ public:
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
             {
                 channel->SetIsPinned(false);
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
                 {
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), "");
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), "");
                     DAW::MarkProjectDirty(nullptr);
                 }
             }
@@ -1052,9 +1056,9 @@ public:
                         channel->SetTrackGUID(this, "");
 
                         // GAW remove this from pinned tracks list in project
-                        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+                        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
                         {
-                            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "Channel" + to_string(i + 1)).c_str(), "");
+                            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), "");
                             DAW::MarkProjectDirty(nullptr);
                         }
                     }
