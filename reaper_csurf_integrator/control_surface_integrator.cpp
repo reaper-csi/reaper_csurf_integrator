@@ -493,7 +493,7 @@ void Page::AdjustTrackBank(int stride)
     
     if(previousTrackOffset != trackOffset_)
     {
-        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
+        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
         DAW::MarkProjectDirty(nullptr);
     }
     
@@ -742,7 +742,7 @@ void Manager::Init()
                 if(tokens.size() != 8)
                     continue;
                 
-                currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseTrackColoring" ? true : false, atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), atoi(tokens[7].c_str()));
+                currentPage = new Page(tokens[1], pages_.size(), tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseTrackColoring" ? true : false, atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), atoi(tokens[7].c_str()));
                 pages_.push_back(currentPage);
                 
             }
