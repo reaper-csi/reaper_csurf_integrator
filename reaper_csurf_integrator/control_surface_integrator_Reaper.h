@@ -112,13 +112,21 @@ public:
 
     static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname) { return ::GetMediaTrackInfo_Value(track, parmname); }
 
+    static double GetTrackSendInfo_Value(MediaTrack* tr, int category, int sendidx, const char* parmname) { return ::GetTrackSendInfo_Value(tr, category, sendidx, parmname); }
+
     static int GetMasterTrackVisibility() { return ::GetMasterTrackVisibility(); }
 
     static void* GetSetMediaTrackInfo(MediaTrack* tr, const char* parmname, void* setNewValue) { return ::GetSetMediaTrackInfo(tr, parmname, setNewValue); }
 
     static double CSurf_OnVolumeChange(MediaTrack* trackid, double volume, bool relative) { return ::CSurf_OnVolumeChange(trackid, volume, relative); }
-
+    
+    static double CSurf_OnSendVolumeChange(MediaTrack* trackid, int sendIndex, double volume, bool relative) { return ::CSurf_OnSendVolumeChange(trackid, sendIndex, volume, relative); }
+    
     static void CSurf_SetSurfaceVolume(MediaTrack* trackid, double volume, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceVolume(trackid, volume, ignoresurf); }
+    
+    static void GetSetTrackSendInfo(MediaTrack* tr, int category, int sendidx, const char* parmname, void* setNewValue) { ::GetSetTrackSendInfo(tr, category, sendidx, parmname, setNewValue); }
+    
+    static int GetTrackNumSends(MediaTrack* tr, int category) { return ::GetTrackNumSends(tr, category); }
 
     static double Track_GetPeakInfo(MediaTrack* track, int channel) { return ::Track_GetPeakInfo(track, channel); }
     

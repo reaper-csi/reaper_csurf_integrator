@@ -58,6 +58,28 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendContext : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendContext(Action* action, bool isInverted) : TrackContext(action, isInverted) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+            action_->RequestUpdate(page, this, widget, track);
+        else
+            widget->Reset();
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+            action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContextWithIntParam : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

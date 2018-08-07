@@ -162,6 +162,7 @@ public:
         return nullptr;
     }
 };
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface;
 class Page;
@@ -385,8 +386,9 @@ public:
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
+    virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
-    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
+    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, RealSurface* surface) {}
     virtual void Do(Page* page, RealSurface* surface, double value) {}
 };
@@ -546,6 +548,7 @@ private:
     int trackColourBlueValue_ = 0;
     map<string, int> trackColours_;
     int trackOffset_ = 0;
+    int sendsOffset_ = 0;
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumTracks_ = 0;
     vector<RealSurface*> realSurfaces_;
@@ -818,6 +821,35 @@ public:
     void SetAlt(bool value)
     {
         alt_ = value;
+    }
+    
+    int GetMaxSends()
+    {
+        int maxSends = 0;
+        
+        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+        {
+            MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            int numSends = DAW::GetTrackNumSends(track, 0);
+            
+            if(numSends > maxSends)
+                maxSends = numSends;
+        }
+
+        return maxSends;
+    }
+    
+    void AdjustTrackSendBank(int stride)
+    {
+        int maxOffset = GetMaxSends() - 1;
+
+        sendsOffset_ += stride;
+        
+        if(sendsOffset_ < 0)
+            sendsOffset_ = 0;
+        else if(sendsOffset_ > maxOffset)
+            sendsOffset_ = maxOffset;
     }
     
     void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateDirectory, string fxTemplateDirectory)

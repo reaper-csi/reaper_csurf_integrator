@@ -235,7 +235,18 @@ class TrackBank : public Action
 public:
     void Do(Page* page, double stride) override
     {
-         TheManager->AdjustTrackBank(page, stride);
+        TheManager->AdjustTrackBank(page, stride);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendBank : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void Do(Page* page, double stride) override
+    {
+        page->AdjustTrackSendBank(stride);
     }
 };
 
