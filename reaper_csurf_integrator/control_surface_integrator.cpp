@@ -636,6 +636,7 @@ void Manager::InitActionDictionary()
     actions_["LatchedScrub"] = new LatchedScrub();
     actions_["NextPage"] = new class NextPage();
     actions_["TrackBank"] = new TrackBank();
+    actions_["TrackSendBank"] = new TrackSendBank();
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
     actions_["MapFXToWidgets"] = new MapFXToWidgets();
@@ -683,6 +684,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["LatchedScrub"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["NextPage"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["TrackSendBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["MapFXToWidgets"] = [this](vector<string> params, bool isInverted) { return new PageSurfaceContext(actions_[params[0]], isInverted); };
