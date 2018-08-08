@@ -254,6 +254,63 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendTouchControlledContext : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Action* touchAction_ = nullptr;
+public:
+    TrackSendTouchControlledContext(Action* action, Action* touchAction, bool isInverted) : TrackContext(action, isInverted), touchAction_(touchAction) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        {
+            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
+            
+            if(maxOffset < 0)
+                widget->Reset();
+            else
+            {
+                int sendsOffset = page->GetSendsOffset();
+                
+                if(sendsOffset > maxOffset)
+                    sendsOffset = maxOffset;
+                
+                if(page->GetTouchState(track, 0))
+                    touchAction_->RequestUpdate(page, this, widget, track, sendsOffset);
+                else
+                    action_->RequestUpdate(page, this, widget, track, sendsOffset);
+            }
+       }
+        else
+            widget->Reset();
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        {
+            
+            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
+            
+            if(maxOffset > -1)
+            {
+                int sendsOffset = page->GetSendsOffset();
+                
+                if(sendsOffset > maxOffset)
+                    sendsOffset = maxOffset;
+                
+                if(page->GetTouchState(track, 0))
+                    touchAction_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+                else
+                    action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+            }
+        }
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackCycleContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
