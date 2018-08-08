@@ -116,7 +116,7 @@ public:
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
-        bool isMuted = value;
+        bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_MUTE");
         
         DAW::GetSetTrackSendInfo(track, 0, sendIndex, "B_MUTE", &isMuted);
     }
