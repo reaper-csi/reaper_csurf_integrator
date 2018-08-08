@@ -87,6 +87,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPan : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
+    {
+        actionContext->SetWidgetValue(widget, 0, volToNormalized(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "D_PAN")));
+    }
+    
+    void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    {
+        double pan = normalizedToPan(value);
+        
+        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "D_PAN", &pan);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendMute : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
+    {
+        actionContext->SetWidgetValue(widget, 0, volToNormalized(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_MUTE")));
+    }
+    
+    void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    {
+        bool isMuted = value;
+        
+        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "B_MUTE", &isMuted);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolumeDB : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -147,7 +183,7 @@ public:
             trackName = "Master";
         else
             trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
-
+        
         widget->SetValue(trackName);
     }
 };
@@ -161,6 +197,39 @@ public:
     {
         char trackVolume[128];
         sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        widget->SetValue(string(trackVolume));
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
+    {
+        MediaTrack* destTrack = (MediaTrack *)GetSetTrackSendInfo(track, 0, sendIndex, "P_DESTTRACK", 0);;
+        
+        if(destTrack)
+        {
+            string sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
+
+            widget->SetValue(sendTrackName);
+        }
+        else
+            widget->Reset();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendVolumeDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
+    {
+        char trackVolume[128];
+        sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "D_VOL")));
         widget->SetValue(string(trackVolume));
     }
 };
