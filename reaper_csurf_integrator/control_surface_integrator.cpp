@@ -630,6 +630,7 @@ void Manager::InitActionDictionary()
     actions_["TrackSolo"] = new TrackSolo();
     actions_["TrackTouch"] = new TrackTouch();
     actions_["TrackTouchControlled"] = new TrackTouchControlled();
+    actions_["TrackSendTouchControlled"] = new TrackTouchControlled();
     actions_["GlobalAutoMode"] = new GlobalAutoMode();
     actions_["TrackAutoMode"] = new TrackAutoMode();
     actions_["CycleTimeline"] = new CycleTimeline();
@@ -683,6 +684,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSolo"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackTouch"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackTouchControlledContext(actions_[params[1]], actions_[params[2]], isInverted); };
+    actionContexts_["TrackSendTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackSendTouchControlledContext(actions_[params[1]], actions_[params[2]], isInverted); };
     actionContexts_["GlobalAutoMode"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["TrackAutoMode"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
