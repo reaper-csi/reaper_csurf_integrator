@@ -208,16 +208,14 @@ class TrackSendNameDisplay : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
     {
+        string sendTrackName = "";
+        
         MediaTrack* destTrack = (MediaTrack *)GetSetTrackSendInfo(track, 0, sendIndex, "P_DESTTRACK", 0);;
         
         if(destTrack)
-        {
-            string sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
+            sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
 
-            widget->SetValue(sendTrackName);
-        }
-        else
-            widget->Reset();
+        widget->SetValue(sendTrackName);
     }
 };
 
