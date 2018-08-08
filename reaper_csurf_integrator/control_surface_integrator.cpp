@@ -603,6 +603,7 @@ void Manager::InitActionDictionary()
     actions_["TrackFX"] = new TrackFX();
     actions_["GainReductionDB"] = new TrackGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
+    actions_["TrackSendVolume"] = new TrackSendVolume();
     actions_["TrackVolumeDB"] = new TrackVolumeDB();
     actions_["TrackPan"] = new TrackPan();
     actions_["TrackPanWidth"] = new TrackPanWidth();
@@ -651,6 +652,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackFX"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackVolume"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["TrackSendVolume"] = [this](vector<string> params, bool isInverted) { return new TrackSendContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackVolumeDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackPan"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["TrackPanWidth"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };

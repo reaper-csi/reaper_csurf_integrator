@@ -701,6 +701,7 @@ public:
     string GetName() { return name_; }
     int GetNumber() { return number_; }
     string GetNumberString() { return "Page" + to_string(number_); }
+    int GetSendsOffset() { return sendsOffset_; }
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     bool GetShowFXWindows() { return showFXWindows_; }
     bool GetSynchPages() { return synchPages_; }
