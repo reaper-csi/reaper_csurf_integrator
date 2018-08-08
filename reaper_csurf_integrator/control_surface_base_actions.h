@@ -67,7 +67,21 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->RequestUpdate(page, this, widget, track);
+        {
+            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
+
+            if(maxOffset < 0)
+               widget->Reset();
+            else
+            {
+                int sendsOffset = page->GetSendsOffset();
+                
+                if(sendsOffset > maxOffset)
+                    sendsOffset = maxOffset;
+                
+                action_->RequestUpdate(page, this, widget, track, sendsOffset);
+            }
+        }
         else
             widget->Reset();
     }
@@ -75,7 +89,19 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+        {
+            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
+
+            if(maxOffset > -1)
+            {
+                int sendsOffset = page->GetSendsOffset();
+                
+                if(sendsOffset > maxOffset)
+                    sendsOffset = maxOffset;
+                
+                action_->Do(page, widget, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
+            }
+        }
     }
 };
 
