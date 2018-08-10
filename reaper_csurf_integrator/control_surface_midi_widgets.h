@@ -368,7 +368,6 @@ public:
     
     virtual void Reset() override
     {
-        lastStringSent_ = "MYMYMYMYMYMYMYMY";
         SetValue("");
     }
     
