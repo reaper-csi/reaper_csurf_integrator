@@ -570,7 +570,7 @@ private:
     bool control_ = false;
     bool alt_ = false;
     
-    void InitActionContexts(RealSurface* surface, string templateDirectory);
+    void InitActionContexts(RealSurface* surface, string templateFilename);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
 
     string GetCurrentModifiers()
@@ -853,7 +853,7 @@ public:
             sendsOffset_ = maxOffset;
     }
     
-    void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateDirectory, string fxTemplateDirectory)
+    void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateFile, string fxTemplateDirectory)
     {
         if(isBankable)
             for(auto channel : surface->GetChannels())
@@ -863,7 +863,7 @@ public:
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
-        InitActionContexts(surface, resourcePath + "axt/" + actionTemplateDirectory);
+        InitActionContexts(surface, resourcePath + "axt/" + actionTemplateFile);
         InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
     }
     

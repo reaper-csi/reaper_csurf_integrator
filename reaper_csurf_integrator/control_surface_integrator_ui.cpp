@@ -278,9 +278,12 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
             }
             
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/axt/"))
-                if(foldername[0] != '.')
-                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ActionTemplates);
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/axt/"))
+            {
+                int length = filename.length();
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'a' && filename[length - 2] == 'x' &&filename[length - 1] == 't')
+                    AddComboEntry(hwndDlg, 0, (char *)filename.c_str(), IDC_COMBO_ActionTemplates);
+            }
             
             for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/fxt/"))
                 if(foldername[0] != '.')

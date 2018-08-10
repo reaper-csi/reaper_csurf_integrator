@@ -120,7 +120,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : RealSurface(page, name, numChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
-    ifstream surfaceTemplateFile(templateFilename);
+    ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/rst/" + templateFilename);
     bool inChannel = false;
     
     for (string line; getline(surfaceTemplateFile, line) ; )
@@ -199,102 +199,96 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Page::InitActionContexts(RealSurface* surface, string templateDirectory)
+void Page::InitActionContexts(RealSurface* surface, string templateFilename)
 {
     bool trackOnSelectionWidgetAdded_ = false;
+   
+    ifstream actionTemplateFile(templateFilename);
     
-    for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
+    for (string line; getline(actionTemplateFile, line) ; )
     {
-        if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'a' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
+        if(line[0] != '/' && line != "") // ignore comment lines and blank lines
         {
-            ifstream actionTemplateFile(string(templateDirectory + "/" + filename));
+            istringstream iss(line);
+            vector<string> tokens;
+            string token;
+            while (iss >> quoted(token))
+                tokens.push_back(token);
             
-            for (string line; getline(actionTemplateFile, line) ; )
+            // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
+            
+            string modifiers = "";
+            string widgetRole = "";
+            bool isInverted = false;
+            
+            if(tokens.size() > 0)
             {
-                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                istringstream modified_role(tokens[0]);
+                vector<string> modifier_tokens;
+                string modifier_token;
+                
+                while (getline(modified_role, modifier_token, '+'))
+                    modifier_tokens.push_back(modifier_token);
+                
+                widgetRole = modifier_tokens[modifier_tokens.size() - 1];
+                
+                if(modifier_tokens.size() > 1)
                 {
-                    istringstream iss(line);
-                    vector<string> tokens;
-                    string token;
-                    while (iss >> quoted(token))
-                        tokens.push_back(token);
+                    vector<string> modifierSlots = { "", "", "", "" };
                     
-                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
-                    
-                    string modifiers = "";
-                    string widgetRole = "";
-                    bool isInverted = false;
-                    
-                    if(tokens.size() > 0)
+                    for(int i = 0; i < modifier_tokens.size() - 1; i++)
                     {
-                        istringstream modified_role(tokens[0]);
-                        vector<string> modifier_tokens;
-                        string modifier_token;
-                        
-                        while (getline(modified_role, modifier_token, '+'))
-                            modifier_tokens.push_back(modifier_token);
-                        
-                        widgetRole = modifier_tokens[modifier_tokens.size() - 1];
-                        
-                        if(modifier_tokens.size() > 1)
-                        {
-                            vector<string> modifierSlots = { "", "", "", "" };
-                            
-                            for(int i = 0; i < modifier_tokens.size() - 1; i++)
-                            {
-                                if(modifier_tokens[i] == Shift)
-                                    modifierSlots[0] = Shift;
-                                else if(modifier_tokens[i] == Option)
-                                    modifierSlots[1] = Option;
-                                else if(modifier_tokens[i] == Control)
-                                    modifierSlots[2] = Control;
-                                else if(modifier_tokens[i] == Alt)
-                                    modifierSlots[3] = Alt;
-                                else if(modifier_tokens[i] == Invert)
-                                    isInverted = true;
-                            }
-                            
-                            modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
-                        }
+                        if(modifier_tokens[i] == Shift)
+                            modifierSlots[0] = Shift;
+                        else if(modifier_tokens[i] == Option)
+                            modifierSlots[1] = Option;
+                        else if(modifier_tokens[i] == Control)
+                            modifierSlots[2] = Control;
+                        else if(modifier_tokens[i] == Alt)
+                            modifierSlots[3] = Alt;
+                        else if(modifier_tokens[i] == Invert)
+                            isInverted = true;
                     }
-
-                    // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can attach ActionContexts
-                    // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
-                    if(widgetRole == "TrackOnSelection" && ! trackOnSelectionWidgetAdded_)
-                    {
-                        trackOnSelectionWidgetAdded_ = true;
-                        surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
-                    }
-
-                    vector<string> params;
-                    for(int i = 1; i < tokens.size(); i++)
-                        params.push_back(tokens[i]);
                     
-                    if(tokens.size() > 1)
-                        for(auto * widget : surface->GetAllWidgets())
-                            if(widget->GetRole() == widgetRole)
-                                if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
-                                {
-                                    if(widgetContexts_.count(widget) < 1)
-                                        widgetContexts_[widget] = new WidgetContext(widget);
-                                    
-                                    widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                                    
-                                    if(params[0] == "TrackCycle")
-                                    {
-                                        for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
-                                            if(cyclerWidget->GetRole() == params[1])
-                                            {
-                                                if(widgetContexts_.count(cyclerWidget) < 1)
-                                                    widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                                
-                                                widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                                context->SetCyclerWidget(cyclerWidget);
-                                            }
-                                    }
-                                }
+                    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                 }
             }
+
+            // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can attach ActionContexts
+            // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
+            if(widgetRole == "TrackOnSelection" && ! trackOnSelectionWidgetAdded_)
+            {
+                trackOnSelectionWidgetAdded_ = true;
+                surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
+            }
+
+            vector<string> params;
+            for(int i = 1; i < tokens.size(); i++)
+                params.push_back(tokens[i]);
+            
+            if(tokens.size() > 1)
+                for(auto * widget : surface->GetAllWidgets())
+                    if(widget->GetRole() == widgetRole)
+                        if(ActionContext* context = TheManager->GetActionContext(params, isInverted))
+                        {
+                            if(widgetContexts_.count(widget) < 1)
+                                widgetContexts_[widget] = new WidgetContext(widget);
+                            
+                            widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                            
+                            if(params[0] == "TrackCycle")
+                            {
+                                for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
+                                    if(cyclerWidget->GetRole() == params[1])
+                                    {
+                                        if(widgetContexts_.count(cyclerWidget) < 1)
+                                            widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
+                                        
+                                        widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                        context->SetCyclerWidget(cyclerWidget);
+                                    }
+                            }
+                        }
         }
     }
 }
@@ -771,7 +765,7 @@ void Manager::Init()
                 int channelOut = atoi(tokens[5].c_str());
 
                 if(currentPage)
-                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], string(DAW::GetResourcePath()) + "/CSI/rst/" + tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
+                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
             }
         }
     }
