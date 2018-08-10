@@ -373,7 +373,7 @@ public:
     
     virtual void ClearCache() override
     {
-        Reset();
+        lastStringSent_ = " ";
     }
     
     virtual void SetValue(string displayText) override
