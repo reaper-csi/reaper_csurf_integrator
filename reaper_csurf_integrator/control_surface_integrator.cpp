@@ -125,7 +125,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
-        if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+        if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
         {
             istringstream iss(line);
             vector<string> tokens;
@@ -207,7 +207,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
     
     for (string line; getline(actionTemplateFile, line) ; )
     {
-        if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+        if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
         {
             istringstream iss(line);
             vector<string> tokens;
