@@ -46,6 +46,8 @@ const string Control = "Control";
 const string Alt = "Alt";
 const string Invert = "Invert";
 const string Toggle = "Toggle";
+const string Zoom = "Zoom";
+const string Scrub = "Scrub";
 const string PageToken = "Page";
 const string Track = "Track";
 
@@ -562,33 +564,63 @@ private:
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
-    bool zoom_ = false;
-    bool scrub_ = false;
-
-    bool shift_ = false;
-    bool option_ = false;
-    bool control_ = false;
-    bool alt_ = false;
-    
     void InitActionContexts(RealSurface* surface, string templateFilename);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
+    
+    bool isZoom_ = false;
+    bool isScrub_ = false;
 
+    bool isShift_ = false;
+    bool isOption_ = false;
+    bool isControl_ = false;
+    bool isAlt_ = false;
+    
     string GetCurrentModifiers()
     {
         string modifiers = "";
         
-        if(shift_)
+        if(isShift_)
             modifiers += Shift;
-        if(option_)
+        if(isOption_)
             modifiers += Option;
-        if(control_)
+        if(isControl_)
             modifiers +=  Control;
-        if(alt_)
+        if(isAlt_)
             modifiers += Alt;
         
         return modifiers;
     }
 
+    void SetShift(bool value)
+    {
+        isShift_ = value;
+    }
+    
+    void SetOption(bool value)
+    {
+        isOption_ = value;
+    }
+    
+    void SetControl(bool value)
+    {
+        isControl_ = value;
+    }
+    
+    void SetAlt(bool value)
+    {
+        isAlt_ = value;
+    }
+    
+    void SetZoom(bool value)
+    {
+        isZoom_ = value;
+    }
+    
+    void SetScrub(bool value)
+    {
+        isScrub_ = ! isScrub_;
+    }
+    
     void SetPinnedTracks()
     {
         char buffer[BUFSZ];
@@ -709,19 +741,9 @@ public:
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
     
-    bool IsZoom() { return zoom_; }
-    bool IsScrub() { return scrub_; }
-    
-    void SetZoom(bool value)
-    {
-        zoom_ = value;
-    }
-    
-    void SetScrub(bool value)
-    {
-        scrub_ = value;
-    }
-    
+    bool IsZoom() { return isZoom_; }
+    bool IsScrub() { return isScrub_; }
+
     void LeavePage()
     {
         if(colourTracks_)
@@ -784,6 +806,10 @@ public:
             SetControl(value);
         else if(widget->GetRole() == Alt)
             SetAlt(value);
+        else if(widget->GetRole() == Zoom)
+            SetZoom(value);
+        else if(widget->GetRole() == Scrub)
+            SetScrub(value);
         else if(widgetContexts_.count(widget) > 0)
             widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
     }
@@ -802,26 +828,6 @@ public:
             OpenFXWindows();
         else
             CloseFXWindows();
-    }
-
-    void SetShift(bool value)
-    {
-        shift_ = value;
-    }
-    
-    void SetOption(bool value)
-    {
-        option_ = value;
-    }
-    
-    void SetControl(bool value)
-    {
-        control_ = value;
-    }
-    
-    void SetAlt(bool value)
-    {
-        alt_ = value;
     }
     
     int GetMaxSends()
