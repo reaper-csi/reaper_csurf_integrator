@@ -566,9 +566,6 @@ private:
 
     void InitActionContexts(RealSurface* surface, string templateFilename);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
-    
-    bool isZoom_ = false;
-    bool isScrub_ = false;
 
     bool isShift_ = false;
     bool isOption_ = false;
@@ -609,16 +606,6 @@ private:
     void SetAlt(bool value)
     {
         isAlt_ = value;
-    }
-    
-    void SetZoom(bool value)
-    {
-        isZoom_ = value;
-    }
-    
-    void SetScrub(bool value)
-    {
-        isScrub_ = ! isScrub_;
     }
     
     void SetPinnedTracks()
@@ -741,9 +728,6 @@ public:
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
     
-    bool IsZoom() { return isZoom_; }
-    bool IsScrub() { return isScrub_; }
-
     void LeavePage()
     {
         if(colourTracks_)
@@ -806,10 +790,6 @@ public:
             SetControl(value);
         else if(widget->GetRole() == Alt)
             SetAlt(value);
-        else if(widget->GetRole() == Zoom)
-            SetZoom(value);
-        else if(widget->GetRole() == Scrub)
-            SetScrub(value);
         else if(widgetContexts_.count(widget) > 0)
             widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
     }

@@ -401,38 +401,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RepeatingArrow : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    /*
-private:
-    int direction_ = 0;
-    clock_t lastRepeated = clock();
-    double repeatRate_ = 0.0;
-    bool pressed_ = false;
-    
-public:
-    
-    virtual void Update(string zoneName, string surfaceName, string widgetName) override
-    {
-        if(pressed_ && clock() - lastRepeated >  CLOCKS_PER_SEC * repeatRate_)
-        {
-            lastRepeated = clock();
-            // GAW TBD
-            //DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
-        }
-    }
-    
-    virtual void Do(double value, string zoneName, string surfaceName, string widgetName) override
-    {
-        // GAW TBD
-        // DAW::CSurf_OnArrow(direction_, Getlayer->GetRealSurfaceFor(surfaceName)->IsZoom());
-        pressed_ = value;
-    }
-     */
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSelect : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
