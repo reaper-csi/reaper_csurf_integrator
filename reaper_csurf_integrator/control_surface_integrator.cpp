@@ -615,7 +615,6 @@ void Manager::InitActionDictionary()
     actions_["Play"] = new Play();
     actions_["Stop"] = new Stop();
     actions_["Record"] = new Record();
-    actions_["RepeatingArrow"] = new RepeatingArrow();
     actions_["TrackSelect"] = new TrackSelect();
     actions_["TrackUniqueSelect"] = new TrackUniqueSelect();
     actions_["TrackRangeSelect"] = new TrackRangeSelect();
@@ -631,9 +630,6 @@ void Manager::InitActionDictionary()
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
     actions_["CycleTimeDisplayModes"] = new CycleTimeDisplayModes();
-    actions_["Latched"] = new Latched();
-    actions_["LatchedZoom"] = new LatchedZoom();
-    actions_["LatchedScrub"] = new LatchedScrub();
     actions_["NextPage"] = new class NextPage();
     actions_["TrackBank"] = new TrackBank();
     actions_["TrackSendBank"] = new TrackSendBank();
@@ -669,7 +665,6 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Play"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Stop"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["Record"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    //actionContexts_["RepeatingArrow"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackUniqueSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackRangeSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
@@ -685,9 +680,6 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["Latched"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["LatchedZoom"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
-    actionContexts_["LatchedScrub"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["NextPage"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["TrackSendBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
