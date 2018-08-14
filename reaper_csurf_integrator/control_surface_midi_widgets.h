@@ -8,7 +8,7 @@
 #define control_surface_midi_widgets_h
 
 #include "control_surface_integrator.h"
-#include "handy_reaper_functions.h"
+#include "handy_functions.h"
 #include "WDL/ptrlist.h"
 
 extern Manager* TheManager;

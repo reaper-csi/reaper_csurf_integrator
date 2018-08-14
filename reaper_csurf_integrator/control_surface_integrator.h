@@ -11,6 +11,10 @@
 #ifndef control_surface_integrator
 #define control_surface_integrator
 
+#ifdef _WIN32
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#endif
+
 #include "time.h"
 #include <sstream>
 #include <vector>
@@ -20,6 +24,11 @@
 #include <fstream>
 #include <functional>
 
+#ifdef _WIN32
+#include "oscpkt.hh"
+#include "udp.hh"
+#endif
+
 #include "control_surface_integrator_Reaper.h"
 
 #ifndef _WIN32
@@ -27,6 +36,11 @@
 #else
 #include <memory>
 #include "direntWin.h"
+#endif
+
+#ifndef _WIN32
+#include "oscpkt.hh"
+#include "udp.hh"
 #endif
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
