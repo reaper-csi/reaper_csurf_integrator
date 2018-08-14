@@ -4,8 +4,8 @@
 //
 //
 
-#ifndef control_surface_base_actions_h
-#define control_surface_base_actions_h
+#ifndef control_surface_action_contexts_h
+#define control_surface_action_contexts_h
 
 #include "control_surface_integrator.h"
 
@@ -388,4 +388,4 @@ public:
     }
 };
 
-#endif /* control_surface_base_actions_h */
+#endif /* control_surface_action_contexts_h */

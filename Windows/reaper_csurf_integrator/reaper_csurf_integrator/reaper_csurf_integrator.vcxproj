@@ -121,7 +121,7 @@
     <ClCompile Include="..\..\..\reaper_csurf_integrator\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_base_actions.h" />
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_action_contexts.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator_Reaper.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_integrator_ui.h" />
@@ -129,10 +129,12 @@
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_midi_widgets.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\control_surface_Reaper_actions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\direntWin.h" />
-    <ClInclude Include="..\..\..\reaper_csurf_integrator\handy_reaper_functions.h" />
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\handy_functions.h" />
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\oscpkt.hh" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\reaper_plugin_functions.h" />
     <ClInclude Include="..\..\..\reaper_csurf_integrator\resource.h" />
+    <ClInclude Include="..\..\..\reaper_csurf_integrator\udp.hh" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\reaper_csurf_integrator\res.rc" />

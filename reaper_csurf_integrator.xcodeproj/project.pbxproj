@@ -13,6 +13,8 @@
 		0310E4D11EB5403C00040D1A /* reaper_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CA1EB5403C00040D1A /* reaper_plugin.h */; };
 		0310E4D21EB5403C00040D1A /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 0310E4CB1EB5403C00040D1A /* resource.h */; };
 		0310E4D41EB5405900040D1A /* swell-modstub.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0310E4D31EB5405900040D1A /* swell-modstub.mm */; };
+		0326FA6D2122E6C4000D5794 /* udp.hh in Headers */ = {isa = PBXBuildFile; fileRef = 0326FA6B2122E6C3000D5794 /* udp.hh */; };
+		0326FA6E2122E6C4000D5794 /* oscpkt.hh in Headers */ = {isa = PBXBuildFile; fileRef = 0326FA6C2122E6C3000D5794 /* oscpkt.hh */; };
 		0355636B1F814C0600583062 /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 0355636A1F814C0600583062 /* reaper_plugin_functions.h */; };
 		03644D1E1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 03644D1D1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp */; };
 		036D522A20272890005FD920 /* direntWin.h in Headers */ = {isa = PBXBuildFile; fileRef = 036D522920272890005FD920 /* direntWin.h */; };
@@ -22,7 +24,7 @@
 
 /* Begin PBXFileReference section */
 		0302E0B71F805102001F3578 /* control_surface_midi_widgets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_midi_widgets.h; sourceTree = "<group>"; };
-		0302E0B81F805229001F3578 /* control_surface_base_actions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_base_actions.h; sourceTree = "<group>"; };
+		0302E0B81F805229001F3578 /* control_surface_action_contexts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_action_contexts.h; sourceTree = "<group>"; };
 		0302E0B91F805291001F3578 /* control_surface_Reaper_actions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_Reaper_actions.h; sourceTree = "<group>"; };
 		0302E0BA1F80537E001F3578 /* control_surface_manager_actions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_manager_actions.h; sourceTree = "<group>"; };
 		0310E4C61EB5403C00040D1A /* control_surface_integrator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = control_surface_integrator.cpp; sourceTree = "<group>"; };
@@ -32,6 +34,8 @@
 		0310E4CB1EB5403C00040D1A /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
 		0310E4CC1EB5403C00040D1A /* WDL */ = {isa = PBXFileReference; lastKnownFileType = folder; path = WDL; sourceTree = "<group>"; };
 		0310E4D31EB5405900040D1A /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "WDL/swell/swell-modstub.mm"; sourceTree = "<group>"; };
+		0326FA6B2122E6C3000D5794 /* udp.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = udp.hh; sourceTree = "<group>"; };
+		0326FA6C2122E6C3000D5794 /* oscpkt.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = oscpkt.hh; sourceTree = "<group>"; };
 		03464AE01EB53E7A00EAD095 /* reaper_csurf_integrator.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_csurf_integrator.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		0352CFFE1FD95CDE002AE18C /* res.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = res.rc; sourceTree = "<group>"; };
 		0355636A1F814C0600583062 /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reaper_plugin_functions.h; sourceTree = "<group>"; };
@@ -42,7 +46,7 @@
 		036D522920272890005FD920 /* direntWin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = direntWin.h; sourceTree = "<group>"; };
 		03719C611F8FC43E009C8F2E /* control_surface_integrator_Reaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_integrator_Reaper.h; sourceTree = "<group>"; };
 		037FB6761EB8C96C0012F4C1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
-		0393E6B11F7501F100BC2E2E /* handy_reaper_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = handy_reaper_functions.h; sourceTree = "<group>"; };
+		0393E6B11F7501F100BC2E2E /* handy_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = handy_functions.h; sourceTree = "<group>"; };
 		03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -79,6 +83,8 @@
 		03464AE21EB53E7A00EAD095 /* reaper_csurf_integrator */ = {
 			isa = PBXGroup;
 			children = (
+				0326FA6C2122E6C3000D5794 /* oscpkt.hh */,
+				0326FA6B2122E6C3000D5794 /* udp.hh */,
 				036D522920272890005FD920 /* direntWin.h */,
 				0352CFFE1FD95CDE002AE18C /* res.rc */,
 				0362B03D1FD80DD500E37C2F /* res.rc_mac_dlg */,
@@ -90,13 +96,13 @@
 				03644D1D1F8FAB4A001F9ED9 /* control_surface_integrator_ui.cpp */,
 				03644D1C1F8FAA61001F9ED9 /* control_surface_integrator_ui.h */,
 				0302E0B71F805102001F3578 /* control_surface_midi_widgets.h */,
-				0302E0B81F805229001F3578 /* control_surface_base_actions.h */,
+				0302E0B81F805229001F3578 /* control_surface_action_contexts.h */,
 				0302E0B91F805291001F3578 /* control_surface_Reaper_actions.h */,
 				0302E0BA1F80537E001F3578 /* control_surface_manager_actions.h */,
 				0310E4C81EB5403C00040D1A /* main.cpp */,
 				0355636A1F814C0600583062 /* reaper_plugin_functions.h */,
 				0310E4CA1EB5403C00040D1A /* reaper_plugin.h */,
-				0393E6B11F7501F100BC2E2E /* handy_reaper_functions.h */,
+				0393E6B11F7501F100BC2E2E /* handy_functions.h */,
 				0310E4CB1EB5403C00040D1A /* resource.h */,
 				0310E4CC1EB5403C00040D1A /* WDL */,
 			);
@@ -123,7 +129,9 @@
 				0310E4D21EB5403C00040D1A /* resource.h in Headers */,
 				0310E4D11EB5403C00040D1A /* reaper_plugin.h in Headers */,
 				036D522A20272890005FD920 /* direntWin.h in Headers */,
+				0326FA6E2122E6C4000D5794 /* oscpkt.hh in Headers */,
 				0310E4CE1EB5403C00040D1A /* control_surface_integrator.h in Headers */,
+				0326FA6D2122E6C4000D5794 /* udp.hh in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

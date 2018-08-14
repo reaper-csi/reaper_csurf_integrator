@@ -4,8 +4,8 @@
 //
 //
 
-#ifndef handy_reaper_functions_h
-#define handy_reaper_functions_h
+#ifndef handy_functions_h
+#define handy_functions_h
 
 #include "reaper_plugin_functions.h"
 #include "WDL/db2val.h"
@@ -160,4 +160,4 @@ static double panToNormalized(double val)
     return 0.5 * (val + 1.0);
 }
 
-#endif /* handy_reaper_functions_h */
+#endif /* handy_functions_h */
