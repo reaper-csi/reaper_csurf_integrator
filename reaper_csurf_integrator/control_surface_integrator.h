@@ -31,14 +31,11 @@
 
 #include "control_surface_integrator_Reaper.h"
 
-#ifndef _WIN32
-#include <dirent.h>
-#else
+#ifdef _WIN32
 #include <memory>
 #include "direntWin.h"
-#endif
-
-#ifndef _WIN32
+#else
+#include <dirent.h>
 #include "oscpkt.hh"
 #include "udp.hh"
 #endif
