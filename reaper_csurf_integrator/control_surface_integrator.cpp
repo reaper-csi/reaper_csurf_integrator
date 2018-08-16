@@ -362,9 +362,9 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     
                     if(fxParamName == "GainReductionDB")
                         params.push_back(fxParamName);
-                    else if(tokens.size() > 2 and tokens[2] == "TrackFXParamNameDisplay")
+                    else if(tokens.size() > 2 && tokens[2] == "TrackFXParamNameDisplay")
                         params.push_back("TrackFXParamNameDisplay");
-                    else if(tokens.size() > 2 and tokens[2] == "TrackFXParamValueDisplay")
+                    else if(tokens.size() > 2 && tokens[2] == "TrackFXParamValueDisplay")
                         params.push_back("TrackFXParamValueDisplay");
                     else params.push_back("TrackFX");
                     params.push_back(fxParamName);
