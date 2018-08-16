@@ -409,6 +409,7 @@ void Page::TrackFXListChanged(MediaTrack* track)
     
     // GAW TBD -- clear all fx items and rebuild
 }
+
 int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
 {
     char fxName[BUFSZ];
@@ -768,5 +769,4 @@ void Manager::Init()
     char buffer[BUFSZ];
     if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", buffer, sizeof(buffer)))
         currentPageIndex_ = atol(buffer);
-
 }
