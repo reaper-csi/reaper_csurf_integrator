@@ -362,6 +362,10 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     
                     if(fxParamName == "GainReductionDB")
                         params.push_back(fxParamName);
+                    else if(tokens.size() > 2 and tokens[2] == "TrackFXParamNameDisplay")
+                        params.push_back("TrackFXParamNameDisplay");
+                    else if(tokens.size() > 2 and tokens[2] == "TrackFXParamValueDisplay")
+                        params.push_back("TrackFXParamValueDisplay");
                     else params.push_back("TrackFX");
                     params.push_back(fxParamName);
                     params.push_back(fxName);
@@ -596,6 +600,8 @@ void Manager::InitActionDictionary()
 {
     actions_["Reaper"] = new ReaperAction();
     actions_["TrackFX"] = new TrackFX();
+    actions_["TrackFXParamNameDisplay"] = new TrackFXParamNameDisplay();
+    actions_["TrackFXParamValueDisplay"] = new TrackFXParamValueDisplay();
     actions_["GainReductionDB"] = new TrackGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
     actions_["TrackSendVolume"] = new TrackSendVolume();
@@ -646,6 +652,8 @@ void Manager::InitActionContextDictionary()
     
     actionContexts_["Reaper"] = [this](vector<string> params, bool isInverted) { return new ReaperActionContext(actions_[params[0]], params[1], isInverted); };
     actionContexts_["TrackFX"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
+    actionContexts_["TrackFXParamNameDisplay"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
+    actionContexts_["TrackFXParamValueDisplay"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackVolume"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSendVolume"] = [this](vector<string> params, bool isInverted) { return new TrackSendContext(actions_[params[0]], isInverted); };
