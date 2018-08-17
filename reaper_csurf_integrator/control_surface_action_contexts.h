@@ -135,16 +135,21 @@ class FXContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    string fxParamNameAlias_ = "";
     string fxParamName_ = "";
     int fxIndex_ = 0;
     
 public:
     FXContext(Action* action, string fxParamName, bool isInverted) : TrackContext(action, isInverted), fxParamName_(fxParamName) {}
     
-    void SetIndex(int index) override { fxIndex_ = index; }
+    virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
     
-    virtual void SetShouldtoggle() override { shouldToggle_ = true; } 
-
+    virtual string GetAlias() override { return fxParamNameAlias_; }
+    
+    virtual void SetIndex(int index) override { fxIndex_ = index; }
+    
+    virtual void SetShouldtoggle() override { shouldToggle_ = true; }
+    
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()) )
