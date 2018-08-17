@@ -158,7 +158,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             {
                 if(inChannel)
                     for(int i = 0; i < GetNumChannels(); i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0], tokens[1], i));
+                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], i));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1]));
             }
