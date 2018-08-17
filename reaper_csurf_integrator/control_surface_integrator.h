@@ -424,6 +424,8 @@ public:
     
     virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
+    virtual void SetAlias(string alias) {}
+    virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
@@ -1237,10 +1239,14 @@ public:
         return nullptr;
     }
     
-    ActionContext* GetFXActionContext(vector<string> params, bool isInverted)
+    ActionContext* GetFXActionContext(vector<string> params, bool isInverted, string alias)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](params, isInverted);
+        {
+            ActionContext* context = actionContexts_[params[0]](params, isInverted);
+            context->SetAlias(alias);
+            return context;
+        }
         
         return nullptr;
     }

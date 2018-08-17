@@ -374,10 +374,16 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     
                     vector<string> params;
                     
+                    string alias = "";
+                    
                     if(fxParamName == "GainReductionDB")
                         params.push_back(fxParamName);
                     else if(tokens.size() > 2 && tokens[2] == "TrackFXParamNameDisplay")
+                    {
+                        if(tokens.size() > 3)
+                            alias = tokens[3];
                         params.push_back("TrackFXParamNameDisplay");
+                    }
                     else if(tokens.size() > 2 && tokens[2] == "TrackFXParamValueDisplay")
                         params.push_back("TrackFXParamValueDisplay");
                     else params.push_back("TrackFX");
@@ -387,7 +393,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     if(tokens.size() > 1)
                         for(auto * widget : surface->GetAllWidgets())
                             if(widget->GetName() == widgetName)
-                                if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted))
+                                if(ActionContext* context = TheManager->GetFXActionContext(params, isInverted, alias))
                                 {
                                     if(shouldToggle)
                                         context->SetShouldtoggle();
