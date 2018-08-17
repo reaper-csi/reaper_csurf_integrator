@@ -209,9 +209,7 @@ public:
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) override
     {
         char fxParamName[128];
-        
         DAW::TrackFX_GetParamName(track, fxIndex, paramIndex, fxParamName, sizeof(fxParamName));
-        
         widget->SetValue(fxParamName);
     }
 };
@@ -224,9 +222,7 @@ public:
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) override
     {
         char fxParamValue[128];
-        
         TrackFX_GetFormattedParamValue(track, fxIndex, paramIndex, fxParamValue, sizeof(fxParamValue));
-
         widget->SetValue(string(fxParamValue));
     }
 };
@@ -239,12 +235,9 @@ public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
     {
         string sendTrackName = "";
-        
         MediaTrack* destTrack = (MediaTrack *)GetSetTrackSendInfo(track, 0, sendIndex, "P_DESTTRACK", 0);;
-        
         if(destTrack)
             sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
-
         widget->SetValue(sendTrackName);
     }
 };

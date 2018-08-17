@@ -40,13 +40,27 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     else if(widgetClass == "MCUXTDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x15, 0x12, channel);
     else if(widgetClass == "MCUVUMeter") return new MCUVUMeter_Midi_Widget(surface, role, name, true, channel);
     
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int displayRow, int channel)
-{
-    if(widgetClass == "C4DisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x17, displayRow + 0x30, channel);
-    else if(widgetClass == "C4DisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x17, displayRow + 0x30, channel);
+    else if(widgetClass == "C4DisplayUpper" || widgetClass == "C4DisplayLower")
+    {
+        int displayRow = 0;
+       
+        for(int i = name.length() - 1; i > 0; i--)
+            if(isalpha(name[i]))
+            {
+                if(name[i] == 'A')
+                    displayRow = 0;
+                else if(name[i] == 'B')
+                    displayRow = 1;
+                else if(name[i] == 'C')
+                    displayRow = 2;
+                else if(name[i] == 'D')
+                    displayRow = 3;
+                break;
+            }
+        
+        if(widgetClass == "C4DisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x17, displayRow + 0x30, channel);
+        else if(widgetClass == "C4DisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x17, displayRow + 0x30, channel);
+    }
     
     return new Midi_Widget(surface, role, name, false);
 }
