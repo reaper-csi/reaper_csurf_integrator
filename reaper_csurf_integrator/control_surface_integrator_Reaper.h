@@ -120,13 +120,21 @@ public:
 
     static double CSurf_OnVolumeChange(MediaTrack* trackid, double volume, bool relative) { return ::CSurf_OnVolumeChange(trackid, volume, relative); }
     
-    static double CSurf_OnSendVolumeChange(MediaTrack* trackid, int sendIndex, double volume, bool relative) { return ::CSurf_OnSendVolumeChange(trackid, sendIndex, volume, relative); }
+    static bool GetTrackUIMute(MediaTrack* track, bool* muteOut) { return ::GetTrackUIMute(track, muteOut); }
+    
+    static bool GetTrackUIVolPan(MediaTrack* track, double* volumeOut, double* panOut) { return ::GetTrackUIVolPan(track, volumeOut, panOut); }
     
     static void CSurf_SetSurfaceVolume(MediaTrack* trackid, double volume, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceVolume(trackid, volume, ignoresurf); }
     
+    static double CSurf_OnSendVolumeChange(MediaTrack* trackid, int sendIndex, double volume, bool relative) { return ::CSurf_OnSendVolumeChange(trackid, sendIndex, volume, relative); }
+
     static void GetSetTrackSendInfo(MediaTrack* tr, int category, int sendidx, const char* parmname, void* setNewValue) { ::GetSetTrackSendInfo(tr, category, sendidx, parmname, setNewValue); }
     
     static int GetTrackNumSends(MediaTrack* tr, int category) { return ::GetTrackNumSends(tr, category); }
+    
+    static bool GetTrackSendUIMute(MediaTrack* track, int send_index, bool* muteOut) { return ::GetTrackSendUIMute(track, send_index, muteOut); }
+
+    static bool GetTrackSendUIVolPan(MediaTrack* track, int send_index, double* volumeOut, double* panOut) { return ::GetTrackSendUIVolPan(track, send_index, volumeOut, panOut); }
 
     static double Track_GetPeakInfo(MediaTrack* track, int channel) { return ::Track_GetPeakInfo(track, channel); }
     
