@@ -59,7 +59,9 @@ class TrackVolume : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        actionContext->SetWidgetValue(widget, 0, volToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        double vol, pan = 0.0;
+        DAW::GetTrackUIVolPan(track, &vol, &pan);        
+        actionContext->SetWidgetValue(widget, 0, volToNormalized(vol));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
@@ -75,7 +77,9 @@ class TrackSendVolume : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
     {
-        actionContext->SetWidgetValue(widget, 0, volToNormalized(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "D_VOL")));
+        double vol, pan = 0.0;
+        DAW::GetTrackSendUIVolPan(track, sendIndex, &vol, &pan);
+        actionContext->SetWidgetValue(widget, 0, volToNormalized(vol));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
@@ -93,7 +97,9 @@ class TrackSendPan : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
     {
-        actionContext->SetWidgetValue(widget, 0, panToNormalized(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "D_PAN")));
+        double vol, pan = 0.0;
+        DAW::GetTrackSendUIVolPan(track, sendIndex, &vol, &pan);
+        actionContext->SetWidgetValue(widget, 0, panToNormalized(pan));
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
@@ -111,7 +117,9 @@ class TrackSendMute : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int sendIndex) override
     {
-        actionContext->SetWidgetValue(widget, 0, DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_MUTE"));
+        bool mute = false;
+        DAW::GetTrackSendUIMute(track, sendIndex, &mute);
+        actionContext->SetWidgetValue(widget, 0, mute);
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
@@ -145,7 +153,9 @@ class TrackPan : public Action
 public: 
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int displayMode) override
     {
-        actionContext->SetWidgetValue(widget, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_PAN")));
+        double vol, pan = 0.0;
+        DAW::GetTrackUIVolPan(track, &vol, &pan);
+        actionContext->SetWidgetValue(widget, 0, panToNormalized(pan));
     }
 
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
@@ -530,7 +540,9 @@ class TrackMute : public Action
 public:
     void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) override
     {
-        actionContext->SetWidgetValue(widget, 0, DAW::GetMediaTrackInfo_Value(track, "B_MUTE"));
+        bool mute = false;
+        DAW::GetTrackUIMute(track, &mute);
+        actionContext->SetWidgetValue(widget, 0, mute);
     }
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
