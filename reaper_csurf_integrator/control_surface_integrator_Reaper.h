@@ -196,6 +196,10 @@ public:
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
 
+    static bool IsTrackVisible(MediaTrack* track, bool mixer) { return ::IsTrackVisible(track, mixer); }
+
+    static MediaTrack* SetMixerScroll(MediaTrack* leftmosttrack) { return ::SetMixerScroll(leftmosttrack); }
+    
     static int GetTrackColor(MediaTrack* track) { return ::GetTrackColor(track); }
     
     // Runs the system color chooser dialog.  Returns 0 if the user cancels the dialog.

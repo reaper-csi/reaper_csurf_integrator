@@ -999,8 +999,9 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
-        if(followMCP_)
+        if(followMCP_ && DAW::IsTrackVisible(track, followMCP_))
         {
+            // Make sure selected track is visble on the control surface
             int low = trackOffset_;
             int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
             
@@ -1010,6 +1011,9 @@ public:
                 AdjustTrackBank(selectedTrackOffset - low);
             if(selectedTrackOffset > high)
                 AdjustTrackBank(selectedTrackOffset - high);
+            
+            // Make sure selected track is visible on the Reaper mixer control panel
+            SetMixerScroll(track);
         }
         
         for(auto surface : realSurfaces_)
