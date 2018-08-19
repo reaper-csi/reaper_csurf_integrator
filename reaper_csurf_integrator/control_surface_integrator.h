@@ -740,6 +740,7 @@ public:
     void AdjustTrackBank(int stride);
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
+    void OnTrackSelection(MediaTrack* track);
     
     void LeavePage()
     {
@@ -997,32 +998,6 @@ public:
             trackOffset_ = atol(buffer);
     }
     
-    void OnTrackSelection(MediaTrack* track)
-    {
-        if(followMCP_ && DAW::IsTrackVisible(track, followMCP_))
-        {
-            // Make sure selected track is visble on the control surface
-            int low = trackOffset_;
-            int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
-            
-            int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
-            
-            if(selectedTrackOffset < low)
-                AdjustTrackBank(selectedTrackOffset - low);
-            if(selectedTrackOffset > high)
-                AdjustTrackBank(selectedTrackOffset - high);
-            
-            // Make sure selected track is visible on the Reaper mixer control panel
-            SetMixerScroll(track);
-        }
-        
-        for(auto surface : realSurfaces_)
-            for(auto widget : surface->GetAllWidgets())
-                if(widget->GetRole() == "TrackOnSelection")
-                    if(widgetContexts_.count(widget) > 0)
-                        widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
-    }
-      
     void PinSelectedTracks()
     {
         BankableChannel* channel = nullptr;
