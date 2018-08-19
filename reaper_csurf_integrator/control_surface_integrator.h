@@ -999,6 +999,19 @@ public:
     
     void OnTrackSelection(MediaTrack* track)
     {
+        if(followMCP_)
+        {
+            int low = trackOffset_;
+            int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
+            
+            int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
+            
+            if(selectedTrackOffset < low)
+                AdjustTrackBank(selectedTrackOffset - low);
+            if(selectedTrackOffset > high)
+                AdjustTrackBank(selectedTrackOffset - high);
+        }
+        
         for(auto surface : realSurfaces_)
             for(auto widget : surface->GetAllWidgets())
                 if(widget->GetRole() == "TrackOnSelection")
