@@ -741,7 +741,8 @@ public:
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
     void OnTrackSelection(MediaTrack* track);
-    
+    void OnTrackSelectionBySurface(MediaTrack* track);
+
     void LeavePage()
     {
         if(colourTracks_)
