@@ -459,24 +459,30 @@ int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string
     return 0;
 }
 
+void Page::OnTrackSelectionBySurface(MediaTrack* track)
+{
+    if(DAW::IsTrackVisible(track, true))
+        DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
+
+    if(DAW::IsTrackVisible(track, false))
+        DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+
+    OnTrackSelection(track);
+}
+
 void Page::OnTrackSelection(MediaTrack* track)
 {
-    if(followMCP_ && DAW::IsTrackVisible(track, followMCP_))
-    {
-        // Make sure selected track is visble on the control surface
-        int low = trackOffset_;
-        int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
-        
-        int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
-        
-        if(selectedTrackOffset < low)
-            TheManager->AdjustTrackBank(this, selectedTrackOffset - low);
-        if(selectedTrackOffset > high)
-            TheManager->AdjustTrackBank(this, selectedTrackOffset - high);
-        
-        // Make sure selected track is visible on the Reaper mixer control panel
-        DAW::SetMixerScroll(track);
-    }
+    // Make sure selected track is visble on the control surface
+    int low = trackOffset_;
+    int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
+    
+    int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
+    
+    if(selectedTrackOffset < low)
+        TheManager->AdjustTrackBank(this, selectedTrackOffset - low);
+    if(selectedTrackOffset > high)
+        TheManager->AdjustTrackBank(this, selectedTrackOffset - high);
+    
     
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
