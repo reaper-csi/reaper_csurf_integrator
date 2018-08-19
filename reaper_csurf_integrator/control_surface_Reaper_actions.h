@@ -84,8 +84,8 @@ public:
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
-        double volume = normalizedToVol(value);
-        
+        double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex, normalizedToVol(value), false);
+
         DAW::GetSetTrackSendInfo(track, 0, sendIndex, "D_VOL", &volume);
     }
 };
@@ -104,7 +104,7 @@ public:
     
     void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
-        double pan = normalizedToPan(value);
+        double pan = DAW::CSurf_OnSendPanChange(track, sendIndex, normalizedToPan(value), false);
         
         DAW::GetSetTrackSendInfo(track, 0, sendIndex, "D_PAN", &pan);
     }
@@ -547,7 +547,9 @@ public:
     
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
     {
-        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! DAW::GetMediaTrackInfo_Value(track, "B_MUTE")), NULL);
+        bool mute = false;
+        DAW::GetTrackUIMute(track, &mute);
+        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! mute), NULL);
     }
 };
 
