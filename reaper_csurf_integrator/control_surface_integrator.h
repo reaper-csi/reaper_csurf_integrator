@@ -557,6 +557,7 @@ private:
     int number_ = 0;
     bool followMCP_ = true;
     bool synchPages_ = false;
+    bool scrollLink_ = true;
     bool colourTracks_ = false;
     int trackColourRedValue_ = 0;
     int trackColourGreenValue_ = 0;
@@ -737,6 +738,7 @@ public:
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     bool GetShowFXWindows() { return showFXWindows_; }
     bool GetSynchPages() { return synchPages_; }
+    bool GetScrollLink() { return scrollLink_; }
     void AdjustTrackBank(int stride);
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
@@ -888,6 +890,11 @@ public:
     bool GetFollowMCP()
     {
         return followMCP_;
+    }
+    
+    void SetScrollLink(bool value)
+    {
+        scrollLink_ = value;
     }
     
     void MapFXToWidgets(MediaTrack* track)
