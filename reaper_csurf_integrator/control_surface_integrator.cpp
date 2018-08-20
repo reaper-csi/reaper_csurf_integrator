@@ -461,28 +461,33 @@ int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string
 
 void Page::OnTrackSelectionBySurface(MediaTrack* track)
 {
-    if(DAW::IsTrackVisible(track, true))
-        DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
+    if(scrollLink_)
+    {
+        if(DAW::IsTrackVisible(track, true))
+            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
 
-    if(DAW::IsTrackVisible(track, false))
-        DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+        if(DAW::IsTrackVisible(track, false))
+            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+    }
 
     OnTrackSelection(track);
 }
 
 void Page::OnTrackSelection(MediaTrack* track)
 {
-    // Make sure selected track is visble on the control surface
-    int low = trackOffset_;
-    int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
-    
-    int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
-    
-    if(selectedTrackOffset < low)
-        TheManager->AdjustTrackBank(this, selectedTrackOffset - low);
-    if(selectedTrackOffset > high)
-        TheManager->AdjustTrackBank(this, selectedTrackOffset - high);
-    
+    if(scrollLink_)
+    {
+        // Make sure selected track is visble on the control surface
+        int low = trackOffset_;
+        int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
+        
+        int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
+        
+        if(selectedTrackOffset < low)
+            TheManager->AdjustTrackBank(this, selectedTrackOffset - low);
+        if(selectedTrackOffset > high)
+            TheManager->AdjustTrackBank(this, selectedTrackOffset - high);
+    }
     
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
@@ -686,6 +691,7 @@ void Manager::InitActionDictionary()
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
+    actions_["SetScrollLink"] = new SetScrollLink();
     actions_["CycleTimeDisplayModes"] = new CycleTimeDisplayModes();
     actions_["NextPage"] = new class NextPage();
     actions_["TrackBank"] = new TrackBank();
@@ -736,6 +742,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
+    actionContexts_["SetScrollLink"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["NextPage"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackBank"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
