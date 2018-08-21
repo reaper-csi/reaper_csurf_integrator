@@ -165,6 +165,37 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectTrackRelative : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void Do(Page* page, double stride) override
+    {
+        if(1 == DAW::CountSelectedTracks(nullptr))
+        {
+            int trackIndex = 0;
+            
+            for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
+                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+                {
+                    trackIndex = i;
+                    break;
+                }
+            
+            trackIndex += stride;
+            
+            if(trackIndex < 0)
+                trackIndex = 0;
+            
+            if(trackIndex > DAW::CSurf_NumTracks(page->GetFollowMCP()))
+                trackIndex = DAW::CSurf_NumTracks(page->GetFollowMCP());
+            
+            DAW::SetOnlyTrackSelected(DAW::CSurf_TrackFromID(trackIndex, page->GetFollowMCP()));
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
