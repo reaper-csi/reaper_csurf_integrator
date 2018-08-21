@@ -12,6 +12,57 @@
 extern Manager* TheManager;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapTrackToWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void Do(Page* page, RealSurface* surface) override
+    {
+        if(1 == DAW::CountSelectedTracks(nullptr))
+        {
+            MediaTrack* track = nullptr;
+            
+            for(int i = 0; i < CSurf_NumTracks(page->GetFollowMCP()); i++)
+                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+                {
+                    track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                    break;
+                }
+            
+            if(track)
+            {
+                page->UnmapWidgetsFromTrack();
+                page->MapTrackToWidgets(surface, track);
+            }
+        }
+        else
+            page->UnmapWidgetsFromTrack();
+    }
+    
+    void Do(Page* page, RealSurface* surface, double value) override
+    {
+        if(1 == DAW::CountSelectedTracks(nullptr))
+        {
+            MediaTrack* track = nullptr;
+            
+            for(int i = 0; i < CSurf_NumTracks(page->GetFollowMCP()); i++)
+                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+                {
+                    track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+                    break;
+                }
+            
+            if(track)
+            {
+                page->ToggleMapTrackToWidgets(surface, track);
+            }
+        }
+        else
+            page->UnmapWidgetsFromTrack();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

@@ -660,30 +660,6 @@ private:
         openFXWindows_.clear();
     }
     
-    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
-    {
-        widgetContextsMappedToTracks_.clear();
-        
-        for(auto channel : surface->GetChannels())
-            for(auto widget : channel)
-                if(widgetContexts_.count(widget) > 0)
-                {
-                    widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
-                    widgetContextsMappedToTracks_.push_back(widgetContexts_[widget]);
-                }
-    }
-    
-    void UnmapWidgetsFromTrack()
-    {
-        for(auto widgetContext : widgetContextsMappedToTracks_)
-        {
-            widgetContext->GetWidget()->SetValue(0, 0.0);
-            widgetContext->SetComponentTrackContext(Track, "");
-        }
-        
-        widgetContextsMappedToTracks_.clear();
-    }
-    
     void RequestUpdate()
     {
         for(auto [widget, widgetContext] : widgetContexts_)
@@ -896,6 +872,25 @@ public:
     {
         scrollLink_ = value;
     }
+        
+    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        MapTrackToWidgets(surface, track);
+        MapFXToWidgets(track);
+    }
+
+    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        widgetContextsMappedToTracks_.clear();
+        
+        for(auto channel : surface->GetChannels())
+            for(auto widget : channel)
+                if(widgetContexts_.count(widget) > 0)
+                {
+                    widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
+                    widgetContextsMappedToTracks_.push_back(widgetContexts_[widget]);
+                }
+    }
     
     void MapFXToWidgets(MediaTrack* track)
     {
@@ -929,6 +924,44 @@ public:
         OpenFXWindows();
     }
     
+    void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        ToggleMapTrackToWidgets(surface, track);
+        ToggleMapFXToWidgets(surface, track);
+    }
+    
+    void ToggleMapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        if(widgetContextsMappedToTracks_.size() > 0)
+            UnmapWidgetsFromTrack();
+        else
+            MapTrackToWidgets(surface, track);
+    }
+
+    void ToggleMapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    {
+        if(widgetContextsMappedToFX_.size() > 0)
+            UnmapWidgetsFromFX();
+        else  MapFXToWidgets(track);
+    }
+    
+    void UnmapWidgetsFromTrackAndFX()
+    {
+        UnmapWidgetsFromTrack();
+        UnmapWidgetsFromFX();
+    }
+    
+    void UnmapWidgetsFromTrack()
+    {
+        for(auto widgetContext : widgetContextsMappedToTracks_)
+        {
+            widgetContext->GetWidget()->SetValue(0, 0.0);
+            widgetContext->SetComponentTrackContext(Track, "");
+        }
+        
+        widgetContextsMappedToTracks_.clear();
+    }
+    
     void UnmapWidgetsFromFX()
     {
         DeleteFXWindows();
@@ -941,35 +974,6 @@ public:
         }
         
         widgetContextsMappedToFX_.clear();
-    }
-    
-    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
-    {
-        MapTrackToWidgets(surface, track);
-        MapFXToWidgets(track);
-    }
-    
-    void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
-    {
-        if(widgetContextsMappedToTracks_.size() > 0)
-            UnmapWidgetsFromTrack();
-        else
-            MapTrackToWidgets(surface, track);
-
-        ToggleMapFXToWidgets(surface, track);
-    }
-    
-    void ToggleMapFXToWidgets(RealSurface* surface, MediaTrack* track)
-    {
-        if(widgetContextsMappedToFX_.size() > 0)
-            UnmapWidgetsFromFX();
-        else  MapFXToWidgets(track);
-    }
-    
-    void UnmapWidgetsFromTrackAndFX()
-    {
-        UnmapWidgetsFromTrack();
-        UnmapWidgetsFromFX();
     }
     
     void CycleTimeDisplayModes()
