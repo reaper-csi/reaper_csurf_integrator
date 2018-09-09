@@ -132,7 +132,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-: RealSurface(page, name, numChannels), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+: RealSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/rst/" + templateFilename);
     bool inChannel = false;
@@ -157,7 +157,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             else if(tokens.size() == 2)
             {
                 if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
+                    for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], i));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1]));
@@ -165,7 +165,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             else if(tokens.size() == 5)
             {
                 if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
+                    for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])));
@@ -173,7 +173,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             else if(tokens.size() == 7)
             {
                 if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
+                    for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
@@ -181,7 +181,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             else if(tokens.size() == 8)
             {
                 if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
+                    for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]) + i, strToHex(tokens[7])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
@@ -189,7 +189,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             else if(tokens.size() == 10)
             {
                 if(inChannel)
-                    for(int i = 0; i < GetNumChannels(); i++)
+                    for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
