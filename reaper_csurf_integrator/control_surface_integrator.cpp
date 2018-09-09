@@ -136,7 +136,9 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
 {
     ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/rst/" + templateFilename);
     bool inChannel = false;
-    
+    bool inSingleChannel = false;
+    int currentChannel = 0;
+
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
         if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
@@ -149,10 +151,17 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             
             if(tokens.size() == 1)
             {
-                if(tokens[0] == Channel)
+                if(tokens[0] == "Channel")
                     inChannel = true;
-                else if(tokens[0] == ChannelEnd)
+                else if(tokens[0] == "ChannelEnd")
                     inChannel = false;
+                if(tokens[0] == "SingleChannel")
+                    inSingleChannel = true;
+                else if(tokens[0] == "SingleChannelEnd")
+                {
+                    inSingleChannel = false;
+                    currentChannel++;
+                }
             }
             else if(tokens.size() == 2)
             {
@@ -162,6 +171,11 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1]));
             }
+            else if(tokens.size() == 3)
+            {
+                if(inSingleChannel)
+                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], currentChannel));
+            }
             else if(tokens.size() == 5)
             {
                 if(inChannel)
@@ -169,6 +183,11 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])));
+            }
+            else if(tokens.size() == 6)
+            {
+                if(inSingleChannel)
+                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
             }
             else if(tokens.size() == 7)
             {
@@ -183,8 +202,15 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                 if(inChannel)
                     for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]) + i, strToHex(tokens[7])));
+                else if(inSingleChannel)
+                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
+            }
+            else if(tokens.size() == 9)
+            {
+                if(inSingleChannel)
+                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
             }
             else if(tokens.size() == 10)
             {
@@ -193,6 +219,11 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
                 else
                     AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
+            }
+            else if(tokens.size() == 11)
+            {
+                if(inSingleChannel)
+                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToDouble(tokens[3]), strToDouble(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9]), strToHex(tokens[10])));
             }
         }
     }
