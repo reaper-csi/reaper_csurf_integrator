@@ -247,16 +247,11 @@ protected:
     Page* page_ = nullptr;
     const string name_ = "";
 
-    vector<Widget*> widgets_;
     vector<Widget*> allWidgets_;
     vector<Widget*> emptyWidgets_;
     vector<vector<Widget*>> channels_;
     
-    RealSurface(Page* page, const string name, int numChannels) : page_(page), name_(name)
-    {
-        for(int i = 0; i < numChannels; i++)
-            channels_.push_back(vector<Widget*>());
-    }
+    RealSurface(Page* page, const string name) : page_(page), name_(name) {}
 
 public:
     virtual ~RealSurface() {};
@@ -265,13 +260,12 @@ public:
 
     Page* GetPage() { return page_; }
     string GetName() const { return name_; }
-    int GetNumChannels() { return channels_.size(); }
     vector<vector<Widget*>> GetChannels() { return channels_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
 
     vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
     {
-        for(int i = 0; i < GetNumChannels(); i++)
+        for(int i = 0; i < channels_.size(); i++)
             for(int j = 0; j < channels_[i].size(); j++)
                 if(channels_[i][j] == aChannelWidget)
                     return channels_[i];
@@ -282,14 +276,16 @@ public:
 
     void AddWidget(Widget* widget)
     {
-        widgets_.push_back(widget);
         allWidgets_.push_back(widget);
     }
     
     void AddWidget(int channelNum, Widget* widget)
     {
-        if(channelNum >= 0 && channelNum < channels_.size())
+        if(channelNum >= 0)
         {
+            if(channels_.size() < channelNum + 1)
+                channels_.push_back(vector<Widget*>());
+            
             channels_[channelNum].push_back(widget);
             allWidgets_.push_back(widget);
         }
