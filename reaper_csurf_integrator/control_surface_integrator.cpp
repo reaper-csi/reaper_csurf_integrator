@@ -154,7 +154,10 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                 if(tokens[0] == "Channel")
                     inChannel = true;
                 else if(tokens[0] == "ChannelEnd")
+                {
                     inChannel = false;
+                    currentChannel = numChannels;
+                }
                 if(tokens[0] == "SingleChannel")
                     inSingleChannel = true;
                 else if(tokens[0] == "SingleChannelEnd")
