@@ -190,6 +190,8 @@ public:
     
     static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
 
+    static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
+    
     static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView); }
     
     static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView) + 1; };
