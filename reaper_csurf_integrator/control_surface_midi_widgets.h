@@ -324,6 +324,60 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class QConProXMasterVUMeter_Midi_Widget : public Midi_Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    QConProXMasterVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Midi_Widget(surface, role, name, wantsFeedback) {}
+    
+    virtual void SetValue(int param, double value) override
+    {
+        
+        
+        /*
+        int midiValue = 0;
+        
+        double minDB = TheManager->GetVUMinDB();
+        double maxDB = TheManager->GetVUMaxDB();
+
+        
+        if(value < minDB)
+            midiValue = 0;
+        else if(value > maxDB)
+            midiValue = 127;
+        else
+            midiValue = ((value - minDB) / (maxDB - minDB)) * 127;
+        
+        SendMidiMessage(0xb0, 0x70 + param, midiValue);
+*/
+        
+        
+        
+        
+        //Master Channel:
+        //Master Level 1 : 0xd1, 0x0L
+        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
+        
+        //Master Level 2 : 0xd1, 0x1L
+        //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
+        
+        int midiValue = 0;
+        
+        double minDB = -60.0;
+        double maxDB = 6.0;
+        
+        if(value < minDB)
+            midiValue = 0x00;
+        else if(value > maxDB)
+            midiValue = 0x0d;
+        else
+            midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
+        
+        SendMidiMessage(0xd1, (param << 4) | midiValue, 0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MCUVUMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

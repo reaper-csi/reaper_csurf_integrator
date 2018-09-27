@@ -215,7 +215,7 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
-        action_->RequestUpdate(page, this, widget);
+        action_->RequestUpdate(page, this, widget, param_);
     }
     
     virtual void DoAction(Page* page, Widget* widget, double value) override

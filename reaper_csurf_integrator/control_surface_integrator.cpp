@@ -28,7 +28,8 @@ double strToDouble(string valueStr)
 Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass)
 {
     if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name, true);
-    
+    else if(widgetClass == "QConProXMasterVUMeter") return new QConProXMasterVUMeter_Midi_Widget(surface, role, name, true);
+
     return new Midi_Widget(surface, role, name, false);
 }
 
@@ -39,7 +40,7 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
     else if(widgetClass == "MCUXTDisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x15, 0x12, channel);
     else if(widgetClass == "MCUXTDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x15, 0x12, channel);
     else if(widgetClass == "MCUVUMeter") return new MCUVUMeter_Midi_Widget(surface, role, name, true, channel);
-    
+
     else if(widgetClass == "C4DisplayUpper" || widgetClass == "C4DisplayLower")
     {
         int displayRow = 0;
@@ -724,6 +725,7 @@ void Manager::InitActionDictionary()
     actions_["TrackSendTouchControlled"] = new TrackTouchControlled();
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
+    actions_["MasterTrackOutputMeter"] = new MasterTrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
     actions_["SetScrollLink"] = new SetScrollLink();
     actions_["CycleTimeDisplayModes"] = new CycleTimeDisplayModes();
@@ -777,6 +779,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackSendTouchControlledContext(actions_[params[1]], actions_[params[2]], isInverted); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
+    actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params, bool isInverted) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str()), isInverted); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["SetScrollLink"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
