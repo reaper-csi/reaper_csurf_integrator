@@ -159,7 +159,9 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
                     inChannel = false;
                     currentChannel = numChannels;
                 }
-                if(tokens[0] == "SingleChannel")
+                else if(tokens[0] == "MasterChannel" || tokens[0] == "MasterChannelEnd")
+                    page->SetHasMasterChannel(true);
+                else if(tokens[0] == "SingleChannel")
                     inSingleChannel = true;
                 else if(tokens[0] == "SingleChannelEnd")
                 {
@@ -696,6 +698,7 @@ void Manager::InitActionDictionary()
     actions_["TrackFXParamValueDisplay"] = new TrackFXParamValueDisplay();
     actions_["GainReductionDB"] = new TrackGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
+    actions_["MasterTrackVolume"] = new MasterTrackVolume();
     actions_["TrackSendVolume"] = new TrackSendVolume();
     actions_["TrackSendPan"] = new TrackSendPan();
     actions_["TrackSendMute"] = new TrackSendMute();
@@ -750,6 +753,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackFXParamValueDisplay"] = [this](vector<string> params, bool isInverted) { return new FXContext(actions_[params[0]], params[1], isInverted); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackVolume"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["MasterTrackVolume"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSendVolume"] = [this](vector<string> params, bool isInverted) { return new TrackSendContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSendPan"] = [this](vector<string> params, bool isInverted) { return new TrackSendContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSendMute"] = [this](vector<string> params, bool isInverted) { return new TrackSendContext(actions_[params[0]], isInverted); };
@@ -872,5 +876,8 @@ void Manager::Init()
     
     char buffer[BUFSZ];
     if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", buffer, sizeof(buffer)))
-        currentPageIndex_ = atol(buffer);
+       currentPageIndex_ = atol(buffer);
+    
+    if(currentPageIndex_ >= pages_.size())
+       currentPageIndex_ = pages_.size() - 1;
 }
