@@ -363,8 +363,8 @@ public:
         
         int midiValue = 0;
         
-        double minDB = -60.0;
-        double maxDB = 6.0;
+        double minDB = TheManager->GetVUMinDB();
+        double maxDB = TheManager->GetVUMaxDB();
         
         if(value < minDB)
             midiValue = 0x00;
@@ -436,9 +436,6 @@ public:
             return;
         
         lastStringSent_ = displayText;
-        
-        if(channel_ > 7) // GAW TDB -- this is a hack to prevent Fader 9 (Master) on MCU from displaying on lower row of channel 1
-            return;
         
         int pad = 7;
         const char* text = displayText.c_str();

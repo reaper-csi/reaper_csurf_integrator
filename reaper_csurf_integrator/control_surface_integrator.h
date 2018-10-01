@@ -550,6 +550,7 @@ private:
     string name_ = "";
     int number_ = 0;
     bool followMCP_ = true;
+    bool hasMasterChannel_ = false;
     bool synchPages_ = false;
     bool scrollLink_ = true;
     bool colourTracks_ = false;
@@ -680,7 +681,9 @@ private:
     {
         if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
         {
-            if(followMCP_ && DAW::GetMasterTrackVisibility() < 2)
+            if(hasMasterChannel_)
+                return false;
+            else if(followMCP_ && DAW::GetMasterTrackVisibility() & 0x02)
                 return true;
             else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
                 return true;
@@ -714,7 +717,9 @@ public:
     void TrackFXListChanged(MediaTrack* track);
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
-
+    
+    void SetHasMasterChannel(bool hasMasterChannel) { hasMasterChannel_ = hasMasterChannel; }
+    
     void LeavePage()
     {
         if(colourTracks_)
