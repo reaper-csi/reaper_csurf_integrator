@@ -597,62 +597,34 @@ void Page::RefreshLayout()
 {
     currentlyRefreshingLayout_ = true;
     
-    vector<MediaTrack*> visibleTracks;
-    
-    for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
-        visibleTracks.push_back(DAW::CSurf_TrackFromID(i, followMCP_));
-    
-    vector<string> pinnedChannelLayout;
     vector<string> pinnedChannels;
-    int offset = trackOffset_;
-    vector<string> movableChannelLayout;
+
+    string masterTrackGUID = DAW::GetTrackGUIDAsString(0, followMCP_);
+    
+    if(hasMasterChannel_)
+        pinnedChannels.push_back(masterTrackGUID);
+    else if( ! (followMCP_ && (DAW::GetMasterTrackVisibility() & 0x02)))
+        pinnedChannels.push_back(masterTrackGUID);
+    else if( ! (! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01)))
+        pinnedChannels.push_back(masterTrackGUID);
     
     for(auto* channel : bankableChannels_)
-    {
-        // Layout Pinned GUIDs
         if(channel->GetIsPinned())
-        {
-            pinnedChannelLayout.push_back(channel->GetTrackGUID());
             pinnedChannels.push_back(channel->GetTrackGUID());
-        }
-        else
-            pinnedChannelLayout.push_back("");
-        
-        // Layout Channel GUIDs
-        if(offset < 0)
-        {
-            movableChannelLayout.push_back("");
-            offset++;
-        }
-        else if(offset >= DAW::CSurf_NumTracks(followMCP_))
-        {
-            movableChannelLayout.push_back("");
-        }
-        else
-        {
-            movableChannelLayout.push_back(DAW::GetTrackGUIDAsString(visibleTracks[offset++], followMCP_));
-        }
-    }
     
-    // Remove Pinned Channels
-    for(int i = 0; i < pinnedChannels.size(); i++)
+    vector<string> layoutChannels(bankableChannels_.size() + pinnedChannels.size());
+
+    int layoutChannelIndex = 0;
+    
+    for(int i = trackOffset_; i < DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
     {
-        auto iter = find(movableChannelLayout.begin(), movableChannelLayout.end(), pinnedChannels[i]);
-        if(iter != movableChannelLayout.end())
-            movableChannelLayout.erase(iter);
-    }
-    
-    // Merge the layouts
-    offset = 0;
-    vector<string> channelLayout;
-    
-    for(int i = 0; i < bankableChannels_.size(); i++)
-    {
-        if(pinnedChannelLayout[i] != "")
-            channelLayout.push_back(pinnedChannelLayout[i]);
+        if(i < 0)
+            layoutChannelIndex++;
         else
-            channelLayout.push_back(movableChannelLayout[offset++]);
+            layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
     }
+    
+    subtract_vector(layoutChannels, pinnedChannels);
     
     if(colourTracks_ && TheManager->GetCurrentPage() == this)
     {
@@ -665,10 +637,14 @@ void Page::RefreshLayout()
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
     }
     
+    
     // Apply new layout
-    offset = 0;
+    layoutChannelIndex = 0;
+    
     for(auto* channel : bankableChannels_)
-        channel->SetTrackGUID(this, channelLayout[offset++]);
+        if(! channel->GetIsPinned())
+            channel->SetTrackGUID(this, layoutChannels[layoutChannelIndex++]);
+
     
     if(colourTracks_ && TheManager->GetCurrentPage() == this)
     {
