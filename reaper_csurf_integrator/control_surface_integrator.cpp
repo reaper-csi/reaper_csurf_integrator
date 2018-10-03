@@ -549,11 +549,31 @@ void Page::AdjustTrackBank(int stride)
     if(trackOffset_ >  top)
         trackOffset_ = top;
     
-    // Jump over any pinned channels and invisible tracks
     vector<string> pinnedChannels;
-    for(auto* channel : bankableChannels_)
-        if(channel->GetIsPinned())
-            pinnedChannels.push_back(channel->GetTrackGUID());
+    
+    GetPinnedChannelGUIDs(pinnedChannels);
+
+    while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
+    {
+        string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
+
+        if(find(pinnedChannels.begin(), pinnedChannels.end(), trackGUID) != pinnedChannels.end())
+            previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+        else if(! IsTrackVisible(DAW::CSurf_TrackFromID(trackOffset_, followMCP_)))
+            previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
+        else
+           break;
+    }
+    
+    
+    
+    /*
+    
+    // Jump over any pinned channels and invisible tracks
+    //vector<string> pinnedChannels;
+    //for(auto* channel : bankableChannels_)
+        //if(channel->GetIsPinned())
+            //pinnedChannels.push_back(channel->GetTrackGUID());
     
     bool skipThisChannel = false;
     
@@ -584,6 +604,8 @@ void Page::AdjustTrackBank(int stride)
             break;
     }
     
+    */
+    
     if(previousTrackOffset != trackOffset_)
     {
         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
@@ -599,18 +621,7 @@ void Page::RefreshLayout()
     
     vector<string> pinnedChannels;
 
-    string masterTrackGUID = DAW::GetTrackGUIDAsString(0, followMCP_);
-    
-    if(hasMasterChannel_)
-        pinnedChannels.push_back(masterTrackGUID);
-    else if( ! (followMCP_ && (DAW::GetMasterTrackVisibility() & 0x02)))
-        pinnedChannels.push_back(masterTrackGUID);
-    else if( ! (! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01)))
-        pinnedChannels.push_back(masterTrackGUID);
-    
-    for(auto* channel : bankableChannels_)
-        if(channel->GetIsPinned())
-            pinnedChannels.push_back(channel->GetTrackGUID());
+    GetPinnedChannelGUIDs(pinnedChannels);
     
     vector<string> layoutChannels(bankableChannels_.size() + pinnedChannels.size());
 
@@ -620,6 +631,8 @@ void Page::RefreshLayout()
     {
         if(i < 0)
             layoutChannelIndex++;
+        else if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
+            pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
         else
             layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
     }
@@ -695,11 +708,13 @@ void Manager::InitActionDictionary()
     actions_["Record"] = new Record();
     actions_["TrackSelect"] = new TrackSelect();
     actions_["TrackUniqueSelect"] = new TrackUniqueSelect();
+    actions_["MasterTrackUniqueSelect"] = new MasterTrackUniqueSelect();
     actions_["TrackRangeSelect"] = new TrackRangeSelect();
     actions_["TrackRecordArm"] = new TrackRecordArm();
     actions_["TrackMute"] = new TrackMute();
     actions_["TrackSolo"] = new TrackSolo();
     actions_["TrackTouch"] = new TrackTouch();
+    actions_["MasterTrackTouch"] = new MasterTrackTouch();
     actions_["TrackTouchControlled"] = new TrackTouchControlled();
     actions_["TrackSendTouchControlled"] = new TrackTouchControlled();
     actions_["CycleTimeline"] = new CycleTimeline();
@@ -750,11 +765,13 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Record"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackUniqueSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["MasterTrackUniqueSelect"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackRangeSelect"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackRecordArm"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackMute"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackSolo"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackTouch"] = [this](vector<string> params, bool isInverted) { return new TrackContext(actions_[params[0]], isInverted); };
+    actionContexts_["MasterTrackTouch"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
     actionContexts_["TrackTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackTouchControlledContext(actions_[params[1]], actions_[params[2]], isInverted); };
     actionContexts_["TrackSendTouchControlled"] = [this](vector<string> params, bool isInverted) { return new TrackSendTouchControlledContext(actions_[params[1]], actions_[params[2]], isInverted); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params, bool isInverted) { return new GlobalContext(actions_[params[0]], isInverted); };
