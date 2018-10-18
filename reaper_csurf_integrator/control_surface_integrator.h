@@ -1173,48 +1173,6 @@ public:
         }
 
         return false;
-       
-        /*
-        vector<string> visibleTrackGUIDs;
-        
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
-            if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
-                visibleTrackGUIDs.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
-        
-        int currentOffset = trackOffset_;
-        bool shouldRefreshLayout = false;
-        
-        for(int i = 0; i < bankableChannels_.size() && currentOffset < DAW::CSurf_NumTracks(followMCP_); i++)
-        {
-            if(bankableChannels_[i]->GetIsPinned())
-            {
-                if(bankableChannels_[i]->GetTrackGUID() == "") // track has been removed
-                {
-                    bankableChannels_[i]->SetIsPinned(false); // unlock this, since there is no longer a track to lock to
-                    shouldRefreshLayout = true;
-                    DAW::ClearCache();
-                    break;
-                }
-                else
-                {
-                    currentOffset++; // track exists, move on
-                }
-            }
-            
-            else if(bankableChannels_[i]->GetTrackGUID() == visibleTrackGUIDs[currentOffset])
-            {
-                currentOffset++; // track exists and positions are in synch
-            }
-            else
-            {
-                shouldRefreshLayout = true;
-                DAW::ClearCache();
-                break;
-            }
-        }
-        
-        return shouldRefreshLayout;
-         */
     }
 };
 
