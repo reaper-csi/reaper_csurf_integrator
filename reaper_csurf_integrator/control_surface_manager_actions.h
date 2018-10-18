@@ -124,7 +124,7 @@ public:
         {
             MediaTrack* track = nullptr;
             
-            for(int i = 0; i < CSurf_NumTracks(page->GetFollowMCP()); i++)
+            for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
                 if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
                 {
                     track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
