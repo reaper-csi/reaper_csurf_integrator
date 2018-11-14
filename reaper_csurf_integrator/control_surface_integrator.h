@@ -437,11 +437,13 @@ protected:
     bool isInverted_ = false;
     bool shouldToggle_ = false;
 
-    ActionContext(Action* action, bool isInverted) : action_(action), isInverted_(isInverted) {}
+    ActionContext(Action* action) : action_(action) {}
     
 public:
     virtual ~ActionContext() {}
     
+    void SetIsInverted() { isInverted_ = true; }
+
     virtual void SetShouldtoggle() {}
     
     virtual void SetTrack(string trackGUID) {}
@@ -1183,7 +1185,7 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(vector<string>, bool isInverted)>> actionContexts_;
+    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1235,19 +1237,19 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(vector<string> params, bool isInverted)
+    ActionContext* GetActionContext(vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](params, isInverted);
+            return actionContexts_[params[0]](params);
         
         return nullptr;
     }
     
-    ActionContext* GetFXActionContext(vector<string> params, bool isInverted, string alias)
+    ActionContext* GetFXActionContext(vector<string> params, string alias)
     {
         if(actionContexts_.count(params[0]) > 0)
         {
-            ActionContext* context = actionContexts_[params[0]](params, isInverted);
+            ActionContext* context = actionContexts_[params[0]](params);
             context->SetAlias(alias);
             return context;
         }

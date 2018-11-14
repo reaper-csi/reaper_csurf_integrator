@@ -14,7 +14,7 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    GlobalContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -35,7 +35,7 @@ protected:
     string trackGUID_ = "";
     
 public:
-    TrackContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    TrackContext(Action* action) : ActionContext(action) {}
     
     virtual void  SetTrack(string trackGUID) override
     {
@@ -62,7 +62,7 @@ class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendContext(Action* action, bool isInverted) : TrackContext(action, isInverted) {}
+    TrackSendContext(Action* action) : TrackContext(action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -113,7 +113,7 @@ private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntParam(Action* action, int param, bool isInverted) : TrackContext(action, isInverted), param_(param) {}
+    TrackContextWithIntParam(Action* action, int param) : TrackContext(action), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -140,7 +140,7 @@ private:
     int fxIndex_ = 0;
     
 public:
-    FXContext(Action* action, string fxParamName, bool isInverted) : TrackContext(action, isInverted), fxParamName_(fxParamName) {}
+    FXContext(Action* action, string fxParamName) : TrackContext(action), fxParamName_(fxParamName) {}
     
     virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
     
@@ -178,7 +178,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Action* action, string commandStr, bool isInverted) : ActionContext(action, isInverted)
+    ReaperActionContext(Action* action, string commandStr) : ActionContext(action)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -211,7 +211,7 @@ private:
     int param_ = 0;
     
 public:
-    GlobalContextWithIntParam(Action* action, int param, bool isInverted) : ActionContext(action, isInverted), param_(param) {}
+    GlobalContextWithIntParam(Action* action, int param) : ActionContext(action), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -231,7 +231,7 @@ class TrackTouchControlledContext : public TrackContext
 private:
     Action* touchAction_ = nullptr;
 public:
-    TrackTouchControlledContext(Action* action, Action* touchAction, bool isInverted) : TrackContext(action, isInverted), touchAction_(touchAction) {}
+    TrackTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -265,7 +265,7 @@ class TrackSendTouchControlledContext : public TrackContext
 private:
     Action* touchAction_ = nullptr;
 public:
-    TrackSendTouchControlledContext(Action* action, Action* touchAction, bool isInverted) : TrackContext(action, isInverted), touchAction_(touchAction) {}
+    TrackSendTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -325,7 +325,7 @@ private:
     vector<ActionContext*> actionContexts_;
     
 public:
-    TrackCycleContext(vector<string> params, Action* action, bool isInverted) : TrackContext(action, isInverted)
+    TrackCycleContext(vector<string> params, Action* action) : TrackContext(action)
     {
         for(int i = 2; i < params.size(); i++)
         {
@@ -335,7 +335,7 @@ public:
             while (iss >> quoted(token))
                 tokens.push_back(token);
 
-            if(ActionContext* context = TheManager->GetActionContext(tokens, isInverted))
+            if(ActionContext* context = TheManager->GetActionContext(tokens))
             {
                 context->SetTrack(trackGUID_);
                 actionContexts_.push_back(context);
@@ -380,7 +380,7 @@ class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PageSurfaceContext(Action* action, bool isInverted) : ActionContext(action, isInverted) {}
+    PageSurfaceContext(Action* action) : ActionContext(action) {}
     
     virtual void DoAction(Page* page, RealSurface* surface) override
     {
