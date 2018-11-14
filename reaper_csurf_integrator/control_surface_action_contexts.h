@@ -147,9 +147,7 @@ public:
     virtual string GetAlias() override { return fxParamNameAlias_; }
     
     virtual void SetIndex(int index) override { fxIndex_ = index; }
-    
-    virtual void SetShouldtoggle() override { shouldToggle_ = true; }
-    
+        
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()) )
