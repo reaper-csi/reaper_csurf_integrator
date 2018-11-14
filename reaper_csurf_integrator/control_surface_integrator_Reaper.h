@@ -55,11 +55,20 @@ public:
  
     static void SwapBufsPrecise(midi_Input* midiInput)
     {
-#ifndef timeGetTime
-        midiInput->SwapBufsPrecise(GetTickCount(), GetTickCount());
-#else
-        midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
-#endif
+    #ifndef timeGetTime
+            midiInput->SwapBufsPrecise(GetTickCount(), GetTickCount());
+    #else
+            midiInput->SwapBufsPrecise(timeGetTime(), timeGetTime());
+    #endif
+    }
+    
+    static double GetCurrentNumberOfMilliseconds()
+    {
+    #ifndef timeGetTime
+            return GetTickCount();
+    #else
+            return timeGetTime();
+    #endif
     }
     
     static const char* get_ini_file() { return ::get_ini_file(); }
