@@ -271,6 +271,9 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
             string modifiers = "";
             string widgetRole = "";
             bool isInverted = false;
+            bool shouldToggle = false;
+            bool isDelayed = false;
+            double delayTime = 0.0;
             
             if(tokens.size() > 0)
             {
@@ -299,6 +302,13 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                             modifierSlots[3] = Alt;
                         else if(modifier_tokens[i] == Invert)
                             isInverted = true;
+                        else if(modifier_tokens[i] == Toggle)
+                            shouldToggle = true;
+                        else if(modifier_tokens[i] == Hold)
+                        {
+                            isDelayed = true;
+                            delayTime = 2.0;
+                        }
                     }
                     
                     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
@@ -324,6 +334,12 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                         {
                             if(isInverted)
                                 context->SetIsInverted();
+                            
+                            if(shouldToggle)
+                                context->SetShouldToggle();
+                            
+                            if(isDelayed)
+                                context->SetDelayTime(delayTime);
                             
                             if(widgetContexts_.count(widget) < 1)
                                 widgetContexts_[widget] = new WidgetContext(widget);
@@ -374,6 +390,8 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     string widgetName = "";
                     bool isInverted = false;
                     bool shouldToggle = false;
+                    bool isDelayed = false;
+                    double delayTime = 0.0;
 
                     if(tokens.size() > 0)
                     {
@@ -404,6 +422,11 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                     isInverted = true;
                                 else if(modifier_tokens[i] == Toggle)
                                     shouldToggle = true;
+                                else if(modifier_tokens[i] == Hold)
+                                {
+                                    isDelayed = true;
+                                    delayTime = 2.0;
+                                }
                             }
                             
                             modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
@@ -439,8 +462,11 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                         context->SetIsInverted();
 
                                     if(shouldToggle)
-                                        context->SetShouldtoggle();
-                                    
+                                        context->SetShouldToggle();
+
+                                    if(isDelayed)
+                                        context->SetDelayTime(delayTime);
+
                                     if(widgetContexts_.count(widget) < 1)
                                         widgetContexts_[widget] = new WidgetContext(widget);
                                     

@@ -55,6 +55,7 @@ const string Control = "Control";
 const string Alt = "Alt";
 const string Invert = "Invert";
 const string Toggle = "Toggle";
+const string Hold = "Hold";
 const string Zoom = "Zoom";
 const string Scrub = "Scrub";
 const string PageToken = "Page";
@@ -436,6 +437,8 @@ protected:
     Action * action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
+    bool isDelayed_ = false;
+    double delayTime_ = 0.0;
 
     ActionContext(Action* action) : action_(action) {}
     
@@ -443,9 +446,9 @@ public:
     virtual ~ActionContext() {}
     
     void SetIsInverted() { isInverted_ = true; }
+    void SetShouldToggle() { shouldToggle_ = true; }
+    void SetDelayTime(double delayTime) { isDelayed_ = true; delayTime_ = delayTime; }
 
-    virtual void SetShouldtoggle() {}
-    
     virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
