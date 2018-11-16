@@ -115,7 +115,7 @@ Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, stri
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
-    surface_->SendMidiMessage(midiMessage);
+    GetSurface()->SendMidiMessage(midiMessage);
 }
 
 void Midi_Widget::SendMidiMessage(int first, int second, int third)
@@ -125,7 +125,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
         lastMessageSent_->midi_message[0] = first;
         lastMessageSent_->midi_message[1] = second;
         lastMessageSent_->midi_message[2] = third;
-        surface_->SendMidiMessage(first, second, third);
+        GetSurface()->SendMidiMessage(first, second, third);
     }
 }
 
@@ -252,8 +252,9 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::InitActionContexts(RealSurface* surface, string templateFilename)
 {
-    bool trackOnSelectionWidgetAdded_ = false;
-   
+    bool isTrackOnSelectionWidgetAdded = false;
+    bool isFocusedFXWidgetAdded = false;
+    
     ifstream actionTemplateFile(templateFilename);
     
     for (string line; getline(actionTemplateFile, line) ; )
@@ -315,14 +316,20 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                 }
             }
 
-            // GAW IMPORTANT -- If widgetRole == "OnTrackSelection", add a MIDI widget to the surface so that we can attach ActionContexts
+            // GAW IMPORTANT -- If widgetRole == "TrackOnSelection" or "FocusedFX", add a widget to the surface so that we can attach ActionContexts
             // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
-            if(widgetRole == "TrackOnSelection" && ! trackOnSelectionWidgetAdded_)
+            if(widgetRole == TrackOnSelection && ! isTrackOnSelectionWidgetAdded)
             {
-                trackOnSelectionWidgetAdded_ = true;
-                surface->AddWidget(new Midi_Widget((Midi_RealSurface*)surface, widgetRole, widgetRole, new MIDI_event_ex_t(00, 00, 00), new MIDI_event_ex_t(00, 00, 00)));
+                isTrackOnSelectionWidgetAdded = true;
+                surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
             }
-
+            
+            if(widgetRole == FocusedFX && ! isFocusedFXWidgetAdded)
+            {
+                isFocusedFXWidgetAdded = true;
+                surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
+            }
+            
             vector<string> params;
             for(int i = 1; i < tokens.size(); i++)
                 params.push_back(tokens[i]);
@@ -439,7 +446,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                     
                     string alias = "";
                     
-                    if(fxParamName == "GainReductionDB")
+                    if(fxParamName == GainReductionDB)
                         params.push_back(fxParamName);
                     else if(tokens.size() > 2 && tokens[2] == "TrackFXParamNameDisplay")
                     {
@@ -560,7 +567,17 @@ void Page::OnTrackSelection(MediaTrack* track)
     
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == "TrackOnSelection")
+            if(widget->GetRole() == TrackOnSelection)
+                if(widgetContexts_.count(widget) > 0)
+                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
+}
+
+void Page::OnFXFocus(MediaTrack* track, int fxIndex)
+{
+    // GAW WIP  -- currently doesn't take FX index into account
+    for(auto surface : realSurfaces_)
+        for(auto widget : surface->GetAllWidgets())
+            if(widget->GetRole() == FocusedFX)
                 if(widgetContexts_.count(widget) > 0)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
 }
