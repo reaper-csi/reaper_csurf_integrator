@@ -44,6 +44,7 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string GainReductionDB = "GainReductionDB";
 const string TrackOnSelection = "TrackOnSelection";
+const string FocusedFX = "FocusedFX";
 const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
@@ -214,16 +215,15 @@ private:
     string role_ = "";
     string name_ = "";
     bool wantsFeedback_ = false;
-
-protected:
-    Widget(string role, string name, bool wantsFeedback) : role_(role), name_(name), wantsFeedback_(wantsFeedback) {}
+    RealSurface* surface_ = nullptr;
 
 public:
+    Widget(RealSurface* surface, string role, string name, bool wantsFeedback) : surface_(surface), role_(role), name_(name), wantsFeedback_(wantsFeedback) {}
     virtual ~Widget() {};
     
     string GetRole() { return role_; }
     string GetName() { return name_; }
-    virtual RealSurface* GetSurface() { return nullptr; }
+    RealSurface* GetSurface() { return surface_; }
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
@@ -237,9 +237,6 @@ class Midi_RealSurface;
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Midi_RealSurface* surface_ = nullptr;
-    
 protected:
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
@@ -249,13 +246,11 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget(role, name, true), surface_(surface) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Widget(role, name, wantsFeedback), surface_(surface) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(role, name, wantsFeedback), surface_(surface),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget((RealSurface*)surface, role, name, true) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Widget((RealSurface*)surface, role, name, wantsFeedback) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((RealSurface*)surface, role, name, wantsFeedback),  midiPressMessage_(press) {}
+    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, role, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
-
-    virtual RealSurface* GetSurface() override { return (RealSurface*)surface_; }
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     virtual void ClearCache() override
@@ -285,6 +280,8 @@ public:
     
     virtual void HandleMidiInput() {}
 
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
+    virtual void SendMidiMessage(int first, int second, int third) {}
     Page* GetPage() { return page_; }
     string GetName() const { return name_; }
     vector<vector<Widget*>> GetChannels() { return channels_; }
@@ -378,7 +375,7 @@ public:
         widgetsByMessage_[message] = widget;
     }
     
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage)
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
     {
         if(midiOutput_)
             midiOutput_->SendMsg(midiMessage, -1);
@@ -391,7 +388,7 @@ public:
         }
     }
     
-    virtual void SendMidiMessage(int first, int second, int third)
+    virtual void SendMidiMessage(int first, int second, int third) override
     {
         if(midiOutput_)
             midiOutput_->Send(first, second, third, -1);
@@ -764,6 +761,7 @@ public:
     void AdjustTrackBank(int stride);
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
+    void OnFXFocus(MediaTrack* track, int fxIndex);
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
     
@@ -1266,6 +1264,12 @@ public:
             pages_[currentPageIndex_]->OnTrackSelection(track);
     }
     
+    void OnFXFocus(MediaTrack *track, int fxIndex)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->OnFXFocus(track,fxIndex);
+    }
+
     void Run()
     {
         if(pages_.size() > 0)
