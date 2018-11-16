@@ -49,9 +49,15 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_SETFOCUSEDFX)
     {
-        MediaTrack* track = (MediaTrack*)parm1;
-        int fxIndex = *(int*)parm3;
-        TheManager->OnFXFocus(track,fxIndex);
+        // GAW TBD -- need to implement take FX and clear focus
+        
+        // Track FX focused
+        if(parm1 != NULL && parm2 == NULL && parm3!= NULL)
+        {
+            MediaTrack* track = (MediaTrack*)parm1;
+            int fxIndex = *(int*)parm3;
+            TheManager->OnFXFocus(track, fxIndex);
+        }
     }
     
     return 1;
