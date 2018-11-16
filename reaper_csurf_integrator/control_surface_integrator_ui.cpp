@@ -46,7 +46,14 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
         // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
         TheManager->TrackFXListChanged((MediaTrack*)parm1);
     }
-
+    
+    if(call == CSURF_EXT_SETFOCUSEDFX)
+    {
+        MediaTrack* track = (MediaTrack*)parm1;
+        int fxIndex = *(int*)parm3;
+        TheManager->OnFXFocus(track,fxIndex);
+    }
+    
     return 1;
 }
 
