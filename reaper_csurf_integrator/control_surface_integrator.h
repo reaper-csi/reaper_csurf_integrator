@@ -434,8 +434,10 @@ protected:
     Action * action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
-    bool isDelayed_ = false;
-    double delayTime_ = 0.0;
+    bool shouldExecute_ = false;
+    double delayAmount_ = 0.0;
+    double delayStartTime_ = 0.0;
+    double valueForDelayedExecution_ = 0.0;
 
     ActionContext(Action* action) : action_(action) {}
     
@@ -444,7 +446,7 @@ public:
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
-    void SetDelayTime(double delayTime) { isDelayed_ = true; delayTime_ = delayTime; }
+    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
 
     virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
