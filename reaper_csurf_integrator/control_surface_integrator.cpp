@@ -781,6 +781,7 @@ void Manager::InitActionDictionary()
     actions_["MapTrackToWidgets"] = new MapTrackToWidgets();
     actions_["MapFXToWidgets"] = new MapFXToWidgets();
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
+    actions_["MapTrackAndFXToWidgetsForTrack"] = new MapTrackAndFXToWidgetsForTrack();
 }
 
 void Manager::InitActionContextDictionary()
@@ -838,6 +839,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["MapTrackToWidgets"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
     actionContexts_["MapFXToWidgets"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
     actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
+    actionContexts_["MapTrackAndFXToWidgetsForTrack"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackCycleContext(params, actions_[params[0]]); };
 }
 

@@ -972,6 +972,21 @@ public:
         OpenFXWindows();
     }
     
+    void ToggleMapTrackAndFXToWidgets(MediaTrack* track)
+    {
+        RealSurface* surfaceC1 = nullptr;
+        
+        for(auto surface : realSurfaces_)
+            if(surface->GetName() == "GreenConsole1")
+            {
+                surfaceC1 = surface;
+                break;
+            }
+        
+        ToggleMapTrackToWidgets(surfaceC1, track);
+        ToggleMapFXToWidgets(surfaceC1, track);
+    }
+    
     void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
         ToggleMapTrackToWidgets(surface, track);
@@ -990,7 +1005,7 @@ public:
     {
         if(widgetContextsMappedToFX_.size() > 0)
             UnmapWidgetsFromFX();
-        else  MapFXToWidgets(track);
+        else MapFXToWidgets(track);
     }
     
     void UnmapWidgetsFromTrackAndFX()

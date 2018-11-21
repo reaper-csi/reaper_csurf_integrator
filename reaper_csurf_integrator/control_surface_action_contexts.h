@@ -59,8 +59,8 @@ public:
     {
         if(shouldExecute_ && DAW::GetCurrentNumberOfMilliseconds() > delayStartTime_ + delayAmount_)
         {
-            ExecuteAction(page, widget, valueForDelayedExecution_);
             shouldExecute_ = false;
+            ExecuteAction(page, widget, valueForDelayedExecution_);
         }
         
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
