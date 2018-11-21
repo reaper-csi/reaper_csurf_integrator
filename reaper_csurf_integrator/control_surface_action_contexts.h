@@ -57,6 +57,12 @@ public:
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
+        if(shouldExecute_ && DAW::GetCurrentNumberOfMilliseconds() > delayStartTime_ + delayAmount_)
+        {
+            ExecuteAction(page, widget, valueForDelayedExecution_);
+            shouldExecute_ = false;
+        }
+        
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
             action_->RequestUpdate(page, this, widget, track);
         else
@@ -65,7 +71,21 @@ public:
     
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
-        ExecuteAction(page, widget, value);
+        if(delayAmount_ == 0)
+            ExecuteAction(page, widget, value);
+        else
+        {
+            if(value == 0.0)
+            {
+               shouldExecute_ = false;
+            }
+            else
+            {
+                valueForDelayedExecution_ = value;
+                delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
+                shouldExecute_ = true;
+            }
+        }
     }
 };
 

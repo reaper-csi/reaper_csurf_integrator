@@ -274,7 +274,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
             bool isInverted = false;
             bool shouldToggle = false;
             bool isDelayed = false;
-            double delayTime = 0.0;
+            double delayAmount = 0.0;
             
             if(tokens.size() > 0)
             {
@@ -308,7 +308,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                         else if(modifier_tokens[i] == Hold)
                         {
                             isDelayed = true;
-                            delayTime = 2.0;
+                            delayAmount = 2.0;
                         }
                     }
                     
@@ -346,7 +346,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                                 context->SetShouldToggle();
                             
                             if(isDelayed)
-                                context->SetDelayTime(delayTime);
+                                context->SetDelayAmount(delayAmount * 1000.0);
                             
                             if(widgetContexts_.count(widget) < 1)
                                 widgetContexts_[widget] = new WidgetContext(widget);
@@ -472,7 +472,7 @@ void Page::InitFXContexts(RealSurface* surface, string templateDirectory)
                                         context->SetShouldToggle();
 
                                     if(isDelayed)
-                                        context->SetDelayTime(delayTime);
+                                        context->SetDelayAmount(delayTime * 1000.0);
 
                                     if(widgetContexts_.count(widget) < 1)
                                         widgetContexts_[widget] = new WidgetContext(widget);
