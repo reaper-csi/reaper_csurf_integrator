@@ -140,7 +140,7 @@ public:
         else
             page->UnmapWidgetsFromTrackAndFX();
     }
-
+    
     void Do(Page* page, RealSurface* surface, double value) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
@@ -161,6 +161,17 @@ public:
         }
         else
             page->UnmapWidgetsFromTrackAndFX();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapTrackAndFXToWidgetsForTrack  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    {
+        page->ToggleMapTrackAndFXToWidgets(track);
     }
 };
 
