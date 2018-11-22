@@ -171,7 +171,7 @@ class MapTrackAndFXToWidgetsForTrack  : public Action
 public:
     void Do(Page* page, RealSurface* surface, MediaTrack* track) override
     {
-        page->MapTrackAndFXToWidgets(surface, track);
+        page->ToggleMapTrackAndFXToWidgets(surface, track);
     }
 };
 
