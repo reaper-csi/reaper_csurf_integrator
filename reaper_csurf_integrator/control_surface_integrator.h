@@ -45,6 +45,7 @@ const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string GainReductionDB = "GainReductionDB";
 const string TrackOnSelection = "TrackOnSelection";
 const string FocusedFX = "FocusedFX";
+const string TrackOnMapTrackAndFXToWidgets = "TrackOnMapTrackAndFXToWidgets";
 const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
@@ -423,6 +424,7 @@ public:
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, RealSurface* surface) {}
+    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
     virtual void Do(Page* page, RealSurface* surface, double value) {}
 };
 
@@ -457,6 +459,7 @@ public:
     virtual void DoAction(Page* page, Widget* widget, double value) {}
     virtual void DoRelativeAction(Page* page, Widget* widget, double value) {}
     virtual void DoAction(Page* page, RealSurface* surface) {}
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -503,7 +506,21 @@ public:
                 actionContext->DoAction(page, widget, value);
     }
     
+    void DoAction(Page* page, string modifiers, RealSurface* surface)
+    {
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->DoAction(page, surface);
+    }
+    
     void DoAction(Page* page, string modifiers, RealSurface* surface, MediaTrack* track)
+    {
+        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
+            for(auto actionContext : actionContexts_[component_][modifiers])
+                actionContext->DoAction(page, surface, track);
+    }
+    
+    void DoAction(Page* page, string modifiers, RealSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
@@ -763,6 +780,7 @@ public:
     void AdjustTrackBank(int stride);
     void RefreshLayout();
     void TrackFXListChanged(MediaTrack* track);
+    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
     void OnFXFocus(MediaTrack* track, int fxIndex);
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
@@ -970,21 +988,6 @@ public:
         }
         
         OpenFXWindows();
-    }
-    
-    void ToggleMapTrackAndFXToWidgets(MediaTrack* track)
-    {
-        RealSurface* surfaceC1 = nullptr;
-        
-        for(auto surface : realSurfaces_)
-            if(surface->GetName() == "GreenConsole1")
-            {
-                surfaceC1 = surface;
-                break;
-            }
-        
-        ToggleMapTrackToWidgets(surfaceC1, track);
-        ToggleMapFXToWidgets(surfaceC1, track);
     }
     
     void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
