@@ -44,7 +44,7 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string GainReductionDB = "GainReductionDB";
 const string TrackOnSelection = "TrackOnSelection";
-const string FocusedFX = "FocusedFX";
+const string TrackOnFocusedFX = "TrackOnFocusedFX";
 const string TrackOnMapTrackAndFXToWidgets = "TrackOnMapTrackAndFXToWidgets";
 const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
@@ -425,6 +425,7 @@ public:
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, RealSurface* surface) {}
     virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
+    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) {}
     virtual void Do(Page* page, RealSurface* surface, double value) {}
 };
 
@@ -460,6 +461,7 @@ public:
     virtual void DoRelativeAction(Page* page, Widget* widget, double value) {}
     virtual void DoAction(Page* page, RealSurface* surface) {}
     virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -524,7 +526,7 @@ public:
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, surface);
+                actionContext->DoAction(page, surface, track, fxIndex);
     }
     
     void SetIndex(int index)
@@ -990,6 +992,38 @@ public:
         OpenFXWindows();
     }
     
+    void MapSingleFXToWidgets(MediaTrack* track, int fxIndex)
+    {
+        for(auto widgetContext : widgetContextsMappedToFX_)
+        {
+            widgetContext->GetWidget()->SetValue(0, 0.0);
+            widgetContext->ClearAllButTrackContexts();
+            widgetContext->SetComponent(Track);
+        }
+
+        char fxName[BUFSZ];
+
+        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+        
+        if(fxWidgets_.count(fxName) > 0)
+        {
+            for(auto widget : fxWidgets_[fxName])
+            {
+                if(widgetContexts_.count(widget) > 0)
+                {
+                    widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
+                    widgetContexts_[widget]->SetComponent(fxName);
+                    widgetContexts_[widget]->SetIndex(fxIndex);
+                    widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
+                }
+            }
+            
+            AddFXWindow(FXWindow(track, fxIndex));
+        }
+        
+        OpenFXWindows();
+    }
+    
     void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
     {
         ToggleMapTrackToWidgets(surface, track);
@@ -1009,6 +1043,21 @@ public:
         if(widgetContextsMappedToFX_.size() > 0)
             UnmapWidgetsFromFX();
         else MapFXToWidgets(track);
+    }
+    
+    void ToggleMapSingleFXToWidgets(RealSurface* surface, MediaTrack* track, int fxIndex)
+    {
+        if(track == nullptr)
+        {
+            for(auto widgetContext : widgetContextsMappedToFX_)
+            {
+                widgetContext->GetWidget()->SetValue(0, 0.0);
+                widgetContext->ClearAllButTrackContexts();
+                widgetContext->SetComponent(Track);
+            }
+        }
+        else
+            MapSingleFXToWidgets(track, fxIndex);
     }
     
     void UnmapWidgetsFromTrackAndFX()
@@ -1287,7 +1336,7 @@ public:
     void OnFXFocus(MediaTrack *track, int fxIndex)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->OnFXFocus(track,fxIndex);
+            pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
 
     void Run()

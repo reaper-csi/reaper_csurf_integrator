@@ -472,6 +472,11 @@ public:
         action_->Do(page, surface, track);
     }
     
+    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) override
+    {
+        action_->Do(page, surface, track, fxIndex);
+    }
+    
     virtual void DoAction(Page* page, Widget* widget, double value) override
     {
         ExecuteAction(page, widget, value);

@@ -317,7 +317,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                 }
             }
 
-            // GAW IMPORTANT -- If widgetRole == "TrackOnSelection" or "FocusedFX", add a widget to the surface so that we can attach ActionContexts
+            // GAW IMPORTANT -- If widgetRole == "TrackOnSelection" or "TrackOnMapTrackAndFXToWidgets" or "TrackOnFocusedFX", add a widget to the surface so that we can attach ActionContexts
             // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
             if(widgetRole == TrackOnSelection && ! isTrackOnSelectionWidgetAdded)
             {
@@ -331,7 +331,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                 surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
             }
             
-            if(widgetRole == FocusedFX && ! isFocusedFXWidgetAdded)
+            if(widgetRole == TrackOnFocusedFX && ! isFocusedFXWidgetAdded)
             {
                 isFocusedFXWidgetAdded = true;
                 surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
@@ -593,7 +593,7 @@ void Page::OnFXFocus(MediaTrack* track, int fxIndex)
     // GAW WIP  -- currently doesn't take FX index into account
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == FocusedFX)
+            if(widget->GetRole() == TrackOnFocusedFX)
                 if(widgetContexts_.count(widget) > 0)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track, fxIndex);
 }
@@ -798,6 +798,7 @@ void Manager::InitActionDictionary()
     actions_["MapFXToWidgets"] = new MapFXToWidgets();
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
     actions_["MapTrackAndFXToWidgetsForTrack"] = new MapTrackAndFXToWidgetsForTrack();
+    actions_["MapSingleFXToWidgetsForTrack"] = new MapSingleFXToWidgetsForTrack();
     actions_["GlobalMapTrackAndFXToWidgetsForTrack"] = new GlobalMapTrackAndFXToWidgetsForTrack();
 }
 
@@ -857,6 +858,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["MapFXToWidgets"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
     actionContexts_["MapTrackAndFXToWidgets"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
     actionContexts_["MapTrackAndFXToWidgetsForTrack"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
+    actionContexts_["MapSingleFXToWidgetsForTrack"] = [this](vector<string> params) { return new PageSurfaceContext(actions_[params[0]]); };
     actionContexts_["GlobalMapTrackAndFXToWidgetsForTrack"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackCycleContext(params, actions_[params[0]]); };
 }
