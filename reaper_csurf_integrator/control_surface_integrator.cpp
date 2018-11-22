@@ -309,7 +309,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                         else if(modifier_tokens[i] == Hold)
                         {
                             isDelayed = true;
-                            delayAmount = 2.0;
+                            delayAmount = 1.0;
                         }
                     }
                     
