@@ -617,6 +617,11 @@ public:
             m_mackie_lasttime_mode=tmode;
             SendMidiMessage(0x90, 0x71, tmode==5?0x7F:0); // set smpte light
             SendMidiMessage(0x90, 0x72, m_mackie_lasttime_mode>0 && tmode<3?0x7F:0); // set beats light
+            
+            // Blank display on mode change
+            for (int x = 0 ; x < sizeof(bla) ; x++)
+                SendMidiMessage(0xB0,0x40+x,0x20);
+           
         }
         
         if (memcmp(m_mackie_lasttime,bla,sizeof(bla)))
