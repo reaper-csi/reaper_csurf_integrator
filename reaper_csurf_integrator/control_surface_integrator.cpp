@@ -130,7 +130,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : RealSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
-    ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/rst/" + templateFilename);
+    ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/mst/" + templateFilename);
     bool inChannel = false;
     bool inSingleChannel = false;
     int currentChannel = 0;
