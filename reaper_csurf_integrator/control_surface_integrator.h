@@ -414,11 +414,13 @@ public:
     
     virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) {}                                     // GlobalContext
     virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, int commandId) {}                      // ReaperActionContext
+    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, string param) {}                       // string param
     virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) {}                  // TrackContext
     virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}       // TrackParamContext
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
+    virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
@@ -1361,11 +1363,30 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", to_string(currentPageIndex_).c_str());
-            DAW::MarkProjectDirty(nullptr);
-            pages_[currentPageIndex_]->EnterPage();
-            pages_[currentPageIndex_]->RefreshLayout();
+            SavePageIndexToProjectFile();
         }
+    }
+    
+    void GoPage(string pageName)
+    {
+        for(int i = 0; i < pages_.size(); i++)
+        {
+            if(pages_[i]->GetName() == pageName)
+            {
+                pages_[currentPageIndex_]->LeavePage();
+                currentPageIndex_ = i;
+                SavePageIndexToProjectFile();
+                break;
+            }
+        }
+    }
+    
+    void SavePageIndexToProjectFile()
+    {
+        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", to_string(currentPageIndex_).c_str());
+        DAW::MarkProjectDirty(nullptr);
+        pages_[currentPageIndex_]->EnterPage();
+        pages_[currentPageIndex_]->RefreshLayout();
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)

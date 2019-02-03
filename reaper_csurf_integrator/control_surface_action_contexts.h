@@ -282,6 +282,32 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GlobalContextWithStringParam : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string param_ = "";
+    
+    void ExecuteAction(Page* page, Widget* widget, double value)
+    {
+        action_->Do(page, param_);
+    }
+    
+public:
+    GlobalContextWithStringParam(Action* action, string param) : ActionContext(action), param_(param) {}
+    
+    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    {
+        action_->RequestUpdate(page, this, widget, param_);
+    }
+    
+    virtual void DoAction(Page* page, Widget* widget, double value) override
+    {
+        ExecuteAction(page, widget, value);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackTouchControlledContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
