@@ -1364,6 +1364,8 @@ public:
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
             SavePageIndexToProjectFile();
+            pages_[currentPageIndex_]->EnterPage();
+            pages_[currentPageIndex_]->RefreshLayout();
         }
     }
     
@@ -1376,6 +1378,9 @@ public:
                 pages_[currentPageIndex_]->LeavePage();
                 currentPageIndex_ = i;
                 SavePageIndexToProjectFile();
+                pages_[currentPageIndex_]->EnterPage();
+                pages_[currentPageIndex_]->RefreshLayout();
+
                 break;
             }
         }
@@ -1385,8 +1390,6 @@ public:
     {
         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", to_string(currentPageIndex_).c_str());
         DAW::MarkProjectDirty(nullptr);
-        pages_[currentPageIndex_]->EnterPage();
-        pages_[currentPageIndex_]->RefreshLayout();
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
