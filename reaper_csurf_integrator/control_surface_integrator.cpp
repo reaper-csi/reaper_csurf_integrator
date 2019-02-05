@@ -122,6 +122,11 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
         lastMessageSent_->midi_message[2] = third;
         GetSurface()->SendMidiMessage(first, second, third);
     }
+    else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
+    {
+        lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
+        GetSurface()->SendMidiMessage(first, second, third);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +220,6 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             }
             else if(tokens.size() == 10)
             {
-                // GAW TBD -- don't forget to add logic here for the single channel case
                 if(inChannel)
                     for(int i = 0; i < numChannels; i++)
                         AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));

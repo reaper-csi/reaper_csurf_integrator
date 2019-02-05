@@ -243,6 +243,10 @@ protected:
     MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
 
+    bool shouldRefresh_ = false;
+    double refreshInterval_ = 0.0;
+    double lastRefreshed_ = 0.0;
+
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     virtual void SendMidiMessage(int first, int second, int third);
 
@@ -253,6 +257,8 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, role, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
 
+    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval; }
+    
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
     virtual void ClearCache() override
     {
