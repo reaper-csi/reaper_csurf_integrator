@@ -355,9 +355,21 @@ public:
     
     virtual void SetValue(string displayText) override
     {
-        if( displayText == lastStringSent_)
-            return;
-        
+        if(shouldRefresh_)
+        {
+            double now = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
+                lastRefreshed_ = now;
+            else
+                return;
+        }
+        else
+        {
+            if(displayText == lastStringSent_) // no changes since last send
+                return;
+        }
+
         lastStringSent_ = displayText;
         
         int pad = 7;
