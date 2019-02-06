@@ -25,86 +25,6 @@ double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass)
-{
-    if(widgetClass == "MCUTimeDisplay") return new MCU_TimeDisplay_Midi_Widget(surface, role, name, true);
-    else if(widgetClass == "QConProXMasterVUMeter") return new QConProXMasterVUMeter_Midi_Widget(surface, role, name, true);
-
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int channel)
-{
-    if(widgetClass == "MCUDisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x14, 0x12, channel);
-    else if(widgetClass == "MCUDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x14, 0x12, channel);
-    else if(widgetClass == "MCUXTDisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x15, 0x12, channel);
-    else if(widgetClass == "MCUXTDisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x15, 0x12, channel);
-    else if(widgetClass == "MCUVUMeter") return new MCUVUMeter_Midi_Widget(surface, role, name, true, channel);
-
-    else if(widgetClass == "C4DisplayUpper" || widgetClass == "C4DisplayLower")
-    {
-        int displayRow = 0;
-       
-        for(int i = name.length() - 1; i > 0; i--)
-            if(isalpha(name[i]))
-            {
-                if(name[i] == 'A')
-                    displayRow = 0;
-                else if(name[i] == 'B')
-                    displayRow = 1;
-                else if(name[i] == 'C')
-                    displayRow = 2;
-                else if(name[i] == 'D')
-                    displayRow = 3;
-                break;
-            }
-        
-        if(widgetClass == "C4DisplayUpper") return new MCUDisplay_Midi_Widget(surface, role, name, true, 0, 0x17, displayRow + 0x30, channel);
-        else if(widgetClass == "C4DisplayLower") return new MCUDisplay_Midi_Widget(surface, role, name, true, 1, 0x17, displayRow + 0x30, channel);
-    }
-    
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3)
-{
-    if(widgetClass == "Press") return new Press_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3));
-    
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3)
-{
-    if(widgetClass == "VUMeter") return new VUMeter_Midi_Widget(surface, role, name, true, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3));
-    else if(widgetClass == "GainReductionMeter") return new GainReductionMeter_Midi_Widget(surface, role, name, true, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3));
-    
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
-{
-    if(widgetClass == "Press") return new Press_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    
-    else if(widgetClass == "PressFB") return new Press_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "PressRelease") return new PressRelease_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "PressReleaseFB") return new PressRelease_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    
-    else if(widgetClass == "Fader7Bit") return new Fader7Bit_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "Fader7BitFB") return new Fader7Bit_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "Encoder") return new Encoder_Midi_Widget(surface, role, name, false, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "EncoderFB") return new Encoder_Midi_Widget(surface, role, name, true, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-
-    return new Midi_Widget(surface, role, name, false);
-}
-
-Midi_Widget* WidgetFor(Midi_RealSurface* surface, string role, string name, string widgetClass, double minDB, double maxDB, int byte1, int byte2, int byte3, int byte4, int byte5, int byte6)
-{
-    if(widgetClass == "Fader14Bit") return new Fader14Bit_Midi_Widget(surface, role, name, false, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-    else if(widgetClass == "Fader14BitFB") return new Fader14Bit_Midi_Widget(surface, role, name, true, minDB, maxDB, new MIDI_event_ex_t(byte1, byte2, byte3), new MIDI_event_ex_t(byte4, byte5, byte6));
-
-    return new Midi_Widget(surface, role, name, false);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,13 +52,10 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : RealSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/mst/" + templateFilename);
-    bool inChannel = false;
-    bool inSingleChannel = false;
-    int currentChannel = 0;
 
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
@@ -150,86 +67,124 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             while (iss >> quoted(token))
                 tokens.push_back(token);
             
-            if(tokens.size() == 1)
+            if(tokens.size() > 0)
             {
-                if(tokens[0] == "Channel")
-                    inChannel = true;
-                else if(tokens[0] == "ChannelEnd")
+                string name = tokens[0];
+
+                if(tokens.size() > 1)
                 {
-                    inChannel = false;
-                    currentChannel = numChannels;
+                    Widget* widget = nullptr;
+                    
+                    string widgetClass = tokens[1];
+
+                    if(widgetClass == "MCUTimeDisplay")
+                    {
+                        if( tokens.size() == 2)
+                            AddWidget(widget = new MCU_TimeDisplay_Midi_Widget(this, name, true));
+                    }
+                    else if(widgetClass == "QConProXMasterVUMeter")
+                    {
+                        if( tokens.size() == 2)
+                            AddWidget(widget = new QConProXMasterVUMeter_Midi_Widget(this, name, true));
+                    }
+                    else if(widgetClass == "MCUDisplayUpper")
+                    {
+                        if( tokens.size() == 3)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x14, 0x12, stoi(tokens[2])));
+                    }
+                    else if(widgetClass == "MCUDisplayLower")
+                    {
+                        if( tokens.size() == 3)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x14, 0x12, stoi(tokens[2])));
+                    }
+                    else if(widgetClass == "MCUXTDisplayUpper")
+                    {
+                        if( tokens.size() == 3)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x15, 0x12, stoi(tokens[2])));
+                    }
+                    else if(widgetClass == "MCUXTDisplayLower")
+                    {
+                        if( tokens.size() == 3)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x15, 0x12, stoi(tokens[2])));
+                    }
+                    else if(widgetClass == "MCUVUMeter")
+                    {
+                        if( tokens.size() == 3)
+                            AddWidget(widget = new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
+                    }
+                    else if(widgetClass == "C4DisplayUpper")
+                    {
+                        if( tokens.size() == 4)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                    }
+                    else if(widgetClass == "C4DisplayLower")
+                    {
+                        if( tokens.size() == 4)
+                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                    }
+                    else if(widgetClass == "VUMeter")
+                    {
+                        if( tokens.size() == 5)
+                            AddWidget(widget = new VUMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                    }
+                    else if(widgetClass == "GainReductionMeter")
+                    {
+                        if( tokens.size() == 5)
+                            AddWidget(widget = new GainReductionMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                    }
+                    else if(widgetClass == "Press")
+                    {
+                        if( tokens.size() == 5)
+                            AddWidget(widget = new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                        else if( tokens.size() == 8)
+                            AddWidget(widget = new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "PressFB")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Press_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "PressRelease")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new PressRelease_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "PressReleaseFB")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new PressRelease_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "Fader7Bit")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Fader7Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "Fader7BitFB")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Fader7Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "Fader14Bit")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Fader14Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "Fader14BitFB")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Fader14Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "Encoder")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Encoder_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
+                    else if(widgetClass == "EncoderFB")
+                    {
+                        if(tokens.size() == 8)
+                            AddWidget(widget = new Encoder_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                    }
                 }
-                else if(tokens[0] == "MasterChannel" || tokens[0] == "MasterChannelEnd")
-                    page->SetHasMasterChannel(true);
-                else if(tokens[0] == "SingleChannel")
-                    inSingleChannel = true;
-                else if(tokens[0] == "SingleChannelEnd")
-                {
-                    inSingleChannel = false;
-                    currentChannel++;
-                }
-            }
-            else if(tokens.size() == 2)
-            {
-                if(inChannel)
-                    for(int i = 0; i < numChannels; i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], i));
-                else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1]));
-            }
-            else if(tokens.size() == 3)
-            {
-                if(inSingleChannel)
-                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], currentChannel));
-            }
-            else if(tokens.size() == 5)
-            {
-                if(inChannel)
-                    for(int i = 0; i < numChannels; i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4])));
-                else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])));
-            }
-            else if(tokens.size() == 6)
-            {
-                if(inSingleChannel)
-                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5])));
-            }
-            else if(tokens.size() == 7)
-            {
-                if(inChannel)
-                    for(int i = 0; i < numChannels; i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]) + i, strToHex(tokens[6])));
-                else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
-            }
-            else if(tokens.size() == 8)
-            {
-                if(inChannel)
-                    for(int i = 0; i < numChannels; i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToHex(tokens[2]), strToHex(tokens[3]) + i, strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]) + i, strToHex(tokens[7])));
-                else if(inSingleChannel)
-                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
-                else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7])));
-            }
-            else if(tokens.size() == 9)
-            {
-                if(inSingleChannel)
-                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToHex(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8])));
-            }
-            else if(tokens.size() == 10)
-            {
-                if(inChannel)
-                    for(int i = 0; i < numChannels; i++)
-                        AddWidget(i, WidgetFor(this, tokens[0], tokens[0] + to_string(i + 1), tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]) + i, strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
-                else
-                    AddWidget(WidgetFor(this, tokens[0], tokens[0], tokens[1], strToDouble(tokens[2]), strToDouble(tokens[3]), strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9])));
-            }
-            else if(tokens.size() == 11)
-            {
-                if(inSingleChannel)
-                    AddWidget(currentChannel, WidgetFor(this, tokens[1], tokens[0], tokens[2], strToDouble(tokens[3]), strToDouble(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]), strToHex(tokens[8]), strToHex(tokens[9]), strToHex(tokens[10])));
             }
         }
     }
@@ -256,6 +211,8 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
     bool isFocusedFXWidgetAdded = false;
     bool isMapTrackAndFXToWidgetsForTrackAdded = false;
     
+    bool inChannel = false;
+  
     ifstream actionTemplateFile(templateFilename);
     
     for (string line; getline(actionTemplateFile, line) ; )
@@ -271,7 +228,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
             // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
             
             string modifiers = "";
-            string widgetRole = "";
+            string widgetName = "";
             bool isInverted = false;
             bool shouldToggle = false;
             bool isDelayed = false;
@@ -279,6 +236,16 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
             
             if(tokens.size() > 0)
             {
+                if(tokens[0] == "BankableChannel")
+                {
+                    inChannel = true;
+                    bankableChannels_.push_back(new BankableChannel());
+                }
+                else if(tokens[0] == "BankableChannelEnd")
+                {
+                    inChannel = false;
+                }
+
                 istringstream modified_role(tokens[0]);
                 vector<string> modifier_tokens;
                 string modifier_token;
@@ -286,7 +253,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                 while (getline(modified_role, modifier_token, '+'))
                     modifier_tokens.push_back(modifier_token);
                 
-                widgetRole = modifier_tokens[modifier_tokens.size() - 1];
+                widgetName = modifier_tokens[modifier_tokens.size() - 1];
                 
                 if(modifier_tokens.size() > 1)
                 {
@@ -319,22 +286,22 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
 
             // GAW IMPORTANT -- If widgetRole == "TrackOnSelection" or "TrackOnMapTrackAndFXToWidgets" or "TrackOnFocusedFX", add a widget to the surface so that we can attach ActionContexts
             // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
-            if(widgetRole == TrackOnSelection && ! isTrackOnSelectionWidgetAdded)
+            if(widgetName == TrackOnSelection && ! isTrackOnSelectionWidgetAdded)
             {
                 isTrackOnSelectionWidgetAdded = true;
-                surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
+                surface->AddWidget(new Widget(surface, widgetName, true));
             }
             
-            if(widgetRole == TrackOnMapTrackAndFXToWidgets && ! isMapTrackAndFXToWidgetsForTrackAdded)
+            if(widgetName == TrackOnMapTrackAndFXToWidgets && ! isMapTrackAndFXToWidgetsForTrackAdded)
             {
                 isMapTrackAndFXToWidgetsForTrackAdded = true;
-                surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
+                surface->AddWidget(new Widget(surface, widgetName, true));
             }
             
-            if(widgetRole == TrackOnFocusedFX && ! isFocusedFXWidgetAdded)
+            if(widgetName == TrackOnFocusedFX && ! isFocusedFXWidgetAdded)
             {
                 isFocusedFXWidgetAdded = true;
-                surface->AddWidget(new Widget(surface, widgetRole, widgetRole, true));
+                surface->AddWidget(new Widget(surface, widgetName, true));
             }
             
             vector<string> params;
@@ -343,9 +310,12 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
             
             if(tokens.size() > 1)
                 for(auto * widget : surface->GetAllWidgets())
-                    if(widget->GetRole() == widgetRole)
+                    if(widget->GetName() == widgetName)
                         if(ActionContext* context = TheManager->GetActionContext(params))
                         {
+                            if(inChannel)
+                                (bankableChannels_.back())->AddWidget(widget);
+                            
                             if(isInverted)
                                 context->SetIsInverted();
                             
@@ -362,8 +332,10 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                             
                             if(params[0] == "TrackCycle")
                             {
+                                // GAW TBD -- get widgets from bankableChannels_
+                                /*
                                 for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
-                                    if(cyclerWidget->GetRole() == params[1])
+                                    if(cyclerWidget->GetName() == params[1])
                                     {
                                         if(widgetContexts_.count(cyclerWidget) < 1)
                                             widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
@@ -371,6 +343,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                                         widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                         context->SetCyclerWidget(cyclerWidget);
                                     }
+                              */
                             }
                         }
         }
@@ -574,7 +547,7 @@ void Page::OnTrackSelection(MediaTrack* track)
     
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == TrackOnSelection)
+            if(widget->GetName() == TrackOnSelection)
                 if(widgetContexts_.count(widget) > 0)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface);
 }
@@ -583,7 +556,7 @@ void Page::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
 {
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == TrackOnMapTrackAndFXToWidgets)
+            if(widget->GetName() == TrackOnMapTrackAndFXToWidgets)
                 if(widgetContexts_.count(widget) > 0)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
 }
@@ -593,7 +566,7 @@ void Page::OnFXFocus(MediaTrack* track, int fxIndex)
     // GAW WIP  -- currently doesn't take FX index into account
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
-            if(widget->GetRole() == TrackOnFocusedFX)
+            if(widget->GetName() == TrackOnFocusedFX)
                 if(widgetContexts_.count(widget) > 0)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track, fxIndex);
 }
@@ -923,16 +896,14 @@ void Manager::Init()
             }
             else if(tokens[0] == MidiSurface)
             {
-                if(tokens.size() != 9)
+                if(tokens.size() != 7)
                     continue;
                 
-                int numChannels = atoi(tokens[2].c_str());
-                bool isBankable = tokens[3] == "Bankable" ? true : false;
-                int channelIn = atoi(tokens[4].c_str());
-                int channelOut = atoi(tokens[5].c_str());
+                int channelIn = atoi(tokens[2].c_str());
+                int channelOut = atoi(tokens[3].c_str());
 
                 if(currentPage)
-                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], tokens[6], numChannels, midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), isBankable, tokens[7], tokens[8]);
+                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], tokens[4], midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
             }
         }
     }

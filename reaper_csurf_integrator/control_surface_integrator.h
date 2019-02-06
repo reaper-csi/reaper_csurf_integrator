@@ -213,16 +213,14 @@ class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string role_ = "";
     string name_ = "";
     bool wantsFeedback_ = false;
     RealSurface* surface_ = nullptr;
 
 public:
-    Widget(RealSurface* surface, string role, string name, bool wantsFeedback) : surface_(surface), role_(role), name_(name), wantsFeedback_(wantsFeedback) {}
+    Widget(RealSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
     virtual ~Widget() {};
     
-    string GetRole() { return role_; }
     string GetName() { return name_; }
     RealSurface* GetSurface() { return surface_; }
     virtual bool WantsFeedback() { return wantsFeedback_; }
@@ -251,21 +249,14 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string role, string name) : Widget((RealSurface*)surface, role, name, true) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Widget((RealSurface*)surface, role, name, wantsFeedback) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((RealSurface*)surface, role, name, wantsFeedback),  midiPressMessage_(press) {}
-    Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, role, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback) : Widget((RealSurface*)surface, name, wantsFeedback) {}
+    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press) {}
+    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval; }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-    virtual void ClearCache() override
-    {
-        lastMessageSent_->midi_message[0] = 0;
-        lastMessageSent_->midi_message[1] = 0;
-        lastMessageSent_->midi_message[2] = 0;
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +268,6 @@ protected:
     const string name_ = "";
 
     vector<Widget*> allWidgets_;
-    vector<Widget*> emptyWidgets_;
-    vector<vector<Widget*>> channels_;
     
     RealSurface(Page* page, const string name) : page_(page), name_(name) {}
 
@@ -291,35 +280,11 @@ public:
     virtual void SendMidiMessage(int first, int second, int third) {}
     Page* GetPage() { return page_; }
     string GetName() const { return name_; }
-    vector<vector<Widget*>> GetChannels() { return channels_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
-
-    vector<Widget*> & GetChannelWidgets(Widget* aChannelWidget)
-    {
-        for(int i = 0; i < channels_.size(); i++)
-            for(int j = 0; j < channels_[i].size(); j++)
-                if(channels_[i][j] == aChannelWidget)
-                    return channels_[i];
-        
-        
-        return emptyWidgets_;
-    }
 
     void AddWidget(Widget* widget)
     {
         allWidgets_.push_back(widget);
-    }
-    
-    void AddWidget(int channelNum, Widget* widget)
-    {
-        if(channelNum >= 0)
-        {
-            if(channels_.size() < channelNum + 1)
-                channels_.push_back(vector<Widget*>());
-            
-            channels_[channelNum].push_back(widget);
-            allWidgets_.push_back(widget);
-        }
     }
 };
 
@@ -353,7 +318,7 @@ private:
     }
     
 public:
-    Midi_RealSurface(Page* page, const string name, string templateFilename, int numChannels, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_RealSurface(Page* page, const string name, string templateFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_RealSurface()
     {
@@ -589,8 +554,9 @@ private:
     vector<Widget*> widgets_;
     
 public:
-    BankableChannel(vector<Widget*> & widgets) : widgets_(widgets) {}
+    BankableChannel() {}
     
+    void AddWidget(Widget* widget) { widgets_.push_back(widget); }
     bool GetIsPinned() { return isPinned_; }
     string GetTrackGUID() { return trackGUID_; }
     void SetTrackGUID(Page* page, string trackGUID);
@@ -851,13 +817,13 @@ public:
 
     void DoAction(Widget* widget, double value)
     {
-        if(widget->GetRole() == Shift)
+        if(widget->GetName() == Shift)
             SetShift(value);
-        else if(widget->GetRole() == Option)
+        else if(widget->GetName() == Option)
             SetOption(value);
-        else if(widget->GetRole() == Control)
+        else if(widget->GetName() == Control)
             SetControl(value);
-        else if(widget->GetRole() == Alt)
+        else if(widget->GetName() == Alt)
             SetAlt(value);
         else if(widgetContexts_.count(widget) > 0)
             widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
@@ -908,11 +874,8 @@ public:
             sendsOffset_ = maxOffset;
     }
     
-    void AddSurface(RealSurface* surface, bool isBankable,  string actionTemplateFile, string fxTemplateDirectory)
+    void AddSurface(RealSurface* surface, string actionTemplateFile, string fxTemplateDirectory)
     {
-        if(isBankable)
-            for(auto channel : surface->GetChannels())
-                bankableChannels_.push_back(new BankableChannel(channel));
         realSurfaces_.push_back(surface);
         
         string resourcePath(DAW::GetResourcePath());
@@ -958,7 +921,7 @@ public:
     void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
     {
         widgetContextsMappedToTracks_.clear();
-        
+        /*
         for(auto channel : surface->GetChannels())
             for(auto widget : channel)
                 if(widgetContexts_.count(widget) > 0)
@@ -966,6 +929,7 @@ public:
                     widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
                     widgetContextsMappedToTracks_.push_back(widgetContexts_[widget]);
                 }
+         */
     }
     
     void MapFXToWidgets(MediaTrack* track)
