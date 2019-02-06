@@ -117,8 +117,6 @@ void AddListEntry(HWND hwndDlg, string buf, int comboId)
 struct MidiSurfaceLine
 {
     string name = "";
-    int numChannels = 0;
-    bool isBankable = true;
     int midiIn = 0;
     int midiOut = 0;
     string templateFilename = "";
@@ -146,8 +144,6 @@ static int dlgResult = 0;
 static int pageIndex = 0;
 
 static char name[BUFSZ];
-static int numChannels = 0;
-static bool isBankable = true;
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
@@ -306,12 +302,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
-                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceNumChannels, to_string(numChannels).c_str());
-
-                if(isBankable)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_UNCHECKED);
 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
@@ -328,7 +318,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             }
             else
             {
-                CheckDlgButton(hwndDlg, IDC_CHECK_IsBankable, BST_CHECKED);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
@@ -346,13 +335,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
                         char tempBuf[BUFSZ];
-                        GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceNumChannels, tempBuf, sizeof(tempBuf));
-                        numChannels = atoi(tempBuf);
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IsBankable))
-                            isBankable = true;
-                        else
-                            isBankable = false;
 
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
@@ -466,8 +448,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     MidiSurfaceLine* surface = new MidiSurfaceLine();
                                     surface->name = name;
-                                    surface->numChannels = numChannels;
-                                    surface->isBankable = isBankable;
                                     surface->midiIn = midiIn;
                                     surface->midiOut = midiOut;
                                     surface->templateFilename = templateFilename;
@@ -518,8 +498,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                numChannels = pages[pageIndex]->midiSurfaces[index]->numChannels;
-                                isBankable = pages[pageIndex]->midiSurfaces[index]->isBankable;
                                 midiIn = pages[pageIndex]->midiSurfaces[index]->midiIn;
                                 midiOut = pages[pageIndex]->midiSurfaces[index]->midiOut;
                                 strcpy(templateFilename, pages[pageIndex]->midiSurfaces[index]->templateFilename.c_str());
@@ -531,8 +509,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 if(dlgResult == IDOK)
                                 {
                                     pages[pageIndex]->midiSurfaces[index]->name = name;
-                                    pages[pageIndex]->midiSurfaces[index]->numChannels = numChannels;
-                                    pages[pageIndex]->midiSurfaces[index]->isBankable = isBankable;
                                     pages[pageIndex]->midiSurfaces[index]->midiIn = midiIn;
                                     pages[pageIndex]->midiSurfaces[index]->midiOut = midiOut;
                                     pages[pageIndex]->midiSurfaces[index]->templateFilename = templateFilename;
@@ -653,18 +629,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == MidiSurface)
                     {
-                        if(tokens.size() != 9)
+                        if(tokens.size() != 7)
                             continue;
                         
                         MidiSurfaceLine* surface = new MidiSurfaceLine();
                         surface->name = tokens[1];
-                        surface->numChannels = atoi(tokens[2].c_str());
-                        surface->isBankable = tokens[3] == "Bankable" ? true : false;;
-                        surface->midiIn = atoi(tokens[4].c_str());
-                        surface->midiOut = atoi(tokens[5].c_str());
-                        surface->templateFilename = tokens[6];
-                        surface->actionTemplateFolder = tokens[7];
-                        surface->FXTemplateFolder = tokens[8];
+                        surface->midiIn = atoi(tokens[2].c_str());
+                        surface->midiOut = atoi(tokens[3].c_str());
+                        surface->templateFilename = tokens[4];
+                        surface->actionTemplateFolder = tokens[5];
+                        surface->FXTemplateFolder = tokens[6];
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->midiSurfaces.push_back(surface);
@@ -736,8 +710,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     {
                         line = MidiSurface + " ";
                         line += surface->name + " ";
-                        line += to_string(surface->numChannels) + " ";
-                        line += surface->isBankable ? "Bankable " : "NonBankable ";
                         line += to_string(surface->midiIn) + " " ;
                         line += to_string(surface->midiOut) + " " ;
                         line += surface->templateFilename + " ";
