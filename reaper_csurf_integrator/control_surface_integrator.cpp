@@ -73,116 +73,114 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
 
                 if(tokens.size() > 1)
                 {
-                    Widget* widget = nullptr;
-                    
                     string widgetClass = tokens[1];
 
                     if(widgetClass == "MCUTimeDisplay")
                     {
-                        if( tokens.size() == 2)
-                            AddWidget(widget = new MCU_TimeDisplay_Midi_Widget(this, name, true));
+                        if(tokens.size() == 2)
+                            AddWidget(new MCU_TimeDisplay_Midi_Widget(this, name, true));
                     }
                     else if(widgetClass == "QConProXMasterVUMeter")
                     {
-                        if( tokens.size() == 2)
-                            AddWidget(widget = new QConProXMasterVUMeter_Midi_Widget(this, name, true));
+                        if(tokens.size() == 2)
+                            AddWidget(new QConProXMasterVUMeter_Midi_Widget(this, name, true));
                     }
                     else if(widgetClass == "MCUDisplayUpper")
                     {
-                        if( tokens.size() == 3)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x14, 0x12, stoi(tokens[2])));
+                        if(tokens.size() == 3)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x14, 0x12, stoi(tokens[2])));
                     }
                     else if(widgetClass == "MCUDisplayLower")
                     {
-                        if( tokens.size() == 3)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x14, 0x12, stoi(tokens[2])));
+                        if(tokens.size() == 3)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x14, 0x12, stoi(tokens[2])));
                     }
                     else if(widgetClass == "MCUXTDisplayUpper")
                     {
-                        if( tokens.size() == 3)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x15, 0x12, stoi(tokens[2])));
+                        if(tokens.size() == 3)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x15, 0x12, stoi(tokens[2])));
                     }
                     else if(widgetClass == "MCUXTDisplayLower")
                     {
-                        if( tokens.size() == 3)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x15, 0x12, stoi(tokens[2])));
+                        if(tokens.size() == 3)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x15, 0x12, stoi(tokens[2])));
                     }
                     else if(widgetClass == "MCUVUMeter")
                     {
-                        if( tokens.size() == 3)
-                            AddWidget(widget = new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
+                        if(tokens.size() == 3)
+                            AddWidget(new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
                     }
                     else if(widgetClass == "C4DisplayUpper")
                     {
-                        if( tokens.size() == 4)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 0, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                        if(tokens.size() == 4)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
                     }
                     else if(widgetClass == "C4DisplayLower")
                     {
-                        if( tokens.size() == 4)
-                            AddWidget(widget = new MCUDisplay_Midi_Widget(this, name, true, 1, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                        if(tokens.size() == 4)
+                            AddWidget(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
                     }
                     else if(widgetClass == "VUMeter")
                     {
-                        if( tokens.size() == 5)
-                            AddWidget(widget = new VUMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                        if(tokens.size() == 5)
+                            AddWidget(new VUMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
                     }
                     else if(widgetClass == "GainReductionMeter")
                     {
-                        if( tokens.size() == 5)
-                            AddWidget(widget = new GainReductionMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                        if(tokens.size() == 5)
+                            AddWidget(new GainReductionMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
                     }
                     else if(widgetClass == "Press")
                     {
-                        if( tokens.size() == 5)
-                            AddWidget(widget = new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
-                        else if( tokens.size() == 8)
-                            AddWidget(widget = new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                        if(tokens.size() == 5)
+                            AddWidget(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                        else if(tokens.size() == 8)
+                            AddWidget(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "PressFB")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Press_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Press_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "PressRelease")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new PressRelease_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new PressRelease_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "PressReleaseFB")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new PressRelease_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new PressRelease_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "Fader7Bit")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Fader7Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Fader7Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "Fader7BitFB")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Fader7Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Fader7Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "Fader14Bit")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Fader14Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Fader14Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "Fader14BitFB")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Fader14Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Fader14Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "Encoder")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Encoder_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Encoder_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                     else if(widgetClass == "EncoderFB")
                     {
                         if(tokens.size() == 8)
-                            AddWidget(widget = new Encoder_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                            AddWidget(new Encoder_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
                     }
                 }
             }
