@@ -10,7 +10,6 @@
 #define IDC_CHECK_MidiOutMon            1001
 #define IDC_CHECK_VSTParamMon           1002
 #define IDC_EDIT_PageName               1003
-#define IDC_CHECK_IsBankable            1006
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_CHECK_SynchPages            1009
 #define IDC_COMBO_ActionTemplates       1017
@@ -19,7 +18,6 @@
 #define IDC_COMBO_MidiIn                1020
 #define IDC_COMBO_MidiOut               1021
 #define IDC_EDIT_MidiSurfaceName        1022
-#define IDC_EDIT_MidiSurfaceNumChannels 1023
 #define IDC_LIST_Pages                  1024
 #define IDC_BUTTON_AddPage              1025
 #define IDC_BUTTON_EditPage             1026
