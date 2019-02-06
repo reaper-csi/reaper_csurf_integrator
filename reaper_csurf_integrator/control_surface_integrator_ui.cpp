@@ -334,7 +334,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
-                        char tempBuf[BUFSZ];
 
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
