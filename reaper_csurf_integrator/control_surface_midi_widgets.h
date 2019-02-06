@@ -18,12 +18,12 @@ class Press_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Press_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, wantsFeedback, press)
+    Press_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
     }
     
-    Press_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    Press_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
     }
@@ -52,7 +52,6 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        ClearCache();
         if(midiPressMessage_->IsEqualTo(midiMessage))
             GetSurface()->GetPage()->DoAction(this, 1.0);
     }
@@ -63,7 +62,7 @@ class PressRelease_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PressRelease_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    PressRelease_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
         surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
@@ -84,7 +83,6 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        ClearCache();
         GetSurface()->GetPage()->DoAction(this, midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
     }
 };
@@ -93,13 +91,8 @@ public:
 class Fader14Bit_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    double minDB_ = 0.0;
-    double maxDB_ = 0.0;
-    //db = 20*log10(X/0xFFFF)
-    
 public:
-    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release), minDB_(minDB), maxDB_(maxDB)
+    Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
     }
@@ -126,7 +119,7 @@ class Fader7Bit_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
@@ -151,11 +144,11 @@ public:
 class Encoder_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+private: // GAW TBD -- move this to context
     double lastNormalizedValue_ = 0.0;
     
 public:
-    Encoder_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, role, name, wantsFeedback, press, release)
+    Encoder_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
     }
@@ -199,10 +192,10 @@ class VUMeter_Midi_Widget : public Midi_Widget
 {
 private:
     double minDB_ = 0.0;
-    double maxDB_ = 0.0;
+    double maxDB_ = 24.0;
     
 public:
-    VUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, wantsFeedback, press), minDB_(minDB), maxDB_(maxDB) {}
+    VUMeter_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press) {}
     
     virtual void Reset() override
     {
@@ -228,12 +221,8 @@ public:
 class GainReductionMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    double minDB_ = 0.0;
-    double maxDB_ = 0.0;
-    
 public:
-    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, double minDB, double maxDB, MIDI_event_ex_t* press) : Midi_Widget(surface, role, name, wantsFeedback, press), minDB_(minDB), maxDB_(maxDB) {}
+    GainReductionMeter_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press) {}
 
     virtual void Reset() override
     {
@@ -251,7 +240,7 @@ class QConProXMasterVUMeter_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    QConProXMasterVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Midi_Widget(surface, role, name, wantsFeedback) {}
+    QConProXMasterVUMeter_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback) : Midi_Widget(surface, name, wantsFeedback) {}
     
     virtual void SetValue(int param, double value) override
     {
@@ -308,7 +297,7 @@ private:
     int channel_ = 0;
     
 public:
-    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, int channel) : Midi_Widget(surface, role, name, wantsFeedback), channel_(channel) {}
+    MCUVUMeter_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, int channel) : Midi_Widget(surface, name, wantsFeedback), channel_(channel) {}
     
     virtual void SetValue(int param, double value) override
     {
@@ -341,7 +330,7 @@ class MCUDisplay_Midi_Widget : public Midi_Widget
     string lastStringSent_ = "";
     
 public:
-    MCUDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, role, name, wantsFeedback), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
+    MCUDisplay_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, name, wantsFeedback), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
     
     virtual void Reset() override
     {
@@ -426,7 +415,7 @@ class MCU_TimeDisplay_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MCU_TimeDisplay_Midi_Widget(Midi_RealSurface* surface, string role, string name, bool wantsFeedback) : Midi_Widget(surface, role, name, wantsFeedback, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
+    MCU_TimeDisplay_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback) : Midi_Widget(surface, name, wantsFeedback, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
     
     virtual void SetValue(int mode, double value) override
     {
