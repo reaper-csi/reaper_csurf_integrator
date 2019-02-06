@@ -281,7 +281,7 @@ public:
     Page* GetPage() { return page_; }
     string GetName() const { return name_; }
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
-
+    
     void AddWidget(Widget* widget)
     {
         allWidgets_.push_back(widget);
