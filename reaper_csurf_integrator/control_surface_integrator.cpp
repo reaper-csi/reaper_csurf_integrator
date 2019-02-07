@@ -396,9 +396,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                             
                             if(params[0] == "TrackCycle")
                             {
-                                // GAW TBD -- get widgets from bankableChannels_
-                                /*
-                                for(auto * cyclerWidget : surface->GetChannelWidgets(widget))
+                                for(auto * cyclerWidget : surface->GetAllWidgets())
                                     if(cyclerWidget->GetName() == params[1])
                                     {
                                         if(widgetContexts_.count(cyclerWidget) < 1)
@@ -407,7 +405,6 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                                         widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                         context->SetCyclerWidget(cyclerWidget);
                                     }
-                              */
                             }
                         }
         }
