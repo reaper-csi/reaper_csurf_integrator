@@ -298,7 +298,7 @@ private:
     midi_Output* midiOutput_ = nullptr;
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
-    map<string, Midi_Widget*> widgetsByMessage_;
+    map<int, Midi_Widget*> widgetsByMessage_;
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
@@ -310,12 +310,12 @@ private:
         }
 
         // At this point we don't know how much of the message comprises the key, so try all three
-        if(widgetsByMessage_.count(to_string(evt->midi_message[0])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0])]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1])]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])) > 0)
-            widgetsByMessage_[to_string(evt->midi_message[0]) + to_string(evt->midi_message[1]) + to_string(evt->midi_message[2])]->ProcessMidiMessage(evt);
+        if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+            widgetsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(evt->midi_message[0]  * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+            widgetsByMessage_[evt->midi_message[0]  * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(evt->midi_message[0]  * 0x10000 + evt->midi_message[1]  * 0x100 + evt->midi_message[2]) > 0)
+            widgetsByMessage_[evt->midi_message[0]  * 0x10000 + evt->midi_message[1]  * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
     }
     
 public:
@@ -343,7 +343,7 @@ public:
         }
     }
     
-    void AddWidgetToMessageMap(string message, Midi_Widget* widget)
+    void AddWidgetToMessageMap(int message, Midi_Widget* widget)
     {
         widgetsByMessage_[message] = widget;
     }
