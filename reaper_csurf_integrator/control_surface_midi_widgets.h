@@ -20,12 +20,12 @@ class Press_Midi_Widget : public Midi_Widget
 public:
     Press_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100 + midiPressMessage_->midi_message[2], this);
     }
     
     Press_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100 + midiPressMessage_->midi_message[2], this);
     }
 
     virtual void Reset() override
@@ -64,8 +64,8 @@ class PressRelease_Midi_Widget : public Midi_Widget
 public:
     PressRelease_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]) + to_string(midiPressMessage_->midi_message[2]), this);
-        surface->AddWidgetToMessageMap(to_string(midiReleaseMessage_->midi_message[0]) + to_string(midiReleaseMessage_->midi_message[1]) + to_string(midiReleaseMessage_->midi_message[2]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100 + midiPressMessage_->midi_message[2], this);
+        surface->AddWidgetToMessageMap(midiReleaseMessage_->midi_message[0] * 0x10000 + midiReleaseMessage_->midi_message[1] * 0x100 + midiReleaseMessage_->midi_message[2], this);
     }
     
     virtual void Reset() override
@@ -94,7 +94,7 @@ class Fader14Bit_Midi_Widget : public Midi_Widget
 public:
     Fader14Bit_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000, this);
     }
     
     virtual void Reset() override
@@ -121,7 +121,7 @@ class Fader7Bit_Midi_Widget : public Midi_Widget
 public:
     Fader7Bit_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100, this);
     }
     
     virtual void Reset() override
@@ -150,7 +150,7 @@ private: // GAW TBD -- move this to context
 public:
     Encoder_Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
-        surface->AddWidgetToMessageMap(to_string(midiPressMessage_->midi_message[0]) + to_string(midiPressMessage_->midi_message[1]), this);
+        surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100, this);
     }
     
     virtual void Reset() override
