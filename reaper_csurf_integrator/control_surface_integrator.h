@@ -217,12 +217,19 @@ private:
     bool wantsFeedback_ = false;
     RealSurface* surface_ = nullptr;
 
+protected:
+    bool shouldRefresh_ = false;
+    double refreshInterval_ = 0.0;
+    double lastRefreshed_ = 0.0;
+    
 public:
     Widget(RealSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
     virtual ~Widget() {};
     
     string GetName() { return name_; }
     RealSurface* GetSurface() { return surface_; }
+    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
+
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
@@ -241,10 +248,6 @@ protected:
     MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
 
-    bool shouldRefresh_ = false;
-    double refreshInterval_ = 0.0;
-    double lastRefreshed_ = 0.0;
-
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     virtual void SendMidiMessage(int first, int second, int third);
 
@@ -253,8 +256,6 @@ public:
     Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press) {}
     Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
-
-    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval; }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
