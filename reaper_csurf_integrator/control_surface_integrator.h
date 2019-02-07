@@ -308,14 +308,14 @@ private:
             sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
             DAW::ShowConsoleMsg(buffer);
         }
-
+        
         // At this point we don't know how much of the message comprises the key, so try all three
         if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
             widgetsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(evt->midi_message[0]  * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-            widgetsByMessage_[evt->midi_message[0]  * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(evt->midi_message[0]  * 0x10000 + evt->midi_message[1]  * 0x100 + evt->midi_message[2]) > 0)
-            widgetsByMessage_[evt->midi_message[0]  * 0x10000 + evt->midi_message[1]  * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+            widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+        else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+            widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
     }
     
 public:
