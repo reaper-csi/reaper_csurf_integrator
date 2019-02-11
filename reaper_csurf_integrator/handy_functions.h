@@ -13,6 +13,38 @@
 //slope = (output_end - output_start) / (input_end - input_start)
 //output = output_start + slope * (input - input_start)
 
+static double int14ToNormalized(unsigned char msb, unsigned char lsb)
+{
+    // GAW TBD -- Make sure the range is 0.0 - 1.0
+    int val=lsb | (msb<<7);
+    return ((double)val)/16383.0;
+}
+
+static double normalizedToVol(double val)
+{
+    double pos=val*1000.0;
+    pos=SLIDER2DB(pos);
+    return DB2VAL(pos);
+}
+
+static double volToNormalized(double vol)
+{
+    double d=(DB2SLIDER(VAL2DB(vol))/1000.0);
+    if (d<0.0)d=0.0;
+    else if (d>1.0)d=1.0;
+    
+    return d;
+}
+
+static double normalizedToPan(double val)
+{
+    return 2.0 * val - 1.0;
+}
+
+static double panToNormalized(double val)
+{
+    return 0.5 * (val + 1.0);
+}
 /*
 static double charToVol(unsigned char val)
 {
@@ -94,14 +126,6 @@ static unsigned char panToChar(double pan)
     
     return (unsigned char)(pan+0.5);
 }
-*/
-
-static double int14ToNormalized(unsigned char msb, unsigned char lsb)
-{
-    // GAW TBD -- Make sure the range is 0.0 - 1.0
-    int val=lsb | (msb<<7);
-    return ((double)val)/16383.0;
-}
 
 static double clampedAndNormalized(double value, double valueMax, double valueMin)
 {
@@ -110,7 +134,7 @@ static double clampedAndNormalized(double value, double valueMax, double valueMi
     
     return 1.0 / (valueMax - valueMin) * (value - valueMin);
 }
-/*
+
 static double normalizedToVol(double value, double valueMaxDB, double valueMinDB)
 {
     //slope = (output_end - output_start) / (input_end - input_start)
@@ -131,33 +155,5 @@ static double volToNormalized(double value, double valueMaxDB, double valueMinDB
     return 0.0 + slope * (value - valueMinDB);
 }
 */
-
-static double normalizedToVol(double val)
-{
-    double pos=val*1000.0;
-    pos=SLIDER2DB(pos);
-    return DB2VAL(pos);
-}
-
-
-static double volToNormalized(double vol)
-{
-    double d=(DB2SLIDER(VAL2DB(vol))/1000.0);
-    if (d<0.0)d=0.0;
-    else if (d>1.0)d=1.0;
-    
-    return d;
-}
-
-
-static double normalizedToPan(double val)
-{
-    return 2.0 * val - 1.0;
-}
-
-static double panToNormalized(double val)
-{
-    return 0.5 * (val + 1.0);
-}
 
 #endif /* handy_functions_h */
