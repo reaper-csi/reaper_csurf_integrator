@@ -65,7 +65,7 @@ const string Track = "Track";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
-// subtracts b<T> to a<T>
+// subtracts b<T> from a<T>
 template <typename T>
 void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 {

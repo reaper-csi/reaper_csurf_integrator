@@ -252,6 +252,11 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             }
         }
     }
+    
+    // Add the "hardcoded" widgets
+    allWidgets_.push_back(new Widget(this, TrackOnSelection, true));
+    allWidgets_.push_back(new Widget(this, TrackOnMapTrackAndFXToWidgets, true));
+    allWidgets_.push_back(new Widget(this, TrackOnFocusedFX, true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -271,10 +276,6 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::InitActionContexts(RealSurface* surface, string templateFilename)
 {
-    bool isTrackOnSelectionWidgetAdded = false;
-    bool isFocusedFXWidgetAdded = false;
-    bool isMapTrackAndFXToWidgetsForTrackAdded = false;
-    
     bool inChannel = false;
   
     ifstream actionTemplateFile(templateFilename);
@@ -346,26 +347,6 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                     
                     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
                 }
-            }
-
-            // GAW IMPORTANT -- If widgetRole == "TrackOnSelection" or "TrackOnMapTrackAndFXToWidgets" or "TrackOnFocusedFX", add a widget to the surface so that we can attach ActionContexts
-            // Timing is important here, the widget must be added BEFORE the widget->GetRole() == widgetRole comparison below
-            if(widgetName == TrackOnSelection && ! isTrackOnSelectionWidgetAdded)
-            {
-                isTrackOnSelectionWidgetAdded = true;
-                surface->AddWidget(new Widget(surface, widgetName, true));
-            }
-            
-            if(widgetName == TrackOnMapTrackAndFXToWidgets && ! isMapTrackAndFXToWidgetsForTrackAdded)
-            {
-                isMapTrackAndFXToWidgetsForTrackAdded = true;
-                surface->AddWidget(new Widget(surface, widgetName, true));
-            }
-            
-            if(widgetName == TrackOnFocusedFX && ! isFocusedFXWidgetAdded)
-            {
-                isFocusedFXWidgetAdded = true;
-                surface->AddWidget(new Widget(surface, widgetName, true));
             }
             
             vector<string> params;
