@@ -270,7 +270,13 @@ protected:
 
     vector<Widget*> allWidgets_;
     
-    RealSurface(Page* page, const string name) : page_(page), name_(name) {}
+    RealSurface(Page* page, const string name) : page_(page), name_(name)
+    {
+        // Add the "hardcoded" widgets
+        allWidgets_.push_back(new Widget(this, TrackOnSelection, true));
+        allWidgets_.push_back(new Widget(this, TrackOnMapTrackAndFXToWidgets, true));
+        allWidgets_.push_back(new Widget(this, TrackOnFocusedFX, true));
+    }
 
 public:
     virtual ~RealSurface() {};
