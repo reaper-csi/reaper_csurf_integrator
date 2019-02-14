@@ -252,11 +252,6 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             }
         }
     }
-    
-    // Add the "hardcoded" widgets
-    allWidgets_.push_back(new Widget(this, TrackOnSelection, true));
-    allWidgets_.push_back(new Widget(this, TrackOnMapTrackAndFXToWidgets, true));
-    allWidgets_.push_back(new Widget(this, TrackOnFocusedFX, true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
