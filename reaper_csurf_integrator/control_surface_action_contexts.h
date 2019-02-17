@@ -22,7 +22,7 @@ private:
 public:
     GlobalContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         action_->RequestUpdate(page_, this, widget_);
     }
@@ -55,7 +55,7 @@ public:
         trackGUID_ = trackGUID;
     }
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(shouldExecute_ && DAW::GetCurrentNumberOfMilliseconds() > delayStartTime_ + delayAmount_)
         {
@@ -115,7 +115,7 @@ private:
 public:
     TrackSendContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : TrackContext(page, surface, widget, action) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
@@ -159,7 +159,7 @@ private:
 public:
     TrackContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : TrackContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
             action_->RequestUpdate(page_, this, widget_, track, param_);
@@ -202,7 +202,7 @@ public:
     
     virtual void SetIndex(int index) override { fxIndex_ = index; }
         
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()) )
             action_->RequestUpdate(this, widget_, track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_));
@@ -244,7 +244,7 @@ public:
         }
     }
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         action_->RequestUpdate(page_, this, widget_, commandId_);
     }
@@ -270,7 +270,7 @@ private:
 public:
     GlobalContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : ActionContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         action_->RequestUpdate(page_, this, widget_, param_);
     }
@@ -296,7 +296,7 @@ private:
 public:
     GlobalContextWithStringParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, string param) : ActionContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         action_->RequestUpdate(page_, this, widget_, param_);
     }
@@ -328,7 +328,7 @@ private:
 public:
     TrackTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
@@ -379,7 +379,7 @@ private:
 public:
     TrackSendTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
@@ -461,10 +461,10 @@ public:
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
     
-    virtual void RequestActionUpdate() override
+    virtual void RequestUpdate() override
     {
         if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
-            actionContexts_[index]->RequestActionUpdate();
+            actionContexts_[index]->RequestUpdate();
         else
             widget_->Reset();
     }
