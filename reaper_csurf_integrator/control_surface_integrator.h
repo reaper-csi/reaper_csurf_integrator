@@ -216,18 +216,16 @@ class Widget
 {
 private:
     string name_ = "";
-    bool wantsFeedback_ = false;
 
 protected:
-    ControlSurface* surface_ = nullptr;
+    Widget(string name, bool wantsFeedback) : name_(name), wantsFeedback_(wantsFeedback) {}
     ActionContext* actionContext_ = nullptr;
-
+    bool wantsFeedback_ = false;
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
     
 public:
-    Widget(ControlSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
     virtual ~Widget() {};
     
     string GetName() { return name_; }
@@ -238,7 +236,6 @@ public:
     
     void RequestUpdate();
     
-    virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
     virtual void ClearCache() {}
@@ -251,6 +248,9 @@ class Midi_ControlSurface;
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    Midi_ControlSurface* surface_ = nullptr;
+    
 protected:
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
@@ -260,9 +260,9 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget((ControlSurface*)surface, name, wantsFeedback) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((ControlSurface*)surface, name, wantsFeedback),  midiPressMessage_(press) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((ControlSurface*)surface, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget(name, wantsFeedback), surface_(surface) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(name, wantsFeedback), surface_(surface), midiPressMessage_(press) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, wantsFeedback), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
@@ -332,13 +332,7 @@ protected:
     map<string, vector<Zone*>> zones_;
     void InitZones(string templateFilename);
     
-    ControlSurface(Page* page, const string name) : page_(page), name_(name)
-    {
-        // Add the "hardcoded" widgets
-        allWidgets_.push_back(new Widget(this, TrackOnSelection, true));
-        allWidgets_.push_back(new Widget(this, TrackOnMapTrackAndFXToWidgets, true));
-        allWidgets_.push_back(new Widget(this, TrackOnFocusedFX, true));
-    }
+    ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
 public:
     virtual ~ControlSurface() {};
@@ -360,9 +354,6 @@ public:
         for(auto widget : allWidgets_)
             widget->RequestUpdate();
     }
-
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
-    virtual void SendMidiMessage(int first, int second, int third) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,7 +422,7 @@ public:
         widgetsByMessage_[message] = widget;
     }
     
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) override
+    void SendMidiMessage(MIDI_event_ex_t* midiMessage)
     {
         if(midiOutput_)
             midiOutput_->SendMsg(midiMessage, -1);
@@ -444,7 +435,7 @@ public:
         }
     }
     
-    virtual void SendMidiMessage(int first, int second, int third) override
+    void SendMidiMessage(int first, int second, int third)
     {
         if(midiOutput_)
             midiOutput_->Send(first, second, third, -1);
@@ -527,6 +518,7 @@ public:
     }
 };
 
+/*
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -544,14 +536,14 @@ public:
     {
         actionContexts_[component][modifiers].push_back(context);
     }
-    /*
+
     void RequestUpdate(Page* page, string modifiers, Widget* widget)
     {
          if(widget->WantsFeedback() && actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->RequestActionUpdate(page, widget);
     }
-   */
+
     void DoRelativeAction(Page* page, string modifiers, Widget* widget, double value)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
@@ -618,7 +610,7 @@ public:
             component_ = component;
     }
 };
-
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -675,9 +667,9 @@ private:
     vector<ControlSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
-    map<Widget*, WidgetContext*> widgetContexts_;
-    vector<WidgetContext*> widgetContextsMappedToTracks_;
-    vector<WidgetContext*> widgetContextsMappedToFX_;
+    //map<Widget*, WidgetContext*> widgetContexts_;
+    //vector<WidgetContext*> widgetContextsMappedToTracks_;
+    //vector<WidgetContext*> widgetContextsMappedToFX_;
     map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
@@ -867,7 +859,7 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 widget->ClearCache();
     }
-
+/*
     WidgetContext* GetWidgetContext(Widget* widget)
     {
         if(widgetContexts_.count(widget) > 0)
@@ -875,7 +867,7 @@ public:
         else
             return nullptr;
     }
-    
+*/
     void Run()
     {
         for(auto surface : realSurfaces_)
@@ -888,7 +880,7 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 widget->Reset();
     }
-
+/*
     void DoAction(Widget* widget, double value)
     {
         if(widget->GetName() == Shift)
@@ -902,13 +894,13 @@ public:
         else if(widgetContexts_.count(widget) > 0)
             widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
     }
-    
+
     void DoRelativeAction(Widget* widget, double value)
     {
         if(widgetContexts_.count(widget) > 0)
             widgetContexts_[widget]->DoRelativeAction(this, GetCurrentModifiers(), widget, value);
     }
-
+  */
     void SetShowFXWindows(bool value)
     {
         showFXWindows_ = ! showFXWindows_;
@@ -994,7 +986,7 @@ public:
 
     void MapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
-        widgetContextsMappedToTracks_.clear();
+        //widgetContextsMappedToTracks_.clear();
         /*
         for(auto channel : surface->GetChannels())
             for(auto widget : channel)
@@ -1008,7 +1000,7 @@ public:
     
     void MapFXToWidgets(MediaTrack* track)
     {
-        widgetContextsMappedToFX_.clear();
+        //widgetContextsMappedToFX_.clear();
         
         char fxName[BUFSZ];
         
@@ -1021,14 +1013,14 @@ public:
             if(fxWidgets_.count(fxName) > 0)
             {
                 for(auto widget : fxWidgets_[fxName])
-                {
+                {/*
                     if(widgetContexts_.count(widget) > 0)
                     {
                         widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
                         widgetContexts_[widget]->SetComponent(fxName);
                         widgetContexts_[widget]->SetIndex(i);
                         widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
-                    }
+                    } */
                 }
                 
                 AddFXWindow(FXWindow(track, i));
@@ -1040,12 +1032,14 @@ public:
     
     void MapSingleFXToWidgets(MediaTrack* track, int fxIndex)
     {
+        /*
         for(auto widgetContext : widgetContextsMappedToFX_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
             widgetContext->ClearAllButTrackContexts();
             widgetContext->SetComponent(Track);
         }
+         */
 
         char fxName[BUFSZ];
 
@@ -1054,14 +1048,14 @@ public:
         if(fxWidgets_.count(fxName) > 0)
         {
             for(auto widget : fxWidgets_[fxName])
-            {
+            {/*
                 if(widgetContexts_.count(widget) > 0)
                 {
                     widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
                     widgetContexts_[widget]->SetComponent(fxName);
                     widgetContexts_[widget]->SetIndex(fxIndex);
                     widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
-                }
+                }*/
             }
             
             AddFXWindow(FXWindow(track, fxIndex));
@@ -1078,29 +1072,33 @@ public:
     
     void ToggleMapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
+        /*
         if(widgetContextsMappedToTracks_.size() > 0)
             UnmapWidgetsFromTrack();
         else
             MapTrackToWidgets(surface, track);
+         */
     }
 
     void ToggleMapFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
+        /*
         if(widgetContextsMappedToFX_.size() > 0)
             UnmapWidgetsFromFX();
         else MapFXToWidgets(track);
+         */
     }
     
     void ToggleMapSingleFXToWidgets(ControlSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(track == nullptr)
-        {
+        {/*
             for(auto widgetContext : widgetContextsMappedToFX_)
             {
                 widgetContext->GetWidget()->SetValue(0, 0.0);
                 widgetContext->ClearAllButTrackContexts();
                 widgetContext->SetComponent(Track);
-            }
+            }*/
         }
         else
             MapSingleFXToWidgets(track, fxIndex);
@@ -1113,20 +1111,20 @@ public:
     }
     
     void UnmapWidgetsFromTrack()
-    {
+    {/*
         for(auto widgetContext : widgetContextsMappedToTracks_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
             widgetContext->SetComponentTrackContext(Track, "");
         }
         
-        widgetContextsMappedToTracks_.clear();
+        widgetContextsMappedToTracks_.clear();*/
     }
     
     void UnmapWidgetsFromFX()
     {
         DeleteFXWindows();
-        
+        /*
         for(auto widgetContext : widgetContextsMappedToFX_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
@@ -1134,7 +1132,7 @@ public:
             widgetContext->SetComponent(Track);
         }
         
-        widgetContextsMappedToFX_.clear();
+        widgetContextsMappedToFX_.clear();*/
     }
     
     void CycleTimeDisplayModes()
