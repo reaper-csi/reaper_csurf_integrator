@@ -229,13 +229,11 @@ public:
     virtual ~Widget() {};
     
     string GetName() { return name_; }
-
-    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
-
-    void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
-    
     void RequestUpdate();
     
+    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
+    void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
+
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
     virtual void ClearCache() {}
@@ -256,8 +254,8 @@ protected:
     MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
 
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage);
-    virtual void SendMidiMessage(int first, int second, int third);
+    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    void SendMidiMessage(int first, int second, int third);
 
 public:
     Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget(name, wantsFeedback), surface_(surface) {}
@@ -267,7 +265,6 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Navigator
@@ -518,99 +515,6 @@ public:
     }
 };
 
-/*
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    Widget* widget_ = nullptr;
-    map<string, map<string, vector<ActionContext*>>> actionContexts_;
-    string component_ = Track;
-    
-public:
-    WidgetContext(Widget* widget) : widget_(widget) {}
-    
-    Widget* GetWidget() { return widget_; }
-    
-    void AddActionContext(string component, string modifiers, ActionContext* context)
-    {
-        actionContexts_[component][modifiers].push_back(context);
-    }
-
-    void RequestUpdate(Page* page, string modifiers, Widget* widget)
-    {
-         if(widget->WantsFeedback() && actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->RequestActionUpdate(page, widget);
-    }
-
-    void DoRelativeAction(Page* page, string modifiers, Widget* widget, double value)
-    {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoRelativeAction(value);
-    }
-
-    void DoAction(Page* page, string modifiers, Widget*widget, double value)
-    {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(value);
-    }
-    
-    void DoAction(Page* page, string modifiers, ControlSurface* surface)
-    {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction();
-    }
-    
-    void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track)
-    {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(track);
-    }
-    
-    void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track, int fxIndex)
-    {
-        if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
-            for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(track, fxIndex);
-    }
-    
-    void SetIndex(int index)
-    {
-        if(actionContexts_.count(component_) > 0)
-            for(auto [modifier, actionContexts] : actionContexts_[component_])
-                for(auto actionContext : actionContexts)
-                    actionContext->SetIndex(index);
-    }
-    
-    void SetComponentTrackContext(string component, string trackGUID)
-    {
-        if(actionContexts_.count(component) > 0)
-            for(auto [modifier, actionContexts] : actionContexts_[component])
-                for(auto actionContext : actionContexts)
-                    actionContext->SetTrack(trackGUID);
-    }
-    
-    void ClearAllButTrackContexts()
-    {
-        for(auto [component, modifiedActionContexts] : actionContexts_)
-            if(component != Track)
-                for(auto [modifier, actionContexts] : actionContexts_[component])
-                    for(auto actionContext : actionContexts)
-                        actionContext->SetTrack("");
-    }
-    
-    void SetComponent(string component)
-    {
-        if(actionContexts_.count(component) > 0)
-            component_ = component;
-    }
-};
-*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -667,9 +571,6 @@ private:
     vector<ControlSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
-    //map<Widget*, WidgetContext*> widgetContexts_;
-    //vector<WidgetContext*> widgetContextsMappedToTracks_;
-    //vector<WidgetContext*> widgetContextsMappedToFX_;
     map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
@@ -859,15 +760,7 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 widget->ClearCache();
     }
-/*
-    WidgetContext* GetWidgetContext(Widget* widget)
-    {
-        if(widgetContexts_.count(widget) > 0)
-            return widgetContexts_[widget];
-        else
-            return nullptr;
-    }
-*/
+
     void Run()
     {
         for(auto surface : realSurfaces_)
@@ -880,27 +773,7 @@ public:
             for(auto widget : surface->GetAllWidgets())
                 widget->Reset();
     }
-/*
-    void DoAction(Widget* widget, double value)
-    {
-        if(widget->GetName() == Shift)
-            SetShift(value);
-        else if(widget->GetName() == Option)
-            SetOption(value);
-        else if(widget->GetName() == Control)
-            SetControl(value);
-        else if(widget->GetName() == Alt)
-            SetAlt(value);
-        else if(widgetContexts_.count(widget) > 0)
-            widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), widget, value);
-    }
 
-    void DoRelativeAction(Widget* widget, double value)
-    {
-        if(widgetContexts_.count(widget) > 0)
-            widgetContexts_[widget]->DoRelativeAction(this, GetCurrentModifiers(), widget, value);
-    }
-  */
     void SetShowFXWindows(bool value)
     {
         showFXWindows_ = ! showFXWindows_;
