@@ -16,7 +16,7 @@ class MapTrackToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface) override
+    void Do(Page* page, ControlSurface* surface) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -39,7 +39,7 @@ public:
             page->UnmapWidgetsFromTrack();
     }
     
-    void Do(Page* page, RealSurface* surface, double value) override
+    void Do(Page* page, ControlSurface* surface, double value) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -67,7 +67,7 @@ class MapFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface) override
+    void Do(Page* page, ControlSurface* surface) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -90,7 +90,7 @@ public:
             page->UnmapWidgetsFromFX();
     }
     
-    void Do(Page* page, RealSurface* surface, double value) override
+    void Do(Page* page, ControlSurface* surface, double value) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -118,7 +118,7 @@ class MapTrackAndFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface) override
+    void Do(Page* page, ControlSurface* surface) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -141,7 +141,7 @@ public:
             page->UnmapWidgetsFromTrackAndFX();
     }
     
-    void Do(Page* page, RealSurface* surface, double value) override
+    void Do(Page* page, ControlSurface* surface, double value) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -169,7 +169,7 @@ class MapSingleFXToWidgetsForTrack  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) override
+    void Do(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) override
     {
         page->ToggleMapSingleFXToWidgets(surface, track, fxIndex);
     }
@@ -180,7 +180,7 @@ class MapTrackAndFXToWidgetsForTrack  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, RealSurface* surface, MediaTrack* track) override
+    void Do(Page* page, ControlSurface* surface, MediaTrack* track) override
     {
         page->ToggleMapTrackAndFXToWidgets(surface, track);
     }
