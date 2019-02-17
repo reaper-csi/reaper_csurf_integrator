@@ -217,13 +217,14 @@ class Widget
 private:
     string name_ = "";
     bool wantsFeedback_ = false;
-    RealSurface* surface_ = nullptr;
 
 protected:
+    RealSurface* surface_ = nullptr;
+    ActionContext* actionContext_ = nullptr;
+
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
-    ActionContext* actioncontext_ = nullptr;
     
 public:
     Widget(RealSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
@@ -233,7 +234,9 @@ public:
     RealSurface* GetSurface() { return surface_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
-    void SetActionContext(ActionContext* actioncontext) { actioncontext_ = actioncontext;  }
+    void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
+    
+    void RequestUpdate();
     
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
@@ -340,9 +343,6 @@ protected:
 public:
     virtual ~RealSurface() {};
     
-
-    
-    // GAW TBS remove this
     Page* GetPage() { return page_; }
     
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
@@ -352,7 +352,17 @@ public:
         allWidgets_.push_back(widget);
     }
     
-    virtual void HandleMidiInput() {}
+    virtual void Run()
+    {
+        RequestUpdate();
+    }
+    
+    void RequestUpdate()
+    {
+        for(auto widget : allWidgets_)
+            widget->RequestUpdate();
+    }
+
     virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
     virtual void SendMidiMessage(int first, int second, int third) {}
 };
@@ -368,6 +378,20 @@ private:
     bool midiOutMonitor_ = false;
     map<int, Midi_Widget*> widgetsByMessage_;
     
+    
+    void HandleMidiInput()
+    {
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
+    }
+
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
         if(midiInMonitor_)
@@ -398,17 +422,10 @@ public:
          */
     }
     
-    virtual void HandleMidiInput() override
+    virtual void Run() override
     {
-        if(midiInput_)
-        {
-            DAW::SwapBufsPrecise(midiInput_);
-            MIDI_eventlist* list = midiInput_->GetReadBuf();
-            int bpos = 0;
-            MIDI_event_t* evt;
-            while ((evt = list->EnumItems(&bpos)))
-                ProcessMidiMessage((MIDI_event_ex_t*)evt);
-        }
+        HandleMidiInput();
+        RequestUpdate();
     }
     
     void AddWidgetToMessageMap(int message, Midi_Widget* widget)
@@ -474,6 +491,9 @@ class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    Page* page_ = nullptr;
+    RealSurface* surface_ = nullptr;
+    Widget* widget_ = nullptr;
     Action * action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -483,6 +503,8 @@ protected:
     double valueForDelayedExecution_ = 0.0;
 
     ActionContext(Action* action) : action_(action) {}
+    
+    ActionContext(Page* page, RealSurface* surface, Widget* widget, Action* action) {}
     
 public:
     virtual ~ActionContext() {}
@@ -526,14 +548,14 @@ public:
     {
         actionContexts_[component][modifiers].push_back(context);
     }
-    
+    /*
     void RequestUpdate(Page* page, string modifiers, Widget* widget)
     {
          if(widget->WantsFeedback() && actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->RequestActionUpdate(page, widget);
     }
-   
+   */
     void DoRelativeAction(Page* page, string modifiers, Widget* widget, double value)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
@@ -765,17 +787,6 @@ private:
         openFXWindows_.clear();
     }
     
-    void RequestUpdate()
-    {
-        for(auto [widget, widgetContext] : widgetContexts_)
-            widgetContext->RequestUpdate(this, GetCurrentModifiers(), widget);
-        
-        // GAW TBD -- move this hack to appropriate class
-        // if no tracks selected unmap tracks and FX
-        if(0 == DAW::CountSelectedTracks(nullptr))
-            UnmapWidgetsFromTrackAndFX();
-    }
-    
     int GetNumPinnedTracks()
     {
         int numPinnedTracks = 0;
@@ -872,9 +883,7 @@ public:
     void Run()
     {
         for(auto surface : realSurfaces_)
-            surface->HandleMidiInput();
-
-        RequestUpdate();
+            surface->Run();
     }
     
     void ResetAllWidgets()

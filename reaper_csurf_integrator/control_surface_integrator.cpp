@@ -26,11 +26,20 @@ double strToDouble(string valueStr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Widget
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Widget::RequestUpdate()
+{
+    if(wantsFeedback_ && actionContext_ != nullptr)
+        actionContext_->RequestActionUpdate(GetSurface()->GetPage(), this);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
-    GetSurface()->SendMidiMessage(midiMessage);
+    surface_->SendMidiMessage(midiMessage);
 }
 
 void Midi_Widget::SendMidiMessage(int first, int second, int third)
@@ -40,12 +49,12 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
         lastMessageSent_->midi_message[0] = first;
         lastMessageSent_->midi_message[1] = second;
         lastMessageSent_->midi_message[2] = third;
-        GetSurface()->SendMidiMessage(first, second, third);
+        surface_->SendMidiMessage(first, second, third);
     }
     else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
     {
         lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
-        GetSurface()->SendMidiMessage(first, second, third);
+        surface_->SendMidiMessage(first, second, third);
     }
 }
 
@@ -253,7 +262,7 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
         }
     }
     
-    // GAW IMPORTANT -- This must happen AFTER the Widgets have been loaded
+    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
     InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
 }
 
