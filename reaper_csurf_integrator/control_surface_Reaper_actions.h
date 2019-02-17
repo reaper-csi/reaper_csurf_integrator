@@ -636,7 +636,7 @@ public:
     {
         if(track)
             if(page->GetTouchState(track, 0))
-                actionContext->RequestActionUpdate(page, widget);
+                actionContext->RequestActionUpdate();
     }
 };
 

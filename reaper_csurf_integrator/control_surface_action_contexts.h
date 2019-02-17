@@ -14,22 +14,22 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        action_->Do(page, isInverted_ == false ? value : 1.0 - value);
+        action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
     }
     
 public:
     GlobalContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        action_->RequestUpdate(page, this, widget);
+        action_->RequestUpdate(page_, this, widget_);
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction( double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -38,10 +38,10 @@ class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            action_->Do(page_, widget_, track, isInverted_ == false ? value : 1.0 - value);
     }
     
 protected:
@@ -55,24 +55,24 @@ public:
         trackGUID_ = trackGUID;
     }
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
         if(shouldExecute_ && DAW::GetCurrentNumberOfMilliseconds() > delayStartTime_ + delayAmount_)
         {
             shouldExecute_ = false;
-            ExecuteAction(page, widget, valueForDelayedExecution_);
+            ExecuteAction(valueForDelayedExecution_);
         }
         
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->RequestUpdate(page, this, widget, track);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            action_->RequestUpdate(page_, this, widget_, track);
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
         if(delayAmount_ == 0)
-            ExecuteAction(page, widget, value);
+            ExecuteAction(value);
         else
         {
             if(value == 0.0)
@@ -94,20 +94,20 @@ class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
             if(maxOffset > -1)
             {
-                int sendsOffset = page->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                action_->Do(page, widget, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(page_, widget_, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -115,31 +115,31 @@ private:
 public:
     TrackSendContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : TrackContext(page, surface, widget, action) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
 
             if(maxOffset < 0)
-               widget->Reset();
+               widget_->Reset();
             else
             {
-                int sendsOffset = page->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
-                
-                action_->RequestUpdate(page, this, widget, track, sendsOffset);
+
+                action_->RequestUpdate(page_, this, widget_, track, sendsOffset);
             }
         }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -150,26 +150,26 @@ class TrackContextWithIntParam : public TrackContext
 private:
     int param_ = 0;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction()
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->Do(page, widget, track, value);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            action_->Do(page_, surface_, track, param_);
     }
     
 public:
     TrackContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : TrackContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            action_->RequestUpdate(page, this, widget, track, param_);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            action_->RequestUpdate(page_, this, widget_, track, param_);
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction( double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction();
     }
 };
 
@@ -182,14 +182,14 @@ private:
     string fxParamName_ = "";
     int fxIndex_ = 0;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
             if(shouldToggle_)
-                action_->DoToggle(track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                action_->DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                action_->Do(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
         }
     }
 
@@ -202,17 +202,17 @@ public:
     
     virtual void SetIndex(int index) override { fxIndex_ = index; }
         
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()) )
-            action_->RequestUpdate(this, widget, track, fxIndex_, page->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()) )
+            action_->RequestUpdate(this, widget_, track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_));
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -223,9 +223,9 @@ class ReaperActionContext : public ActionContext
 private:
     int commandId_ = 0;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction()
     {
-        action_->Do(page, commandId_);
+        action_->Do(page_, commandId_);
     }
 
     
@@ -244,14 +244,14 @@ public:
         }
     }
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        action_->RequestUpdate(page, this, widget, commandId_);
+        action_->RequestUpdate(page_, this, widget_, commandId_);
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction();
     }
 };
 
@@ -262,22 +262,22 @@ class GlobalContextWithIntParam : public ActionContext
 private:
     int param_ = 0;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction()
     {
-        action_->Do(page, param_);
+        action_->Do(page_, param_);
     }
     
 public:
     GlobalContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : ActionContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        action_->RequestUpdate(page, this, widget, param_);
+        action_->RequestUpdate(page_, this, widget_, param_);
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction();
     }
 };
 
@@ -288,22 +288,22 @@ class GlobalContextWithStringParam : public ActionContext
 private:
     string param_ = "";
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction()
     {
-        action_->Do(page, param_);
+        action_->Do(page_, param_);
     }
     
 public:
     GlobalContextWithStringParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, string param) : ActionContext(page, surface, widget, action), param_(param) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        action_->RequestUpdate(page, this, widget, param_);
+        action_->RequestUpdate(page_, this, widget_, param_);
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction();
     }
 };
 
@@ -314,36 +314,36 @@ class TrackTouchControlledContext : public TrackContext
 private:
     Action* touchAction_ = nullptr;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
-            if(page->GetTouchState(track, 0))
-                touchAction_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+            if(page_->GetTouchState(track, 0))
+                touchAction_->Do(page_, widget_, track, isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(page_, widget_, track, isInverted_ == false ? value : 1.0 - value);
         }
     }
 
 public:
     TrackTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
-            if(page->GetTouchState(track, 0))
-                touchAction_->RequestUpdate(page, this, widget, track);
+            if(page_->GetTouchState(track, 0))
+                touchAction_->RequestUpdate(page_, this, widget_, track);
             else
-                action_->RequestUpdate(page, this, widget, track);
+                action_->RequestUpdate(page_, this, widget_, track);
         }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -354,24 +354,24 @@ class TrackSendTouchControlledContext : public TrackContext
 private:
     Action* touchAction_ = nullptr;
     
-     void ExecuteAction(Page* page, Widget* widget, double value)
+     void ExecuteAction(double value)
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
             
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
             if(maxOffset > -1)
             {
-                int sendsOffset = page->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                if(page->GetTouchState(track, 0))
-                    touchAction_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+                if(page_->GetTouchState(track, 0))
+                    touchAction_->Do(page_, widget_, track, isInverted_ == false ? value : 1.0 - value);
                 else
-                    action_->Do(page, widget, track, isInverted_ == false ? value : 1.0 - value);
+                    action_->Do(page_, widget_, track, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -379,34 +379,34 @@ private:
 public:
     TrackSendTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
             if(maxOffset < 0)
-                widget->Reset();
+                widget_->Reset();
             else
             {
-                int sendsOffset = page->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                if(page->GetTouchState(track, 0))
-                    touchAction_->RequestUpdate(page, this, widget, track, sendsOffset);
+                if(page_->GetTouchState(track, 0))
+                    touchAction_->RequestUpdate(page_, this, widget_, track, sendsOffset);
                 else
-                    action_->RequestUpdate(page, this, widget, track, sendsOffset);
+                    action_->RequestUpdate(page_, this, widget_, track, sendsOffset);
             }
        }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -419,17 +419,17 @@ private:
     int index = 0;
     vector<ActionContext*> actionContexts_;
     
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        if(widget && widget == cyclerWidget_)
+        if(widget_ && widget_ == cyclerWidget_)
         {
             if(value)
                 index = index < actionContexts_.size() - 1 ? index + 1 : 0;
         }
         else if(actionContexts_[index])
         {
-            if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-                actionContexts_[index]->DoAction(page, widget, value);
+            if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+                actionContexts_[index]->DoAction(value);
         }
     }
     
@@ -461,17 +461,17 @@ public:
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
     
-    virtual void RequestActionUpdate(Page* page, Widget* widget) override
+    virtual void RequestActionUpdate() override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page->GetFollowMCP()))
-            actionContexts_[index]->RequestActionUpdate(page, widget);
+        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            actionContexts_[index]->RequestActionUpdate();
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
@@ -480,32 +480,32 @@ class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    void ExecuteAction(Page* page, Widget* widget, double value)
+    void ExecuteAction(double value)
     {
-        action_->Do(page, widget->GetSurface(), isInverted_ == false ? value : 1.0 - value);
+        action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
     }
     
 public:
     PageSurfaceContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
-    virtual void DoAction(Page* page, ControlSurface* surface) override
+    virtual void DoAction() override
     {
-        action_->Do(page, surface);
+        action_->Do(page_, surface_);
     }
     
-    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track) override
+    virtual void DoAction(MediaTrack* track) override
     {
-        action_->Do(page, surface, track);
+        action_->Do(page_, surface_, track);
     }
     
-    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) override
+    virtual void DoAction(MediaTrack* track, int fxIndex) override
     {
-        action_->Do(page, surface, track, fxIndex);
+        action_->Do(page_, surface_, track, fxIndex);
     }
     
-    virtual void DoAction(Page* page, Widget* widget, double value) override
+    virtual void DoAction(double value) override
     {
-        ExecuteAction(page, widget, value);
+        ExecuteAction(value);
     }
 };
 
