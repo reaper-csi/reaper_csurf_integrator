@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <fstream>
 #include <functional>
+#include <regex>
 
 #ifdef _WIN32
 #include "oscpkt.hh"
@@ -207,6 +208,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface;
+class ActionContext;
 class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
@@ -221,6 +223,7 @@ protected:
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
+    ActionContext* actioncontext_ = nullptr;
     
 public:
     Widget(RealSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
@@ -230,6 +233,8 @@ public:
     RealSurface* GetSurface() { return surface_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
+    void SetActionContext(ActionContext* actioncontext) { actioncontext_ = actioncontext;  }
+    
     virtual bool WantsFeedback() { return wantsFeedback_; }
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
@@ -260,6 +265,58 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Navigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<Widget*, ActionContext*> actionContextForWidget_;
+
+protected:
+    RealSurface* surface_ = nullptr;
+    string name_ = "";
+    Navigator* navigator_ = nullptr;
+    
+public:
+    Zone(RealSurface* surface, string name) : surface_(surface), name_(name) {}
+    virtual ~Zone() {}
+    
+    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context)
+    {
+        actionContextForWidget_[widget] = context;
+    }
+    
+    virtual void AddZone(Zone* zone) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CompositeZone : public Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<Zone*> zones_;
+
+public:
+    CompositeZone(RealSurface* surface, string name) : Zone(surface, name) {}
+    
+    virtual ~CompositeZone() {}
+    
+    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
+    
+    virtual void AddZone(Zone* zone) override
+    {
+        zones_.push_back(zone);
+    }
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class RealSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,6 +326,8 @@ protected:
     const string name_ = "";
 
     vector<Widget*> allWidgets_;
+    map<string, vector<Zone*>> zones_;
+    void InitZones(string templateFilename);
     
     RealSurface(Page* page, const string name) : page_(page), name_(name)
     {
@@ -281,18 +340,21 @@ protected:
 public:
     virtual ~RealSurface() {};
     
-    virtual void HandleMidiInput() {}
 
-    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
-    virtual void SendMidiMessage(int first, int second, int third) {}
+    
+    // GAW TBS remove this
     Page* GetPage() { return page_; }
-    string GetName() const { return name_; }
+    
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
     
     void AddWidget(Widget* widget)
     {
         allWidgets_.push_back(widget);
     }
+    
+    virtual void HandleMidiInput() {}
+    virtual void SendMidiMessage(MIDI_event_ex_t* midiMessage) {}
+    virtual void SendMidiMessage(int first, int second, int third) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +373,7 @@ private:
         if(midiInMonitor_)
         {
             char buffer[250];
-            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", GetName().c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
             DAW::ShowConsoleMsg(buffer);
         }
         
@@ -325,7 +387,7 @@ private:
     }
     
 public:
-    Midi_RealSurface(Page* page, const string name, string templateFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_RealSurface(Page* page, const string name, string templateFilename, string zoneFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_RealSurface()
     {
@@ -362,7 +424,7 @@ public:
         if(midiOutMonitor_)
         {
             char buffer[250];
-            sprintf(buffer, "OUT -> %s SysEx \n", GetName().c_str());
+            sprintf(buffer, "OUT -> %s SysEx \n", name_.c_str());
             DAW::ShowConsoleMsg(buffer);
         }
     }
@@ -375,14 +437,12 @@ public:
         if(midiOutMonitor_)
         {
             char buffer[250];
-            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", GetName().c_str(), first, second, third);
+            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
             DAW::ShowConsoleMsg(buffer);
         }
     }
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionContext;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -608,6 +668,8 @@ private:
     void InitActionContexts(RealSurface* surface, string templateFilename);
     void InitFXContexts(RealSurface* surface, string templateDirectory);
 
+
+    
     bool isShift_ = false;
     bool isOption_ = false;
     bool isControl_ = false;
