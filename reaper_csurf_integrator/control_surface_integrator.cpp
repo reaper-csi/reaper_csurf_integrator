@@ -31,7 +31,7 @@ double strToDouble(string valueStr)
 void Widget::RequestUpdate()
 {
     if(wantsFeedback_ && actionContext_ != nullptr)
-        actionContext_->RequestActionUpdate();
+        actionContext_->RequestUpdate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
