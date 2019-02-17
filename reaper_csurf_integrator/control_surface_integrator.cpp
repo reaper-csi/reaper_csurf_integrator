@@ -52,7 +52,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_RealSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templateFilename, string zoneFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : RealSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
 {
     ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/mst/" + templateFilename);
@@ -252,6 +252,9 @@ Midi_RealSurface::Midi_RealSurface(Page* page, const string name, string templat
             }
         }
     }
+    
+    // GAW IMPORTANT -- This must happen AFTER the Widgets have been loaded
+    InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,12 +270,159 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// RealSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void RealSurface::InitZones(string templateFilename)
+{
+    string zoneFilename = templateFilename;
+    
+    zoneFilename = regex_replace(zoneFilename, regex("axt"), "zon");
+
+    
+    map<string, vector<CompositeZone*>> compositeZoneMembers_;
+    
+    
+    
+    
+    bool inCompositeZone = false;
+    
+    bool inZone = false;
+
+
+    ifstream zoneFile(zoneFilename);
+    
+    for (string line; getline(zoneFile, line) ; )
+    {
+        if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
+        {
+            istringstream iss(line);
+            vector<string> tokens;
+            string token;
+            while (iss >> quoted(token))
+                tokens.push_back(token);
+            
+            // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
+            
+            string modifiers = "";
+            string widgetName = "";
+            bool isInverted = false;
+            bool shouldToggle = false;
+            bool isDelayed = false;
+            double delayAmount = 0.0;
+            
+            if(tokens.size() > 0)
+            {
+                if(tokens[0] == "BankableChannel")
+                {
+                    //inChannel = true;
+                    //bankableChannels_.push_back(new BankableChannel());
+                }
+                else if(tokens[0] == "BankableChannelEnd")
+                {
+                    //inChannel = false;
+                }
+
+                istringstream modified_role(tokens[0]);
+                vector<string> modifier_tokens;
+                string modifier_token;
+                
+                while (getline(modified_role, modifier_token, '+'))
+                    modifier_tokens.push_back(modifier_token);
+                
+                widgetName = modifier_tokens[modifier_tokens.size() - 1];
+                
+                if(modifier_tokens.size() > 1)
+                {
+                    vector<string> modifierSlots = { "", "", "", "" };
+                    
+                    for(int i = 0; i < modifier_tokens.size() - 1; i++)
+                    {
+                        if(modifier_tokens[i] == Shift)
+                            modifierSlots[0] = Shift;
+                        else if(modifier_tokens[i] == Option)
+                            modifierSlots[1] = Option;
+                        else if(modifier_tokens[i] == Control)
+                            modifierSlots[2] = Control;
+                        else if(modifier_tokens[i] == Alt)
+                            modifierSlots[3] = Alt;
+                        else if(modifier_tokens[i] == Invert)
+                            isInverted = true;
+                        else if(modifier_tokens[i] == Toggle)
+                            shouldToggle = true;
+                        else if(modifier_tokens[i] == Hold)
+                        {
+                            isDelayed = true;
+                            delayAmount = 1.0;
+                        }
+                    }
+                    
+                    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+                }
+            }
+            
+            vector<string> params;
+            for(int i = 1; i < tokens.size(); i++)
+                params.push_back(tokens[i]);
+            
+            if(tokens.size() > 1)
+                for(auto * widget : allWidgets_)
+                    if(widget->GetName() == widgetName)
+                        if(ActionContext* context = TheManager->GetActionContext(params))
+                        {
+                            //if(inChannel)
+                                //(bankableChannels_.back())->AddWidget(widget);
+                            
+                            if(isInverted)
+                                context->SetIsInverted();
+                            
+                            if(shouldToggle)
+                                context->SetShouldToggle();
+                            
+                            if(isDelayed)
+                                context->SetDelayAmount(delayAmount * 1000.0);
+                            
+                            //if(widgetContexts_.count(widget) < 1)
+                                //widgetContexts_[widget] = new WidgetContext(widget);
+                            
+                            //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                            
+                            if(params[0] == "TrackCycle")
+                            {
+                                for(auto * cyclerWidget : allWidgets_)
+                                    if(cyclerWidget->GetName() == params[1])
+                                    {
+                                        //if(widgetContexts_.count(cyclerWidget) < 1)
+                                            //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
+                                        
+                                        //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                        context->SetCyclerWidget(cyclerWidget);
+                                    }
+                            }
+                        }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::InitActionContexts(RealSurface* surface, string templateFilename)
 {
     bool inChannel = false;
-  
+    
     ifstream actionTemplateFile(templateFilename);
     
     for (string line; getline(actionTemplateFile, line) ; )
@@ -305,7 +455,7 @@ void Page::InitActionContexts(RealSurface* surface, string templateFilename)
                 {
                     inChannel = false;
                 }
-
+                
                 istringstream modified_role(tokens[0]);
                 vector<string> modifier_tokens;
                 string modifier_token;
@@ -940,7 +1090,7 @@ void Manager::Init()
                 int channelOut = atoi(tokens[3].c_str());
 
                 if(currentPage)
-                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], tokens[4], midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
+                    currentPage->AddSurface(new Midi_RealSurface(currentPage, tokens[1], tokens[4], tokens[5], midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
             }
         }
     }
