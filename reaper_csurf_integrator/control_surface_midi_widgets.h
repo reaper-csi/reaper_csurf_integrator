@@ -52,8 +52,8 @@ public:
 
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        if(midiPressMessage_->IsEqualTo(midiMessage))
-            GetSurface()->GetPage()->DoAction(this, 1.0);
+        if(actionContext_ != nullptr && midiPressMessage_->IsEqualTo(midiMessage))
+           actionContext_->DoAction(1.0);
     }
 };
 
@@ -83,7 +83,8 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetSurface()->GetPage()->DoAction(this, midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
+        if(actionContext_ != nullptr)
+            actionContext_->DoAction(midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
     }
 };
 
@@ -110,7 +111,8 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetSurface()->GetPage()->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+        if(actionContext_ != nullptr)
+            actionContext_->DoAction(int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -136,7 +138,8 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        GetSurface()->GetPage()->DoAction(this, midiMessage->midi_message[2] / 127.0);
+        if(actionContext_ != nullptr)
+            actionContext_->DoAction(midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -178,11 +181,14 @@ public:
         
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
-        
-        GetSurface()->GetPage()->DoRelativeAction(this, value);
-        
-        if(WantsFeedback())
-            GetSurface()->GetPage()->DoAction(this, value + lastNormalizedValue_);
+
+        if(actionContext_ != nullptr)
+        {
+            actionContext_->DoRelativeAction(value);
+            
+            if(WantsFeedback())
+                actionContext_->DoAction(value + lastNormalizedValue_);
+        }
     }
 };
 

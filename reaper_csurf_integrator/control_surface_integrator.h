@@ -231,7 +231,7 @@ public:
     virtual ~Widget() {};
     
     string GetName() { return name_; }
-    ControlSurface* GetSurface() { return surface_; }
+
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
     void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
@@ -342,8 +342,6 @@ protected:
 
 public:
     virtual ~ControlSurface() {};
-    
-    Page* GetPage() { return page_; }
     
     vector<Widget*> & GetAllWidgets() { return allWidgets_; }
     
@@ -502,8 +500,6 @@ protected:
     double delayStartTime_ = 0.0;
     double valueForDelayedExecution_ = 0.0;
 
-    //ActionContext(Action* action) : action_(action) {}
-    
     ActionContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : page_(page), surface_(surface), widget_(widget), action_(action) {}
     
 public:
@@ -519,9 +515,9 @@ public:
     virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestUpdate() {}
+    virtual void DoAction() {}
     virtual void DoAction(double value) {}
     virtual void DoRelativeAction(double value) {}
-    virtual void DoAction() {}
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
 
