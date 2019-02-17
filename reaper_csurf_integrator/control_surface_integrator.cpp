@@ -284,7 +284,7 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
 
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-    //InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
+    InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,6 +299,10 @@ void ControlSurface::InitZones(string templateFilename)
 
     
     map<string, vector<CompositeZone*>> compositeZoneMembers_;
+    
+    
+    return;
+    
     
     
     
