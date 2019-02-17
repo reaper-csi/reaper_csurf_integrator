@@ -20,7 +20,7 @@ private:
     }
     
 public:
-    GlobalContext(Action* action) : ActionContext(action) {}
+    GlobalContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -48,7 +48,7 @@ protected:
     string trackGUID_ = "";
     
 public:
-    TrackContext(Action* action) : ActionContext(action) {}
+    TrackContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
     virtual void  SetTrack(string trackGUID) override
     {
@@ -113,7 +113,7 @@ private:
     }
     
 public:
-    TrackSendContext(Action* action) : TrackContext(action) {}
+    TrackSendContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : TrackContext(page, surface, widget, action) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -157,7 +157,7 @@ private:
     }
     
 public:
-    TrackContextWithIntParam(Action* action, int param) : TrackContext(action), param_(param) {}
+    TrackContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : TrackContext(page, surface, widget, action), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -194,7 +194,7 @@ private:
     }
 
 public:
-    FXContext(Action* action, string fxParamName) : TrackContext(action), fxParamName_(fxParamName) {}
+    FXContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, string fxParamName) : TrackContext(page, surface, widget, action), fxParamName_(fxParamName) {}
     
     virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
     
@@ -230,7 +230,7 @@ private:
 
     
 public:
-    ReaperActionContext(Action* action, string commandStr) : ActionContext(action)
+    ReaperActionContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, string commandStr) : ActionContext(page, surface, widget, action)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -268,7 +268,7 @@ private:
     }
     
 public:
-    GlobalContextWithIntParam(Action* action, int param) : ActionContext(action), param_(param) {}
+    GlobalContextWithIntParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, int param) : ActionContext(page, surface, widget, action), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -294,7 +294,7 @@ private:
     }
     
 public:
-    GlobalContextWithStringParam(Action* action, string param) : ActionContext(action), param_(param) {}
+    GlobalContextWithStringParam(Page* page, ControlSurface* surface, Widget* widget, Action* action, string param) : ActionContext(page, surface, widget, action), param_(param) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -326,7 +326,7 @@ private:
     }
 
 public:
-    TrackTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
+    TrackTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -377,7 +377,7 @@ private:
     }
     
 public:
-    TrackSendTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
+    TrackSendTouchControlledContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, Action* touchAction) : TrackContext(page, surface, widget, action), touchAction_(touchAction) {}
     
     virtual void RequestActionUpdate(Page* page, Widget* widget) override
     {
@@ -434,7 +434,7 @@ private:
     }
     
 public:
-    TrackCycleContext(vector<string> params, Action* action) : TrackContext(action)
+    TrackCycleContext(Page* page, ControlSurface* surface, Widget* widget, Action* action, vector<string> params) : TrackContext(page, surface, widget, action)
     {
         for(int i = 2; i < params.size(); i++)
         {
@@ -444,7 +444,7 @@ public:
             while (iss >> quoted(token))
                 tokens.push_back(token);
 
-            if(ActionContext* context = TheManager->GetActionContext(tokens))
+            if(ActionContext* context = TheManager->GetActionContext(page_, surface_, widget_, tokens))
             {
                 context->SetTrack(trackGUID_);
                 actionContexts_.push_back(context);
@@ -486,19 +486,19 @@ private:
     }
     
 public:
-    PageSurfaceContext(Action* action) : ActionContext(action) {}
+    PageSurfaceContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : ActionContext(page, surface, widget, action) {}
     
-    virtual void DoAction(Page* page, RealSurface* surface) override
+    virtual void DoAction(Page* page, ControlSurface* surface) override
     {
         action_->Do(page, surface);
     }
     
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) override
+    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track) override
     {
         action_->Do(page, surface, track);
     }
     
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) override
+    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) override
     {
         action_->Do(page, surface, track, fxIndex);
     }

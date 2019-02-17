@@ -207,7 +207,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RealSurface;
+class ControlSurface;
 class ActionContext;
 class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -219,7 +219,7 @@ private:
     bool wantsFeedback_ = false;
 
 protected:
-    RealSurface* surface_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     ActionContext* actionContext_ = nullptr;
 
     bool shouldRefresh_ = false;
@@ -227,11 +227,11 @@ protected:
     double lastRefreshed_ = 0.0;
     
 public:
-    Widget(RealSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
+    Widget(ControlSurface* surface, string name, bool wantsFeedback) : surface_(surface), name_(name), wantsFeedback_(wantsFeedback) {}
     virtual ~Widget() {};
     
     string GetName() { return name_; }
-    RealSurface* GetSurface() { return surface_; }
+    ControlSurface* GetSurface() { return surface_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
     void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
@@ -246,7 +246,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_RealSurface;
+class Midi_ControlSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,9 +260,9 @@ protected:
     virtual void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback) : Widget((RealSurface*)surface, name, wantsFeedback) {}
-    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press) {}
-    Midi_Widget(Midi_RealSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((RealSurface*)surface, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget((ControlSurface*)surface, name, wantsFeedback) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget((ControlSurface*)surface, name, wantsFeedback),  midiPressMessage_(press) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget((ControlSurface*)surface, name, wantsFeedback),  midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
@@ -284,12 +284,12 @@ private:
     map<Widget*, ActionContext*> actionContextForWidget_;
 
 protected:
-    RealSurface* surface_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     string name_ = "";
     Navigator* navigator_ = nullptr;
     
 public:
-    Zone(RealSurface* surface, string name) : surface_(surface), name_(name) {}
+    Zone(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Zone() {}
     
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context)
@@ -308,7 +308,7 @@ private:
     vector<Zone*> zones_;
 
 public:
-    CompositeZone(RealSurface* surface, string name) : Zone(surface, name) {}
+    CompositeZone(ControlSurface* surface, string name) : Zone(surface, name) {}
     
     virtual ~CompositeZone() {}
     
@@ -321,7 +321,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class RealSurface
+class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
@@ -332,7 +332,7 @@ protected:
     map<string, vector<Zone*>> zones_;
     void InitZones(string templateFilename);
     
-    RealSurface(Page* page, const string name) : page_(page), name_(name)
+    ControlSurface(Page* page, const string name) : page_(page), name_(name)
     {
         // Add the "hardcoded" widgets
         allWidgets_.push_back(new Widget(this, TrackOnSelection, true));
@@ -341,7 +341,7 @@ protected:
     }
 
 public:
-    virtual ~RealSurface() {};
+    virtual ~ControlSurface() {};
     
     Page* GetPage() { return page_; }
     
@@ -368,7 +368,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_RealSurface : public RealSurface
+class Midi_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -411,9 +411,9 @@ private:
     }
     
 public:
-    Midi_RealSurface(Page* page, const string name, string templateFilename, string zoneFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
-    virtual ~Midi_RealSurface()
+    virtual ~Midi_ControlSurface()
     {
         // GAW TBD -- removing this temporarily to see what happens with windows users crash when loading other projects
         /*
@@ -480,10 +480,10 @@ public:
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
-    virtual void Do(Page* page, RealSurface* surface) {}
-    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track) {}
-    virtual void Do(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) {}
-    virtual void Do(Page* page, RealSurface* surface, double value) {}
+    virtual void Do(Page* page, ControlSurface* surface) {}
+    virtual void Do(Page* page, ControlSurface* surface, MediaTrack* track) {}
+    virtual void Do(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) {}
+    virtual void Do(Page* page, ControlSurface* surface, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -492,7 +492,7 @@ class ActionContext
 {
 protected:
     Page* page_ = nullptr;
-    RealSurface* surface_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     Widget* widget_ = nullptr;
     Action * action_ = nullptr;
     bool isInverted_ = false;
@@ -502,9 +502,9 @@ protected:
     double delayStartTime_ = 0.0;
     double valueForDelayedExecution_ = 0.0;
 
-    ActionContext(Action* action) : action_(action) {}
+    //ActionContext(Action* action) : action_(action) {}
     
-    ActionContext(Page* page, RealSurface* surface, Widget* widget, Action* action) {}
+    ActionContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : page_(page), surface_(surface), widget_(widget), action_(action) {}
     
 public:
     virtual ~ActionContext() {}
@@ -521,9 +521,9 @@ public:
     virtual void RequestActionUpdate(Page* page, Widget* widget) {}
     virtual void DoAction(Page* page, Widget* widget, double value) {}
     virtual void DoRelativeAction(Page* page, Widget* widget, double value) {}
-    virtual void DoAction(Page* page, RealSurface* surface) {}
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track) {}
-    virtual void DoAction(Page* page, RealSurface* surface, MediaTrack* track, int fxIndex) {}
+    virtual void DoAction(Page* page, ControlSurface* surface) {}
+    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track) {}
+    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -570,21 +570,21 @@ public:
                 actionContext->DoAction(page, widget, value);
     }
     
-    void DoAction(Page* page, string modifiers, RealSurface* surface)
+    void DoAction(Page* page, string modifiers, ControlSurface* surface)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->DoAction(page, surface);
     }
     
-    void DoAction(Page* page, string modifiers, RealSurface* surface, MediaTrack* track)
+    void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
                 actionContext->DoAction(page, surface, track);
     }
     
-    void DoAction(Page* page, string modifiers, RealSurface* surface, MediaTrack* track, int fxIndex)
+    void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
@@ -676,7 +676,7 @@ private:
     int sendsOffset_ = 0;
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
-    vector<RealSurface*> realSurfaces_;
+    vector<ControlSurface*> realSurfaces_;
     vector<BankableChannel*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
     map<Widget*, WidgetContext*> widgetContexts_;
@@ -687,8 +687,8 @@ private:
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
-    void InitActionContexts(RealSurface* surface, string templateFilename);
-    void InitFXContexts(RealSurface* surface, string templateDirectory);
+    void InitActionContexts(ControlSurface* surface, string templateFilename);
+    void InitFXContexts(ControlSurface* surface, string templateDirectory);
 
 
     
@@ -952,7 +952,7 @@ public:
             sendsOffset_ = maxOffset;
     }
     
-    void AddSurface(RealSurface* surface, string actionTemplateFile, string fxTemplateDirectory)
+    void AddSurface(ControlSurface* surface, string actionTemplateFile, string fxTemplateDirectory)
     {
         realSurfaces_.push_back(surface);
         
@@ -990,13 +990,13 @@ public:
         scrollLink_ = value;
     }
         
-    void MapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void MapTrackAndFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         MapTrackToWidgets(surface, track);
         MapFXToWidgets(track);
     }
 
-    void MapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+    void MapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         widgetContextsMappedToTracks_.clear();
         /*
@@ -1074,13 +1074,13 @@ public:
         OpenFXWindows();
     }
     
-    void ToggleMapTrackAndFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void ToggleMapTrackAndFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         ToggleMapTrackToWidgets(surface, track);
         ToggleMapFXToWidgets(surface, track);
     }
     
-    void ToggleMapTrackToWidgets(RealSurface* surface, MediaTrack* track)
+    void ToggleMapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         if(widgetContextsMappedToTracks_.size() > 0)
             UnmapWidgetsFromTrack();
@@ -1088,14 +1088,14 @@ public:
             MapTrackToWidgets(surface, track);
     }
 
-    void ToggleMapFXToWidgets(RealSurface* surface, MediaTrack* track)
+    void ToggleMapFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         if(widgetContextsMappedToFX_.size() > 0)
             UnmapWidgetsFromFX();
         else MapFXToWidgets(track);
     }
     
-    void ToggleMapSingleFXToWidgets(RealSurface* surface, MediaTrack* track, int fxIndex)
+    void ToggleMapSingleFXToWidgets(ControlSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(track == nullptr)
         {
@@ -1305,7 +1305,7 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(Page*, ControlSurface*, Widget*, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1357,19 +1357,19 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(vector<string> params)
+    ActionContext* GetActionContext(Page* page, ControlSurface* surface, Widget* widget, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](params);
+            return actionContexts_[params[0]](page, surface, widget, params);
         
         return nullptr;
     }
     
-    ActionContext* GetFXActionContext(vector<string> params, string alias)
+    ActionContext* GetFXActionContext(Page* page, ControlSurface* surface, Widget* widget, vector<string> params, string alias)
     {
         if(actionContexts_.count(params[0]) > 0)
         {
-            ActionContext* context = actionContexts_[params[0]](params);
+            ActionContext* context = actionContexts_[params[0]](page, surface, widget, params);
             context->SetAlias(alias);
             return context;
         }
