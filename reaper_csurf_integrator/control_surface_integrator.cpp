@@ -31,7 +31,7 @@ double strToDouble(string valueStr)
 void Widget::RequestUpdate()
 {
     if(wantsFeedback_ && actionContext_ != nullptr)
-        actionContext_->RequestActionUpdate(GetSurface()->GetPage(), this);
+        actionContext_->RequestActionUpdate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,7 +277,7 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
     }
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-    InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
+    //InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

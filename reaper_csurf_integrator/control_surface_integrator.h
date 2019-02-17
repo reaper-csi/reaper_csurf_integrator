@@ -518,12 +518,12 @@ public:
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
-    virtual void RequestActionUpdate(Page* page, Widget* widget) {}
-    virtual void DoAction(Page* page, Widget* widget, double value) {}
-    virtual void DoRelativeAction(Page* page, Widget* widget, double value) {}
-    virtual void DoAction(Page* page, ControlSurface* surface) {}
-    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track) {}
-    virtual void DoAction(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) {}
+    virtual void RequestActionUpdate() {}
+    virtual void DoAction(double value) {}
+    virtual void DoRelativeAction(double value) {}
+    virtual void DoAction() {}
+    virtual void DoAction(MediaTrack* track) {}
+    virtual void DoAction(MediaTrack* track, int fxIndex) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -560,35 +560,35 @@ public:
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoRelativeAction(page, widget, value);
+                actionContext->DoRelativeAction(value);
     }
 
     void DoAction(Page* page, string modifiers, Widget*widget, double value)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, widget, value);
+                actionContext->DoAction(value);
     }
     
     void DoAction(Page* page, string modifiers, ControlSurface* surface)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, surface);
+                actionContext->DoAction();
     }
     
     void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, surface, track);
+                actionContext->DoAction(track);
     }
     
     void DoAction(Page* page, string modifiers, ControlSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(actionContexts_.count(component_) > 0 && actionContexts_[component_].count(modifiers) > 0)
             for(auto actionContext : actionContexts_[component_][modifiers])
-                actionContext->DoAction(page, surface, track, fxIndex);
+                actionContext->DoAction(track, fxIndex);
     }
     
     void SetIndex(int index)
