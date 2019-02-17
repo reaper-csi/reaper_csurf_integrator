@@ -65,10 +65,11 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 {
     trackGUID_ = trackGUID;
-    
+    /*
     for(auto widget : widgets_)
         if(WidgetContext* widgetContext = page->GetWidgetContext(widget))
             widgetContext->SetComponentTrackContext(Track, trackGUID);
+     */
 }
 
 
@@ -275,6 +276,12 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
             }
         }
     }
+    
+    // Add the "hardcoded" widgets
+    allWidgets_.push_back(new Midi_Widget(this, TrackOnSelection, true));
+    allWidgets_.push_back(new Midi_Widget(this, TrackOnMapTrackAndFXToWidgets, true));
+    allWidgets_.push_back(new Midi_Widget(this, TrackOnFocusedFX, true));
+
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
     //InitZones(string(DAW::GetResourcePath()) + "/CSI/axt/" + zoneFilename);
@@ -525,7 +532,7 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                             
                             if(isDelayed)
                                 context->SetDelayAmount(delayAmount * 1000.0);
-                            
+                            /*
                             if(widgetContexts_.count(widget) < 1)
                                 widgetContexts_[widget] = new WidgetContext(widget);
                             
@@ -542,7 +549,7 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                                         widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                         context->SetCyclerWidget(cyclerWidget);
                                     }
-                            }
+                            }*/
                         }
         }
     }
@@ -651,12 +658,12 @@ void Page::InitFXContexts(ControlSurface* surface, string templateDirectory)
 
                                     if(isDelayed)
                                         context->SetDelayAmount(delayTime * 1000.0);
-
+/*
                                     if(widgetContexts_.count(widget) < 1)
                                         widgetContexts_[widget] = new WidgetContext(widget);
                                     
                                     widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
-                                    fxWidgets_[fxName].push_back(widget);
+                                    fxWidgets_[fxName].push_back(widget);*/
                                 }
                 }
             }
@@ -742,31 +749,31 @@ void Page::OnTrackSelection(MediaTrack* track)
         if(selectedTrackOffset > high)
             TheManager->AdjustTrackBank(this, selectedTrackOffset - high);
     }
-    
+    /*
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
             if(widget->GetName() == TrackOnSelection)
                 if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface);
+                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface);*/
 }
 
 void Page::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
-{
+{/*
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
             if(widget->GetName() == TrackOnMapTrackAndFXToWidgets)
                 if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);
+                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);*/
 }
 
 void Page::OnFXFocus(MediaTrack* track, int fxIndex)
-{
+{/*
     // GAW WIP  -- currently doesn't take FX index into account
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
             if(widget->GetName() == TrackOnFocusedFX)
                 if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track, fxIndex);
+                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track, fxIndex);*/
 }
 
 void Page::AdjustTrackBank(int stride)
