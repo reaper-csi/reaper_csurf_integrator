@@ -186,7 +186,7 @@ public:
         {
             actionContext_->DoRelativeAction(value);
             
-            if(WantsFeedback())
+            if(wantsFeedback_)
                 actionContext_->DoAction(value + lastNormalizedValue_);
         }
     }
