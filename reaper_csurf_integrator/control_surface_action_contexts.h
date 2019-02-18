@@ -13,12 +13,6 @@
 class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    void ExecuteAction(Widget* widget, double value)
-    {
-        action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
-    }
-    
 public:
     GlobalContext(Page* page, ControlSurface* surface, Action* action) : ActionContext(page, surface, action) {}
     
@@ -29,7 +23,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        ExecuteAction(widget, value);
+        action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
