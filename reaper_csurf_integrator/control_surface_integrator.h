@@ -331,10 +331,19 @@ protected:
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
+    void RequestUpdate()
+    {
+        for(auto widget : allWidgets_)
+            widget->RequestUpdate();
+    }
+
 public:
     virtual ~ControlSurface() {};
     
-    vector<Widget*> & GetAllWidgets() { return allWidgets_; }
+    vector<Widget*> & GetAllWidgets()
+    {
+        return allWidgets_;
+    }
     
     void AddWidget(Widget* widget)
     {
@@ -344,12 +353,6 @@ public:
     virtual void Run()
     {
         RequestUpdate();
-    }
-    
-    void RequestUpdate()
-    {
-        for(auto widget : allWidgets_)
-            widget->RequestUpdate();
     }
 };
 
@@ -479,16 +482,14 @@ class ActionContext
 protected:
     Page* page_ = nullptr;
     ControlSurface* surface_ = nullptr;
-    Widget* widget_ = nullptr;
     Action * action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
-    double valueForDelayedExecution_ = 0.0;
 
-    ActionContext(Page* page, ControlSurface* surface, Widget* widget, Action* action) : page_(page), surface_(surface), widget_(widget), action_(action) {}
+    ActionContext(Page* page, ControlSurface* surface, Action* action) : page_(page), surface_(surface), action_(action) {}
     
 public:
     virtual ~ActionContext() {}
@@ -502,12 +503,12 @@ public:
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
-    virtual void RequestUpdate() {}
-    virtual void DoAction() {}
-    virtual void DoAction(double value) {}
-    virtual void DoRelativeAction(double value) {}
-    virtual void DoAction(MediaTrack* track) {}
-    virtual void DoAction(MediaTrack* track, int fxIndex) {}
+    virtual void RequestUpdate(Widget* widget) {}
+    virtual void DoAction(Widget* widget) {}
+    virtual void DoAction(Widget* widget, double value) {}
+    virtual void DoRelativeAction(Widget* widget, double value) {}
+    virtual void DoAction(Widget* widget, MediaTrack* track) {}
+    virtual void DoAction(Widget* widget, MediaTrack* track, int fxIndex) {}
 
     void SetWidgetValue(Widget* widget, int displayMode, double value)
     {
@@ -1172,7 +1173,7 @@ class Manager
 private:
     MidiIOManager* midiIOManager_ = nullptr;
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(Page*, ControlSurface*, Widget*, vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(Page*, ControlSurface*, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1224,10 +1225,10 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(Page* page, ControlSurface* surface, Widget* widget, vector<string> params)
+    ActionContext* GetActionContext(Page* page, ControlSurface* surface, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](page, surface, widget, params);
+            return actionContexts_[params[0]](page, surface, params);
         
         return nullptr;
     }
@@ -1236,7 +1237,7 @@ public:
     {
         if(actionContexts_.count(params[0]) > 0)
         {
-            ActionContext* context = actionContexts_[params[0]](page, surface, widget, params);
+            ActionContext* context = actionContexts_[params[0]](page, surface, params);
             context->SetAlias(alias);
             return context;
         }
