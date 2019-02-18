@@ -53,7 +53,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(actionContext_ != nullptr && midiPressMessage_->IsEqualTo(midiMessage))
-           actionContext_->DoAction(1.0);
+           actionContext_->DoAction(this, 1.0);
     }
 };
 
@@ -84,7 +84,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(actionContext_ != nullptr)
-            actionContext_->DoAction(midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
+            actionContext_->DoAction(this, midiMessage->IsEqualTo(midiPressMessage_) ? 1 : 0);
     }
 };
 
@@ -112,7 +112,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(actionContext_ != nullptr)
-            actionContext_->DoAction(int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+            actionContext_->DoAction(this, int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
 };
 
@@ -139,7 +139,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         if(actionContext_ != nullptr)
-            actionContext_->DoAction(midiMessage->midi_message[2] / 127.0);
+            actionContext_->DoAction(this, midiMessage->midi_message[2] / 127.0);
     }
 };
 
@@ -184,10 +184,10 @@ public:
 
         if(actionContext_ != nullptr)
         {
-            actionContext_->DoRelativeAction(value);
+            actionContext_->DoRelativeAction(this, value);
             
             if(wantsFeedback_)
-                actionContext_->DoAction(value + lastNormalizedValue_);
+                actionContext_->DoAction(this, value + lastNormalizedValue_);
         }
     }
 };
