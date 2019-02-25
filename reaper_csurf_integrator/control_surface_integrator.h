@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <fstream>
+#include <filesystem>
 #include <functional>
 #include <regex>
 
@@ -289,12 +290,12 @@ public:
     Zone(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Zone() {}
     
+    string GetName() { return name_ ;}
+    
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context)
     {
         actionContextForWidget_[widget] = context;
     }
-    
-    virtual void AddZone(Zone* zone) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,7 +303,7 @@ class CompositeZone : public Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<Zone*> zones_;
+    map<string, Zone*> zones_;
 
 public:
     CompositeZone(ControlSurface* surface, string name) : Zone(surface, name) {}
@@ -311,9 +312,9 @@ public:
     
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
     
-    virtual void AddZone(Zone* zone) override
+    virtual void AddZone(Zone* zone)
     {
-        zones_.push_back(zone);
+        zones_[zone->GetName()] = zone;
     }
 };
 
@@ -326,7 +327,7 @@ protected:
     const string name_ = "";
 
     vector<Widget*> allWidgets_;
-    map<string, vector<Zone*>> zones_;
+    map<string, Zone*> zones_;
     void InitZones(string templateFilename);
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
@@ -400,7 +401,7 @@ private:
     }
     
 public:
-    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFilename, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
     virtual ~Midi_ControlSurface()
     {
@@ -821,8 +822,8 @@ public:
         string resourcePath(DAW::GetResourcePath());
         resourcePath += "/CSI/";
    
-        InitActionContexts(surface, resourcePath + "axt/" + actionTemplateFile);
-        InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
+        //InitActionContexts(surface, resourcePath + "axt/" + actionTemplateFile);
+        //InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
