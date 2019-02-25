@@ -10,7 +10,6 @@
 #include "reaper_plugin_functions.h"
 
 using namespace std;
-using namespace filesystem;
 
 extern HWND g_hwnd;
 
