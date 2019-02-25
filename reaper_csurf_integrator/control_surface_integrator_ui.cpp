@@ -113,6 +113,44 @@ void AddListEntry(HWND hwndDlg, string buf, int comboId)
     SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FileSystem
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    static vector<string> GetDirectoryFilenames(const string& dir)
+    {
+        vector<string> filenames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        if(directory_ptr == nullptr)
+            return filenames;
+        
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            filenames.push_back(string(dirent_ptr->d_name));
+        
+        return filenames;
+    }
+    
+    static vector<string> GetDirectoryFolderNames(const string& dir)
+    {
+        vector<string> folderNames;
+        shared_ptr<DIR> directory_ptr(opendir(dir.c_str()), [](DIR* dir){ dir && closedir(dir); });
+        struct dirent *dirent_ptr;
+        
+        if(directory_ptr == nullptr)
+            return folderNames;
+        
+        while ((dirent_ptr = readdir(directory_ptr.get())) != nullptr)
+            if(dirent_ptr->d_type == DT_DIR)
+                folderNames.push_back(string(dirent_ptr->d_name));
+        
+        return folderNames;
+    }
+};
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // structs
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
