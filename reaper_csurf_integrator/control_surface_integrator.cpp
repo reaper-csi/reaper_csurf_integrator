@@ -12,6 +12,24 @@
 
 extern Manager* TheManager;
 
+void listFiles(const string &path, vector<string> &results)
+{
+    regex rx(".*\\.zon$");
+    
+    if (auto dir = opendir(path.c_str())) {
+        while (auto f = readdir(dir)) {
+            if (!f->d_name || f->d_name[0] == '.') continue;
+            if (f->d_type == DT_DIR)
+                listFiles(path + f->d_name + "/", results);
+            
+            if (f->d_type == DT_REG)
+                if(regex_match(f->d_name, rx))
+                    results.push_back(path + f->d_name);
+        }
+        closedir(dir);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidgeta available for inclusion in Real Surface Templates, we will add widgets as necessary
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,24 +303,6 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
     InitZones(string(DAW::GetResourcePath()) + "/CSI/Zones/" + zoneFolder);
-}
-
-void listFiles(const string &path, vector<string> &results)
-{
-    regex rx(".*\\.ini$");
-    
-    if (auto dir = opendir(path.c_str())) {
-        while (auto f = readdir(dir)) {
-            if (!f->d_name || f->d_name[0] == '.') continue;
-            if (f->d_type == DT_DIR)
-                listFiles(path + f->d_name + "/", results);
-            
-            if (f->d_type == DT_REG)
-                if(regex_match(f->d_name, rx))
-                    results.push_back(path + f->d_name);
-        }
-        closedir(dir);
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
