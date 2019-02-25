@@ -12,8 +12,7 @@
 #define IDC_EDIT_PageName               1003
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_CHECK_SynchPages            1009
-#define IDC_COMBO_ActionTemplates       1017
-#define IDC_COMBO_FXTemplates           1018
+#define IDC_COMBO_ZoneTemplates         1017
 #define IDC_COMBO_SurfaceTemplate       1019
 #define IDC_COMBO_MidiIn                1020
 #define IDC_COMBO_MidiOut               1021
