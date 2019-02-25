@@ -42,12 +42,7 @@
 #include "udp.hh"
 #endif
 
-const string Control_Surface_Integrator = "Control Surface Integrator";
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
-const string GainReductionDB = "GainReductionDB";
-const string TrackOnSelection = "TrackOnSelection";
-const string TrackOnFocusedFX = "TrackOnFocusedFX";
-const string TrackOnMapTrackAndFXToWidgets = "TrackOnMapTrackAndFXToWidgets";
 const string MidiInMonitor = "MidiInMonitor";
 const string MidiOutMonitor = "MidiOutMonitor";
 const string VSTMonitor = "VSTMonitor";
@@ -57,14 +52,7 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-const string Invert = "Invert";
-const string Toggle = "Toggle";
-const string Hold = "Hold";
-const string Zoom = "Zoom";
-const string Scrub = "Scrub";
 const string PageToken = "Page";
-const string Track = "Track";
-
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
 // subtracts b<T> from a<T>

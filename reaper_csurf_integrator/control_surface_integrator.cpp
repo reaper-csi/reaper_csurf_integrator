@@ -12,6 +12,8 @@
 
 extern Manager* TheManager;
 
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MidiWidgeta available for inclusion in Real Surface Templates, we will add widgets as necessary
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,11 +278,11 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
             }
         }
     }
-    
+
     // Add the "hardcoded" widgets
-    allWidgets_.push_back(new Midi_Widget(this, TrackOnSelection, true));
-    allWidgets_.push_back(new Midi_Widget(this, TrackOnMapTrackAndFXToWidgets, true));
-    allWidgets_.push_back(new Midi_Widget(this, TrackOnFocusedFX, true));
+    allWidgets_.push_back(new Midi_Widget(this, "TrackOnSelection", true));
+    allWidgets_.push_back(new Midi_Widget(this, "TrackOnMapTrackAndFXToWidgets", true));
+    allWidgets_.push_back(new Midi_Widget(this, "TrackOnFocusedFX", true));
 
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
@@ -311,6 +313,10 @@ void listFiles(const string &path, vector<string> &results)
 
 void ControlSurface::InitZones(string zoneFolder)
 {
+    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
+
+    
+    
     vector<string> zoneFilesToProcess;
     listFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
 
@@ -380,11 +386,11 @@ void ControlSurface::InitZones(string zoneFolder)
                                 modifierSlots[2] = Control;
                             else if(modifier_tokens[i] == Alt)
                                 modifierSlots[3] = Alt;
-                            else if(modifier_tokens[i] == Invert)
+                            else if(modifier_tokens[i] == "Invert")
                                 isInverted = true;
-                            else if(modifier_tokens[i] == Toggle)
+                            else if(modifier_tokens[i] == "Toggle")
                                 shouldToggle = true;
-                            else if(modifier_tokens[i] == Hold)
+                            else if(modifier_tokens[i] == "Hold")
                             {
                                 isDelayed = true;
                                 delayAmount = 1.0;
@@ -514,11 +520,11 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                             modifierSlots[2] = Control;
                         else if(modifier_tokens[i] == Alt)
                             modifierSlots[3] = Alt;
-                        else if(modifier_tokens[i] == Invert)
+                        else if(modifier_tokens[i] == "Invert")
                             isInverted = true;
-                        else if(modifier_tokens[i] == Toggle)
+                        else if(modifier_tokens[i] == "Toggle")
                             shouldToggle = true;
-                        else if(modifier_tokens[i] == Hold)
+                        else if(modifier_tokens[i] == "Hold")
                         {
                             isDelayed = true;
                             delayAmount = 1.0;
