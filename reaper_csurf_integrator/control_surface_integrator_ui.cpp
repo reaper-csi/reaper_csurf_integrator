@@ -554,7 +554,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    if(tokens[0] == MidiInMonitor)
+                    if(tokens[0] == MidiInMonitorToken)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -562,7 +562,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_MidiInMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == MidiOutMonitor)
+                    else if(tokens[0] == MidiOutMonitorToken)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -570,7 +570,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_MidiOutMon, BST_CHECKED);
                     }
-                    else if(tokens[0] == VSTMonitor)
+                    else if(tokens[0] == VSTMonitorToken)
                     {
                         if(tokens.size() != 2)
                             continue;
@@ -609,7 +609,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                     }
-                    else if(tokens[0] == MidiSurface)
+                    else if(tokens[0] == MidiSurfaceToken)
                     {
                         if(tokens.size() != 6)
                             continue;
@@ -639,21 +639,21 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             if(iniFile.is_open())
             {
-                string line = MidiInMonitor + " ";
+                string line = MidiInMonitorToken + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiInMon))
                     line += "On";
                 else
                     line += "Off";
                 iniFile << line + "\n";
                 
-                line = MidiOutMonitor + " ";
+                line = MidiOutMonitorToken + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiOutMon))
                     line += "On";
                 else
                     line += "Off";
                 iniFile << line + "\n";
                 
-                line = VSTMonitor + " ";
+                line = VSTMonitorToken + " ";
                 if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_VSTParamMon))
                     line += "On";
                 else
@@ -689,7 +689,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     for(auto surface : page->midiSurfaces)
                     {
-                        line = MidiSurface + " ";
+                        line = MidiSurfaceToken + " ";
                         line += surface->name + " ";
                         line += to_string(surface->midiIn) + " " ;
                         line += to_string(surface->midiOut) + " " ;
