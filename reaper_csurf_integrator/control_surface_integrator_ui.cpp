@@ -120,9 +120,7 @@ struct MidiSurfaceLine
     int midiIn = 0;
     int midiOut = 0;
     string templateFilename = "";
-    string actionTemplateFolder = "";
-    string FXTemplateFolder = "";
-
+    string zoneTemplateFolder = "";
 };
 
 struct PageLine
@@ -147,8 +145,7 @@ static char name[BUFSZ];
 static int midiIn = 0;
 static int midiOut = 0;
 static char templateFilename[BUFSZ];
-static char actionTemplateFolder[BUFSZ];
-static char FXTemplateFolder[BUFSZ];
+static char zoneTemplateFolder[BUFSZ];
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -279,24 +276,18 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 }
             
             string resourcePath(DAW::GetResourcePath());
+           
             int i = 0;
-            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/mst/"))
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/Midi/"))
             {
                 int length = filename.length();
                 if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'm' && filename[length - 2] == 's' &&filename[length - 1] == 't')
                     AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
             }
             
-            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/axt/"))
-            {
-                int length = filename.length();
-                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'a' && filename[length - 2] == 'x' &&filename[length - 1] == 't')
-                    AddComboEntry(hwndDlg, 0, (char *)filename.c_str(), IDC_COMBO_ActionTemplates);
-            }
-            
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/fxt/"))
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/Zones/"))
                 if(foldername[0] != '.')
-                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_FXTemplates);
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ZoneTemplates);
             
             if(editMode)
             {
@@ -307,22 +298,16 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
                 
-                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_FINDSTRING, -1, (LPARAM)actionTemplateFolder);
+                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, index, 0);
-                
-                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_FINDSTRING, -1, (LPARAM)FXTemplateFolder);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, index, 0);
-                
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
             }
             else
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ActionTemplates), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_FXTemplates), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
             }
         }
 
@@ -343,8 +328,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                             midiOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
 
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
-                        GetDlgItemText(hwndDlg, IDC_COMBO_ActionTemplates, actionTemplateFolder, sizeof(actionTemplateFolder));
-                        GetDlgItemText(hwndDlg, IDC_COMBO_FXTemplates, FXTemplateFolder, sizeof(FXTemplateFolder));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
 
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
@@ -450,8 +434,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->midiIn = midiIn;
                                     surface->midiOut = midiOut;
                                     surface->templateFilename = templateFilename;
-                                    surface->actionTemplateFolder = actionTemplateFolder;
-                                    surface->FXTemplateFolder = FXTemplateFolder;
+                                    surface->zoneTemplateFolder = zoneTemplateFolder;
                                     
                                     pages[pageIndex]->midiSurfaces.push_back(surface);
                                     
@@ -500,8 +483,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 midiIn = pages[pageIndex]->midiSurfaces[index]->midiIn;
                                 midiOut = pages[pageIndex]->midiSurfaces[index]->midiOut;
                                 strcpy(templateFilename, pages[pageIndex]->midiSurfaces[index]->templateFilename.c_str());
-                                strcpy(actionTemplateFolder, pages[pageIndex]->midiSurfaces[index]->actionTemplateFolder.c_str());
-                                strcpy(FXTemplateFolder, pages[pageIndex]->midiSurfaces[index]->FXTemplateFolder.c_str());
+                                strcpy(zoneTemplateFolder, pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder.c_str());
                                 dlgResult = false;
                                 editMode = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
@@ -511,8 +493,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->midiSurfaces[index]->midiIn = midiIn;
                                     pages[pageIndex]->midiSurfaces[index]->midiOut = midiOut;
                                     pages[pageIndex]->midiSurfaces[index]->templateFilename = templateFilename;
-                                    pages[pageIndex]->midiSurfaces[index]->actionTemplateFolder = actionTemplateFolder;
-                                    pages[pageIndex]->midiSurfaces[index]->FXTemplateFolder = FXTemplateFolder;
+                                    pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
                                 }
                             }
                         }
@@ -628,7 +609,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == MidiSurface)
                     {
-                        if(tokens.size() != 7)
+                        if(tokens.size() != 6)
                             continue;
                         
                         MidiSurfaceLine* surface = new MidiSurfaceLine();
@@ -636,8 +617,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->midiIn = atoi(tokens[2].c_str());
                         surface->midiOut = atoi(tokens[3].c_str());
                         surface->templateFilename = tokens[4];
-                        surface->actionTemplateFolder = tokens[5];
-                        surface->FXTemplateFolder = tokens[6];
+                        surface->zoneTemplateFolder = tokens[5];
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->midiSurfaces.push_back(surface);
@@ -712,8 +692,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         line += to_string(surface->midiIn) + " " ;
                         line += to_string(surface->midiOut) + " " ;
                         line += surface->templateFilename + " ";
-                        line += surface->actionTemplateFolder + " " ;
-                        line += surface->FXTemplateFolder + "\n";
+                        line += surface->zoneTemplateFolder + "\n" ;
+
                         
                         iniFile << line;
                     }
