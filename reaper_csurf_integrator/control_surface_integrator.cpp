@@ -1089,7 +1089,7 @@ void Manager::Init()
             while (iss >> quoted(token))
                 tokens.push_back(token);
             
-            if(tokens[0] == MidiInMonitor)
+            if(tokens[0] == MidiInMonitorToken)
             {
                 if(tokens.size() != 2)
                     continue;
@@ -1097,7 +1097,7 @@ void Manager::Init()
                 if(tokens[1] == "On")
                     midiInMonitor = true;
             }
-            else if(tokens[0] == MidiOutMonitor)
+            else if(tokens[0] == MidiOutMonitorToken)
             {
                 if(tokens.size() != 2)
                     continue;
@@ -1105,7 +1105,7 @@ void Manager::Init()
                 if(tokens[1] == "On")
                     midiOutMonitor = true;
             }
-            else if(tokens[0] == VSTMonitor)
+            else if(tokens[0] == VSTMonitorToken)
             {
                 if(tokens.size() != 2)
                     continue;
@@ -1122,7 +1122,7 @@ void Manager::Init()
                 pages_.push_back(currentPage);
                 
             }
-            else if(tokens[0] == MidiSurface)
+            else if(tokens[0] == MidiSurfaceToken)
             {
                 if(tokens.size() != 6)
                     continue;
