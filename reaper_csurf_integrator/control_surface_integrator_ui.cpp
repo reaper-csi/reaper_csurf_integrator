@@ -583,7 +583,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
             for (string line; getline(iniFile, line) ; )
             {
-                if(line[0] != '/' && line != "") // ignore comment lines and blank lines
+                if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
                 {
                     istringstream iss(line);
                     vector<string> tokens;
