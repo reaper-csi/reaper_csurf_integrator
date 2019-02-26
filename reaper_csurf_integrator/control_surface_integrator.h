@@ -279,15 +279,19 @@ protected:
     Page* page_ = nullptr;
     const string name_ = "";
 
-    vector<Widget*> allWidgets_;
+    vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     void InitZones(string templateFilename);
+    void ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<Zone*>> &compositeZoneMembers);
+    void ProcessZone(ifstream &zoneFile, vector<string> tokens);
+    void ProcessActionZone(ifstream &zoneFile, vector<string> tokens);
+
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
     void RequestUpdate()
     {
-        for(auto widget : allWidgets_)
+        for(auto widget : widgets_)
             widget->RequestUpdate();
     }
 
@@ -296,12 +300,12 @@ public:
     
     vector<Widget*> & GetAllWidgets()
     {
-        return allWidgets_;
+        return widgets_;
     }
     
     void AddWidget(Widget* widget)
     {
-        allWidgets_.push_back(widget);
+        widgets_.push_back(widget);
     }
     
     virtual void Run()
