@@ -107,7 +107,7 @@ void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Midi_RealSurface
+// Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
 : ControlSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
@@ -314,35 +314,43 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// RealSurface
+// ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ControlSurface::ProcessActionZone(ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::InitZones(string zoneFolder)
 {
-    Zone* zone = new Zone(this, tokens[1]);
-    zones_[zone->GetName()] = zone;
+    vector<string> zoneFilesToProcess;
+    listFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
     
-    for (string line; getline(zoneFile, line) ; )
+    map<string, vector<CompositeZone*>> compositeZoneMembers;
+    
+    for(auto zoneFilename : zoneFilesToProcess)
     {
-        vector<string> tokens(GetTokens(line));
+        ifstream zoneFile(zoneFilename);
         
-        if(tokens.size() > 0 && tokens[0] == "ActionZoneEnd")    // finito baybay - ActionZone processing complete
-            return;
+        for (string line; getline(zoneFile, line) ; )
+        {
+            vector<string> tokens(GetTokens(line));
             
-            
-            
-
+            if(tokens.size() > 1)
+            {
+                if(tokens[0] == "Zone")
+                    ProcessZone(zoneFile, tokens);
+                else if(tokens[0] == "CompositeZone")
+                    ProcessCompositeZone(zoneFile, tokens, compositeZoneMembers);
+            }
+        }
     }
 }
 
-void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<Zone*>> &compositeZoneMembers)
+void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers)
 {
-    Zone* compositeZone = new CompositeZone(this, tokens[1]);
+    CompositeZone* compositeZone = new CompositeZone(this, tokens[1]);
     zones_[compositeZone->GetName()] = compositeZone;
     
     for (string line; getline(zoneFile, line) ; )
     {
         vector<string> tokens(GetTokens(line));
-
+        
         if(tokens.size() > 0)
         {
             if(tokens[0] == "CompositeZoneEnd")    // finito baybay - CompositeZone processing complete
@@ -353,8 +361,29 @@ void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tok
     }
 }
 
+void ControlSurface::ProcessActionZone(ifstream &zoneFile, vector<string> tokens)
+{
+    Zone* actionZone = new ActionZone(this, tokens[1]);
+    zones_[actionZone->GetName()] = actionZone;
+    
+    for (string line; getline(zoneFile, line) ; )
+    {
+        vector<string> tokens(GetTokens(line));
+        
+        if(tokens.size() > 0)
+        {
+            if(tokens[0] == "ActionZoneEnd")    // finito baybay - ActionZone processing complete
+            return;
+            
+            
+        }
+    }
+}
+
 void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
 {
+    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
+
     Zone* zone = new Zone(this, tokens[1]);
     zones_[zone->GetName()] = zone;
     
@@ -364,14 +393,6 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
 
         if(tokens.size() > 0 && tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
             return;
-        
-        
-        
-        
-        
-        
-        
-        
         
         // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
         
@@ -384,32 +405,12 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
         
         if(tokens.size() > 0)
         {
-            
-            
-            
-            if(tokens[0] == "BankableChannel")
-            {
-                //inChannel = true;
-                //bankableChannels_.push_back(new BankableChannel());
-            }
-            else if(tokens[0] == "BankableChannelEnd")
-            {
-                //inChannel = false;
-            }
-            
             istringstream modified_role(tokens[0]);
             vector<string> modifier_tokens;
             string modifier_token;
             
             while (getline(modified_role, modifier_token, '+'))
                 modifier_tokens.push_back(modifier_token);
-            
-            widgetName = modifier_tokens[modifier_tokens.size() - 1];
-            
-            
-            
-            
-            
             
             if(modifier_tokens.size() > 1)
             {
@@ -439,122 +440,60 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
                 modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
             }
             
+            widgetName = modifier_tokens[modifier_tokens.size() - 1];
+
             
             
+
+            vector<string> params;
+            for(int i = 1; i < tokens.size(); i++)
+                params.push_back(tokens[i]);
             
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        vector<string> params;
-        for(int i = 1; i < tokens.size(); i++)
-            params.push_back(tokens[i]);
-        
-        if(tokens.size() > 1)
-            for(auto * widget : widgets_)
-                if(widget->GetName() == widgetName)
-                    if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
-                    {
-                        //if(inChannel)
-                        //(bankableChannels_.back())->AddWidget(widget);
-                        
-                        if(isInverted)
-                            context->SetIsInverted();
-                        
-                        if(shouldToggle)
-                            context->SetShouldToggle();
-                        
-                        if(isDelayed)
-                            context->SetDelayAmount(delayAmount * 1000.0);
-                        
-                        //if(widgetContexts_.count(widget) < 1)
-                        //widgetContexts_[widget] = new WidgetContext(widget);
-                        
-                        //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                        
-                        if(params[0] == "TrackCycle")
+            if(params.size() > 0)
+                for(auto * widget : widgets_)
+                    if(widget->GetName() == widgetName)
+                        if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
                         {
-                            for(auto * cyclerWidget : widgets_)
-                                if(cyclerWidget->GetName() == params[1])
-                                {
-                                    //if(widgetContexts_.count(cyclerWidget) < 1)
-                                    //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                    
-                                    //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                    context->SetCyclerWidget(cyclerWidget);
-                                }
+                            //if(inChannel)
+                            //(bankableChannels_.back())->AddWidget(widget);
+                            
+                            if(isInverted)
+                                context->SetIsInverted();
+                            
+                            if(shouldToggle)
+                                context->SetShouldToggle();
+                            
+                            if(isDelayed)
+                                context->SetDelayAmount(delayAmount * 1000.0);
+                            
+                            //if(widgetContexts_.count(widget) < 1)
+                            //widgetContexts_[widget] = new WidgetContext(widget);
+                            
+                            //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                            
+                            if(params[0] == "TrackCycle")
+                            {
+                                for(auto * cyclerWidget : widgets_)
+                                    if(cyclerWidget->GetName() == params[1])
+                                    {
+                                        //if(widgetContexts_.count(cyclerWidget) < 1)
+                                        //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
+                                        
+                                        //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                        context->SetCyclerWidget(cyclerWidget);
+                                    }
+                            }
                         }
-                    }
-    }
-}
-
-void ControlSurface::InitZones(string zoneFolder)
-{
-    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
-
-    
-    
-    vector<string> zoneFilesToProcess;
-    listFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
-
-    map<string, vector<Zone*>> compositeZoneMembers;
-
-    //return;
-    
-    for(auto zoneFilename : zoneFilesToProcess)
-    {
-        ifstream zoneFile(zoneFilename);
-        
-        for (string line; getline(zoneFile, line) ; )
-        {
-            if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
-            {
-                istringstream iss(line);
-                vector<string> tokens;
-                string token;
-                while (iss >> quoted(token))
-                    tokens.push_back(token);
-                
-     
-                if(tokens.size() > 1)
-                {
-                    if(tokens[0] == "Zone")
-                        ProcessZone(zoneFile, tokens);
-                    if(tokens[0] == "CompositeZone")
-                        ProcessCompositeZone(zoneFile, tokens, compositeZoneMembers);
-
-                }
-                
-
-            }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
 {
+    /*
     bool inChannel = false;
     
     ifstream actionTemplateFile(templateFilename);
@@ -648,7 +587,7 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                             
                             if(isDelayed)
                                 context->SetDelayAmount(delayAmount * 1000.0);
-                            /*
+                           
                             if(widgetContexts_.count(widget) < 1)
                                 widgetContexts_[widget] = new WidgetContext(widget);
                             
@@ -665,10 +604,11 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                                         widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
                                         context->SetCyclerWidget(cyclerWidget);
                                     }
-                            }*/
+                            }
                         }
         }
     }
+*/
 }
 
 void Page::InitFXContexts(ControlSurface* surface, string templateDirectory)

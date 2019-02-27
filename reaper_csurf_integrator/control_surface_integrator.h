@@ -257,7 +257,7 @@ class CompositeZone : public Zone
 {
 private:
     map<string, Zone*> zones_;
-
+    
 public:
     CompositeZone(ControlSurface* surface, string name) : Zone(surface, name) {}
     
@@ -265,10 +265,22 @@ public:
     
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
     
-    virtual void AddZone(Zone* zone)
+    void AddZone(Zone* zone)
     {
         zones_[zone->GetName()] = zone;
     }
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionZone : public Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ActionZone(ControlSurface* surface, string name) : Zone(surface, name) {}
+    
+    virtual ~ActionZone() {}
+    
+    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,8 +293,9 @@ protected:
 
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
+    vector<Zone*> activeZones_;
     void InitZones(string templateFilename);
-    void ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<Zone*>> &compositeZoneMembers);
+    void ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers);
     void ProcessZone(ifstream &zoneFile, vector<string> tokens);
     void ProcessActionZone(ifstream &zoneFile, vector<string> tokens);
 
