@@ -42,10 +42,10 @@
 #endif
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
-const string Shift = "Shift";
-const string Option = "Option";
-const string Control = "Control";
-const string Alt = "Alt";
+//const string Shift = "Shift";
+//const string Option = "Option";
+//const string Control = "Control";
+//const string Alt = "Alt";
 
 // CSI.ini tokens used by GUI and initialization
 const string MidiInMonitorToken = "MidiInMonitor";
@@ -221,13 +221,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Navigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -237,7 +230,6 @@ private:
 protected:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
-    Navigator* navigator_ = nullptr;
     
 public:
     Zone(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
@@ -281,6 +273,37 @@ public:
     virtual ~ActionZone() {}
     
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Navigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator : public Navigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    bool isPinned_ = false;
+    string trackGUID_ = "";
+    vector<Widget*> widgets_;
+    
+public:
+    TrackNavigator() {}
+    
+    void AddWidget(Widget* widget) { widgets_.push_back(widget); }
+    bool GetIsPinned() { return isPinned_; }
+    string GetTrackGUID() { return trackGUID_; }
+    void SetTrackGUID(Page* page, string trackGUID);
+    
+    void SetIsPinned(bool pinned)
+    {
+        isPinned_ = pinned;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -498,29 +521,6 @@ struct FXWindow
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class BankableChannel
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    bool isPinned_ = false;
-    string trackGUID_ = "";
-    vector<Widget*> widgets_;
-    
-public:
-    BankableChannel() {}
-    
-    void AddWidget(Widget* widget) { widgets_.push_back(widget); }
-    bool GetIsPinned() { return isPinned_; }
-    string GetTrackGUID() { return trackGUID_; }
-    void SetTrackGUID(Page* page, string trackGUID);
-
-    void SetIsPinned(bool pinned)
-    {
-        isPinned_ = pinned;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -541,7 +541,7 @@ private:
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
     vector<ControlSurface*> realSurfaces_;
-    vector<BankableChannel*> bankableChannels_;
+    vector<TrackNavigator*> bankableChannels_;
     vector<MediaTrack*> touchedTracks_;
     map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
@@ -563,16 +563,17 @@ private:
         string modifiers = "";
         
         if(isShift_)
-            modifiers += Shift;
+            modifiers += "Shift";
         if(isOption_)
-            modifiers += Option;
+            modifiers += "Option";
         if(isControl_)
-            modifiers +=  Control;
+            modifiers +=  "Control";
         if(isAlt_)
-            modifiers += Alt;
+            modifiers += "Alt";
         
         return modifiers;
     }
+
 
     void SetShift(bool value)
     {
@@ -1016,7 +1017,7 @@ public:
     
     void PinSelectedTracks()
     {
-        BankableChannel* channel = nullptr;
+        TrackNavigator* channel = nullptr;
         
         for(int i = 0; i < bankableChannels_.size(); i++)
         {
@@ -1037,7 +1038,7 @@ public:
     
     void UnpinSelectedTracks()
     {
-        BankableChannel* channel = nullptr;
+        TrackNavigator* channel = nullptr;
         char buffer[BUFSZ];
         
         for(int i = 0; i < bankableChannels_.size(); i++)
@@ -1086,7 +1087,7 @@ public:
             
             DAW::ClearCache();
             
-            BankableChannel* channel = nullptr;
+            TrackNavigator* channel = nullptr;
             char buffer[BUFSZ];
             for(int i = 0; i < bankableChannels_.size(); i++)
             {
