@@ -95,7 +95,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // BankableChannel
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void BankableChannel::SetTrackGUID(Page* page, string trackGUID)
+void TrackNavigator::SetTrackGUID(Page* page, string trackGUID)
 {
     trackGUID_ = trackGUID;
     /*
@@ -396,7 +396,6 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
         
         // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
         
-        string modifiers = "";
         string widgetName = "";
         bool isInverted = false;
         bool shouldToggle = false;
@@ -414,19 +413,9 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
             
             if(modifier_tokens.size() > 1)
             {
-                vector<string> modifierSlots = { "", "", "", "" };
-                
                 for(int i = 0; i < modifier_tokens.size() - 1; i++)
                 {
-                    if(modifier_tokens[i] == Shift)
-                        modifierSlots[0] = Shift;
-                    else if(modifier_tokens[i] == Option)
-                        modifierSlots[1] = Option;
-                    else if(modifier_tokens[i] == Control)
-                        modifierSlots[2] = Control;
-                    else if(modifier_tokens[i] == Alt)
-                        modifierSlots[3] = Alt;
-                    else if(modifier_tokens[i] == "Invert")
+                    if(modifier_tokens[i] == "Invert")
                         isInverted = true;
                     else if(modifier_tokens[i] == "Toggle")
                         shouldToggle = true;
@@ -436,54 +425,52 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
                         delayAmount = 1.0;
                     }
                 }
-                
-                modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
             }
             
             widgetName = modifier_tokens[modifier_tokens.size() - 1];
 
+            Widget* widget = nullptr;
             
+            for(auto * aWidget : widgets_)
+                if(aWidget->GetName() == widgetName)
+                    widget = aWidget;
             
-
             vector<string> params;
             for(int i = 1; i < tokens.size(); i++)
                 params.push_back(tokens[i]);
             
-            if(params.size() > 0)
-                for(auto * widget : widgets_)
-                    if(widget->GetName() == widgetName)
-                        if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
-                        {
-                            //if(inChannel)
-                            //(bankableChannels_.back())->AddWidget(widget);
-                            
-                            if(isInverted)
-                                context->SetIsInverted();
-                            
-                            if(shouldToggle)
-                                context->SetShouldToggle();
-                            
-                            if(isDelayed)
-                                context->SetDelayAmount(delayAmount * 1000.0);
-                            
-                            //if(widgetContexts_.count(widget) < 1)
-                            //widgetContexts_[widget] = new WidgetContext(widget);
-                            
-                            //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                            
-                            if(params[0] == "TrackCycle")
+            if(params.size() > 0 && widget != nullptr)
+            {
+                if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
+                {
+                    if(isInverted)
+                        context->SetIsInverted();
+                    
+                    if(shouldToggle)
+                        context->SetShouldToggle();
+                    
+                    if(isDelayed)
+                        context->SetDelayAmount(delayAmount * 1000.0);
+                    
+                    //if(widgetContexts_.count(widget) < 1)
+                    //widgetContexts_[widget] = new WidgetContext(widget);
+                    
+                    //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                    
+                    if(params[0] == "TrackCycle")
+                    {
+                        for(auto * cyclerWidget : widgets_)
+                            if(cyclerWidget->GetName() == params[1])
                             {
-                                for(auto * cyclerWidget : widgets_)
-                                    if(cyclerWidget->GetName() == params[1])
-                                    {
-                                        //if(widgetContexts_.count(cyclerWidget) < 1)
-                                        //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                        
-                                        //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                        context->SetCyclerWidget(cyclerWidget);
-                                    }
+                                //if(widgetContexts_.count(cyclerWidget) < 1)
+                                //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
+                                
+                                //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                context->SetCyclerWidget(cyclerWidget);
                             }
-                        }
+                    }
+                }
+            }
         }
     }
 }
