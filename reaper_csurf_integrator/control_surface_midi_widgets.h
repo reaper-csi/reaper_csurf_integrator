@@ -14,6 +14,132 @@
 extern Manager* TheManager;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Press_Midi_ControlGenerator : public Midi_ControlGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* press_;
+    
+public:
+    virtual ~Press_Midi_ControlGenerator() {}
+    Press_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlGenerator(widget), press_(press)
+    {
+        surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        widget_->DoAction(1);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PressRelease_Midi_ControlGenerator : public Midi_ControlGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* press_;
+    MIDI_event_ex_t* release_;
+    
+public:
+    virtual ~PressRelease_Midi_ControlGenerator() {}
+    PressRelease_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlGenerator(widget), press_(press), release_(release)
+    {
+        surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
+        surface->AddControlGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        widget_->DoAction(midiMessage->IsEqualTo(press_) ? 1 : 0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Fader14Bit_Midi_ControlGenerator : public Midi_ControlGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* max_;
+    MIDI_event_ex_t* min_;
+    
+public:
+    virtual ~Fader14Bit_Midi_ControlGenerator() {}
+    Fader14Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    {
+        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
+        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        widget_->DoAction(int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Fader7Bit_Midi_ControlGenerator : public Midi_ControlGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* max_;
+    MIDI_event_ex_t* min_;
+    
+public:
+    virtual ~Fader7Bit_Midi_ControlGenerator() {}
+    Fader7Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    {
+        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
+        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        widget_->DoAction(midiMessage->midi_message[2] / 127.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Encoder_Midi_ControlGenerator : public Midi_ControlGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* max_;
+    MIDI_event_ex_t* min_;
+    
+public:
+    virtual ~Encoder_Midi_ControlGenerator() {}
+    Encoder_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    {
+        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
+        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
+        
+        if (midiMessage->midi_message[2] & 0x40)
+            value = -value;
+        
+        widget_->DoRelativeAction(value);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Press_Midi_Widget : public Midi_Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
