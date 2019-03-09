@@ -183,14 +183,6 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
                     if(tokens.size() == 4)
                         widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
                 }
-                else if(widgetClass == "MCUVUMeter")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
                 else if(widgetClass == "C4DisplayUpper")
                 {
                     if(tokens.size() == 4 || tokens.size() == 5)
@@ -206,6 +198,14 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
                     
                     if(tokens.size() == 5)
                         widgets_.back()->SetRefreshInterval(strToDouble(tokens[4]));
+                }
+                else if(widgetClass == "MCUVUMeter")
+                {
+                    if(tokens.size() == 3 || tokens.size() == 4)
+                        widgets_.push_back(new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
+                    
+                    if(tokens.size() == 4)
+                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
                 }
                 else if(widgetClass == "VUMeter")
                 {
