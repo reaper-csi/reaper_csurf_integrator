@@ -27,17 +27,8 @@ public:
     {
         surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100 + midiPressMessage_->midi_message[2], this);
     }
-
-    virtual void Reset() override
-    {
-        if(midiReleaseMessage_)
-            SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-        else
-            SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], 0x00);
-
-    }
     
-    virtual void SetValue(int displayMode, double value) override
+    virtual void SetValue(double value) override
     {
         if(value == 0.0)
         {
@@ -67,13 +58,8 @@ public:
         surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100 + midiPressMessage_->midi_message[2], this);
         surface->AddWidgetToMessageMap(midiReleaseMessage_->midi_message[0] * 0x10000 + midiReleaseMessage_->midi_message[1] * 0x100 + midiReleaseMessage_->midi_message[2], this);
     }
-    
-    virtual void Reset() override
-    {
-        SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-    }
 
-    virtual void SetValue(int displayMode, double value) override
+    virtual void SetValue(double value) override
     {
         if(value == 0.0)
             SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
@@ -98,12 +84,7 @@ public:
         surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000, this);
     }
     
-    virtual void Reset() override
-    {
-        SetValue(0, 0.0);
-    }
-
-    virtual void SetValue(int displayMode, double volume) override
+    virtual void SetValue(double volume) override
     {
         int volint = volume * 16383.0;
         SendMidiMessage(midiPressMessage_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
@@ -126,12 +107,7 @@ public:
         surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100, this);
     }
     
-    virtual void Reset() override
-    {
-        SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
-    }
-    
-    virtual void SetValue(int displayMode, double value) override
+    virtual void SetValue(double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], value * 127.0);
     }
@@ -154,11 +130,6 @@ public:
     Encoder_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_Widget(surface, name, wantsFeedback, press, release)
     {
         surface->AddWidgetToMessageMap(midiPressMessage_->midi_message[0] * 0x10000 + midiPressMessage_->midi_message[1] * 0x100, this);
-    }
-    
-    virtual void Reset() override
-    {
-        SendMidiMessage(midiReleaseMessage_->midi_message[0], midiReleaseMessage_->midi_message[1], midiReleaseMessage_->midi_message[2]);
     }
 
     virtual void SetValue(int displayMode, double value) override
@@ -203,12 +174,7 @@ private:
 public:
     VUMeter_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press) {}
     
-    virtual void Reset() override
-    {
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], 0x00);
-    }
-
-    virtual void SetValue(int displayMode, double value) override
+    virtual void SetValue(double value) override
     {
         int midiValue = 0;
         
@@ -229,13 +195,8 @@ class GainReductionMeter_Midi_Widget : public Midi_Widget
 {
 public:
     GainReductionMeter_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Midi_Widget(surface, name, wantsFeedback, press) {}
-
-    virtual void Reset() override
-    {
-        SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], 0x00);
-    }
-    
-    void SetValue(int displayMode, double value) override
+   
+    void SetValue(double value) override
     {
         SendMidiMessage(midiPressMessage_->midi_message[0], midiPressMessage_->midi_message[1], fabs(1.0 - value) * 127.0);
     }
@@ -305,7 +266,7 @@ private:
 public:
     MCUVUMeter_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, int channel) : Midi_Widget(surface, name, wantsFeedback), channel_(channel) {}
     
-    virtual void SetValue(int param, double value) override
+    virtual void SetValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
         
@@ -337,11 +298,6 @@ class MCUDisplay_Midi_Widget : public Midi_Widget
     
 public:
     MCUDisplay_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_Widget(surface, name, wantsFeedback), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) {}
-    
-    virtual void Reset() override
-    {
-        SetValue("");
-    }
     
     virtual void ClearCache() override
     {
@@ -423,7 +379,7 @@ class MCU_TimeDisplay_Midi_Widget : public Midi_Widget
 public:
     MCU_TimeDisplay_Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Midi_Widget(surface, name, wantsFeedback, new MIDI_event_ex_t(0x00, 0x00, 0x00), new MIDI_event_ex_t(0x00, 0x00, 0x00)) {}
     
-    virtual void SetValue(int mode, double value) override
+    virtual void SetValue(double value) override
     {
         
 #ifndef timeGetTime

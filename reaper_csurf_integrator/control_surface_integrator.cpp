@@ -45,9 +45,6 @@ vector<string> GetTokens(string line)
     return tokens;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MidiWidgeta available for inclusion in Real Surface Templates, we will add widgets as necessary
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 int strToHex(string valueStr)
 {
     return strtol(valueStr.c_str(), nullptr, 16);
@@ -93,7 +90,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// BankableChannel
+// TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigator::SetTrackGUID(Page* page, string trackGUID)
 {
@@ -331,7 +328,7 @@ void ControlSurface::InitZones(string zoneFolder)
         {
             vector<string> tokens(GetTokens(line));
             
-            if(tokens.size() > 1)
+            if(tokens.size() == 2)
             {
                 if(tokens[0] == "Zone")
                     ProcessZone(zoneFile, tokens);
@@ -351,7 +348,7 @@ void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tok
     {
         vector<string> tokens(GetTokens(line));
         
-        if(tokens.size() > 0)
+        if(tokens.size() == 1)
         {
             if(tokens[0] == "CompositeZoneEnd")    // finito baybay - CompositeZone processing complete
                 return;
@@ -361,27 +358,17 @@ void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tok
     }
 }
 
-void ControlSurface::ProcessActionZone(ifstream &zoneFile, vector<string> tokens)
-{
-    Zone* actionZone = new ActionZone(this, tokens[1]);
-    zones_[actionZone->GetName()] = actionZone;
-    
-    for (string line; getline(zoneFile, line) ; )
-    {
-        vector<string> tokens(GetTokens(line));
-        
-        if(tokens.size() > 0)
-        {
-            if(tokens[0] == "ActionZoneEnd")    // finito baybay - ActionZone processing complete
-            return;
-            
-            
-        }
-    }
-}
-
 void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
 {
+    
+    string aString("Fader|");
+    aString = regex_replace(aString, regex("\\|"), "1");
+    
+    
+
+    
+    
+    
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
 
     Zone* zone = new Zone(this, tokens[1]);
@@ -471,6 +458,25 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
                     }
                 }
             }
+        }
+    }
+}
+
+void ControlSurface::ProcessActionZone(ifstream &zoneFile, vector<string> tokens)
+{
+    Zone* actionZone = new ActionZone(this, tokens[1]);
+    zones_[actionZone->GetName()] = actionZone;
+    
+    for (string line; getline(zoneFile, line) ; )
+    {
+        vector<string> tokens(GetTokens(line));
+        
+        if(tokens.size() > 0)
+        {
+            if(tokens[0] == "ActionZoneEnd")    // finito baybay - ActionZone processing complete
+                return;
+            
+            
         }
     }
 }
