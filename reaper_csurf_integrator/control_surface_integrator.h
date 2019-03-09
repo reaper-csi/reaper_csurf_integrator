@@ -188,10 +188,17 @@ public:
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
 
+    virtual void SetValue(double value) {}
     virtual void SetValue(int mode, double value) {}
     virtual void SetValue(string value) {}
     virtual void ClearCache() {}
-    virtual void Reset() {}
+    
+    void Reset()
+    {
+        SetValue(0.0);
+        SetValue(0, 0.0);
+        SetValue("");
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,6 +225,13 @@ public:
     virtual ~Midi_Widget() {};
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+    
+    virtual void ClearCache() override
+    {
+        lastMessageSent_->midi_message[0] = 0;
+        lastMessageSent_->midi_message[1] = 0;
+        lastMessageSent_->midi_message[2] = 0;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -504,9 +518,14 @@ public:
     virtual void DoAction(Widget* widget, MediaTrack* track) {}
     virtual void DoAction(Widget* widget, MediaTrack* track, int fxIndex) {}
 
-    void SetWidgetValue(Widget* widget, int displayMode, double value)
+    void SetWidgetValue(Widget* widget, double value)
     {
-        isInverted_ == false ? widget->SetValue(displayMode, value) : widget->SetValue(displayMode, 1.0 - value);
+        isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
+    }
+    
+    void SetWidgetValue(Widget* widget, int param, double value)
+    {
+        isInverted_ == false ? widget->SetValue(param, value) : widget->SetValue(param, 1.0 - value);
     }
 };
 
@@ -1085,7 +1104,7 @@ public:
             for(int i = 0; i < currentNumVisibleTracks; i++)
                 previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
             
-            DAW::ClearCache();
+            DAW::ClearGUIDTracksCache();
             
             TrackNavigator* channel = nullptr;
             char buffer[BUFSZ];
@@ -1124,7 +1143,7 @@ public:
                     delete[] previousTrackList_;
                 previousTrackList_ = currentTrackList;
                 
-                DAW::ClearCache();
+                DAW::ClearGUIDTracksCache();
                 return true;
             }
             else
