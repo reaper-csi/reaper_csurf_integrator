@@ -17,12 +17,9 @@ extern Manager* TheManager;
 class Press_Midi_ControlGenerator : public Midi_ControlGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MIDI_event_ex_t* press_;
-    
 public:
     virtual ~Press_Midi_ControlGenerator() {}
-    Press_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlGenerator(widget), press_(press)
+    Press_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlGenerator(widget)
     {
         surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
     }
@@ -39,11 +36,10 @@ class PressRelease_Midi_ControlGenerator : public Midi_ControlGenerator
 {
 private:
     MIDI_event_ex_t* press_;
-    MIDI_event_ex_t* release_;
     
 public:
     virtual ~PressRelease_Midi_ControlGenerator() {}
-    PressRelease_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlGenerator(widget), press_(press), release_(release)
+    PressRelease_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlGenerator(widget), press_(press)
     {
         surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
         surface->AddControlGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
@@ -59,16 +55,11 @@ public:
 class Fader14Bit_Midi_ControlGenerator : public Midi_ControlGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MIDI_event_ex_t* max_;
-    MIDI_event_ex_t* min_;
-    
 public:
     virtual ~Fader14Bit_Midi_ControlGenerator() {}
-    Fader14Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    Fader14Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
     {
-        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
-        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+        surface->AddControlGenerator(message->midi_message[0] * 0x10000, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -81,16 +72,11 @@ public:
 class Fader7Bit_Midi_ControlGenerator : public Midi_ControlGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MIDI_event_ex_t* max_;
-    MIDI_event_ex_t* min_;
-    
 public:
     virtual ~Fader7Bit_Midi_ControlGenerator() {}
-    Fader7Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    Fader7Bit_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
     {
-        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
-        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+        surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -103,16 +89,11 @@ public:
 class Encoder_Midi_ControlGenerator : public Midi_ControlGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    MIDI_event_ex_t* max_;
-    MIDI_event_ex_t* min_;
-    
 public:
     virtual ~Encoder_Midi_ControlGenerator() {}
-    Encoder_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* max, MIDI_event_ex_t* min) : Midi_ControlGenerator(widget), max_(max), min_(min)
+    Encoder_Midi_ControlGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
     {
-        surface->AddControlGenerator(max->midi_message[0] * 0x10000 + max->midi_message[1] * 0x100 + max->midi_message[2], this);
-        surface->AddControlGenerator(min->midi_message[0] * 0x10000 + min->midi_message[1] * 0x100 + min->midi_message[2], this);
+        surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
