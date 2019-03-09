@@ -212,7 +212,7 @@ public:
         else
             trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
         
-        widget->SetValue(trackName);
+        actionContext->SetWidgetValue(widget, trackName);
     }
 };
 
@@ -225,7 +225,7 @@ public:
     {
         char trackVolume[128];
         sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-        widget->SetValue(string(trackVolume));
+        actionContext->SetWidgetValue(widget, string(trackVolume));
     }
 };
 
@@ -240,10 +240,10 @@ public:
         {
             char fxParamName[128];
             DAW::TrackFX_GetParamName(track, fxIndex, paramIndex, fxParamName, sizeof(fxParamName));
-            widget->SetValue(fxParamName);
+            actionContext->SetWidgetValue(widget, fxParamName);
         }
         else
-            widget->SetValue(actionContext->GetAlias());
+            actionContext->SetWidgetValue(widget, actionContext->GetAlias());
     }
 };
 
@@ -256,7 +256,7 @@ public:
     {
         char fxParamValue[128];
         TrackFX_GetFormattedParamValue(track, fxIndex, paramIndex, fxParamValue, sizeof(fxParamValue));
-        widget->SetValue(string(fxParamValue));
+        actionContext->SetWidgetValue(widget, string(fxParamValue));
     }
 };
 
@@ -271,7 +271,7 @@ public:
         MediaTrack* destTrack = (MediaTrack *)GetSetTrackSendInfo(track, 0, sendIndex, "P_DESTTRACK", 0);;
         if(destTrack)
             sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
-        widget->SetValue(sendTrackName);
+        actionContext->SetWidgetValue(widget, sendTrackName);
     }
 };
 
@@ -284,7 +284,7 @@ public:
     {
         char trackVolume[128];
         sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "D_VOL")));
-        widget->SetValue(string(trackVolume));
+        actionContext->SetWidgetValue(widget, string(trackVolume));
     }
 };
 
@@ -336,7 +336,7 @@ public:
         if(panIntVal == 0)
             trackPan = "  <C>  ";
         
-        widget->SetValue(string(trackPan));
+        actionContext->SetWidgetValue(widget, string(trackPan));
     }
 };
 
@@ -368,7 +368,7 @@ public:
         if(widthIntVal == 0)
             trackPanWidth = " <Mno> ";
 
-        widget->SetValue(string(trackPanWidth));
+        actionContext->SetWidgetValue(widget, string(trackPanWidth));
     }
 };
 

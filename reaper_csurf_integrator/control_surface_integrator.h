@@ -527,6 +527,11 @@ public:
     {
         isInverted_ == false ? widget->SetValue(param, value) : widget->SetValue(param, 1.0 - value);
     }
+    
+    void SetWidgetValue(Widget* widget, string value)
+    {
+        widget->SetValue(value);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
