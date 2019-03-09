@@ -64,6 +64,18 @@ void Widget::RequestUpdate()
         actionContext_->RequestUpdate(this);
 }
 
+void Widget::DoAction(double value)
+{
+    if(actionContext_ != nullptr)
+        actionContext_->DoAction(this, value);
+}
+
+void Widget::DoRelativeAction(double value)
+{
+    if(actionContext_ != nullptr)
+        actionContext_->DoRelativeAction(this, value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
