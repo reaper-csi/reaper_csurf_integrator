@@ -206,23 +206,62 @@ class ControlSignalGenerator
 {
 protected:
     Widget* widget_ = nullptr;
+    ControlSignalGenerator(Widget* widget) : widget_(widget) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Midi_ControlSignalGenerator : public ControlSignalGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    Midi_ControlSignalGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
+    virtual ~Midi_ControlSignalGenerator() {}
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    bool shouldRefresh_ = false;
+    double refreshInterval_ = 0.0;
+    double lastRefreshed_ = 0.0;
     
 public:
-    ControlSignalGenerator(Widget* widget) : widget_(widget) {}
+    virtual ~FeedbackProcessor() {}
+    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
+    virtual void SetValue(double value) {}
+    virtual void SetValue(int param, double value) {}
+    virtual void SetValue(string value) {}
+    virtual void ClearCache() {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Midi_ControlSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_ControlGenerator : public ControlSignalGenerator
+class Midi_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Midi_ControlGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
-    ~Midi_ControlGenerator() {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* press) : surface_(surface), midiPressMessage_(press) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
+
+    Midi_ControlSurface* surface_;
+    MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
+    MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
+    MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
+    
+    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    void SendMidiMessage(int first, int second, int third);
     
 public:
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+    virtual void ClearCache() override
+    {
+        lastMessageSent_->midi_message[0] = 0;
+        lastMessageSent_->midi_message[1] = 0;
+        lastMessageSent_->midi_message[2] = 0;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +435,7 @@ private:
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
     map<int, Midi_Widget*> widgetsByMessage_;
-    map<int, Midi_ControlGenerator*> controlGeneratorsByMessage_;
+    map<int, Midi_ControlSignalGenerator*> controlGeneratorsByMessage_;
     
     void HandleMidiInput()
     {
@@ -452,7 +491,7 @@ public:
         widgetsByMessage_[message] = widget;
     }
     
-    void AddControlGenerator(int message, Midi_ControlGenerator* controlGenerator)
+    void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
     {
         controlGeneratorsByMessage_[message] = controlGenerator;
     }

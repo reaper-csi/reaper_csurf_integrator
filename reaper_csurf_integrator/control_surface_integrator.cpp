@@ -77,6 +77,30 @@ void Widget::DoRelativeAction(double value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Midi_FeedbackProcessor
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
+{
+    surface_->SendMidiMessage(midiMessage);
+}
+
+void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
+{
+    if(first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
+    {
+        lastMessageSent_->midi_message[0] = first;
+        lastMessageSent_->midi_message[1] = second;
+        lastMessageSent_->midi_message[2] = third;
+        surface_->SendMidiMessage(first, second, third);
+    }
+    else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
+    {
+        lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
+        surface_->SendMidiMessage(first, second, third);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
@@ -99,7 +123,6 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
         surface_->SendMidiMessage(first, second, third);
     }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
