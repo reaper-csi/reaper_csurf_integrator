@@ -14,12 +14,12 @@
 extern Manager* TheManager;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Press_Midi_ControlSignalGenerator : public Midi_ControlGenerator
+class Press_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Press_Midi_ControlSignalGenerator() {}
-    Press_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlGenerator(widget)
+    Press_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlSignalGenerator(widget)
     {
         surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
     }
@@ -31,7 +31,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PressRelease_Midi_ControlSignalGenerator : public Midi_ControlGenerator
+class PressRelease_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -39,7 +39,7 @@ private:
     
 public:
     virtual ~PressRelease_Midi_ControlSignalGenerator() {}
-    PressRelease_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlGenerator(widget), press_(press)
+    PressRelease_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlSignalGenerator(widget), press_(press)
     {
         surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
         surface->AddControlGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
@@ -52,12 +52,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader14Bit_Midi_ControlSignalGenerator : public Midi_ControlGenerator
+class Fader14Bit_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Fader14Bit_Midi_ControlSignalGenerator() {}
-    Fader14Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
+    Fader14Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
     {
         surface->AddControlGenerator(message->midi_message[0] * 0x10000, this);
     }
@@ -69,12 +69,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader7Bit_Midi_ControlSignalGenerator : public Midi_ControlGenerator
+class Fader7Bit_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Fader7Bit_Midi_ControlSignalGenerator() {}
-    Fader7Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
+    Fader7Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
     {
         surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
@@ -86,12 +86,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Encoder_Midi_ControlSignalGenerator : public Midi_ControlGenerator
+class Encoder_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual ~Encoder_Midi_ControlSignalGenerator() {}
-    Encoder_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlGenerator(widget)
+    Encoder_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
     {
         surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
