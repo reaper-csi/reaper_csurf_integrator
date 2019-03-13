@@ -1146,6 +1146,71 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackCycle"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackCycleContext(page, surface, actions_[params[0]], params); };
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct MidiChannelInput
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    int channel_ = 0;
+    midi_Input* midiInput_ = nullptr;
+    
+    MidiChannelInput(int channel, midi_Input* midiInput)
+    : channel_(channel), midiInput_(midiInput) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct MidiChannelOutput
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    int channel_ = 0;
+    midi_Output* midiOutput_ = nullptr;
+    
+    MidiChannelOutput(int channel, midi_Output* midiOutput)
+    : channel_(channel), midiOutput_(midiOutput) {}
+};
+
+static vector<MidiChannelInput> inputs_;
+static vector<MidiChannelOutput> outputs_;
+
+static midi_Input* GetMidiInputForChannel(int inputChannel)
+{
+    for(auto input : inputs_)
+        if(input.channel_ == inputChannel)
+            return input.midiInput_; // return existing
+    
+    // make new
+    midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
+    
+    if(newInput)
+    {
+        newInput->start();
+        inputs_.push_back(MidiChannelInput(inputChannel, newInput));
+        return newInput;
+    }
+    
+    return nullptr;
+}
+
+static midi_Output* GetMidiOutputForChannel(int outputChannel)
+{
+    for(auto output : outputs_)
+        if(output.channel_ == outputChannel)
+            return output.midiOutput_; // return existing
+    
+    // make new
+    midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
+    
+    if(newOutput)
+    {
+        outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
+        return newOutput;
+    }
+    
+    return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Manager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::Init()
 {
     pages_.clear();
@@ -1204,9 +1269,9 @@ void Manager::Init()
                 
                 int channelIn = atoi(tokens[2].c_str());
                 int channelOut = atoi(tokens[3].c_str());
-
-                if(currentPage)
-                    currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], midiIOManager_->GetMidiInputForChannel(channelIn), midiIOManager_->GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
+                
+                 if(currentPage)
+                     currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
             }
         }
     }
