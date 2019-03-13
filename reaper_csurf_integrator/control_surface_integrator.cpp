@@ -60,8 +60,23 @@ double strToDouble(string valueStr)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::RequestUpdate()
 {
-    if(wantsFeedback_ && actionContext_ != nullptr)
+    if(actionContext_ != nullptr)
         actionContext_->RequestUpdate(this);
+}
+
+void  Widget::SetValue(double value)
+{
+    
+}
+
+void  Widget::SetValue(int mode, double value)
+{
+    
+}
+
+void  Widget::SetValue(string value)
+{
+    
 }
 
 void Widget::DoAction(double value)
@@ -158,6 +173,7 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
             {
                 string widgetClass = tokens[1];
 
+                /*
                 if(widgetClass == "MCUTimeDisplay")
                 {
                     if(tokens.size() == 2 || tokens.size() == 3)
@@ -331,6 +347,7 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
                     if(tokens.size() == 9)
                         widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
                 }
+                */
             }
         }
     }

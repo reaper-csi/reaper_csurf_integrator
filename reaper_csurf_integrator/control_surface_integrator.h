@@ -159,6 +159,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
+class FeedbackProcessor;
 class ActionContext;
 class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,9 +170,12 @@ private:
     string name_ = "";
 
 protected:
-    Widget(string name, bool wantsFeedback) : name_(name), wantsFeedback_(wantsFeedback) {}
+    Widget(string name) : name_(name) {}
     ActionContext* actionContext_ = nullptr;
-    bool wantsFeedback_ = false;
+    vector<FeedbackProcessor*> feedbackProcessors_;
+    double lastValue_ = 0.0;
+    string lastStringValue_ = "";
+    int lastParamValue_ = 0;
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
@@ -186,10 +190,11 @@ public:
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
-
-    virtual void SetValue(double value) {}
-    virtual void SetValue(int mode, double value) {}
-    virtual void SetValue(string value) {}
+    void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
+    
+    void SetValue(double value);
+    void SetValue(int mode, double value);
+    void SetValue(string value);
     virtual void ClearCache() {}
     
     void Reset()
@@ -281,9 +286,9 @@ protected:
     void SendMidiMessage(int first, int second, int third);
 
 public:
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget(name, wantsFeedback), surface_(surface) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(name, wantsFeedback), surface_(surface), midiPressMessage_(press) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name, wantsFeedback), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget(name), surface_(surface) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(name), surface_(surface), midiPressMessage_(press) {}
+    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
     virtual ~Midi_Widget() {};
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}

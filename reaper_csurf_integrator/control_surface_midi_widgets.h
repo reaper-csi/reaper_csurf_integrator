@@ -566,7 +566,7 @@ public:
 
 
 
-
+/*
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Press_Midi_Widget : public Midi_Widget
@@ -712,8 +712,8 @@ public:
         {
             actionContext_->DoRelativeAction(this, value);
             
-            if(wantsFeedback_)
-                actionContext_->DoAction(this, value + lastNormalizedValue_);
+            //if(wantsFeedback_)
+                //actionContext_->DoAction(this, value + lastNormalizedValue_);
         }
     }
 };
@@ -768,7 +768,7 @@ public:
     {
         
         
-        /*
+ 
         int midiValue = 0;
         
         double minDB = TheManager->GetVUMinDB();
@@ -783,7 +783,7 @@ public:
             midiValue = ((value - minDB) / (maxDB - minDB)) * 127;
         
         SendMidiMessage(0xb0, 0x70 + param, midiValue);
-*/
+
         
         
         
@@ -1077,5 +1077,7 @@ public:
             }
         }
     }
+
 };
+ */
 #endif /* control_surface_midi_widgets_h */
