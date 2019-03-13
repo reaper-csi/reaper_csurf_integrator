@@ -244,14 +244,15 @@ class Midi_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* press) : surface_(surface), midiPressMessage_(press) {}
-    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
-
     Midi_ControlSurface* surface_;
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
-    MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
-    MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
+    MIDI_event_ex_t* midiFeedbackMessage1_ = new MIDI_event_ex_t(0, 0, 0);
+    MIDI_event_ex_t* midiFeedbackMessage2_ = new MIDI_event_ex_t(0, 0, 0);
     
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface) : surface_(surface) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : surface_(surface), midiFeedbackMessage1_(feedback1) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : surface_(surface), midiFeedbackMessage1_(feedback1), midiFeedbackMessage2_(feedback2) {}
+
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
     
