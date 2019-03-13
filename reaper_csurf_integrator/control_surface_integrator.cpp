@@ -12,7 +12,7 @@
 
 extern Manager* TheManager;
 
-void listFiles(const string &path, vector<string> &results)
+void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
     
@@ -20,7 +20,7 @@ void listFiles(const string &path, vector<string> &results)
         while (auto f = readdir(dir)) {
             if (!f->d_name || f->d_name[0] == '.') continue;
             if (f->d_type == DT_DIR)
-                listFiles(path + f->d_name + "/", results);
+                listZoneFiles(path + f->d_name + "/", results);
             
             if (f->d_type == DT_REG)
                 if(regex_match(f->d_name, rx))
@@ -368,7 +368,7 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
 void ControlSurface::InitZones(string zoneFolder)
 {
     vector<string> zoneFilesToProcess;
-    listFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
+    listZoneFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
     
     map<string, vector<CompositeZone*>> compositeZoneMembers;
     
