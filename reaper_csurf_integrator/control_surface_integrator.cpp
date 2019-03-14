@@ -12,7 +12,7 @@
 
 extern Manager* TheManager;
 
-void listZoneFiles(const string &path, vector<string> &results)
+static void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
     
@@ -30,7 +30,7 @@ void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-vector<string> GetTokens(string line)
+static vector<string> GetTokens(string line)
 {
     vector<string> tokens;
     
@@ -45,14 +45,42 @@ vector<string> GetTokens(string line)
     return tokens;
 }
 
-int strToHex(string valueStr)
+static int strToHex(string valueStr)
 {
     return strtol(valueStr.c_str(), nullptr, 16);
 }
 
-double strToDouble(string valueStr)
+static double strToDouble(string valueStr)
 {
     return strtod(valueStr.c_str(), nullptr);
+}
+
+// subtracts b<T> from a<T>
+template <typename T>
+static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
+{
+    typename std::vector<T>::iterator       ita = a.begin();
+    typename std::vector<T>::const_iterator itb = b.begin();
+    typename std::vector<T>::iterator       enda = a.end();
+    typename std::vector<T>::const_iterator endb = b.end();
+    
+    while (ita != enda)
+    {
+        while (itb != endb)
+        {
+            if (*ita == *itb)
+            {
+                ita = a.erase(ita);
+                enda = a.end();
+                itb = b.begin();
+            }
+            else
+                ++itb;
+        }
+        ++ita;
+        
+        itb = b.begin();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
