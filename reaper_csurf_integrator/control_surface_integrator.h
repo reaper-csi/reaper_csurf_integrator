@@ -57,34 +57,6 @@ const string PageToken = "Page";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
-// subtracts b<T> from a<T>
-template <typename T>
-void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
-{
-    typename std::vector<T>::iterator       ita = a.begin();
-    typename std::vector<T>::const_iterator itb = b.begin();
-    typename std::vector<T>::iterator       enda = a.end();
-    typename std::vector<T>::const_iterator endb = b.end();
-    
-    while (ita != enda)
-    {
-        while (itb != endb)
-        {
-            if (*ita == *itb)
-            {
-                ita = a.erase(ita);
-                enda = a.end();
-                itb = b.begin();
-            }
-            else
-                ++itb;
-        }
-        ++ita;
-        
-        itb = b.begin();
-    }
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
 class FeedbackProcessor;
