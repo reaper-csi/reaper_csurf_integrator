@@ -1196,12 +1196,12 @@ struct MidiChannelOutput
     : channel_(channel), midiOutput_(midiOutput) {}
 };
 
-static vector<MidiChannelInput> inputs_;
-static vector<MidiChannelOutput> outputs_;
+static vector<MidiChannelInput> midiInputs_;
+static vector<MidiChannelOutput> midiOutputs_;
 
 static midi_Input* GetMidiInputForChannel(int inputChannel)
 {
-    for(auto input : inputs_)
+    for(auto input : midiInputs_)
         if(input.channel_ == inputChannel)
             return input.midiInput_; // return existing
     
@@ -1211,7 +1211,7 @@ static midi_Input* GetMidiInputForChannel(int inputChannel)
     if(newInput)
     {
         newInput->start();
-        inputs_.push_back(MidiChannelInput(inputChannel, newInput));
+        midiInputs_.push_back(MidiChannelInput(inputChannel, newInput));
         return newInput;
     }
     
@@ -1220,7 +1220,7 @@ static midi_Input* GetMidiInputForChannel(int inputChannel)
 
 static midi_Output* GetMidiOutputForChannel(int outputChannel)
 {
-    for(auto output : outputs_)
+    for(auto output : midiOutputs_)
         if(output.channel_ == outputChannel)
             return output.midiOutput_; // return existing
     
@@ -1229,7 +1229,7 @@ static midi_Output* GetMidiOutputForChannel(int outputChannel)
     
     if(newOutput)
     {
-        outputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
+        midiOutputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
         return newOutput;
     }
     
