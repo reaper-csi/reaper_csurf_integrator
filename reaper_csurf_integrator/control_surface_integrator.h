@@ -169,7 +169,7 @@ public:
         lastMessageSent_->midi_message[2] = 0;
     }
 };
-
+/*
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Midi_Widget : public Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ public:
         lastMessageSent_->midi_message[2] = 0;
     }
 };
-
+*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +340,7 @@ private:
     midi_Output* midiOutput_ = nullptr;
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
-    map<int, Midi_Widget*> widgetsByMessage_;
+    //map<int, Midi_Widget*> widgetsByMessage_;
     map<int, Midi_ControlSignalGenerator*> controlGeneratorsByMessage_;
     
     void HandleMidiInput()
@@ -366,25 +366,27 @@ private:
         }
         
         // At this point we don't know how much of the message comprises the key, so try all three
+        if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
+        else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+        else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+        /*
+        // At this point we don't know how much of the message comprises the key, so try all three
         if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
             widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
         else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
             widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
         else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
             widgetsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+        */
     }
     
 public:
     Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
 
-    virtual ~Midi_ControlSurface()
-    {
-        // GAW TBD -- removing this temporarily to see what happens with windows users crash when loading other projects
-        /*
-        if (midiInput_) delete midiInput_;
-        if(midiOutput_) delete midiOutput_;
-         */
-    }
+    virtual ~Midi_ControlSurface() {}
     
     virtual void Run() override
     {
@@ -392,10 +394,11 @@ public:
         RequestUpdate();
     }
     
+    /*
     void AddWidgetToMessageMap(int message, Midi_Widget* widget)
     {
         widgetsByMessage_[message] = widget;
-    }
+    }*/
     
     void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
     {

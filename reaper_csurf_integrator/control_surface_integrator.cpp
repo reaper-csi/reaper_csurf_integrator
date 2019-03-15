@@ -142,7 +142,7 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
         surface_->SendMidiMessage(first, second, third);
     }
 }
-
+/*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ void Midi_Widget::SendMidiMessage(int first, int second, int third)
         surface_->SendMidiMessage(first, second, third);
     }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -380,10 +380,11 @@ Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string t
         }
     }
 
+    // GAW TBD -- add these back in when refactoring complete
     // Add the "hardcoded" widgets
-    widgets_.push_back(new Midi_Widget(this, "TrackOnSelection", true));
-    widgets_.push_back(new Midi_Widget(this, "TrackOnMapTrackAndFXToWidgets", true));
-    widgets_.push_back(new Midi_Widget(this, "TrackOnFocusedFX", true));
+    //widgets_.push_back(new Midi_Widget(this, "TrackOnSelection", true));
+    //widgets_.push_back(new Midi_Widget(this, "TrackOnMapTrackAndFXToWidgets", true));
+    //widgets_.push_back(new Midi_Widget(this, "TrackOnFocusedFX", true));
 
     
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
