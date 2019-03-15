@@ -1197,22 +1197,21 @@ struct MidiChannelOutput
     : channel_(channel), midiOutput_(midiOutput) {}
 };
 
-static vector<MidiChannelInput> midiInputs_;
-static vector<MidiChannelOutput> midiOutputs_;
+static map<int, MidiChannelInput*> midiInputs_;
+static map<int, MidiChannelOutput*> midiOutputs_;
 
 static midi_Input* GetMidiInputForChannel(int inputChannel)
 {
-    for(auto input : midiInputs_)
-        if(input.channel_ == inputChannel)
-            return input.midiInput_; // return existing
+    if(midiInputs_.count(inputChannel) > 0)
+        return midiInputs_[inputChannel]->midiInput_; // return existing
     
-    // make new
+    // otherwise make new
     midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
     
     if(newInput)
     {
         newInput->start();
-        midiInputs_.push_back(MidiChannelInput(inputChannel, newInput));
+        midiInputs_[inputChannel] = new MidiChannelInput(inputChannel, newInput);
         return newInput;
     }
     
@@ -1221,19 +1220,18 @@ static midi_Input* GetMidiInputForChannel(int inputChannel)
 
 static midi_Output* GetMidiOutputForChannel(int outputChannel)
 {
-    for(auto output : midiOutputs_)
-        if(output.channel_ == outputChannel)
-            return output.midiOutput_; // return existing
+    if(midiOutputs_.count(outputChannel) > 0)
+        return midiOutputs_[outputChannel]->midiOutput_; // return existing
     
-    // make new
-    midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL );
+    // otherwise make new
+    midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL);
     
     if(newOutput)
     {
-        midiOutputs_.push_back(MidiChannelOutput(outputChannel, newOutput));
+        midiOutputs_[outputChannel] = new MidiChannelOutput(outputChannel, newOutput);
         return newOutput;
     }
-    
+
     return nullptr;
 }
 
