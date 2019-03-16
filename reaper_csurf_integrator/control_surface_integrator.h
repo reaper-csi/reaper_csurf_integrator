@@ -71,7 +71,6 @@ private:
     string name_ = "";
 
 protected:
-    Widget(string name) : name_(name) {}
     ActionContext* actionContext_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
     double lastValue_ = 0.0;
@@ -82,6 +81,7 @@ protected:
     double lastRefreshed_ = 0.0;
     
 public:
+    Widget(string name) : name_(name) {}
     virtual ~Widget() {};
     
     string GetName() { return name_; }
@@ -301,10 +301,11 @@ protected:
     vector<Zone*> activeZones_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
+    void ProcessFile(string filePath);
+    virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
     void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers);
     void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
     void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
-
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
@@ -384,6 +385,9 @@ private:
             widgetsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
         */
     }
+    
+protected:
+    virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) override;
     
 public:
     Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
