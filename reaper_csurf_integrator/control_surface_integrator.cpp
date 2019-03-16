@@ -194,10 +194,11 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
         
         for (string line; getline(surfaceTemplateFile, line) ; )
         {
+            lineNumber++;
+
             if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
                 continue;
 
-            lineNumber++;
             vector<string> tokens(GetTokens(line));
             
             if(tokens.size() > 0)
@@ -425,10 +426,11 @@ void ControlSurface::InitZones(string zoneFolder)
             
             for (string line; getline(zoneFile, line) ; )
             {
+                lineNumber++;
+
                 if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
                     continue;
 
-                lineNumber++;
                 vector<string> tokens(GetTokens(line));
                 
                 if(tokens.size() == 2)
@@ -456,10 +458,11 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
+
         if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
             continue;
 
-        lineNumber++;
         vector<string> tokens(GetTokens(line));
         
         if(tokens.size() == 1)
@@ -490,10 +493,11 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
+
         if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
             continue;
 
-        lineNumber++;
         vector<string> tokens(GetTokens(line));
 
         if(tokens.size() > 0 && tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
@@ -587,10 +591,11 @@ void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vect
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
+
         if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
             continue;
 
-        lineNumber++;
         vector<string> tokens(GetTokens(line));
         
         if(tokens.size() > 0)
