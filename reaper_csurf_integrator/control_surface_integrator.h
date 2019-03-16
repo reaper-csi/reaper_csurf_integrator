@@ -17,6 +17,7 @@
 
 #include "time.h"
 #include <sstream>
+#include <exception>
 #include <vector>
 #include <map>
 #include <algorithm>
@@ -298,10 +299,11 @@ protected:
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     vector<Zone*> activeZones_;
-    void InitZones(string templateFilename);
-    void ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers);
-    void ProcessZone(ifstream &zoneFile, vector<string> tokens);
-    void ProcessActionZone(ifstream &zoneFile, vector<string> tokens);
+    virtual void InitWidgets(string templateFilename) {}
+    void InitZones(string zoneFolder);
+    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers);
+    void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
+    void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
 
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
@@ -384,10 +386,19 @@ private:
     }
     
 public:
-    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor);
+    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
+    : ControlSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+    {
+        InitWidgets(templateFilename);
+        
+        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
+        InitZones(zoneFolder);
+    }
 
     virtual ~Midi_ControlSurface() {}
     
+    virtual void InitWidgets(string templateFilename) override;
+
     virtual void Run() override
     {
         HandleMidiInput();
