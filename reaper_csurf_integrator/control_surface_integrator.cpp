@@ -196,7 +196,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
         {
             lineNumber++;
 
-            if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
                 continue;
 
             vector<string> tokens(GetTokens(line));
@@ -428,7 +428,7 @@ void ControlSurface::InitZones(string zoneFolder)
             {
                 lineNumber++;
 
-                if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+                if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
                     continue;
 
                 vector<string> tokens(GetTokens(line));
@@ -460,7 +460,7 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
     {
         lineNumber++;
 
-        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
         vector<string> tokens(GetTokens(line));
@@ -495,7 +495,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     {
         lineNumber++;
 
-        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
         vector<string> tokens(GetTokens(line));
@@ -593,7 +593,7 @@ void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vect
     {
         lineNumber++;
 
-        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
         vector<string> tokens(GetTokens(line));
