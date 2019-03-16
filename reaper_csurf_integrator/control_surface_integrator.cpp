@@ -184,249 +184,273 @@ void TrackNavigator::SetTrackGUID(Page* page, string trackGUID)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Midi_ControlSurface::Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-: ControlSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
-    ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/mst/" + templateFilename);
-
-    for (string line; getline(surfaceTemplateFile, line) ; )
+    int lineNumber = 0;
+    
+    try
     {
-        vector<string> tokens(GetTokens(line));
+        ifstream surfaceTemplateFile(string(DAW::GetResourcePath()) + "/CSI/mst/" + templateFilename);
         
-        if(tokens.size() > 0)
+        for (string line; getline(surfaceTemplateFile, line) ; )
         {
-            string name = tokens[0];
-
-            if(tokens.size() > 1)
+            lineNumber++;
+            vector<string> tokens(GetTokens(line));
+            
+            if(tokens.size() > 0)
             {
-                string widgetClass = tokens[1];
-
-                /*
-                if(widgetClass == "MCUTimeDisplay")
+                string name = tokens[0];
+                
+                if(tokens.size() > 1)
                 {
-                    if(tokens.size() == 2 || tokens.size() == 3)
-                        widgets_.push_back(new MCU_TimeDisplay_Midi_Widget(this, name, true));
+                    string widgetClass = tokens[1];
                     
-                    if(tokens.size() == 3)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[2]));
+                    /*
+                     if(widgetClass == "MCUTimeDisplay")
+                     {
+                     if(tokens.size() == 2 || tokens.size() == 3)
+                     widgets_.push_back(new MCU_TimeDisplay_Midi_Widget(this, name, true));
+                     
+                     if(tokens.size() == 3)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[2]));
+                     }
+                     else if(widgetClass == "QConProXMasterVUMeter")
+                     {
+                     if(tokens.size() == 2 || tokens.size() == 3)
+                     widgets_.push_back(new QConProXMasterVUMeter_Midi_Widget(this, name, true));
+                     
+                     if(tokens.size() == 3)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[2]));
+                     }
+                     else if(widgetClass == "MCUDisplayUpper")
+                     {
+                     if(tokens.size() == 3 || tokens.size() == 4)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x14, 0x12, stoi(tokens[2])));
+                     
+                     if(tokens.size() == 4)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
+                     }
+                     else if(widgetClass == "MCUDisplayLower")
+                     {
+                     if(tokens.size() == 3 || tokens.size() == 4)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x14, 0x12, stoi(tokens[2])));
+                     
+                     if(tokens.size() == 4)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
+                     }
+                     else if(widgetClass == "MCUXTDisplayUpper")
+                     {
+                     if(tokens.size() == 3 || tokens.size() == 4)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x15, 0x12, stoi(tokens[2])));
+                     
+                     if(tokens.size() == 4)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
+                     }
+                     else if(widgetClass == "MCUXTDisplayLower")
+                     {
+                     if(tokens.size() == 3 || tokens.size() == 4)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x15, 0x12, stoi(tokens[2])));
+                     
+                     if(tokens.size() == 4)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
+                     }
+                     else if(widgetClass == "C4DisplayUpper")
+                     {
+                     if(tokens.size() == 4 || tokens.size() == 5)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                     
+                     if(tokens.size() == 5)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[4]));
+                     }
+                     else if(widgetClass == "C4DisplayLower")
+                     {
+                     if(tokens.size() == 4 || tokens.size() == 5)
+                     widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
+                     
+                     if(tokens.size() == 5)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[4]));
+                     }
+                     else if(widgetClass == "MCUVUMeter")
+                     {
+                     if(tokens.size() == 3 || tokens.size() == 4)
+                     widgets_.push_back(new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
+                     
+                     if(tokens.size() == 4)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
+                     }
+                     else if(widgetClass == "VUMeter")
+                     {
+                     if(tokens.size() == 5 || tokens.size() == 6)
+                     widgets_.push_back(new VUMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                     
+                     if(tokens.size() == 6)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
+                     }
+                     else if(widgetClass == "GainReductionMeter")
+                     {
+                     if(tokens.size() == 5 || tokens.size() == 6)
+                     widgets_.push_back(new GainReductionMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                     
+                     if(tokens.size() == 6)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
+                     }
+                     else if(widgetClass == "Press")
+                     {
+                     if(tokens.size() == 5 || tokens.size() == 6)
+                     widgets_.push_back(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
+                     else if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 6)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "PressFB")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Press_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "PressRelease")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new PressRelease_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "PressReleaseFB")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new PressRelease_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "Fader7Bit")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Fader7Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "Fader7BitFB")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Fader7Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "Fader14Bit")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Fader14Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "Fader14BitFB")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Fader14Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "Encoder")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Encoder_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     else if(widgetClass == "EncoderFB")
+                     {
+                     if(tokens.size() == 8 || tokens.size() == 9)
+                     widgets_.push_back(new Encoder_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
+                     
+                     if(tokens.size() == 9)
+                     widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
+                     }
+                     */
                 }
-                else if(widgetClass == "QConProXMasterVUMeter")
-                {
-                    if(tokens.size() == 2 || tokens.size() == 3)
-                        widgets_.push_back(new QConProXMasterVUMeter_Midi_Widget(this, name, true));
-                    
-                    if(tokens.size() == 3)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[2]));
-                }
-                else if(widgetClass == "MCUDisplayUpper")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x14, 0x12, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
-                else if(widgetClass == "MCUDisplayLower")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x14, 0x12, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
-                else if(widgetClass == "MCUXTDisplayUpper")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x15, 0x12, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
-                else if(widgetClass == "MCUXTDisplayLower")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x15, 0x12, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
-                else if(widgetClass == "C4DisplayUpper")
-                {
-                    if(tokens.size() == 4 || tokens.size() == 5)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 0, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
-                    
-                    if(tokens.size() == 5)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[4]));
-                }
-                else if(widgetClass == "C4DisplayLower")
-                {
-                    if(tokens.size() == 4 || tokens.size() == 5)
-                        widgets_.push_back(new MCUDisplay_Midi_Widget(this, name, true, 1, 0x17, stoi(tokens[2]) + 0x30, stoi(tokens[3])));
-                    
-                    if(tokens.size() == 5)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[4]));
-                }
-                else if(widgetClass == "MCUVUMeter")
-                {
-                    if(tokens.size() == 3 || tokens.size() == 4)
-                        widgets_.push_back(new MCUVUMeter_Midi_Widget(this, name, true, stoi(tokens[2])));
-                    
-                    if(tokens.size() == 4)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[3]));
-                }
-                else if(widgetClass == "VUMeter")
-                {
-                    if(tokens.size() == 5 || tokens.size() == 6)
-                        widgets_.push_back(new VUMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
-                    
-                    if(tokens.size() == 6)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
-                }
-                else if(widgetClass == "GainReductionMeter")
-                {
-                    if(tokens.size() == 5 || tokens.size() == 6)
-                        widgets_.push_back(new GainReductionMeter_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
-                    
-                    if(tokens.size() == 6)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
-                }
-                else if(widgetClass == "Press")
-                {
-                    if(tokens.size() == 5 || tokens.size() == 6)
-                        widgets_.push_back(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4]))));
-                    else if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Press_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 6)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[5]));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "PressFB")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Press_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "PressRelease")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new PressRelease_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "PressReleaseFB")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new PressRelease_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "Fader7Bit")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Fader7Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "Fader7BitFB")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Fader7Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "Fader14Bit")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Fader14Bit_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "Fader14BitFB")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Fader14Bit_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "Encoder")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Encoder_Midi_Widget(this, name, false, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                else if(widgetClass == "EncoderFB")
-                {
-                    if(tokens.size() == 8 || tokens.size() == 9)
-                        widgets_.push_back(new Encoder_Midi_Widget(this, name, true, new MIDI_event_ex_t(strToHex(tokens[2]), strToHex(tokens[3]), strToHex(tokens[4])), new MIDI_event_ex_t(strToHex(tokens[5]), strToHex(tokens[6]), strToHex(tokens[7]))));
-                    
-                    if(tokens.size() == 9)
-                        widgets_.back()->SetRefreshInterval(strToDouble(tokens[8]));
-                }
-                */
             }
         }
-    }
-
-    // GAW TBD -- add these back in when refactoring complete
-    // Add the "hardcoded" widgets
-    //widgets_.push_back(new Midi_Widget(this, "TrackOnSelection", true));
-    //widgets_.push_back(new Midi_Widget(this, "TrackOnMapTrackAndFXToWidgets", true));
-    //widgets_.push_back(new Midi_Widget(this, "TrackOnFocusedFX", true));
-
     
-    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-    InitZones(string(DAW::GetResourcePath()) + "/CSI/Zones/" + zoneFolder + "/");
+        // GAW TBD -- add these back in when refactoring complete
+        // Add the "hardcoded" widgets
+        //widgets_.push_back(new Midi_Widget(this, "TrackOnSelection", true));
+        //widgets_.push_back(new Midi_Widget(this, "TrackOnMapTrackAndFXToWidgets", true));
+        //widgets_.push_back(new Midi_Widget(this, "TrackOnFocusedFX", true));
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        sprintf(buffer, "Trouble in %s, around line %d\n", templateFilename.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ControlSurface::InitZones(string zoneFolder)
 {
-    vector<string> zoneFilesToProcess;
-    listZoneFiles(zoneFolder, zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
-    
-    map<string, vector<CompositeZone*>> compositeZoneMembers;
-    
-    for(auto zoneFilename : zoneFilesToProcess)
+    int lineNumber = 0;
+    string zonePath = "";
+
+    try
     {
-        ifstream zoneFile(zoneFilename);
+        vector<string> zoneFilesToProcess;
+        listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
-        for (string line; getline(zoneFile, line) ; )
+        map<string, vector<CompositeZone*>> compositeZoneMembers;
+        
+        
+        for(auto zoneFilename : zoneFilesToProcess)
         {
-            vector<string> tokens(GetTokens(line));
+            zonePath = zoneFilename;
+            ifstream zoneFile(zoneFilename);
             
-            if(tokens.size() == 2)
+            for (string line; getline(zoneFile, line) ; )
             {
-                if(tokens[0] == "Zone")
-                    ProcessZone(zoneFile, tokens);
-                else if(tokens[0] == "CompositeZone")
-                    ProcessCompositeZone(zoneFile, tokens, compositeZoneMembers);
+                lineNumber++;
+                vector<string> tokens(GetTokens(line));
+                
+                if(tokens.size() == 2)
+                {
+                    if(tokens[0] == "Zone")
+                        ProcessZone(lineNumber, zoneFile, tokens);
+                    else if(tokens[0] == "CompositeZone")
+                        ProcessCompositeZone(lineNumber, zoneFile, tokens, compositeZoneMembers);
+                }
             }
         }
     }
+    catch (exception &e)
+    {
+        char buffer[250];
+        sprintf(buffer, "Trouble in %s, around line %d\n", zonePath.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
 }
 
-void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers)
+void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers)
 {
     CompositeZone* compositeZone = new CompositeZone(this, tokens[1]);
     zones_[compositeZone->GetName()] = compositeZone;
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
         vector<string> tokens(GetTokens(line));
         
         if(tokens.size() == 1)
@@ -439,7 +463,7 @@ void ControlSurface::ProcessCompositeZone(ifstream &zoneFile, vector<string> tok
     }
 }
 
-void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
     
     string aString("Fader|");
@@ -457,6 +481,7 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
         vector<string> tokens(GetTokens(line));
 
         if(tokens.size() > 0 && tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
@@ -543,13 +568,14 @@ void ControlSurface::ProcessZone(ifstream &zoneFile, vector<string> tokens)
     }
 }
 
-void ControlSurface::ProcessActionZone(ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
     Zone* actionZone = new ActionZone(this, tokens[1]);
     zones_[actionZone->GetName()] = actionZone;
     
     for (string line; getline(zoneFile, line) ; )
     {
+        lineNumber++;
         vector<string> tokens(GetTokens(line));
         
         if(tokens.size() > 0)
