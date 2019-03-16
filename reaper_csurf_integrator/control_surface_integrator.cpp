@@ -194,6 +194,9 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
         
         for (string line; getline(surfaceTemplateFile, line) ; )
         {
+            if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+                continue;
+
             lineNumber++;
             vector<string> tokens(GetTokens(line));
             
@@ -422,6 +425,9 @@ void ControlSurface::InitZones(string zoneFolder)
             
             for (string line; getline(zoneFile, line) ; )
             {
+                if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+                    continue;
+
                 lineNumber++;
                 vector<string> tokens(GetTokens(line));
                 
@@ -450,6 +456,9 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
     
     for (string line; getline(zoneFile, line) ; )
     {
+        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+            continue;
+
         lineNumber++;
         vector<string> tokens(GetTokens(line));
         
@@ -481,6 +490,9 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     
     for (string line; getline(zoneFile, line) ; )
     {
+        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+            continue;
+
         lineNumber++;
         vector<string> tokens(GetTokens(line));
 
@@ -575,6 +587,9 @@ void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vect
     
     for (string line; getline(zoneFile, line) ; )
     {
+        if(line[0] == '\r' || line[0] == '/' || line == "") // ignore comment lines and blank lines
+            continue;
+
         lineNumber++;
         vector<string> tokens(GetTokens(line));
         
@@ -591,9 +606,11 @@ void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vect
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
 void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
 {
-    /*
+
     bool inChannel = false;
     
     ifstream actionTemplateFile(templateFilename);
@@ -708,12 +725,10 @@ void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
                         }
         }
     }
-*/
 }
 
 void Page::InitFXContexts(ControlSurface* surface, string templateDirectory)
 {
-    /*
     for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
     {
         if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
@@ -826,8 +841,9 @@ void Page::InitFXContexts(ControlSurface* surface, string templateDirectory)
             }
         }
     }
-*/
 }
+*/
+
 
 void Page::TrackFXListChanged(MediaTrack* track)
 {

@@ -558,8 +558,8 @@ private:
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
 
-    void InitActionContexts(ControlSurface* surface, string templateFilename);
-    void InitFXContexts(ControlSurface* surface, string templateDirectory);
+    //void InitActionContexts(ControlSurface* surface, string templateFilename);
+    //void InitFXContexts(ControlSurface* surface, string templateDirectory);
 
 
     
