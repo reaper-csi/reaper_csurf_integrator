@@ -194,8 +194,41 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 
 void Midi_ControlSurface::ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens)
 {
+    Widget* widget = new Widget(tokens[1]);
+    widgets_.push_back(widget);
     
-    
+    for (string line; getline(surfaceTemplateFile, line) ; )
+    {
+        lineNumber++;
+        
+        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            continue;
+        
+        vector<string> tokens(GetTokens(line));
+        
+        if(tokens.size() == 1)
+        {
+            if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
+                return;
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+
     
     
     
@@ -433,6 +466,8 @@ void ControlSurface::ProcessFile(string filePath)
         
         for (string line; getline(file, line) ; )
         {
+            lineNumber++;
+            
             if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
                 continue;
             
