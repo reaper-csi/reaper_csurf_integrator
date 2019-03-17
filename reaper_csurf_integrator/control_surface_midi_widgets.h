@@ -180,7 +180,6 @@ public:
     }
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class VUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +278,7 @@ public:
         else
             midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
         
-        SendMidiMessage(0xd1, (param << 4) | midiValue, 0);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], (param << 4) | midiValue, 0);
     }
 };
 
@@ -292,7 +291,7 @@ private:
     
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
-    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface) : Midi_FeedbackProcessor(surface) { }
+    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface) { }
     
     virtual void SetValue(double value) override
     {
@@ -310,7 +309,7 @@ public:
         else
             midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
         
-        SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], (channel_ << 4) | midiValue, 0);
     }
 };
 
