@@ -119,8 +119,10 @@ protected:
 class Midi_ControlSignalGenerator : public ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public:
+protected:
     Midi_ControlSignalGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
+
+public:
     virtual ~Midi_ControlSignalGenerator() {}
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
