@@ -408,6 +408,12 @@ void ControlSurface::InitZones(string zoneFolder)
         
         for(auto zoneFilename : zoneFilesToProcess)
             ProcessFile(zoneFilename);
+        
+        // now add approriate zones to composite zones
+        for(auto [zoneName, compositeZones] : compositeZoneMembers_)
+            if(zones_.count(zoneName) > 0)
+                for(auto compositeZone : compositeZones)
+                        compositeZone->AddZone(zones_[zoneName]);
     }
     catch (exception &e)
     {
@@ -420,7 +426,6 @@ void ControlSurface::InitZones(string zoneFolder)
 void ControlSurface::ProcessFile(string filePath)
 {
     int lineNumber = 0;
-    map<string, vector<CompositeZone*>> compositeZoneMembers;
     
     try
     {
@@ -438,12 +443,13 @@ void ControlSurface::ProcessFile(string filePath)
                 if(tokens[0] == "Zone")
                     ProcessZone(lineNumber, file, tokens);
                 else if(tokens[0] == "CompositeZone")
-                    ProcessCompositeZone(lineNumber, file, tokens, compositeZoneMembers);
+                    ProcessCompositeZone(lineNumber, file, tokens);
                 else if(tokens[0] == "Widget")
                     ProcessWidget(lineNumber, file, tokens);
             }
         }
-    } catch (exception &e)
+    }
+    catch (exception &e)
     {
         char buffer[250];
         sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
@@ -451,7 +457,7 @@ void ControlSurface::ProcessFile(string filePath)
     }
 }
 
-void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers)
+void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
     CompositeZone* compositeZone = new CompositeZone(this, tokens[1]);
     zones_[compositeZone->GetName()] = compositeZone;
@@ -469,8 +475,8 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
         {
             if(tokens[0] == "CompositeZoneEnd")    // finito baybay - CompositeZone processing complete
                 return;
-            else
-                compositeZoneMembers[tokens[0]].push_back(compositeZone);
+            else if(compositeZone->GetName() != tokens[0]) // prevent recursive defintion
+                compositeZoneMembers_[tokens[0]].push_back(compositeZone);
         }
     }
 }
@@ -1371,7 +1377,5 @@ void Manager::Init()
         char buffer[250];
         sprintf(buffer, "Trouble in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
-
     }
-
 }

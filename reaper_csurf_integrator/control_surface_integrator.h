@@ -299,11 +299,12 @@ protected:
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     vector<Zone*> activeZones_;
+    map<string, vector<CompositeZone*>> compositeZoneMembers_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);
     virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
-    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, map<string, vector<CompositeZone*>> &compositeZoneMembers);
+    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
     void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
     void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
     
