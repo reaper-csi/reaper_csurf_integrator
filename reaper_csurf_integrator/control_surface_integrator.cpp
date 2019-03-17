@@ -457,7 +457,7 @@ void ControlSurface::ProcessFile(string filePath)
                 {
                     outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + "\n";
                 }
-                else if((tokens[1] == "C4DisplayUpper" || tokens[1] == "C4DisplayLOwer") && tokens.size() == 4)
+                else if((tokens[1] == "C4DisplayUpper" || tokens[1] == "C4DisplayLower") && tokens.size() == 4)
                 {
                     outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + " " + tokens[3] + "\n";
                 }
