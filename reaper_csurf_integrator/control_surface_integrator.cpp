@@ -344,8 +344,8 @@ void ControlSurface::InitZones(string zoneFolder)
         vector<string> zoneFilesToProcess;
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
-        for(auto zoneFilename : zoneFilesToProcess)
-            ProcessFile(zoneFilename);
+        //for(auto zoneFilename : zoneFilesToProcess)
+            //ProcessFile(zoneFilename);
         
         // now add approriate zones to composite zones
         for(auto [zoneName, compositeZones] : compositeZoneMembers_)
@@ -363,10 +363,26 @@ void ControlSurface::InitZones(string zoneFolder)
 
 void ControlSurface::ProcessFile(string filePath)
 {
+    
+    
+    
+    
+    
+    //string aString("Fader|");
+    //aString = regex_replace(aString, regex("\\|"), "1");
+
+    
+    
+    
     int lineNumber = 0;
     
     try
     {
+        string outFilePath = filePath;
+        outFilePath[outFilePath.size() - 1] = 'x';
+        
+        ofstream outfile(outFilePath);
+        
         ifstream file(filePath);
         
         for (string line; getline(file, line) ; )
@@ -378,6 +394,100 @@ void ControlSurface::ProcessFile(string filePath)
             
             vector<string> tokens(GetTokens(line));
             
+            
+            
+            
+            
+            
+            
+            if(tokens.size() < 1)
+                continue;
+            
+            outfile << "Widget " + tokens[0] + "\n";
+            
+            
+            if(tokens.size() > 1)
+            {
+                if(tokens[1] == "Press" && tokens.size() == 5)
+                {
+                    outfile << "\tPress " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "PressFB" && tokens.size() == 8)
+                {
+                    outfile << "\tPress " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                    outfile << "\tFB_TwoState " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] + "\n";
+                }
+                else if(tokens[1] == "PressRelease" && tokens.size() == 8)
+                {
+                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "PressReleaseFB" && tokens.size() == 8)
+                {
+                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                    outfile << "\tFB_TwoState " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] + "\n";
+                }
+                else if(tokens[1] == "Encoder" && tokens.size() == 8)
+                {
+                    outfile << "\tEncoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "EncoderFB" && tokens.size() == 8)
+                {
+                    outfile << "\tEncoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                    outfile << "\tFB_Encoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "Fader7Bit" && tokens.size() == 8)
+                {
+                    outfile << "\tFader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "Fader7BitFB" && tokens.size() == 8)
+                {
+                    outfile << "\tFader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                    outfile << "\tFB_Fader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "Fader14Bit" && tokens.size() == 8)
+                {
+                    outfile << "\tFader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "Fader14BitFB" && tokens.size() == 8)
+                {
+                    outfile << "\tFader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                    outfile << "\tFB_Fader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
+                }
+                else if((tokens[1] == "MCUDisplayUpper" || tokens[1] == "MCUDisplayLower" || tokens[1] == "MCUXTDisplayUpper" || tokens[1] == "MCUXTDisplayLower") && tokens.size() == 3)
+                {
+                    outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + "\n";
+                }
+                else if((tokens[1] == "C4DisplayUpper" || tokens[1] == "C4DisplayLOwer") && tokens.size() == 4)
+                {
+                    outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + " " + tokens[3] + "\n";
+                }
+                else if(tokens[1] == "MCUTimeDisplay" && tokens.size() == 2)
+                {
+                    outfile << "\tFB_MCUTimeDisplay\n";
+                }
+                else if(tokens[1] == "MCUVUMeter" && tokens.size() == 3)
+                {
+                    outfile << "\tFB_MCUVUMeter " + tokens[2] + "\n";
+                }
+                else if(tokens[1] == "VUMeter" && tokens.size() == 5)
+                {
+                    outfile << "\tFB_VUMeter " + tokens[2] + " "  + tokens[3] + " "  + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "GainReductionMeter" && tokens.size() == 5)
+                {
+                    outfile << "\tFB_GainReductionMeter " + tokens[2] + " "  + tokens[3] + " "  + tokens[4] + "\n";
+                }
+                else if(tokens[1] == "QConProXMasterVUMeter" && tokens.size() == 2)
+                {
+                    outfile << "\tFB_QConProXMasterVUMeter\n";
+                }
+            }
+            
+            outfile << "WidgetEnd\n\n";
+            
+            
+            
+            /*
             if(tokens.size() > 0)
             {
                 if(tokens[0] == "Zone")
@@ -387,6 +497,7 @@ void ControlSurface::ProcessFile(string filePath)
                 else if(tokens[0] == "Widget")
                     ProcessWidget(lineNumber, file, tokens);
             }
+             */
         }
     }
     catch (exception &e)
@@ -423,15 +534,6 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
 
 void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
-    
-    string aString("Fader|");
-    aString = regex_replace(aString, regex("\\|"), "1");
-    
-    
-
-    
-    
-    
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
 
     Zone* zone = new Zone(this, tokens[1]);
