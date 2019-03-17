@@ -91,17 +91,20 @@ void Widget::RequestUpdate()
 
 void  Widget::SetValue(double value)
 {
-    
+    for(auto feebackProcessor : feedbackProcessors_)
+        feebackProcessor->SetValue(value);
 }
 
 void  Widget::SetValue(int mode, double value)
 {
-    
+    for(auto feebackProcessor : feedbackProcessors_)
+        feebackProcessor->SetValue(mode, value);
 }
 
 void  Widget::SetValue(string value)
 {
-    
+    for(auto feebackProcessor : feedbackProcessors_)
+        feebackProcessor->SetValue(value);
 }
 
 void Widget::DoAction(double value)
