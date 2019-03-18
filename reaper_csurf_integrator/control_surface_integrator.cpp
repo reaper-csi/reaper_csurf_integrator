@@ -363,25 +363,14 @@ void ControlSurface::InitZones(string zoneFolder)
 
 void ControlSurface::ProcessFile(string filePath)
 {
-    
-    
-    
-    
-    
-    //string aString("Fader|");
-    //aString = regex_replace(aString, regex("\\|"), "1");
-
-    
-    
-    
     int lineNumber = 0;
     
     try
     {
-        string outFilePath = filePath;
-        outFilePath[outFilePath.size() - 1] = 'x';
+        //string outFilePath = filePath;
+        //outFilePath[outFilePath.size() - 1] = 'x';
         
-        ofstream outfile(outFilePath);
+        //ofstream outfile(outFilePath);
         
         ifstream file(filePath);
         
@@ -398,8 +387,8 @@ void ControlSurface::ProcessFile(string filePath)
             
             
             
-            
-            
+            // old .mst -> new .msx
+            /*
             if(tokens.size() < 1)
                 continue;
             
@@ -485,9 +474,10 @@ void ControlSurface::ProcessFile(string filePath)
             
             outfile << "WidgetEnd\n\n";
             
+            */
+            // old .mst -> new .msx
+
             
-            
-            /*
             if(tokens.size() > 0)
             {
                 if(tokens[0] == "Zone")
@@ -497,7 +487,6 @@ void ControlSurface::ProcessFile(string filePath)
                 else if(tokens[0] == "Widget")
                     ProcessWidget(lineNumber, file, tokens);
             }
-             */
         }
     }
     catch (exception &e)
@@ -534,6 +523,13 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
 
 void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
+    
+    //string aString("Fader|");
+    //aString = regex_replace(aString, regex("\\|"), "1");
+
+    
+    
+    
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
 
     Zone* zone = new Zone(this, tokens[1]);
