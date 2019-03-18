@@ -344,8 +344,8 @@ void ControlSurface::InitZones(string zoneFolder)
         vector<string> zoneFilesToProcess;
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
-        //for(auto zoneFilename : zoneFilesToProcess)
-            //ProcessFile(zoneFilename);
+        for(auto zoneFilename : zoneFilesToProcess)
+            ProcessFile(zoneFilename);
         
         // now add approriate zones to composite zones
         for(auto [zoneName, compositeZones] : compositeZoneMembers_)
@@ -523,17 +523,79 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
 
 void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
 {
+    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
+
+    
+    if(tokens.size() < 2)
+        return;
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    vector<Zone*> localZones;
+    vector<string> localZoneIds;
+    string zoneBaseName = "";
+    int rangeBegin = 0;
+    int rangeEnd = 1;
+    
+    istringstream expandedZone(tokens[1]);
+    vector<string> expandedZoneTokens;
+    string expandedZoneToken;
+    
+    while (getline(expandedZone, expandedZoneToken, '|'))
+       expandedZoneTokens.push_back(expandedZoneToken);
+    
+    if(expandedZoneTokens.size() > 1)
+    {
+        zoneBaseName = expandedZoneTokens[0];
+        
+        istringstream range(expandedZoneTokens[1]);
+        vector<string> rangeTokens;
+        string rangeToken;
+        
+        while (getline(range, rangeToken, '-'))
+            rangeTokens.push_back(rangeToken);
+        
+        if(rangeTokens.size() > 1)
+        {
+            rangeBegin = stoi(rangeTokens[0]);
+            rangeEnd = stoi(rangeTokens[1]);
+            
+            for(int i = rangeBegin; i <= rangeEnd; i++)
+                localZoneIds.push_back(to_string(i));
+            
+            for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+            {
+                Zone* zone = new Zone(this, zoneBaseName + localZoneIds[i]);
+                zones_[zone->GetName()] = zone;
+                localZones.push_back(zone);
+            }
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /// Just regular syntax of type "Channel1"
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    else
+    {
+        Zone* zone = new Zone(this, tokens[1]);
+        zones_[zone->GetName()] = zone;
+        localZones.push_back(zone);
+        localZoneIds.push_back("");
+    }
+
+    
+    
     
     //string aString("Fader|");
     //aString = regex_replace(aString, regex("\\|"), "1");
+    
+    
+    
+    
 
     
     
     
-    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
-
-    Zone* zone = new Zone(this, tokens[1]);
-    zones_[zone->GetName()] = zone;
     
     for (string line; getline(zoneFile, line) ; )
     {
