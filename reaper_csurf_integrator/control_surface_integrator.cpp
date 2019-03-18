@@ -189,32 +189,7 @@ void Midi_ControlSurface::ProcessWidget(int &lineNumber, ifstream &surfaceTempla
         vector<string> tokens(GetTokens(line));
         
         if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
-        {
-            // GAW TDB -- remove this hack later
-            if(widget->GetName() == "Stop")
-            {
-                vector<string> params;
-                
-                params.push_back("Stop");
-                
-                ActionContext* actionContext = TheManager->GetActionContext(page_, this, params);
-                
-                widget->SetActionContext(actionContext);
-            }
-            
-            if(widget->GetName() == "Play")
-            {
-                vector<string> params;
-                
-                params.push_back("Play");
-                
-                ActionContext* actionContext = TheManager->GetActionContext(page_, this, params);
-                
-                widget->SetActionContext(actionContext);
-            }
-            
             return;
-        }
 
         if(tokens.size() > 1)
         {
