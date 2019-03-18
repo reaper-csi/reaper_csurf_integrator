@@ -142,31 +142,7 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
         surface_->SendMidiMessage(first, second, third);
     }
 }
-/*
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Midi_Widget
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Midi_Widget::SendMidiMessage(MIDI_event_ex_t* midiMessage)
-{
-    surface_->SendMidiMessage(midiMessage);
-}
 
-void Midi_Widget::SendMidiMessage(int first, int second, int third)
-{
-    if(first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
-    {
-        lastMessageSent_->midi_message[0] = first;
-        lastMessageSent_->midi_message[1] = second;
-        lastMessageSent_->midi_message[2] = third;
-        surface_->SendMidiMessage(first, second, third);
-    }
-    else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
-    {
-        lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
-        surface_->SendMidiMessage(first, second, third);
-    }
-}
-*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -661,11 +637,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                         
                         localZones[i]->AddActionContextForWidget(widget, context);
                         
-                        //if(widgetContexts_.count(widget) < 1)
-                        //widgetContexts_[widget] = new WidgetContext(widget);
-                        
-                        //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                        
+                        /*
                         if(params[0] == "TrackCycle")
                         {
                             for(auto * cyclerWidget : widgets_)
@@ -682,6 +654,8 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                                 }
                             }
                         }
+                        */
+                        
                     }
                 }
             }
@@ -716,245 +690,6 @@ void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vect
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-void Page::InitActionContexts(ControlSurface* surface, string templateFilename)
-{
-
-    bool inChannel = false;
-    
-    ifstream actionTemplateFile(templateFilename);
-    
-    for (string line; getline(actionTemplateFile, line) ; )
-    {
-        if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
-        {
-            istringstream iss(line);
-            vector<string> tokens;
-            string token;
-            while (iss >> quoted(token))
-                tokens.push_back(token);
-            
-            // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
-            
-            string modifiers = "";
-            string widgetName = "";
-            bool isInverted = false;
-            bool shouldToggle = false;
-            bool isDelayed = false;
-            double delayAmount = 0.0;
-            
-            if(tokens.size() > 0)
-            {
-                if(tokens[0] == "BankableChannel")
-                {
-                    inChannel = true;
-                    bankableChannels_.push_back(new BankableChannel());
-                }
-                else if(tokens[0] == "BankableChannelEnd")
-                {
-                    inChannel = false;
-                }
-                
-                istringstream modified_role(tokens[0]);
-                vector<string> modifier_tokens;
-                string modifier_token;
-                
-                while (getline(modified_role, modifier_token, '+'))
-                    modifier_tokens.push_back(modifier_token);
-                
-                widgetName = modifier_tokens[modifier_tokens.size() - 1];
-                
-                if(modifier_tokens.size() > 1)
-                {
-                    vector<string> modifierSlots = { "", "", "", "" };
-                    
-                    for(int i = 0; i < modifier_tokens.size() - 1; i++)
-                    {
-                        if(modifier_tokens[i] == Shift)
-                            modifierSlots[0] = Shift;
-                        else if(modifier_tokens[i] == Option)
-                            modifierSlots[1] = Option;
-                        else if(modifier_tokens[i] == Control)
-                            modifierSlots[2] = Control;
-                        else if(modifier_tokens[i] == Alt)
-                            modifierSlots[3] = Alt;
-                        else if(modifier_tokens[i] == "Invert")
-                            isInverted = true;
-                        else if(modifier_tokens[i] == "Toggle")
-                            shouldToggle = true;
-                        else if(modifier_tokens[i] == "Hold")
-                        {
-                            isDelayed = true;
-                            delayAmount = 1.0;
-                        }
-                    }
-                    
-                    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
-                }
-            }
-            
-            vector<string> params;
-            for(int i = 1; i < tokens.size(); i++)
-                params.push_back(tokens[i]);
-            
-            if(tokens.size() > 1)
-                for(auto * widget : surface->GetAllWidgets())
-                    if(widget->GetName() == widgetName)
-                        if(ActionContext* context = TheManager->GetActionContext(this, surface, params))
-                        {
-                            if(inChannel)
-                                (bankableChannels_.back())->AddWidget(widget);
-                            
-                            if(isInverted)
-                                context->SetIsInverted();
-                            
-                            if(shouldToggle)
-                                context->SetShouldToggle();
-                            
-                            if(isDelayed)
-                                context->SetDelayAmount(delayAmount * 1000.0);
-                           
-                            if(widgetContexts_.count(widget) < 1)
-                                widgetContexts_[widget] = new WidgetContext(widget);
-                            
-                            widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                            
-                            if(params[0] == "TrackCycle")
-                            {
-                                for(auto * cyclerWidget : surface->GetAllWidgets())
-                                    if(cyclerWidget->GetName() == params[1])
-                                    {
-                                        if(widgetContexts_.count(cyclerWidget) < 1)
-                                            widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                        
-                                        widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                        context->SetCyclerWidget(cyclerWidget);
-                                    }
-                            }
-                        }
-        }
-    }
-}
-
-void Page::InitFXContexts(ControlSurface* surface, string templateDirectory)
-{
-    for(string filename : FileSystem::GetDirectoryFilenames(templateDirectory))
-    {
-        if(filename.length() > 4 && filename[0] != '.' && filename[filename.length() - 4] == '.' && filename[filename.length() - 3] == 'f' && filename[filename.length() - 2] == 'x' &&filename[filename.length() - 1] == 't')
-        {
-            ifstream fxTemplateFile(string(templateDirectory + "/" + filename));
-            
-            string fxName;
-            getline(fxTemplateFile, fxName);
-            
-            for (string line; getline(fxTemplateFile, line) ; )
-            {
-                if(line[0] != '\r' && line[0] != '/' && line != "") // ignore comment lines and blank lines
-                {
-                    istringstream iss(line);
-                    vector<string> tokens;
-                    string token;
-                    while (iss >> quoted(token))
-                        tokens.push_back(token);
-                    
-                    // GAW -- the first token is the (possibly decorated with modifiers) Widget name
-                    
-                    string modifiers = "";
-                    string widgetName = "";
-                    bool isInverted = false;
-                    bool shouldToggle = false;
-                    bool isDelayed = false;
-                    double delayTime = 0.0;
-
-                    if(tokens.size() > 0)
-                    {
-                        istringstream modified_name(tokens[0]);
-                        vector<string> modifier_tokens;
-                        string modifier_token;
-                        
-                        while (getline(modified_name, modifier_token, '+'))
-                            modifier_tokens.push_back(modifier_token);
-                        
-                        widgetName = modifier_tokens[modifier_tokens.size() - 1];
-                        
-                        if(modifier_tokens.size() > 1)
-                        {
-                            vector<string> modifierSlots = { "", "", "", "" };
-                            
-                            for(int i = 0; i < modifier_tokens.size() - 1; i++)
-                            {
-                                if(modifier_tokens[i] == Shift)
-                                    modifierSlots[0] = Shift;
-                                else if(modifier_tokens[i] == Option)
-                                    modifierSlots[1] = Option;
-                                else if(modifier_tokens[i] == Control)
-                                    modifierSlots[2] = Control;
-                                else if(modifier_tokens[i] == Alt)
-                                    modifierSlots[3] = Alt;
-                                else if(modifier_tokens[i] == Invert)
-                                    isInverted = true;
-                                else if(modifier_tokens[i] == Toggle)
-                                    shouldToggle = true;
-                                else if(modifier_tokens[i] == Hold)
-                                {
-                                    isDelayed = true;
-                                    delayTime = 2.0;
-                                }
-                            }
-                            
-                            modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
-                        }
-                    }
-                    
-                    string fxParamName = tokens[1];
-                    
-                    vector<string> params;
-                    
-                    string alias = "";
-                    
-                    if(fxParamName == GainReductionDB)
-                        params.push_back(fxParamName);
-                    else if(tokens.size() > 2 && tokens[2] == "TrackFXParamNameDisplay")
-                    {
-                        if(tokens.size() > 3)
-                            alias = tokens[3];
-                        params.push_back("TrackFXParamNameDisplay");
-                    }
-                    else if(tokens.size() > 2 && tokens[2] == "TrackFXParamValueDisplay")
-                        params.push_back("TrackFXParamValueDisplay");
-                    else params.push_back("TrackFX");
-                    params.push_back(fxParamName);
-                    params.push_back(fxName);
-
-                    if(tokens.size() > 1)
-                        for(auto * widget : surface->GetAllWidgets())
-                            if(widget->GetName() == widgetName)
-                                if(ActionContext* context = TheManager->GetFXActionContext(this, surface, widget, params, alias))
-                                {
-                                    if(isInverted)
-                                        context->SetIsInverted();
-
-                                    if(shouldToggle)
-                                        context->SetShouldToggle();
-
-                                    if(isDelayed)
-                                        context->SetDelayAmount(delayTime * 1000.0);
-
-                                    if(widgetContexts_.count(widget) < 1)
-                                        widgetContexts_[widget] = new WidgetContext(widget);
-                                    
-                                    widgetContexts_[widget]->AddActionContext(fxName, modifiers, context);
-                                    fxWidgets_[fxName].push_back(widget);
-                                }
-                }
-            }
-        }
-    }
-}
-*/
-
-
 void Page::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];
@@ -1456,7 +1191,7 @@ void Manager::Init()
                     int channelOut = atoi(tokens[3].c_str());
                     
                      if(currentPage)
-                         currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor), tokens[5], tokens[6]);
+                         currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
                 }
             }
         }
