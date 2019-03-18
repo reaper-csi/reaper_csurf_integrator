@@ -43,10 +43,6 @@
 #endif
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
-//const string Shift = "Shift";
-//const string Option = "Option";
-//const string Control = "Control";
-//const string Alt = "Alt";
 
 // CSI.ini tokens used by GUI and initialization
 const string MidiInMonitorToken = "MidiInMonitor";
@@ -172,38 +168,7 @@ public:
         lastMessageSent_->midi_message[2] = 0;
     }
 };
-/*
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_Widget : public Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Midi_ControlSurface* surface_ = nullptr;
-    
-protected:
-    MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
-    MIDI_event_ex_t* midiPressMessage_ = new MIDI_event_ex_t(0, 0, 0);
-    MIDI_event_ex_t* midiReleaseMessage_ = new MIDI_event_ex_t(0, 0, 0);
 
-    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
-    void SendMidiMessage(int first, int second, int third);
-
-public:
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback) : Widget(name), surface_(surface) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press) : Widget(name), surface_(surface), midiPressMessage_(press) {}
-    Midi_Widget(Midi_ControlSurface* surface, string name, bool wantsFeedback, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Widget(name), surface_(surface), midiPressMessage_(press), midiReleaseMessage_(release) {}
-    virtual ~Midi_Widget() {};
-    
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-    
-    virtual void ClearCache() override
-    {
-        lastMessageSent_->midi_message[0] = 0;
-        lastMessageSent_->midi_message[1] = 0;
-        lastMessageSent_->midi_message[2] = 0;
-    }
-};
-*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +311,6 @@ private:
     midi_Output* midiOutput_ = nullptr;
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
-    //map<int, Midi_Widget*> widgetsByMessage_;
     map<int, Midi_ControlSignalGenerator*> controlGeneratorsByMessage_;
     
     void HandleMidiInput()
@@ -378,15 +342,6 @@ private:
             controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
         else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
             controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
-        /*
-        // At this point we don't know how much of the message comprises the key, so try all three
-        if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
-            widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-            widgetsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
-        else if(widgetsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
-            widgetsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
-        */
     }
     
 protected:
@@ -411,12 +366,6 @@ public:
         HandleMidiInput();
         RequestUpdate();
     }
-    
-    /*
-    void AddWidgetToMessageMap(int message, Midi_Widget* widget)
-    {
-        widgetsByMessage_[message] = widget;
-    }*/
     
     void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
     {
@@ -564,11 +513,6 @@ private:
     bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
-
-    //void InitActionContexts(ControlSurface* surface, string templateFilename);
-    //void InitFXContexts(ControlSurface* surface, string templateDirectory);
-
-
     
     bool isShift_ = false;
     bool isOption_ = false;
@@ -803,15 +747,9 @@ public:
             sendsOffset_ = maxOffset;
     }
     
-    void AddSurface(ControlSurface* surface, string actionTemplateFile, string fxTemplateDirectory)
+    void AddSurface(ControlSurface* surface)
     {
         realSurfaces_.push_back(surface);
-        
-        string resourcePath(DAW::GetResourcePath());
-        resourcePath += "/CSI/";
-   
-        //InitActionContexts(surface, resourcePath + "axt/" + actionTemplateFile);
-        //InitFXContexts(surface, resourcePath + "fxt/" + fxTemplateDirectory);
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
