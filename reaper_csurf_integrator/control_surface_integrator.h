@@ -190,6 +190,12 @@ public:
     {
         actionContextForWidget_[widget] = context;
     }
+    
+    virtual void Activate()
+    {
+        for(auto [widget, actionContext] : actionContextForWidget_)
+            widget->SetActionContext(actionContext);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -209,6 +215,12 @@ public:
     void AddZone(Zone* zone)
     {
         zones_[zone->GetName()] = zone;
+    }
+    
+    virtual void Activate() override
+    {
+        for(auto [name, zone] : zones_)
+           zone->Activate();
     }
 };
 
@@ -296,6 +308,12 @@ public:
         widgets_.push_back(widget);
     }
     
+    void ActivateZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName ]->Activate();
+    }
+    
     virtual void Run()
     {
         RequestUpdate();
@@ -355,6 +373,8 @@ public:
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
+        
+        ActivateZone("Home");
     }
 
     virtual ~Midi_ControlSurface() {}
