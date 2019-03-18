@@ -191,10 +191,20 @@ public:
         actionContextForWidget_[widget] = context;
     }
     
+    virtual void Deactivate();
+    
     virtual void Activate()
     {
         for(auto [widget, actionContext] : actionContextForWidget_)
             widget->SetActionContext(actionContext);
+    }
+
+    virtual void ActivateWidgets(vector <Widget*> &widgets)
+    {
+        for(auto widget : widgets)
+            for(auto [localWidget, actionContext] : actionContextForWidget_)
+                if(localWidget == widget)
+                    localWidget->SetActionContext(actionContext);
     }
 };
 
@@ -203,7 +213,7 @@ class CompositeZone : public Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<string, Zone*> zones_;
+    vector<Zone*> zones_;
     
 public:
     CompositeZone(ControlSurface* surface, string name) : Zone(surface, name) {}
@@ -214,13 +224,25 @@ public:
     
     void AddZone(Zone* zone)
     {
-        zones_[zone->GetName()] = zone;
+        zones_.push_back(zone);
     }
     
     virtual void Activate() override
     {
-        for(auto [name, zone] : zones_)
+        for(auto zone : zones_)
            zone->Activate();
+    }
+    
+    virtual void Deactivate() override
+    {
+        for(auto zone : zones_)
+            zone->Deactivate();
+    }
+    
+    virtual void ActivateWidgets(vector <Widget*> &widgets) override
+    {
+        for(auto zone : zones_)
+            zone->ActivateWidgets(widgets);
     }
 };
 
@@ -312,6 +334,12 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             zones_[zoneName ]->Activate();
+    }
+    
+    void DeactivateWidgets(vector<Widget*> &widgets)
+    {
+        if(zones_.count("Home") > 0)
+            zones_["Home"]->ActivateWidgets(widgets);
     }
     
     virtual void Run()
