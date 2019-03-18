@@ -419,11 +419,11 @@ void ControlSurface::ProcessFile(string filePath)
                 }
                 else if(tokens[1] == "PressRelease" && tokens.size() == 8)
                 {
-                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
+                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
                 }
                 else if(tokens[1] == "PressReleaseFB" && tokens.size() == 8)
                 {
-                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
+                    outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
                     outfile << "\tFB_TwoState " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] + "\n";
                 }
                 else if(tokens[1] == "Encoder" && tokens.size() == 8)
