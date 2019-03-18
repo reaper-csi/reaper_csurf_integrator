@@ -583,20 +583,6 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         localZoneIds.push_back("");
     }
 
-    
-    
-    
-    //string aString("Fader|");
-    //aString = regex_replace(aString, regex("\\|"), "1");
-    
-    
-    
-    
-
-    
-    
-    
-    
     for (string line; getline(zoneFile, line) ; )
     {
         lineNumber++;
@@ -604,85 +590,98 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
-        vector<string> tokens(GetTokens(line));
-
-        if(tokens.size() > 0 && tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
-            return;
-        
-        // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
-        
-        string widgetName = "";
-        bool isInverted = false;
-        bool shouldToggle = false;
-        bool isDelayed = false;
-        double delayAmount = 0.0;
-        
-        if(tokens.size() > 0)
+        for(int i = 0; i < localZones.size(); i++)
         {
-            istringstream modified_role(tokens[0]);
-            vector<string> modifier_tokens;
-            string modifier_token;
-            
-            while (getline(modified_role, modifier_token, '+'))
-                modifier_tokens.push_back(modifier_token);
-            
-            if(modifier_tokens.size() > 1)
+            // Pre-process for "Channel|1-8" syntax
+            string localZoneLine(line);
+            localZoneLine = regex_replace(localZoneLine, regex("\\|"), localZoneIds[i]);
+
+            vector<string> tokens(GetTokens(localZoneLine));
+
+            if(tokens.size() > 0 && tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
+                return;
+        
+            // GAW -- the first token is the (possibly decorated with modifiers) Widget name.
+        
+            string widgetName = "";
+            bool isInverted = false;
+            bool shouldToggle = false;
+            bool isDelayed = false;
+            double delayAmount = 0.0;
+        
+            if(tokens.size() > 0)
             {
-                for(int i = 0; i < modifier_tokens.size() - 1; i++)
+                istringstream modified_role(tokens[0]);
+                vector<string> modifier_tokens;
+                string modifier_token;
+                
+                while (getline(modified_role, modifier_token, '+'))
+                    modifier_tokens.push_back(modifier_token);
+                
+                if(modifier_tokens.size() > 1)
                 {
-                    if(modifier_tokens[i] == "Invert")
-                        isInverted = true;
-                    else if(modifier_tokens[i] == "Toggle")
-                        shouldToggle = true;
-                    else if(modifier_tokens[i] == "Hold")
+                    for(int i = 0; i < modifier_tokens.size() - 1; i++)
                     {
-                        isDelayed = true;
-                        delayAmount = 1.0;
+                        if(modifier_tokens[i] == "Invert")
+                            isInverted = true;
+                        else if(modifier_tokens[i] == "Toggle")
+                            shouldToggle = true;
+                        else if(modifier_tokens[i] == "Hold")
+                        {
+                            isDelayed = true;
+                            delayAmount = 1.0;
+                        }
                     }
                 }
-            }
-            
-            widgetName = modifier_tokens[modifier_tokens.size() - 1];
+                
+                widgetName = modifier_tokens[modifier_tokens.size() - 1];
 
-            Widget* widget = nullptr;
-            
-            for(auto * aWidget : widgets_)
-                if(aWidget->GetName() == widgetName)
-                    widget = aWidget;
-            
-            vector<string> params;
-            for(int i = 1; i < tokens.size(); i++)
-                params.push_back(tokens[i]);
-            
-            if(params.size() > 0 && widget != nullptr)
-            {
-                if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
+                Widget* widget = nullptr;
+                
+                for(auto * aWidget : widgets_)
+                    if(aWidget->GetName() == widgetName)
+                        widget = aWidget;
+                
+                vector<string> params;
+                for(int i = 1; i < tokens.size(); i++)
+                    params.push_back(tokens[i]);
+                
+                if(params.size() > 0 && widget != nullptr)
                 {
-                    if(isInverted)
-                        context->SetIsInverted();
-                    
-                    if(shouldToggle)
-                        context->SetShouldToggle();
-                    
-                    if(isDelayed)
-                        context->SetDelayAmount(delayAmount * 1000.0);
-                    
-                    //if(widgetContexts_.count(widget) < 1)
-                    //widgetContexts_[widget] = new WidgetContext(widget);
-                    
-                    //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
-                    
-                    if(params[0] == "TrackCycle")
+                    if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
                     {
-                        for(auto * cyclerWidget : widgets_)
-                            if(cyclerWidget->GetName() == params[1])
+                        if(isInverted)
+                            context->SetIsInverted();
+                        
+                        if(shouldToggle)
+                            context->SetShouldToggle();
+                        
+                        if(isDelayed)
+                            context->SetDelayAmount(delayAmount * 1000.0);
+                        
+                        localZones[i]->AddActionContextForWidget(widget, context);
+                        
+                        //if(widgetContexts_.count(widget) < 1)
+                        //widgetContexts_[widget] = new WidgetContext(widget);
+                        
+                        //widgetContexts_[widget]->AddActionContext(Track, modifiers, context);
+                        
+                        if(params[0] == "TrackCycle")
+                        {
+                            for(auto * cyclerWidget : widgets_)
                             {
-                                //if(widgetContexts_.count(cyclerWidget) < 1)
-                                //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                
-                                //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                context->SetCyclerWidget(cyclerWidget);
+                                if(cyclerWidget->GetName() == params[1])
+                                {
+                                    localZones[i]->AddActionContextForWidget(widget, context);
+
+                                    //if(widgetContexts_.count(cyclerWidget) < 1)
+                                    //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
+                                    
+                                    //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
+                                    context->SetCyclerWidget(cyclerWidget);
+                                }
                             }
+                        }
                     }
                 }
             }
