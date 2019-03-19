@@ -445,9 +445,9 @@ void ControlSurface::ProcessFile(string filePath)
             if(tokens.size() > 0)
             {
                 if(tokens[0] == "Zone")
-                    ProcessZone(lineNumber, file, tokens);
+                    ProcessZone(lineNumber, file, tokens, filePath);
                 else if(tokens[0] == "CompositeZone")
-                    ProcessCompositeZone(lineNumber, file, tokens);
+                    ProcessCompositeZone(lineNumber, file, tokens, filePath);
                 else if(tokens[0] == "Widget")
                     ProcessWidget(lineNumber, file, tokens);
             }
@@ -461,9 +461,9 @@ void ControlSurface::ProcessFile(string filePath)
     }
 }
 
-void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath)
 {
-    CompositeZone* compositeZone = new CompositeZone(this, tokens[1]);
+    CompositeZone* compositeZone = new CompositeZone(this, tokens[1], filePath);
     zones_[compositeZone->GetName()] = compositeZone;
     
     for (string line; getline(zoneFile, line) ; )
@@ -485,7 +485,7 @@ void ControlSurface::ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, v
     }
 }
 
-void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath)
 {
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
 
@@ -530,9 +530,9 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
             
             for(int i = 0; i <= rangeEnd - rangeBegin; i++)
             {
-                Zone* zone = new Zone(this, zoneBaseName + localZoneIds[i]);
-                zones_[zone->GetName()] = zone;
-                localZones.push_back(zone);
+                Zone* zone = new Zone(this, zoneBaseName + localZoneIds[i], filePath);
+                if(AddZone(zone))
+                    localZones.push_back(zone);
             }
         }
     }
@@ -541,10 +541,12 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     //////////////////////////////////////////////////////////////////////////////////////////////
     else
     {
-        Zone* zone = new Zone(this, tokens[1]);
-        zones_[zone->GetName()] = zone;
-        localZones.push_back(zone);
-        localZoneIds.push_back("");
+        Zone* zone = new Zone(this, tokens[1], filePath);
+        if(AddZone(zone))
+        {
+            localZones.push_back(zone);
+            localZoneIds.push_back("");
+        }
     }
 
     for (string line; getline(zoneFile, line) ; )
@@ -651,9 +653,9 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     }
 }
 
-void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens)
+void ControlSurface::ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath)
 {
-    Zone* actionZone = new ActionZone(this, tokens[1]);
+    Zone* actionZone = new ActionZone(this, tokens[1], filepath);
     zones_[actionZone->GetName()] = actionZone;
     
     for (string line; getline(zoneFile, line) ; )

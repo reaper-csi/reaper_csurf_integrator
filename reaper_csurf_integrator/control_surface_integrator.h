@@ -179,12 +179,14 @@ private:
 protected:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
+    string filePath_ = "";
     
 public:
-    Zone(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
+    Zone(ControlSurface* surface, string name, string filePath) : surface_(surface), name_(name), filePath_(filePath) {}
     virtual ~Zone() {}
     
     string GetName() { return name_ ;}
+    string GetFilepath() { return filePath_; }
     
     virtual void AddActionContextForWidget(Widget* widget, ActionContext* context)
     {
@@ -216,7 +218,7 @@ private:
     vector<Zone*> zones_;
     
 public:
-    CompositeZone(ControlSurface* surface, string name) : Zone(surface, name) {}
+    CompositeZone(ControlSurface* surface, string name, string filePath) : Zone(surface, name, filePath) {}
     
     virtual ~CompositeZone() {}
     
@@ -251,7 +253,7 @@ class ActionZone : public Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ActionZone(ControlSurface* surface, string name) : Zone(surface, name) {}
+    ActionZone(ControlSurface* surface, string name, string filePath) : Zone(surface, name, filePath) {}
     
     virtual ~ActionZone() {}
     
@@ -305,9 +307,9 @@ protected:
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);
     virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
-    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
-    void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
-    void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens);
+    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
+    void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
+    void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
@@ -315,6 +317,23 @@ protected:
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
+    }
+    
+    bool AddZone(Zone* zone)
+    {
+        if(zones_.count(zone->GetName()) > 0)
+        {
+            char buffer[5000];
+            sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+                    zone->GetName().c_str(), zones_[zone->GetName()]->GetFilepath().c_str(), zone->GetName().c_str(), zone->GetFilepath().c_str());
+            DAW::ShowConsoleMsg(buffer);
+            return false;
+        }
+        else
+        {
+            zones_[zone->GetName()] = zone;
+            return true;
+        }
     }
 
 public:
