@@ -281,7 +281,7 @@ protected:
 
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
-    //vector<Zone*> activeZones_;
+    vector<Zone*> activeZones_;
     map<string, vector<Zone*>> includedZoneMembers_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
@@ -543,7 +543,6 @@ private:
     string name_ = "";
     int number_ = 0;
     bool followMCP_ = true;
-    bool hasMasterChannel_ = false;
     bool synchPages_ = false;
     bool scrollLink_ = true;
     bool colourTracks_ = false;
@@ -621,15 +620,6 @@ private:
 
     void GetPinnedChannelGUIDs(vector<string> & pinnedChannels)
     {
-        string masterTrackGUID = DAW::GetTrackGUIDAsString(0, followMCP_);
-        
-        if(hasMasterChannel_)
-            pinnedChannels.push_back(masterTrackGUID);
-        else if( ! (followMCP_ && (DAW::GetMasterTrackVisibility() & 0x02)))
-            pinnedChannels.push_back(masterTrackGUID);
-        else if( ! (! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01)))
-            pinnedChannels.push_back(masterTrackGUID);
-        
         for(auto* navigator : trackNavigators_)
             if(navigator->GetIsPinned())
                 pinnedChannels.push_back(navigator->GetTrackGUID());
@@ -672,26 +662,12 @@ private:
     
     bool IsTrackVisible(MediaTrack* track)
     {
-        if(DAW::GetMediaTrackInfo_Value(track, "IP_TRACKNUMBER") == -1) // Master
-        {
-            if(hasMasterChannel_)
-                return false;
-            else if(followMCP_ && (DAW::GetMasterTrackVisibility() & 0x02))
-                return true;
-            else if( ! followMCP_ && (DAW::GetMasterTrackVisibility() & 0x01))
-                return true;
-            else
-                return false;
-        }
+        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+            return true;
+        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+            return true;
         else
-        {
-            if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-                return true;
-            else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-                return true;
-            else
-                return false;
-        }
+            return false;
     }
 
 public:
@@ -712,8 +688,6 @@ public:
     void OnFXFocus(MediaTrack* track, int fxIndex);
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
-    
-    void SetHasMasterChannel(bool hasMasterChannel) { hasMasterChannel_ = hasMasterChannel; }
     
     void LeavePage()
     {
@@ -771,7 +745,7 @@ public:
     {
         int maxSends = 0;
         
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
@@ -1014,7 +988,7 @@ public:
     
     void Init()
     {
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
+        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
             trackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
 
         SetPinnedTracks();
@@ -1079,7 +1053,7 @@ public:
         
         int currentNumVisibleTracks = 0;
         
-        for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_); i++)
+        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
             if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
                 currentNumVisibleTracks++;
 

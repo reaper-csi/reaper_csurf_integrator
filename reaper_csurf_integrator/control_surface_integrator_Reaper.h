@@ -123,8 +123,6 @@ public:
 
     static double GetTrackSendInfo_Value(MediaTrack* tr, int category, int sendidx, const char* parmname) { return ::GetTrackSendInfo_Value(tr, category, sendidx, parmname); }
 
-    static int GetMasterTrackVisibility() { return ::GetMasterTrackVisibility(); }
-
     static void* GetSetMediaTrackInfo(MediaTrack* tr, const char* parmname, void* setNewValue) { return ::GetSetMediaTrackInfo(tr, parmname, setNewValue); }
 
     static double CSurf_OnVolumeChange(MediaTrack* trackid, double volume, bool relative) { return ::CSurf_OnVolumeChange(trackid, volume, relative); }
@@ -195,15 +193,13 @@ public:
    
     static  void PreventUIRefresh(int prevent_count) { ::PreventUIRefresh(prevent_count); }
     
-    static int CountTracks() { return ::CountTracks(0); }
-    
     static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
 
     static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
     
     static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView); }
     
-    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView) + 1; };
+    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
     
     static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
 
@@ -222,10 +218,8 @@ public:
 
     static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
-        if(trackNumber < 0 || trackNumber > CSurf_NumTracks(mcpView))
+        if(trackNumber <= 0 || trackNumber > CSurf_NumTracks(mcpView))
             return "";
-        else if(0 == trackNumber)
-            return "ReaperMasterTrackGUID"; // GAW -- Hack to ensure every track has a GUID
         else
         {
             char pBuffer[BUFSZ];
@@ -247,7 +241,7 @@ public:
         
         if(GUIDTracks_.count(trackGUID) < 1)
         {
-            for(int i = 0; i < CSurf_NumTracks(mcpView); i++)
+            for(int i = 1; i <= CSurf_NumTracks(mcpView); i++)
             {
                 if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
                 {
