@@ -552,7 +552,7 @@ private:
     int trackColourGreenValue_ = 0;
     int trackColourBlueValue_ = 0;
     map<string, int> trackColours_;
-    int trackOffset_ = 0;
+    int trackOffset_ = 1;
     int sendsOffset_ = 0;
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
@@ -584,7 +584,6 @@ private:
         
         return modifiers;
     }
-
 
     void SetShift(bool value)
     {

@@ -268,15 +268,15 @@ void Midi_ControlSurface::ProcessWidget(int &lineNumber, ifstream &surfaceTempla
                 
                 widget->AddFeedbackProcessor(feedbackProcessor);
             }
-            else if((widgetClass == "MCUDisplayUpper" || widgetClass == "MCUDisplayLower" || widgetClass == "MCUXTDisplayUpper" || widgetClass == "MCUXTDisplayLower") && (tokens.size() == 2 || tokens.size() == 3))
+            else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && (tokens.size() == 2 || tokens.size() == 3))
             {
-                if(widgetClass == "MCUDisplayUpper")
+                if(widgetClass == "FB_MCUDisplayUpper")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 0, 0x14, 0x12, stoi(tokens[1]));
-                else if(widgetClass == "MCUDisplayLower")
+                else if(widgetClass == "FB_MCUDisplayLower")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 1, 0x14, 0x12, stoi(tokens[1]));
-                else if(widgetClass == "MCUXTDisplayUpper")
+                else if(widgetClass == "FB_MCUXTDisplayUpper")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 0, 0x15, 0x12, stoi(tokens[1]));
-                else if(widgetClass == "MCUXTDisplayLower")
+                else if(widgetClass == "FB_MCUXTDisplayLower")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 1, 0x15, 0x12, stoi(tokens[1]));
                 
                 if(tokens.size() == 3)
@@ -285,11 +285,11 @@ void Midi_ControlSurface::ProcessWidget(int &lineNumber, ifstream &surfaceTempla
                 widget->AddFeedbackProcessor(feedbackProcessor);
             }
             
-            else if((widgetClass == "C4DisplayUpper" || widgetClass == "C4DisplayLower") && (tokens.size() == 3 || tokens.size() == 4))
+            else if((widgetClass == "FB_C4DisplayUpper" || widgetClass == "FB_C4DisplayLower") && (tokens.size() == 3 || tokens.size() == 4))
             {
-                if(widgetClass == "MCUDisplayUpper")
+                if(widgetClass == "FB_MCUDisplayUpper")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 0, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
-                else if(widgetClass == "MCUDisplayLower")
+                else if(widgetClass == "FB_MCUDisplayLower")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(this, 1, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
                 
                 if(tokens.size() == 4)
@@ -615,6 +615,8 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     
     ExpandZone(tokens, filePath, localZones, localZoneIds);
 
+    Navigator* navigator = nullptr;
+    
     for (string line; getline(zoneFile, line) ; )
     {
         lineNumber++;
@@ -622,6 +624,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
+        
         for(int i = 0; i < localZones.size(); i++)
         {
             // Pre-process for "Channel|1-8" syntax
@@ -646,8 +649,6 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                     ProcessIncludedZones(lineNumber, zoneFile, tokens, filePath, localZones[i]);
                     continue;
                 }
-
-                Navigator* navigator = nullptr;
                 
                 if(tokens.size() == 2 && tokens[0] == "Navigator")
                 {
