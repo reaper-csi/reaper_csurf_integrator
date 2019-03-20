@@ -462,6 +462,59 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
+void ControlSurface::ExpandIncludedZone(vector<string> tokens, vector<string> &localZones)
+{
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    
+    vector<string> localZoneIds;
+
+    istringstream expandedZone(tokens[0]);
+    vector<string> expandedZoneTokens;
+    string expandedZoneToken;
+    
+    while (getline(expandedZone, expandedZoneToken, '|'))
+        expandedZoneTokens.push_back(expandedZoneToken);
+    
+    if(expandedZoneTokens.size() > 1)
+    {
+        string zoneBaseName = "";
+        int rangeBegin = 0;
+        int rangeEnd = 1;
+        
+        zoneBaseName = expandedZoneTokens[0];
+        
+        istringstream range(expandedZoneTokens[1]);
+        vector<string> rangeTokens;
+        string rangeToken;
+        
+        while (getline(range, rangeToken, '-'))
+            rangeTokens.push_back(rangeToken);
+        
+        if(rangeTokens.size() > 1)
+        {
+            rangeBegin = stoi(rangeTokens[0]);
+            rangeEnd = stoi(rangeTokens[1]);
+            
+            for(int i = rangeBegin; i <= rangeEnd; i++)
+                localZoneIds.push_back(to_string(i));
+            
+            for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+            {
+                localZones.push_back(zoneBaseName + localZoneIds[i]);
+            }
+        }
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    /// Just regular syntax of type "Channel1"
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    else
+    {
+        localZones.push_back(tokens[0]);
+    }
+}
+
 void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath, Zone* zone)
 {
     for (string line; getline(zoneFile, line) ; )
@@ -478,30 +531,26 @@ void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, v
             if(tokens[0] == "IncludedZonesEnd")    // finito baybay - IncludedZone processing complete
                 return;
             
-            vector<Zone*> localZones;
-            vector<string> localZoneIds;
+            vector<string> localZones;
             
-            ExpandZone(tokens, filePath, localZones, localZoneIds);
-
+            ExpandIncludedZone(tokens, localZones);
+            
             for(int i = 0; i < localZones.size(); i++)
             {
-                if(zone->GetName() != localZones[i]->GetName()) // prevent recursive defintion
-                    includedZoneMembers_[localZones[i]->GetName()].push_back(zone);
+                if(zone->GetName() != localZones[i]) // prevent recursive defintion
+                    includedZoneMembers_[localZones[i]].push_back(zone);
             }
         }
     }
 }
 
-void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &localZones,vector<string> &localZoneIds)
+void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &localZones, vector<string> &localZoneIds)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
     //////////////////////////////////////////////////////////////////////////////////////////////
     
-    string zoneBaseName = "";
-    int rangeBegin = 0;
-    int rangeEnd = 1;
-    
+
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
     string expandedZoneToken;
@@ -511,6 +560,10 @@ void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Z
     
     if(expandedZoneTokens.size() > 1)
     {
+        string zoneBaseName = "";
+        int rangeBegin = 0;
+        int rangeEnd = 1;
+
         zoneBaseName = expandedZoneTokens[0];
         
         istringstream range(expandedZoneTokens[1]);
@@ -589,7 +642,10 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                     return;
                 
                 else if(tokens[0] == "IncludedZones")
+                {
                     ProcessIncludedZones(lineNumber, zoneFile, tokens, filePath, localZones[i]);
+                    continue;
+                }
 
                 Navigator* navigator = nullptr;
                 
