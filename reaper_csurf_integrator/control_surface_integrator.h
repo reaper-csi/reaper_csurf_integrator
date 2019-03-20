@@ -186,6 +186,7 @@ class Zone
 {
 private:
     map<Widget*, ActionContext*> actionContextForWidget_;
+    vector<Zone*> includedZones_;
 
 protected:
     ControlSurface* surface_ = nullptr;
@@ -204,12 +205,20 @@ public:
         actionContextForWidget_[widget] = context;
     }
     
-    virtual void Deactivate();
+    void AddZone(Zone* zone)
+    {
+        includedZones_.push_back(zone);
+    }
+
+    void Deactivate();
     
     virtual void Activate()
     {
         for(auto [widget, actionContext] : actionContextForWidget_)
             widget->SetActionContext(actionContext);
+        
+        for(auto zone : includedZones_)
+            zone->Activate();
     }
 
     virtual void ActivateWidgets(vector <Widget*> &widgets)
@@ -218,59 +227,11 @@ public:
             for(auto [localWidget, actionContext] : actionContextForWidget_)
                 if(localWidget == widget)
                     localWidget->SetActionContext(actionContext);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CompositeZone : public Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<Zone*> zones_;
-    
-public:
-    CompositeZone(ControlSurface* surface, string name, string filePath) : Zone(surface, name, filePath) {}
-    
-    virtual ~CompositeZone() {}
-    
-    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
-    
-    void AddZone(Zone* zone)
-    {
-        zones_.push_back(zone);
-    }
-    
-    virtual void Activate() override
-    {
-        for(auto zone : zones_)
-           zone->Activate();
-    }
-    
-    virtual void Deactivate() override
-    {
-        for(auto zone : zones_)
-            zone->Deactivate();
-    }
-    
-    virtual void ActivateWidgets(vector <Widget*> &widgets) override
-    {
-        for(auto zone : zones_)
+        
+        for(auto zone : includedZones_)
             zone->ActivateWidgets(widgets);
     }
 };
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionZone : public Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    ActionZone(ControlSurface* surface, string name, string filePath) : Zone(surface, name, filePath) {}
-    
-    virtual ~ActionZone() {}
-    
-    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context) override {}
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Navigator
@@ -321,12 +282,12 @@ protected:
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     //vector<Zone*> activeZones_;
-    map<string, vector<CompositeZone*>> compositeZoneMembers_;
+    map<string, vector<Zone*>> includedZoneMembers_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);
     virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
-    void ProcessCompositeZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
+    void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, Zone* zone);
     void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
     void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
     
@@ -386,6 +347,7 @@ public:
     {
         RequestUpdate();
     }
+    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
