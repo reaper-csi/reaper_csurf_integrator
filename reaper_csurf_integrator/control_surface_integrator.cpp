@@ -904,9 +904,9 @@ void Page::AdjustTrackBank(int stride)
     {
         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
         DAW::MarkProjectDirty(nullptr);
+        
+            RefreshLayout();
     }
-    
-    RefreshLayout();        
 }
 
 void Page::RefreshLayout()
