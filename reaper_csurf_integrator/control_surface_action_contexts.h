@@ -31,20 +31,12 @@ public:
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    string trackGUID_ = "";
-    
 public:
     TrackContext(Page* page, ControlSurface* surface, Action* action) : ActionContext(page, surface, action) {}
     
-    virtual void  SetTrack(string trackGUID) override
-    {
-        trackGUID_ = trackGUID;
-    }
-    
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
             action_->RequestUpdate(page_, this, widget, track);
         else
             widget->Reset();
@@ -52,7 +44,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
             action_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
@@ -66,7 +58,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
 
@@ -88,7 +80,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
@@ -117,7 +109,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
             action_->RequestUpdate(page_, this, widget, track, param_);
         else
             widget->Reset();
@@ -125,7 +117,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
             action_->Do(page_, surface_, track, param_);
     }
 };
@@ -150,7 +142,7 @@ public:
         
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()) )
+        if(MediaTrack* track = widget->GetTrack())
             action_->RequestUpdate(this, widget, track, fxIndex_, page_->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
         else
             widget->Reset();
@@ -158,7 +150,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             if(shouldToggle_)
                 action_->DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
@@ -255,7 +247,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             if(page_->GetTouchState(track, 0))
                 touchAction_->RequestUpdate(page_, this, widget, track);
@@ -267,7 +259,7 @@ public:
     }
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             if(page_->GetTouchState(track, 0))
                 touchAction_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
@@ -289,7 +281,7 @@ public:
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
@@ -314,7 +306,7 @@ public:
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
         {
             
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
@@ -357,24 +349,16 @@ public:
 
             if(ActionContext* context = TheManager->GetActionContext(page_, surface_, tokens))
             {
-                context->SetTrack(trackGUID_);
                 actionContexts_.push_back(context);
             }
         }
-    }
-    
-    virtual void  SetTrack(string trackGUID) override
-    {
-        trackGUID_ = trackGUID;
-        for(auto context : actionContexts_)
-            context->SetTrack(trackGUID_);
     }
     
     virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+        if(MediaTrack* track = widget->GetTrack())
             actionContexts_[index]->RequestUpdate(widget);
         else
             widget->Reset();
@@ -389,7 +373,7 @@ public:
         }
         else if(actionContexts_[index])
         {
-            if(MediaTrack* track = DAW::GetTrackFromGUID(trackGUID_, page_->GetFollowMCP()))
+            if(MediaTrack* track = widget->GetTrack())
                 actionContexts_[index]->DoAction(widget, value);
         }
     }
