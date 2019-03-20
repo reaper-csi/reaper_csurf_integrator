@@ -495,6 +495,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     //////////////////////////////////////////////////////////////////////////////////////////////
     vector<Zone*> localZones;
     vector<string> localZoneIds;
+    
     string zoneBaseName = "";
     int rangeBegin = 0;
     int rangeEnd = 1;
@@ -545,6 +546,8 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
             localZoneIds.push_back("");
         }
     }
+    
+    
 
     for (string line; getline(zoneFile, line) ; )
     {
@@ -641,26 +644,6 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                             context->SetDelayAmount(delayAmount * 1000.0);
                         
                         localZones[i]->AddActionContextForWidget(widget, context);
-                        
-                        /*
-                        if(params[0] == "TrackCycle")
-                        {
-                            for(auto * cyclerWidget : widgets_)
-                            {
-                                if(cyclerWidget->GetName() == params[1])
-                                {
-                                    localZones[i]->AddActionContextForWidget(widget, context);
-
-                                    //if(widgetContexts_.count(cyclerWidget) < 1)
-                                    //widgetContexts_[cyclerWidget] = new WidgetContext(cyclerWidget);
-                                    
-                                    //widgetContexts_[cyclerWidget]->AddActionContext(Track, modifiers, context);
-                                    context->SetCyclerWidget(cyclerWidget);
-                                }
-                            }
-                        }
-                        */
-                        
                     }
                 }
             }
@@ -787,7 +770,7 @@ void Page::AdjustTrackBank(int stride)
     if(trackOffset_ <  bottom)
         trackOffset_ =  bottom;
     
-    int top = DAW::CSurf_NumTracks(followMCP_) - 1;
+    int top = DAW::CSurf_NumTracks(followMCP_);
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
@@ -872,7 +855,7 @@ void Page::RefreshLayout()
     
     for(int i = trackOffset_; i < DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
     {
-        if(i < 0)
+        if(i <= 0)
             layoutChannelIndex++;
         else if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
             pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
