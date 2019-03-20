@@ -462,7 +462,7 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
-void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, Zone* zone)
+void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath, Zone* zone)
 {
     for (string line; getline(zoneFile, line) ; )
     {
@@ -477,24 +477,26 @@ void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, v
         {
             if(tokens[0] == "IncludedZonesEnd")    // finito baybay - IncludedZone processing complete
                 return;
-            else if(zone->GetName() != tokens[0]) // prevent recursive defintion
-                includedZoneMembers_[tokens[0]].push_back(zone);
+            
+            vector<Zone*> localZones;
+            vector<string> localZoneIds;
+            
+            ExpandZone(tokens, filePath, localZones, localZoneIds);
+
+            for(int i = 0; i < localZones.size(); i++)
+            {
+                if(zone->GetName() != localZones[i]->GetName()) // prevent recursive defintion
+                    includedZoneMembers_[localZones[i]->GetName()].push_back(zone);
+            }
         }
     }
 }
 
-void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath)
+void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &localZones,vector<string> &localZoneIds)
 {
-    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
-    
-    if(tokens.size() < 2)
-        return;
-
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
     //////////////////////////////////////////////////////////////////////////////////////////////
-    vector<Zone*> localZones;
-    vector<string> localZoneIds;
     
     string zoneBaseName = "";
     int rangeBegin = 0;
@@ -505,7 +507,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
     string expandedZoneToken;
     
     while (getline(expandedZone, expandedZoneToken, '|'))
-       expandedZoneTokens.push_back(expandedZoneToken);
+        expandedZoneTokens.push_back(expandedZoneToken);
     
     if(expandedZoneTokens.size() > 1)
     {
@@ -546,8 +548,19 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
             localZoneIds.push_back("");
         }
     }
+}
+
+void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath)
+{
+    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
     
+    if(tokens.size() < 2)
+        return;
+
+    vector<Zone*> localZones;
+    vector<string> localZoneIds;
     
+    ExpandZone(tokens, filePath, localZones, localZoneIds);
 
     for (string line; getline(zoneFile, line) ; )
     {
@@ -576,7 +589,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                     return;
                 
                 else if(tokens[0] == "IncludedZones")
-                    ProcessIncludedZones(lineNumber, zoneFile, tokens, localZones[i]);
+                    ProcessIncludedZones(lineNumber, zoneFile, tokens, filePath, localZones[i]);
 
                 Navigator* navigator = nullptr;
                 
