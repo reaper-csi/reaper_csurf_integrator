@@ -127,6 +127,12 @@ void Widget::DoRelativeAction(double value)
         actionContext_->DoRelativeAction(this, value);
 }
 
+void Widget::ClearCache()
+{
+    for(auto feedbackProcessor : feedbackProcessors_)
+        feedbackProcessor->ClearCache();
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -571,6 +577,19 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         
             if(tokens.size() > 0)
             {
+                Navigator* navigator = nullptr;
+                
+                if(tokens.size() == 2 && tokens[0] == "Navigator")
+                {
+                    if(tokens[1] == "TrackNavigator")
+                    {
+                        navigator = new TrackNavigator();
+                        GetPage()->AddTrackNavigator((TrackNavigator*)navigator);
+                    }
+                    
+                    continue;
+                }
+                
                 istringstream modified_role(tokens[0]);
                 vector<string> modifier_tokens;
                 string modifier_token;
@@ -608,6 +627,9 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
+                    if(navigator != nullptr)
+                        widget->AddNavigator(navigator);
+                    
                     if(ActionContext* context = TheManager->GetActionContext(page_, this, params))
                     {
                         if(isInverted)
@@ -743,7 +765,7 @@ void Page::OnTrackSelection(MediaTrack* track)
     {
         // Make sure selected track is visble on the control surface
         int low = trackOffset_;
-        int high = low + bankableChannels_.size() - 1 - GetNumPinnedTracks();
+        int high = low + trackNavigators_.size() - 1 - GetNumPinnedTracks();
         
         int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
         
@@ -785,7 +807,7 @@ void Page::AdjustTrackBank(int stride)
     
     trackOffset_ += stride;
     
-    int bottom = 1 - bankableChannels_.size() + GetNumPinnedTracks();
+    int bottom = 1 - trackNavigators_.size() + GetNumPinnedTracks();
     
     if(trackOffset_ <  bottom)
         trackOffset_ =  bottom;
@@ -869,7 +891,7 @@ void Page::RefreshLayout()
 
     GetPinnedChannelGUIDs(pinnedChannels);
     
-    vector<string> layoutChannels(bankableChannels_.size() + pinnedChannels.size());
+    vector<string> layoutChannels(trackNavigators_.size() + pinnedChannels.size());
 
     int layoutChannelIndex = 0;
     
@@ -890,29 +912,29 @@ void Page::RefreshLayout()
         DAW::PreventUIRefresh(1);
         
         // reset track colors
-        for(auto* channel : bankableChannels_)
-            if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
-                if(trackColours_.count(channel->GetTrackGUID()) > 0)
-                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[channel->GetTrackGUID()]);
+        for(auto* navigator : trackNavigators_)
+            if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+                if(trackColours_.count(navigator->GetTrackGUID()) > 0)
+                    DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
     }
     
     
     // Apply new layout
     layoutChannelIndex = 0;
     
-    for(auto* channel : bankableChannels_)
-        if(! channel->GetIsPinned())
-            channel->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
+    for(auto* navigator : trackNavigators_)
+        if(! navigator->GetIsPinned())
+            navigator->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
 
     
     if(colourTracks_ && TheManager->GetCurrentPage() == this)
     {
         // color tracks
         int color = DAW::ColorToNative(trackColourRedValue_, trackColourGreenValue_, trackColourBlueValue_) | 0x1000000;
-        for(auto* channel : bankableChannels_)
-            if(MediaTrack* track = DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_))
+        for(auto* navigator : trackNavigators_)
+            if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
             {
-                trackColours_[channel->GetTrackGUID()] = DAW::GetTrackColor(track);
+                trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
                 DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &color);
             }
         
