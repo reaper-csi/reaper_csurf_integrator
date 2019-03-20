@@ -778,12 +778,10 @@ void Page::AdjustTrackBank(int stride)
     
     trackOffset_ += stride;
     
-    int bottom = 1 - trackNavigators_.size() + GetNumPinnedTracks();
+    if(trackOffset_ <  1)
+        trackOffset_ =  1;
     
-    if(trackOffset_ <  bottom)
-        trackOffset_ =  bottom;
-    
-    int top = DAW::CSurf_NumTracks(followMCP_);
+    int top = DAW::CSurf_NumTracks(followMCP_) - trackNavigators_.size();
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
@@ -792,7 +790,7 @@ void Page::AdjustTrackBank(int stride)
     
     GetPinnedChannelGUIDs(pinnedChannels);
 
-    while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
+    while(trackOffset_ <= DAW::CSurf_NumTracks(followMCP_))
     {
         string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
 
@@ -868,9 +866,7 @@ void Page::RefreshLayout()
     
     for(int i = trackOffset_; i < DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
     {
-        if(i <= 0)
-            layoutChannelIndex++;
-        else if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
+        if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
             pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
         else
             layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
