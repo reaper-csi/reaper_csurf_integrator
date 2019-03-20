@@ -523,7 +523,7 @@ public:
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 0; i < DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
+        for(int i = 1; i <= DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
         {
            MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
             
