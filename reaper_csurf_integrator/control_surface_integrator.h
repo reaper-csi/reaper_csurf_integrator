@@ -287,7 +287,8 @@ protected:
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);
     virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
-    void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, Zone* zone);
+    void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath, Zone* zone);
+    void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &localZones, vector<string> &localZoneIds);
     void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
     void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
     
