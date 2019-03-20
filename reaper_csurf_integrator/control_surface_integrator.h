@@ -59,16 +59,20 @@ class ControlSurface;
 class FeedbackProcessor;
 class ActionContext;
 class Page;
+class Navigator;
+class TrackNavigator;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    ControlSurface* surface_ = nullptr;
     string name_ = "";
+    Navigator* navigator_ = nullptr;
 
-protected:
     ActionContext* actionContext_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
+    
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
     int lastParamValue_ = 0;
@@ -77,10 +81,13 @@ protected:
     double lastRefreshed_ = 0.0;
     
 public:
-    Widget(string name) : name_(name) {}
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
+    Widget(ControlSurface* surface, string name, Navigator* navigator) : surface_(surface), name_(name), navigator_(navigator) {}
     virtual ~Widget() {};
     
+    ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
+    MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
@@ -265,7 +272,13 @@ public:
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+public:
+    virtual ~Navigator() {}
+    virtual bool GetIsPinned() { return false; }
+    virtual string GetTrackGUID() { return ""; }
     
+    virtual void SetTrackGUID(string trackGUID) {}
+    virtual void SetIsPinned(bool pinned) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,17 +288,19 @@ class TrackNavigator : public Navigator
 private:
     bool isPinned_ = false;
     string trackGUID_ = "";
-    vector<Widget*> widgets_;
     
 public:
-    TrackNavigator() {}
+    virtual ~TrackNavigator() {}
     
-    void AddWidget(Widget* widget) { widgets_.push_back(widget); }
-    bool GetIsPinned() { return isPinned_; }
-    string GetTrackGUID() { return trackGUID_; }
-    void SetTrackGUID(Page* page, string trackGUID);
+    virtual bool GetIsPinned() override { return isPinned_; }
+    virtual string GetTrackGUID() override { return trackGUID_; }
     
-    void SetIsPinned(bool pinned)
+    virtual void SetTrackGUID(string trackGUID) override
+    {
+        trackGUID_ = trackGUID;
+    }
+    
+    virtual void SetIsPinned(bool pinned) override
     {
         isPinned_ = pinned;
     }
@@ -301,7 +316,7 @@ protected:
 
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
-    vector<Zone*> activeZones_;
+    //vector<Zone*> activeZones_;
     map<string, vector<CompositeZone*>> compositeZoneMembers_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
@@ -338,6 +353,8 @@ protected:
 
 public:
     virtual ~ControlSurface() {};
+    
+    Page* GetPage() { return page_; }
     
     vector<Widget*> & GetAllWidgets()
     {
@@ -515,7 +532,6 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
 
-    virtual void SetTrack(string trackGUID) {}
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
@@ -631,7 +647,7 @@ private:
         {
             if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
             {
-                bankableChannels_[i]->SetTrackGUID(this, buffer);
+                bankableChannels_[i]->SetTrackGUID(buffer);
                 bankableChannels_[i]->SetIsPinned(true);
             }
         }
@@ -1028,7 +1044,7 @@ public:
     void Init()
     {
         for(int i = 0; i < DAW::CSurf_NumTracks(followMCP_) && i < bankableChannels_.size(); i++)
-            bankableChannels_[i]->SetTrackGUID(this, DAW::GetTrackGUIDAsString(i, followMCP_));
+            bankableChannels_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
 
         SetPinnedTracks();
         
@@ -1120,7 +1136,7 @@ public:
                     if(DAW::GetTrackFromGUID(channel->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
                     {
                         channel->SetIsPinned(false);
-                        channel->SetTrackGUID(this, "");
+                        channel->SetTrackGUID("");
 
                         // GAW remove this from pinned tracks list in project
                         if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))

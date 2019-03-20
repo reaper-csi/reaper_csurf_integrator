@@ -83,6 +83,14 @@ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* Widget::GetTrack()
+{
+    if(navigator_ == nullptr)
+        return nullptr;
+    else
+        return DAW::GetTrackFromGUID(navigator_->GetTrackGUID(), surface_->GetPage()->GetFollowMCP());
+}
+
 void Widget::RequestUpdate()
 {
     if(actionContext_ != nullptr)
@@ -157,20 +165,6 @@ void Zone::Deactivate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigator::SetTrackGUID(Page* page, string trackGUID)
-{
-    trackGUID_ = trackGUID;
-    /*
-    for(auto widget : widgets_)
-        if(WidgetContext* widgetContext = page->GetWidgetContext(widget))
-            widgetContext->SetComponentTrackContext(Track, trackGUID);
-     */
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_ControlSurface::InitWidgets(string templateFilename)
@@ -178,9 +172,9 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename);
     
     // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget("TrackOnSelection"));
-    widgets_.push_back(new Widget("TrackOnMapTrackAndFXToWidgets"));
-    widgets_.push_back(new Widget("TrackOnFocusedFX"));
+    widgets_.push_back(new Widget(this, "TrackOnSelection"));
+    widgets_.push_back(new Widget(this, "TrackOnMapTrackAndFXToWidgets"));
+    widgets_.push_back(new Widget(this, "TrackOnFocusedFX"));
 
 }
 
@@ -189,7 +183,7 @@ void Midi_ControlSurface::ProcessWidget(int &lineNumber, ifstream &surfaceTempla
     if(tokens.size() < 2)
         return;
     
-    Widget* widget = new Widget(tokens[1]);
+    Widget* widget = new Widget(this, tokens[1]);
     widgets_.push_back(widget);
     
     for (string line; getline(surfaceTemplateFile, line) ; )
@@ -908,7 +902,7 @@ void Page::RefreshLayout()
     
     for(auto* channel : bankableChannels_)
         if(! channel->GetIsPinned())
-            channel->SetTrackGUID(this, layoutChannels[layoutChannelIndex++]);
+            channel->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
 
     
     if(colourTracks_ && TheManager->GetCurrentPage() == this)
