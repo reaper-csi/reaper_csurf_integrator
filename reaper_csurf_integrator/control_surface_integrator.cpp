@@ -515,7 +515,7 @@ void ControlSurface::ExpandIncludedZone(vector<string> tokens, vector<string> &l
     }
 }
 
-void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath, Zone* zone)
+void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, Zone* zone)
 {
     for (string line; getline(zoneFile, line) ; )
     {
@@ -603,18 +603,21 @@ void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Z
     }
 }
 
-void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filePath)
+void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath)
 {
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
     
-    if(tokens.size() < 2)
+    if(passedTokens.size() < 2)
         return;
 
     vector<Zone*> localZones;
     vector<string> localZoneIds;
     
-    ExpandZone(tokens, filePath, localZones, localZoneIds);
+    ExpandZone(passedTokens, filePath, localZones, localZoneIds);
 
+    bool hasNavigator = false;
+    string navigatorType = "";
+    
     Navigator* navigator = nullptr;
     
     for (string line; getline(zoneFile, line) ; )
@@ -624,9 +627,30 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
 
+        vector<string> tokens(GetTokens(line));
+        
+        if(tokens.size() == 2 && tokens[0] == "Navigator")
+        {
+            hasNavigator = true;
+            navigatorType = tokens[1];
+            continue;
+        }
         
         for(int i = 0; i < localZones.size(); i++)
         {
+            if(hasNavigator)
+            {
+                if(navigatorType == "TrackNavigator")
+                {
+                    navigator = new TrackNavigator();
+                    GetPage()->AddTrackNavigator((TrackNavigator*)navigator);
+                }
+            }
+            else
+            {
+                navigator = nullptr;
+            }
+
             // Pre-process for "Channel|1-8" syntax
             string localZoneLine(line);
             localZoneLine = regex_replace(localZoneLine, regex("\\|"), localZoneIds[i]);
@@ -646,20 +670,10 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                 
                 else if(tokens[0] == "IncludedZones")
                 {
-                    ProcessIncludedZones(lineNumber, zoneFile, tokens, filePath, localZones[i]);
+                    ProcessIncludedZones(lineNumber, zoneFile, filePath, localZones[i]);
                     continue;
                 }
                 
-                if(tokens.size() == 2 && tokens[0] == "Navigator")
-                {
-                    if(tokens[1] == "TrackNavigator")
-                    {
-                        navigator = new TrackNavigator();
-                        GetPage()->AddTrackNavigator((TrackNavigator*)navigator);
-                    }
-                    
-                    continue;
-                }
                 
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 istringstream modified_role(tokens[0]);
