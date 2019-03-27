@@ -508,7 +508,7 @@ public:
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
-    virtual void RequestUpdate(Widget* widget) {}
+    virtual void RequestUpdate() {}
     virtual void DoAction(Widget* widget) {}
     virtual void DoAction(Widget* widget, double value) {}
     virtual void DoRelativeAction(Widget* widget, double value) {}
