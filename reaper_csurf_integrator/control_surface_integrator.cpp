@@ -12,6 +12,8 @@
 
 extern Manager* TheManager;
 
+static map<string, vector<Zone*>> includedZoneMembers;
+
 static void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
@@ -155,22 +157,6 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
         lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
         surface_->SendMidiMessage(first, second, third);
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Zone
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::Deactivate()
-{
-    vector<Widget*> widgets;
-    
-    for(auto [widget, actionContext] : actionContextForWidget_)
-        widgets.push_back(widget);
-    
-    surface_->DeactivateWidgets(widgets);
-
-    for(auto zone : includedZones_)
-        zone->Deactivate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -449,7 +435,7 @@ void ControlSurface::InitZones(string zoneFolder)
             ProcessFile(zoneFilename);
         
         // now add appropriate included zones to zones
-        for(auto [includedZoneName, includedZones] : includedZoneMembers_)
+        for(auto [includedZoneName, includedZones] : includedZoneMembers)
             if(zones_.count(includedZoneName) > 0)
                 for(auto includedZone : includedZones)
                         includedZone->AddZone(zones_[includedZoneName]);
@@ -538,7 +524,7 @@ void ControlSurface::ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, s
             for(int i = 0; i < localZones.size(); i++)
             {
                 if(zone->GetName() != localZones[i]) // prevent recursive defintion
-                    includedZoneMembers_[localZones[i]].push_back(zone);
+                    includedZoneMembers[localZones[i]].push_back(zone);
             }
         }
     }
@@ -656,12 +642,6 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
             localZoneLine = regex_replace(localZoneLine, regex("\\|"), localZoneIds[i]);
 
             vector<string> tokens(GetTokens(localZoneLine));
-
-            string widgetName = "";
-            bool isInverted = false;
-            bool shouldToggle = false;
-            bool isDelayed = false;
-            double delayAmount = 0.0;
         
             if(tokens.size() > 0)
             {
@@ -674,33 +654,15 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                     continue;
                 }
                 
-                
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
-                istringstream modified_role(tokens[0]);
-                vector<string> modifier_tokens;
-                string modifier_token;
-                
-                while (getline(modified_role, modifier_token, '+'))
-                    modifier_tokens.push_back(modifier_token);
-                
-                if(modifier_tokens.size() > 1)
-                {
-                    for(int i = 0; i < modifier_tokens.size() - 1; i++)
-                    {
-                        if(modifier_tokens[i] == "Invert")
-                            isInverted = true;
-                        else if(modifier_tokens[i] == "Toggle")
-                            shouldToggle = true;
-                        else if(modifier_tokens[i] == "Hold")
-                        {
-                            isDelayed = true;
-                            delayAmount = 1.0;
-                        }
-                    }
-                }
-                
-                widgetName = modifier_tokens[modifier_tokens.size() - 1];
+                string widgetName = "";
+                bool isInverted = false;
+                bool shouldToggle = false;
+                bool isDelayed = false;
+                double delayAmount = 0.0;
 
+                GetWidgetNameAndModifiers(tokens[0], widgetName, isInverted, shouldToggle, isDelayed, delayAmount);
+                
                 Widget* widget = nullptr;
                 
                 for(auto * aWidget : widgets_)
@@ -1036,13 +998,17 @@ void Manager::InitActionDictionary()
     actions_["TrackSendBank"] = new TrackSendBank();
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
+    
+    
+    /*
     actions_["MapTrackToWidgets"] = new MapTrackToWidgets();
     actions_["MapFXToWidgets"] = new MapFXToWidgets();
     actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
     actions_["MapTrackAndFXToWidgetsForTrack"] = new MapTrackAndFXToWidgetsForTrack();
     actions_["MapSingleFXToWidgetsForTrack"] = new MapSingleFXToWidgetsForTrack();
     actions_["GlobalMapTrackAndFXToWidgetsForTrack"] = new GlobalMapTrackAndFXToWidgetsForTrack();
-}
+*/
+     }
 
 void Manager::InitActionContextDictionary()
 {
@@ -1097,13 +1063,15 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendBank"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new GlobalContextWithIntParam(page, surface, actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["PinSelectedTracks"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new GlobalContext(page, surface, actions_[params[0]]); };
     actionContexts_["UnpinSelectedTracks"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new GlobalContext(page, surface, actions_[params[0]]); };
-    actionContexts_["MapTrackToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    actionContexts_["MapFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    actionContexts_["MapTrackAndFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    actionContexts_["MapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    actionContexts_["MapSingleFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    actionContexts_["GlobalMapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackContext(page, surface, actions_[params[0]]); };
-    actionContexts_["TrackCycle"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackCycleContext(page, surface, actions_[params[0]], params); };
+    
+    
+    //actionContexts_["TrackCycle"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackCycleContext(page, surface, actions_[params[0]], params); };
+    //actionContexts_["MapTrackToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
+    //actionContexts_["MapFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
+    //actionContexts_["MapTrackAndFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
+    //actionContexts_["MapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
+    //actionContexts_["MapSingleFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
+    //actionContexts_["GlobalMapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackContext(page, surface, actions_[params[0]]); };
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
