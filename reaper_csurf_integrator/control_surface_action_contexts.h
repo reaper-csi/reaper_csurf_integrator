@@ -14,16 +14,16 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(Page* page, ControlSurface* surface, Action* action) : ActionContext(page, surface, action) {}
+    GlobalContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        action_->RequestUpdate(page_, this, widget);
+        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget);
     }
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
+        action_->Do(widget->GetSurface()->GetPage(), isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -32,12 +32,12 @@ class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackContext(Page* page, ControlSurface* surface, Action* action) : ActionContext(page, surface, action) {}
+    TrackContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
         if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(page_, this, widget, track);
+            action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
         else
             widget->Reset();
     }
@@ -45,7 +45,7 @@ public:
     virtual void DoAction(Widget* widget, double value) override
     {
         if(MediaTrack* track = widget->GetTrack())
-            action_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
+            action_->Do(widget->GetSurface()->GetPage(), widget, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -54,7 +54,7 @@ class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendContext(Page* page, ControlSurface* surface, Action* action) : TrackContext(page, surface, action) {}
+    TrackSendContext(Widget* widget, Action* action) : TrackContext(widget, action) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
@@ -66,12 +66,12 @@ public:
                widget->Reset();
             else
             {
-                int sendsOffset = page_->GetSendsOffset();
+                int sendsOffset = widget->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
 
-                action_->RequestUpdate(page_, this, widget, track, sendsOffset);
+                action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
             }
         }
         else
@@ -86,12 +86,12 @@ public:
             
             if(maxOffset > -1)
             {
-                int sendsOffset = page_->GetSendsOffset();
+                int sendsOffset = widget->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                action_->Do(page_, widget, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(widget->GetSurface()->GetPage(), widget, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -105,12 +105,12 @@ private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntParam(Page* page, ControlSurface* surface, Action* action, int param) : TrackContext(page, surface, action), param_(param) {}
+    TrackContextWithIntParam(Widget* widget, Action* action, int param) : TrackContext(widget, action), param_(param) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
         if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(page_, this, widget, track, param_);
+            action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, param_);
         else
             widget->Reset();
     }
@@ -118,7 +118,7 @@ public:
     virtual void DoAction(Widget* widget, double value) override
     {
         if(MediaTrack* track = widget->GetTrack())
-            action_->Do(page_, surface_, track, param_);
+            action_->Do(widget->GetSurface()->GetPage(), widget->GetSurface(), track, param_);
     }
 };
 
@@ -132,7 +132,7 @@ private:
     int fxIndex_ = 0;
 
 public:
-    FXContext(Page* page, ControlSurface* surface, Action* action, string fxParamName) : TrackContext(page, surface, action), fxParamName_(fxParamName) {}
+    FXContext(Widget* widget, Action* action, string fxParamName) : TrackContext(widget, action), fxParamName_(fxParamName) {}
     
     virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
     
@@ -143,7 +143,7 @@ public:
     virtual void RequestUpdate(Widget* widget) override
     {
         if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(this, widget, track, fxIndex_, page_->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
+            action_->RequestUpdate(this, widget, track, fxIndex_, widget->GetSurface()->GetPage()->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
         else
             widget->Reset();
     }
@@ -153,9 +153,9 @@ public:
         if(MediaTrack* track = widget->GetTrack())
         {
             if(shouldToggle_)
-                action_->DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                action_->DoToggle(track, fxIndex_, widget->GetSurface()->GetPage()->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(track, fxIndex_, page_->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                action_->Do(track, fxIndex_, widget->GetSurface()->GetPage()->GetFXParamIndex(track, widget, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
         }
     }
 };
@@ -168,7 +168,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Page* page, ControlSurface* surface, Action* action, string commandStr) : ActionContext(page, surface, action)
+    ReaperActionContext(Widget* widget, Action* action, string commandStr) : ActionContext(widget, action)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -184,12 +184,12 @@ public:
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        action_->RequestUpdate(page_, this, widget, commandId_);
+        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, commandId_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        action_->Do(page_, commandId_);
+        action_->Do(widget->GetSurface()->GetPage(), commandId_);
     }
 };
 
@@ -201,16 +201,16 @@ private:
     int param_ = 0;
    
 public:
-    GlobalContextWithIntParam(Page* page, ControlSurface* surface, Action* action, int param) : ActionContext(page, surface, action), param_(param) {}
+    GlobalContextWithIntParam(Widget* widget, Action* action, int param) : ActionContext(widget, action), param_(param) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        action_->RequestUpdate(page_, this, widget, param_);
+        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, param_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        action_->Do(page_, param_);
+        action_->Do(widget->GetSurface()->GetPage(), param_);
     }
 };
 
@@ -222,16 +222,16 @@ private:
     string param_ = "";
     
 public:
-    GlobalContextWithStringParam(Page* page, ControlSurface* surface, Action* action, string param) : ActionContext(page, surface, action), param_(param) {}
+    GlobalContextWithStringParam(Widget* widget, Action* action, string param) : ActionContext(widget, action), param_(param) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
-        action_->RequestUpdate(page_, this, widget, param_);
+        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, param_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        action_->Do(page_, param_);
+        action_->Do(widget->GetSurface()->GetPage(), param_);
     }
 };
 
@@ -243,16 +243,16 @@ private:
     Action* touchAction_ = nullptr;
 
 public:
-    TrackTouchControlledContext(Page* page, ControlSurface* surface, Action* action, Action* touchAction) : TrackContext(page, surface, action), touchAction_(touchAction) {}
+    TrackTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
         if(MediaTrack* track = widget->GetTrack())
         {
-            if(page_->GetTouchState(track, 0))
-                touchAction_->RequestUpdate(page_, this, widget, track);
+            if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
+                touchAction_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
             else
-                action_->RequestUpdate(page_, this, widget, track);
+                action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
         }
         else
             widget->Reset();
@@ -261,10 +261,10 @@ public:
     {
         if(MediaTrack* track = widget->GetTrack())
         {
-            if(page_->GetTouchState(track, 0))
-                touchAction_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
+            if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
+                touchAction_->Do(widget->GetSurface()->GetPage(), widget, track, isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(widget->GetSurface()->GetPage(), widget, track, isInverted_ == false ? value : 1.0 - value);
         }
     }
 };
@@ -277,7 +277,7 @@ private:
     Action* touchAction_ = nullptr;
     
 public:
-    TrackSendTouchControlledContext(Page* page, ControlSurface* surface, Action* action, Action* touchAction) : TrackContext(page, surface, action), touchAction_(touchAction) {}
+    TrackSendTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
     
     virtual void RequestUpdate(Widget* widget) override
     {
@@ -289,15 +289,15 @@ public:
                 widget->Reset();
             else
             {
-                int sendsOffset = page_->GetSendsOffset();
+                int sendsOffset = widget->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                if(page_->GetTouchState(track, 0))
-                    touchAction_->RequestUpdate(page_, this, widget, track, sendsOffset);
+                if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
+                    touchAction_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
                 else
-                    action_->RequestUpdate(page_, this, widget, track, sendsOffset);
+                    action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
             }
        }
         else
@@ -313,15 +313,15 @@ public:
             
             if(maxOffset > -1)
             {
-                int sendsOffset = page_->GetSendsOffset();
+                int sendsOffset =widget->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                if(page_->GetTouchState(track, 0))
-                    touchAction_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
+                if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
+                    touchAction_->Do(widget->GetSurface()->GetPage(), widget, track, isInverted_ == false ? value : 1.0 - value);
                 else
-                    action_->Do(page_, widget, track, isInverted_ == false ? value : 1.0 - value);
+                    action_->Do(widget->GetSurface()->GetPage(), widget, track, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -384,26 +384,26 @@ class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PageSurfaceContext(Page* page, ControlSurface* surface, Action* action) : ActionContext(page, surface, action) {}
+    PageSurfaceContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
     
     virtual void DoAction(Widget* widget) override
     {
-        action_->Do(page_, surface_);
+        action_->Do(widget->GetSurface()->GetPage(), widget->GetSurface());
     }
     
     virtual void DoAction(Widget* widget, MediaTrack* track) override
     {
-        action_->Do(page_, surface_, track);
+        action_->Do(widget->GetSurface()->GetPage(), widget->GetSurface(), track);
     }
     
     virtual void DoAction(Widget* widget, MediaTrack* track, int fxIndex) override
     {
-        action_->Do(page_, surface_, track, fxIndex);
+        action_->Do(widget->GetSurface()->GetPage(), widget->GetSurface(), track, fxIndex);
     }
     
     virtual void DoAction(Widget* widget, double value) override
     {
-        action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
+        action_->Do(widget->GetSurface()->GetPage(), widget->GetSurface(), isInverted_ == false ? value : 1.0 - value);
     }
 };
 
