@@ -185,7 +185,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<Widget*, ActionContext*> actionContextForWidget_;
+    vector<ActionContext*> actionContexts_;
     vector<Zone*> includedZones_;
 
 protected:
@@ -200,9 +200,9 @@ public:
     string GetName() { return name_ ;}
     string GetFilepath() { return filePath_; }
     
-    virtual void AddActionContextForWidget(Widget* widget, ActionContext* context)
+    virtual void AddActionContext(ActionContext* context)
     {
-        actionContextForWidget_[widget] = context;
+        actionContexts_.push_back(context);
     }
     
     void AddZone(Zone* zone)
@@ -210,25 +210,8 @@ public:
         includedZones_.push_back(zone);
     }
 
-    virtual void Activate()
-    {
-        for(auto [widget, actionContext] : actionContextForWidget_)
-            widget->SetActionContext(actionContext);
-        
-        for(auto zone : includedZones_)
-            zone->Activate();
-    }
-
-    virtual void ActivateWidgets(vector <Widget*> &widgets)
-    {
-        for(auto widget : widgets)
-            for(auto [localWidget, actionContext] : actionContextForWidget_)
-                if(localWidget == widget)
-                    localWidget->SetActionContext(actionContext);
-        
-        for(auto zone : includedZones_)
-            zone->ActivateWidgets(widgets);
-    }
+    void Activate();
+    void ActivateWidgets(vector <Widget*> &widgets);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -502,8 +485,7 @@ class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Page* page_ = nullptr;
-    ControlSurface* surface_ = nullptr;
+    Widget* widget_ = nullptr;
     Action * action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -511,7 +493,7 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
 
-    ActionContext(Page* page, ControlSurface* surface, Action* action) : page_(page), surface_(surface), action_(action) {}
+    ActionContext(Widget* widget, Action* action) : widget_(widget), action_(action) {}
     
 public:
     virtual ~ActionContext() {}
@@ -520,6 +502,8 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
 
+    Widget* GetWidget() { return widget_; }
+    
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
@@ -579,7 +563,7 @@ private:
     vector<ControlSurface*> realSurfaces_;
     vector<TrackNavigator*> trackNavigators_;
     vector<MediaTrack*> touchedTracks_;
-    map <string, vector<Widget*>> fxWidgets_;
+    //map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -1156,7 +1140,7 @@ class Manager
 {
 private:
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(Page*, ControlSurface*, vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(Widget*, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1207,10 +1191,10 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(Page* page, ControlSurface* surface, vector<string> params)
+    ActionContext* GetActionContext(Widget* widget, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](page, surface, params);
+            return actionContexts_[params[0]](widget, params);
         
         return nullptr;
     }
