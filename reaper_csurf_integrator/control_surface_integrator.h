@@ -210,8 +210,6 @@ public:
         includedZones_.push_back(zone);
     }
 
-    void Deactivate();
-    
     virtual void Activate()
     {
         for(auto [widget, actionContext] : actionContextForWidget_)
@@ -282,7 +280,6 @@ protected:
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     vector<Zone*> activeZones_;
-    map<string, vector<Zone*>> includedZoneMembers_;
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);
@@ -318,6 +315,35 @@ protected:
         }
     }
 
+    void GetWidgetNameAndModifiers(string line, string &widgetName, bool &isInverted, bool &shouldToggle, bool &isDelayed,  double &delayAmount)
+    {
+        istringstream modified_role(line);
+        vector<string> modifier_tokens;
+        string modifier_token;
+        
+        while (getline(modified_role, modifier_token, '+'))
+            modifier_tokens.push_back(modifier_token);
+        
+        if(modifier_tokens.size() > 1)
+        {
+            for(int i = 0; i < modifier_tokens.size() - 1; i++)
+            {
+                if(modifier_tokens[i] == "Invert")
+                    isInverted = true;
+                else if(modifier_tokens[i] == "Toggle")
+                    shouldToggle = true;
+                else if(modifier_tokens[i] == "Hold")
+                {
+                    isDelayed = true;
+                    delayAmount = 1.0;
+                }
+            }
+        }
+        
+        widgetName = modifier_tokens[modifier_tokens.size() - 1];
+    }
+    
+    
 public:
     virtual ~ControlSurface() {};
     
@@ -337,12 +363,6 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             zones_[zoneName ]->Activate();
-    }
-    
-    void DeactivateWidgets(vector<Widget*> &widgets)
-    {
-        if(zones_.count("Home") > 0)
-            zones_["Home"]->ActivateWidgets(widgets);
     }
     
     virtual void Run()
@@ -807,7 +827,10 @@ public:
     {
         scrollLink_ = value;
     }
-        
+    
+    
+    
+/*
     void MapTrackAndFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         MapTrackToWidgets(surface, track);
@@ -817,7 +840,7 @@ public:
     void MapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
         //widgetContextsMappedToTracks_.clear();
-        /*
+ 
         for(auto channel : surface->GetChannels())
             for(auto widget : channel)
                 if(widgetContexts_.count(widget) > 0)
@@ -825,7 +848,7 @@ public:
                     widgetContexts_[widget]->SetComponentTrackContext(Track, DAW::GetTrackGUIDAsString(track, followMCP_));
                     widgetContextsMappedToTracks_.push_back(widgetContexts_[widget]);
                 }
-         */
+ 
     }
     
     void MapFXToWidgets(MediaTrack* track)
@@ -843,14 +866,13 @@ public:
             if(fxWidgets_.count(fxName) > 0)
             {
                 for(auto widget : fxWidgets_[fxName])
-                {/*
-                    if(widgetContexts_.count(widget) > 0)
+                {                    if(widgetContexts_.count(widget) > 0)
                     {
                         widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
                         widgetContexts_[widget]->SetComponent(fxName);
                         widgetContexts_[widget]->SetIndex(i);
                         widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
-                    } */
+                    }
                 }
                 
                 AddFXWindow(FXWindow(track, i));
@@ -862,14 +884,14 @@ public:
     
     void MapSingleFXToWidgets(MediaTrack* track, int fxIndex)
     {
-        /*
+        
         for(auto widgetContext : widgetContextsMappedToFX_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
             widgetContext->ClearAllButTrackContexts();
             widgetContext->SetComponent(Track);
         }
-         */
+        
 
         char fxName[BUFSZ];
 
@@ -878,14 +900,14 @@ public:
         if(fxWidgets_.count(fxName) > 0)
         {
             for(auto widget : fxWidgets_[fxName])
-            {/*
+            {
                 if(widgetContexts_.count(widget) > 0)
                 {
                     widgetContexts_[widget]->SetComponentTrackContext(fxName, DAW::GetTrackGUIDAsString(track, followMCP_));
                     widgetContexts_[widget]->SetComponent(fxName);
                     widgetContexts_[widget]->SetIndex(fxIndex);
                     widgetContextsMappedToFX_.push_back(widgetContexts_[widget]);
-                }*/
+                }
             }
             
             AddFXWindow(FXWindow(track, fxIndex));
@@ -902,33 +924,33 @@ public:
     
     void ToggleMapTrackToWidgets(ControlSurface* surface, MediaTrack* track)
     {
-        /*
+        
         if(widgetContextsMappedToTracks_.size() > 0)
             UnmapWidgetsFromTrack();
         else
             MapTrackToWidgets(surface, track);
-         */
+        
     }
 
     void ToggleMapFXToWidgets(ControlSurface* surface, MediaTrack* track)
     {
-        /*
+        
         if(widgetContextsMappedToFX_.size() > 0)
             UnmapWidgetsFromFX();
         else MapFXToWidgets(track);
-         */
+        
     }
     
     void ToggleMapSingleFXToWidgets(ControlSurface* surface, MediaTrack* track, int fxIndex)
     {
         if(track == nullptr)
-        {/*
+        {
             for(auto widgetContext : widgetContextsMappedToFX_)
             {
                 widgetContext->GetWidget()->SetValue(0, 0.0);
                 widgetContext->ClearAllButTrackContexts();
                 widgetContext->SetComponent(Track);
-            }*/
+            }
         }
         else
             MapSingleFXToWidgets(track, fxIndex);
@@ -941,20 +963,20 @@ public:
     }
     
     void UnmapWidgetsFromTrack()
-    {/*
+    {
         for(auto widgetContext : widgetContextsMappedToTracks_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
             widgetContext->SetComponentTrackContext(Track, "");
         }
         
-        widgetContextsMappedToTracks_.clear();*/
+        widgetContextsMappedToTracks_.clear();
     }
     
     void UnmapWidgetsFromFX()
     {
         DeleteFXWindows();
-        /*
+        
         for(auto widgetContext : widgetContextsMappedToFX_)
         {
             widgetContext->GetWidget()->SetValue(0, 0.0);
@@ -962,8 +984,14 @@ public:
             widgetContext->SetComponent(Track);
         }
         
-        widgetContextsMappedToFX_.clear();*/
+        widgetContextsMappedToFX_.clear();
     }
+    */
+    
+    
+    
+    
+    
     
     void CycleTimeDisplayModes()
     {
@@ -1186,7 +1214,7 @@ public:
         
         return nullptr;
     }
-    
+    /*
     ActionContext* GetFXActionContext(Page* page, ControlSurface* surface, Widget* widget, vector<string> params, string alias)
     {
         if(actionContexts_.count(params[0]) > 0)
@@ -1198,7 +1226,7 @@ public:
         
         return nullptr;
     }
-    
+    */
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
