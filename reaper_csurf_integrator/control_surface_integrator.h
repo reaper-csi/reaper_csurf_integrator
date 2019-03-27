@@ -509,11 +509,11 @@ public:
     virtual string GetAlias() { return ""; }
     virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestUpdate() {}
-    virtual void DoAction(Widget* widget) {}
-    virtual void DoAction(Widget* widget, double value) {}
-    virtual void DoRelativeAction(Widget* widget, double value) {}
-    virtual void DoAction(Widget* widget, MediaTrack* track) {}
-    virtual void DoAction(Widget* widget, MediaTrack* track, int fxIndex) {}
+    virtual void DoAction() {}
+    virtual void DoAction(double value) {}
+    virtual void DoRelativeAction(double value) {}
+    virtual void DoAction(MediaTrack* track) {}
+    virtual void DoAction(MediaTrack* track, int fxIndex) {}
 
     void SetWidgetValue(Widget* widget, double value)
     {

@@ -120,13 +120,13 @@ void  Widget::SetValue(string value)
 void Widget::DoAction(double value)
 {
     if(actionContext_ != nullptr)
-        actionContext_->DoAction(this, value);
+        actionContext_->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double value)
 {
     if(actionContext_ != nullptr)
-        actionContext_->DoRelativeAction(this, value);
+        actionContext_->DoRelativeAction(value);
 }
 
 void Widget::ClearCache()
