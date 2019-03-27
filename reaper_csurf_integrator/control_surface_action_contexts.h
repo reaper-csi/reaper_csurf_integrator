@@ -16,9 +16,9 @@ class GlobalContext : public ActionContext
 public:
     GlobalContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget);
+        action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -34,12 +34,12 @@ class TrackContext : public ActionContext
 public:
     TrackContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track);
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -56,26 +56,26 @@ class TrackSendContext : public TrackContext
 public:
     TrackSendContext(Widget* widget, Action* action) : TrackContext(widget, action) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
 
             if(maxOffset < 0)
-               widget->Reset();
+               widget_->Reset();
             else
             {
-                int sendsOffset = widget->GetSurface()->GetPage()->GetSendsOffset();
+                int sendsOffset = widget_->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
 
-                action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
+                action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track, sendsOffset);
             }
         }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -107,12 +107,12 @@ private:
 public:
     TrackContextWithIntParam(Widget* widget, Action* action, int param) : TrackContext(widget, action), param_(param) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, param_);
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track, param_);
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -140,12 +140,12 @@ public:
     
     virtual void SetIndex(int index) override { fxIndex_ = index; }
         
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
-            action_->RequestUpdate(this, widget, track, fxIndex_, widget->GetSurface()->GetPage()->GetFXParamIndex(track, widget, fxIndex_, fxParamName_));
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->RequestUpdate(this, widget_, track, fxIndex_, widget_->GetSurface()->GetPage()->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_));
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -182,9 +182,9 @@ public:
         }
     }
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, commandId_);
+        action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, commandId_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -203,9 +203,9 @@ private:
 public:
     GlobalContextWithIntParam(Widget* widget, Action* action, int param) : ActionContext(widget, action), param_(param) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, param_);
+        action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, param_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -224,9 +224,9 @@ private:
 public:
     GlobalContextWithStringParam(Widget* widget, Action* action, string param) : ActionContext(widget, action), param_(param) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, param_);
+        action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, param_);
     }
     
     virtual void DoAction(Widget* widget, double value) override
@@ -245,17 +245,17 @@ private:
 public:
     TrackTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
         {
-            if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
-                touchAction_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
+            if(widget_->GetSurface()->GetPage()->GetTouchState(track, 0))
+                touchAction_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track);
             else
-                action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track);
+                action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track);
         }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     virtual void DoAction(Widget* widget, double value) override
     {
@@ -279,29 +279,29 @@ private:
 public:
     TrackSendTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
     
-    virtual void RequestUpdate(Widget* widget) override
+    virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
             if(maxOffset < 0)
-                widget->Reset();
+                widget_->Reset();
             else
             {
-                int sendsOffset = widget->GetSurface()->GetPage()->GetSendsOffset();
+                int sendsOffset = widget_->GetSurface()->GetPage()->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                if(widget->GetSurface()->GetPage()->GetTouchState(track, 0))
-                    touchAction_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
+                if(widget_->GetSurface()->GetPage()->GetTouchState(track, 0))
+                    touchAction_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track, sendsOffset);
                 else
-                    action_->RequestUpdate(widget->GetSurface()->GetPage(), this, widget, track, sendsOffset);
+                    action_->RequestUpdate(widget_->GetSurface()->GetPage(), this, widget_, track, sendsOffset);
             }
        }
         else
-            widget->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(Widget* widget, double value) override
