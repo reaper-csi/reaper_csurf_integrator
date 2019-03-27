@@ -96,7 +96,7 @@ MediaTrack* Widget::GetTrack()
 void Widget::RequestUpdate()
 {
     if(actionContext_ != nullptr)
-        actionContext_->RequestUpdate(this);
+        actionContext_->RequestUpdate();
 }
 
 void  Widget::SetValue(double value)
