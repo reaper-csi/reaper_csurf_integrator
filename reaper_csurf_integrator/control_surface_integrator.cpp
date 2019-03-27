@@ -44,6 +44,34 @@ static vector<string> GetTokens(string line)
     return tokens;
 }
 
+static void GetWidgetNameAndModifiers(string line, string &widgetName, bool &isInverted, bool &shouldToggle, bool &isDelayed,  double &delayAmount)
+{
+    istringstream modified_role(line);
+    vector<string> modifier_tokens;
+    string modifier_token;
+    
+    while (getline(modified_role, modifier_token, '+'))
+        modifier_tokens.push_back(modifier_token);
+    
+    if(modifier_tokens.size() > 1)
+    {
+        for(int i = 0; i < modifier_tokens.size() - 1; i++)
+        {
+            if(modifier_tokens[i] == "Invert")
+                isInverted = true;
+            else if(modifier_tokens[i] == "Toggle")
+                shouldToggle = true;
+            else if(modifier_tokens[i] == "Hold")
+            {
+                isDelayed = true;
+                delayAmount = 1.0;
+            }
+        }
+    }
+    
+    widgetName = modifier_tokens[modifier_tokens.size() - 1];
+}
+
 static int strToHex(string valueStr)
 {
     return strtol(valueStr.c_str(), nullptr, 16);
@@ -171,15 +199,9 @@ void Zone::Activate()
         zone->Activate();
 }
 
-void Zone::ActivateWidgets(vector <Widget*> &widgets)
+TrackNavigator::TrackNavigator(Page* page) : Navigator(page)
 {
-    for(auto widget : widgets)
-        for(auto actionContext : actionContexts_)
-            if(actionContext->GetWidget() == widget)
-                actionContext->GetWidget()->SetActionContext(actionContext);
-    
-    for(auto zone : includedZones_)
-        zone->ActivateWidgets(widgets);
+    page->AddTrackNavigator(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +213,6 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "TrackOnSelection"));
-    widgets_.push_back(new Widget(this, "TrackOnMapTrackAndFXToWidgets"));
     widgets_.push_back(new Widget(this, "TrackOnFocusedFX"));
 
 }
@@ -626,8 +647,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
 
     bool hasNavigator = false;
     string navigatorType = "";
-    
-    Navigator* navigator = nullptr;
+    vector<Navigator*> localNavigators;
     
     for (string line; getline(zoneFile, line) ; )
     {
@@ -638,28 +658,28 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
 
         vector<string> tokens(GetTokens(line));
         
+        if(tokens.size() > 0)
+        {
+            if(tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
+                return;
+        }
+        
         if(tokens.size() == 2 && tokens[0] == "Navigator")
         {
             hasNavigator = true;
             navigatorType = tokens[1];
+            
+            for(int i = 0; i < localZones.size(); i++)
+            {
+                if(navigatorType == "TrackNavigator")
+                    localNavigators.push_back(new TrackNavigator(GetPage()));
+            }
+            
             continue;
         }
         
         for(int i = 0; i < localZones.size(); i++)
         {
-            if(hasNavigator)
-            {
-                if(navigatorType == "TrackNavigator")
-                {
-                    navigator = new TrackNavigator();
-                    GetPage()->AddTrackNavigator((TrackNavigator*)navigator);
-                }
-            }
-            else
-            {
-                navigator = nullptr;
-            }
-
             // Pre-process for "Channel|1-8" syntax
             string localZoneLine(line);
             localZoneLine = regex_replace(localZoneLine, regex("\\|"), localZoneIds[i]);
@@ -668,10 +688,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
         
             if(tokens.size() > 0)
             {
-                if(tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
-                    return;
-                
-                else if(tokens[0] == "IncludedZones")
+                if(tokens[0] == "IncludedZones")
                 {
                     ProcessIncludedZones(lineNumber, zoneFile, filePath, localZones[i]);
                     continue;
@@ -698,8 +715,8 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
-                    if(navigator != nullptr)
-                        widget->AddNavigator(navigator);
+                    if(hasNavigator)
+                        widget->AddNavigator(localNavigators[i]);
                     
                     if(ActionContext* context = TheManager->GetActionContext(widget, params))
                     {
@@ -858,47 +875,6 @@ void Page::AdjustTrackBank(int stride)
            break;
     }
     
-    
-    
-    /*
-    
-    // Jump over any pinned channels and invisible tracks
-    //vector<string> pinnedChannels;
-    //for(auto* channel : bankableChannels_)
-        //if(channel->GetIsPinned())
-            //pinnedChannels.push_back(channel->GetTrackGUID());
-    
-    bool skipThisChannel = false;
-    
-    while(trackOffset_ >= 0 && trackOffset_ < DAW::CSurf_NumTracks(followMCP_))
-    {
-        string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
-        
-        for(auto pinnedChannel : pinnedChannels)
-            if(pinnedChannel == trackGUID)
-            {
-                skipThisChannel = true;
-                previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-                break;
-            }
-        
-        if( ! IsTrackVisible(DAW::CSurf_TrackFromID(trackOffset_, followMCP_)))
-        {
-            skipThisChannel = true;
-            previousTrackOffset < trackOffset_ ? trackOffset_++ : trackOffset_--;
-        }
-        
-        if(skipThisChannel)
-        {
-            skipThisChannel = false;
-            continue;
-        }
-        else
-            break;
-    }
-    
-    */
-    
     if(previousTrackOffset != trackOffset_)
     {
         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
@@ -1022,15 +998,6 @@ void Manager::InitActionDictionary()
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
     
-    
-    /*
-    actions_["MapTrackToWidgets"] = new MapTrackToWidgets();
-    actions_["MapFXToWidgets"] = new MapFXToWidgets();
-    actions_["MapTrackAndFXToWidgets"] = new MapTrackAndFXToWidgets();
-    actions_["MapTrackAndFXToWidgetsForTrack"] = new MapTrackAndFXToWidgetsForTrack();
-    actions_["MapSingleFXToWidgetsForTrack"] = new MapSingleFXToWidgetsForTrack();
-    actions_["GlobalMapTrackAndFXToWidgetsForTrack"] = new GlobalMapTrackAndFXToWidgetsForTrack();
-*/
      }
 
 void Manager::InitActionContextDictionary()
@@ -1086,15 +1053,6 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendBank"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["PinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
     actionContexts_["UnpinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    
-    
-    //actionContexts_["TrackCycle"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackCycleContext(page, surface, actions_[params[0]], params); };
-    //actionContexts_["MapTrackToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    //actionContexts_["MapFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    //actionContexts_["MapTrackAndFXToWidgets"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    //actionContexts_["MapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    //actionContexts_["MapSingleFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new PageSurfaceContext(page, surface, actions_[params[0]]); };
-    //actionContexts_["GlobalMapTrackAndFXToWidgetsForTrack"] = [this](Page* page, ControlSurface* surface, vector<string> params) { return new TrackContext(page, surface, actions_[params[0]]); };
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
