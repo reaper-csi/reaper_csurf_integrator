@@ -258,20 +258,8 @@ protected:
     map<string, Zone*> zones_;
     vector<Zone*> activeZones_;
     
-    // It's all about parsing...
-    map<int, TrackNavigator*> trackNavigators_;
-    
-    TrackNavigator* TrackNavigatorForChannel(int channel);
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
-    void ProcessFile(string filePath);
-    virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) {}
-    void ExpandIncludedZone(vector<string> tokens, vector<string> &localZones);
-    void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, Zone* zone);
-    void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &localZones, vector<string> &localZoneIds);
-    void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
-    void ProcessActionZone(int &lineNumber, ifstream &zoneFile, vector<string> tokens, string filepath);
-    // Parsing complete
     
     ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
 
@@ -281,23 +269,6 @@ protected:
             widget->RequestUpdate();
     }
     
-    bool AddZone(Zone* zone)
-    {
-        if(zones_.count(zone->GetName()) > 0)
-        {
-            char buffer[5000];
-            sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                    zone->GetName().c_str(), zones_[zone->GetName()]->GetFilepath().c_str(), zone->GetName().c_str(), zone->GetFilepath().c_str());
-            DAW::ShowConsoleMsg(buffer);
-            return false;
-        }
-        else
-        {
-            zones_[zone->GetName()] = zone;
-            return true;
-        }
-    }
-
 public:
     virtual ~ControlSurface() {};
     
@@ -320,6 +291,23 @@ public:
         widgets_.push_back(widget);
     }
     
+    bool AddZone(Zone* zone)
+    {
+        if(zones_.count(zone->GetName()) > 0)
+        {
+            char buffer[5000];
+            sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+                    zone->GetName().c_str(), zones_[zone->GetName()]->GetFilepath().c_str(), zone->GetName().c_str(), zone->GetFilepath().c_str());
+            DAW::ShowConsoleMsg(buffer);
+            return false;
+        }
+        else
+        {
+            zones_[zone->GetName()] = zone;
+            return true;
+        }
+    }
+
     void ActivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
@@ -374,9 +362,6 @@ private:
         else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
             controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
     }
-    
-protected:
-    virtual void ProcessWidget(int &lineNumber, ifstream &widgetFile, vector<string> tokens) override;
     
 public:
     Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
