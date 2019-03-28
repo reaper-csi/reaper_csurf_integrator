@@ -115,10 +115,10 @@ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(navigator_ == nullptr)
-        return nullptr;
+    if(actionContext_ != nullptr && actionContext_->GetNavigator() != nullptr)
+        return DAW::GetTrackFromGUID(actionContext_->GetNavigator()->GetTrackGUID(), surface_->GetPage()->GetFollowMCP());
     else
-        return DAW::GetTrackFromGUID(navigator_->GetTrackGUID(), surface_->GetPage()->GetFollowMCP());
+        return nullptr;
 }
 
 void Widget::RequestUpdate()
@@ -722,11 +722,11 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
-                    if(hasNavigator)
-                        widget->AddNavigator(localNavigators[i]);
-                    
                     if(ActionContext* context = TheManager->GetActionContext(widget, params))
                     {
+                        if(hasNavigator)
+                            context->SetNavigator(localNavigators[i]);
+
                         if(isInverted)
                             context->SetIsInverted();
                         
