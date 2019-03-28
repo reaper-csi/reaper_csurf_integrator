@@ -217,11 +217,7 @@ public:
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Page* page_ = nullptr;
-    
 public:
-    Navigator(Page* page) : page_(page) {}
     virtual ~Navigator() {}
 
     virtual bool GetIsPinned() { return false; }
@@ -240,7 +236,6 @@ private:
     string trackGUID_ = "";
     
 public:
-    TrackNavigator(Page* page);
     virtual ~TrackNavigator() {}
     
     virtual bool GetIsPinned() override { return isPinned_; }
@@ -270,6 +265,9 @@ protected:
     vector<Zone*> activeZones_;
     
     // It's all about parsing...
+    map<int, TrackNavigator*> trackNavigators_;
+    
+    TrackNavigator* TrackNavigatorForChannel(int channel);
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     void ProcessFile(string filePath);

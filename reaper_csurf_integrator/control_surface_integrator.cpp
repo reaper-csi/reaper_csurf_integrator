@@ -199,11 +199,6 @@ void Zone::Activate()
         zone->Activate();
 }
 
-TrackNavigator::TrackNavigator(Page* page) : Navigator(page)
-{
-    page->AddTrackNavigator(this);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -633,6 +628,18 @@ void ControlSurface::ExpandZone(vector<string> tokens, string filePath, vector<Z
     }
 }
 
+TrackNavigator* ControlSurface::TrackNavigatorForChannel(int channel)
+{
+    if(trackNavigators_.count(channel) < 1)
+    {
+        trackNavigators_[channel] = new TrackNavigator();
+        page_->AddTrackNavigator(trackNavigators_[channel]);
+    }
+    
+    return trackNavigators_[channel];
+}
+
+
 void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath)
 {
     const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
@@ -672,7 +679,7 @@ void ControlSurface::ProcessZone(int &lineNumber, ifstream &zoneFile, vector<str
             for(int i = 0; i < localZones.size(); i++)
             {
                 if(navigatorType == "TrackNavigator")
-                    localNavigators.push_back(new TrackNavigator(GetPage()));
+                    localNavigators.push_back(TrackNavigatorForChannel(i));
             }
             
             continue;
