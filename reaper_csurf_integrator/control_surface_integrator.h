@@ -68,7 +68,6 @@ class Widget
 private:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
-    Navigator* navigator_ = nullptr;
 
     ActionContext* actionContext_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
@@ -100,11 +99,6 @@ public:
     void SetValue(string value);
     void ClearCache();
 
-    void AddNavigator(Navigator* navigator)
-    {
-        navigator_ = navigator;
-    }
-    
     void Reset()
     {
         SetValue(0.0);
@@ -471,6 +465,7 @@ class ActionContext
 protected:
     Widget* widget_ = nullptr;
     Action * action_ = nullptr;
+    Navigator* navigator_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
@@ -482,11 +477,13 @@ protected:
 public:
     virtual ~ActionContext() {}
     
+    void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
 
     Widget* GetWidget() { return widget_; }
+    Navigator* GetNavigator() { return navigator_; }
     
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
