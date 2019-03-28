@@ -48,11 +48,6 @@ class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    static void ClearGUIDTracksCache()
-    {
-        GUIDTracks_.clear();
-    }
- 
     static void SwapBufsPrecise(midi_Input* midiInput)
     {
     #ifndef timeGetTime
@@ -232,6 +227,11 @@ public:
     static string GetTrackGUIDAsString(MediaTrack* track, bool mcpView)
     {
         return GetTrackGUIDAsString(CSurf_TrackToID(track, mcpView), mcpView);
+    }
+    
+    static void ClearGUIDTracksCache()
+    {
+        GUIDTracks_.clear();
     }
 
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
