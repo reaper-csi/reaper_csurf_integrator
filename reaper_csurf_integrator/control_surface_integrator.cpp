@@ -233,9 +233,9 @@ void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, 
     }
 }
 
-map<int, TrackNavigator*> trackNavigators;
+map<string, TrackNavigator*> trackNavigators;
 
-static TrackNavigator* TrackNavigatorForChannel(int channel, Page* page)
+static TrackNavigator* TrackNavigatorForChannel(string channel, Page* page)
 {
         if(trackNavigators.count(channel) < 1)
         {
@@ -372,7 +372,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             for(int i = 0; i < expandedZones.size(); i++)
             {
                 if(navigatorType == "TrackNavigator")
-                    expandedNavigators.push_back(TrackNavigatorForChannel(i, surface->GetPage()));
+                    expandedNavigators.push_back(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface->GetPage()));
             }
             
             continue;
@@ -1173,7 +1173,7 @@ void Page::AdjustTrackBank(int stride)
     if(trackOffset_ <  1)
         trackOffset_ =  1;
     
-    int top = DAW::CSurf_NumTracks(followMCP_) - trackNavigators_.size();
+    int top = DAW::CSurf_NumTracks(followMCP_) - trackNavigators_.size() + 1;
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
@@ -1215,7 +1215,7 @@ void Page::RefreshLayout()
 
     int layoutChannelIndex = 0;
     
-    for(int i = trackOffset_; i < DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
+    for(int i = trackOffset_; i <= DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
     {
         if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
             pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
