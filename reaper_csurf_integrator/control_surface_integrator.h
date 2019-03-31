@@ -273,7 +273,8 @@ public:
     virtual ~ControlSurface() {};
     
     Page* GetPage() { return page_; }
-    
+    string GetName() { return name_; }
+
     void Reset()
     {
         for(auto widget : widgets_)
