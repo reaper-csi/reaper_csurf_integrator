@@ -174,11 +174,10 @@ public:
         
         if(commandId_ == 0) // unsuccessful conversion to number
         {
+            commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
         
-        commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
-        
-        if(commandId_ == 0) // can't find it
-            commandId_ = 65535; // no-op
+            if(commandId_ == 0) // can't find it
+                commandId_ = 65535; // no-op
         }
     }
     
