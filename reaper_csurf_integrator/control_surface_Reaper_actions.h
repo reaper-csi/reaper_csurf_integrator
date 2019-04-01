@@ -523,9 +523,9 @@ public:
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 1; i <= DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
+        for(int i = 1; i <= page->GetNumTracks(); i++)
         {
-           MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+           MediaTrack* currentTrack = page->GetTrackFromId(i);
             
             if(currentTrack == track)
                 trackIndex = i;
@@ -545,7 +545,7 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
+            MediaTrack* currentTrack = page->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
             page->OnTrackSelectionBySurface(currentTrack);

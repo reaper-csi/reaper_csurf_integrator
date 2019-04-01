@@ -208,8 +208,8 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 1; i <= DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
-                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
+            for(int i = 1; i <= page->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(page->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
                     break;
@@ -220,10 +220,10 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > DAW::CSurf_NumTracks(page->GetFollowMCP()))
-                trackIndex = DAW::CSurf_NumTracks(page->GetFollowMCP());
+            if(trackIndex > page->GetNumTracks())
+                trackIndex = page->GetNumTracks();
             
-            DAW::SetOnlyTrackSelected(DAW::CSurf_TrackFromID(trackIndex, page->GetFollowMCP()));
+            DAW::SetOnlyTrackSelected(page->GetTrackFromId(trackIndex));
         }
     }
 };

@@ -318,8 +318,10 @@ public:
     virtual void Run()
     {
         RequestUpdate();
+        
+        // GAW TBD -- Determine the state of modifiers and activate appropriate Zones
     }
-    
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -509,12 +511,12 @@ struct FXWindow
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page
+class TrackNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_ = "";
-    int number_ = 0;
+    Page* page_ = nullptr;
+    string pageName_ = "";
     bool followMCP_ = true;
     bool synchPages_ = false;
     bool scrollLink_ = true;
@@ -524,14 +526,249 @@ private:
     int trackColourBlueValue_ = 0;
     map<string, int> trackColours_;
     int trackOffset_ = 1;
-    int sendsOffset_ = 0;
     MediaTrack **previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
-    vector<ControlSurface*> realSurfaces_;
     vector<TrackNavigator*> trackNavigators_;
-    vector<MediaTrack*> touchedTracks_;
-    //map <string, vector<Widget*>> fxWidgets_;
     bool currentlyRefreshingLayout_ = false;
+    
+    int GetNumPinnedTracks()
+    {
+        int numPinnedTracks = 0;
+        
+        for(auto* navigator : trackNavigators_)
+            if(navigator->GetIsPinned())
+                numPinnedTracks++;
+        
+        return numPinnedTracks;
+    }
+    
+    bool IsTrackVisible(MediaTrack* track)
+    {
+        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+            return true;
+        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+            return true;
+        else
+            return false;
+    }
+    
+    void SetPinnedTracks()
+    {
+        char buffer[BUFSZ];
+        
+        for(int i = 0; i < trackNavigators_.size(); i++)
+        {
+            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+            {
+                trackNavigators_[i]->SetTrackGUID(buffer);
+                trackNavigators_[i]->SetIsPinned(true);
+            }
+        }
+    }
+    
+    void GetPinnedChannelGUIDs(vector<string> & pinnedChannels)
+    {
+        for(auto* navigator : trackNavigators_)
+            if(navigator->GetIsPinned())
+                pinnedChannels.push_back(navigator->GetTrackGUID());
+    }
+
+public:
+    
+    TrackNavigationManager(Page* page, string pageName, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), pageName_(pageName), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    
+    bool GetSynchPages() { return synchPages_; }
+    bool GetScrollLink() { return scrollLink_; }
+    int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+    MediaTrack* GetTrackFromId(int trackNumber) { return DAW::CSurf_TrackFromID(trackNumber, followMCP_); }
+    MediaTrack* GetTrackFromGUID(string GUID) { return DAW::GetTrackFromGUID(GUID, followMCP_); }
+
+    void AdjustTrackBank(int stride);
+    void RefreshLayout();
+    void OnTrackSelection(MediaTrack* track);
+    void OnTrackSelectionBySurface(MediaTrack* track);
+
+    void AddTrackNavigator(TrackNavigator* trackNavigator)
+    {
+        trackNavigators_.push_back(trackNavigator);
+    }
+
+    void Init()
+    {
+        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
+            trackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
+        
+        SetPinnedTracks();
+        
+        char buffer[BUFSZ];
+        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "BankOffset").c_str(), buffer, sizeof(buffer)))
+            trackOffset_ = atol(buffer);
+    }
+    
+    void EnterPage()
+    {
+        if(colourTracks_)
+        {
+            // capture track colors
+            for(auto* navigator : trackNavigators_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+                    trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
+        }
+    }
+    
+    void LeavePage()
+    {
+        if(colourTracks_)
+        {
+            DAW::PreventUIRefresh(1);
+            // reset track colors
+            for(auto* navigator : trackNavigators_)
+                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+                    if(trackColours_.count(navigator->GetTrackGUID()) > 0)
+                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
+            DAW::PreventUIRefresh(-1);
+        }
+    }
+    
+    void SetScrollLink(bool value)
+    {
+        scrollLink_ = value;
+    }
+    
+    void PinSelectedTracks()
+    {
+        TrackNavigator* navigator = nullptr;
+        
+        for(int i = 0; i < trackNavigators_.size(); i++)
+        {
+            navigator = trackNavigators_[i];
+            
+            MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_);
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+            {
+                navigator->SetIsPinned(true);
+                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), navigator->GetTrackGUID().c_str());
+                DAW::MarkProjectDirty(nullptr);
+            }
+        }
+    }
+    
+    void UnpinSelectedTracks()
+    {
+        TrackNavigator* navigator = nullptr;
+        char buffer[BUFSZ];
+        
+        for(int i = 0; i < trackNavigators_.size(); i++)
+        {
+            navigator = trackNavigators_[i];
+            
+            MediaTrack* track =  DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_);
+            if(track == nullptr)
+                continue;
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+            {
+                navigator->SetIsPinned(false);
+                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+                {
+                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), "");
+                    DAW::MarkProjectDirty(nullptr);
+                }
+            }
+        }
+        
+        RefreshLayout();
+    }
+    
+    bool TrackListChanged()
+    {
+        if(currentlyRefreshingLayout_)
+            return false;
+        
+        int currentNumVisibleTracks = 0;
+        
+        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+            if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
+                currentNumVisibleTracks++;
+        
+        if(currentNumVisibleTracks != previousNumVisibleTracks_)
+        {
+            if(previousTrackList_ != nullptr)
+                delete[] previousTrackList_;
+            
+            previousNumVisibleTracks_ = currentNumVisibleTracks;
+            previousTrackList_ = new MediaTrack* [currentNumVisibleTracks];
+            
+            for(int i = 0; i < currentNumVisibleTracks; i++)
+                previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            DAW::ClearGUIDTracksCache();
+            
+            TrackNavigator* navigator = nullptr;
+            char buffer[BUFSZ];
+            for(int i = 0; i < trackNavigators_.size(); i++)
+            {
+                navigator = trackNavigators_[i];
+                
+                if(navigator->GetIsPinned())
+                {
+                    if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
+                    {
+                        navigator->SetIsPinned(false);
+                        navigator->SetTrackGUID("");
+                        
+                        // GAW remove this from pinned tracks list in project
+                        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
+                        {
+                            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (pageName_ + "Channel" + to_string(i + 1)).c_str(), "");
+                            DAW::MarkProjectDirty(nullptr);
+                        }
+                    }
+                }
+            }
+            
+            return true;
+        }
+        else if(currentNumVisibleTracks == previousNumVisibleTracks_)
+        {
+            MediaTrack **currentTrackList = new MediaTrack* [currentNumVisibleTracks];
+            for(int i = 0; i < currentNumVisibleTracks; i++)
+                currentTrackList[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
+            {
+                if(previousTrackList_ != nullptr)
+                    delete[] previousTrackList_;
+                previousTrackList_ = currentTrackList;
+                
+                DAW::ClearGUIDTracksCache();
+                return true;
+            }
+            else
+            {
+                delete[]currentTrackList;
+                return false;
+            }
+        }
+        
+        return false;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string name_ = "";
+    TrackNavigationManager* trackNavigationManager_ = nullptr;
+ 
+    int sendsOffset_ = 0;
+    vector<ControlSurface*> realSurfaces_;
+    vector<MediaTrack*> touchedTracks_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -576,27 +813,6 @@ private:
         isAlt_ = value;
     }
     
-    void SetPinnedTracks()
-    {
-        char buffer[BUFSZ];
-        
-        for(int i = 0; i < trackNavigators_.size(); i++)
-        {
-            if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
-            {
-                trackNavigators_[i]->SetTrackGUID(buffer);
-                trackNavigators_[i]->SetIsPinned(true);
-            }
-        }
-    }
-
-    void GetPinnedChannelGUIDs(vector<string> & pinnedChannels)
-    {
-        for(auto* navigator : trackNavigators_)
-            if(navigator->GetIsPinned())
-                pinnedChannels.push_back(navigator->GetTrackGUID());
-    }
-
     void AddFXWindow(FXWindow fxWindow)
     {
         openFXWindows_.push_back(fxWindow);
@@ -621,73 +837,24 @@ private:
         openFXWindows_.clear();
     }
     
-    int GetNumPinnedTracks()
-    {
-        int numPinnedTracks = 0;
-        
-        for(auto* navigator : trackNavigators_)
-            if(navigator->GetIsPinned())
-                numPinnedTracks++;
-        
-        return numPinnedTracks;
-    }
-    
-    bool IsTrackVisible(MediaTrack* track)
-    {
-        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-            return true;
-        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-            return true;
-        else
-            return false;
-    }
-
 public:
-    Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), number_(number), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
+    {
+        trackNavigationManager_ = new TrackNavigationManager(this, "Page" + to_string(number), followMCP, synchPages, colourTracks, red, green, blue);
+    }
     
     string GetName() { return name_; }
-    int GetNumber() { return number_; }
-    string GetNumberString() { return "Page" + to_string(number_); }
     int GetSendsOffset() { return sendsOffset_; }
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     bool GetShowFXWindows() { return showFXWindows_; }
-    bool GetSynchPages() { return synchPages_; }
-    bool GetScrollLink() { return scrollLink_; }
-    void AdjustTrackBank(int stride);
-    void RefreshLayout();
-    void TrackFXListChanged(MediaTrack* track);
     void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
+    void TrackFXListChanged(MediaTrack* track);
     void OnFXFocus(MediaTrack* track, int fxIndex);
-    void OnTrackSelection(MediaTrack* track);
-    void OnTrackSelectionBySurface(MediaTrack* track);
-    
-    void LeavePage()
-    {
-        if(colourTracks_)
-        {
-            DAW::PreventUIRefresh(1);
-            // reset track colors
-            for(auto* navigator : trackNavigators_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-                    if(trackColours_.count(navigator->GetTrackGUID()) > 0)
-                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
-            DAW::PreventUIRefresh(-1);
-        }
-    }
-    
-    void EnterPage()
-    {
-        if(colourTracks_)
-        {
-            // capture track colors
-            for(auto* navigator : trackNavigators_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-                    trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
-        }
-        
-        for(auto surface : realSurfaces_)
-            surface->ClearCache();
-    }
+    int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
+    MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
+    MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
+    bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
+    bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
 
     void Run()
     {
@@ -715,9 +882,9 @@ public:
     {
         int maxSends = 0;
         
-        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        for(int i = 1; i <= GetNumTracks(); i++)
         {
-            MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
+            MediaTrack* track = GetTrackFromId(i);
             
             int numSends = DAW::GetTrackNumSends(track, 0);
             
@@ -731,7 +898,7 @@ public:
     void AdjustTrackSendBank(int stride)
     {
         int maxOffset = GetMaxSends() - 1;
-
+        
         sendsOffset_ += stride;
         
         if(sendsOffset_ < 0)
@@ -743,11 +910,6 @@ public:
     void AddSurface(ControlSurface* surface)
     {
         realSurfaces_.push_back(surface);
-    }
-    
-    void AddTrackNavigator(TrackNavigator* trackNavigator)
-    {
-        trackNavigators_.push_back(trackNavigator);
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
@@ -767,16 +929,6 @@ public:
             touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
     }
     
-    bool GetFollowMCP()
-    {
-        return followMCP_;
-    }
-    
-    void SetScrollLink(bool value)
-    {
-        scrollLink_ = value;
-    }
-        
     void CycleTimeDisplayModes()
     {
         int *tmodeptr = &__g_projectconfig_timemode2;
@@ -799,139 +951,77 @@ public:
         }
     }
     
+    // GAW -- start TrackNavigationManager facade
+    void AddTrackNavigator(TrackNavigator* trackNavigator)
+    {
+        trackNavigationManager_->AddTrackNavigator(trackNavigator);
+    }
+    
+    void AdjustTrackBank(int stride)
+    {
+        trackNavigationManager_->AdjustTrackBank(stride);
+    }
+    
+    void RefreshLayout()
+    {
+        trackNavigationManager_->RefreshLayout();
+    }
+
+    void OnTrackSelection(MediaTrack* track)
+    {
+        trackNavigationManager_->OnTrackSelection(track);
+        /*
+         for(auto surface : realSurfaces_)
+         for(auto widget : surface->GetAllWidgets())
+         if(widget->GetName() == TrackOnSelection)
+         if(widgetContexts_.count(widget) > 0)
+         widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface);*/
+    }
+    
+    void OnTrackSelectionBySurface(MediaTrack* track)
+    {
+        trackNavigationManager_->OnTrackSelectionBySurface(track);
+    }
+
+    
     void Init()
     {
-        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
-            trackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
-
-        SetPinnedTracks();
+        trackNavigationManager_->Init();
+    }
+    
+    void EnterPage()
+    {
+        trackNavigationManager_->EnterPage();
         
-        char buffer[BUFSZ];
-        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "BankOffset").c_str(), buffer, sizeof(buffer)))
-            trackOffset_ = atol(buffer);
+        for(auto surface : realSurfaces_)
+            surface->ClearCache();
+    }
+    
+    void LeavePage()
+    {
+        trackNavigationManager_->LeavePage();
+    }
+    
+    void SetScrollLink(bool value)
+    {
+        trackNavigationManager_->SetScrollLink(value);
     }
     
     void PinSelectedTracks()
     {
-        TrackNavigator* navigator = nullptr;
-        
-        for(int i = 0; i < trackNavigators_.size(); i++)
-        {
-            navigator = trackNavigators_[i];
-            
-            MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_);
-            if(track == nullptr)
-                continue;
-            
-            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-            {
-                navigator->SetIsPinned(true);
-                DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), navigator->GetTrackGUID().c_str());
-                DAW::MarkProjectDirty(nullptr);
-            }
-        }
+        trackNavigationManager_->PinSelectedTracks();
     }
     
     void UnpinSelectedTracks()
     {
-        TrackNavigator* navigator = nullptr;
-        char buffer[BUFSZ];
-        
-        for(int i = 0; i < trackNavigators_.size(); i++)
-        {
-            navigator = trackNavigators_[i];
-            
-            MediaTrack* track =  DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_);
-            if(track == nullptr)
-                continue;
-            
-            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
-            {
-                navigator->SetIsPinned(false);
-                if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
-                {
-                    DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), "");
-                    DAW::MarkProjectDirty(nullptr);
-                }
-            }
-        }
-        
-        RefreshLayout();
+        trackNavigationManager_->UnpinSelectedTracks();
     }
     
     bool TrackListChanged()
     {
-        if(currentlyRefreshingLayout_)
-            return false;
-        
-        int currentNumVisibleTracks = 0;
-        
-        for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-            if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
-                currentNumVisibleTracks++;
-
-        if(currentNumVisibleTracks != previousNumVisibleTracks_)
-        {
-            if(previousTrackList_ != nullptr)
-                delete[] previousTrackList_;
-
-            previousNumVisibleTracks_ = currentNumVisibleTracks;
-            previousTrackList_ = new MediaTrack* [currentNumVisibleTracks];
-            
-            for(int i = 0; i < currentNumVisibleTracks; i++)
-                previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
-            
-            DAW::ClearGUIDTracksCache();
-            
-            TrackNavigator* navigator = nullptr;
-            char buffer[BUFSZ];
-            for(int i = 0; i < trackNavigators_.size(); i++)
-            {
-                navigator = trackNavigators_[i];
-
-                if(navigator->GetIsPinned())
-                {
-                    if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
-                    {
-                        navigator->SetIsPinned(false);
-                        navigator->SetTrackGUID("");
-
-                        // GAW remove this from pinned tracks list in project
-                        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
-                        {
-                            DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (GetNumberString() + "Channel" + to_string(i + 1)).c_str(), "");
-                            DAW::MarkProjectDirty(nullptr);
-                        }
-                    }
-                }
-            }
-            
-            return true;
-        }
-        else if(currentNumVisibleTracks == previousNumVisibleTracks_)
-        {
-            MediaTrack **currentTrackList = new MediaTrack* [currentNumVisibleTracks];
-            for(int i = 0; i < currentNumVisibleTracks; i++)
-                currentTrackList[i] = DAW::CSurf_TrackFromID(i, followMCP_);
-
-            if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
-            {
-                if(previousTrackList_ != nullptr)
-                    delete[] previousTrackList_;
-                previousTrackList_ = currentTrackList;
-                
-                DAW::ClearGUIDTracksCache();
-                return true;
-            }
-            else
-            {
-                delete[]currentTrackList;
-                return false;
-            }
-        }
-
-        return false;
+        return trackNavigationManager_->TrackListChanged();
     }
+    // GAW -- end TrackNavigationManager facade
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
