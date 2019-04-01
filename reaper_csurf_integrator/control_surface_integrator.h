@@ -185,14 +185,14 @@ private:
 protected:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
-    string filePath_ = "";
+    string sourceFilePath_ = "";
     
 public:
-    Zone(ControlSurface* surface, string name, string filePath) : surface_(surface), name_(name), filePath_(filePath) {}
+    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
     string GetName() { return name_ ;}
-    string GetFilepath() { return filePath_; }
+    string GetSourceFilePath() { return sourceFilePath_; }
     
     virtual void AddActionContext(ActionContext* context)
     {
@@ -298,7 +298,7 @@ public:
         {
             char buffer[5000];
             sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                    zone->GetName().c_str(), zones_[zone->GetName()]->GetFilepath().c_str(), zone->GetName().c_str(), zone->GetFilepath().c_str());
+                    zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
             DAW::ShowConsoleMsg(buffer);
             return false;
         }
