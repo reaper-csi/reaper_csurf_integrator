@@ -759,25 +759,23 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page
+class ModifierActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_ = "";
-    TrackNavigationManager* trackNavigationManager_ = nullptr;
- 
-    int sendsOffset_ = 0;
-    vector<ControlSurface*> realSurfaces_;
-    vector<MediaTrack*> touchedTracks_;
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
-    
     bool isShift_ = false;
     bool isOption_ = false;
     bool isControl_ = false;
     bool isAlt_ = false;
     
-    string GetCurrentModifiers()
+    vector<Zone*> shiftZones_;
+    vector<Zone*> optionZones_;
+    vector<Zone*> controlZones_;
+    vector<Zone*> altZones_;
+
+    string currentModifiers_ = "";
+
+    string GetModifiers()
     {
         string modifiers = "";
         
@@ -792,6 +790,86 @@ private:
         
         return modifiers;
     }
+    
+    void ActivateZones(vector<Zone*> &zones)
+    {
+        for(auto zone : zones)
+            zone->Activate();
+    }
+
+public:
+    void SetShift(bool value)
+    {
+        isShift_ = value;
+    }
+    
+    void SetOption(bool value)
+    {
+        isOption_ = value;
+    }
+    
+    void SetControl(bool value)
+    {
+        isControl_ = value;
+    }
+    
+    void SetAlt(bool value)
+    {
+        isAlt_ = value;
+    }
+    
+    void AddShiftZone(Zone* zone)
+    {
+        shiftZones_.push_back(zone);
+    }
+    
+    void AddOptionZone(Zone* zone)
+    {
+        optionZones_.push_back(zone);
+    }
+    
+    void AddControlZone(Zone* zone)
+    {
+        controlZones_.push_back(zone);
+    }
+    
+    void AddAltZone(Zone* zone)
+    {
+        altZones_.push_back(zone);
+    }
+    
+    void Run()
+    {
+        if(currentModifiers_ != GetModifiers())
+        {
+            currentModifiers_ = GetModifiers();
+            
+            if(currentModifiers_ == "Shift")
+                ActivateZones(shiftZones_);
+            else if(currentModifiers_ == "Option")
+                ActivateZones(optionZones_);
+            else if(currentModifiers_ == "Control")
+                ActivateZones(controlZones_);
+            else if(currentModifiers_ == "Alt")
+                ActivateZones(altZones_);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string name_ = "";
+    TrackNavigationManager* trackNavigationManager_ = nullptr;
+    ModifierActivationManager* modifierActivationManager_ = nullptr;
+    
+    int sendsOffset_ = 0;
+    vector<ControlSurface*> realSurfaces_;
+    vector<MediaTrack*> touchedTracks_;
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
     
     void AddFXWindow(FXWindow fxWindow)
     {
@@ -821,6 +899,7 @@ public:
     Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
         trackNavigationManager_ = new TrackNavigationManager(this, "Page" + to_string(number), followMCP, synchPages, colourTracks, red, green, blue);
+        modifierActivationManager_ = new ModifierActivationManager();
     }
     
     string GetName() { return name_; }
@@ -830,9 +909,6 @@ public:
     void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
     void TrackFXListChanged(MediaTrack* track);
     void OnFXFocus(MediaTrack* track, int fxIndex);
-    int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
-    MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
-    MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
 
     int GetMaxSends()
     {
@@ -853,6 +929,8 @@ public:
 
     void Run()
     {
+        modifierActivationManager_->Run();
+        
         for(auto surface : realSurfaces_)
             surface->Run();
     }
@@ -873,26 +951,6 @@ public:
             CloseFXWindows();
     }
     
-    void SetShift(bool value)
-    {
-        isShift_ = value;
-    }
-    
-    void SetOption(bool value)
-    {
-        isOption_ = value;
-    }
-    
-    void SetControl(bool value)
-    {
-        isControl_ = value;
-    }
-    
-    void SetAlt(bool value)
-    {
-        isAlt_ = value;
-    }
-
     void AdjustTrackSendBank(int stride)
     {
         int maxOffset = GetMaxSends() - 1;
@@ -953,6 +1011,9 @@ public:
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
+    int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
+    MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
+    MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
 
     void AddTrackNavigator(TrackNavigator* trackNavigator)
     {
@@ -1025,6 +1086,51 @@ public:
     }
     
     /// GAW -- end TrackNavigationManager facade
+    
+    
+    /// GAW -- start ModifierActivationManager facade
+    
+    void SetShift(bool value)
+    {
+        modifierActivationManager_->SetShift(value);
+    }
+    
+    void SetOption(bool value)
+    {
+        modifierActivationManager_->SetOption(value);
+    }
+    
+    void SetControl(bool value)
+    {
+        modifierActivationManager_->SetControl(value);
+    }
+    
+    void SetAlt(bool value)
+    {
+        modifierActivationManager_->SetAlt(value);
+    }
+    
+    void AddShiftZone(Zone* zone)
+    {
+        modifierActivationManager_->AddShiftZone(zone);
+    }
+    
+    void AddOptionZone(Zone* zone)
+    {
+        modifierActivationManager_->AddOptionZone(zone);
+    }
+    
+    void AddControlZone(Zone* zone)
+    {
+        modifierActivationManager_->AddControlZone(zone);
+    }
+    
+    void AddAltZone(Zone* zone)
+    {
+        modifierActivationManager_->AddAltZone(zone);
+    }
+    
+    /// GAW -- end ModifierActivationManager facade
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
