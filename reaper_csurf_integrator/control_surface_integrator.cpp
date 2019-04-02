@@ -708,6 +708,10 @@ void Manager::InitActionDictionary()
     actions_["TrackSendBank"] = new TrackSendBank();
     actions_["PinSelectedTracks"] = new PinSelectedTracks();
     actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
+    actions_["Shift"] = new SetShift();
+    actions_["Option"] = new SetOption();
+    actions_["Control"] = new SetControl();
+    actions_["Alt"] = new SetAlt();
 }
 
 void Manager::InitActionContextDictionary()
@@ -763,6 +767,10 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendBank"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["PinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
     actionContexts_["UnpinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
+    actionContexts_["Shift"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
+    actionContexts_["Option"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
+    actionContexts_["Control"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
+    actionContexts_["Alt"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
 }
 
 void Manager::Init()

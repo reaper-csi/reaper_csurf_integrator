@@ -792,26 +792,6 @@ private:
         
         return modifiers;
     }
-
-    void SetShift(bool value)
-    {
-        isShift_ = value;
-    }
-    
-    void SetOption(bool value)
-    {
-        isOption_ = value;
-    }
-    
-    void SetControl(bool value)
-    {
-        isControl_ = value;
-    }
-    
-    void SetAlt(bool value)
-    {
-        isAlt_ = value;
-    }
     
     void AddFXWindow(FXWindow fxWindow)
     {
@@ -853,8 +833,23 @@ public:
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
     MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
-    bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
-    bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
+
+    int GetMaxSends()
+    {
+        int maxSends = 0;
+        
+        for(int i = 1; i <= GetNumTracks(); i++)
+        {
+            MediaTrack* track = GetTrackFromId(i);
+            
+            int numSends = DAW::GetTrackNumSends(track, 0);
+            
+            if(numSends > maxSends)
+                maxSends = numSends;
+        }
+        
+        return maxSends;
+    }
 
     void Run()
     {
@@ -878,23 +873,26 @@ public:
             CloseFXWindows();
     }
     
-    int GetMaxSends()
+    void SetShift(bool value)
     {
-        int maxSends = 0;
-        
-        for(int i = 1; i <= GetNumTracks(); i++)
-        {
-            MediaTrack* track = GetTrackFromId(i);
-            
-            int numSends = DAW::GetTrackNumSends(track, 0);
-            
-            if(numSends > maxSends)
-                maxSends = numSends;
-        }
-
-        return maxSends;
+        isShift_ = value;
     }
     
+    void SetOption(bool value)
+    {
+        isOption_ = value;
+    }
+    
+    void SetControl(bool value)
+    {
+        isControl_ = value;
+    }
+    
+    void SetAlt(bool value)
+    {
+        isAlt_ = value;
+    }
+
     void AdjustTrackSendBank(int stride)
     {
         int maxOffset = GetMaxSends() - 1;
@@ -951,7 +949,11 @@ public:
         }
     }
     
-    // GAW -- start TrackNavigationManager facade
+    /// GAW -- start TrackNavigationManager facade
+    
+    bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
+    bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
+
     void AddTrackNavigator(TrackNavigator* trackNavigator)
     {
         trackNavigationManager_->AddTrackNavigator(trackNavigator);
@@ -1021,7 +1023,8 @@ public:
     {
         return trackNavigationManager_->TrackListChanged();
     }
-    // GAW -- end TrackNavigationManager facade
+    
+    /// GAW -- end TrackNavigationManager facade
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
