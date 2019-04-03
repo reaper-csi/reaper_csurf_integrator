@@ -1007,29 +1007,7 @@ public:
     {
         surfaces_.push_back(surface);
     }
-    
-    void CycleTimeDisplayModes()
-    {
-        int *tmodeptr = &__g_projectconfig_timemode2;
-        if (tmodeptr && *tmodeptr>=0)
-        {
-            (*tmodeptr)++;
-            if ((*tmodeptr)>5)
-                (*tmodeptr)=0;
-        }
-        else
-        {
-            tmodeptr = &__g_projectconfig_timemode;
-            
-            if (tmodeptr)
-            {
-                (*tmodeptr)++;
-                if ((*tmodeptr)>5)
-                    (*tmodeptr)=0;
-            }
-        }
-    }
-    
+        
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -1069,7 +1047,6 @@ public:
         trackNavigationManager_->OnTrackSelectionBySurface(track);
     }
 
-    
     void Init()
     {
         trackNavigationManager_->Init();

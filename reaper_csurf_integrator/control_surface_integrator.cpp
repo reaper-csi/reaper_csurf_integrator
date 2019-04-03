@@ -1055,7 +1055,6 @@ void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
     }
 }
 
-
 void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int previousTrackOffset = trackOffset_;
