@@ -1154,6 +1154,26 @@ void TrackNavigationManager::RefreshLayout()
     currentlyRefreshingLayout_ = false;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SendsNavigationManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+int SendsNavigationManager::GetMaxSends()
+{
+    int maxSends = 0;
+    
+    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    {
+        MediaTrack* track = page_->GetTrackFromId(i);
+        
+        int numSends = DAW::GetTrackNumSends(track, 0);
+        
+        if(numSends > maxSends)
+            maxSends = numSends;
+    }
+    
+    return maxSends;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
