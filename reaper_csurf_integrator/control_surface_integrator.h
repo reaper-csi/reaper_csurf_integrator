@@ -912,26 +912,10 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page
+class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string name_ = "";
-    TrackNavigationManager* trackNavigationManager_ = nullptr;
-    SendsNavigationManager* sendsNavigationManager_ = nullptr;
-    ModifierActivationManager* modifierActivationManager_ = nullptr;
-    TrackTouchActivationManager* trackTouchActivationManager_ = nullptr;
-    vector<ControlSurface*> surfaces_;
-
-    
-
-    
-    
-    
-    
-    
-    
-    
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -958,12 +942,41 @@ private:
         CloseFXWindows();
         openFXWindows_.clear();
     }
+
+public:
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
+    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
+    void TrackFXListChanged(MediaTrack* track);
+    void OnFXFocus(MediaTrack* track, int fxIndex);
     
+    bool GetShowFXWindows() { return showFXWindows_; }
     
-    
-    
-    
-    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string name_ = "";
+    vector<ControlSurface*> surfaces_;
+
+    TrackNavigationManager* trackNavigationManager_ = nullptr;
+    SendsNavigationManager* sendsNavigationManager_ = nullptr;
+    ModifierActivationManager* modifierActivationManager_ = nullptr;
+    TrackTouchActivationManager* trackTouchActivationManager_ = nullptr;
+    FXActivationManager* FXActivationManager_ = nullptr;
+
 public:
     Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
@@ -971,6 +984,7 @@ public:
         sendsNavigationManager_ = new SendsNavigationManager(this);
         modifierActivationManager_ = new ModifierActivationManager();
         trackTouchActivationManager_ = new TrackTouchActivationManager();
+        FXActivationManager_ = new FXActivationManager();
     }
     
     string GetName() { return name_; }
@@ -1015,41 +1029,6 @@ public:
             }
         }
     }
-
-    
-    
-    
-    
-    
-
-    
-    
-
-    
-    
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
-    bool GetShowFXWindows() { return showFXWindows_; }
-    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
-    void TrackFXListChanged(MediaTrack* track);
-    void OnFXFocus(MediaTrack* track, int fxIndex);
-
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-
-    
-    
-    
-    
-    
-    
-    
     
     /// GAW -- start TrackNavigationManager facade
     
@@ -1158,6 +1137,37 @@ public:
     }
 
     /// GAW -- end TrackTouchedActivationManager facade
+
+ 
+    /// GAW -- start FXActivationManager facade
+
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
+    bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
+    
+    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
+    {
+        FXActivationManager_->OnGlobalMapTrackAndFxToWidgetsForTrack(track);
+        
+    }
+    
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        FXActivationManager_->TrackFXListChanged(track);
+        
+    }
+    
+    void OnFXFocus(MediaTrack* track, int fxIndex)
+    {
+        FXActivationManager_->OnFXFocus(track, fxIndex);
+        
+    }
+    
+    void SetShowFXWindows(bool value)
+    {
+        FXActivationManager_->SetShowFXWindows(value);
+    }
+
+    /// GAW -- end FXActivationManager facade
 
     
     /// GAW -- start ModifierActivationManager facade
