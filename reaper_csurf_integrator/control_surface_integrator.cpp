@@ -1176,9 +1176,9 @@ int SendsNavigationManager::GetMaxSends()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Page
+// FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Page::TrackFXListChanged(MediaTrack* track)
+void FXActivationManager::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -1202,7 +1202,7 @@ void Page::TrackFXListChanged(MediaTrack* track)
     // GAW TBD -- clear all fx items and rebuild
 }
 
-int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
+int FXActivationManager::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
 {
     char fxName[BUFSZ];
     
@@ -1227,7 +1227,7 @@ int Page::GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string
     return 0;
 }
 
-void Page::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
+void FXActivationManager::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
 {/*
     for(auto surface : realSurfaces_)
         for(auto widget : surface->GetAllWidgets())
@@ -1236,7 +1236,7 @@ void Page::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
                     widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);*/
 }
 
-void Page::OnFXFocus(MediaTrack* track, int fxIndex)
+void FXActivationManager::OnFXFocus(MediaTrack* track, int fxIndex)
 {/*
     // GAW WIP  -- currently doesn't take FX index into account
     for(auto surface : realSurfaces_)
