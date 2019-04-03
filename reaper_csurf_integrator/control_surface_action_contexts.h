@@ -56,6 +56,8 @@ class TrackSendContext : public TrackContext
 public:
     TrackSendContext(Widget* widget, Action* action) : TrackContext(widget, action) {}
     
+    // GAW TDB -- move some of this to SendsNavigationManager
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
