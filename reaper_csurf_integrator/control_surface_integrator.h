@@ -759,6 +759,35 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendsNavigationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    int sendsOffset_ = 0;
+   
+    int GetMaxSends();
+
+public:
+    SendsNavigationManager(Page* page) : page_(page) {}
+    
+    int GetSendsOffset() { return sendsOffset_; }
+    
+    
+    void AdjustTrackSendBank(int stride)
+    {
+        int maxOffset = GetMaxSends() - 1;
+        
+        sendsOffset_ += stride;
+        
+        if(sendsOffset_ < 0)
+            sendsOffset_ = 0;
+        else if(sendsOffset_ > maxOffset)
+            sendsOffset_ = maxOffset;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ModifierActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -857,17 +886,52 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackTouchActivationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<MediaTrack*> touchedTracks_;
+
+public:
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        for(MediaTrack* touchedTrack : touchedTracks_)
+            if(touchedTrack == track)
+                return true;
+        
+        return false;
+    }
+    
+    void SetTouchState(MediaTrack* track,  bool touched)
+    {
+        if(touched)
+            touchedTracks_.push_back(track);
+        else
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string name_ = "";
     TrackNavigationManager* trackNavigationManager_ = nullptr;
+    SendsNavigationManager* sendsNavigationManager_ = nullptr;
     ModifierActivationManager* modifierActivationManager_ = nullptr;
+    TrackTouchActivationManager* trackTouchActivationManager_ = nullptr;
+    vector<ControlSurface*> surfaces_;
+
     
-    int sendsOffset_ = 0;
-    vector<ControlSurface*> realSurfaces_;
-    vector<MediaTrack*> touchedTracks_;
+
+    
+    
+    
+    
+    
+    
+    
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -895,94 +959,39 @@ private:
         openFXWindows_.clear();
     }
     
+    
+    
+    
+    
+    
 public:
     Page(string name, int number, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
         trackNavigationManager_ = new TrackNavigationManager(this, "Page" + to_string(number), followMCP, synchPages, colourTracks, red, green, blue);
+        sendsNavigationManager_ = new SendsNavigationManager(this);
         modifierActivationManager_ = new ModifierActivationManager();
+        trackTouchActivationManager_ = new TrackTouchActivationManager();
     }
     
     string GetName() { return name_; }
-    int GetSendsOffset() { return sendsOffset_; }
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
-    bool GetShowFXWindows() { return showFXWindows_; }
-    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
-    void TrackFXListChanged(MediaTrack* track);
-    void OnFXFocus(MediaTrack* track, int fxIndex);
-
-    int GetMaxSends()
-    {
-        int maxSends = 0;
-        
-        for(int i = 1; i <= GetNumTracks(); i++)
-        {
-            MediaTrack* track = GetTrackFromId(i);
-            
-            int numSends = DAW::GetTrackNumSends(track, 0);
-            
-            if(numSends > maxSends)
-                maxSends = numSends;
-        }
-        
-        return maxSends;
-    }
 
     void Run()
     {
         modifierActivationManager_->Run();
         
-        for(auto surface : realSurfaces_)
+        for(auto surface : surfaces_)
             surface->Run();
     }
     
     void ResetAllWidgets()
     {
-        for(auto surface : realSurfaces_)
+        for(auto surface : surfaces_)
             surface->Reset();
-    }
-
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-    
-    void AdjustTrackSendBank(int stride)
-    {
-        int maxOffset = GetMaxSends() - 1;
-        
-        sendsOffset_ += stride;
-        
-        if(sendsOffset_ < 0)
-            sendsOffset_ = 0;
-        else if(sendsOffset_ > maxOffset)
-            sendsOffset_ = maxOffset;
     }
     
     void AddSurface(ControlSurface* surface)
     {
-        realSurfaces_.push_back(surface);
-    }
-    
-    bool GetTouchState(MediaTrack* track, int touchedControl)
-    {
-        for(MediaTrack* touchedTrack : touchedTracks_)
-            if(touchedTrack == track)
-                return true;
-        
-        return false;
-    }
-    
-    void SetTouchState(MediaTrack* track,  bool touched)
-    {
-        if(touched)
-            touchedTracks_.push_back(track);
-        else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+        surfaces_.push_back(surface);
     }
     
     void CycleTimeDisplayModes()
@@ -1006,6 +1015,41 @@ public:
             }
         }
     }
+
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
+    bool GetShowFXWindows() { return showFXWindows_; }
+    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
+    void TrackFXListChanged(MediaTrack* track);
+    void OnFXFocus(MediaTrack* track, int fxIndex);
+
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+
+    
+    
+    
+    
+    
+    
+    
     
     /// GAW -- start TrackNavigationManager facade
     
@@ -1056,7 +1100,7 @@ public:
     {
         trackNavigationManager_->EnterPage();
         
-        for(auto surface : realSurfaces_)
+        for(auto surface : surfaces_)
             surface->ClearCache();
     }
     
@@ -1087,6 +1131,34 @@ public:
     
     /// GAW -- end TrackNavigationManager facade
     
+    
+    /// GAW -- start SendsNavigationManager facade
+    
+    int GetSendsOffset() { return sendsNavigationManager_->GetSendsOffset(); }
+    
+    
+    void AdjustTrackSendBank(int stride)
+    {
+        sendsNavigationManager_->AdjustTrackSendBank(stride);
+    }
+    
+    /// GAW -- end SendsNavigationManager facade
+
+
+    /// GAW -- start TrackTouchedActivationManager facade
+
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        return trackTouchActivationManager_->GetTouchState(track, touchedControl);
+    }
+    
+    void SetTouchState(MediaTrack* track,  bool touched)
+    {
+        trackTouchActivationManager_->SetTouchState(track, touched);
+    }
+
+    /// GAW -- end TrackTouchedActivationManager facade
+
     
     /// GAW -- start ModifierActivationManager facade
     
