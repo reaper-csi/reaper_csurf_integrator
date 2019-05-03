@@ -33,6 +33,7 @@
 #ifdef _WIN32
 #include <memory>
 #include "direntWin.h"
+#include <functional>
 #else
 #include <dirent.h>
 #include "oscpkt.hh"
