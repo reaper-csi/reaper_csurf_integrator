@@ -17,13 +17,10 @@
 
 #include "time.h"
 #include <sstream>
-#include <exception>
 #include <vector>
 #include <map>
-#include <algorithm>
 #include <iomanip>
 #include <fstream>
-#include <functional>
 #include <regex>
 
 #ifdef _WIN32
