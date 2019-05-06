@@ -94,11 +94,6 @@ static map<string, vector<Zone*>> includedZoneMembers;
 
 void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface)
 {
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    
-    
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
     string expandedZoneToken;
@@ -108,6 +103,10 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
     
     if(expandedZoneTokens.size() > 1)
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
+        //////////////////////////////////////////////////////////////////////////////////////////////
+
         string zoneBaseName = "";
         int rangeBegin = 0;
         int rangeEnd = 1;
@@ -137,11 +136,12 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
             }
         }
     }
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    /// Just regular syntax of type "Channel1"
-    //////////////////////////////////////////////////////////////////////////////////////////////
     else
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        /// Just regular syntax of type "Channel1"
+        //////////////////////////////////////////////////////////////////////////////////////////////
+
         Zone* zone = new Zone(surface, tokens[1], filePath);
         if(surface->AddZone(zone))
         {
@@ -264,10 +264,11 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, bool &isInverted, bool &shouldToggle, bool &isDelayed,  double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isInverted, bool &shouldToggle, bool &isDelayed,  double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
+    vector<string> modifierSlots = { "", "", "", "" };
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -277,7 +278,16 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, bool &isI
     {
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
-            if(modifier_tokens[i] == "Invert")
+            if(modifier_tokens[i] == "Shift")
+                modifierSlots[0] = "Shift";
+            else if(modifier_tokens[i] == "Option")
+                modifierSlots[1] = "Option";
+            else if(modifier_tokens[i] == "Control")
+                modifierSlots[2] = "Control";
+            else if(modifier_tokens[i] == "Alt")
+                modifierSlots[3] = "Alt";
+            
+            else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
                 shouldToggle = true;
@@ -290,6 +300,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, bool &isI
     }
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
+    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
 void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
@@ -355,12 +366,13 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
+                string modifiers = "";
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, isInverted, shouldToggle, isDelayed, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isInverted, shouldToggle, isDelayed, delayAmount);
                 
                 Widget* widget = nullptr;
                 
@@ -369,13 +381,15 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         widget = aWidget;
                 
                 vector<string> params;
-                for(int i = 1; i < tokens.size(); i++)
-                    params.push_back(tokens[i]);
+                for(int j = 1; j < tokens.size(); j++)
+                    params.push_back(tokens[j]);
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
                     if(ActionContext* context = TheManager->GetActionContext(widget, params))
                     {
+                        context->SetModifiers(modifiers);
+                        
                         if(hasNavigator)
                             context->SetNavigator(expandedNavigators[i]);
                         
@@ -978,10 +992,28 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 void Zone::Activate()
 {
     for(auto actionContext : actionContexts_)
-        actionContext->GetWidget()->SetActionContext(actionContext);
+        actionContext->Activate();
     
     for(auto zone : includedZones_)
         zone->Activate();
+}
+
+void Zone::Deactivate()
+{
+    for(auto actionContext : actionContexts_)
+        actionContext->Deactivate();
+    
+    for(auto zone : includedZones_)
+        zone->Deactivate();
+}
+
+void Zone::Relink(vector<ActionContext*> & actionContexts)
+{
+    for(auto actionContext : actionContexts_)
+        actionContext->Relink(actionContexts);
+    
+    for(auto zone : includedZones_)
+        zone->Relink(actionContexts);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1008,6 +1040,36 @@ void ControlSurface::InitZones(string zoneFolder)
         char buffer[250];
         sprintf(buffer, "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void ControlSurface::DeactivateZone(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+    {
+        Zone* zone = zones_[zoneName];
+        
+        if(zone == activeZones_.back())
+        {
+            zone->Deactivate();
+            activeZones_.pop_back();
+        }
+        else
+        {
+            // If not last in active Zones vector, transfer previous context downstream, removing zoneActionContexts as we encounter relinking opportunities
+            // Don't stop at the next Zone downstream, as there will not likely be congruity between the Zone being removed and its downstream neighbour
+            
+            vector<ActionContext *> zoneActionContexts = zone->GetActionContexts();
+            
+            for(auto i = find(activeZones_.begin(), activeZones_.end(), zone); i != activeZones_.end(); i++)
+                (*i)->Relink(zoneActionContexts);
+            
+            // these are the Action Contexts left over that don't exist downstream, so just Deactivate normally
+            for(auto context : zoneActionContexts)
+                context->Deactivate();
+            
+            activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zone));
+        }
     }
 }
 
