@@ -81,6 +81,7 @@ public:
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     MediaTrack* GetTrack();
+    ActionContext* GetCurrentActionContext() { return actionContext_; }
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
@@ -189,6 +190,8 @@ public:
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
     
+    vector<ActionContext*> GetActionContexts() { return actionContexts_; }
+    
     virtual void AddActionContext(ActionContext* context)
     {
         actionContexts_.push_back(context);
@@ -198,8 +201,11 @@ public:
     {
         includedZones_.push_back(zone);
     }
-
+    
     void Activate();
+    void Deactivate();
+    
+    void Relink(vector<ActionContext*> & actionContexts);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -309,9 +315,14 @@ public:
     void ActivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
-            zones_[zoneName ]->Activate();
+        {
+            zones_[zoneName]->Activate();
+            activeZones_.push_back(zones_[zoneName]);
+        }
     }
     
+    void DeactivateZone(string zoneName);
+
     virtual void Run()
     {
         RequestUpdate();
@@ -449,13 +460,15 @@ class ActionContext
 {
 protected:
     Widget* widget_ = nullptr;
-    Action * action_ = nullptr;
+    Action* action_ = nullptr;
     Navigator* navigator_ = nullptr;
+    ActionContext* previousActionContext_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
+    string modifiers_ = "";
 
     ActionContext(Widget* widget, Action* action) : widget_(widget), action_(action) {}
     
@@ -466,9 +479,10 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
+    void SetModifiers(string modifiers) { modifiers_ = modifiers; }
 
-    Widget* GetWidget() { return widget_; }
     Navigator* GetNavigator() { return navigator_; }
+    ActionContext* GetPreviousActionContext() { return previousActionContext_; }
     
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
@@ -481,6 +495,34 @@ public:
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
 
+    void Activate()
+    {
+        if(widget_ != nullptr)
+        {
+            previousActionContext_ = widget_->GetCurrentActionContext();
+            widget_->SetActionContext(this);
+        }
+    }
+    
+    void Deactivate()
+    {
+        if(widget_ != nullptr)
+            widget_->SetActionContext(previousActionContext_);
+    }
+    
+    void Relink(vector<ActionContext*> &contexts)
+    {
+        for(int i = 0; i < contexts.size(); i++)
+        {
+            if(previousActionContext_ == contexts[i])
+            {
+                previousActionContext_ = contexts[i]->GetPreviousActionContext();
+                contexts.erase(contexts.begin() + i);
+                break;
+            }
+        }
+    }
+    
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
