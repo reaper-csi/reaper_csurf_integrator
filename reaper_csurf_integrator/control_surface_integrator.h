@@ -49,13 +49,14 @@ const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string PageToken = "Page";
+const string NoModifiers = "NoModifiers";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
 class FeedbackProcessor;
-class ActionContext;
+class ModifierActionContextManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +65,7 @@ private:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
 
-    ActionContext* actionContext_ = nullptr;
+    ModifierActionContextManager* modifierActionContextManager_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
     
     double lastValue_ = 0.0;
@@ -81,13 +82,12 @@ public:
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     MediaTrack* GetTrack();
-    ActionContext* GetCurrentActionContext() { return actionContext_; }
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
-    void SetActionContext(ActionContext* actionContext) { actionContext_ = actionContext;  }
+    void SetModifierActionContextManager(ModifierActionContextManager* modifierActionContextManager) { modifierActionContextManager_ = modifierActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     
     void SetValue(double value);
@@ -175,7 +175,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<ActionContext*> actionContexts_;
+    vector<ModifierActionContextManager*> actionContextManagers_;
     vector<Zone*> includedZones_;
 
 protected:
@@ -189,12 +189,10 @@ public:
     
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
-    
-    vector<ActionContext*> GetActionContexts() { return actionContexts_; }
-    
-    virtual void AddActionContext(ActionContext* context)
+       
+    virtual void AddActionContextManager(ModifierActionContextManager* manager)
     {
-        actionContexts_.push_back(context);
+        actionContextManagers_.push_back(manager);
     }
     
     void AddZone(Zone* zone)
@@ -203,9 +201,6 @@ public:
     }
     
     void Activate();
-    void Deactivate();
-    
-    void Relink(vector<ActionContext*> & actionContexts);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,7 +316,15 @@ public:
         }
     }
     
-    void DeactivateZone(string zoneName);
+    void DeactivateZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
+            for(auto zone : activeZones_)
+                zone->Activate();
+        }
+    }
 
     virtual void Run()
     {
@@ -429,6 +432,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionContext;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -461,28 +466,22 @@ class ActionContext
 protected:
     Widget* widget_ = nullptr;
     Action* action_ = nullptr;
-    Navigator* navigator_ = nullptr;
-    ActionContext* previousActionContext_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
-    string modifiers_ = "";
 
     ActionContext(Widget* widget, Action* action) : widget_(widget), action_(action) {}
+
+    Widget* GetWidget() { return widget_; }
     
 public:
     virtual ~ActionContext() {}
     
-    void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
-    void SetModifiers(string modifiers) { modifiers_ = modifiers; }
-
-    Navigator* GetNavigator() { return navigator_; }
-    ActionContext* GetPreviousActionContext() { return previousActionContext_; }
     
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
@@ -494,34 +493,6 @@ public:
     virtual void DoRelativeAction(double value) {}
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
-
-    void Activate()
-    {
-        if(widget_ != nullptr)
-        {
-            previousActionContext_ = widget_->GetCurrentActionContext();
-            widget_->SetActionContext(this);
-        }
-    }
-    
-    void Deactivate()
-    {
-        if(widget_ != nullptr)
-            widget_->SetActionContext(previousActionContext_);
-    }
-    
-    void Relink(vector<ActionContext*> &contexts)
-    {
-        for(int i = 0; i < contexts.size(); i++)
-        {
-            if(previousActionContext_ == contexts[i])
-            {
-                previousActionContext_ = contexts[i]->GetPreviousActionContext();
-                contexts.erase(contexts.begin() + i);
-                break;
-            }
-        }
-    }
     
     void SetWidgetValue(Widget* widget, double value)
     {
@@ -537,7 +508,38 @@ public:
     {
         widget->SetValue(value);
     }
+    
+    void Activate(ModifierActionContextManager* modifierActionContextManager)
+    {
+        GetWidget()->SetModifierActionContextManager(modifierActionContextManager);
+    }
 };
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ModifierActionContextManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    ControlSurface* surface_ = nullptr;
+    Navigator* navigator_ = nullptr;
+    map<string, vector <ActionContext*>> modifierActionContexts_;
+
+public:
+    ModifierActionContextManager(ControlSurface* surface, Navigator* navigator) : surface_(surface), navigator_(navigator) {}
+
+    MediaTrack* GetTrack();
+    
+    void RequestUpdate();
+    void DoAction(double value);
+    void DoRelativeAction(double value);
+    void Activate();
+
+    void AddActionContext(string modifiers, ActionContext* context)
+    {
+        modifierActionContexts_[modifiers].push_back(context);
+    }
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
@@ -847,104 +849,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ModifierActivationManager : public ActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    bool isShift_ = false;
-    bool isOption_ = false;
-    bool isControl_ = false;
-    bool isAlt_ = false;
-    
-    vector<Zone*> shiftZones_;
-    vector<Zone*> optionZones_;
-    vector<Zone*> controlZones_;
-    vector<Zone*> altZones_;
-
-    string currentModifiers_ = "";
-
-    string GetModifiers()
-    {
-        string modifiers = "";
-        
-        if(isShift_)
-            modifiers += "Shift";
-        if(isOption_)
-            modifiers += "Option";
-        if(isControl_)
-            modifiers +=  "Control";
-        if(isAlt_)
-            modifiers += "Alt";
-        
-        return modifiers;
-    }
-    
-    void ActivateZones(vector<Zone*> &zones)
-    {
-        for(auto zone : zones)
-            zone->Activate();
-    }
-
-public:
-    void SetShift(bool value)
-    {
-        isShift_ = value;
-    }
-    
-    void SetOption(bool value)
-    {
-        isOption_ = value;
-    }
-    
-    void SetControl(bool value)
-    {
-        isControl_ = value;
-    }
-    
-    void SetAlt(bool value)
-    {
-        isAlt_ = value;
-    }
-    
-    void AddShiftZone(Zone* zone)
-    {
-        shiftZones_.push_back(zone);
-    }
-    
-    void AddOptionZone(Zone* zone)
-    {
-        optionZones_.push_back(zone);
-    }
-    
-    void AddControlZone(Zone* zone)
-    {
-        controlZones_.push_back(zone);
-    }
-    
-    void AddAltZone(Zone* zone)
-    {
-        altZones_.push_back(zone);
-    }
-    
-    void Run()
-    {
-        if(currentModifiers_ != GetModifiers())
-        {
-            currentModifiers_ = GetModifiers();
-            
-            if(currentModifiers_ == "Shift")
-                ActivateZones(shiftZones_);
-            else if(currentModifiers_ == "Option")
-                ActivateZones(optionZones_);
-            else if(currentModifiers_ == "Control")
-                ActivateZones(controlZones_);
-            else if(currentModifiers_ == "Alt")
-                ActivateZones(altZones_);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackTouchActivationManager : public ActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1028,10 +932,14 @@ class Page
 private:
     string name_ = "";
     vector<ControlSurface*> surfaces_;
+    
+    bool isShift_ = false;
+    bool isOption_ = false;
+    bool isControl_ = false;
+    bool isAlt_ = false;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
-    ModifierActivationManager* modifierActivationManager_ = nullptr;
     TrackTouchActivationManager* trackTouchActivationManager_ = nullptr;
     FXActivationManager* FXActivationManager_ = nullptr;
 
@@ -1040,7 +948,6 @@ public:
     {
         trackNavigationManager_ = new TrackNavigationManager(this, "Page" + to_string(number), followMCP, synchPages, colourTracks, red, green, blue);
         sendsNavigationManager_ = new SendsNavigationManager(this);
-        modifierActivationManager_ = new ModifierActivationManager();
         trackTouchActivationManager_ = new TrackTouchActivationManager();
         FXActivationManager_ = new FXActivationManager();
     }
@@ -1049,8 +956,6 @@ public:
 
     void Run()
     {
-        modifierActivationManager_->Run();
-        
         for(auto surface : surfaces_)
             surface->Run();
     }
@@ -1205,47 +1110,47 @@ public:
     /// GAW -- end FXActivationManager facade
 
     
-    /// GAW -- start ModifierActivationManager facade
+    /// GAW -- start Modifier section
     
     void SetShift(bool value)
     {
-        modifierActivationManager_->SetShift(value);
+        isShift_ = value;
     }
     
     void SetOption(bool value)
     {
-        modifierActivationManager_->SetOption(value);
+        isOption_ = value;
     }
     
     void SetControl(bool value)
     {
-        modifierActivationManager_->SetControl(value);
+        isControl_ = value;
     }
     
     void SetAlt(bool value)
     {
-        modifierActivationManager_->SetAlt(value);
+        isAlt_ = value;
     }
-    
-    void AddShiftZone(Zone* zone)
+
+    string GetModifiers()
     {
-        modifierActivationManager_->AddShiftZone(zone);
+        string modifiers = "";
+        
+        if(isShift_)
+            modifiers += "Shift";
+        if(isOption_)
+            modifiers += "Option";
+        if(isControl_)
+            modifiers +=  "Control";
+        if(isAlt_)
+            modifiers += "Alt";
+        
+        if(modifiers == "")
+            modifiers = NoModifiers;
+        
+        return modifiers;
     }
-    
-    void AddOptionZone(Zone* zone)
-    {
-        modifierActivationManager_->AddOptionZone(zone);
-    }
-    
-    void AddControlZone(Zone* zone)
-    {
-        modifierActivationManager_->AddControlZone(zone);
-    }
-    
-    void AddAltZone(Zone* zone)
-    {
-        modifierActivationManager_->AddAltZone(zone);
-    }
+
     
     /// GAW -- end ModifierActivationManager facade
 };
