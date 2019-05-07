@@ -56,7 +56,7 @@ extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
 class FeedbackProcessor;
-class ModifierActionContextManager;
+class WidgetActionContextManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ private:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
 
-    ModifierActionContextManager* modifierActionContextManager_ = nullptr;
+    WidgetActionContextManager* widgetActionContextManager_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
     
     double lastValue_ = 0.0;
@@ -87,7 +87,7 @@ public:
     void DoRelativeAction(double value);
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
-    void SetModifierActionContextManager(ModifierActionContextManager* modifierActionContextManager) { modifierActionContextManager_ = modifierActionContextManager;  }
+    void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     
     void SetValue(double value);
@@ -175,7 +175,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<ModifierActionContextManager*> actionContextManagers_;
+    vector<WidgetActionContextManager*> actionContextManagers_;
     vector<Zone*> includedZones_;
 
 protected:
@@ -190,7 +190,7 @@ public:
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
-    virtual void AddActionContextManager(ModifierActionContextManager* manager)
+    virtual void AddActionContextManager(WidgetActionContextManager* manager)
     {
         actionContextManagers_.push_back(manager);
     }
@@ -464,7 +464,7 @@ class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Widget* widget_ = nullptr;
+    WidgetActionContextManager* widgetActionContextManager_ = nullptr;
     Action* action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -472,9 +472,9 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
 
-    ActionContext(Widget* widget, Action* action) : widget_(widget), action_(action) {}
+    ActionContext(Action* action) : action_(action) {}
 
-    Widget* GetWidget() { return widget_; }
+    Widget* GetWidget();
     
 public:
     virtual ~ActionContext() {}
@@ -482,6 +482,7 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
+    void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager; }
     
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
@@ -509,24 +510,25 @@ public:
         widget->SetValue(value);
     }
     
-    void Activate(ModifierActionContextManager* modifierActionContextManager)
+    void Activate(WidgetActionContextManager* modifierActionContextManager)
     {
-        GetWidget()->SetModifierActionContextManager(modifierActionContextManager);
+        GetWidget()->SetWidgetActionContextManager(modifierActionContextManager);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ModifierActionContextManager
+class WidgetActionContextManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* surface_ = nullptr;
+    Widget* widget_ = nullptr;
     Navigator* navigator_ = nullptr;
-    map<string, vector <ActionContext*>> modifierActionContexts_;
+    map<string, vector <ActionContext*>> widgetActionContexts_;
 
 public:
-    ModifierActionContextManager(ControlSurface* surface, Navigator* navigator) : surface_(surface), navigator_(navigator) {}
+    WidgetActionContextManager(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
 
+    Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
     
     void RequestUpdate();
@@ -536,7 +538,7 @@ public:
 
     void AddActionContext(string modifiers, ActionContext* context)
     {
-        modifierActionContexts_[modifiers].push_back(context);
+        widgetActionContexts_[modifiers].push_back(context);
     }
 };
 
@@ -1161,7 +1163,7 @@ class Manager
 {
 private:
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(Widget*, vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1215,7 +1217,7 @@ public:
     ActionContext* GetActionContext(Widget* widget, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](widget, params);
+            return actionContexts_[params[0]](params);
         
         return nullptr;
     }

@@ -14,7 +14,7 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
+    GlobalContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestUpdate() override
     {
@@ -32,7 +32,7 @@ class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
+    TrackContext(Action* action) : ActionContext(action) {}
     
     virtual void RequestUpdate() override
     {
@@ -54,7 +54,7 @@ class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendContext(Widget* widget, Action* action) : TrackContext(widget, action) {}
+    TrackSendContext(Action* action) : TrackContext(action) {}
     
     // GAW TDB -- move some of this to SendsNavigationManager
     
@@ -107,7 +107,7 @@ private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntParam(Widget* widget, Action* action, int param) : TrackContext(widget, action), param_(param) {}
+    TrackContextWithIntParam(Action* action, int param) : TrackContext(action), param_(param) {}
     
     virtual void RequestUpdate() override
     {
@@ -134,7 +134,7 @@ private:
     int fxIndex_ = 0;
 
 public:
-    FXContext(Widget* widget, Action* action, string fxParamName) : TrackContext(widget, action), fxParamName_(fxParamName) {}
+    FXContext(Action* action, string fxParamName) : TrackContext(action), fxParamName_(fxParamName) {}
     
     virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
     
@@ -170,7 +170,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Widget* widget, Action* action, string commandStr) : ActionContext(widget, action)
+    ReaperActionContext(Action* action, string commandStr) : ActionContext(action)
     {
         commandId_ =  atol(commandStr.c_str());
         
@@ -202,7 +202,7 @@ private:
     int param_ = 0;
    
 public:
-    GlobalContextWithIntParam(Widget* widget, Action* action, int param) : ActionContext(widget, action), param_(param) {}
+    GlobalContextWithIntParam(Action* action, int param) : ActionContext(action), param_(param) {}
     
     virtual void RequestUpdate() override
     {
@@ -223,7 +223,7 @@ private:
     string param_ = "";
     
 public:
-    GlobalContextWithStringParam(Widget* widget, Action* action, string param) : ActionContext(widget, action), param_(param) {}
+    GlobalContextWithStringParam(Action* action, string param) : ActionContext(action), param_(param) {}
     
     virtual void RequestUpdate() override
     {
@@ -244,7 +244,7 @@ private:
     Action* touchAction_ = nullptr;
 
 public:
-    TrackTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
+    TrackTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
     
     virtual void RequestUpdate() override
     {
@@ -278,7 +278,7 @@ private:
     Action* touchAction_ = nullptr;
     
 public:
-    TrackSendTouchControlledContext(Widget* widget, Action* action, Action* touchAction) : TrackContext(widget, action), touchAction_(touchAction) {}
+    TrackSendTouchControlledContext(Action* action, Action* touchAction) : TrackContext(action), touchAction_(touchAction) {}
     
     virtual void RequestUpdate() override
     {
@@ -385,7 +385,7 @@ class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    PageSurfaceContext(Widget* widget, Action* action) : ActionContext(widget, action) {}
+    PageSurfaceContext(Action* action) : ActionContext(action) {}
     
     virtual void DoAction() override
     {
