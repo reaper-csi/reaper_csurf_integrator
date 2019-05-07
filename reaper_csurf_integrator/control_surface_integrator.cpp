@@ -301,6 +301,8 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+    if(modifiers == "")
+        modifiers = NoModifiers;
 }
 
 void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
@@ -318,6 +320,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     bool hasNavigator = false;
     string navigatorType = "";
     vector<Navigator*> expandedNavigators;
+    map<Widget*, ModifierActionContextManager*> modifierActionContextManagerForWidget;
     
     for (string line; getline(zoneFile, line) ; )
     {
@@ -377,8 +380,13 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 Widget* widget = nullptr;
                 
                 for(auto * aWidget : widgets)
+                {
                     if(aWidget->GetName() == widgetName)
+                    {
                         widget = aWidget;
+                        break;
+                    }
+                }
                 
                 vector<string> params;
                 for(int j = 1; j < tokens.size(); j++)
@@ -388,11 +396,6 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 {
                     if(ActionContext* context = TheManager->GetActionContext(widget, params))
                     {
-                        context->SetModifiers(modifiers);
-                        
-                        if(hasNavigator)
-                            context->SetNavigator(expandedNavigators[i]);
-                        
                         if(isInverted)
                             context->SetIsInverted();
                         
@@ -402,7 +405,17 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(isDelayed)
                             context->SetDelayAmount(delayAmount * 1000.0);
                         
-                        expandedZones[i]->AddActionContext(context);
+                        if(modifierActionContextManagerForWidget.count(widget) < 1)
+                        {
+                            if(hasNavigator)
+                                modifierActionContextManagerForWidget[widget] = new ModifierActionContextManager(surface, expandedNavigators[i]);
+                            else
+                                modifierActionContextManagerForWidget[widget] = new ModifierActionContextManager(surface, new Navigator()); // just add a dummy to satisfy protocol
+                            
+                            expandedZones[i]->AddActionContextManager(modifierActionContextManagerForWidget[widget]);
+                        }
+                        
+                        modifierActionContextManagerForWidget[widget]->AddActionContext(modifiers, context);                        
                     }
                 }
             }
@@ -914,16 +927,16 @@ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(actionContext_ != nullptr && actionContext_->GetNavigator() != nullptr)
-        return surface_->GetPage()->GetTrackFromGUID(actionContext_->GetNavigator()->GetTrackGUID());
+    if(modifierActionContextManager_ != nullptr)
+        return modifierActionContextManager_->GetTrack();
     else
         return nullptr;
 }
 
 void Widget::RequestUpdate()
 {
-    if(actionContext_ != nullptr)
-        actionContext_->RequestUpdate();
+    if(modifierActionContextManager_ != nullptr)
+        modifierActionContextManager_->RequestUpdate();
 }
 
 void  Widget::SetValue(double value)
@@ -946,14 +959,14 @@ void  Widget::SetValue(string value)
 
 void Widget::DoAction(double value)
 {
-    if(actionContext_ != nullptr)
-        actionContext_->DoAction(value);
+    if(modifierActionContextManager_ != nullptr)
+        modifierActionContextManager_->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double value)
 {
-    if(actionContext_ != nullptr)
-        actionContext_->DoRelativeAction(value);
+    if(modifierActionContextManager_ != nullptr)
+        modifierActionContextManager_->DoRelativeAction(value);
 }
 
 void Widget::ClearCache()
@@ -991,29 +1004,11 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Activate()
 {
-    for(auto actionContext : actionContexts_)
-        actionContext->Activate();
+    for(auto actionContextManager : actionContextManagers_)
+        actionContextManager->Activate();
     
     for(auto zone : includedZones_)
         zone->Activate();
-}
-
-void Zone::Deactivate()
-{
-    for(auto actionContext : actionContexts_)
-        actionContext->Deactivate();
-    
-    for(auto zone : includedZones_)
-        zone->Deactivate();
-}
-
-void Zone::Relink(vector<ActionContext*> & actionContexts)
-{
-    for(auto actionContext : actionContexts_)
-        actionContext->Relink(actionContexts);
-    
-    for(auto zone : includedZones_)
-        zone->Relink(actionContexts);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1043,36 +1038,6 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
-void ControlSurface::DeactivateZone(string zoneName)
-{
-    if(zones_.count(zoneName) > 0)
-    {
-        Zone* zone = zones_[zoneName];
-        
-        if(zone == activeZones_.back())
-        {
-            zone->Deactivate();
-            activeZones_.pop_back();
-        }
-        else
-        {
-            // If not last in active Zones vector, transfer previous context downstream, removing zoneActionContexts as we encounter relinking opportunities
-            // Don't stop at the next Zone downstream, as there will not likely be congruity between the Zone being removed and its downstream neighbour
-            
-            vector<ActionContext *> zoneActionContexts = zone->GetActionContexts();
-            
-            for(auto i = find(activeZones_.begin(), activeZones_.end(), zone); i != activeZones_.end(); i++)
-                (*i)->Relink(zoneActionContexts);
-            
-            // these are the Action Contexts left over that don't exist downstream, so just Deactivate normally
-            for(auto context : zoneActionContexts)
-                context->Deactivate();
-            
-            activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zone));
-        }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1083,6 +1048,42 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "TrackOnSelection"));
     widgets_.push_back(new Widget(this, "TrackOnFocusedFX"));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ModifierActionContextManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* ModifierActionContextManager::GetTrack()
+{
+    return surface_->GetPage()->GetTrackFromGUID(navigator_->GetTrackGUID());
+}
+
+void ModifierActionContextManager::RequestUpdate()
+{
+    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
+        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+            context->RequestUpdate();
+}
+
+void ModifierActionContextManager::DoAction(double value)
+{
+    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
+        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+            context->DoAction(value);
+}
+
+void ModifierActionContextManager::DoRelativeAction(double value)
+{
+    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
+        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+            context->DoRelativeAction(value);
+}
+
+void ModifierActionContextManager::Activate()
+{
+    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
+        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+            context->Activate(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
