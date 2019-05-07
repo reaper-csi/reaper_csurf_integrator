@@ -1214,7 +1214,7 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(Widget* widget, vector<string> params)
+    ActionContext* GetActionContext(vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
             return actionContexts_[params[0]](params);
