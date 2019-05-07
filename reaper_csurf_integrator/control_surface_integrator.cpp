@@ -394,7 +394,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
-                    if(ActionContext* context = TheManager->GetActionContext(widget, params))
+                    if(ActionContext* context = TheManager->GetActionContext(params))
                     {
                         if(isInverted)
                             context->SetIsInverted();
