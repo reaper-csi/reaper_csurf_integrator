@@ -320,7 +320,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     bool hasNavigator = false;
     string navigatorType = "";
     vector<Navigator*> expandedNavigators;
-    map<Widget*, ModifierActionContextManager*> modifierActionContextManagerForWidget;
+    map<Widget*, WidgetActionContextManager*> widgetActionContextManager;
     
     for (string line; getline(zoneFile, line) ; )
     {
@@ -405,17 +405,19 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(isDelayed)
                             context->SetDelayAmount(delayAmount * 1000.0);
                         
-                        if(modifierActionContextManagerForWidget.count(widget) < 1)
+                        if(widgetActionContextManager.count(widget) < 1)
                         {
                             if(hasNavigator)
-                                modifierActionContextManagerForWidget[widget] = new ModifierActionContextManager(surface, expandedNavigators[i]);
+                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
                             else
-                                modifierActionContextManagerForWidget[widget] = new ModifierActionContextManager(surface, new Navigator()); // just add a dummy to satisfy protocol
+                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, new Navigator()); // just add a dummy to satisfy protocol
                             
-                            expandedZones[i]->AddActionContextManager(modifierActionContextManagerForWidget[widget]);
+                            expandedZones[i]->AddActionContextManager(widgetActionContextManager[widget]);
                         }
                         
-                        modifierActionContextManagerForWidget[widget]->AddActionContext(modifiers, context);                        
+                        context->SetWidgetActionContextManager(widgetActionContextManager[widget]);
+                        
+                        widgetActionContextManager[widget]->AddActionContext(modifiers, context);                        
                     }
                 }
             }
@@ -745,59 +747,59 @@ void Manager::InitActionContextDictionary()
 {
     InitActionDictionary();
     
-    actionContexts_["Reaper"] = [this](Widget* widget, vector<string> params) { return new ReaperActionContext(widget, actions_[params[0]], params[1]); };
-    actionContexts_["TrackFX"] = [this](Widget* widget, vector<string> params) { return new FXContext(widget, actions_[params[0]], params[1]); };
-    actionContexts_["TrackFXParamNameDisplay"] = [this](Widget* widget, vector<string> params) { return new FXContext(widget, actions_[params[0]], params[1]); };
-    actionContexts_["TrackFXParamValueDisplay"] = [this](Widget* widget, vector<string> params) { return new FXContext(widget, actions_[params[0]], params[1]); };
-    actionContexts_["GainReductionDB"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackVolume"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["MasterTrackVolume"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSendVolume"] = [this](Widget* widget, vector<string> params) { return new TrackSendContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSendPan"] = [this](Widget* widget, vector<string> params) { return new TrackSendContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSendMute"] = [this](Widget* widget, vector<string> params) { return new TrackSendContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackVolumeDB"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackPan"] = [this](Widget* widget, vector<string> params) { return new TrackContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackPanWidth"] = [this](Widget* widget, vector<string> params) { return new TrackContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackNameDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackVolumeDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSendNameDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackSendContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSendVolumeDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackSendContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackPanDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackPanWidthDisplay"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TimeDisplay"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Rewind"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["FastForward"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Play"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Stop"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Record"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSelect"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackUniqueSelect"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["MasterTrackUniqueSelect"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackRangeSelect"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackRecordArm"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackMute"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackSolo"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackTouch"] = [this](Widget* widget, vector<string> params) { return new TrackContext(widget, actions_[params[0]]); };
-    actionContexts_["MasterTrackTouch"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackTouchControlled"] = [this](Widget* widget, vector<string> params) { return new TrackTouchControlledContext(widget, actions_[params[1]], actions_[params[2]]); };
-    actionContexts_["TrackSendTouchControlled"] = [this](Widget* widget, vector<string> params) { return new TrackSendTouchControlledContext(widget, actions_[params[1]], actions_[params[2]]); };
-    actionContexts_["CycleTimeline"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["TrackOutputMeter"] = [this](Widget* widget, vector<string> params) { return new TrackContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["MasterTrackOutputMeter"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["SetShowFXWindows"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["SetScrollLink"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["CycleTimeDisplayModes"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["NextPage"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["GoPage"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithStringParam(widget, actions_[params[0]], params[1]); };
-    actionContexts_["SelectTrackRelative"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackBank"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackSendBank"] = [this](Widget* widget, vector<string> params) { return new GlobalContextWithIntParam(widget, actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["PinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["UnpinSelectedTracks"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Shift"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Option"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Control"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
-    actionContexts_["Alt"] = [this](Widget* widget, vector<string> params) { return new GlobalContext(widget, actions_[params[0]]); };
+    actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
+    actionContexts_["TrackFX"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
+    actionContexts_["TrackFXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
+    actionContexts_["TrackFXParamValueDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
+    actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["MasterTrackVolume"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackSendVolume"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
+    actionContexts_["TrackSendPan"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
+    actionContexts_["TrackSendMute"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
+    actionContexts_["TrackVolumeDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackNameDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackSendNameDisplay"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
+    actionContexts_["TrackSendVolumeDisplay"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
+    actionContexts_["TrackPanDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackPanWidthDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TimeDisplay"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Rewind"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["FastForward"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Play"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Stop"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Record"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackUniqueSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["MasterTrackUniqueSelect"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackRangeSelect"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackRecordArm"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackMute"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackSolo"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["TrackTouch"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["MasterTrackTouch"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackTouchControlled"] = [this](vector<string> params) { return new TrackTouchControlledContext(actions_[params[1]], actions_[params[2]]); };
+    actionContexts_["TrackSendTouchControlled"] = [this](vector<string> params) { return new TrackSendTouchControlledContext(actions_[params[1]], actions_[params[2]]); };
+    actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["SetScrollLink"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["GoPage"] = [this](vector<string> params) { return new GlobalContextWithStringParam(actions_[params[0]], params[1]); };
+    actionContexts_["SelectTrackRelative"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackSendBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["PinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Shift"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Option"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
 }
 
 void Manager::Init()
@@ -927,16 +929,16 @@ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(modifierActionContextManager_ != nullptr)
-        return modifierActionContextManager_->GetTrack();
+    if(widgetActionContextManager_ != nullptr)
+        return widgetActionContextManager_->GetTrack();
     else
         return nullptr;
 }
 
 void Widget::RequestUpdate()
 {
-    if(modifierActionContextManager_ != nullptr)
-        modifierActionContextManager_->RequestUpdate();
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->RequestUpdate();
 }
 
 void  Widget::SetValue(double value)
@@ -959,14 +961,14 @@ void  Widget::SetValue(string value)
 
 void Widget::DoAction(double value)
 {
-    if(modifierActionContextManager_ != nullptr)
-        modifierActionContextManager_->DoAction(value);
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double value)
 {
-    if(modifierActionContextManager_ != nullptr)
-        modifierActionContextManager_->DoRelativeAction(value);
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoRelativeAction(value);
 }
 
 void Widget::ClearCache()
@@ -1051,38 +1053,46 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ModifierActionContextManager
+// ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* ModifierActionContextManager::GetTrack()
+Widget* ActionContext::GetWidget()
 {
-    return surface_->GetPage()->GetTrackFromGUID(navigator_->GetTrackGUID());
+    return widgetActionContextManager_->GetWidget();
 }
 
-void ModifierActionContextManager::RequestUpdate()
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ModifierActionContextManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* WidgetActionContextManager::GetTrack()
 {
-    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
-        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+    return widget_->GetSurface()->GetPage()->GetTrackFromGUID(navigator_->GetTrackGUID());
+}
+
+void WidgetActionContextManager::RequestUpdate()
+{
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
             context->RequestUpdate();
 }
 
-void ModifierActionContextManager::DoAction(double value)
+void WidgetActionContextManager::DoAction(double value)
 {
-    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
-        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
             context->DoAction(value);
 }
 
-void ModifierActionContextManager::DoRelativeAction(double value)
+void WidgetActionContextManager::DoRelativeAction(double value)
 {
-    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
-        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
             context->DoRelativeAction(value);
 }
 
-void ModifierActionContextManager::Activate()
+void WidgetActionContextManager::Activate()
 {
-    if(modifierActionContexts_.count(surface_->GetPage()->GetModifiers()) > 0)
-        for(auto context : modifierActionContexts_[surface_->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
             context->Activate(this);
 }
 
