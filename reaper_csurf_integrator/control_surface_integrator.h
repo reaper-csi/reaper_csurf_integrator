@@ -520,28 +520,42 @@ public:
 class WidgetActionContextManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     Widget* widget_ = nullptr;
     Navigator* navigator_ = nullptr;
     map<string, vector <ActionContext*>> widgetActionContexts_;
-
+    
 public:
+    ~WidgetActionContextManager() {}
     WidgetActionContextManager(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
-
+    
     Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
     
-    void RequestUpdate();
-    void DoAction(double value);
-    void DoRelativeAction(double value);
-    void Activate();
-
+    virtual void RequestUpdate();
+    virtual void DoAction(double value);
+    virtual void DoRelativeAction(double value);
+    virtual void Activate();
+    
     void AddActionContext(string modifiers, ActionContext* context)
     {
         widgetActionContexts_[modifiers].push_back(context);
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ModifierWidgetActionContextManager : public WidgetActionContextManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ~ModifierWidgetActionContextManager() {}
+    ModifierWidgetActionContextManager(Widget* widget, Navigator* navigator) : WidgetActionContextManager(widget, navigator) {}
+   
+    virtual void RequestUpdate() override;
+    virtual void DoAction(double value) override;
+    virtual void DoRelativeAction(double value) override;
+    virtual void Activate() override;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXWindow
