@@ -409,6 +409,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         {
                             if(hasNavigator)
                                 widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
+                            else if(params[0] == "Shift" || params[0] == "Option" || params[0] == "Control" || params[0] == "Alt")
+                                widgetActionContextManager[widget] = new ModifierWidgetActionContextManager(widget, new Navigator()); //  add a Modifier style WidgetActionContextManager
                             else
                                 widgetActionContextManager[widget] = new WidgetActionContextManager(widget, new Navigator()); // just add a dummy to satisfy protocol
                             
@@ -1061,7 +1063,7 @@ Widget* ActionContext::GetWidget()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ModifierActionContextManager
+// WidgetActionContextManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* WidgetActionContextManager::GetTrack()
 {
@@ -1093,6 +1095,37 @@ void WidgetActionContextManager::Activate()
 {
     if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
+            context->Activate(this);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ModifierWidgetActionContextManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ModifierWidgetActionContextManager::RequestUpdate()
+{
+    if(widgetActionContexts_.count("NoModifiers") > 0)
+        for(auto context : widgetActionContexts_["NoModifiers"])
+            context->RequestUpdate();
+}
+
+void ModifierWidgetActionContextManager::DoAction(double value)
+{
+    if(widgetActionContexts_.count("NoModifiers") > 0)
+        for(auto context : widgetActionContexts_["NoModifiers"])
+            context->DoAction(value);
+}
+
+void ModifierWidgetActionContextManager::DoRelativeAction(double value)
+{
+    if(widgetActionContexts_.count("NoModifiers") > 0)
+        for(auto context : widgetActionContexts_["NoModifiers"])
+            context->DoRelativeAction(value);
+}
+
+void ModifierWidgetActionContextManager::Activate()
+{
+    if(widgetActionContexts_.count("NoModifiers") > 0)
+        for(auto context : widgetActionContexts_["NoModifiers"])
             context->Activate(this);
 }
 
