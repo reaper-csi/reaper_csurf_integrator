@@ -49,6 +49,11 @@ const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string PageToken = "Page";
+const string TrackTouch = "TrackTouch";
+const string Shift = "Shift";
+const string Option = "Option";
+const string Control = "Control";
+const string Alt = "Alt";
 const string NoModifiers = "NoModifiers";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
@@ -1148,18 +1153,20 @@ public:
         isAlt_ = value;
     }
 
-    string GetModifiers()
+    string GetModifiers(MediaTrack* track)
     {
         string modifiers = "";
         
+        if(GetTouchState(track, 0))
+            modifiers += TrackTouch;
         if(isShift_)
-            modifiers += "Shift";
+            modifiers += Shift;
         if(isOption_)
-            modifiers += "Option";
+            modifiers += Option;
         if(isControl_)
-            modifiers +=  "Control";
+            modifiers +=  Control;
         if(isAlt_)
-            modifiers += "Alt";
+            modifiers += Alt;
         
         if(modifiers == "")
             modifiers = NoModifiers;
