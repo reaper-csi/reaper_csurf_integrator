@@ -320,7 +320,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
     bool hasNavigator = false;
-    string navigatorType = "";
+
     vector<Navigator*> expandedNavigators;
     map<Widget*, WidgetActionContextManager*> widgetActionContextManager;
     
@@ -342,7 +342,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
         if(tokens.size() == 2 && tokens[0] == "Navigator")
         {
             hasNavigator = true;
-            navigatorType = tokens[1];
+            string navigatorType = tokens[1];
             
             for(int i = 0; i < expandedZones.size(); i++)
             {
@@ -353,6 +353,10 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             continue;
         }
         
+        if(! hasNavigator) // judt add a dummy to satisfy protocol
+            for(int i = 0; i < expandedZones.size(); i++)
+                expandedNavigators.push_back(new Navigator());
+            
         for(int i = 0; i < expandedZones.size(); i++)
         {
             // Pre-process for "Channel|1-8" syntax
@@ -409,17 +413,16 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         if(widgetActionContextManager.count(widget) < 1)
                         {
-                            if(hasNavigator)
-                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
-                            else
-                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, new Navigator()); // just add a dummy to satisfy protocol
-                            
+                            widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
                             expandedZones[i]->AddActionContextManager(widgetActionContextManager[widget]);
                         }
                         
                         context->SetWidgetActionContextManager(widgetActionContextManager[widget]);
 
                         widgetActionContextManager[widget]->AddActionContext(modifiers, context);
+                        
+                        if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
+                            widget->SetIsModifier();
                     }
                 }
             }
@@ -1061,6 +1064,14 @@ Widget* ActionContext::GetWidget()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionContextManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string WidgetActionContextManager::GetModifiers()
+{
+    if(widget_->GetIsModifier())
+        return NoModifiers; // Modifier Widgets cannot have Modifiers
+    else
+        return widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack());
+}
+
 MediaTrack* WidgetActionContextManager::GetTrack()
 {
     return widget_->GetSurface()->GetPage()->GetTrackFromGUID(navigator_->GetTrackGUID());
@@ -1068,29 +1079,29 @@ MediaTrack* WidgetActionContextManager::GetTrack()
 
 void WidgetActionContextManager::RequestUpdate()
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
             context->RequestUpdate();
 }
 
 void WidgetActionContextManager::DoAction(double value)
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(value);
 }
 
 void WidgetActionContextManager::DoRelativeAction(double value)
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoRelativeAction(value);
 }
 
 void WidgetActionContextManager::Activate()
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
             context->Activate(this);
 }
 
