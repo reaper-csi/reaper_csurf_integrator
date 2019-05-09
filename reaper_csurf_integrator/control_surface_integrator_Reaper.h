@@ -245,7 +245,7 @@ public:
             if(GUIDTracks_[trackGUID].trackPointer == CSurf_TrackFromID(GUIDTracks_[trackGUID].trackIndex, mcpView))
                 return GUIDTracks_[trackGUID].trackPointer;
             else
-                GUIDTracks_.clear(); // pointers didn't agree, cahe is stalr
+                GUIDTracks_.clear(); // pointers didn't agree, cache is stale
         }
         
         for(int i = 1; i <= CSurf_NumTracks(mcpView); i++)
@@ -259,7 +259,7 @@ public:
         }
 
         if(GUIDTracks_.count(trackGUID) > 0)
-            return GUIDTracks_[trackGUID].trackPointer;
+            return GUIDTracks_[trackGUID].trackPointer; // this one won't be stale becuse it was just built in the previous loop
         else
             return nullptr;
     }
