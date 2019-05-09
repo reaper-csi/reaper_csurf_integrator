@@ -41,7 +41,13 @@ struct MIDI_event_ex_t : MIDI_event_t
     }
 };
 
-static map<string, MediaTrack*> GUIDTracks_;
+struct TrackID
+{
+    int trackIndex;
+    MediaTrack* trackPointer;
+};
+
+static map<string, TrackID> GUIDTracks_;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DAW
@@ -229,30 +235,31 @@ public:
         return GetTrackGUIDAsString(CSurf_TrackToID(track, mcpView), mcpView);
     }
     
-    static void ClearGUIDTracksCache()
-    {
-        GUIDTracks_.clear();
-    }
-
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
         if(trackGUID == "")
             return nullptr;
         
-        if(GUIDTracks_.count(trackGUID) < 1)
+        if(GUIDTracks_.count(trackGUID) > 0)
         {
-            for(int i = 1; i <= CSurf_NumTracks(mcpView); i++)
-            {
-                if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
-                {
-                    GUIDTracks_[trackGUID] = CSurf_TrackFromID(i, mcpView);
-                    break;
-                }
-            }
+            if(GUIDTracks_[trackGUID].trackPointer == CSurf_TrackFromID(GUIDTracks_[trackGUID].trackIndex, mcpView))
+                return GUIDTracks_[trackGUID].trackPointer;
+            else
+                GUIDTracks_.clear(); // pointers didn't agree, cahe is stalr
         }
         
+        for(int i = 1; i <= CSurf_NumTracks(mcpView); i++)
+        {
+            if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
+            {
+                GUIDTracks_[trackGUID].trackIndex = i;
+                GUIDTracks_[trackGUID].trackPointer = CSurf_TrackFromID(i, mcpView);
+                break;
+            }
+        }
+
         if(GUIDTracks_.count(trackGUID) > 0)
-            return GUIDTracks_[trackGUID];
+            return GUIDTracks_[trackGUID].trackPointer;
         else
             return nullptr;
     }
