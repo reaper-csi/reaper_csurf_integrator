@@ -268,7 +268,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
-    vector<string> modifierSlots = { "", "", "", "" };
+    vector<string> modifierSlots = { "", "", "", "", "" };
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -278,14 +278,16 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     {
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
-            if(modifier_tokens[i] == "Shift")
-                modifierSlots[0] = "Shift";
-            else if(modifier_tokens[i] == "Option")
-                modifierSlots[1] = "Option";
-            else if(modifier_tokens[i] == "Control")
-                modifierSlots[2] = "Control";
-            else if(modifier_tokens[i] == "Alt")
-                modifierSlots[3] = "Alt";
+            if(modifier_tokens[i] == TrackTouch)
+                modifierSlots[0] = TrackTouch;
+            if(modifier_tokens[i] == Shift)
+                modifierSlots[1] = Shift;
+            else if(modifier_tokens[i] == Option)
+                modifierSlots[2] = Option;
+            else if(modifier_tokens[i] == Control)
+                modifierSlots[3] = Control;
+            else if(modifier_tokens[i] == Alt)
+                modifierSlots[4] = Alt;
             
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
@@ -300,7 +302,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     }
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
-    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4];
     if(modifiers == "")
         modifiers = NoModifiers;
 }
@@ -407,10 +409,10 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         if(widgetActionContextManager.count(widget) < 1)
                         {
-                            if(hasNavigator)
-                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
-                            else if(params[0] == "Shift" || params[0] == "Option" || params[0] == "Control" || params[0] == "Alt")
+                            if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                                 widgetActionContextManager[widget] = new ModifierWidgetActionContextManager(widget, new Navigator()); //  add a Modifier style WidgetActionContextManager
+                            else if(hasNavigator)
+                                widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
                             else
                                 widgetActionContextManager[widget] = new WidgetActionContextManager(widget, new Navigator()); // just add a dummy to satisfy protocol
                             
@@ -722,10 +724,8 @@ void Manager::InitActionDictionary()
     actions_["TrackRecordArm"] = new TrackRecordArm();
     actions_["TrackMute"] = new TrackMute();
     actions_["TrackSolo"] = new TrackSolo();
-    actions_["TrackTouch"] = new TrackTouch();
-    actions_["MasterTrackTouch"] = new MasterTrackTouch();
-    actions_["TrackTouchControlled"] = new TrackTouchControlled();
-    actions_["TrackSendTouchControlled"] = new TrackTouchControlled();
+    actions_[TrackTouch] = new SetTrackTouch();
+    actions_["MasterTrackTouch"] = new SetMasterTrackTouch();
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
     actions_["MasterTrackOutputMeter"] = new MasterTrackOutputMeter();
@@ -781,10 +781,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackRecordArm"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackMute"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackSolo"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackTouch"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_[TrackTouch] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["MasterTrackTouch"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackTouchControlled"] = [this](vector<string> params) { return new TrackTouchControlledContext(actions_[params[1]], actions_[params[2]]); };
-    actionContexts_["TrackSendTouchControlled"] = [this](vector<string> params) { return new TrackSendTouchControlledContext(actions_[params[1]], actions_[params[2]]); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
@@ -1072,29 +1070,29 @@ MediaTrack* WidgetActionContextManager::GetTrack()
 
 void WidgetActionContextManager::RequestUpdate()
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
             context->RequestUpdate();
 }
 
 void WidgetActionContextManager::DoAction(double value)
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
             context->DoAction(value);
 }
 
 void WidgetActionContextManager::DoRelativeAction(double value)
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
             context->DoRelativeAction(value);
 }
 
 void WidgetActionContextManager::Activate()
 {
-    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers()])
+    if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
+        for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
             context->Activate(this);
 }
 
