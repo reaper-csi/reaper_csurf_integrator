@@ -75,7 +75,7 @@ private:
     
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
-    int lastParamValue_ = 0;
+
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
@@ -339,8 +339,6 @@ public:
     virtual void Run()
     {
         RequestUpdate();
-        
-        // GAW TBD -- Determine the state of modifiers and activate appropriate Zones
     }
 
 };
