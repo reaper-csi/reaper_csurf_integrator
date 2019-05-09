@@ -409,9 +409,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         if(widgetActionContextManager.count(widget) < 1)
                         {
-                            if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
-                                widgetActionContextManager[widget] = new ModifierWidgetActionContextManager(widget, new Navigator()); //  add a Modifier style WidgetActionContextManager
-                            else if(hasNavigator)
+                            if(hasNavigator)
                                 widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
                             else
                                 widgetActionContextManager[widget] = new WidgetActionContextManager(widget, new Navigator()); // just add a dummy to satisfy protocol
@@ -420,8 +418,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         }
                         
                         context->SetWidgetActionContextManager(widgetActionContextManager[widget]);
-                        
-                        widgetActionContextManager[widget]->AddActionContext(modifiers, context);                        
+
+                        widgetActionContextManager[widget]->AddActionContext(modifiers, context);
                     }
                 }
             }
@@ -1093,37 +1091,6 @@ void WidgetActionContextManager::Activate()
 {
     if(widgetActionContexts_.count(widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())) > 0)
         for(auto context : widgetActionContexts_[widget_->GetSurface()->GetPage()->GetModifiers(widget_->GetTrack())])
-            context->Activate(this);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ModifierWidgetActionContextManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModifierWidgetActionContextManager::RequestUpdate()
-{
-    if(widgetActionContexts_.count(NoModifiers) > 0)
-        for(auto context : widgetActionContexts_[NoModifiers])
-            context->RequestUpdate();
-}
-
-void ModifierWidgetActionContextManager::DoAction(double value)
-{
-    if(widgetActionContexts_.count(NoModifiers) > 0)
-        for(auto context : widgetActionContexts_[NoModifiers])
-            context->DoAction(value);
-}
-
-void ModifierWidgetActionContextManager::DoRelativeAction(double value)
-{
-    if(widgetActionContexts_.count(NoModifiers) > 0)
-        for(auto context : widgetActionContexts_[NoModifiers])
-            context->DoRelativeAction(value);
-}
-
-void ModifierWidgetActionContextManager::Activate()
-{
-    if(widgetActionContexts_.count(NoModifiers) > 0)
-        for(auto context : widgetActionContexts_[NoModifiers])
             context->Activate(this);
 }
 
