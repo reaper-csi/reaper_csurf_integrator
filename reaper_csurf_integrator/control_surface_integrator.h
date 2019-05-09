@@ -80,6 +80,8 @@ private:
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
     
+    bool isModifier_ = false;
+    
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Widget() {};
@@ -94,6 +96,9 @@ public:
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
+    
+    void SetIsModifier() { isModifier_ = true; }
+    bool GetIsModifier() { return isModifier_; }
     
     void SetValue(double value);
     void SetValue(int mode, double value);
@@ -525,22 +530,23 @@ public:
 class WidgetActionContextManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
+private:
     Widget* widget_ = nullptr;
     Navigator* navigator_ = nullptr;
     map<string, vector <ActionContext*>> widgetActionContexts_;
     
+    string GetModifiers();
+    
 public:
-    ~WidgetActionContextManager() {}
     WidgetActionContextManager(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
     
     Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
     
-    virtual void RequestUpdate();
-    virtual void DoAction(double value);
-    virtual void DoRelativeAction(double value);
-    virtual void Activate();
+    void RequestUpdate();
+    void DoAction(double value);
+    void DoRelativeAction(double value);
+    void Activate();
     
     void AddActionContext(string modifiers, ActionContext* context)
     {
