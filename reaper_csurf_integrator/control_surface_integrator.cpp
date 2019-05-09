@@ -1101,29 +1101,29 @@ void WidgetActionContextManager::Activate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModifierWidgetActionContextManager::RequestUpdate()
 {
-    if(widgetActionContexts_.count("NoModifiers") > 0)
-        for(auto context : widgetActionContexts_["NoModifiers"])
+    if(widgetActionContexts_.count(NoModifiers) > 0)
+        for(auto context : widgetActionContexts_[NoModifiers])
             context->RequestUpdate();
 }
 
 void ModifierWidgetActionContextManager::DoAction(double value)
 {
-    if(widgetActionContexts_.count("NoModifiers") > 0)
-        for(auto context : widgetActionContexts_["NoModifiers"])
+    if(widgetActionContexts_.count(NoModifiers) > 0)
+        for(auto context : widgetActionContexts_[NoModifiers])
             context->DoAction(value);
 }
 
 void ModifierWidgetActionContextManager::DoRelativeAction(double value)
 {
-    if(widgetActionContexts_.count("NoModifiers") > 0)
-        for(auto context : widgetActionContexts_["NoModifiers"])
+    if(widgetActionContexts_.count(NoModifiers) > 0)
+        for(auto context : widgetActionContexts_[NoModifiers])
             context->DoRelativeAction(value);
 }
 
 void ModifierWidgetActionContextManager::Activate()
 {
-    if(widgetActionContexts_.count("NoModifiers") > 0)
-        for(auto context : widgetActionContexts_["NoModifiers"])
+    if(widgetActionContexts_.count(NoModifiers) > 0)
+        for(auto context : widgetActionContexts_[NoModifiers])
             context->Activate(this);
 }
 
