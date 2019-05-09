@@ -757,8 +757,6 @@ public:
             for(int i = 0; i < currentNumVisibleTracks; i++)
                 previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
             
-            DAW::ClearGUIDTracksCache();
-            
             TrackNavigator* navigator = nullptr;
             char buffer[BUFSZ];
             for(int i = 0; i < trackNavigators_.size(); i++)
@@ -795,8 +793,6 @@ public:
                 if(previousTrackList_ != nullptr)
                     delete[] previousTrackList_;
                 previousTrackList_ = currentTrackList;
-                
-                DAW::ClearGUIDTracksCache();
                 return true;
             }
             else
