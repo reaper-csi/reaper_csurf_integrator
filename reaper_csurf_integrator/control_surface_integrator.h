@@ -1028,6 +1028,8 @@ public:
         
         for(auto surface : surfaces_)
             surface->ClearCache();
+        
+        RefreshLayout();
     }
     
     void LeavePage()
@@ -1265,7 +1267,6 @@ public:
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
             SavePageIndexToProjectFile();
             pages_[currentPageIndex_]->EnterPage();
-            pages_[currentPageIndex_]->RefreshLayout();
         }
     }
     
@@ -1279,7 +1280,6 @@ public:
                 currentPageIndex_ = i;
                 SavePageIndexToProjectFile();
                 pages_[currentPageIndex_]->EnterPage();
-                pages_[currentPageIndex_]->RefreshLayout();
 
                 break;
             }
