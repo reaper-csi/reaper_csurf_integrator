@@ -1176,6 +1176,8 @@ private:
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
+    time_t lastTimeCacheCleared = 0;
+    
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
@@ -1245,6 +1247,14 @@ public:
 
     void Run()
     {
+        time_t timeNow = DAW::GetCurrentNumberOfMilliseconds();
+        
+        if(timeNow - lastTimeCacheCleared > 30000) // every 30 seconds
+        {
+            lastTimeCacheCleared = timeNow;
+            DAW::ClearCache();
+        }
+        
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
     }

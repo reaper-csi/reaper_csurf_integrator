@@ -235,6 +235,11 @@ public:
         return GetTrackGUIDAsString(CSurf_TrackToID(track, mcpView), mcpView);
     }
     
+    static void ClearCache()
+    {
+        GUIDTracks_.clear();
+    }
+
     static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
     {
         if(trackGUID == "")
