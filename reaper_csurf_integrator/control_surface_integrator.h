@@ -317,6 +317,14 @@ public:
         }
     }
 
+    void ToggleZoneActivation(string zoneName)
+    {
+        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
+            DeactivateZone(zoneName);
+        else
+            ActivateZone(zoneName);
+    }
+    
     void ActivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
@@ -456,6 +464,7 @@ public:
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
+    virtual void Do(ControlSurface* surface, string value) {}                                                                                // SurfaceContext
     virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
@@ -495,7 +504,6 @@ public:
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
-    virtual void SetCyclerWidget(Widget* cyclerWidget) {}
     virtual void RequestUpdate() {}
     virtual void DoAction() {}
     virtual void DoAction(double value) {}

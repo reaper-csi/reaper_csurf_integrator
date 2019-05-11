@@ -735,6 +735,7 @@ void Manager::InitActionDictionary()
     actions_["CycleTimeDisplayModes"] = new CycleTimeDisplayModes();
     actions_["NextPage"] = new class NextPage();
     actions_["GoPage"] = new class GoPage();
+    actions_["ToggleZone"] = new class ToggleZone();
     actions_["SelectTrackRelative"] = new SelectTrackRelative();
     actions_["TrackBank"] = new TrackBank();
     actions_["TrackSendBank"] = new TrackSendBank();
@@ -792,6 +793,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["GoPage"] = [this](vector<string> params) { return new GlobalContextWithStringParam(actions_[params[0]], params[1]); };
+    actionContexts_["ToggleZone"] = [this](vector<string> params) { return new SurfaceContextWithStringParam(actions_[params[0]], params[1]); };
     actionContexts_["SelectTrackRelative"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["TrackSendBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
@@ -1019,6 +1021,9 @@ void Zone::Activate()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ControlSurface::InitZones(string zoneFolder)
 {
+    includedZoneMembers.clear();
+    trackNavigators.clear();
+    
     try
     {
         vector<string> zoneFilesToProcess;
