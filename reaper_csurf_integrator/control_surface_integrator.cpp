@@ -693,6 +693,7 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::InitActionDictionary()
 {
+    actions_["NoAction"] = new Action();
     actions_["Reaper"] = new ReaperAction();
     actions_["TrackFX"] = new TrackFX();
     actions_["TrackFXParamNameDisplay"] = new TrackFXParamNameDisplay();
@@ -751,6 +752,7 @@ void Manager::InitActionContextDictionary()
 {
     InitActionDictionary();
     
+    actionContexts_["NoAction"] = [this](vector<string> params) { return new ActionContext(actions_[params[0]]); };
     actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
     actionContexts_["TrackFX"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
     actionContexts_["TrackFXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
