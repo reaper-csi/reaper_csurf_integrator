@@ -412,7 +412,7 @@ public:
     virtual void Run() override
     {
         HandleMidiInput();
-        RequestUpdate();
+        ControlSurface::Run();
     }
     
     void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
