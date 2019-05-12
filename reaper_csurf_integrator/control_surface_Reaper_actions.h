@@ -173,7 +173,7 @@ public:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        actionContext->SetWidgetValue(widget, panToNormalized(pan));
+        actionContext->SetWidgetValue(widget, displayMode, panToNormalized(pan));
     }
 
     void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
