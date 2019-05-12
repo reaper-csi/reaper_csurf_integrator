@@ -489,11 +489,10 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
 
-    ActionContext(Action* action) : action_(action) {}
-
     Widget* GetWidget();
     
 public:
+    ActionContext(Action* action) : action_(action) {}
     virtual ~ActionContext() {}
     
     void SetIsInverted() { isInverted_ = true; }
@@ -507,7 +506,6 @@ public:
     virtual void RequestUpdate() {}
     virtual void DoAction() {}
     virtual void DoAction(double value) {}
-    //virtual void DoRelativeAction(double value) {}
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
     
