@@ -120,7 +120,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget()->GetSurface(), track, param_);
+            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, value);
     }
 };
 
