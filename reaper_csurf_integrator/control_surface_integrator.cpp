@@ -946,12 +946,16 @@ void Widget::RequestUpdate()
 
 void  Widget::SetValue(double value)
 {
+    lastValue_ = value;
+    
     for(auto feebackProcessor : feedbackProcessors_)
         feebackProcessor->SetValue(value);
 }
 
 void  Widget::SetValue(int mode, double value)
 {
+    lastValue_ = value;
+    
     for(auto feebackProcessor : feedbackProcessors_)
         feebackProcessor->SetValue(mode, value);
 }
@@ -971,7 +975,7 @@ void Widget::DoAction(double value)
 void Widget::DoRelativeAction(double value)
 {
     if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->DoRelativeAction(value);
+        widgetActionContextManager_->DoAction(lastValue_ + value);
 }
 
 void Widget::ClearCache()
@@ -1094,13 +1098,6 @@ void WidgetActionContextManager::DoAction(double value)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(value);
-}
-
-void WidgetActionContextManager::DoRelativeAction(double value)
-{
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->DoRelativeAction(value);
 }
 
 void WidgetActionContextManager::Activate()
