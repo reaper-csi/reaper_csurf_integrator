@@ -507,7 +507,7 @@ public:
     virtual void RequestUpdate() {}
     virtual void DoAction() {}
     virtual void DoAction(double value) {}
-    virtual void DoRelativeAction(double value) {}
+    //virtual void DoRelativeAction(double value) {}
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
     
@@ -551,7 +551,6 @@ public:
     
     void RequestUpdate();
     void DoAction(double value);
-    void DoRelativeAction(double value);
     void Activate();
     
     void AddActionContext(string modifiers, ActionContext* context)
