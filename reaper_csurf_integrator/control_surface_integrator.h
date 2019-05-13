@@ -464,7 +464,7 @@ public:
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
-    virtual void Do(ControlSurface* surface, string value) {}                                                                                // SurfaceContext
+    virtual void Do(ControlSurface* surface, string value) {}                                                                   // SurfaceContext
     virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
@@ -536,16 +536,18 @@ class WidgetActionContextManager
 {
 private:
     Widget* widget_ = nullptr;
-    Navigator* navigator_ = nullptr;
+    TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <ActionContext*>> widgetActionContexts_;
     
     string GetModifiers();
     
 public:
-    WidgetActionContextManager(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
+    WidgetActionContextManager(Widget* widget) : widget_(widget) {}
     
     Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
+    
+    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
     
     void RequestUpdate();
     void DoAction(double value);
@@ -1168,7 +1170,7 @@ public:
     }
 
     
-    /// GAW -- end ModifierActivationManager facade
+    /// GAW -- end Modifier section
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

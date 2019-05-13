@@ -319,11 +319,11 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
-    bool hasNavigator = false;
-
-    vector<Navigator*> expandedNavigators;
     map<Widget*, WidgetActionContextManager*> widgetActionContextManager;
     
+    bool hasTrackNavigator = false;
+    vector<TrackNavigator*> expandedTrackNavigators;
+       
     for (string line; getline(zoneFile, line) ; )
     {
         lineNumber++;
@@ -339,24 +339,16 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 return;
         }
         
-        if(tokens.size() == 2 && tokens[0] == "Navigator")
+        if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
-            hasNavigator = true;
-            string navigatorType = tokens[1];
+            hasTrackNavigator = true;
             
             for(int i = 0; i < expandedZones.size(); i++)
-            {
-                if(navigatorType == "TrackNavigator")
-                    expandedNavigators.push_back(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface->GetPage()));
-            }
+                expandedTrackNavigators.push_back(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface->GetPage()));
             
             continue;
         }
         
-        if(! hasNavigator) // judt add a dummy to satisfy protocol
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedNavigators.push_back(new Navigator());
-            
         for(int i = 0; i < expandedZones.size(); i++)
         {
             // Pre-process for "Channel|1-8" syntax
@@ -413,7 +405,9 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         if(widgetActionContextManager.count(widget) < 1)
                         {
-                            widgetActionContextManager[widget] = new WidgetActionContextManager(widget, expandedNavigators[i]);
+                            widgetActionContextManager[widget] = new WidgetActionContextManager(widget);
+                            if(hasTrackNavigator)
+                                widgetActionContextManager[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
                             expandedZones[i]->AddActionContextManager(widgetActionContextManager[widget]);
                         }
                         
@@ -1085,7 +1079,10 @@ string WidgetActionContextManager::GetModifiers()
 
 MediaTrack* WidgetActionContextManager::GetTrack()
 {
-    return widget_->GetSurface()->GetPage()->GetTrackFromGUID(navigator_->GetTrackGUID());
+    if(trackNavigator_ == nullptr)
+        return nullptr;
+    else
+        return widget_->GetSurface()->GetPage()->GetTrackFromGUID(trackNavigator_->GetTrackGUID());
 }
 
 void WidgetActionContextManager::RequestUpdate()
