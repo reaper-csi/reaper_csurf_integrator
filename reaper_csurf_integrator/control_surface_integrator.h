@@ -214,14 +214,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
+class TrackNavigationManager;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator //: public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     bool isPinned_ = false;
     string trackGUID_ = "";
     
+    TrackNavigationManager* trackNavigationManager_ = nullptr;
+    
 public:
+    void SetTrackNavigationManager(TrackNavigationManager* trackNavigationManager) { trackNavigationManager_ = trackNavigationManager; }
+   
     bool GetIsPinned() { return isPinned_; }
     string GetTrackGUID() { return trackGUID_; }
     
@@ -624,9 +630,9 @@ public:
 
     void AddTrackNavigator(TrackNavigator* trackNavigator)
     {
+        trackNavigator->SetTrackNavigationManager(this);
         trackNavigators_.push_back(trackNavigator);
     }
-
     
     void EnterPage()
     {
