@@ -502,7 +502,7 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
                 
                 widget->AddFeedbackProcessor(feedbackProcessor);
             }
-            else if(widgetClass == "FB_MCU_TimeDisplay_Midi" && tokens.size() == 1)
+            else if(widgetClass == "FB_MCUTimeDisplay" && tokens.size() == 1)
             {
                 feedbackProcessor = new MCU_TimeDisplay_Midi_FeedbackProcessor(surface);
             }
