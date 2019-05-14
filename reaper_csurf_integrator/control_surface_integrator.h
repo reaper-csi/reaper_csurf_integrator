@@ -214,21 +214,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Navigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Navigator() {}
-
-    virtual bool GetIsPinned() { return false; }
-    virtual string GetTrackGUID() { return ""; }
-    
-    virtual void SetTrackGUID(string trackGUID) {}
-    virtual void SetIsPinned(bool pinned) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator : public Navigator
+class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -236,17 +222,15 @@ private:
     string trackGUID_ = "";
     
 public:
-    virtual ~TrackNavigator() {}
+    bool GetIsPinned() { return isPinned_; }
+    string GetTrackGUID() { return trackGUID_; }
     
-    virtual bool GetIsPinned() override { return isPinned_; }
-    virtual string GetTrackGUID() override { return trackGUID_; }
-    
-    virtual void SetTrackGUID(string trackGUID) override
+    void SetTrackGUID(string trackGUID)
     {
         trackGUID_ = trackGUID;
     }
     
-    virtual void SetIsPinned(bool pinned) override
+    void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
     }
