@@ -479,8 +479,6 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
                 
                 if(tokens.size() == 8)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[7]));
-                
-                widget->AddFeedbackProcessor(feedbackProcessor);
             }
             else if(tokens.size() == 4 || tokens.size() == 5)
             {
@@ -497,10 +495,8 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
                 else if(widgetClass == "FB_QConProXMasterVUMeter")
                     feedbackProcessor = new QConProXMasterVUMeter_Midi_FeedbackProcessor(surface);
                 
-                if(tokens.size() == 5)
+                if(tokens.size() == 5 && feedbackProcessor != nullptr)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[4]));
-                
-                widget->AddFeedbackProcessor(feedbackProcessor);
             }
             else if(widgetClass == "FB_MCUTimeDisplay" && tokens.size() == 1)
             {
@@ -510,10 +506,8 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
             {
                 feedbackProcessor = new MCUVUMeter_Midi_FeedbackProcessor(surface, stoi(tokens[1]));
                 
-                if(tokens.size() == 3)
+                if(tokens.size() == 3 && feedbackProcessor != nullptr)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[2]));
-                
-                widget->AddFeedbackProcessor(feedbackProcessor);
             }
             else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && (tokens.size() == 2 || tokens.size() == 3))
             {
@@ -526,24 +520,23 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
                 else if(widgetClass == "FB_MCUXTDisplayLower")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 1, 0x15, 0x12, stoi(tokens[1]));
                 
-                if(tokens.size() == 3)
+                if(tokens.size() == 3 && feedbackProcessor != nullptr)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[2]));
-                
-                widget->AddFeedbackProcessor(feedbackProcessor);
             }
             
             else if((widgetClass == "FB_C4DisplayUpper" || widgetClass == "FB_C4DisplayLower") && (tokens.size() == 3 || tokens.size() == 4))
             {
-                if(widgetClass == "FB_MCUDisplayUpper")
+                if(widgetClass == "FB_C4DisplayUpper")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 0, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
-                else if(widgetClass == "FB_MCUDisplayLower")
+                else if(widgetClass == "FB_C4DisplayLower")
                     feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 1, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
                 
-                if(tokens.size() == 4)
+                if(tokens.size() == 4 && feedbackProcessor != nullptr)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[3]));
-                
-                widget->AddFeedbackProcessor(feedbackProcessor);
             }
+            
+            if(feedbackProcessor != nullptr)
+                widget->AddFeedbackProcessor(feedbackProcessor);
         }
     }
 }
