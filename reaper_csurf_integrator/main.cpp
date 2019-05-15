@@ -4,6 +4,8 @@
 #include "reaper_plugin_functions.h"
 #include "resource.h"
 
+extern  void ShutdownMidiIO();
+
 extern reaper_csurf_reg_t csurf_integrator_reg;
 
 REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs, if any
@@ -15,7 +17,13 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
 {
     g_hInst = hInstance;
     
-    if (!reaper_plugin_info || reaper_plugin_info->caller_version != REAPER_PLUGIN_VERSION || !reaper_plugin_info->GetFunc)
+    if (! reaper_plugin_info)
+    {
+        ShutdownMidiIO();
+        return 0;
+    }
+    
+    if (reaper_plugin_info->caller_version != REAPER_PLUGIN_VERSION || !reaper_plugin_info->GetFunc)
         return 0;
 
     if (reaper_plugin_info)
