@@ -267,7 +267,9 @@ public:
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
 
-    void Reset()
+    virtual void TurnOffMonitoring() {}
+    
+    void ResetAllWidgets()
     {
         for(auto widget : widgets_)
             widget->Reset();
@@ -392,6 +394,12 @@ public:
     virtual ~Midi_ControlSurface() {}
     
     virtual void InitWidgets(string templateFilename) override;
+
+    virtual void TurnOffMonitoring() override
+    {
+        midiInMonitor_ = false;
+        midiOutMonitor_ = false;
+    }
 
     virtual void Run() override
     {
@@ -819,10 +827,16 @@ public:
             surface->Run();
     }
     
+    void TurnOffMonitoring()
+    {
+        for(auto surface : surfaces_)
+            surface->TurnOffMonitoring();
+    }
+
     void ResetAllWidgets()
     {
         for(auto surface : surfaces_)
-            surface->Reset();
+            surface->ResetAllWidgets();
     }
     
     void AddSurface(ControlSurface* surface)
@@ -1056,7 +1070,10 @@ public:
     void ResetAllWidgets()
     {
         if(pages_.size() > 0)
+        {
+            pages_[currentPageIndex_]->TurnOffMonitoring();
             pages_[currentPageIndex_]->ResetAllWidgets();
+        }
     }
     
     void Init();
