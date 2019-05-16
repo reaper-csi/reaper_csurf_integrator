@@ -424,6 +424,10 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                             widget->SetIsModifier();
                     }
+                    else
+                    {
+                        // log error, etc.
+                    }
                 }
             }
         }
@@ -460,7 +464,7 @@ void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string
         if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
             return;
         
-        if(tokens.size() > 1)
+        if(tokens.size() > 0)
         {
             Midi_FeedbackProcessor* feedbackProcessor = nullptr;
             
