@@ -696,53 +696,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    vector<Zone*> zones_;
-
-public:
-    void AddZone(Zone* zone)
-    {
-        zones_.push_back(zone);
-    }
-    
-    void Activate()
-    {
-        for(auto zone : zones_)
-            zone->Activate();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackTouchActivationManager : public ActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<MediaTrack*> touchedTracks_;
-
-public:
-    bool GetTouchState(MediaTrack* track, int touchedControl)
-    {
-        for(MediaTrack* touchedTrack : touchedTracks_)
-            if(touchedTrack == track)
-                return true;
-        
-        return false;
-    }
-    
-    void SetTouchState(MediaTrack* track,  bool touched)
-    {
-        if(touched)
-            touchedTracks_.push_back(track);
-        else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXActivationManager : public ActivationManager
+class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -804,10 +758,11 @@ private:
     bool isOption_ = false;
     bool isControl_ = false;
     bool isAlt_ = false;
+    
+    vector<MediaTrack*> touchedTracks_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
-    TrackTouchActivationManager* trackTouchActivationManager_ = nullptr;
     FXActivationManager* FXActivationManager_ = nullptr;
 
 public:
@@ -815,7 +770,6 @@ public:
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
         sendsNavigationManager_ = new SendsNavigationManager(this);
-        trackTouchActivationManager_ = new TrackTouchActivationManager();
         FXActivationManager_ = new FXActivationManager();
     }
     
@@ -843,7 +797,65 @@ public:
     {
         surfaces_.push_back(surface);
     }
+
+    bool GetTouchState(MediaTrack* track, int touchedControl)
+    {
+        for(MediaTrack* touchedTrack : touchedTracks_)
+            if(touchedTrack == track)
+                return true;
         
+        return false;
+    }
+    
+    void SetTouchState(MediaTrack* track,  bool touched)
+    {
+        if(touched)
+            touchedTracks_.push_back(track);
+        else
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+    }
+    
+    void SetShift(bool value)
+    {
+        isShift_ = value;
+    }
+    
+    void SetOption(bool value)
+    {
+        isOption_ = value;
+    }
+    
+    void SetControl(bool value)
+    {
+        isControl_ = value;
+    }
+    
+    void SetAlt(bool value)
+    {
+        isAlt_ = value;
+    }
+    
+    string GetModifiers(MediaTrack* track)
+    {
+        string modifiers = "";
+        
+        if(GetTouchState(track, 0))
+            modifiers += TrackTouch;
+        if(isShift_)
+            modifiers += Shift;
+        if(isOption_)
+            modifiers += Option;
+        if(isControl_)
+            modifiers +=  Control;
+        if(isAlt_)
+            modifiers += Alt;
+        
+        if(modifiers == "")
+            modifiers = NoModifiers;
+        
+        return modifiers;
+    }
+
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -939,21 +951,6 @@ public:
     /// GAW -- end SendsNavigationManager facade
 
 
-    /// GAW -- start TrackTouchedActivationManager facade
-
-    bool GetTouchState(MediaTrack* track, int touchedControl)
-    {
-        return trackTouchActivationManager_->GetTouchState(track, touchedControl);
-    }
-    
-    void SetTouchState(MediaTrack* track,  bool touched)
-    {
-        trackTouchActivationManager_->SetTouchState(track, touched);
-    }
-
-    /// GAW -- end TrackTouchedActivationManager facade
-
- 
     /// GAW -- start FXActivationManager facade
 
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
@@ -983,53 +980,6 @@ public:
     }
 
     /// GAW -- end FXActivationManager facade
-
-    
-    /// GAW -- start Modifier section
-    
-    void SetShift(bool value)
-    {
-        isShift_ = value;
-    }
-    
-    void SetOption(bool value)
-    {
-        isOption_ = value;
-    }
-    
-    void SetControl(bool value)
-    {
-        isControl_ = value;
-    }
-    
-    void SetAlt(bool value)
-    {
-        isAlt_ = value;
-    }
-
-    string GetModifiers(MediaTrack* track)
-    {
-        string modifiers = "";
-        
-        if(GetTouchState(track, 0))
-            modifiers += TrackTouch;
-        if(isShift_)
-            modifiers += Shift;
-        if(isOption_)
-            modifiers += Option;
-        if(isControl_)
-            modifiers +=  Control;
-        if(isAlt_)
-            modifiers += Alt;
-        
-        if(modifiers == "")
-            modifiers = NoModifiers;
-        
-        return modifiers;
-    }
-
-    
-    /// GAW -- end Modifier section
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
