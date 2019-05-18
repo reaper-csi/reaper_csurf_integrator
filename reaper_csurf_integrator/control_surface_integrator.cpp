@@ -1244,9 +1244,11 @@ bool TrackNavigationManager::TrackListChanged()
         {
             navigator = trackNavigators_[i];
             
-            if(navigator->GetIsPinned())
+            if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
             {
-                if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
+                page_->TrackHasBeenRemoved(navigator->GetTrackGUID());
+                
+                if(navigator->GetIsPinned())
                 {
                     navigator->SetIsPinned(false);
                     navigator->SetTrackGUID("");
