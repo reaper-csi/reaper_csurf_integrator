@@ -620,7 +620,8 @@ public:
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
     MediaTrack* GetTrackFromId(int trackNumber) { return DAW::CSurf_TrackFromID(trackNumber, followMCP_); }
     MediaTrack* GetTrackFromGUID(string GUID) { return DAW::GetTrackFromGUID(GUID, followMCP_); }
-
+    string GetTrackGUID(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
+    
     void Init();
     void AdjustTrackBank(int stride);
     void RefreshLayout();
@@ -759,7 +760,7 @@ private:
     bool isControl_ = false;
     bool isAlt_ = false;
     
-    vector<MediaTrack*> touchedTracks_;
+    vector<string> touchedTrackGUIDs_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -800,8 +801,11 @@ public:
 
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        for(MediaTrack* touchedTrack : touchedTracks_)
-            if(touchedTrack == track)
+        string touchedTrackGUID = trackNavigationManager_->GetTrackGUID(track);
+        
+        
+        for(auto trackGUID : touchedTrackGUIDs_)
+            if(trackGUID == touchedTrackGUID)
                 return true;
         
         return false;
@@ -809,10 +813,12 @@ public:
     
     void SetTouchState(MediaTrack* track,  bool touched)
     {
+        string touchedTrackGUID = trackNavigationManager_->GetTrackGUID(track);
+        
         if(touched)
-            touchedTracks_.push_back(track);
+            touchedTrackGUIDs_.push_back(touchedTrackGUID);
         else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
+            touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
     void SetShift(bool value)
@@ -871,7 +877,8 @@ public:
     
     void AdjustTrackBank(int stride)
     {
-        trackNavigationManager_->AdjustTrackBank(stride);
+        if(touchedTrackGUIDs_.size() == 0)
+            trackNavigationManager_->AdjustTrackBank(stride);
     }
     
     void RefreshLayout()
