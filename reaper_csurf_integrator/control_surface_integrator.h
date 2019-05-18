@@ -803,7 +803,6 @@ public:
     {
         string touchedTrackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        
         for(auto trackGUID : touchedTrackGUIDs_)
             if(trackGUID == touchedTrackGUID)
                 return true;
