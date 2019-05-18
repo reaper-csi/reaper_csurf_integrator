@@ -748,6 +748,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct CSI_TrackInfo
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    int index = 0;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -761,6 +768,8 @@ private:
     bool isAlt_ = false;
     
     vector<string> touchedTrackGUIDs_;
+
+    map<string, map<string, CSI_TrackInfo>> CSITrackInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -820,6 +829,31 @@ public:
             touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
+    int GetTrackCycleModiferIndex(string modifier, string trackGUID)
+    {
+        if(CSITrackInfo_.count(modifier) < 1)
+            return 0;
+        else if(CSITrackInfo_[modifier].count(trackGUID) < 1)
+            return 0;
+        else
+            return CSITrackInfo_[modifier][trackGUID].index;
+    }
+    
+    void IncrementTrackCycleModifierIndex(string modifier, string trackGUID, int maxIndex)
+    {
+        if(CSITrackInfo_.count(modifier) < 1 || CSITrackInfo_[modifier].count(trackGUID) < 1)
+                CSITrackInfo_[modifier][trackGUID] = CSI_TrackInfo();
+        
+        CSITrackInfo_[modifier][trackGUID].index++;
+        
+        if(CSITrackInfo_[modifier][trackGUID].index > maxIndex)
+            CSITrackInfo_[modifier][trackGUID].index = 0;
+        
+        // GAW could save to rpp file here for recall after project reload
+        // could get VERY verbose
+        // big downside - ties project to certain CSI config
+    }
+    
     void SetShift(bool value)
     {
         isShift_ = value;
@@ -860,7 +894,22 @@ public:
         
         return modifiers;
     }
+    
+    void TrackHasBeenRemoved(string removedTrackGUID)
+    {
+        touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), removedTrackGUID), touchedTrackGUIDs_.end());
 
+        for(auto [customModifierName, trackInfo] : CSITrackInfo_)
+            if(trackInfo.count(removedTrackGUID) > 0)
+                CSITrackInfo_[customModifierName].erase(removedTrackGUID);
+
+            
+            
+
+        
+        
+    }
+    
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
