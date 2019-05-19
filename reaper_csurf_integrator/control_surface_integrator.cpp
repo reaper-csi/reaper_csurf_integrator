@@ -743,6 +743,7 @@ void Manager::InitActionDictionary()
     actions_["Option"] = new SetOption();
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
+    actions_["TrackCycle"] = new IncrementTrackModiferIndex();
 }
 
 void Manager::InitActionContextDictionary()
@@ -761,8 +762,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendPan"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
     actionContexts_["TrackSendMute"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
     actionContexts_["TrackVolumeDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["TrackNameDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackSendNameDisplay"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
@@ -785,7 +786,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_[TrackTouch] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["MasterTrackTouch"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["SetScrollLink"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
@@ -802,6 +803,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Option"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
+    actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
 }
 
 void Manager::Init()
