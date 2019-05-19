@@ -849,7 +849,7 @@ public:
         
         CSITrackInfo_[modifier][trackGUID].index++;
         
-        if(CSITrackInfo_[modifier][trackGUID].index > maxIndex)
+        if(CSITrackInfo_[modifier][trackGUID].index > maxIndex - 1)
             CSITrackInfo_[modifier][trackGUID].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
