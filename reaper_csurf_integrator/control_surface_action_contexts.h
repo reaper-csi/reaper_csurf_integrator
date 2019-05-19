@@ -100,14 +100,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackContextWithIntParam : public TrackContext
+class TrackContextWithIntFeedbackParam : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntParam(Action* action, int param) : TrackContext(action), param_(param) {}
+    TrackContextWithIntFeedbackParam(Action* action, int param) : TrackContext(action), param_(param) {}
     
     virtual void RequestUpdate() override
     {
@@ -121,6 +121,32 @@ public:
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, value);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackContextWithStringAndIntParams : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int intParam_ = 0;
+    string stringParam_ = "";
+    
+public:
+    TrackContextWithStringAndIntParams(Action* action, string stringParam, int intParam) : TrackContext(action), stringParam_(stringParam), intParam_(intParam) {}
+    
+    virtual void RequestUpdate() override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+            action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), track);
+        else
+            GetWidget()->Reset();
+    }
+    
+    virtual void DoAction(double value) override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, stringParam_, intParam_);
     }
 };
 

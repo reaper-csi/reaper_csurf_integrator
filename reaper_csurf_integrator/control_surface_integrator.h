@@ -460,6 +460,7 @@ public:
     virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
+    virtual void Do(Page* page, Widget* widget, MediaTrack* track, string stringParam, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, ControlSurface* surface) {}
@@ -829,7 +830,7 @@ public:
             touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
-    int GetTrackCycleModiferIndex(string modifier, string trackGUID)
+    int GetTrackModiferIndex(string modifier, string trackGUID)
     {
         if(CSITrackInfo_.count(modifier) < 1)
             return 0;
@@ -839,8 +840,10 @@ public:
             return CSITrackInfo_[modifier][trackGUID].index;
     }
     
-    void IncrementTrackCycleModifierIndex(string modifier, string trackGUID, int maxIndex)
+    void IncrementTrackModifierIndex(string modifier, MediaTrack* track, int maxIndex)
     {
+        string trackGUID = trackNavigationManager_->GetTrackGUID(track);
+        
         if(CSITrackInfo_.count(modifier) < 1 || CSITrackInfo_[modifier].count(trackGUID) < 1)
                 CSITrackInfo_[modifier][trackGUID] = CSI_TrackInfo();
         
