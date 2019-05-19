@@ -270,7 +270,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isInverted, bool &shouldToggle, bool &isDelayed,  double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customModifier, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -300,15 +300,17 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
             else if(modifier_tokens[i] == "Toggle")
                 shouldToggle = true;
             else if(modifier_tokens[i] == "Hold")
-            {
-                isDelayed = true;
                 delayAmount = 1.0;
-            }
+            
+            else
+                customModifier = modifier_tokens[i];
         }
     }
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
+    
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4];
+    
     if(modifiers == "")
         modifiers = NoModifiers;
 }
@@ -374,12 +376,16 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
                 string modifiers = "";
+                string customModifier = "";
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isInverted, shouldToggle, isDelayed, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customModifier, isInverted, shouldToggle, delayAmount);
+                
+                if(delayAmount > 0.0)
+                    isDelayed = true;
                 
                 Widget* widget = nullptr;
                 
