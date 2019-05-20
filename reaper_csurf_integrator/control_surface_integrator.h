@@ -441,6 +441,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ActionContext;
+class WidgetActionContextManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,7 +461,7 @@ public:
     virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
     virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, string stringParam, double value) {}                              // Sends
+    virtual void Do(Page* page, Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string stringParam2, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, ControlSurface* surface) {}
@@ -488,11 +489,14 @@ public:
     ActionContext(Action* action) : action_(action) {}
     virtual ~ActionContext() {}
     
+    WidgetActionContextManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
+    
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager; }
     
+    virtual void AddActionContext(ActionContext* actionContext) {}
     virtual void SetIndex(int index) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
@@ -529,15 +533,17 @@ class WidgetActionContextManager
 {
 private:
     Widget* widget_ = nullptr;
+    Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <ActionContext*>> widgetActionContexts_;
     
     string GetModifiers();
     
 public:
-    WidgetActionContextManager(Widget* widget) : widget_(widget) {}
+    WidgetActionContextManager(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
     
     Widget* GetWidget() { return widget_; }
+    Zone* GetZone() { return zone_; }
     MediaTrack* GetTrack();
     
     void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
@@ -770,7 +776,7 @@ private:
     
     vector<string> touchedTrackGUIDs_;
 
-    map<string, map<string, CSI_TrackInfo>> CSITrackInfo_;
+    map<string, map<string, map<string, CSI_TrackInfo>>> CSITrackInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -830,27 +836,31 @@ public:
             touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
-    int GetTrackModiferIndex(string modifier, string trackGUID)
-    {
-        if(CSITrackInfo_.count(modifier) < 1)
-            return 0;
-        else if(CSITrackInfo_[modifier].count(trackGUID) < 1)
-            return 0;
-        else
-            return CSITrackInfo_[modifier][trackGUID].index;
-    }
-    
-    void IncrementTrackModifierIndex(string modifier, MediaTrack* track, int maxIndex)
+    int GetTrackModiferIndex(string zoneName, string modifierName, MediaTrack* track)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackInfo_.count(modifier) < 1 || CSITrackInfo_[modifier].count(trackGUID) < 1)
-                CSITrackInfo_[modifier][trackGUID] = CSI_TrackInfo();
+        if(CSITrackInfo_.count(zoneName) < 1)
+            return 0;
+        else if(CSITrackInfo_[zoneName].count(modifierName) < 1)
+            return 0;
+        else if(CSITrackInfo_[zoneName][modifierName].count(trackGUID) < 1)
+            return 0;
+        else
+            return CSITrackInfo_[zoneName][modifierName][trackGUID].index;
+    }
+    
+    void IncrementTrackModifierIndex(string zoneName, string modifierName, MediaTrack* track, int maxIndex)
+    {
+        string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        CSITrackInfo_[modifier][trackGUID].index++;
+        if(CSITrackInfo_.count(zoneName) < 1 || CSITrackInfo_[zoneName].count(modifierName) < 1 || CSITrackInfo_[zoneName][modifierName].count(trackGUID) < 1)
+                CSITrackInfo_[zoneName][modifierName][trackGUID] = CSI_TrackInfo();
         
-        if(CSITrackInfo_[modifier][trackGUID].index > maxIndex - 1)
-            CSITrackInfo_[modifier][trackGUID].index = 0;
+        CSITrackInfo_[zoneName][modifierName][trackGUID].index++;
+        
+        if(CSITrackInfo_[zoneName][modifierName][trackGUID].index > maxIndex - 1)
+            CSITrackInfo_[zoneName][modifierName][trackGUID].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
         // could get VERY verbose
@@ -902,9 +912,13 @@ public:
     {
         touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), removedTrackGUID), touchedTrackGUIDs_.end());
 
-        for(auto [customModifierName, trackInfo] : CSITrackInfo_)
-            if(trackInfo.count(removedTrackGUID) > 0)
-                CSITrackInfo_[customModifierName].erase(removedTrackGUID);
+        for(auto [zoneName, customModifier] : CSITrackInfo_)
+            for(auto [customModifierName, trackInfo] : customModifier)
+                if(CSITrackInfo_[zoneName][customModifierName].count(removedTrackGUID) > 0)
+                {
+                    CSITrackInfo_[zoneName][customModifierName].erase(removedTrackGUID);
+                    break;
+                }
 
             
             

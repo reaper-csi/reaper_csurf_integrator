@@ -621,9 +621,9 @@ class IncrementTrackModiferIndex : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, Widget* widget, MediaTrack* track, string stringParam, double value) override
+    void Do(Page* page, Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string modifierName, double value) override
     {
-        page->IncrementTrackModifierIndex(stringParam, track, value);
+        page->IncrementTrackModifierIndex(widgetActionContextManager->GetZone()->GetName(), modifierName, track, value);
     }
 };
 
