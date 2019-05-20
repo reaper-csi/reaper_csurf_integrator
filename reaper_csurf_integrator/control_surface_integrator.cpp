@@ -270,7 +270,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customModifier, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customModifierName, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -301,9 +301,9 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 shouldToggle = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
-            
+
             else
-                customModifier = modifier_tokens[i];
+                customModifierName = modifier_tokens[i];
         }
     }
     
@@ -327,7 +327,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
-    map<Widget*, WidgetActionContextManager*> widgetActionContextManager;
+    map<Widget*, WidgetActionContextManager*> widgetActionContextManagerForWidget;
     
     bool hasTrackNavigator = false;
     vector<TrackNavigator*> expandedTrackNavigators;
@@ -376,13 +376,13 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
                 string modifiers = "";
-                string customModifier = "";
+                string customModifierName = "";
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customModifier, isInverted, shouldToggle, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customModifierName, isInverted, shouldToggle, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -415,17 +415,48 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(isDelayed)
                             context->SetDelayAmount(delayAmount * 1000.0);
                         
-                        if(widgetActionContextManager.count(widget) < 1)
+                        
+                        
+                        if(widgetActionContextManagerForWidget.count(widget) < 1)
                         {
-                            widgetActionContextManager[widget] = new WidgetActionContextManager(widget);
+                            widgetActionContextManagerForWidget[widget] = new WidgetActionContextManager(widget, expandedZones[i]);
                             if(hasTrackNavigator)
-                                widgetActionContextManager[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
-                            expandedZones[i]->AddActionContextManager(widgetActionContextManager[widget]);
+                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
+                            expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
                         }
                         
-                        context->SetWidgetActionContextManager(widgetActionContextManager[widget]);
+                        WidgetActionContextManager* contextManager = widgetActionContextManagerForWidget[widget];
+                        
+                        context->SetWidgetActionContextManager(contextManager);
 
-                        widgetActionContextManager[widget]->AddActionContext(modifiers, context);
+                
+                        // GAW TBD -- if there is a custom modifier, ensiure there is a wrapper (don't forget to account for normal modifiers)
+                        // then add custom modifier wrapper to widgetActionContextManagerForWidget[widget]
+                        // then add context to wrapper
+                        
+                        map<string, map <string, TrackCycleContext*>> customModifierContexts;
+                        
+                        
+                        if(customModifierName != "")
+                        {
+                            
+                            
+                            
+                            
+                        }
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        // no custom mosidifers ? -- just add directly to widgetActionContextManagerForWidget[widget]
+                        contextManager->AddActionContext(modifiers, context);
+                        
+                        
+                        
+                        
                         
                         if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                             widget->SetIsModifier();

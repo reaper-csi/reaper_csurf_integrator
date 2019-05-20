@@ -50,6 +50,44 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackCycleContext : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string customModifierName_ = "";
+    
+    vector<ActionContext*> actionContexts_;
+    
+    int GetCurrentIndex()
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+            return GetWidget()->GetSurface()->GetPage()->GetTrackModiferIndex(widgetActionContextManager_->GetZone()->GetName(), customModifierName_, track);
+        else
+            return 0;
+    }
+    
+public:
+    TrackCycleContext(Action* action, string customModifierName) : TrackContext(action), customModifierName_(customModifierName) {}
+    
+    virtual void AddActionContext(ActionContext* actionContext) override
+    {
+        actionContexts_.push_back(actionContext);
+    }
+
+    virtual void RequestUpdate() override
+    {
+        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size() - 1)
+            actionContexts_[GetCurrentIndex()]->RequestUpdate();
+    }
+    
+    virtual void DoAction(double value) override
+    {
+        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size() - 1)
+            actionContexts_[GetCurrentIndex()]->DoAction(value);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -146,7 +184,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, stringParam_, intParam_);
+            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
     }
 };
 
@@ -278,60 +316,6 @@ public:
     }
 };
 
-
-/*
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackCycleContext : public TrackContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* cyclerWidget_ = nullptr;
-    int index = 0;
-    vector<ActionContext*> actionContexts_;
-    
-public:
-    TrackCycleContext(Page* page, ControlSurface* surface, Action* action, vector<string> params) : TrackContext(page, surface, action)
-    {
-        for(int i = 2; i < params.size(); i++)
-        {
-            istringstream iss(params[i]);
-            vector<string> tokens;
-            string token;
-            while (iss >> quoted(token))
-                tokens.push_back(token);
-
-            if(ActionContext* context = TheManager->GetActionContext(page_, surface_, tokens))
-            {
-                actionContexts_.push_back(context);
-            }
-        }
-    }
-    
-    virtual void SetCyclerWidget(Widget* cyclerWidget) override { cyclerWidget_ = cyclerWidget; }
-    
-    virtual void RequestUpdate(Widget* widget) override
-    {
-        if(MediaTrack* track = widget->GetTrack())
-            actionContexts_[index]->RequestUpdate(widget);
-        else
-            widget->Reset();
-    }
-    
-    virtual void DoAction(Widget* widget, double value) override
-    {
-        if(widget && widget == cyclerWidget_)
-        {
-            if(value)
-                index = index < actionContexts_.size() - 1 ? index + 1 : 0;
-        }
-        else if(actionContexts_[index])
-        {
-            if(MediaTrack* track = widget->GetTrack())
-                actionContexts_[index]->DoAction(widget, value);
-        }
-    }
-};
-*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class PageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
