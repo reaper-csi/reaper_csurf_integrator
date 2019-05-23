@@ -617,13 +617,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class IncrementTrackModiferIndex : public Action
+class CycleTrackModiferIndex : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     void Do(Page* page, Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string modifierName, double value) override
     {
-        page->IncrementTrackModifierIndex(widgetActionContextManager->GetZone()->GetName(), modifierName, track, value);
+        page->CycleTrackModifierIndex(modifierName, track, value);
     }
 };
 
