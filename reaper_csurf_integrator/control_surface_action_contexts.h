@@ -61,7 +61,7 @@ private:
     int GetCurrentIndex()
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            return GetWidget()->GetSurface()->GetPage()->GetTrackModiferIndex(widgetActionContextManager_->GetZone()->GetName(), customModifierName_, track);
+            return GetWidget()->GetSurface()->GetPage()->GetTrackModiferIndex(customModifierName_, track);
         else
             return 0;
     }
@@ -76,13 +76,15 @@ public:
 
     virtual void RequestUpdate() override
     {
-        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size() - 1)
+        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size())
             actionContexts_[GetCurrentIndex()]->RequestUpdate();
     }
     
     virtual void DoAction(double value) override
     {
-        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size() - 1)
+        int index = GetCurrentIndex();
+        
+        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size())
             actionContexts_[GetCurrentIndex()]->DoAction(value);
     }
 };

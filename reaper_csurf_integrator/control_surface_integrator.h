@@ -533,17 +533,15 @@ class WidgetActionContextManager
 {
 private:
     Widget* widget_ = nullptr;
-    Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <ActionContext*>> widgetActionContexts_;
     
     string GetModifiers();
     
 public:
-    WidgetActionContextManager(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
+    WidgetActionContextManager(Widget* widget) : widget_(widget) {}
     
     Widget* GetWidget() { return widget_; }
-    Zone* GetZone() { return zone_; }
     MediaTrack* GetTrack();
     
     void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
@@ -776,7 +774,7 @@ private:
     
     vector<string> touchedTrackGUIDs_;
 
-    map<string, map<string, map<string, CSI_TrackInfo>>> CSITrackInfo_;
+    map<string, map<string, CSI_TrackInfo>> CSITrackInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -836,31 +834,29 @@ public:
             touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
-    int GetTrackModiferIndex(string zoneName, string modifierName, MediaTrack* track)
+    int GetTrackModiferIndex(string modifierName, MediaTrack* track)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackInfo_.count(zoneName) < 1)
+        if(CSITrackInfo_.count(modifierName) < 1)
             return 0;
-        else if(CSITrackInfo_[zoneName].count(modifierName) < 1)
-            return 0;
-        else if(CSITrackInfo_[zoneName][modifierName].count(trackGUID) < 1)
+        else if(CSITrackInfo_[modifierName].count(trackGUID) < 1)
             return 0;
         else
-            return CSITrackInfo_[zoneName][modifierName][trackGUID].index;
+            return CSITrackInfo_[modifierName][trackGUID].index;
     }
     
-    void IncrementTrackModifierIndex(string zoneName, string modifierName, MediaTrack* track, int maxIndex)
+    void CycleTrackModifierIndex(string modifierName, MediaTrack* track, int maxSize)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackInfo_.count(zoneName) < 1 || CSITrackInfo_[zoneName].count(modifierName) < 1 || CSITrackInfo_[zoneName][modifierName].count(trackGUID) < 1)
-                CSITrackInfo_[zoneName][modifierName][trackGUID] = CSI_TrackInfo();
+        if(CSITrackInfo_.count(modifierName) < 1 || CSITrackInfo_[modifierName].count(trackGUID) < 1)
+                CSITrackInfo_[modifierName][trackGUID] = CSI_TrackInfo();
         
-        CSITrackInfo_[zoneName][modifierName][trackGUID].index++;
+        CSITrackInfo_[modifierName][trackGUID].index++;
         
-        if(CSITrackInfo_[zoneName][modifierName][trackGUID].index > maxIndex - 1)
-            CSITrackInfo_[zoneName][modifierName][trackGUID].index = 0;
+        if(CSITrackInfo_[modifierName][trackGUID].index > maxSize - 1)
+            CSITrackInfo_[modifierName][trackGUID].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
         // could get VERY verbose
@@ -912,11 +908,10 @@ public:
     {
         touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), removedTrackGUID), touchedTrackGUIDs_.end());
 
-        for(auto [zoneName, customModifier] : CSITrackInfo_)
-            for(auto [customModifierName, trackInfo] : customModifier)
-                if(CSITrackInfo_[zoneName][customModifierName].count(removedTrackGUID) > 0)
+            for(auto [customModifierName, trackInfo] : CSITrackInfo_)
+                if(CSITrackInfo_[customModifierName].count(removedTrackGUID) > 0)
                 {
-                    CSITrackInfo_[zoneName][customModifierName].erase(removedTrackGUID);
+                    CSITrackInfo_[customModifierName].erase(removedTrackGUID);
                     break;
                 }
 
