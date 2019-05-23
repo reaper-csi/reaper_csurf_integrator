@@ -286,7 +286,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
         {
             if(modifier_tokens[i] == TrackTouch)
                 modifierSlots[0] = TrackTouch;
-            if(modifier_tokens[i] == Shift)
+            else if(modifier_tokens[i] == Shift)
                 modifierSlots[1] = Shift;
             else if(modifier_tokens[i] == Option)
                 modifierSlots[2] = Option;
@@ -328,7 +328,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
     map<Widget*, WidgetActionContextManager*> widgetActionContextManagerForWidget;
-    
+    map< string, map<string, map <string, TrackCycleContext*>>> customModifierContexts;
+
     bool hasTrackNavigator = false;
     vector<TrackNavigator*> expandedTrackNavigators;
        
@@ -415,49 +416,38 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(isDelayed)
                             context->SetDelayAmount(delayAmount * 1000.0);
                         
-                        
-                        
                         if(widgetActionContextManagerForWidget.count(widget) < 1)
                         {
-                            widgetActionContextManagerForWidget[widget] = new WidgetActionContextManager(widget, expandedZones[i]);
+                            widgetActionContextManagerForWidget[widget] = new WidgetActionContextManager(widget);
                             if(hasTrackNavigator)
                                 widgetActionContextManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
                             expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
                         }
                         
-                        WidgetActionContextManager* contextManager = widgetActionContextManagerForWidget[widget];
-                        
-                        context->SetWidgetActionContextManager(contextManager);
+                        context->SetWidgetActionContextManager(widgetActionContextManagerForWidget[widget]);
 
-                
-                        // GAW TBD -- if there is a custom modifier, ensiure there is a wrapper (don't forget to account for normal modifiers)
-                        // then add custom modifier wrapper to widgetActionContextManagerForWidget[widget]
+                        // If there is a custom modifier, ensiure there is a wrapper (don't forget to account for normal modifiers)
+                        // then add custom modifier wrapper context to contextManager
                         // then add context to wrapper
-                        
-                        map<string, map <string, TrackCycleContext*>> customModifierContexts;
-                        
-                        
                         if(customModifierName != "")
                         {
+                            string zoneName = expandedZones[i]->GetName();
                             
-                            
-                            
-                            
+                            if(customModifierContexts.count(zoneName) < 1 || customModifierContexts[zoneName].count(customModifierName) < 1 || customModifierContexts[zoneName][customModifierName].count(modifiers) < 1)
+                            {
+                                customModifierContexts[zoneName][customModifierName][modifiers] = new TrackCycleContext(new Action(), customModifierName);
+                                
+                                customModifierContexts[zoneName][customModifierName][modifiers]->SetWidgetActionContextManager(widgetActionContextManagerForWidget[widget]);
+                                
+                                widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, customModifierContexts[zoneName][customModifierName][modifiers]);
+                            }
+
+                            customModifierContexts[zoneName][customModifierName][modifiers]->AddActionContext(context);
                         }
+                        else // no custom mosidifers ? -- just add directly to contextManager
+                            widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, context);
                         
-                        
-                        
-                        
-                        
-                        
-                        
-                        // no custom mosidifers ? -- just add directly to widgetActionContextManagerForWidget[widget]
-                        contextManager->AddActionContext(modifiers, context);
-                        
-                        
-                        
-                        
-                        
+
                         if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                             widget->SetIsModifier();
                     }
@@ -780,7 +770,7 @@ void Manager::InitActionDictionary()
     actions_["Option"] = new SetOption();
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
-    actions_["TrackCycle"] = new IncrementTrackModiferIndex();
+    actions_["TrackCycle"] = new CycleTrackModiferIndex();
 }
 
 void Manager::InitActionContextDictionary()
