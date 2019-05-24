@@ -269,6 +269,11 @@ public:
 
     virtual void TurnOffMonitoring() {}
     
+    virtual void Run()
+    {
+        RequestUpdate();
+    }
+    
     void ResetAllWidgets()
     {
         for(auto widget : widgets_)
@@ -330,11 +335,12 @@ public:
         }
     }
 
-    virtual void Run()
+    void OnTrackSelection(MediaTrack* track)
     {
-        RequestUpdate();
+        for(auto widget : widgets_)
+            if(widget->GetName() == "OnTrackSelection")
+                widget->DoAction(1.0);
     }
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -922,6 +928,14 @@ public:
         
     }
     
+    void OnTrackSelection(MediaTrack* track)
+    {
+        trackNavigationManager_->OnTrackSelection(track);
+        
+        for(auto surface : surfaces_)
+            surface->OnTrackSelection(track);
+    }
+ 
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -944,17 +958,6 @@ public:
     void RefreshLayout()
     {
         trackNavigationManager_->RefreshLayout();
-    }
-
-    void OnTrackSelection(MediaTrack* track)
-    {
-        trackNavigationManager_->OnTrackSelection(track);
-        /*
-         for(auto surface : realSurfaces_)
-         for(auto widget : surface->GetAllWidgets())
-         if(widget->GetName() == TrackOnSelection)
-         if(widgetContexts_.count(widget) > 0)
-         widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface);*/
     }
     
     void OnTrackSelectionBySurface(MediaTrack* track)
