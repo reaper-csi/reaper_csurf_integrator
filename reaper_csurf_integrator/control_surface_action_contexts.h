@@ -195,14 +195,20 @@ class FXContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string fxParamNameAlias_ = "";
     string fxParamName_ = "";
+    string fxParamNameAlias_ = "";
     int fxIndex_ = 0;
 
 public:
-    FXContext(Action* action, string fxParamName) : TrackContext(action), fxParamName_(fxParamName) {}
-    
-    virtual void SetAlias(string alias) override { fxParamNameAlias_ = alias; }
+    FXContext(Action* action, vector<string> params) : TrackContext(action)
+    {
+        fxParamName_ = params[1];
+        
+        if(params.size() > 2)
+            fxParamNameAlias_ = params[2];
+        else
+            fxParamNameAlias_ = params[1];
+    }
     
     virtual string GetAlias() override { return fxParamNameAlias_; }
     
