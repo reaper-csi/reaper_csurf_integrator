@@ -719,10 +719,10 @@ void Manager::InitActionDictionary()
 {
     actions_["NoAction"] = new Action();
     actions_["Reaper"] = new ReaperAction();
-    actions_["TrackFX"] = new TrackFX();
-    actions_["TrackFXParamNameDisplay"] = new TrackFXParamNameDisplay();
-    actions_["TrackFXParamValueDisplay"] = new TrackFXParamValueDisplay();
-    actions_["GainReductionDB"] = new TrackGainReductionMeter();
+    actions_["FXParam"] = new FXParam();
+    actions_["FXParamNameDisplay"] = new FXParamNameDisplay();
+    actions_["FXParamValueDisplay"] = new FXParamValueDisplay();
+    actions_["GainReductionDB"] = new FXGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
     actions_["MasterTrackVolume"] = new MasterTrackVolume();
     actions_["TrackSendVolume"] = new TrackSendVolume();
@@ -779,9 +779,9 @@ void Manager::InitActionContextDictionary()
     
     actionContexts_["NoAction"] = [this](vector<string> params) { return new ActionContext(actions_[params[0]]); };
     actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
-    actionContexts_["TrackFX"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
-    actionContexts_["TrackFXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
-    actionContexts_["TrackFXParamValueDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params[1]); };
+    actionContexts_["FXParam"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
+    actionContexts_["FXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
+    actionContexts_["FXParamValueDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
     actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["MasterTrackVolume"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
