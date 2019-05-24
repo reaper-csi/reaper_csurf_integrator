@@ -774,7 +774,7 @@ private:
     
     vector<string> touchedTrackGUIDs_;
 
-    map<string, map<string, CSI_TrackInfo>> CSITrackInfo_;
+    map<string, map<string, CSI_TrackInfo>> CSITrackSlotInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -834,29 +834,29 @@ public:
             touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
     }
     
-    int GetTrackModiferIndex(string modifierName, MediaTrack* track)
+    int GetTrackSlotIndex(string slotName, MediaTrack* track)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackInfo_.count(modifierName) < 1)
+        if(CSITrackSlotInfo_.count(slotName) < 1)
             return 0;
-        else if(CSITrackInfo_[modifierName].count(trackGUID) < 1)
+        else if(CSITrackSlotInfo_[slotName].count(trackGUID) < 1)
             return 0;
         else
-            return CSITrackInfo_[modifierName][trackGUID].index;
+            return CSITrackSlotInfo_[slotName][trackGUID].index;
     }
     
-    void CycleTrackModifierIndex(string modifierName, MediaTrack* track, int maxSize)
+    void CycleTrackSlotIndex(string slotrName, MediaTrack* track, int maxSize)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackInfo_.count(modifierName) < 1 || CSITrackInfo_[modifierName].count(trackGUID) < 1)
-                CSITrackInfo_[modifierName][trackGUID] = CSI_TrackInfo();
+        if(CSITrackSlotInfo_.count(slotrName) < 1 || CSITrackSlotInfo_[slotrName].count(trackGUID) < 1)
+                CSITrackSlotInfo_[slotrName][trackGUID] = CSI_TrackInfo();
         
-        CSITrackInfo_[modifierName][trackGUID].index++;
+        CSITrackSlotInfo_[slotrName][trackGUID].index++;
         
-        if(CSITrackInfo_[modifierName][trackGUID].index > maxSize - 1)
-            CSITrackInfo_[modifierName][trackGUID].index = 0;
+        if(CSITrackSlotInfo_[slotrName][trackGUID].index > maxSize - 1)
+            CSITrackSlotInfo_[slotrName][trackGUID].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
         // could get VERY verbose
@@ -908,10 +908,10 @@ public:
     {
         touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), removedTrackGUID), touchedTrackGUIDs_.end());
 
-            for(auto [customModifierName, trackInfo] : CSITrackInfo_)
-                if(CSITrackInfo_[customModifierName].count(removedTrackGUID) > 0)
+            for(auto [customModifierName, trackInfo] : CSITrackSlotInfo_)
+                if(CSITrackSlotInfo_[customModifierName].count(removedTrackGUID) > 0)
                 {
-                    CSITrackInfo_[customModifierName].erase(removedTrackGUID);
+                    CSITrackSlotInfo_[customModifierName].erase(removedTrackGUID);
                     break;
                 }
 

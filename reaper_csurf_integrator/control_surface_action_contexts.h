@@ -50,24 +50,24 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackCycleContext : public TrackContext
+class TrackSlotCycleContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string customModifierName_ = "";
+    string customSlotName_ = "";
     
     vector<ActionContext*> actionContexts_;
     
     int GetCurrentIndex()
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            return GetWidget()->GetSurface()->GetPage()->GetTrackModiferIndex(customModifierName_, track);
+            return GetWidget()->GetSurface()->GetPage()->GetTrackSlotIndex(customSlotName_, track);
         else
             return 0;
     }
     
 public:
-    TrackCycleContext(Action* action, string customModifierName) : TrackContext(action), customModifierName_(customModifierName) {}
+    TrackSlotCycleContext(Action* action, string customModifierName) : TrackContext(action), customSlotName_(customModifierName) {}
     
     virtual void AddActionContext(ActionContext* actionContext) override
     {

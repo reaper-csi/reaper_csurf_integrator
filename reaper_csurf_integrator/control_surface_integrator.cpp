@@ -270,7 +270,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customModifierName, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customSlotName, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -303,7 +303,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 delayAmount = 1.0;
 
             else
-                customModifierName = modifier_tokens[i];
+                customSlotName = modifier_tokens[i];
         }
     }
     
@@ -317,7 +317,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
 
 void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
-    const string GainReductionDB = "GainReductionDB"; // GAW TBD don't forget this logic
+    const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
     
     if(passedTokens.size() < 2)
         return;
@@ -328,7 +328,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
     map<Widget*, WidgetActionContextManager*> widgetActionContextManagerForWidget;
-    map< string, map<string, map <string, TrackCycleContext*>>> customModifierContexts;
+    map< string, map<string, map <string, TrackSlotCycleContext*>>> customSlotContexts;
 
     bool hasTrackNavigator = false;
     vector<TrackNavigator*> expandedTrackNavigators;
@@ -377,13 +377,13 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
                 string modifiers = "";
-                string customModifierName = "";
+                string customSlotName = "";
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customModifierName, isInverted, shouldToggle, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customSlotName, isInverted, shouldToggle, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -426,25 +426,25 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         context->SetWidgetActionContextManager(widgetActionContextManagerForWidget[widget]);
 
-                        // If there is a custom modifier, ensiure there is a wrapper (don't forget to account for normal modifiers)
-                        // then add custom modifier wrapper context to contextManager
-                        // then add context to wrapper
-                        if(customModifierName != "")
+                        // If there is a custom slot, ensure there is a wrapper (don't forget to account for modifiers)
+                        // then add custom slot wrapper context to contextManager
+                        // then add context to custom slot wrapper
+                        if(customSlotName != "")
                         {
                             string zoneName = expandedZones[i]->GetName();
                             
-                            if(customModifierContexts.count(zoneName) < 1 || customModifierContexts[zoneName].count(customModifierName) < 1 || customModifierContexts[zoneName][customModifierName].count(modifiers) < 1)
+                            if(customSlotContexts.count(zoneName) < 1 || customSlotContexts[zoneName].count(customSlotName) < 1 || customSlotContexts[zoneName][customSlotName].count(modifiers) < 1)
                             {
-                                customModifierContexts[zoneName][customModifierName][modifiers] = new TrackCycleContext(new Action(), customModifierName);
+                                customSlotContexts[zoneName][customSlotName][modifiers] = new TrackSlotCycleContext(new Action(), customSlotName);
                                 
-                                customModifierContexts[zoneName][customModifierName][modifiers]->SetWidgetActionContextManager(widgetActionContextManagerForWidget[widget]);
+                                customSlotContexts[zoneName][customSlotName][modifiers]->SetWidgetActionContextManager(widgetActionContextManagerForWidget[widget]);
                                 
-                                widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, customModifierContexts[zoneName][customModifierName][modifiers]);
+                                widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, customSlotContexts[zoneName][customSlotName][modifiers]);
                             }
 
-                            customModifierContexts[zoneName][customModifierName][modifiers]->AddActionContext(context);
+                            customSlotContexts[zoneName][customSlotName][modifiers]->AddActionContext(context);
                         }
-                        else // no custom mosidifers ? -- just add directly to contextManager
+                        else // no custom slots ? -- just add directly to contextManager
                             widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, context);
                         
 
@@ -722,7 +722,7 @@ void Manager::InitActionDictionary()
     actions_["FXParam"] = new FXParam();
     actions_["FXParamNameDisplay"] = new FXParamNameDisplay();
     actions_["FXParamValueDisplay"] = new FXParamValueDisplay();
-    actions_["GainReductionDB"] = new FXGainReductionMeter();
+    actions_["FXGainReductionMeter"] = new FXGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
     actions_["MasterTrackVolume"] = new MasterTrackVolume();
     actions_["TrackSendVolume"] = new TrackSendVolume();
@@ -770,7 +770,7 @@ void Manager::InitActionDictionary()
     actions_["Option"] = new SetOption();
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
-    actions_["TrackCycle"] = new CycleTrackModiferIndex();
+    actions_["TrackCycle"] = new CycleTrackSlotIndex();
 }
 
 void Manager::InitActionContextDictionary()
@@ -782,7 +782,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["FXParam"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
     actionContexts_["FXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
     actionContexts_["FXParamValueDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
-    actionContexts_["GainReductionDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
+    actionContexts_["FXGainReductionMeter"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackVolume"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["MasterTrackVolume"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackSendVolume"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
