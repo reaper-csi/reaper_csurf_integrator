@@ -771,6 +771,7 @@ void Manager::InitActionDictionary()
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
     actions_["TrackCycle"] = new CycleTrackSlotIndex();
+    actions_["MapTrackToWidgets"] = new MapTrackToWidgets();
 }
 
 void Manager::InitActionContextDictionary()
@@ -831,6 +832,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
+    actionContexts_["MapTrackToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
+
 }
 
 void Manager::Init()
@@ -1086,8 +1089,8 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, (ControlSurface*)this, widgets_);
     
     // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget(this, "TrackOnSelection"));
-    widgets_.push_back(new Widget(this, "TrackOnFocusedFX"));
+    widgets_.push_back(new Widget(this, "OnTrackSelection"));
+    widgets_.push_back(new Widget(this, "OnFocusedFX"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
