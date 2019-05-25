@@ -376,6 +376,13 @@ public:
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(1.0);
     }
+    
+    void OnFXFocus(MediaTrack* track, int fxIndex)
+    {
+        for(auto widget : widgets_)
+            if(widget->GetName() == "OnFXFocus")
+                widget->DoAction(1.0);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -779,9 +786,8 @@ private:
 public:
     FXActivationManager(Page* page) : page_(page) {}
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
-    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
     void TrackFXListChanged(MediaTrack* track);
-    void OnFXFocus(MediaTrack* track, int fxIndex);
+    void MapFocusedTrackFXToWidgets(ControlSurface* surface);
     void MapSelectedTrackFXToWidgets(ControlSurface* surface);
     
     bool GetShowFXWindows() { return showFXWindows_; }
@@ -1072,21 +1078,21 @@ public:
             FXActivationManager_->MapSelectedTrackFXToWidgets(surface);
     }
     
-    void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
+    void MapFocusedTrackFXToWidgets()
     {
-        FXActivationManager_->OnGlobalMapTrackAndFxToWidgetsForTrack(track);
-        
+        for(auto surface : surfaces_)
+            FXActivationManager_->MapFocusedTrackFXToWidgets(surface);
     }
     
     void TrackFXListChanged(MediaTrack* track)
     {
         FXActivationManager_->TrackFXListChanged(track);
-        
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
-        FXActivationManager_->OnFXFocus(track, fxIndex);
+        for(auto surface : surfaces_)
+            surface->OnFXFocus(track, fxIndex);
     }
     
     void SetShowFXWindows(bool value)
