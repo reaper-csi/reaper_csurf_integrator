@@ -363,6 +363,11 @@ public:
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(1.0);
     }
+    
+    void MapSelectedTrackFXToWidgets()
+    {
+        int blah = 0;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

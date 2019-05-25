@@ -783,6 +783,7 @@ void Manager::InitActionDictionary()
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
     actions_["TrackCycle"] = new CycleTrackSlotIndex();
+    actions_["MapSelectedTrackFXToWidgets"] = new MapSelectedTrackFXToWidgets();
 }
 
 void Manager::InitActionContextDictionary()
@@ -843,6 +844,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
+    actionContexts_["MapSelectedTrackFXToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
 }
 
 void Manager::Init()
