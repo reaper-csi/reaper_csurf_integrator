@@ -784,6 +784,7 @@ void Manager::InitActionDictionary()
     actions_["Alt"] = new SetAlt();
     actions_["TrackCycle"] = new CycleTrackSlotIndex();
     actions_["MapSelectedTrackFXToWidgets"] = new MapSelectedTrackFXToWidgets();
+    actions_["MapFocusedTrackFXToWidgets"] = new MapFocusedTrackFXToWidgets();
 }
 
 void Manager::InitActionContextDictionary()
@@ -845,6 +846,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
     actionContexts_["MapSelectedTrackFXToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
+    actionContexts_["MapFocusedTrackFXToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
 }
 
 void Manager::Init()
@@ -1133,7 +1135,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "OnTrackSelection"));
-    widgets_.push_back(new Widget(this, "OnFocusedFX"));
+    widgets_.push_back(new Widget(this, "OnFXFocus"));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1578,21 +1580,19 @@ int FXActivationManager::GetFXParamIndex(MediaTrack* track, Widget* widget, int 
     return 0;
 }
 
-void FXActivationManager::OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
-{/*
-    for(auto surface : realSurfaces_)
-        for(auto widget : surface->GetAllWidgets())
-            if(widget->GetName() == TrackOnMapTrackAndFXToWidgets)
-                if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track);*/
-}
+void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface)
+{
+    int trackNumber = 0;
+    int itemNumber = 0;
+    int fxIndex = 0;
+    
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+    {
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(page_->GetTrackFromId(trackNumber), fxIndex, FXName, sizeof(FXName));
+        
+        surface->ActivateZone(FXName, fxIndex);
 
-void FXActivationManager::OnFXFocus(MediaTrack* track, int fxIndex)
-{/*
-    // GAW WIP  -- currently doesn't take FX index into account
-    for(auto surface : realSurfaces_)
-        for(auto widget : surface->GetAllWidgets())
-            if(widget->GetName() == TrackOnFocusedFX)
-                if(widgetContexts_.count(widget) > 0)
-                    widgetContexts_[widget]->DoAction(this, GetCurrentModifiers(), surface, track, fxIndex);*/
+    }
 }

@@ -102,6 +102,8 @@ public:
 
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
 
+    static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
+
     static void TrackFX_Show(MediaTrack* track, int index, int showFlag) { ::TrackFX_Show(track, index, showFlag); }
 
     static int TrackFX_GetCount(MediaTrack* track) { return ::TrackFX_GetCount(track); }
