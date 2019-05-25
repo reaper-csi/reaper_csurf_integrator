@@ -1062,6 +1062,15 @@ void Zone::Activate()
         zone->Activate();
 }
 
+void Zone::Activate(int contextIndex)
+{
+    for(auto actionContextManager : actionContextManagers_)
+        actionContextManager->Activate(contextIndex);
+    
+    for(auto zone : includedZones_)
+        zone->Activate(contextIndex);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SelectedTrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1112,6 +1121,38 @@ void ControlSurface::InitZones(string zoneFolder)
         char buffer[250];
         sprintf(buffer, "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void ControlSurface::MapSelectedTrackFXToWidgets()
+{
+    if(DAW::CountSelectedTracks(nullptr) != 1)
+        return;
+    
+    MediaTrack* selectedTrack = nullptr;
+    int flags;
+    
+    for(int i = 0; i < GetNumTracks(); i++)
+    {
+        DAW::GetTrackInfo(page_->GetTrackFromId(i), &flags);
+        
+        if(flags & 0x02)
+        {
+            selectedTrack = page_->GetTrackFromId(i);
+            break;
+        }
+    }
+    
+    int numFX = DAW::TrackFX_GetCount(selectedTrack);
+    
+    for(int i = 0; i < numFX; i++)
+    {
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+        
+        if(zones_.count(FXName) > 0)
+            ActivateZone(FXName, i);
     }
 }
 
@@ -1173,6 +1214,16 @@ void WidgetActionContextManager::Activate()
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->Activate(this);
+}
+
+void WidgetActionContextManager::Activate(int contextIndex)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+        {
+            context->SetIndex(contextIndex);
+            context->Activate(this);
+        }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
