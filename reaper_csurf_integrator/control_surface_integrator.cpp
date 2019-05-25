@@ -332,7 +332,9 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
 
     bool hasTrackNavigator = false;
     vector<TrackNavigator*> expandedTrackNavigators;
-       
+    
+    bool hasSelectedTrackNavigator = false;
+    
     for (string line; getline(zoneFile, line) ; )
     {
         lineNumber++;
@@ -355,6 +357,12 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             for(int i = 0; i < expandedZones.size(); i++)
                 expandedTrackNavigators.push_back(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface->GetPage()));
             
+            continue;
+        }
+
+        if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
+        {
+            hasSelectedTrackNavigator = true;
             continue;
         }
         
@@ -419,8 +427,12 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(widgetActionContextManagerForWidget.count(widget) < 1)
                         {
                             widgetActionContextManagerForWidget[widget] = new WidgetActionContextManager(widget);
+                            
                             if(hasTrackNavigator)
                                 widgetActionContextManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
+                            else if(hasSelectedTrackNavigator)
+                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(new SelectedTrackNavigator(widget->GetSurface()->GetPage()));
+
                             expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
                         }
                         
@@ -771,7 +783,6 @@ void Manager::InitActionDictionary()
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
     actions_["TrackCycle"] = new CycleTrackSlotIndex();
-    actions_["MapTrackToWidgets"] = new MapTrackToWidgets();
 }
 
 void Manager::InitActionContextDictionary()
@@ -832,8 +843,6 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
-    actionContexts_["MapTrackToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
-
 }
 
 void Manager::Init()
@@ -1049,6 +1058,29 @@ void Zone::Activate()
     
     for(auto zone : includedZones_)
         zone->Activate();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SelectedTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string SelectedTrackNavigator::GetTrackGUID()
+{
+    if(DAW::CountSelectedTracks(nullptr) != 1)
+        return "";
+    
+     for(int i = 1; i <= page_->GetNumTracks(); i++)
+     {
+         MediaTrack* track = page_->GetTrackFromId(i);
+         
+         int flags = 0;
+         
+         DAW::GetTrackInfo(track, &flags);
+         
+         if(flags & 0x02) // Selected
+             return page_->GetTrackGUID(track);
+     }
+
+    return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
