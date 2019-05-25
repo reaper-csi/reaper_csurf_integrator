@@ -1124,38 +1124,6 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
-void ControlSurface::MapSelectedTrackFXToWidgets()
-{
-    if(DAW::CountSelectedTracks(nullptr) != 1)
-        return;
-    
-    MediaTrack* selectedTrack = nullptr;
-    int flags;
-    
-    for(int i = 0; i < GetNumTracks(); i++)
-    {
-        DAW::GetTrackInfo(page_->GetTrackFromId(i), &flags);
-        
-        if(flags & 0x02)
-        {
-            selectedTrack = page_->GetTrackFromId(i);
-            break;
-        }
-    }
-    
-    int numFX = DAW::TrackFX_GetCount(selectedTrack);
-    
-    for(int i = 0; i < numFX; i++)
-    {
-        char FXName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-        
-        if(zones_.count(FXName) > 0)
-            ActivateZone(FXName, i);
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1273,6 @@ void TrackNavigationManager::PinSelectedTracks()
     }
 }
 
-
 void TrackNavigationManager::UnpinSelectedTracks()
 {
     TrackNavigator* navigator = nullptr;
@@ -1404,6 +1371,7 @@ bool TrackNavigationManager::TrackListChanged()
     
     return false;
 }
+
 void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int previousTrackOffset = trackOffset_;
@@ -1525,6 +1493,42 @@ int SendsNavigationManager::GetMaxSends()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface)
+{
+    if(DAW::CountSelectedTracks(nullptr) != 1)
+        return;
+    
+    DeleteFXWindows();
+    
+    MediaTrack* selectedTrack = nullptr;
+    int flags;
+    
+    for(int i = 0; i < page_->GetNumTracks(); i++)
+    {
+        DAW::GetTrackInfo(page_->GetTrackFromId(i), &flags);
+        
+        if(flags & 0x02)
+        {
+            selectedTrack = page_->GetTrackFromId(i);
+            break;
+        }
+    }
+    
+    int numFX = DAW::TrackFX_GetCount(selectedTrack);
+    
+    for(int i = 0; i < numFX; i++)
+    {
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+        
+        if(surface->ActivateZone(FXName, i))
+            AddFXWindow(FXWindow(selectedTrack, i));
+    }
+    
+    OpenFXWindows();
+}
+
 void FXActivationManager::TrackFXListChanged(MediaTrack* track)
 {
     char fxName[BUFSZ];

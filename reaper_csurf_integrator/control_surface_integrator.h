@@ -289,8 +289,6 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
-   
-    void MapSelectedTrackFXToWidgets();
     
     virtual void TurnOffMonitoring() {}
     
@@ -350,13 +348,16 @@ public:
         }
     }
     
-    void ActivateZone(string zoneName, int contextIndex)
+    bool ActivateZone(string zoneName, int contextIndex)
     {
         if(zones_.count(zoneName) > 0)
         {
             zones_[zoneName]->Activate(contextIndex);
             activeZones_.push_back(zones_[zoneName]);
+            return true;
         }
+        
+        return false;
     }
     
     void DeactivateZone(string zoneName)
@@ -747,6 +748,7 @@ class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Page* page_ = nullptr;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -775,10 +777,12 @@ private:
     }
 
 public:
+    FXActivationManager(Page* page) : page_(page) {}
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track);
     void TrackFXListChanged(MediaTrack* track);
     void OnFXFocus(MediaTrack* track, int fxIndex);
+    void MapSelectedTrackFXToWidgets(ControlSurface* surface);
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -826,7 +830,7 @@ public:
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
         sendsNavigationManager_ = new SendsNavigationManager(this);
-        FXActivationManager_ = new FXActivationManager();
+        FXActivationManager_ = new FXActivationManager(this);
     }
     
     string GetName() { return name_; }
@@ -1058,9 +1062,15 @@ public:
 
 
     /// GAW -- start FXActivationManager facade
-
+    
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
+    
+    void MapSelectedTrackFXToWidgets()
+    {
+        for(auto surface : surfaces_)
+            FXActivationManager_->MapSelectedTrackFXToWidgets(surface);
+    }
     
     void OnGlobalMapTrackAndFxToWidgetsForTrack(MediaTrack* track)
     {

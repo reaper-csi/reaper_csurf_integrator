@@ -19,7 +19,7 @@ public:
     
     void Do(Page* page, ControlSurface* surface, double value) override
     {
-        surface->MapSelectedTrackFXToWidgets();
+        page->MapSelectedTrackFXToWidgets();
     }
 };
 
