@@ -195,6 +195,8 @@ public:
     static  void PreventUIRefresh(int prevent_count) { ::PreventUIRefresh(prevent_count); }
     
     static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
+    
+    static const char* GetTrackInfo(MediaTrack* track, int* flags) { return ::GetTrackInfo((INT_PTR)track, flags);  };
 
     static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
     
