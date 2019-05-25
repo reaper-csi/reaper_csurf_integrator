@@ -11,37 +11,19 @@
 
 extern Manager* TheManager;
 
+/*
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapTrackToWidgets  : public Action
+class MapSelectedTrackToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     
     void Do(Page* page, ControlSurface* surface, double value) override
     {
-        if(1 == DAW::CountSelectedTracks(nullptr))
-        {
-            MediaTrack* track = nullptr;
-            
-            /*
-            for(int i = 1; i <= DAW::CSurf_NumTracks(page->GetFollowMCP()); i++)
-                if(DAW::GetMediaTrackInfo_Value(DAW::CSurf_TrackFromID(i, page->GetFollowMCP()), "I_SELECTED"))
-                {
-                    track = DAW::CSurf_TrackFromID(i, page->GetFollowMCP());
-                    break;
-                }
-            
-            if(track)
-            {
-                page->ToggleMapTrackToWidgets(surface, track);
-            }
-             */
-        }
-        //else
-            //page->UnmapWidgetsFromTrack();
+        surface->MapSelectedTrackToWidgets();
     }
 };
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

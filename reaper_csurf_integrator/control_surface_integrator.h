@@ -214,26 +214,48 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator //: public Navigator
+class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     bool isPinned_ = false;
     string trackGUID_ = "";
-
-public:
-    bool GetIsPinned() { return isPinned_; }
-    string GetTrackGUID() { return trackGUID_; }
     
-    void SetTrackGUID(string trackGUID)
+public:
+    virtual ~TrackNavigator() {}
+    
+    virtual bool GetIsPinned() { return isPinned_; }
+    virtual string GetTrackGUID() { return trackGUID_; }
+    
+    virtual void SetTrackGUID(string trackGUID)
     {
         trackGUID_ = trackGUID;
     }
     
-    void SetIsPinned(bool pinned)
+    virtual void SetIsPinned(bool pinned)
     {
         isPinned_ = pinned;
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+   
+public:
+    SelectedTrackNavigator(Page* page) : page_(page) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual bool GetIsPinned() override { return false; }
+    virtual void SetTrackGUID(string trackGUID) override {}
+    virtual void SetIsPinned(bool pinned) override {}
+   
+    virtual string GetTrackGUID() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -943,6 +965,7 @@ public:
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
     MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
+    string GetTrackGUID(MediaTrack* track) { return trackNavigationManager_->GetTrackGUID(track); }
 
     void AddTrackNavigator(TrackNavigator* trackNavigator)
     {
