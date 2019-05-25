@@ -197,6 +197,9 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
+    void Activate();
+    void Activate(int contextIndex);
+    
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
@@ -209,8 +212,6 @@ public:
     {
         includedZones_.push_back(zone);
     }
-    
-    void Activate();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +289,9 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
-
+   
+    void MapSelectedTrackFXToWidgets();
+    
     virtual void TurnOffMonitoring() {}
     
     virtual void Run()
@@ -347,6 +350,15 @@ public:
         }
     }
     
+    void ActivateZone(string zoneName, int contextIndex)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            zones_[zoneName]->Activate(contextIndex);
+            activeZones_.push_back(zones_[zoneName]);
+        }
+    }
+    
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
@@ -362,11 +374,6 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(1.0);
-    }
-    
-    void MapSelectedTrackFXToWidgets()
-    {
-        int blah = 0;
     }
 };
 
@@ -582,7 +589,8 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void Activate();
-    
+    void Activate(int contextIndex);
+
     void AddActionContext(string modifiers, ActionContext* context)
     {
         widgetActionContexts_[modifiers].push_back(context);
@@ -1069,7 +1077,6 @@ public:
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         FXActivationManager_->OnFXFocus(track, fxIndex);
-        
     }
     
     void SetShowFXWindows(bool value)
