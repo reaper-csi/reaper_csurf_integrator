@@ -334,7 +334,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     vector<TrackNavigator*> expandedTrackNavigators;
     
     bool hasSelectedTrackNavigator = false;
-    
+    bool hasFocusedFXTrackNavigator = false;
+
     for (string line; getline(zoneFile, line) ; )
     {
         lineNumber++;
@@ -363,6 +364,12 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
         if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
         {
             hasSelectedTrackNavigator = true;
+            continue;
+        }
+        
+        if(tokens.size() == 1 && tokens[0] == "FocusedFXTrackNavigator")
+        {
+            hasFocusedFXTrackNavigator = true;
             continue;
         }
         
@@ -432,6 +439,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                                 widgetActionContextManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
                             else if(hasSelectedTrackNavigator)
                                 widgetActionContextManagerForWidget[widget]->SetTrackNavigator(new SelectedTrackNavigator(widget->GetSurface()->GetPage()));
+                            else if(hasFocusedFXTrackNavigator)
+                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(new FocusedFXTrackNavigator(widget->GetSurface()->GetPage()));
 
                             expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
                         }
@@ -1081,19 +1090,34 @@ string SelectedTrackNavigator::GetTrackGUID()
     if(DAW::CountSelectedTracks(nullptr) != 1)
         return "";
     
-     for(int i = 1; i <= page_->GetNumTracks(); i++)
-     {
-         MediaTrack* track = page_->GetTrackFromId(i);
-         
-         int flags = 0;
-         
-         DAW::GetTrackInfo(track, &flags);
-         
-         if(flags & 0x02) // Selected
-             return page_->GetTrackGUID(track);
-     }
-
+    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    {
+        MediaTrack* track = page_->GetTrackFromId(i);
+        
+        int flags = 0;
+        
+        DAW::GetTrackInfo(track, &flags);
+        
+        if(flags & 0x02) // Selected
+            return page_->GetTrackGUID(track);
+    }
+    
     return "";
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FocusedFXTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string FocusedFXTrackNavigator::GetTrackGUID()
+{
+    int trackNumber = 0;
+    int itemNumber = 0;
+    int fxIndex = 0;
+    
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+        return page_->GetTrackGUID(page_->GetTrackFromId(trackNumber));
+    else
+        return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

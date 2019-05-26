@@ -247,7 +247,7 @@ class SelectedTrackNavigator : public TrackNavigator
 {
 private:
     Page* page_ = nullptr;
-   
+    
 public:
     SelectedTrackNavigator(Page* page) : page_(page) {}
     virtual ~SelectedTrackNavigator() {}
@@ -255,7 +255,25 @@ public:
     virtual bool GetIsPinned() override { return false; }
     virtual void SetTrackGUID(string trackGUID) override {}
     virtual void SetIsPinned(bool pinned) override {}
-   
+    
+    virtual string GetTrackGUID() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    
+public:
+    FocusedFXTrackNavigator(Page* page) : page_(page) {}
+    virtual ~FocusedFXTrackNavigator() {}
+    
+    virtual bool GetIsPinned() override { return false; }
+    virtual void SetTrackGUID(string trackGUID) override {}
+    virtual void SetIsPinned(bool pinned) override {}
+    
     virtual string GetTrackGUID() override;
 };
 
