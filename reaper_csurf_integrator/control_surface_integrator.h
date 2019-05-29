@@ -366,7 +366,7 @@ public:
         }
     }
     
-    bool ActivateZone(string zoneName, int contextIndex)
+    bool ActivateFXZone(string zoneName, int contextIndex)
     {
         if(zones_.count(zoneName) > 0)
         {
@@ -377,7 +377,7 @@ public:
         
         return false;
     }
-    
+            
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
@@ -774,6 +774,7 @@ class FXActivationManager
 {
 private:
     Page* page_ = nullptr;
+    vector<string> activeFX_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -800,7 +801,7 @@ private:
         CloseFXWindows();
         openFXWindows_.clear();
     }
-
+    
 public:
     FXActivationManager(Page* page) : page_(page) {}
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
