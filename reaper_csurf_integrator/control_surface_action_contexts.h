@@ -147,7 +147,11 @@ private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntFeedbackParam(Action* action, int param) : TrackContext(action), param_(param) {}
+    TrackContextWithIntFeedbackParam(Action* action, vector<string> params) : TrackContext(action)
+    {
+        if(params.size() > 1)
+            param_= atol(params[1].c_str());
+    }
     
     virtual void RequestUpdate() override
     {
@@ -169,11 +173,18 @@ class TrackContextWithStringAndIntParams : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int intParam_ = 0;
     string stringParam_ = "";
+    int intParam_ = 0;
     
 public:
-    TrackContextWithStringAndIntParams(Action* action, string stringParam, int intParam) : TrackContext(action), stringParam_(stringParam), intParam_(intParam) {}
+    TrackContextWithStringAndIntParams(Action* action, vector<string> params) : TrackContext(action)
+    {
+        if(params.size() > 2)
+        {
+            stringParam_ = params[1];
+            intParam_ = atol(params[2].c_str());
+        }
+    }
     
     virtual void RequestUpdate() override
     {
@@ -242,16 +253,21 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Action* action, string commandStr) : ActionContext(action)
+    ReaperActionContext(Action* action, vector<string> params) : ActionContext(action)
     {
-        commandId_ =  atol(commandStr.c_str());
-        
-        if(commandId_ == 0) // unsuccessful conversion to number
+        if(params.size() > 1)
         {
-            commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
+            string commandStr = params[1];
         
-            if(commandId_ == 0) // can't find it
-                commandId_ = 65535; // no-op
+            commandId_ =  atol(commandStr.c_str());
+            
+            if(commandId_ == 0) // unsuccessful conversion to number
+            {
+                commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
+            
+                if(commandId_ == 0) // can't find it
+                    commandId_ = 65535; // no-op
+            }
         }
     }
     
@@ -274,7 +290,11 @@ private:
     int param_ = 0;
    
 public:
-    GlobalContextWithIntParam(Action* action, int param) : ActionContext(action), param_(param) {}
+    GlobalContextWithIntParam(Action* action, vector<string> params) : ActionContext(action)
+    {
+        if(params.size() > 1)
+            param_= atol(params[1].c_str());
+    }
     
     virtual void RequestUpdate() override
     {
