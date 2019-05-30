@@ -801,7 +801,7 @@ void Manager::InitActionContextDictionary()
     InitActionDictionary();
     
     actionContexts_["NoAction"] = [this](vector<string> params) { return new ActionContext(actions_[params[0]]); };
-    actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params[1]); };
+    actionContexts_["Reaper"] = [this](vector<string> params) { return new ReaperActionContext(actions_[params[0]], params); };
     actionContexts_["FXParam"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
     actionContexts_["FXParamNameDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
     actionContexts_["FXParamValueDisplay"] = [this](vector<string> params) { return new FXContext(actions_[params[0]], params); };
@@ -812,8 +812,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendPan"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
     actionContexts_["TrackSendMute"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
     actionContexts_["TrackVolumeDB"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
-    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackPan"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], params); };
+    actionContexts_["TrackPanWidth"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], params); };
     actionContexts_["TrackNameDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackVolumeDisplay"] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["TrackSendNameDisplay"] = [this](vector<string> params) { return new TrackSendContext(actions_[params[0]]); };
@@ -836,24 +836,24 @@ void Manager::InitActionContextDictionary()
     actionContexts_[TrackTouch] = [this](vector<string> params) { return new TrackContext(actions_[params[0]]); };
     actionContexts_["MasterTrackTouch"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["CycleTimeline"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["TrackOutputMeter"] = [this](vector<string> params) { return new TrackContextWithIntFeedbackParam(actions_[params[0]], params); };
+    actionContexts_["MasterTrackOutputMeter"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
     actionContexts_["SetShowFXWindows"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["SetScrollLink"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["GoPage"] = [this](vector<string> params) { return new GlobalContextWithStringParam(actions_[params[0]], params[1]); };
     actionContexts_["ToggleZone"] = [this](vector<string> params) { return new SurfaceContextWithStringParam(actions_[params[0]], params[1]); };
-    actionContexts_["SelectTrackRelative"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
-    actionContexts_["TrackSendBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], atol(params[1].c_str())); };
+    actionContexts_["SelectTrackRelative"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
+    actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
+    actionContexts_["TrackSendBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
     actionContexts_["PinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["UnpinSelectedTracks"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Shift"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Option"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Control"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["Alt"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params[1], atol(params[2].c_str())); };
+    actionContexts_["TrackCycle"] = [this](vector<string> params) { return new TrackContextWithStringAndIntParams(actions_[params[0]], params); };
     actionContexts_["MapSelectedTrackFXToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
     actionContexts_["MapFocusedTrackFXToWidgets"] = [this](vector<string> params) { return new TrackPageSurfaceContext(actions_[params[0]]); };
 }
