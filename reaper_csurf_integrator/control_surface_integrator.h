@@ -1028,6 +1028,8 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track)
     {
         trackNavigationManager_->OnTrackSelectionBySurface(track);
+        for(auto surface : surfaces_)
+            surface->OnTrackSelection(track);
     }
 
     void Init()
