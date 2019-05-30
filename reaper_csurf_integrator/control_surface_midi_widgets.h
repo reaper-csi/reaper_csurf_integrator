@@ -143,6 +143,12 @@ public:
         int volint = value * 16383.0;
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
     }
+    
+    virtual void SetValue(int displayMode, double value) override
+    {
+        int volint = value * 16383.0;
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +163,11 @@ public:
     {
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
     }
+    
+    virtual void SetValue(int displayMode, double value) override
+    {
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +177,20 @@ class Encoder_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 public:
     virtual ~Encoder_Midi_FeedbackProcessor() {}
     Encoder_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    
+    virtual void SetValue(double value) override
+    {
+        int displayMode = 0;
+        
+        int valueInt = value * 127;
+        
+        int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. Q)
+        
+        //if(displayMode) // Should light up lower middle light
+        //val |= 0x40;
+        
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1] + 0x20, val);
+    }
     
     virtual void SetValue(int displayMode, double value) override
     {
