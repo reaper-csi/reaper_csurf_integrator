@@ -1548,13 +1548,20 @@ int SendsNavigationManager::GetMaxSends()
 void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
 {
     DeleteFXWindows();
-    activeFXZoneNames_.clear();
+    
+    if(activeFXZoneNames_.count(surface) > 0)
+    {
+        for(auto zoneName :activeFXZoneNames_[surface])
+            surface->DeactivateZone(zoneName);
+        
+        activeFXZoneNames_[surface].clear();
+    }
     
     int flags;
     
     DAW::GetTrackInfo(selectedTrack, &flags);
 
-    if(flags & 0x02) // track is selected == not deseleted
+    if(flags & 0x02) // track is selected -- not deselected
     {
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
         {
@@ -1564,9 +1571,8 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, M
             
             if(surface->ActivateFXZone(FXName, i))
             {
-                // GAW TBD -- change to per surface dixtionary
                 AddFXWindow(FXWindow(selectedTrack, i));
-                activeFXZoneNames_.push_back(FXName);
+                activeFXZoneNames_[surface].push_back(FXName);
             }
         }
         
@@ -1576,17 +1582,20 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, M
 
 void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
 {
-    for(auto activeFXZoneName : activeFXZoneNames_)
-        surface->DeactivateZone(activeFXZoneName);
-    
-    activeFXZoneNames_.clear();
+    if(activeFXZoneNames_.count(surface) > 0)
+    {
+        for(auto zoneName :activeFXZoneNames_[surface])
+            surface->DeactivateZone(zoneName);
+        
+        activeFXZoneNames_[surface].clear();
+    }
 
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
     
     if(surface->ActivateFXZone(FXName, fxIndex))
-        activeFXZoneNames_.push_back(FXName);  // GAW TBD -- change to per surface dixtionary
+        activeFXZoneNames_[surface].push_back(FXName);
 }
 
 void FXActivationManager::TrackFXListChanged(MediaTrack* track)
