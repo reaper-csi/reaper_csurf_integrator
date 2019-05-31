@@ -785,7 +785,7 @@ class FXActivationManager
 {
 private:
     Page* page_ = nullptr;
-    vector<string> activeFXZoneNames_;
+    map<ControlSurface*, vector<string>> activeFXZoneNames_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
