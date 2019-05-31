@@ -91,6 +91,7 @@ public:
     MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
+    void DoAction(MediaTrack* track);
     void DoRelativeAction(double value);
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
@@ -197,6 +198,7 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
+    void Deactivate();
     void Activate();
     void Activate(int contextIndex);
     
@@ -382,6 +384,8 @@ public:
     {
         if(zones_.count(zoneName) > 0)
         {
+            zones_[zoneName]->Deactivate();
+            
             activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
             for(auto zone : activeZones_)
                 zone->Activate();
@@ -390,9 +394,15 @@ public:
 
     void OnTrackSelection(MediaTrack* track)
     {
+        int flags = 0x00;
+        
+        DAW::GetTrackInfo(track, &flags);
+        
+        bool isSelected = flags & 0x02; // selected
+        
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
-                widget->DoAction(1.0);
+                widget->DoAction(track);
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
@@ -614,6 +624,7 @@ public:
     
     void RequestUpdate();
     void DoAction(double value);
+    void DoAction(MediaTrack* track);
     void Activate();
     void Activate(int contextIndex);
 
@@ -774,7 +785,7 @@ class FXActivationManager
 {
 private:
     Page* page_ = nullptr;
-    vector<string> activeFX_;
+    vector<string> activeFXZoneNames_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -806,8 +817,8 @@ public:
     FXActivationManager(Page* page) : page_(page) {}
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
     void TrackFXListChanged(MediaTrack* track);
-    void MapFocusedTrackFXToWidgets(ControlSurface* surface);
-    void MapSelectedTrackFXToWidgets(ControlSurface* surface);
+    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex);
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -1028,6 +1039,7 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track)
     {
         trackNavigationManager_->OnTrackSelectionBySurface(track);
+        
         for(auto surface : surfaces_)
             surface->OnTrackSelection(track);
     }
@@ -1093,16 +1105,16 @@ public:
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
     
-    void MapSelectedTrackFXToWidgets()
+    void MapSelectedTrackFXToWidgets(MediaTrack* track)
     {
         for(auto surface : surfaces_)
-            FXActivationManager_->MapSelectedTrackFXToWidgets(surface);
+            FXActivationManager_->MapSelectedTrackFXToWidgets(surface, track);
     }
     
-    void MapFocusedTrackFXToWidgets()
+    void MapFocusedTrackFXToWidgets(MediaTrack* track, int fxIndex)
     {
         for(auto surface : surfaces_)
-            FXActivationManager_->MapFocusedTrackFXToWidgets(surface);
+            FXActivationManager_->MapFocusedTrackFXToWidgets(surface, track, fxIndex);
     }
     
     void TrackFXListChanged(MediaTrack* track)
