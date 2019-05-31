@@ -1025,6 +1025,12 @@ void Widget::DoAction(double value)
         widgetActionContextManager_->DoAction(value);
 }
 
+void Widget::DoAction(MediaTrack* track)
+{
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoAction(track);
+}
+
 void Widget::DoRelativeAction(double value)
 {
     if(widgetActionContextManager_ != nullptr)
@@ -1064,6 +1070,19 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::Deactivate()
+{
+    for(auto actionContextManager : actionContextManagers_)
+        if(actionContextManager->GetWidget() != nullptr)
+        {
+            actionContextManager->GetWidget()->SetWidgetActionContextManager(nullptr);
+            actionContextManager->GetWidget()->Reset();
+        }
+    
+    for(auto zone : includedZones_)
+        zone->Deactivate();
+}
+
 void Zone::Activate()
 {
     for(auto actionContextManager : actionContextManagers_)
@@ -1201,6 +1220,13 @@ void WidgetActionContextManager::DoAction(double value)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(value);
+}
+
+void WidgetActionContextManager::DoAction(MediaTrack* track)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+            context->DoAction(track);
 }
 
 void WidgetActionContextManager::Activate()
@@ -1519,63 +1545,48 @@ int SendsNavigationManager::GetMaxSends()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface)
+void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
 {
-    if(DAW::CountSelectedTracks(nullptr) != 1)
-        return;
-    
     DeleteFXWindows();
-    activeFX_.clear();
+    activeFXZoneNames_.clear();
     
-    MediaTrack* selectedTrack = nullptr;
     int flags;
     
-    for(int i = 0; i < page_->GetNumTracks(); i++)
+    DAW::GetTrackInfo(selectedTrack, &flags);
+
+    if(flags & 0x02) // track is selected == not deseleted
     {
-        DAW::GetTrackInfo(page_->GetTrackFromId(i), &flags);
-        
-        if(flags & 0x02)
+        for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
         {
-            selectedTrack = page_->GetTrackFromId(i);
-            break;
+            char FXName[BUFSZ];
+            
+            DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+            
+            if(surface->ActivateFXZone(FXName, i))
+            {
+                // GAW TBD -- change to per surface dixtionary
+                AddFXWindow(FXWindow(selectedTrack, i));
+                activeFXZoneNames_.push_back(FXName);
+            }
         }
-    }
-    
-    int numFX = DAW::TrackFX_GetCount(selectedTrack);
-    
-    for(int i = 0; i < numFX; i++)
-    {
-        char FXName[BUFSZ];
         
-        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-        
-        if(surface->ActivateFXZone(FXName, i))
-        {
-            AddFXWindow(FXWindow(selectedTrack, i));
-            activeFX_.push_back(FXName);
-        }
+        OpenFXWindows();
     }
-    
-    OpenFXWindows();
 }
 
-void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface)
+void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
 {
-    int trackNumber = 0;
-    int itemNumber = 0;
-    int fxIndex = 0;
+    for(auto activeFXZoneName : activeFXZoneNames_)
+        surface->DeactivateZone(activeFXZoneName);
     
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-    {
-        char FXName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(page_->GetTrackFromId(trackNumber), fxIndex, FXName, sizeof(FXName));
-        
-        activeFX_.clear();
-        
-        if(surface->ActivateFXZone(FXName, fxIndex))
-            activeFX_.push_back(FXName);
-    }
+    activeFXZoneNames_.clear();
+
+    char FXName[BUFSZ];
+    
+    DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+    
+    if(surface->ActivateFXZone(FXName, fxIndex))
+        activeFXZoneNames_.push_back(FXName);  // GAW TBD -- change to per surface dixtionary
 }
 
 void FXActivationManager::TrackFXListChanged(MediaTrack* track)
