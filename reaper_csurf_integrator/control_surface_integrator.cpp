@@ -1031,6 +1031,12 @@ void Widget::DoAction(MediaTrack* track)
         widgetActionContextManager_->DoAction(track);
 }
 
+void Widget::DoAction(MediaTrack* track, int intParam)
+{
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoAction(track, intParam);
+}
+
 void Widget::DoRelativeAction(double value)
 {
     if(widgetActionContextManager_ != nullptr)
@@ -1227,6 +1233,13 @@ void WidgetActionContextManager::DoAction(MediaTrack* track)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(track);
+}
+
+void WidgetActionContextManager::DoAction(MediaTrack* track, int intParam)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+            context->DoAction(track, intParam);
 }
 
 void WidgetActionContextManager::Activate()
