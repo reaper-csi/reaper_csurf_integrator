@@ -91,8 +91,9 @@ public:
     MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
-    void DoAction(MediaTrack* track);
     void DoRelativeAction(double value);
+    void DoAction(MediaTrack* track);
+    void DoAction(MediaTrack* track, int intParam);
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
@@ -409,7 +410,7 @@ public:
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
-                widget->DoAction(1.0);
+                widget->DoAction(track, fxIndex);
     }
 };
 
@@ -625,6 +626,7 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void DoAction(MediaTrack* track);
+    void DoAction(MediaTrack* track, int intParam);
     void Activate();
     void Activate(int contextIndex);
 
