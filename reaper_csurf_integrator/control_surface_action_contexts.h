@@ -315,7 +315,11 @@ private:
     string param_ = "";
     
 public:
-    GlobalContextWithStringParam(Action* action, string param) : ActionContext(action), param_(param) {}
+    GlobalContextWithStringParam(Action* action, vector<string> params) : ActionContext(action)
+    {
+        if(params.size() > 1)
+            param_ = params[1];
+    }
     
     virtual void RequestUpdate() override
     {
@@ -329,6 +333,30 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GlobalContextWith2StringParams : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string param1_ = "";
+    string param2_ = "";
+
+public:
+    GlobalContextWith2StringParams(Action* action, vector<string> params) : ActionContext(action)
+    {
+        if(params.size() > 2)
+        {
+            param1_ = params[1];
+            param2_ = params[2];
+        }
+    }
+    
+    virtual void DoAction(double value) override
+    {
+        action_->Do(GetWidget()->GetSurface()->GetPage(), param1_, param2_);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceContextWithStringParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -336,7 +364,11 @@ private:
     string param_ = "";
     
 public:
-    SurfaceContextWithStringParam(Action* action, string param) : ActionContext(action), param_(param) {}
+    SurfaceContextWithStringParam(Action* action, vector<string> params) : ActionContext(action)
+    {
+        if(params.size() > 1)
+            param_ = params[1];
+    }
     
     virtual void DoAction(double value) override
     {

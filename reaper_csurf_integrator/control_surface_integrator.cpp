@@ -842,8 +842,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["SetScrollLink"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["CycleTimeDisplayModes"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
     actionContexts_["NextPage"] = [this](vector<string> params) { return new GlobalContext(actions_[params[0]]); };
-    actionContexts_["GoPage"] = [this](vector<string> params) { return new GlobalContextWithStringParam(actions_[params[0]], params[1]); };
-    actionContexts_["ToggleZone"] = [this](vector<string> params) { return new SurfaceContextWithStringParam(actions_[params[0]], params[1]); };
+    actionContexts_["GoPage"] = [this](vector<string> params) { return new GlobalContextWithStringParam(actions_[params[0]], params); };
+    actionContexts_["ToggleZone"] = [this](vector<string> params) { return new SurfaceContextWithStringParam(actions_[params[0]], params); };
     actionContexts_["SelectTrackRelative"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
     actionContexts_["TrackBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
     actionContexts_["TrackSendBank"] = [this](vector<string> params) { return new GlobalContextWithIntParam(actions_[params[0]], params); };
