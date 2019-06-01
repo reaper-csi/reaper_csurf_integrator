@@ -395,12 +395,6 @@ public:
 
     void OnTrackSelection(MediaTrack* track)
     {
-        int flags = 0x00;
-        
-        DAW::GetTrackInfo(track, &flags);
-        
-        bool isSelected = flags & 0x02; // selected
-        
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(track);

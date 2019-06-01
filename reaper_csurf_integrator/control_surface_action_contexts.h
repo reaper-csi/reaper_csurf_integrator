@@ -374,6 +374,11 @@ public:
     {
         action_->Do(GetWidget()->GetSurface(), param_);
     }
+    
+    virtual void DoAction(MediaTrack* track) override
+    {
+        action_->Do(GetWidget()->GetSurface(), param_);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
