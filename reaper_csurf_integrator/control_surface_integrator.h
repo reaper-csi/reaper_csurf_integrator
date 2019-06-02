@@ -518,12 +518,12 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget) {}                                     // GlobalContext
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, int commandId) {}                      // ReaperActionContext
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, string param) {}                       // string param
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track) {}                  // TrackContext
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}       // TrackParamContext
-    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
+    virtual void RequestUpdate(ActionContext* actionContext) {}                                     // GlobalContext
+    virtual void RequestUpdate(ActionContext* actionContext, int commandId) {}                      // ReaperActionContext
+    virtual void RequestUpdate(ActionContext* actionContext, string param) {}                       // string param
+    virtual void RequestUpdate(ActionContext* actionContext, MediaTrack* track) {}                  // TrackContext
+    virtual void RequestUpdate(ActionContext* actionContext, MediaTrack* track, int param) {}       // TrackParamContext
+    virtual void RequestUpdate(ActionContext* actionContext, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(ControlSurface* surface, string value) {}                                                                   // SurfaceContext
@@ -552,11 +552,9 @@ protected:
     bool shouldExecute_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
-
-    Widget* GetWidget();
     
 public:
-    ActionContext(Action* action) : action_(action) {}
+    ActionContext(WidgetActionContextManager* widgetActionContextManager, Action* action) : widgetActionContextManager_(widgetActionContextManager), action_(action) {}
     virtual ~ActionContext() {}
     
     WidgetActionContextManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
@@ -564,7 +562,9 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
-    void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager; }
+    
+    Widget* GetWidget();
+    Page* GetPage() { return GetWidget()->GetSurface()->GetPage(); }
     
     virtual void AddActionContext(ActionContext* actionContext) {}
     virtual void SetIndex(int index) {}
@@ -1136,7 +1136,7 @@ class Manager
 {
 private:
     map<string, Action*> actions_;
-    map<string , function<ActionContext*(vector<string>)>> actionContexts_;
+    map<string , function<ActionContext*(WidgetActionContextManager* manager, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     map<string, map<string, int>> fxParamIndices_;
     
@@ -1192,14 +1192,21 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(vector<string> params)
+    ActionContext* GetActionContext(WidgetActionContextManager* manager, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](params);
+            return actionContexts_[params[0]](manager, params);
         
         return nullptr;
     }
 
+    bool IsActionContextAvailable(string contextName)
+    {
+        if(actionContexts_.count(contextName) > 0)
+            return true;
+        else return false;
+    }
+    
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
