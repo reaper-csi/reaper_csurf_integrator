@@ -525,13 +525,14 @@ public:
     virtual void RequestUpdate(ActionContext* actionContext, MediaTrack* track, int param) {}       // TrackParamContext
     virtual void RequestUpdate(ActionContext* actionContext, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
+    virtual void Do(double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(ControlSurface* surface, string value) {}                                                                   // SurfaceContext
     virtual void Do(Page* page, string value) {}                                                                                // GlobalContext / ReaperActionContext
     virtual void Do(Page* page, string value1, string value2) {}                                                                                // GlobalContext / ReaperActionContext
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string stringParam2, double value) {}                              // Sends
+    virtual void Do(Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
+    virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
+    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string stringParam2, double value) {}                              // Sends
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                            // FXContext
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                      // FXContext
     virtual void Do(Page* page, ControlSurface* surface) {}

@@ -23,7 +23,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), isInverted_ == false ? value : 1.0 - value);
+        action_->Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -45,7 +45,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, isInverted_ == false ? value : 1.0 - value);
+            action_->Do(GetWidget(), track, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -133,7 +133,7 @@ public:
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(GetWidget(), track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -164,7 +164,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, value);
+            action_->Do(GetWidget(), track, value);
     }
 };
 
@@ -198,7 +198,7 @@ public:
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             if(GetWidgetActionContextManager() != nullptr)
-                action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
+                action_->Do(GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
     }
 };
 
@@ -279,7 +279,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), commandId_);
+        action_->Do(commandId_);
     }
 };
 
