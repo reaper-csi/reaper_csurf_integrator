@@ -21,7 +21,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetToggleCommandState(commandId));
     }
     
-    void Do(Page* page, double commandId) override
+    void Do(double commandId) override
     {
         DAW::SendCommandMessage(commandId);
     }
@@ -64,7 +64,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), volToNormalized(vol));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
@@ -82,7 +82,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), volToNormalized(vol));
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_SetSurfaceVolume(DAW::GetMasterTrack(0), DAW::CSurf_OnVolumeChange(DAW::GetMasterTrack(0), normalizedToVol(value), false), NULL);
     }
@@ -100,7 +100,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), volToNormalized(vol));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
         double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex, normalizedToVol(value), false);
 
@@ -120,7 +120,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), panToNormalized(pan));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do( Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
         double pan = DAW::CSurf_OnSendPanChange(track, sendIndex, normalizedToPan(value), false);
         
@@ -140,7 +140,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), mute);
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
     {
         bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_MUTE");
         
@@ -158,7 +158,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
     }
@@ -176,7 +176,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), displayMode, panToNormalized(pan));
     }
 
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
@@ -192,7 +192,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
@@ -379,7 +379,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -390,7 +390,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -410,7 +410,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), playState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -431,7 +431,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), stopState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnStop();
     }
@@ -452,7 +452,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), recordState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnRecord();
     }
@@ -468,10 +468,10 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-        page->OnTrackSelectionBySurface(track);
+        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
     }
 };
 
@@ -485,10 +485,10 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::SetOnlyTrackSelected(track);
-        page->OnTrackSelectionBySurface(track);
+        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
     }
 };
 
@@ -519,15 +519,15 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
 
-    virtual void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    virtual void Do(Widget* widget, MediaTrack* track, double value) override
     {
         int currentlySelectedCount = 0;
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 1; i <= page->GetNumTracks(); i++)
+        for(int i = 1; i <= widget->GetSurface()->GetPage()->GetNumTracks(); i++)
         {
-           MediaTrack* currentTrack = page->GetTrackFromId(i);
+           MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
             
             if(currentTrack == track)
                 trackIndex = i;
@@ -547,10 +547,10 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = page->GetTrackFromId(i);
+            MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-            page->OnTrackSelectionBySurface(currentTrack);
+            widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(currentTrack);
         }
     }
 };
@@ -565,7 +565,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
     }
@@ -583,7 +583,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), mute);
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         bool mute = false;
         DAW::GetTrackUIMute(track, &mute);
@@ -601,7 +601,7 @@ public:
         actionContext->SetWidgetValue(actionContext->GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
     }
     
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
     }
@@ -612,7 +612,7 @@ class SetTrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, Widget* widget, MediaTrack* track, double value) override
+    void Do(Widget* widget, MediaTrack* track, double value) override
     {
         widget->GetSurface()->GetPage()->SetTouchState(track, value == 0 ? false : true);
     }
@@ -623,7 +623,7 @@ class CycleTrackSlotIndex : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(Page* page, Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string modifierName, double value) override
+    void Do(Widget* widget, MediaTrack* track, WidgetActionContextManager* widgetActionContextManager, string modifierName, double value) override
     {
          widget->GetSurface()->GetPage()->CycleTrackSlotIndex(modifierName, track, value);
     }
