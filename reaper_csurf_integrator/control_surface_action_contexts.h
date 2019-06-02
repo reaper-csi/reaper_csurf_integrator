@@ -197,7 +197,8 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
+            if(GetWidgetActionContextManager() != nullptr)
+                action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
     }
 };
 
