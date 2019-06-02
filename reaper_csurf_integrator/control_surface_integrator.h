@@ -518,11 +518,11 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) {}                                     // GlobalContext
-    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, int commandId) {}                      // ReaperActionContext
-    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, string param) {}                       // string param
-    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track) {}                  // TrackContext
-    virtual void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}       // TrackParamContext
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget) {}                                     // GlobalContext
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, int commandId) {}                      // ReaperActionContext
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, string param) {}                       // string param
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track) {}                  // TrackContext
+    virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int param) {}       // TrackParamContext
     virtual void RequestUpdate(ActionContext* actionContext, Widget* widget, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
 
     virtual void Do(Page* page, double value) {}                                                                                // GlobalContext / ReaperActionContext
