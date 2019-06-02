@@ -14,11 +14,11 @@ class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(Action* action) : ActionContext(action) {}
+    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(this, GetWidget());
+        action_->RequestUpdate(this);
     }
     
     virtual void DoAction(double value) override
@@ -32,12 +32,12 @@ class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackContext(Action* action) : ActionContext(action) {}
-    
+    TrackContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
+
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(this, GetWidget(), track);
+            action_->RequestUpdate(this, track);
         else
             GetWidget()->Reset();
     }
@@ -67,7 +67,7 @@ private:
     }
     
 public:
-    TrackSlotCycleContext(Action* action, string customModifierName) : TrackContext(action), customSlotName_(customModifierName) {}
+    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName) {}
     
     virtual void AddActionContext(ActionContext* actionContext) override
     {
@@ -94,7 +94,7 @@ class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendContext(Action* action) : TrackContext(action) {}
+    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action) {}
     
     // GAW TDB -- move some of this to SendsNavigationManager
     
@@ -113,7 +113,7 @@ public:
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
 
-                action_->RequestUpdate(this, GetWidget(), track, sendsOffset);
+                action_->RequestUpdate(this, track, sendsOffset);
             }
         }
         else
@@ -147,7 +147,7 @@ private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntFeedbackParam(Action* action, vector<string> params) : TrackContext(action)
+    TrackContextWithIntFeedbackParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -156,7 +156,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(this, GetWidget(), track, param_);
+            action_->RequestUpdate(this, track, param_);
         else
             GetWidget()->Reset();
     }
@@ -177,7 +177,7 @@ private:
     int intParam_ = 0;
     
 public:
-    TrackContextWithStringAndIntParams(Action* action, vector<string> params) : TrackContext(action)
+    TrackContextWithStringAndIntParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
     {
         if(params.size() > 2)
         {
@@ -189,7 +189,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(this, GetWidget(), track);
+            action_->RequestUpdate(this, track);
         else
             GetWidget()->Reset();
     }
@@ -212,7 +212,7 @@ private:
     int fxIndex_ = 0;
 
 public:
-    FXContext(Action* action, vector<string> params) : TrackContext(action)
+    FXContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
     {
         fxParamName_ = params[1];
         
@@ -229,7 +229,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(this, GetWidget(), track, fxIndex_, GetWidget()->GetSurface()->GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_));
+            action_->RequestUpdate(this, track, fxIndex_, GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_));
         else
             GetWidget()->Reset();
     }
@@ -241,7 +241,7 @@ public:
             if(shouldToggle_)
                 action_->DoToggle(track, fxIndex_, GetWidget()->GetSurface()->GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(track, fxIndex_, GetWidget()->GetSurface()->GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                action_->Do(track, fxIndex_, GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
         }
     }
 };
@@ -254,7 +254,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(Action* action, vector<string> params) : ActionContext(action)
+    ReaperActionContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
     {
         if(params.size() > 1)
         {
@@ -274,7 +274,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(this, GetWidget(), commandId_);
+        action_->RequestUpdate(this, commandId_);
     }
     
     virtual void DoAction(double value) override
@@ -291,7 +291,7 @@ private:
     int param_ = 0;
    
 public:
-    GlobalContextWithIntParam(Action* action, vector<string> params) : ActionContext(action)
+    GlobalContextWithIntParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -299,7 +299,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(this, GetWidget(), param_);
+        action_->RequestUpdate(this, param_);
     }
     
     virtual void DoAction(double value) override
@@ -316,7 +316,7 @@ private:
     string param_ = "";
     
 public:
-    GlobalContextWithStringParam(Action* action, vector<string> params) : ActionContext(action)
+    GlobalContextWithStringParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -324,7 +324,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(this, GetWidget(), param_);
+        action_->RequestUpdate(this, param_);
     }
     
     virtual void DoAction(double value) override
@@ -342,7 +342,7 @@ private:
     string param2_ = "";
 
 public:
-    GlobalContextWith2StringParams(Action* action, vector<string> params) : ActionContext(action)
+    GlobalContextWith2StringParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
     {
         if(params.size() > 2)
         {
@@ -365,7 +365,7 @@ private:
     string param_ = "";
     
 public:
-    SurfaceContextWithStringParam(Action* action, vector<string> params) : ActionContext(action)
+    SurfaceContextWithStringParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -387,7 +387,7 @@ class TrackPageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPageSurfaceContext(Action* action) : ActionContext(action) {}
+    TrackPageSurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
     
     virtual void DoAction() override
     {
