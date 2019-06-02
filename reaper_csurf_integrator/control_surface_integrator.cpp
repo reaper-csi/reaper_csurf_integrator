@@ -1439,6 +1439,9 @@ bool TrackNavigationManager::TrackListChanged()
 
 void TrackNavigationManager::AdjustTrackBank(int stride)
 {
+    if(DAW::CSurf_NumTracks(followMCP_) <= trackNavigators_.size())
+        return;
+    
     int previousTrackOffset = trackOffset_;
     
     trackOffset_ += stride;
