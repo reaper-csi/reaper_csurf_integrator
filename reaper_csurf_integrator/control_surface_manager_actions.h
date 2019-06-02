@@ -207,9 +207,9 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) override
+    void RequestUpdate(ActionContext* actionContext, Widget* widget) override
     {
-        actionContext->SetWidgetValue(widget, page->GetShowFXWindows());
+        actionContext->SetWidgetValue(widget, widget->GetSurface()->GetPage()->GetShowFXWindows());
     }
     
     void Do(Page* page, double value) override
@@ -223,9 +223,9 @@ class SetScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Page* page, ActionContext* actionContext, Widget* widget) override
+    void RequestUpdate(ActionContext* actionContext, Widget* widget) override
     {
-        actionContext->SetWidgetValue(widget, page->GetScrollLink());
+        actionContext->SetWidgetValue(widget, widget->GetSurface()->GetPage()->GetScrollLink());
     }
     
     void Do(Page* page, double value) override

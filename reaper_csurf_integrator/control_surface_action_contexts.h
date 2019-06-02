@@ -18,7 +18,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget());
+        action_->RequestUpdate(this, GetWidget());
     }
     
     virtual void DoAction(double value) override
@@ -37,7 +37,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), track);
+            action_->RequestUpdate(this, GetWidget(), track);
         else
             GetWidget()->Reset();
     }
@@ -113,7 +113,7 @@ public:
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
 
-                action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), track, sendsOffset);
+                action_->RequestUpdate(this, GetWidget(), track, sendsOffset);
             }
         }
         else
@@ -156,7 +156,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), track, param_);
+            action_->RequestUpdate(this, GetWidget(), track, param_);
         else
             GetWidget()->Reset();
     }
@@ -189,7 +189,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), track);
+            action_->RequestUpdate(this, GetWidget(), track);
         else
             GetWidget()->Reset();
     }
@@ -274,7 +274,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), commandId_);
+        action_->RequestUpdate(this, GetWidget(), commandId_);
     }
     
     virtual void DoAction(double value) override
@@ -299,7 +299,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), param_);
+        action_->RequestUpdate(this, GetWidget(), param_);
     }
     
     virtual void DoAction(double value) override
@@ -324,7 +324,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(GetWidget()->GetSurface()->GetPage(), this, GetWidget(), param_);
+        action_->RequestUpdate(this, GetWidget(), param_);
     }
     
     virtual void DoAction(double value) override
