@@ -400,20 +400,14 @@ public:
         surface_ = GetWidget()->GetSurface();
     }
     
-    virtual void DoAction(double value) override
+    virtual void DoAction(MediaTrack* track) override
     {
-        // Total hack to support OnTrackSelection and OnFXFoce=us
-        Widget* widget = GetWidget();
-        
-        if(widget->GetUseValueAsFXIndex() && widget->GetSuppliedTrack() != nullptr)
-            action_->Do(page_, surface_, widget->GetSuppliedTrack(), value);
-        else if(widget->GetSuppliedTrack() != nullptr)
-            action_->Do(page_, surface_, widget->GetSuppliedTrack());
-        else
-            action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
-        
-        widget->SetSuppliedTrack(nullptr);
-        widget->SetUseValueAsFXIndex(false);
+        action_->Do(page_, surface_, track);
+    }
+    
+    virtual void DoAction(MediaTrack* track, int fxIndex) override
+    {
+        action_->Do(page_, surface_, track, fxIndex);
     }
 };
 

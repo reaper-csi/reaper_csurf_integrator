@@ -1029,6 +1029,18 @@ void Widget::DoRelativeAction(double value)
         widgetActionContextManager_->DoAction(lastValue_ + value);
 }
 
+void Widget::DoAction(MediaTrack* track)
+{
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoAction(track);
+}
+
+void Widget::DoAction(MediaTrack* track, int fxIndex)
+{
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->DoAction(track, fxIndex);
+}
+
 void Widget::ClearCache()
 {
     for(auto feedbackProcessor : feedbackProcessors_)
@@ -1212,6 +1224,20 @@ void WidgetActionContextManager::DoAction(double value)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(value);
+}
+
+void WidgetActionContextManager::DoAction(MediaTrack* track)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+            context->DoAction(track);
+}
+
+void WidgetActionContextManager::DoAction(MediaTrack* track, int fxIndex)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+            context->DoAction(track, fxIndex);
 }
 
 void WidgetActionContextManager::Activate()
