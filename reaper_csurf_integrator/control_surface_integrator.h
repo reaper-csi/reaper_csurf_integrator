@@ -82,9 +82,20 @@ private:
     
     bool isModifier_ = false;
     
+    // GAW -- total HACK for OnTrackSelection and OnFXFocus
+    MediaTrack* suppliedTrack_ = nullptr;
+    bool useValueAsFXIndex_ = false;
+    
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Widget() {};
+ 
+    // GAW -- total HACK for OnTrackSelection and OnFXFocus
+    void SetSuppliedTrack(MediaTrack* track) { suppliedTrack_ = track; }
+    void SetUseValueAsFXIndex(bool shouldUseValue) { useValueAsFXIndex_ = shouldUseValue; }
+    MediaTrack* GetSuppliedTrack() { return suppliedTrack_; }
+    bool GetUseValueAsFXIndex() { return useValueAsFXIndex_; }
+    
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
@@ -92,8 +103,6 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
-    void DoAction(MediaTrack* track);
-    void DoAction(MediaTrack* track, int intParam);
 
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
@@ -395,14 +404,21 @@ public:
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
-                widget->DoAction(track);
+            {
+                widget->SetSuppliedTrack(track);
+                widget->DoAction(1.0);
+            }
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
-                widget->DoAction(track, fxIndex);
+            {
+                widget->SetSuppliedTrack(track);
+                widget->SetUseValueAsFXIndex(true);
+                widget->DoAction(fxIndex);
+            }
     }
 };
 
@@ -577,8 +593,6 @@ public:
     virtual string GetAlias() { return ""; }
     virtual void RequestUpdate() {}
     virtual void DoAction(double value) {}
-    virtual void DoAction(MediaTrack* track) {}
-    virtual void DoAction(MediaTrack* track, int fxIndex) {}
     
     void SetWidgetValue(Widget* widget, double value)
     {
@@ -622,8 +636,6 @@ public:
     
     void RequestUpdate();
     void DoAction(double value);
-    void DoAction(MediaTrack* track);
-    void DoAction(MediaTrack* track, int intParam);
     void Activate();
     void Activate(int contextIndex);
 

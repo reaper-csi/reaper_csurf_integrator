@@ -24,16 +24,16 @@ public:
 
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
             action_->RequestUpdate(this, track);
         else
-            GetWidget()->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget(), track, isInverted_ == false ? value : 1.0 - value);
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->Do(widget_, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -385,16 +385,6 @@ public:
     {
         action_->Do(surface_, param_);
     }
-    
-    virtual void DoAction(MediaTrack* track) override
-    {
-        action_->Do(surface_, param_);
-    }
-    
-    virtual void DoAction(MediaTrack* track, int fxIndex) override
-    {
-        action_->Do(surface_, param_);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -412,17 +402,18 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
-    }
-
-    virtual void DoAction(MediaTrack* track) override
-    {
-        action_->Do(page_, surface_, track);
-    }
-    
-    virtual void DoAction(MediaTrack* track, int fxIndex) override
-    {
-        action_->Do(page_, surface_, track, fxIndex);
+        // Total hack to support OnTrackSelection and OnFXFoce=us
+        Widget* widget = GetWidget();
+        
+        if(widget->GetUseValueAsFXIndex() && widget->GetSuppliedTrack() != nullptr)
+            action_->Do(page_, surface_, widget->GetSuppliedTrack(), value);
+        else if(widget->GetSuppliedTrack() != nullptr)
+            action_->Do(page_, surface_, widget->GetSuppliedTrack());
+        else
+            action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
+        
+        widget->SetSuppliedTrack(nullptr);
+        widget->SetUseValueAsFXIndex(false);
     }
 };
 
