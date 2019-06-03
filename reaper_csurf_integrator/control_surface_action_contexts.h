@@ -42,9 +42,7 @@ class TrackSlotCycleContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     string customSlotName_ = "";
-    
     vector<ActionContext*> actionContexts_;
     
     int GetCurrentIndex()
@@ -56,10 +54,7 @@ private:
     }
     
 public:
-    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName)
-    {
-        page_ = GetPage();
-    }
+    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName) {}
     
     virtual void AddActionContext(ActionContext* actionContext) override
     {
@@ -85,14 +80,8 @@ public:
 class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Page* page_ = nullptr;
-    
 public:
-    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action)
-    {
-        page_ = GetPage();
-    }
+    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action) {}
     
     // GAW TDB -- move some of this to SendsNavigationManager
     
@@ -171,7 +160,6 @@ class FXContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     string fxParamName_ = "";
     string fxParamNameAlias_ = "";
     int fxIndex_ = 0;
@@ -185,8 +173,6 @@ public:
             fxParamNameAlias_ = params[2];
         else
             fxParamNameAlias_ = params[1];
-        
-        page_ = GetPage();
     }
     
     virtual string GetAlias() override { return fxParamNameAlias_; }
@@ -253,13 +239,8 @@ public:
 class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    Page* page_ = nullptr;
-
 public:
-    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
-    {
-        page_ = GetPage();
-    }
+    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
     
     virtual void RequestUpdate() override
     {
@@ -314,7 +295,6 @@ class GlobalContextWithIntParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     int param_ = 0;
    
 public:
@@ -322,8 +302,6 @@ public:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
-        
-        page_ = GetPage();
     }
     
     virtual void RequestUpdate() override
@@ -342,7 +320,6 @@ class GlobalContextWithStringParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     string param_ = "";
     
 public:
@@ -350,8 +327,6 @@ public:
     {
         if(params.size() > 1)
             param_ = params[1];
-        
-        page_ = GetPage();
     }
     
     virtual void RequestUpdate() override
@@ -370,7 +345,6 @@ class GlobalContextWith2StringParams : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     string param1_ = "";
     string param2_ = "";
 
@@ -382,8 +356,6 @@ public:
             param1_ = params[1];
             param2_ = params[2];
         }
-        
-        page_ = GetPage();
     }
     
     virtual void DoAction(double value) override
@@ -430,13 +402,11 @@ class TrackPageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     ControlSurface* surface_ = nullptr;
     
 public:
     TrackPageSurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
     {
-        page_ = GetPage();
         surface_ = GetWidget()->GetSurface();
     }
     
