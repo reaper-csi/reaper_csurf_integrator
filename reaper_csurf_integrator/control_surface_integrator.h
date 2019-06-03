@@ -546,6 +546,7 @@ class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    Page* page_ = nullptr;
     WidgetActionContextManager* widgetActionContextManager_ = nullptr;
     Action* action_ = nullptr;
     bool isInverted_ = false;
@@ -555,7 +556,10 @@ protected:
     double delayStartTime_ = 0.0;
     
 public:
-    ActionContext(WidgetActionContextManager* widgetActionContextManager, Action* action) : widgetActionContextManager_(widgetActionContextManager), action_(action) {}
+    ActionContext(WidgetActionContextManager* widgetActionContextManager, Action* action) : widgetActionContextManager_(widgetActionContextManager), action_(action)
+    {
+        page_ = GetWidget()->GetSurface()->GetPage();
+    }
     virtual ~ActionContext() {}
     
     WidgetActionContextManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
@@ -565,7 +569,7 @@ public:
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     Widget* GetWidget();
-    Page* GetPage() { return GetWidget()->GetSurface()->GetPage(); }
+    Page* GetPage() { return page_; }
     
     virtual void AddActionContext(ActionContext* actionContext) {}
     virtual void SetIndex(int index) {}
