@@ -10,29 +10,17 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalContext : public ActionContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
-    
-    virtual void RequestUpdate() override
-    {
-        action_->RequestUpdate(this);
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        action_->Do(isInverted_ == false ? value : 1.0 - value);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+protected:
+    Widget* widget_ = nullptr;
+
 public:
-    TrackContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
+    TrackContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
+    {
+        widget_ = GetWidget();
+    }
 
     virtual void RequestUpdate() override
     {
@@ -54,20 +42,24 @@ class TrackSlotCycleContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Page* page_ = nullptr;
     string customSlotName_ = "";
     
     vector<ActionContext*> actionContexts_;
     
     int GetCurrentIndex()
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-            return GetWidget()->GetSurface()->GetPage()->GetTrackSlotIndex(customSlotName_, track);
+        if(MediaTrack* track = widget_->GetTrack())
+            return page_->GetTrackSlotIndex(customSlotName_, track);
         else
             return 0;
     }
     
 public:
-    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName) {}
+    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName)
+    {
+        page_ = GetPage();
+    }
     
     virtual void AddActionContext(ActionContext* actionContext) override
     {
@@ -84,8 +76,8 @@ public:
     {
         int index = GetCurrentIndex();
         
-        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size())
-            actionContexts_[GetCurrentIndex()]->DoAction(value);
+        if(actionContexts_.size() > 0 && index < actionContexts_.size())
+            actionContexts_[index]->DoAction(value);
     }
 };
 
@@ -93,22 +85,28 @@ public:
 class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    Page* page_ = nullptr;
+    
 public:
-    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action) {}
+    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action)
+    {
+        page_ = GetPage();
+    }
     
     // GAW TDB -- move some of this to SendsNavigationManager
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
 
             if(maxOffset < 0)
-               GetWidget()->Reset();
+               widget_->Reset();
             else
             {
-                int sendsOffset = GetWidget()->GetSurface()->GetPage()->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
@@ -117,23 +115,23 @@ public:
             }
         }
         else
-            GetWidget()->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
         {
             int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
             
             if(maxOffset > -1)
             {
-                int sendsOffset = GetWidget()->GetSurface()->GetPage()->GetSendsOffset();
+                int sendsOffset = page_->GetSendsOffset();
                 
                 if(sendsOffset > maxOffset)
                     sendsOffset = maxOffset;
                 
-                action_->Do(GetWidget(), track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
+                action_->Do(widget_, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
             }
         }
     }
@@ -155,18 +153,67 @@ public:
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
             action_->RequestUpdate(this, track, param_);
         else
-            GetWidget()->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->Do(GetWidget(), track, value);
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->Do(widget_, track, value);
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXContext : public TrackContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    string fxParamName_ = "";
+    string fxParamNameAlias_ = "";
+    int fxIndex_ = 0;
+
+public:
+    FXContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
+    {
+        fxParamName_ = params[1];
+        
+        if(params.size() > 2)
+            fxParamNameAlias_ = params[2];
+        else
+            fxParamNameAlias_ = params[1];
+        
+        page_ = GetPage();
+    }
+    
+    virtual string GetAlias() override { return fxParamNameAlias_; }
+    
+    virtual void SetIndex(int index) override { fxIndex_ = index; }
+        
+    virtual void RequestUpdate() override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+            action_->RequestUpdate(this, track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_));
+        else
+            widget_->Reset();
+    }
+    
+    virtual void DoAction(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            if(shouldToggle_)
+                action_->DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+            else
+                action_->Do(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+        }
+    }
+};
+
+//////// The next Contexts don't use the double value, so they can safely override all flavours
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackContextWithStringAndIntParams : public TrackContext
@@ -188,61 +235,40 @@ public:
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = widget_->GetTrack())
             action_->RequestUpdate(this, track);
         else
-            GetWidget()->Reset();
+            widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-            if(GetWidgetActionContextManager() != nullptr)
-                action_->Do(GetWidget(), track, GetWidgetActionContextManager(), stringParam_, intParam_);
+        if(MediaTrack* track = widget_->GetTrack())
+            if(widgetActionContextManager_ != nullptr)
+                action_->Do(widget_, track, widgetActionContextManager_, stringParam_, intParam_);
     }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXContext : public TrackContext
+class GlobalContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    string fxParamName_ = "";
-    string fxParamNameAlias_ = "";
-    int fxIndex_ = 0;
+    Page* page_ = nullptr;
 
 public:
-    FXContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
+    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
     {
-        fxParamName_ = params[1];
-        
-        if(params.size() > 2)
-            fxParamNameAlias_ = params[2];
-        else
-            fxParamNameAlias_ = params[1];
+        page_ = GetPage();
     }
     
-    virtual string GetAlias() override { return fxParamNameAlias_; }
-    
-    virtual void SetIndex(int index) override { fxIndex_ = index; }
-        
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-            action_->RequestUpdate(this, track, fxIndex_, GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_));
-        else
-            GetWidget()->Reset();
+        action_->RequestUpdate(this);
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
-        {
-            if(shouldToggle_)
-                action_->DoToggle(track, fxIndex_, GetWidget()->GetSurface()->GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
-            else
-                action_->Do(track, fxIndex_, GetPage()->GetFXParamIndex(track, GetWidget(), fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
-        }
+        action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -288,6 +314,7 @@ class GlobalContextWithIntParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Page* page_ = nullptr;
     int param_ = 0;
    
 public:
@@ -295,6 +322,8 @@ public:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
+        
+        page_ = GetPage();
     }
     
     virtual void RequestUpdate() override
@@ -304,7 +333,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), param_);
+        action_->Do(page_, param_);
     }
 };
 
@@ -313,6 +342,7 @@ class GlobalContextWithStringParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Page* page_ = nullptr;
     string param_ = "";
     
 public:
@@ -320,6 +350,8 @@ public:
     {
         if(params.size() > 1)
             param_ = params[1];
+        
+        page_ = GetPage();
     }
     
     virtual void RequestUpdate() override
@@ -329,7 +361,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), param_);
+        action_->Do(page_, param_);
     }
 };
 
@@ -338,6 +370,7 @@ class GlobalContextWith2StringParams : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Page* page_ = nullptr;
     string param1_ = "";
     string param2_ = "";
 
@@ -349,11 +382,13 @@ public:
             param1_ = params[1];
             param2_ = params[2];
         }
+        
+        page_ = GetPage();
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), param1_, param2_);
+        action_->Do(page_, param1_, param2_);
     }
 };
 
@@ -362,6 +397,7 @@ class SurfaceContextWithStringParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    ControlSurface* surface_ = nullptr;
     string param_ = "";
     
 public:
@@ -369,16 +405,23 @@ public:
     {
         if(params.size() > 1)
             param_ = params[1];
+        
+        surface_ = GetWidget()->GetSurface();
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface(), param_);
+        action_->Do(surface_, param_);
     }
     
     virtual void DoAction(MediaTrack* track) override
     {
-        action_->Do(GetWidget()->GetSurface(), param_);
+        action_->Do(surface_, param_);
+    }
+    
+    virtual void DoAction(MediaTrack* track, int fxIndex) override
+    {
+        action_->Do(surface_, param_);
     }
 };
 
@@ -386,27 +429,30 @@ public:
 class TrackPageSurfaceContext : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    Page* page_ = nullptr;
+    ControlSurface* surface_ = nullptr;
+    
 public:
-    TrackPageSurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
-    
-    virtual void DoAction() override
+    TrackPageSurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget()->GetSurface());
-    }
-    
-    virtual void DoAction(MediaTrack* track) override
-    {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget()->GetSurface(), track);
-    }
-    
-    virtual void DoAction(MediaTrack* track, int fxIndex) override
-    {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget()->GetSurface(), track, fxIndex);
+        page_ = GetPage();
+        surface_ = GetWidget()->GetSurface();
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(GetWidget()->GetSurface()->GetPage(), GetWidget()->GetSurface(), isInverted_ == false ? value : 1.0 - value);
+        action_->Do(page_, surface_, isInverted_ == false ? value : 1.0 - value);
+    }
+
+    virtual void DoAction(MediaTrack* track) override
+    {
+        action_->Do(page_, surface_, track);
+    }
+    
+    virtual void DoAction(MediaTrack* track, int fxIndex) override
+    {
+        action_->Do(page_, surface_, track, fxIndex);
     }
 };
 
