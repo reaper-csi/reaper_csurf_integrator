@@ -405,6 +405,7 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
             {
+                // GAW -- Total hack to avoid overriding DoAction(double value)
                 widget->SetSuppliedTrack(track);
                 widget->DoAction(1.0);
             }
@@ -415,6 +416,7 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
             {
+                // GAW -- Total hack to avoid overriding DoAction(double value)
                 widget->SetSuppliedTrack(track);
                 widget->SetUseValueAsFXIndex(true);
                 widget->DoAction(fxIndex);
