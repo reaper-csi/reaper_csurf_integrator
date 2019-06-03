@@ -572,7 +572,6 @@ public:
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void RequestUpdate() {}
-    virtual void DoAction() {}
     virtual void DoAction(double value) {}
     virtual void DoAction(MediaTrack* track) {}
     virtual void DoAction(MediaTrack* track, int fxIndex) {}
