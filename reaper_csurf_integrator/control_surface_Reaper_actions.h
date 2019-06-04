@@ -236,15 +236,6 @@ class FXParamNameDisplay : public Action
 public:
     virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) override
     {
-        /*
-        if(actionContext->GetAlias() == "")
-        {
-            char fxParamName[128];
-            DAW::TrackFX_GetParamName(track, fxIndex, paramIndex, fxParamName, sizeof(fxParamName));
-            actionContext->SetWidgetValue(widget, fxParamName);
-        }
-        else
-         */
         context->SetWidgetValue(context->GetWidget(), context->GetAlias());
     }
 };
