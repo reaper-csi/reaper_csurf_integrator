@@ -330,7 +330,7 @@ protected:
             return false;
     }
 
-    void EraseActiveZone(string zoneName)
+    void RemoveActiveZone(string zoneName)
     {
         zones_[zoneName]->Deactivate();
         activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
@@ -417,7 +417,7 @@ public:
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
-            EraseActiveZone(zoneName);
+            RemoveActiveZone(zoneName);
     }
 
     void ToggleZone(string zoneName)
@@ -433,7 +433,7 @@ public:
         if(zones_.count(zoneName) > 0)
         {
             if(HasActiveZone(zoneName))
-                EraseActiveZone(zoneName);
+                DeactivateZone(zoneName);
             
             ActivateZone(zoneName);
         }
