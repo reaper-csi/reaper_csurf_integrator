@@ -341,30 +341,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalContextWith2StringParams : public ActionContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string param1_ = "";
-    string param2_ = "";
-
-public:
-    GlobalContextWith2StringParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
-    {
-        if(params.size() > 2)
-        {
-            param1_ = params[1];
-            param2_ = params[2];
-        }
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        action_->Do(page_, param1_, param2_);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceContextWithStringParam : public ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -386,6 +362,34 @@ public:
         action_->Do(surface_, param_);
     }
 };
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SurfaceContextWith2StringParams : public ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    ControlSurface* surface_ = nullptr;
+    string param1_ = "";
+    string param2_ = "";
+    
+public:
+    SurfaceContextWith2StringParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    {
+        if(params.size() > 2)
+        {
+            param1_ = params[1];
+            param2_ = params[2];
+        }
+        
+        surface_ = GetWidget()->GetSurface();
+    }
+    
+    virtual void DoAction(double value) override
+    {
+        action_->Do(surface_, param1_, param2_);
+    }
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPageSurfaceContext : public ActionContext

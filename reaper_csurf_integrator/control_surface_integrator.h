@@ -368,9 +368,27 @@ public:
                 
                 activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
             }
-
+            
             ActivateZone(zoneName);
         }
+    }
+    
+    void GoSubZone(string zoneName, string parentZoneName)
+    {
+        
+        /*
+        if(zones_.count(zoneName) > 0)
+        {
+            if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
+            {
+                zones_[zoneName]->Deactivate();
+                
+                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
+            }
+            
+            ActivateZone(zoneName);
+        }
+         */
     }
     
     void ActivateZone(string zoneName)
@@ -533,23 +551,23 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(ActionContext* context) {}                                     // GlobalContext
-    virtual void RequestUpdate(ActionContext* context, int commandId) {}                      // ReaperActionContext
-    virtual void RequestUpdate(ActionContext* context, string param) {}                       // string param
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track) {}                  // TrackContext
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int param) {}       // TrackParamContext
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) {} // FXContext
+    virtual void RequestUpdate(ActionContext* context) {}
+    virtual void RequestUpdate(ActionContext* context, int commandId) {}
+    virtual void RequestUpdate(ActionContext* context, string param) {}
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track) {}
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int param) {}
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) {}
 
-    virtual void Do(double value) {}                                                                                // GlobalContext / ReaperActionContext
-    virtual void Do(Page* page, double value) {}                                                                    // GlobalContext / ReaperActionContext
-    virtual void Do(ControlSurface* surface, string value) {}                                                       // SurfaceContext
-    virtual void Do(Page* page, string value) {}                                                                    // GlobalContext / ReaperActionContext
-    virtual void Do(Page* page, string value1, string value2) {}                                                    // GlobalContext / ReaperActionContext
-    virtual void Do(Widget* widget, MediaTrack* track, double value) {}                                             // TrackContext / TrackParamContext
-    virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}                              // Sends
-    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionContextManager* manager, string stringParam2, double value) {}  // Sends
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                                // FXContext
-    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                          // FXContext
+    virtual void Do(double value) {}
+    virtual void Do(Page* page, double value) {}
+    virtual void Do(ControlSurface* surface, string value) {}
+    virtual void Do(ControlSurface* surface, string value1, string value2) {}
+    virtual void Do(Page* page, string value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, double value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionContextManager* manager, string stringParam2, double value) {}
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                 
     virtual void Do(Page* page, ControlSurface* surface) {}
     virtual void Do(Page* page, ControlSurface* surface, MediaTrack* track) {}
     virtual void Do(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) {}
