@@ -304,6 +304,14 @@ protected:
             widget->RequestUpdate();
     }
     
+    bool HasActiveZone(string zoneName)
+    {
+        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
+            return true;
+        else
+            return false;
+    }
+
     void ActivateZoneStack()
     {
         for(auto zone : activeZones_)
@@ -322,14 +330,6 @@ protected:
         activeZones_.push_back(zones_[zoneName]);
     }
     
-    bool HasActiveZone(string zoneName)
-    {
-        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            return true;
-        else
-            return false;
-    }
-
     void RemoveActiveZone(string zoneName)
     {
         zones_[zoneName]->Deactivate();
@@ -402,6 +402,7 @@ public:
         if(zones_.count(zoneName) > 0)
         {
             AddActiveFXZone(zoneName, contextIndex);
+            ActivateZoneStack();
             return true;
         }
         
@@ -412,12 +413,16 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             AddActiveZone(zoneName);
+        
+        ActivateZoneStack();
     }
 
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
             RemoveActiveZone(zoneName);
+        
+        ActivateZoneStack();
     }
 
     void ToggleZone(string zoneName)
@@ -426,6 +431,8 @@ public:
             DeactivateZone(zoneName);
         else if(zones_.count(zoneName) > 0)
             ActivateZone(zoneName);
+        
+        ActivateZoneStack();
     }
     
     void GoZone(string zoneName)
@@ -437,6 +444,8 @@ public:
             
             ActivateZone(zoneName);
         }
+        
+        ActivateZoneStack();
     }
     
     void GoSubZone(string zoneName, string parentZoneName)
