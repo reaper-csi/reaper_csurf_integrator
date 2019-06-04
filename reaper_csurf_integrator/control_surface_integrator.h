@@ -95,10 +95,10 @@ public:
     void DoAction(MediaTrack* track);
     void DoAction(MediaTrack* track, int fxIndex);
 
-    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
-    
+    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
+
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
     
