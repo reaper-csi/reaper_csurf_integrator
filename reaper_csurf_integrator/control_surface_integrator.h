@@ -290,6 +290,7 @@ protected:
 
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
+    map<string, vector<Zone*>> activeSubZones_;
     vector<Zone*> activeZones_;
     
     virtual void InitWidgets(string templateFilename) {}
@@ -301,6 +302,25 @@ protected:
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
+    }
+    
+    void ActivateZoneStack()
+    {
+        for(auto zone : activeZones_)
+            zone->Activate();
+    }
+    
+    bool HasActiveZone(string zoneName)
+    {
+        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
+            return true;
+        else
+            return false;
+    }
+    
+    void EraseActiveZone(string zoneName)
+    {
+        activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
     }
     
 public:
@@ -350,80 +370,6 @@ public:
         }
     }
 
-    void ToggleZoneActivation(string zoneName)
-    {
-        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            DeactivateZone(zoneName);
-        else
-            ActivateZone(zoneName);
-    }
-    
-    void GoZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            {
-                zones_[zoneName]->Deactivate();
-                
-                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
-            }
-            
-            ActivateZone(zoneName);
-        }
-    }
-    
-    void GoSubZone(string zoneName, string parentZoneName)
-    {
-        
-        /*
-        if(zones_.count(zoneName) > 0)
-        {
-            if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            {
-                zones_[zoneName]->Deactivate();
-                
-                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
-            }
-            
-            ActivateZone(zoneName);
-        }
-         */
-    }
-    
-    void ActivateZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Activate();
-            activeZones_.push_back(zones_[zoneName]);
-        }
-    }
-    
-    bool ActivateFXZone(string zoneName, int contextIndex)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Activate(contextIndex);
-            activeZones_.push_back(zones_[zoneName]);
-            return true;
-        }
-        
-        return false;
-    }
-            
-    void DeactivateZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Deactivate();
-            
-            activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
-            for(auto zone : activeZones_)
-                zone->Activate();
-        }
-    }
-
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto widget : widgets_)
@@ -437,6 +383,96 @@ public:
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(track, fxIndex);
     }
+
+    bool ActivateFXZone(string zoneName, int contextIndex)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            zones_[zoneName]->Activate(contextIndex);
+            activeZones_.push_back(zones_[zoneName]);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    void ActivateZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            zones_[zoneName]->Activate();
+            activeZones_.push_back(zones_[zoneName]);
+        }
+    }
+
+    void DeactivateZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            zones_[zoneName]->Deactivate();
+            EraseActiveZone(zoneName);
+        }
+    }
+
+    void ToggleZone(string zoneName)
+    {
+        if(HasActiveZone(zoneName))
+            DeactivateZone(zoneName);
+        else
+            ActivateZone(zoneName);
+    }
+    
+    void GoZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            if(HasActiveZone(zoneName))
+            {
+                zones_[zoneName]->Deactivate();
+                
+                EraseActiveZone(zoneName);
+            }
+            
+            ActivateZone(zoneName);
+        }
+    }
+    
+    void GoSubZone(string zoneName, string parentZoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            if(HasActiveZone(zoneName))
+            {
+                zones_[zoneName]->Deactivate();
+                
+                EraseActiveZone(zoneName);
+            }
+            
+
+        }
+
+        if(HasActiveZone(zoneName))
+        {
+
+            
+        
+        
+            ActivateZone(zoneName);
+        }
+        /*
+        if(zones_.count(zoneName) > 0)
+        {
+            if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
+            {
+                zones_[zoneName]->Deactivate();
+                
+                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
+            }
+            
+            ActivateZone(zoneName);
+        }
+         */
+    }    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1329,10 +1365,10 @@ public:
                 page->RefreshLayout();
     }
     
-    void TrackFXListChanged(MediaTrack* trackid)
+    void TrackFXListChanged(MediaTrack* track)
     {
         for(auto & page : pages_)
-            page->TrackFXListChanged(trackid);
+            page->TrackFXListChanged(track);
     }
 };
 
