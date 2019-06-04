@@ -1441,7 +1441,9 @@ bool TrackNavigationManager::TrackListChanged()
 
 void TrackNavigationManager::AdjustTrackBank(int stride)
 {
-    if(DAW::CSurf_NumTracks(followMCP_) <= trackNavigators_.size())
+    int numTracks = DAW::CSurf_NumTracks(followMCP_);
+    
+    if(numTracks <= trackNavigators_.size())
         return;
     
     int previousTrackOffset = trackOffset_;
@@ -1451,7 +1453,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     if(trackOffset_ <  1)
         trackOffset_ =  1;
     
-    int top = DAW::CSurf_NumTracks(followMCP_) - trackNavigators_.size() + 1;
+    int top = numTracks - trackNavigators_.size() + 1;
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
@@ -1460,7 +1462,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     
     GetPinnedChannelGUIDs(pinnedChannels);
     
-    while(trackOffset_ <= DAW::CSurf_NumTracks(followMCP_))
+    while(trackOffset_ <= numTracks)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
         
