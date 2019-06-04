@@ -781,6 +781,7 @@ void Manager::InitActionDictionary()
     actions_["GoPage"] = new class GoPage();
     actions_["ToggleZone"] = new class ToggleZone();
     actions_["GoZone"] = new class GoZone();
+    actions_["GoSubZone"] = new class GoSubZone();
     actions_["SelectTrackRelative"] = new SelectTrackRelative();
     actions_["TrackBank"] = new TrackBank();
     actions_["TrackSendBank"] = new TrackSendBank();
@@ -844,6 +845,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["GoPage"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithStringParam(manager, actions_[params[0]], params); };
     actionContexts_["ToggleZone"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new SurfaceContextWithStringParam(manager, actions_[params[0]], params); };
     actionContexts_["GoZone"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new SurfaceContextWithStringParam(manager, actions_[params[0]], params); };
+    actionContexts_["GoSubZone"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new SurfaceContextWith2StringParams(manager, actions_[params[0]], params); };
     actionContexts_["SelectTrackRelative"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
     actionContexts_["TrackBank"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
     actionContexts_["TrackSendBank"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
