@@ -82,7 +82,7 @@ public:
         context->SetWidgetValue(context->GetWidget(), volToNormalized(vol));
     }
     
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_SetSurfaceVolume(DAW::GetMasterTrack(0), DAW::CSurf_OnVolumeChange(DAW::GetMasterTrack(0), normalizedToVol(value), false), NULL);
     }
@@ -370,7 +370,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -381,7 +381,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -401,7 +401,7 @@ public:
         context->SetWidgetValue(context->GetWidget(), playState);
     }
     
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -422,7 +422,7 @@ public:
         context->SetWidgetValue(context->GetWidget(), stopState);
     }
     
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnStop();
     }
@@ -443,7 +443,7 @@ public:
         context->SetWidgetValue(context->GetWidget(), recordState);
     }
     
-    void Do(double value) override
+    void Do(Page* page, double value) override
     {
         DAW::CSurf_OnRecord();
     }
