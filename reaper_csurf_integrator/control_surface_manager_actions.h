@@ -156,7 +156,7 @@ class ToggleZone : public Action
 public:
     void Do(ControlSurface* surface, string zoneName) override
     {
-        surface->ToggleZoneActivation(zoneName);
+        surface->ToggleZone(zoneName);
     }
 };
 

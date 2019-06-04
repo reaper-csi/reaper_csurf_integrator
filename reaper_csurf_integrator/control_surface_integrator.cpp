@@ -1604,7 +1604,7 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface, Me
 {
     if(activeFXZoneNames_.count(surface) > 0)
     {
-        for(auto zoneName :activeFXZoneNames_[surface])
+        for(auto zoneName : activeFXZoneNames_[surface])
             surface->DeactivateZone(zoneName);
         
         activeFXZoneNames_[surface].clear();
