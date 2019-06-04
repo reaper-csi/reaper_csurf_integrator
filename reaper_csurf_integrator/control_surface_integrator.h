@@ -310,6 +310,18 @@ protected:
             zone->Activate();
     }
     
+    void AddActiveZone(string zoneName)
+    {
+        zones_[zoneName]->Activate();
+        activeZones_.push_back(zones_[zoneName]);
+    }
+    
+    void AddActiveFXZone(string zoneName, int fxIndex)
+    {
+        zones_[zoneName]->Activate(fxIndex);
+        activeZones_.push_back(zones_[zoneName]);
+    }
+    
     bool HasActiveZone(string zoneName)
     {
         if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
@@ -317,9 +329,10 @@ protected:
         else
             return false;
     }
-    
+
     void EraseActiveZone(string zoneName)
     {
+        zones_[zoneName]->Deactivate();
         activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
     }
     
@@ -388,8 +401,7 @@ public:
     {
         if(zones_.count(zoneName) > 0)
         {
-            zones_[zoneName]->Activate(contextIndex);
-            activeZones_.push_back(zones_[zoneName]);
+            AddActiveFXZone(zoneName, contextIndex);
             return true;
         }
         
@@ -399,26 +411,20 @@ public:
     void ActivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Activate();
-            activeZones_.push_back(zones_[zoneName]);
-        }
+            AddActiveZone(zoneName);
     }
 
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Deactivate();
             EraseActiveZone(zoneName);
-        }
     }
 
     void ToggleZone(string zoneName)
     {
         if(HasActiveZone(zoneName))
             DeactivateZone(zoneName);
-        else
+        else if(zones_.count(zoneName) > 0)
             ActivateZone(zoneName);
     }
     
@@ -427,11 +433,7 @@ public:
         if(zones_.count(zoneName) > 0)
         {
             if(HasActiveZone(zoneName))
-            {
-                zones_[zoneName]->Deactivate();
-                
                 EraseActiveZone(zoneName);
-            }
             
             ActivateZone(zoneName);
         }
@@ -439,16 +441,11 @@ public:
     
     void GoSubZone(string zoneName, string parentZoneName)
     {
+        /*
         if(zones_.count(zoneName) > 0)
         {
             if(HasActiveZone(zoneName))
-            {
-                zones_[zoneName]->Deactivate();
-                
-                EraseActiveZone(zoneName);
-            }
-            
-
+                EraseActiveZone(zoneName)
         }
 
         if(HasActiveZone(zoneName))
@@ -459,7 +456,7 @@ public:
         
             ActivateZone(zoneName);
         }
-        /*
+      
         if(zones_.count(zoneName) > 0)
         {
             if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
