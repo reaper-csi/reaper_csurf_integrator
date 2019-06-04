@@ -312,7 +312,7 @@ protected:
             return false;
     }
 
-    void ActivateZoneStack()
+    void ReactivateZoneStack()
     {
         for(auto zone : activeZones_)
             zone->Activate();
@@ -332,6 +332,17 @@ protected:
     
     void RemoveActiveZone(string zoneName)
     {
+        if(activeSubZones_.count(zoneName) > 0)
+        {
+            for(auto subZone : activeSubZones_[zoneName])
+            {
+                subZone->Deactivate();
+                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), subZone));
+            }
+            
+            activeSubZones_.erase(zoneName);
+        }
+        
         zones_[zoneName]->Deactivate();
         activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
     }
@@ -402,7 +413,7 @@ public:
         if(zones_.count(zoneName) > 0)
         {
             AddActiveFXZone(zoneName, contextIndex);
-            ActivateZoneStack();
+            ReactivateZoneStack();
             return true;
         }
         
@@ -414,7 +425,7 @@ public:
         if(zones_.count(zoneName) > 0)
             AddActiveZone(zoneName);
         
-        ActivateZoneStack();
+        ReactivateZoneStack();
     }
 
     void DeactivateZone(string zoneName)
@@ -422,7 +433,7 @@ public:
         if(zones_.count(zoneName) > 0)
             RemoveActiveZone(zoneName);
         
-        ActivateZoneStack();
+        ReactivateZoneStack();
     }
 
     void ToggleZone(string zoneName)
@@ -432,7 +443,7 @@ public:
         else if(zones_.count(zoneName) > 0)
             ActivateZone(zoneName);
         
-        ActivateZoneStack();
+        ReactivateZoneStack();
     }
     
     void GoZone(string zoneName)
@@ -443,42 +454,25 @@ public:
                 DeactivateZone(zoneName);
             
             ActivateZone(zoneName);
+            
+            ReactivateZoneStack();
         }
-        
-        ActivateZoneStack();
     }
     
     void GoSubZone(string zoneName, string parentZoneName)
     {
-        /*
-        if(zones_.count(zoneName) > 0)
+        if(zones_.count(parentZoneName) > 0 && zones_.count(zoneName) > 0)
         {
             if(HasActiveZone(zoneName))
-                EraseActiveZone(zoneName)
-        }
-
-        if(HasActiveZone(zoneName))
-        {
-
+                DeactivateZone(zoneName);
             
-        
-        
+            activeSubZones_[parentZoneName].push_back(zones_[zoneName]);
+
             ActivateZone(zoneName);
-        }
-      
-        if(zones_.count(zoneName) > 0)
-        {
-            if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            {
-                zones_[zoneName]->Deactivate();
-                
-                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
-            }
             
-            ActivateZone(zoneName);
+            ReactivateZoneStack();
         }
-         */
-    }    
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
