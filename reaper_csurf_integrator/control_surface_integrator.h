@@ -322,12 +322,14 @@ protected:
     {
         zones_[zoneName]->Activate();
         activeZones_.push_back(zones_[zoneName]);
+        ReactivateZoneStack();
     }
     
     void AddActiveFXZone(string zoneName, int fxIndex)
     {
         zones_[zoneName]->Activate(fxIndex);
         activeZones_.push_back(zones_[zoneName]);
+        ReactivateZoneStack();
     }
     
     void RemoveActiveZone(string zoneName)
@@ -345,6 +347,8 @@ protected:
         
         zones_[zoneName]->Deactivate();
         activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
+        
+        ReactivateZoneStack();
     }
     
 public:
@@ -413,7 +417,6 @@ public:
         if(zones_.count(zoneName) > 0)
         {
             AddActiveFXZone(zoneName, contextIndex);
-            ReactivateZoneStack();
             return true;
         }
         
@@ -424,16 +427,13 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             AddActiveZone(zoneName);
-        
-        ReactivateZoneStack();
+
     }
 
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
             RemoveActiveZone(zoneName);
-        
-        ReactivateZoneStack();
     }
 
     void ToggleZone(string zoneName)
@@ -442,20 +442,21 @@ public:
             DeactivateZone(zoneName);
         else if(zones_.count(zoneName) > 0)
             ActivateZone(zoneName);
-        
-        ReactivateZoneStack();
     }
     
     void GoZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
         {
-            if(HasActiveZone(zoneName))
+            if(zoneName == "Home")
+            {
+                activeZones_.clear();
+                activeSubZones_.clear();
+            }
+            else if(HasActiveZone(zoneName))
                 DeactivateZone(zoneName);
             
             ActivateZone(zoneName);
-            
-            ReactivateZoneStack();
         }
     }
     
@@ -469,8 +470,6 @@ public:
             activeSubZones_[parentZoneName].push_back(zones_[zoneName]);
 
             ActivateZone(zoneName);
-            
-            ReactivateZoneStack();
         }
     }
 };
