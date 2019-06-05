@@ -450,6 +450,9 @@ public:
         {
             if(zoneName == "Home")
             {
+                for(auto zone : activeZones_)
+                    zone->Deactivate();
+                
                 activeZones_.clear();
                 activeSubZones_.clear();
             }
