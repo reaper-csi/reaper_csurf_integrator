@@ -887,10 +887,6 @@ private:
     
 public:
     FXActivationManager(Page* page) : page_(page) {}
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName);
-    void TrackFXListChanged(MediaTrack* track);
-    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
-    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex);
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -902,6 +898,108 @@ public:
             OpenFXWindows();
         else
             CloseFXWindows();
+    }
+    
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
+    {
+        char fxName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+        
+        if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
+            return fxParamIndices_[fxName][fxParamName];
+        
+        char paramName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        {
+            DAW::TrackFX_GetParamName(track, fxIndex, i, paramName, sizeof(paramName));
+            
+            if(paramName == fxParamName)
+            {
+                fxParamIndices_[fxName][fxParamName] = i;
+                return i;
+            }
+        }
+        
+        return 0;
+    }
+
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    {
+        char fxName[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(VSTMonitor)
+            {
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
+            }
+        }
+        
+        // GAW TBD -- clear all fx items and rebuild
+    }
+
+    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+    {
+        DeleteFXWindows();
+        
+        if(activeFXZoneNames_.count(surface) > 0)
+        {
+            for(auto zoneName :activeFXZoneNames_[surface])
+                surface->DeactivateZone(zoneName);
+            
+            activeFXZoneNames_[surface].clear();
+        }
+        
+        int flags;
+        
+        DAW::GetTrackInfo(selectedTrack, &flags);
+        
+        if(flags & 0x02) // track is selected -- not deselected
+        {
+            for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+            {
+                char FXName[BUFSZ];
+                
+                DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+                
+                if(surface->ActivateFXZone(FXName, i))
+                {
+                    AddFXWindow(FXWindow(selectedTrack, i));
+                    activeFXZoneNames_[surface].push_back(FXName);
+                }
+            }
+            
+            OpenFXWindows();
+        }
+    }
+    
+    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
+    {
+        if(activeFXZoneNames_.count(surface) > 0)
+        {
+            for(auto zoneName : activeFXZoneNames_[surface])
+                surface->DeactivateZone(zoneName);
+            
+            activeFXZoneNames_[surface].clear();
+        }
+        
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+        
+        if(surface->ActivateFXZone(FXName, fxIndex))
+            activeFXZoneNames_[surface].push_back(FXName);
     }
 };
 
@@ -1189,9 +1287,9 @@ public:
             FXActivationManager_->MapFocusedTrackFXToWidgets(surface, track, fxIndex);
     }
     
-    void TrackFXListChanged(MediaTrack* track)
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
     {
-        FXActivationManager_->TrackFXListChanged(track);
+        FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
@@ -1369,7 +1467,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto & page : pages_)
-            page->TrackFXListChanged(track);
+            page->TrackFXListChanged(track, VSTMonitor_);
     }
 };
 
