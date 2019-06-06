@@ -854,6 +854,8 @@ class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    map<string, map<string, int>> fxParamIndices_;
+
     Page* page_ = nullptr;
     map<ControlSurface*, vector<string>> activeFXZoneNames_;
     vector<FXWindow> openFXWindows_;
@@ -1214,7 +1216,6 @@ private:
     map<string, Action*> actions_;
     map<string , function<ActionContext*(WidgetActionContextManager* manager, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
-    map<string, map<string, int>> fxParamIndices_;
     
     time_t lastTimeCacheCleared = 0;
     
@@ -1257,8 +1258,6 @@ public:
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
-    
-    map<string, map<string, int>> & GetFXParamIndices() { return fxParamIndices_; }
     
     Page* GetCurrentPage()
     {
