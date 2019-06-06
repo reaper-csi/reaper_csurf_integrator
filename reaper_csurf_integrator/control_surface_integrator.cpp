@@ -1648,8 +1648,8 @@ int FXActivationManager::GetFXParamIndex(MediaTrack* track, Widget* widget, int 
     
     DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
     
-    if(TheManager->GetFXParamIndices().count(fxName) > 0 && TheManager->GetFXParamIndices()[fxName].count(fxParamName) > 0)
-        return TheManager->GetFXParamIndices()[fxName][fxParamName];
+    if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
+        return fxParamIndices_[fxName][fxParamName];
     
     char paramName[BUFSZ];
     
@@ -1659,7 +1659,7 @@ int FXActivationManager::GetFXParamIndex(MediaTrack* track, Widget* widget, int 
         
         if(paramName == fxParamName)
         {
-            TheManager->GetFXParamIndices()[fxName][fxParamName] = i;
+            fxParamIndices_[fxName][fxParamName] = i;
             return i;
         }
     }
