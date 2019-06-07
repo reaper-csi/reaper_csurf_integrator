@@ -161,6 +161,7 @@ struct MidiSurfaceLine
     int midiOut = 0;
     string templateFilename = "";
     string zoneTemplateFolder = "";
+    bool useZoneLink = false;
 };
 
 struct PageLine
@@ -189,6 +190,7 @@ static char zoneTemplateFolder[BUFSZ];
 
 static bool followMCP = true;
 static bool synchPages = false;
+static bool useZoneLink = false;
 static bool trackColouring = false;
 
 static vector<PageLine*> pages;
@@ -341,6 +343,11 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+
+                if(useZoneLink)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
             }
             else
             {
@@ -370,6 +377,11 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
 
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
+                            useZoneLink = true;
+                        else
+                            useZoneLink = false;
+                       
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -475,6 +487,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->midiOut = midiOut;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
+                                    surface->useZoneLink = useZoneLink;
                                     
                                     pages[pageIndex]->midiSurfaces.push_back(surface);
                                     
@@ -524,8 +537,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 midiOut = pages[pageIndex]->midiSurfaces[index]->midiOut;
                                 strcpy(templateFilename, pages[pageIndex]->midiSurfaces[index]->templateFilename.c_str());
                                 strcpy(zoneTemplateFolder, pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder.c_str());
+                                useZoneLink = pages[pageIndex]->midiSurfaces[index]->useZoneLink;
                                 dlgResult = false;
                                 editMode = true;
+                                
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                                 if(dlgResult == IDOK)
                                 {
@@ -534,6 +549,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->midiSurfaces[index]->midiOut = midiOut;
                                     pages[pageIndex]->midiSurfaces[index]->templateFilename = templateFilename;
                                     pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
+                                    pages[pageIndex]->midiSurfaces[index]->useZoneLink = useZoneLink;
                                 }
                             }
                         }
@@ -649,7 +665,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == MidiSurfaceToken)
                     {
-                        if(tokens.size() != 6)
+                        if(tokens.size() != 7)
                             continue;
                         
                         MidiSurfaceLine* surface = new MidiSurfaceLine();
@@ -658,6 +674,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->midiOut = atoi(tokens[3].c_str());
                         surface->templateFilename = tokens[4];
                         surface->zoneTemplateFolder = tokens[5];
+                        surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->midiSurfaces.push_back(surface);
@@ -732,8 +749,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         line += to_string(surface->midiIn) + " " ;
                         line += to_string(surface->midiOut) + " " ;
                         line += surface->templateFilename + " ";
-                        line += surface->zoneTemplateFolder + "\n" ;
-
+                        line += surface->zoneTemplateFolder + " " ;
+                        line += surface->useZoneLink == true ? "UseZoneLink\n" : "NoZoneLink\n";
                         
                         iniFile << line;
                     }
