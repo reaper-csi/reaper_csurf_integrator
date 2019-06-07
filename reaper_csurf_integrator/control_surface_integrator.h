@@ -288,6 +288,8 @@ protected:
     Page* page_ = nullptr;
     const string name_ = "";
 
+    bool useZoneLink_ = false;
+    
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
     map<string, vector<Zone*>> activeSubZones_;
@@ -296,7 +298,7 @@ protected:
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     
-    ControlSurface(Page* page, const string name) : page_(page), name_(name) {}
+    ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink) {}
 
     void RequestUpdate()
     {
@@ -310,6 +312,12 @@ protected:
             return true;
         else
             return false;
+    }
+
+    void ActivateZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            AddActiveZone(zoneName);
     }
 
     void ReactivateZoneStack()
@@ -356,6 +364,8 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
+    
+    bool GetUseZoneLink() { return useZoneLink_; }
     
     virtual void TurnOffMonitoring() {}
     
@@ -423,13 +433,6 @@ public:
         return false;
     }
     
-    void ActivateZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            AddActiveZone(zoneName);
-
-    }
-
     void DeactivateZone(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
@@ -520,8 +523,8 @@ private:
     }
     
 public:
-    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor)
-    : ControlSurface(page, name), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
+    : ControlSurface(page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
     {
         InitWidgets(templateFilename);
         
@@ -1181,6 +1184,38 @@ public:
             surface->OnTrackSelection(track);
     }
  
+    /// GAW -- start ZoneActivation facade
+
+    void GoSubZone(ControlSurface* surface, string zoneName, string parentZoneName)
+    {
+        if( ! surface->GetUseZoneLink())
+            surface->GoSubZone(zoneName, parentZoneName);
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->GoSubZone(zoneName, parentZoneName);
+    }
+    
+    void GoZone(ControlSurface* surface, string zoneName)
+    {
+        if( ! surface->GetUseZoneLink())
+            surface->GoZone(zoneName);
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->GoZone(zoneName);
+    }
+    
+    void ToggleZone(ControlSurface* surface, string zoneName)
+    {
+        if( ! surface->GetUseZoneLink())
+            surface->ToggleZone(zoneName);
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->ToggleZone(zoneName);
+    }
+
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
