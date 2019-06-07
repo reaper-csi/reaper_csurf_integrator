@@ -156,7 +156,7 @@ class ToggleZone : public Action
 public:
     void Do(ControlSurface* surface, string zoneName) override
     {
-        surface->ToggleZone(zoneName);
+        surface->GetPage()->ToggleZone(surface, zoneName);
     }
 };
 
@@ -167,7 +167,7 @@ class GoZone : public Action
 public:
     void Do(ControlSurface* surface, string zoneName) override
     {
-        surface->GoZone(zoneName);
+        surface->GetPage()->GoZone(surface, zoneName);
     }
 };
 
@@ -178,7 +178,7 @@ class GoSubZone : public Action
 public:
     void Do(ControlSurface* surface, string zoneName, string parentZoneName) override
     {
-        surface->GoSubZone(zoneName, parentZoneName);
+        surface->GetPage()->GoSubZone(surface, zoneName, parentZoneName);
     }
 };
 

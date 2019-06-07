@@ -919,14 +919,14 @@ void Manager::Init()
                 }
                 else if(tokens[0] == MidiSurfaceToken)
                 {
-                    if(tokens.size() != 6)
+                    if(tokens.size() != 7)
                         continue;
                     
                     int channelIn = atoi(tokens[2].c_str());
                     int channelOut = atoi(tokens[3].c_str());
                     
                     if(currentPage)
-                        currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor));
+                        currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
                 }
             }
         }
