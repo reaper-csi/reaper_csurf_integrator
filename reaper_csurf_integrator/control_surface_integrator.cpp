@@ -792,6 +792,7 @@ void Manager::InitActionDictionary()
     actions_["Control"] = new SetControl();
     actions_["Alt"] = new SetAlt();
     actions_["TrackCycle"] = new CycleTrackSlotIndex();
+    actions_["MapSelectedTrackSendsToWidgets"] = new MapSelectedTrackSendsToWidgets();
     actions_["MapSelectedTrackFXToWidgets"] = new MapSelectedTrackFXToWidgets();
     actions_["MapFocusedTrackFXToWidgets"] = new MapFocusedTrackFXToWidgets();
 }
@@ -856,6 +857,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Control"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["Alt"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContextWithStringAndIntParams(manager, actions_[params[0]], params); };
+    actionContexts_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
     actionContexts_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
     actionContexts_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
 }
@@ -1100,13 +1102,22 @@ void Zone::Activate()
         zone->Activate();
 }
 
-void Zone::Activate(int contextIndex)
+void Zone::Activate(int fxIndex)
 {
     for(auto actionContextManager : actionContextManagers_)
-        actionContextManager->Activate(contextIndex);
+        actionContextManager->Activate(fxIndex);
     
     for(auto zone : includedZones_)
-        zone->Activate(contextIndex);
+        zone->Activate(fxIndex);
+}
+
+void Zone::Activate(MediaTrack* track, int sendsIndex)
+{
+    for(auto actionContextManager : actionContextManagers_)
+        actionContextManager->Activate(track, sendsIndex);
+    
+    for(auto zone : includedZones_)
+        zone->Activate(track, sendsIndex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1256,6 +1267,17 @@ void WidgetActionContextManager::Activate(int contextIndex)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
         {
+            context->SetIndex(contextIndex);
+            context->Activate(this);
+        }
+}
+
+void WidgetActionContextManager::Activate(MediaTrack* track, int contextIndex)
+{
+    if(widgetActionContexts_.count(GetModifiers()) > 0)
+        for(auto context : widgetActionContexts_[GetModifiers()])
+        {
+            context->SetTrack(track);
             context->SetIndex(contextIndex);
             context->Activate(this);
         }
@@ -1561,3 +1583,46 @@ int SendsNavigationManager::GetMaxSends()
     
     return maxSends;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SendsActivationManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+{
+    for(auto surface : page_->GetSurfaces())
+    {
+        if(activeSendZoneNames_.count(surface) > 0)
+        {
+            for(auto zoneName :activeSendZoneNames_[surface])
+                surface->DeactivateZone(zoneName);
+            
+            activeSendZoneNames_[surface].clear();
+        }
+    }
+    
+    int flags;
+    
+    DAW::GetTrackInfo(selectedTrack, &flags);
+    
+    if(flags & 0x02) // track is selected -- not deselected
+    {
+        for(int i = 0; i < DAW::DAW::GetTrackNumSends(selectedTrack, 0); i++)
+        {
+            string sendName = "Send" + to_string(i + 1);
+            
+            if( ! surface->GetUseZoneLink())
+            {
+                if(surface->ActivateSendsZone(sendName, selectedTrack, i))
+                    activeSendZoneNames_[surface].push_back(sendName);
+            }
+            else
+            {
+                for(auto surface : page_->GetSurfaces())
+                    if(surface->GetUseZoneLink())
+                        if(surface->ActivateSendsZone(sendName, selectedTrack, i))
+                            activeSendZoneNames_[surface].push_back(sendName);
+            }
+        }
+    }
+}
+
