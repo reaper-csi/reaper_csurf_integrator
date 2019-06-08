@@ -1033,11 +1033,14 @@ class SendsActivationManager
 {
 private:
     Page* page_ = nullptr;
-
+    bool shouldMapSends_ = false;
+    
     map<ControlSurface*, vector<string>> activeSendZoneNames_;
 
 public:
     SendsActivationManager(Page* page) : page_(page) {}
+    
+    void ToggleShouldMapSends();
     
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
 };
@@ -1383,7 +1386,10 @@ public:
         FXActivationManager_->SetShowFXWindows(value);
     }
 
-    /// GAW -- end FXActivationManager facade
+    /// GAW -- end SendsActivationManager facade
+
+    void ToggleShouldMapSends() { sendsActivationManager_->ToggleShouldMapSends(); }
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
