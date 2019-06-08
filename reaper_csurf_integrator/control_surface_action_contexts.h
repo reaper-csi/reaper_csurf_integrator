@@ -80,49 +80,27 @@ public:
 class TrackSendContext : public TrackContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    int sendsIndex_ = 0;
+    MediaTrack* track_ = nullptr;
+
 public:
     TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action) {}
     
-    // GAW TDB -- move some of this to SendsNavigationManager
-    
+    virtual void SetIndex(int sendsIndex) override { sendsIndex_ = sendsIndex; }
+    virtual void SetTrack(MediaTrack* track) override { track_ = track; }
+
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
-
-            if(maxOffset < 0)
-               widget_->Reset();
-            else
-            {
-                int sendsOffset = page_->GetSendsOffset();
-                
-                if(sendsOffset > maxOffset)
-                    sendsOffset = maxOffset;
-
-                action_->RequestUpdate(this, track, sendsOffset);
-            }
-        }
+        if(track_)
+            action_->RequestUpdate(this, track_, sendsIndex_);
         else
             widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            int maxOffset = DAW::GetTrackNumSends(track, 0) - 1;
-            
-            if(maxOffset > -1)
-            {
-                int sendsOffset = page_->GetSendsOffset();
-                
-                if(sendsOffset > maxOffset)
-                    sendsOffset = maxOffset;
-                
-                action_->Do(widget_, track, sendsOffset, isInverted_ == false ? value : 1.0 - value);
-            }
-        }
+        if(track_)
+            action_->Do(widget_, track_, sendsIndex_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -177,7 +155,7 @@ public:
     
     virtual string GetAlias() override { return fxParamNameAlias_; }
     
-    virtual void SetIndex(int index) override { fxIndex_ = index; }
+    virtual void SetIndex(int fxIndex) override { fxIndex_ = fxIndex; }
         
     virtual void RequestUpdate() override
     {

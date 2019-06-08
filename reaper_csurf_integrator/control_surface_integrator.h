@@ -202,7 +202,8 @@ public:
     void Deactivate();
     void Activate();
     void Activate(int contextIndex);
-    
+    void Activate(MediaTrack* track, int contextIndex);
+
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
@@ -340,6 +341,13 @@ protected:
         ReactivateZoneStack();
     }
     
+    void AddActiveSendsZone(string zoneName, MediaTrack* track, int fxIndex)
+    {
+        zones_[zoneName]->Activate(track, fxIndex);
+        activeZones_.push_back(zones_[zoneName]);
+        ReactivateZoneStack();
+    }
+    
     void RemoveActiveZone(string zoneName)
     {
         if(activeSubZones_.count(zoneName) > 0)
@@ -422,11 +430,22 @@ public:
                 widget->DoAction(track, fxIndex);
     }
 
-    bool ActivateFXZone(string zoneName, int contextIndex)
+    bool ActivateFXZone(string zoneName, int fxIndex)
     {
         if(zones_.count(zoneName) > 0)
         {
-            AddActiveFXZone(zoneName, contextIndex);
+            AddActiveFXZone(zoneName, fxIndex);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    bool ActivateSendsZone(string zoneName, MediaTrack* track, int sendsIndex)
+    {
+        if(zones_.count(zoneName) > 0)
+        {
+            AddActiveSendsZone(zoneName, track, sendsIndex);
             return true;
         }
         
@@ -647,6 +666,7 @@ public:
     
     virtual void AddActionContext(ActionContext* actionContext) {}
     virtual void SetIndex(int index) {}
+    virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void RequestUpdate() {}
@@ -701,7 +721,8 @@ public:
 
     void Activate();
     void Activate(int contextIndex);
-
+    void Activate(MediaTrack* track, int contextIndex);
+    
     void AddActionContext(string modifiers, ActionContext* context)
     {
         widgetActionContexts_[modifiers].push_back(context);
@@ -1007,6 +1028,21 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendsActivationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+
+    map<ControlSurface*, vector<string>> activeSendZoneNames_;
+
+public:
+    SendsActivationManager(Page* page) : page_(page) {}
+    
+    void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct CSI_TrackInfo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1033,6 +1069,7 @@ private:
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
     FXActivationManager* FXActivationManager_ = nullptr;
+    SendsActivationManager* sendsActivationManager_ = nullptr;
 
 public:
     Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
@@ -1040,10 +1077,13 @@ public:
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
         sendsNavigationManager_ = new SendsNavigationManager(this);
         FXActivationManager_ = new FXActivationManager(this);
+        sendsActivationManager_ = new SendsActivationManager(this);
     }
     
     string GetName() { return name_; }
-
+    
+    vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
+    
     void Run()
     {
         for(auto surface : surfaces_)
@@ -1100,17 +1140,17 @@ public:
             return CSITrackSlotInfo_[slotName][trackGUID].index;
     }
     
-    void CycleTrackSlotIndex(string slotrName, MediaTrack* track, int maxSize)
+    void CycleTrackSlotIndex(string slotName, MediaTrack* track, int maxSize)
     {
         string trackGUID = trackNavigationManager_->GetTrackGUID(track);
         
-        if(CSITrackSlotInfo_.count(slotrName) < 1 || CSITrackSlotInfo_[slotrName].count(trackGUID) < 1)
-                CSITrackSlotInfo_[slotrName][trackGUID] = CSI_TrackInfo();
+        if(CSITrackSlotInfo_.count(slotName) < 1 || CSITrackSlotInfo_[slotName].count(trackGUID) < 1)
+                CSITrackSlotInfo_[slotName][trackGUID] = CSI_TrackInfo();
         
-        CSITrackSlotInfo_[slotrName][trackGUID].index++;
+        CSITrackSlotInfo_[slotName][trackGUID].index++;
         
-        if(CSITrackSlotInfo_[slotrName][trackGUID].index > maxSize - 1)
-            CSITrackSlotInfo_[slotrName][trackGUID].index = 0;
+        if(CSITrackSlotInfo_[slotName][trackGUID].index > maxSize - 1)
+            CSITrackSlotInfo_[slotName][trackGUID].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
         // could get VERY verbose
@@ -1310,12 +1350,17 @@ public:
     int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
     
+    void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* track)
+    {
+        sendsActivationManager_->MapSelectedTrackSendsToWidgets(surface, track);
+    }
+    
     void MapSelectedTrackFXToWidgets(MediaTrack* track)
     {
         for(auto surface : surfaces_)
             FXActivationManager_->MapSelectedTrackFXToWidgets(surface, track);
     }
-    
+
     void MapFocusedTrackFXToWidgets(MediaTrack* track, int fxIndex)
     {
         for(auto surface : surfaces_)
