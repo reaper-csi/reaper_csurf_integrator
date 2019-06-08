@@ -106,7 +106,7 @@ BEGIN
     GROUPBOX        "Templates",IDC_STATIC,8,76,206,56,WS_GROUP
     COMBOBOX        IDC_COMBO_ZoneTemplates,41,111,170,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Zone",IDC_STATIC,15,114,23,8
-    CONTROL         " Synch Zones Across Surfaces",IDC_CHECK_SynchZones,
+    CONTROL         " Synch Zones Across Surfaces",IDC_CHECK_ZoneLink,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,136,133,10
 END
 
