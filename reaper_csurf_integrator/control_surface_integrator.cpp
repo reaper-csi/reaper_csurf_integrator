@@ -795,6 +795,9 @@ void Manager::InitActionDictionary()
     actions_["MapSelectedTrackSendsToWidgets"] = new MapSelectedTrackSendsToWidgets();
     actions_["MapSelectedTrackFXToWidgets"] = new MapSelectedTrackFXToWidgets();
     actions_["MapFocusedTrackFXToWidgets"] = new MapFocusedTrackFXToWidgets();
+    actions_["ToggleShouldMapSends"] = new ToggleShouldMapSends();
+
+    
 }
 
 void Manager::InitActionContextDictionary()
@@ -860,6 +863,7 @@ void Manager::InitActionContextDictionary()
     actionContexts_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
     actionContexts_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
     actionContexts_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
+    actionContexts_["ToggleShouldMapSends"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
 }
 
 void Manager::Init()
@@ -1604,7 +1608,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surf
     
     DAW::GetTrackInfo(selectedTrack, &flags);
     
-    if(flags & 0x02) // track is selected -- not deselected
+    if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
     {
         for(int i = 0; i < DAW::DAW::GetTrackNumSends(selectedTrack, 0); i++)
         {
@@ -1626,3 +1630,51 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surf
     }
 }
 
+void SendsActivationManager::ToggleShouldMapSends()
+{
+    shouldMapSends_ = ! shouldMapSends_;
+    
+    if(DAW::CountSelectedTracks(NULL) == 1)
+    {
+        for(auto surface : page_->GetSurfaces())
+        {
+            if(activeSendZoneNames_.count(surface) > 0)
+            {
+                for(auto zoneName :activeSendZoneNames_[surface])
+                    surface->DeactivateZone(zoneName);
+                
+                activeSendZoneNames_[surface].clear();
+            }
+        }
+        
+        int flags;
+        
+        MediaTrack* selectedTrack = nullptr;
+        
+        for(int i = 1; i <= page_->GetNumTracks(); i++)
+        {
+            MediaTrack* currentTrack = page_->GetTrackFromId(i);
+            
+            if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
+            {
+                selectedTrack = currentTrack;
+                break;
+            }
+        }
+        
+        DAW::GetTrackInfo(selectedTrack, &flags);
+        
+        if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
+        {
+            for(int i = 0; i < DAW::DAW::GetTrackNumSends(selectedTrack, 0); i++)
+            {
+                string sendName = "Send" + to_string(i + 1);
+                
+                    for(auto surface : page_->GetSurfaces())
+                        if(surface->ActivateSendsZone(sendName, selectedTrack, i))
+                            activeSendZoneNames_[surface].push_back(sendName);
+            }
+        }
+    }
+
+}
