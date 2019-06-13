@@ -31,9 +31,9 @@ class MapSelectedTrackSendsToWidgets  : public Action
 {
 public:
     
-    void Do(Page* page, ControlSurface* surface, MediaTrack* track) override
+    void Do(Page* page, double value) override
     {
-        page->MapSelectedTrackSendsToWidgets(surface, track);
+        page->MapSelectedTrackSendsToWidgets();
     }
 };
 
@@ -43,9 +43,9 @@ class MapSelectedTrackFXToWidgets  : public Action
 {
 public:
     
-    void Do(Page* page, ControlSurface* surface, MediaTrack* track) override
+    void Do(Page* page, double value) override
     {
-        page->MapSelectedTrackFXToWidgets(track);
+        page->MapSelectedTrackFXToWidgets();
     }
 };
 
@@ -55,12 +55,11 @@ class MapFocusedTrackFXToWidgets  : public Action
 {
 public:
     
-    void Do(Page* page, ControlSurface* surface, MediaTrack* track, int fxIndex) override
+    void Do(Page* page, double value) override
     {
-        page->MapFocusedTrackFXToWidgets(track, fxIndex);
+        page->MapFocusedTrackFXToWidgets();
     }
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SelectTrackRelative : public Action

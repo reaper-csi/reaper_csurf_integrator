@@ -367,30 +367,4 @@ public:
         action_->Do(surface_, param1_, param2_);
     }
 };
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPageSurfaceContext : public ActionContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* surface_ = nullptr;
-    
-public:
-    TrackPageSurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
-    {
-        surface_ = GetWidget()->GetSurface();
-    }
-    
-    virtual void DoAction(MediaTrack* track) override
-    {
-        action_->Do(page_, surface_, track);
-    }
-    
-    virtual void DoAction(MediaTrack* track, int fxIndex) override
-    {
-        action_->Do(page_, surface_, track, fxIndex);
-    }
-};
-
 #endif /* control_surface_action_contexts_h */
