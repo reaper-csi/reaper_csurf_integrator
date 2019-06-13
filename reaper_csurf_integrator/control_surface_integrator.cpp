@@ -860,9 +860,9 @@ void Manager::InitActionContextDictionary()
     actionContexts_["Control"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["Alt"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["TrackCycle"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContextWithStringAndIntParams(manager, actions_[params[0]], params); };
-    actionContexts_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
-    actionContexts_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
-    actionContexts_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackPageSurfaceContext(manager, actions_[params[0]]); };
+    actionContexts_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
+    actionContexts_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
+    actionContexts_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["ToggleShouldMapSends"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
 }
 
@@ -1037,18 +1037,6 @@ void Widget::DoRelativeAction(double value)
 {
     if(widgetActionContextManager_ != nullptr)
         widgetActionContextManager_->DoAction(lastValue_ + value);
-}
-
-void Widget::DoAction(MediaTrack* track)
-{
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->DoAction(track);
-}
-
-void Widget::DoAction(MediaTrack* track, int fxIndex)
-{
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->DoAction(track, fxIndex);
 }
 
 void Widget::ClearCache()
@@ -1243,20 +1231,6 @@ void WidgetActionContextManager::DoAction(double value)
     if(widgetActionContexts_.count(GetModifiers()) > 0)
         for(auto context : widgetActionContexts_[GetModifiers()])
             context->DoAction(value);
-}
-
-void WidgetActionContextManager::DoAction(MediaTrack* track)
-{
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->DoAction(track);
-}
-
-void WidgetActionContextManager::DoAction(MediaTrack* track, int fxIndex)
-{
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->DoAction(track, fxIndex);
 }
 
 void WidgetActionContextManager::Activate()
@@ -1676,5 +1650,4 @@ void SendsActivationManager::ToggleShouldMapSends()
             }
         }
     }
-
 }
