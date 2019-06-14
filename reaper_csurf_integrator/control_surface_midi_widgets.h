@@ -219,16 +219,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        int midiValue = 0;
-        
-        if(value < minDB_)
-            midiValue = 0;
-        else if(value > maxDB_)
-            midiValue = 127;
-        else
-            midiValue = ((value - minDB_) / (maxDB_ - minDB_)) * 127;
-        
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], midiValue);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], (value * 127.0) + 15.0);
     }
 };
 
@@ -246,7 +237,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], fabs(1.0 - value) * 127.0);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], (fabs(1.0 - value) * 127.0) + 15.0);
     }
 };
 
@@ -264,26 +255,6 @@ public:
     
     virtual void SetValue(int param, double value) override
     {
-        /*
-         int midiValue = 0;
-         
-         double minDB = TheManager->GetVUMinDB();
-         double maxDB = TheManager->GetVUMaxDB();
-         
-         
-         if(value < minDB)
-         midiValue = 0;
-         else if(value > maxDB)
-         midiValue = 127;
-         else
-         midiValue = ((value - minDB) / (maxDB - minDB)) * 127;
-         
-         SendMidiMessage(0xb0, 0x70 + param, midiValue);
-         */
-        
-        
-        
-        
         //Master Channel:
         //Master Level 1 : 0xd1, 0x0L
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
@@ -291,18 +262,7 @@ public:
         //Master Level 2 : 0xd1, 0x1L
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
         
-        int midiValue = 0;
-        
-        double minDB = TheManager->GetVUMinDB();
-        double maxDB = TheManager->GetVUMaxDB();
-        
-        if(value < minDB)
-            midiValue = 0x00;
-        else if(value > maxDB)
-            midiValue = 0x0d;
-        else
-            midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
-        
+        int midiValue = value * 0x0d;
         SendMidiMessage(0xd1, (param << 4) | midiValue, 0);
     }
 };
@@ -321,19 +281,7 @@ public:
     virtual void SetValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
-        
-        int midiValue = 0;
-        
-        double minDB = TheManager->GetVUMinDB();
-        double maxDB = TheManager->GetVUMaxDB();
-        
-        if(value < minDB)
-            midiValue = 0x00;
-        else if(value > maxDB)
-            midiValue = 0x0d;
-        else
-            midiValue = ((value - minDB) / (maxDB - minDB)) * 0x0d;
-        
+        int midiValue = value * 0x0d;
         SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
     }
 };
