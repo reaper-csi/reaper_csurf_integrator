@@ -744,20 +744,20 @@ void Manager::InitActionDictionary()
     actions_["FXGainReductionMeter"] = new FXGainReductionMeter();
     actions_["TrackVolume"] = new TrackVolume();
     actions_["MasterTrackVolume"] = new MasterTrackVolume();
+    actions_["TrackVolumeDB"] = new TrackVolumeDB();
+    actions_["TrackPan"] = new TrackPan();
+    actions_["TrackPanWidth"] = new TrackPanWidth();
+    actions_["TrackPanDisplay"] = new TrackPanDisplay();
+    actions_["TrackPanWidthDisplay"] = new TrackPanWidthDisplay();
+    actions_["TrackNameDisplay"] = new TrackNameDisplay();
+    actions_["TrackVolumeDisplay"] = new TrackVolumeDisplay();
     actions_["TrackSendVolume"] = new TrackSendVolume();
     actions_["TrackSendPan"] = new TrackSendPan();
     actions_["TrackSendMute"] = new TrackSendMute();
     actions_["TrackSendInvertPolarity"] = new TrackSendInvertPolarity();
     actions_["TrackSendPrePost"] = new TrackSendPrePost();
-    actions_["TrackVolumeDB"] = new TrackVolumeDB();
-    actions_["TrackPan"] = new TrackPan();
-    actions_["TrackPanWidth"] = new TrackPanWidth();
-    actions_["TrackNameDisplay"] = new TrackNameDisplay();
-    actions_["TrackVolumeDisplay"] = new TrackVolumeDisplay();
     actions_["TrackSendNameDisplay"] = new TrackSendNameDisplay();
     actions_["TrackSendVolumeDisplay"] = new TrackSendVolumeDisplay();
-    actions_["TrackPanDisplay"] = new TrackPanDisplay();
-    actions_["TrackPanWidthDisplay"] = new TrackPanWidthDisplay();
     actions_["TimeDisplay"] = new TimeDisplay();
     actions_["Rewind"] = new Rewind();
     actions_["FastForward"] = new FastForward();
@@ -1181,6 +1181,26 @@ void ControlSurface::InitZones(string zoneFolder)
         char buffer[250];
         sprintf(buffer, "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void ControlSurface::GoZone(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+    {
+        if(zoneName == "Home")
+        {
+            for(auto zone : activeZones_)
+                zone->Deactivate();
+            
+            activeZones_.clear();
+            activeSubZones_.clear();
+            page_->ClearActiveFXZones(this);
+        }
+        else if(HasActiveZone(zoneName))
+            DeactivateZone(zoneName);
+        
+        ActivateZone(zoneName);
     }
 }
 

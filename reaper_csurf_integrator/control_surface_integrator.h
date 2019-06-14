@@ -374,7 +374,8 @@ public:
     bool GetUseZoneLink() { return useZoneLink_; }
     
     virtual void TurnOffMonitoring() {}
-    
+    void GoZone(string zoneName);
+
     virtual void Run()
     {
         RequestUpdate();
@@ -462,25 +463,6 @@ public:
             DeactivateZone(zoneName);
         else if(zones_.count(zoneName) > 0)
             ActivateZone(zoneName);
-    }
-    
-    void GoZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            if(zoneName == "Home")
-            {
-                for(auto zone : activeZones_)
-                    zone->Deactivate();
-                
-                activeZones_.clear();
-                activeSubZones_.clear();
-            }
-            else if(HasActiveZone(zoneName))
-                DeactivateZone(zoneName);
-            
-            ActivateZone(zoneName);
-        }
     }
     
     void GoSubZone(string zoneName, string parentZoneName)
@@ -982,6 +964,12 @@ public:
         // GAW TBD -- clear all fx items and rebuild
     }
 
+    void ClearActiveFXZones(ControlSurface* surface)
+    {
+        if(activeFXZoneNames_.count(surface) > 0)
+            activeFXZoneNames_[surface].clear();
+    }
+    
     void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
     {
         DeleteFXWindows();
@@ -1401,6 +1389,11 @@ public:
     void SetShowFXWindows(bool value)
     {
         FXActivationManager_->SetShowFXWindows(value);
+    }
+
+    void ClearActiveFXZones(ControlSurface* surface)
+    {
+        FXActivationManager_->ClearActiveFXZones(surface);
     }
 
     /// GAW -- end SendsActivationManager facade
