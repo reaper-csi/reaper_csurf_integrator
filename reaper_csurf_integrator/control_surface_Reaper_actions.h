@@ -723,9 +723,9 @@ public:
     void RequestUpdate(ActionContext* context, MediaTrack* track, int param) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            context->SetWidgetValue(context->GetWidget(), VAL2DB(DAW::Track_GetPeakInfo(track, param)));
+            context->SetWidgetValue(context->GetWidget(), volToNormalized(DAW::Track_GetPeakInfo(track, param)));
         else
-            context->SetWidgetValue(context->GetWidget(), TheManager->GetVUMinDB());
+            context->SetWidgetValue(context->GetWidget(), 0.0);
     }
 };
 
@@ -737,9 +737,9 @@ public:
     void RequestUpdate(ActionContext* context, int param) override
     {
         if(DAW::GetPlayState() & 0x01) // if playing
-            context->SetWidgetValue(context->GetWidget(), param, VAL2DB(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param))); // param 0=left, 1=right, etc.
+            context->SetWidgetValue(context->GetWidget(), param, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param))); // param 0=left, 1=right, etc.
         else
-            context->SetWidgetValue(context->GetWidget(), param, TheManager->GetVUMinDB());
+            context->SetWidgetValue(context->GetWidget(), param, 0.0);
     }
 };
 
