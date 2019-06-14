@@ -149,6 +149,50 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendInvertPolarity : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, MediaTrack* track, int sendIndex) override
+    {
+        context->SetWidgetValue(context->GetWidget(), DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_PHASE"));
+    }
+    
+    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    {
+        bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_PHASE");
+        
+        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "B_PHASE", &reversed);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPrePost : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, MediaTrack* track, int sendIndex) override
+    {
+        if(DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "I_SENDMODE") == 0)
+            context->SetWidgetValue(context->GetWidget(), 0);
+        else
+            context->SetWidgetValue(context->GetWidget(), 1);
+    }
+    
+    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    {
+        bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "I_SENDMODE") == 0 ? 0 : 1;
+        
+        if(isPre == 0)
+            isPre = 3; // switch to post FX
+        else
+            isPre = 0; // switch to post fader
+        
+        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "I_SENDMODE", &isPre);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolumeDB : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
