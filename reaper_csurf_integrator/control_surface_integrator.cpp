@@ -747,6 +747,8 @@ void Manager::InitActionDictionary()
     actions_["TrackSendVolume"] = new TrackSendVolume();
     actions_["TrackSendPan"] = new TrackSendPan();
     actions_["TrackSendMute"] = new TrackSendMute();
+    actions_["TrackSendInvertPolarity"] = new TrackSendInvertPolarity();
+    actions_["TrackSendPrePost"] = new TrackSendPrePost();
     actions_["TrackVolumeDB"] = new TrackVolumeDB();
     actions_["TrackPan"] = new TrackPan();
     actions_["TrackPanWidth"] = new TrackPanWidth();
@@ -815,6 +817,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["TrackSendVolume"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackSendContext(manager, actions_[params[0]]); };
     actionContexts_["TrackSendPan"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackSendContext(manager, actions_[params[0]]); };
     actionContexts_["TrackSendMute"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackSendContext(manager, actions_[params[0]]); };
+    actionContexts_["TrackSendInvertPolarity"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackSendContext(manager, actions_[params[0]]); };
+    actionContexts_["TrackSendPrePost"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackSendContext(manager, actions_[params[0]]); };
     actionContexts_["TrackVolumeDB"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContext(manager, actions_[params[0]]); };
     actionContexts_["TrackPan"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContextWithIntFeedbackParam(manager, actions_[params[0]], params); };
     actionContexts_["TrackPanWidth"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContextWithIntFeedbackParam(manager, actions_[params[0]], params); };
