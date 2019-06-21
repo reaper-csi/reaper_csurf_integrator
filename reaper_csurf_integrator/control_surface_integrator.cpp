@@ -12,6 +12,57 @@
 
 extern Manager* TheManager;
 
+
+
+
+
+using namespace oscpkt;
+
+
+
+const int PORT_NUM = 9109;
+
+void runServer()
+{
+    UdpSocket sock;
+    sock.bindTo(PORT_NUM);
+    if (!sock.isOk())
+    {
+        //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
+    }
+    else
+    {
+        //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
+        PacketReader pr;
+        PacketWriter pw;
+        while (sock.isOk())
+        {
+            if (sock.receiveNextPacket(30 /* timeout, in ms */))
+            {
+                pr.init(sock.packetData(), sock.packetSize());
+                oscpkt::Message *msg;
+                while (pr.isOk() && (msg = pr.popMessage()) != 0)
+                {
+                    int iarg;
+                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
+                    {
+                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
+                        Message repl; repl.init("/pong").pushInt32(iarg+1);
+                        pw.init().addMessage(repl);
+                        sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
+                    }
+                    else
+                    {
+                        //cout << "Server: unhandled message: " << *msg << "\n";
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MidiChannelInput
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

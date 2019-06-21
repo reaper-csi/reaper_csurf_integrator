@@ -283,6 +283,9 @@ public:
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    char prjFn[BUFSZ * 10] = "";
+
 protected:
     Page* page_ = nullptr;
     const string name_ = "";
@@ -378,6 +381,11 @@ public:
 
     virtual void Run()
     {
+        DAW::EnumProjects(-1, prjFn, sizeof(prjFn));
+        if (! *prjFn) // No projects open
+            for(auto widget : widgets_)
+                widget->Reset();
+
         RequestUpdate();
     }
     
