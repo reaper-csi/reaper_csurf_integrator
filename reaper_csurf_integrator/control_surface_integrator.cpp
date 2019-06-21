@@ -826,6 +826,8 @@ void Manager::InitActionDictionary()
     actions_["MasterTrackTouch"] = new SetMasterTrackTouch();
     actions_["CycleTimeline"] = new CycleTimeline();
     actions_["TrackOutputMeter"] = new TrackOutputMeter();
+    actions_["TrackOutputMeterAverageLR"] = new TrackOutputMeterAverageLR();
+    actions_["TrackOutputMeterMaxPeakLR"] = new TrackOutputMeterMaxPeakLR();
     actions_["MasterTrackOutputMeter"] = new MasterTrackOutputMeter();
     actions_["SetShowFXWindows"] = new SetShowFXWindows();
     actions_["SetScrollLink"] = new SetScrollLink();
@@ -896,6 +898,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["MasterTrackTouch"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["CycleTimeline"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["TrackOutputMeter"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContextWithIntFeedbackParam(manager, actions_[params[0]], params); };
+    actionContexts_["TrackOutputMeterAverageLR"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContext(manager, actions_[params[0]]); };
+    actionContexts_["TrackOutputMeterMaxPeakLR"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new TrackContext(manager, actions_[params[0]]); };
     actionContexts_["MasterTrackOutputMeter"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
     actionContexts_["SetShowFXWindows"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["SetScrollLink"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };

@@ -730,6 +730,45 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackOutputMeterAverageLR : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, MediaTrack* track) override
+    {
+        if(DAW::GetPlayState() & 0x01) // if playing
+        {
+            double lrVol = (DAW::Track_GetPeakInfo(track, 0) + DAW::Track_GetPeakInfo(track, 1)) / 2.0;
+            
+            context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
+        }
+        else
+            context->SetWidgetValue(context->GetWidget(), 0.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackOutputMeterMaxPeakLR : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, MediaTrack* track) override
+    {
+        if(DAW::GetPlayState() & 0x01) // if playing
+        {
+            double lVol = DAW::Track_GetPeakInfo(track, 0);
+            double rVol = DAW::Track_GetPeakInfo(track, 1);
+
+            double lrVol =  lVol > rVol ? lVol : rVol;
+            
+            context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
+        }
+        else
+            context->SetWidgetValue(context->GetWidget(), 0.0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MasterTrackOutputMeter : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
