@@ -439,6 +439,9 @@ public:
 
     bool ActivateFXZone(string zoneName, int fxIndex)
     {
+        if((activeZones_.back())->GetName() == zoneName)
+            return false;
+
         if(zones_.count(zoneName) > 0)
         {
             AddActiveFXZone(zoneName, fxIndex);
@@ -450,6 +453,9 @@ public:
     
     bool ActivateSendsZone(string zoneName, MediaTrack* track, int sendsIndex)
     {
+        if((activeZones_.back())->GetName() == zoneName)
+            return false;
+
         if(zones_.count(zoneName) > 0)
         {
             AddActiveSendsZone(zoneName, track, sendsIndex);
@@ -475,6 +481,9 @@ public:
     
     void GoSubZone(string zoneName, string parentZoneName)
     {
+        if((activeZones_.back())->GetName() == zoneName)
+            return;
+        
         if(zones_.count(parentZoneName) > 0 && zones_.count(zoneName) > 0)
         {
             if(HasActiveZone(zoneName))
