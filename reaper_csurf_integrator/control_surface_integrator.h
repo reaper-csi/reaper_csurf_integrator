@@ -381,10 +381,12 @@ public:
 
     virtual void Run()
     {
+        /*
         DAW::EnumProjects(-1, prjFn, sizeof(prjFn));
         if (! *prjFn) // No projects open
             for(auto widget : widgets_)
                 widget->Reset();
+         */
 
         RequestUpdate();
     }
