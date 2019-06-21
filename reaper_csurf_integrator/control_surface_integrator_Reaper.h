@@ -82,6 +82,8 @@ public:
 
     static int SetProjExtState(ReaProject* proj, const char* extname, const char* key, const char* value) { return ::SetProjExtState(proj, extname, key, value); }
     
+    static   ReaProject* EnumProjects(int idx, char* projfn, int projfn_sz) { return ::EnumProjects(idx, projfn, projfn_sz); }
+    
     static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
     static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }
