@@ -506,7 +506,7 @@ public:
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
+        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(),  track);
     }
 };
 
@@ -523,7 +523,7 @@ public:
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::SetOnlyTrackSelected(track);
-        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
+        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(),  track);
     }
 };
 
@@ -540,7 +540,7 @@ public:
     void Do(Page* page, double value) override
     {
         DAW::SetOnlyTrackSelected(DAW::GetMasterTrack(0));
-        page->OnTrackSelectionBySurface(DAW::GetMasterTrack(0));
+        page->OnTrackSelection(DAW::GetMasterTrack(0));
     }
 };
 
@@ -585,7 +585,7 @@ public:
             MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-            widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(currentTrack);
+            widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(), currentTrack);
         }
     }
 };

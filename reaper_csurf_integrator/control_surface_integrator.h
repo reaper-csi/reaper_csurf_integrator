@@ -1300,11 +1300,17 @@ public:
         trackNavigationManager_->RefreshLayout();
     }
     
-    void OnTrackSelectionBySurface(MediaTrack* track)
+    void OnTrackSelectionBySurface(ControlSurface* surface, MediaTrack* track)
     {
         trackNavigationManager_->OnTrackSelectionBySurface(track);
         
-        for(auto surface : surfaces_)
+        if(surface->GetUseZoneLink())
+        {
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->OnTrackSelection(track);
+        }
+        else
             surface->OnTrackSelection(track);
     }
 
