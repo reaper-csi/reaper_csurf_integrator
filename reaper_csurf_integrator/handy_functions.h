@@ -15,9 +15,13 @@
 
 static double int14ToNormalized(unsigned char msb, unsigned char lsb)
 {
-    // GAW TBD -- Make sure the range is 0.0 - 1.0
-    int val=lsb | (msb<<7);
-    return ((double)val)/16383.0;
+    int val = lsb | (msb<<7);
+    double normalizedVal = val/16383.0;
+    
+    normalizedVal = normalizedVal < 0.0 ? 0.0 : normalizedVal;
+    normalizedVal = normalizedVal > 1.0 ? 1.0 : normalizedVal;
+    
+    return normalizedVal;
 }
 
 static double normalizedToVol(double val)
