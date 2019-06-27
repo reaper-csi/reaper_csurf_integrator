@@ -774,10 +774,7 @@ class TrackOutputMeter : public Action
 public:
     void RequestUpdate(ActionContext* context, MediaTrack* track, int param) override
     {
-        if(DAW::GetPlayState() & 0x01) // if playing
-            context->SetWidgetValue(context->GetWidget(), volToNormalized(DAW::Track_GetPeakInfo(track, param)));
-        else
-            context->SetWidgetValue(context->GetWidget(), 0.0);
+        context->SetWidgetValue(context->GetWidget(), volToNormalized(DAW::Track_GetPeakInfo(track, param)));
     }
 };
 
@@ -788,14 +785,9 @@ class TrackOutputMeterAverageLR : public Action
 public:
     void RequestUpdate(ActionContext* context, MediaTrack* track) override
     {
-        if(DAW::GetPlayState() & 0x01) // if playing
-        {
-            double lrVol = (DAW::Track_GetPeakInfo(track, 0) + DAW::Track_GetPeakInfo(track, 1)) / 2.0;
-            
-            context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
-        }
-        else
-            context->SetWidgetValue(context->GetWidget(), 0.0);
+        double lrVol = (DAW::Track_GetPeakInfo(track, 0) + DAW::Track_GetPeakInfo(track, 1)) / 2.0;
+        
+        context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
     }
 };
 
@@ -806,17 +798,12 @@ class TrackOutputMeterMaxPeakLR : public Action
 public:
     void RequestUpdate(ActionContext* context, MediaTrack* track) override
     {
-        if(DAW::GetPlayState() & 0x01) // if playing
-        {
-            double lVol = DAW::Track_GetPeakInfo(track, 0);
-            double rVol = DAW::Track_GetPeakInfo(track, 1);
+        double lVol = DAW::Track_GetPeakInfo(track, 0);
+        double rVol = DAW::Track_GetPeakInfo(track, 1);
 
-            double lrVol =  lVol > rVol ? lVol : rVol;
-            
-            context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
-        }
-        else
-            context->SetWidgetValue(context->GetWidget(), 0.0);
+        double lrVol =  lVol > rVol ? lVol : rVol;
+        
+        context->SetWidgetValue(context->GetWidget(), volToNormalized(lrVol));
     }
 };
 
@@ -827,10 +814,7 @@ class MasterTrackOutputMeter : public Action
 public:
     void RequestUpdate(ActionContext* context, int param) override
     {
-        if(DAW::GetPlayState() & 0x01) // if playing
-            context->SetWidgetValue(context->GetWidget(), param, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param))); // param 0=left, 1=right, etc.
-        else
-            context->SetWidgetValue(context->GetWidget(), param, 0.0);
+        context->SetWidgetValue(context->GetWidget(), param, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param))); // param 0=left, 1=right, etc.
     }
 };
 
@@ -841,20 +825,15 @@ class FXGainReductionMeter : public Action
 public:
     void RequestUpdate(ActionContext* context, MediaTrack* track) override
     {
-        if(DAW::GetPlayState() & 0x01) // if playing
-        {
-            char buffer[BUFSZ];
+        char buffer[BUFSZ];
 
-            // GAW TBD fx Index
-            int fxIndex = 0;
-            
-            if(DAW::TrackFX_GetNamedConfigParm(track, fxIndex, "GainReduction_dB", buffer, sizeof(buffer)))
-               context->SetWidgetValue(context->GetWidget(), -atof(buffer)/20.0);
-            else
-               context->SetWidgetValue(context->GetWidget(), 0.0);
-        }
+        // GAW TBD fx Index
+        int fxIndex = 0;
+        
+        if(DAW::TrackFX_GetNamedConfigParm(track, fxIndex, "GainReduction_dB", buffer, sizeof(buffer)))
+           context->SetWidgetValue(context->GetWidget(), -atof(buffer)/20.0);
         else
-            context->SetWidgetValue(context->GetWidget(), 1.0);
+           context->SetWidgetValue(context->GetWidget(), 0.0);
     }
 };
 

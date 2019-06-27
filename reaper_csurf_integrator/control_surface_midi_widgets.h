@@ -219,7 +219,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], (value * 127.0) + 15.0);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
     }
 };
 
@@ -237,7 +237,7 @@ public:
     
     virtual void SetValue(double value) override
     {
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], (fabs(1.0 - value) * 127.0) + 15.0);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], fabs(1.0 - value) * 127.0);
     }
 };
 
