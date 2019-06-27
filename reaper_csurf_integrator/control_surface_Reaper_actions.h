@@ -689,6 +689,58 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GlobalAutoMode : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, int mode) override
+    {
+        context->SetWidgetValue(context->GetWidget(), DAW::GetGlobalAutomationOverride());
+    }
+    
+    void Do(Page* page, double autoMode) override
+    {
+        DAW::SetGlobalAutomationOverride(autoMode);
+    }
+};
+
+
+// I_AUTOMODE : int * : track automation mode (0=trim/off, 1=read, 2=touch, 3=write, 4=latch)
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackAutoMode : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    void RequestUpdate(ActionContext* context, int mode) override
+    {
+        bool gotOne = false;
+        
+        for(int i = 1; i <= context->GetPage()->GetNumTracks(); i++)
+        {
+            MediaTrack* track = context->GetPage()->GetTrackFromId(i);
+            
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == mode)
+            {
+                gotOne = true;
+                break;
+            }
+        }
+        
+        if(gotOne)
+            context->SetWidgetValue(context->GetWidget(), 1.0);
+        else
+            context->SetWidgetValue(context->GetWidget(), 0.0);
+    }
+    
+    virtual void Do(Page* page, double autoMode) override
+    {
+        DAW::SetAutomationMode(autoMode, true);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

@@ -619,6 +619,7 @@ public:
 
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
+    virtual void Do(Page* page, ControlSurface* surface) {}
     virtual void Do(ControlSurface* surface, string value) {}
     virtual void Do(ControlSurface* surface, string value1, string value2) {}
     virtual void Do(Page* page, string value) {}
@@ -1056,7 +1057,7 @@ private:
 public:
     SendsActivationManager(Page* page) : page_(page) {}
     
-    void ToggleShouldMapSends();
+    void ToggleMapSends(ControlSurface* surface);
     
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
 };
@@ -1423,7 +1424,7 @@ public:
 
     /// GAW -- end SendsActivationManager facade
 
-    void ToggleShouldMapSends() { sendsActivationManager_->ToggleShouldMapSends(); }
+    void ToggleMapSends(ControlSurface* surface) { sendsActivationManager_->ToggleMapSends(surface); }
 
 };
 
