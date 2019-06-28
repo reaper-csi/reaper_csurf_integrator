@@ -209,17 +209,22 @@ public:
 class VUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    double minDB_ = 0.0;
-    double maxDB_ = 24.0;
-    
 public:
     virtual ~VUMeter_Midi_FeedbackProcessor() {}
     VUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
     
     virtual void SetValue(double value) override
     {
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
+        double dB = VAL2DB(normalizedToVol(value)) + 2.5;
+        
+        double midiVal = 0;
+        
+        if(dB < 0)
+            midiVal = pow(10.0, dB / 48) * 96;
+        else
+            midiVal = pow(10.0, dB / 60) * 96;
+        
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], midiVal);
     }
 };
 
