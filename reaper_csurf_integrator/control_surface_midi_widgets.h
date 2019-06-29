@@ -286,7 +286,9 @@ public:
     virtual void SetValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
-        int midiValue = value * 0x0d;
+        int midiValue = value * 0x0f;
+        if(midiValue > 0x0d)
+            midiValue = 0x0d;
         SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
     }
 };

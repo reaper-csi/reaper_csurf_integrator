@@ -1665,7 +1665,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surf
     
     if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
     {
-        for(int i = 0; i < DAW::DAW::GetTrackNumSends(selectedTrack, 0); i++)
+        for(int i = 0; i < DAW::GetTrackNumSends(selectedTrack, 0); i++)
         {
             string sendName = "Send" + to_string(i + 1);
             
