@@ -840,8 +840,8 @@ void Manager::InitActionDictionary()
     actions_["SelectTrackRelative"] = new SelectTrackRelative();
     actions_["TrackBank"] = new TrackBank();
     actions_["TrackSendBank"] = new TrackSendBank();
-    actions_["PinSelectedTracks"] = new PinSelectedTracks();
-    actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
+    //actions_["PinSelectedTracks"] = new PinSelectedTracks();
+    //actions_["UnpinSelectedTracks"] = new UnpinSelectedTracks();
     actions_["Shift"] = new SetShift();
     actions_["Option"] = new SetOption();
     actions_["Control"] = new SetControl();
@@ -912,8 +912,8 @@ void Manager::InitActionContextDictionary()
     actionContexts_["SelectTrackRelative"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
     actionContexts_["TrackBank"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
     actionContexts_["TrackSendBank"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContextWithIntParam(manager, actions_[params[0]], params); };
-    actionContexts_["PinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
-    actionContexts_["UnpinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
+    //actionContexts_["PinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
+    //actionContexts_["UnpinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["Shift"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["Option"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
     actionContexts_["Control"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
@@ -1020,7 +1020,7 @@ void Manager::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+/*
 // subtracts b<T> from a<T>
 template <typename T>
 static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
@@ -1048,6 +1048,7 @@ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
         itb = b.begin();
     }
 }
+ */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
@@ -1274,6 +1275,14 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Action::RequestUpdate(ActionContext* context)
+{
+    context->GetWidget()->Reset();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Widget* ActionContext::GetWidget()
@@ -1350,13 +1359,13 @@ void TrackNavigationManager::Init()
     for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
         trackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
     
-    SetPinnedTracks();
+    //SetPinnedTracks();
     
     char buffer[BUFSZ];
     if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "BankOffset").c_str(), buffer, sizeof(buffer)))
         trackOffset_ = atol(buffer);
 }
-
+/*
 void TrackNavigationManager::SetPinnedTracks()
 {
     char buffer[BUFSZ];
@@ -1370,14 +1379,14 @@ void TrackNavigationManager::SetPinnedTracks()
         }
     }
 }
-
+*/
 void TrackNavigationManager::OnTrackSelection(MediaTrack* track)
 {
     if(scrollLink_)
     {
         // Make sure selected track is visble on the control surface
         int low = trackOffset_;
-        int high = low + trackNavigators_.size() - 1 - GetNumPinnedTracks();
+        int high = low + trackNavigators_.size() - 1;
         
         int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
         
@@ -1399,7 +1408,7 @@ void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
             DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
     }
 }
-
+/*
 void TrackNavigationManager::PinSelectedTracks()
 {
     TrackNavigator* navigator = nullptr;
@@ -1447,11 +1456,48 @@ void TrackNavigationManager::UnpinSelectedTracks()
     
     RefreshLayout();
 }
-
+*/
 bool TrackNavigationManager::TrackListChanged()
 {
     if(currentlyRefreshingLayout_)
         return false;
+    
+  
+    int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+    
+    //trackGUIDs_.clear();
+    //trackSendGUIDs_.clear();
+    
+    if(trackPointers_ != nullptr)
+        delete[] trackPointers_;
+    
+    trackPointers_ = new MediaTrack* [DAW::CSurf_NumTracks(followMCP_)];
+    
+    for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+    {
+        trackPointers_[i] = GetTrackFromId(i);
+        /*
+        MediaTrack* track = GetTrackFromId(i);
+        
+        string trackGUID = GetTrackGUID(track);
+        
+        trackGUIDs_.push_back(trackGUID);
+        
+        int numSends = DAW::GetTrackNumSends(track, 0);
+        
+        if(numSends)
+            for(int j = 0; j < numSends; j++)
+                trackSendGUIDs_[trackGUID].push_back(trackGUID);
+         */
+    }
+    
+    int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+    
+    char msgBuffer[250];
+    sprintf(msgBuffer, "%d microseconds\n", duration);
+    DAW::ShowConsoleMsg(msgBuffer);
+
     
     int currentNumVisibleTracks = 0;
     
@@ -1465,10 +1511,10 @@ bool TrackNavigationManager::TrackListChanged()
             delete[] previousTrackList_;
         
         previousNumVisibleTracks_ = currentNumVisibleTracks;
-        previousTrackList_ = new MediaTrack* [currentNumVisibleTracks];
+        previousTrackList_ = new string [currentNumVisibleTracks];
         
         for(int i = 0; i < currentNumVisibleTracks; i++)
-            previousTrackList_[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+            previousTrackList_[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
         
         TrackNavigator* navigator = nullptr;
         char buffer[BUFSZ];
@@ -1479,7 +1525,7 @@ bool TrackNavigationManager::TrackListChanged()
             if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
             {
                 page_->TrackHasBeenRemoved(navigator->GetTrackGUID());
-                
+                /*
                 if(navigator->GetIsPinned())
                 {
                     navigator->SetIsPinned(false);
@@ -1492,22 +1538,31 @@ bool TrackNavigationManager::TrackListChanged()
                         DAW::MarkProjectDirty(nullptr);
                     }
                 }
+                */
             }
         }
-        
+
         return true;
     }
     else if(currentNumVisibleTracks == previousNumVisibleTracks_)
     {
-        MediaTrack **currentTrackList = new MediaTrack* [currentNumVisibleTracks];
+        string *currentTrackList = new string [currentNumVisibleTracks];
         for(int i = 0; i < currentNumVisibleTracks; i++)
-            currentTrackList[i] = DAW::CSurf_TrackFromID(i, followMCP_);
+            currentTrackList[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
         
         if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
         {
             if(previousTrackList_ != nullptr)
                 delete[] previousTrackList_;
             previousTrackList_ = currentTrackList;
+            
+            int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+            
+            //char msgBuffer[250];
+            //sprintf(msgBuffer, "%d Track Count same, Tracks are differnt \n", duration);
+            //DAW::ShowConsoleMsg(msgBuffer);
+
+            
             return true;
         }
         else
@@ -1541,7 +1596,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     
     vector<string> pinnedChannels;
     
-    GetPinnedChannelGUIDs(pinnedChannels);
+    //GetPinnedChannelGUIDs(pinnedChannels);
     
     while(trackOffset_ <= numTracks)
     {
@@ -1568,23 +1623,23 @@ void TrackNavigationManager::RefreshLayout()
 {
     currentlyRefreshingLayout_ = true;
     
-    vector<string> pinnedChannels;
+    //vector<string> pinnedChannels;
     
-    GetPinnedChannelGUIDs(pinnedChannels);
+    //GetPinnedChannelGUIDs(pinnedChannels);
     
-    vector<string> layoutChannels(trackNavigators_.size() + pinnedChannels.size());
+    vector<string> layoutChannels(trackNavigators_.size());
     
     int layoutChannelIndex = 0;
     
     for(int i = trackOffset_; i <= DAW::CSurf_NumTracks(followMCP_) && layoutChannelIndex < layoutChannels.size(); i++)
     {
-        if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
-            pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
-        else
+        //if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
+            //pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
+        //else
             layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
     }
     
-    subtract_vector(layoutChannels, pinnedChannels);
+    //subtract_vector(layoutChannels, pinnedChannels);
     
     if(colourTracks_ && TheManager->GetCurrentPage() == page_)
     {
@@ -1602,7 +1657,7 @@ void TrackNavigationManager::RefreshLayout()
     layoutChannelIndex = 0;
     
     for(auto* navigator : trackNavigators_)
-        if(! navigator->GetIsPinned())
+        //if(! navigator->GetIsPinned())
             navigator->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
     
     
@@ -1646,9 +1701,32 @@ int SendsNavigationManager::GetMaxSends()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+void SendsActivationManager::ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack)
 {
-    for(auto surface : page_->GetSurfaces())
+    if(selectedTrack == nullptr)
+        return;
+    
+    int flags;
+    
+    DAW::GetTrackInfo(selectedTrack, &flags);
+    
+    if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
+    {
+        
+        // GAW TBD -- Zero all Sends Zones for this surface (and all if zoneLink)
+        
+        for(int i = 0; i < DAW::GetTrackNumSends(selectedTrack, 0); i++)
+        {
+            string zoneName = "Send" + to_string(i + 1);
+            
+            ActivateSendsZone(surface, selectedTrack, i, zoneName);
+        }
+    }
+}
+
+void SendsActivationManager::DeactivateSendsZones(ControlSurface* surface)
+{
+    if(! surface->GetUseZoneLink())
     {
         if(activeSendZoneNames_.count(surface) > 0)
         {
@@ -1658,43 +1736,9 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surf
             activeSendZoneNames_[surface].clear();
         }
     }
-    
-    int flags;
-    
-    DAW::GetTrackInfo(selectedTrack, &flags);
-    
-    if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
+    else
     {
-        for(int i = 0; i < DAW::GetTrackNumSends(selectedTrack, 0); i++)
-        {
-            string sendName = "Send" + to_string(i + 1);
-            
-            if( ! surface->GetUseZoneLink())
-            {
-                if(surface->ActivateSendsZone(sendName, selectedTrack, i))
-                    activeSendZoneNames_[surface].push_back(sendName);
-            }
-            else
-            {
-                for(auto surface : page_->GetSurfaces())
-                    if(surface->GetUseZoneLink())
-                        if(surface->ActivateSendsZone(sendName, selectedTrack, i))
-                            activeSendZoneNames_[surface].push_back(sendName);
-            }
-        }
-    }
-}
-
-void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
-{
-    if(DAW::CountSelectedTracks(NULL) != 1)
-        return;
-    
-    shouldMapSends_ = ! shouldMapSends_;
-    
-    if(DAW::CountSelectedTracks(NULL) == 1)
-    {
-        if(! surface->GetUseZoneLink())
+        for(auto surface : page_->GetSurfaces())
         {
             if(activeSendZoneNames_.count(surface) > 0)
             {
@@ -1704,53 +1748,50 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
                 activeSendZoneNames_[surface].clear();
             }
         }
-        else
+    }
+}
+
+void SendsActivationManager::ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName)
+{
+    if(! surface->GetUseZoneLink())
+    {
+        if(surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex))
+            activeSendZoneNames_[surface].push_back(zoneName);
+    }
+    else
+    {
+        for(auto surface : page_->GetSurfaces())
+            if(surface->GetUseZoneLink())
+                if(surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex))
+                    activeSendZoneNames_[surface].push_back(zoneName);
+    }
+}
+
+void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+{
+    DeactivateSendsZones(surface);
+    ActivateSendsZones(surface, selectedTrack);
+}
+
+void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
+{
+    if(DAW::CountSelectedTracks(NULL) != 1)
+        return;
+    
+    shouldMapSends_ = ! shouldMapSends_;
+    
+    DeactivateSendsZones(surface);
+    
+    MediaTrack* selectedTrack = nullptr;
+    
+    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    {
+        if(DAW::GetMediaTrackInfo_Value(page_->GetTrackFromId(i), "I_SELECTED"))
         {
-            for(auto surface : page_->GetSurfaces())
-            {
-                if(activeSendZoneNames_.count(surface) > 0)
-                {
-                    for(auto zoneName :activeSendZoneNames_[surface])
-                        surface->DeactivateZone(zoneName);
-                    
-                    activeSendZoneNames_[surface].clear();
-                }
-            }
-        }
-        
-        MediaTrack* selectedTrack = nullptr;
-        
-        for(int i = 1; i <= page_->GetNumTracks(); i++)
-        {
-            if(DAW::GetMediaTrackInfo_Value(page_->GetTrackFromId(i), "I_SELECTED"))
-            {
-                selectedTrack = page_->GetTrackFromId(i);
-                break;
-            }
-        }
-        
-        int flags;
-        
-        DAW::GetTrackInfo(selectedTrack, &flags);
-        
-        if((flags & 0x02) && shouldMapSends_) // track is selected -- not deselected and shouldMapSends_ == true
-        {
-            for(int i = 0; i < DAW::DAW::GetTrackNumSends(selectedTrack, 0); i++)
-            {
-                string sendName = "Send" + to_string(i + 1);
-                
-                if(! surface->GetUseZoneLink())
-                {
-                    if(surface->ActivateSendsZone(sendName, selectedTrack, i))
-                        activeSendZoneNames_[surface].push_back(sendName);
-                }
-                else
-                {
-                    for(auto surface : page_->GetSurfaces())
-                        if(surface->ActivateSendsZone(sendName, selectedTrack, i))
-                            activeSendZoneNames_[surface].push_back(sendName);
-                }
-            }
+            selectedTrack = page_->GetTrackFromId(i);
+            break;
         }
     }
+    
+    ActivateSendsZones(surface, selectedTrack);
 }

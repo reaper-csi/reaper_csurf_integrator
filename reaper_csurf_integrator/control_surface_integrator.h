@@ -221,13 +221,13 @@ class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    bool isPinned_ = false;
+    //bool isPinned_ = false;
     string trackGUID_ = "";
     
 public:
     virtual ~TrackNavigator() {}
     
-    virtual bool GetIsPinned() { return isPinned_; }
+    //virtual bool GetIsPinned() { return isPinned_; }
     virtual string GetTrackGUID() { return trackGUID_; }
     
     virtual void SetTrackGUID(string trackGUID)
@@ -235,10 +235,10 @@ public:
         trackGUID_ = trackGUID;
     }
     
-    virtual void SetIsPinned(bool pinned)
-    {
-        isPinned_ = pinned;
-    }
+    //virtual void SetIsPinned(bool pinned)
+    //{
+        //isPinned_ = pinned;
+    //}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -254,9 +254,9 @@ public:
     SelectedTrackNavigator(Page* page) : page_(page) {}
     virtual ~SelectedTrackNavigator() {}
     
-    virtual bool GetIsPinned() override { return false; }
+    //virtual bool GetIsPinned() override { return false; }
     virtual void SetTrackGUID(string trackGUID) override {}
-    virtual void SetIsPinned(bool pinned) override {}
+    //virtual void SetIsPinned(bool pinned) override {}
     
     virtual string GetTrackGUID() override;
 };
@@ -272,9 +272,9 @@ public:
     FocusedFXTrackNavigator(Page* page) : page_(page) {}
     virtual ~FocusedFXTrackNavigator() {}
     
-    virtual bool GetIsPinned() override { return false; }
+    //virtual bool GetIsPinned() override { return false; }
     virtual void SetTrackGUID(string trackGUID) override {}
-    virtual void SetIsPinned(bool pinned) override {}
+    //virtual void SetIsPinned(bool pinned) override {}
     
     virtual string GetTrackGUID() override;
 };
@@ -610,12 +610,12 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void RequestUpdate(ActionContext* context) {}
-    virtual void RequestUpdate(ActionContext* context, int commandId) {}
-    virtual void RequestUpdate(ActionContext* context, string param) {}
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track) {}
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int param) {}
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) {}
+    virtual void RequestUpdate(ActionContext* context);
+    virtual void RequestUpdate(ActionContext* context, int commandId) { RequestUpdate(context); }
+    virtual void RequestUpdate(ActionContext* context, string param) { RequestUpdate(context); }
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track) { RequestUpdate(context); }
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int param) { RequestUpdate(context); }
+    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
 
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
@@ -746,11 +746,28 @@ private:
     int trackColourBlueValue_ = 0;
     map<string, int> trackColours_;
     int trackOffset_ = 1;
-    MediaTrack **previousTrackList_ = nullptr;
+    string *previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
     vector<TrackNavigator*> trackNavigators_;
     bool currentlyRefreshingLayout_ = false;
     
+    vector<string> trackGUIDs_;
+    map<string, vector<string>> trackSendGUIDs_;
+    
+    MediaTrack* *trackPointers_ = nullptr;
+    
+    
+    bool IsTrackVisible(MediaTrack* track)
+    {
+        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
+            return true;
+        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
+            return true;
+        else
+            return false;
+    }
+
+    /*
     int GetNumPinnedTracks()
     {
         int numPinnedTracks = 0;
@@ -762,15 +779,6 @@ private:
         return numPinnedTracks;
     }
     
-    bool IsTrackVisible(MediaTrack* track)
-    {
-        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-            return true;
-        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-            return true;
-        else
-            return false;
-    }
     
     void SetPinnedTracks();
     
@@ -780,7 +788,7 @@ private:
             if(navigator->GetIsPinned())
                 pinnedChannels.push_back(navigator->GetTrackGUID());
     }
-
+*/
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     
@@ -796,8 +804,8 @@ public:
     void RefreshLayout();
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
-    void PinSelectedTracks();
-    void UnpinSelectedTracks();
+    //void PinSelectedTracks();
+    //void UnpinSelectedTracks();
     bool TrackListChanged();
 
     void AddTrackNavigator(TrackNavigator* trackNavigator)
@@ -1053,6 +1061,10 @@ private:
     bool shouldMapSends_ = false;
     
     map<ControlSurface*, vector<string>> activeSendZoneNames_;
+
+    void DeactivateSendsZones(ControlSurface* surface);
+    void ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack);
+    void ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName);
 
 public:
     SendsActivationManager(Page* page) : page_(page) {}
@@ -1339,7 +1351,7 @@ public:
     {
         trackNavigationManager_->SetScrollLink(value);
     }
-    
+    /*
     void PinSelectedTracks()
     {
         trackNavigationManager_->PinSelectedTracks();
@@ -1349,7 +1361,7 @@ public:
     {
         trackNavigationManager_->UnpinSelectedTracks();
     }
-    
+    */
     bool TrackListChanged()
     {
         return trackNavigationManager_->TrackListChanged();
