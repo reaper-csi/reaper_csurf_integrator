@@ -223,9 +223,6 @@ class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    //bool isPinned_ = false;
-    //string trackGUID_ = "";
-    
     int offset_ = 0;
     
 protected:
@@ -236,20 +233,7 @@ public:
     TrackNavigator(Page* page, int offset) : page_(page), offset_(offset) {}
     virtual ~TrackNavigator() {}
     
-    //virtual bool GetIsPinned() { return isPinned_; }
-    //virtual string GetTrackGUID() { return trackGUID_; }
-    
-    //virtual void SetTrackGUID(string trackGUID)
-    //{
-        //trackGUID_ = trackGUID;
-    //}
-    
     virtual MediaTrack* GetTrack();
-    
-    //virtual void SetIsPinned(bool pinned)
-    //{
-        //isPinned_ = pinned;
-    //}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -261,11 +245,7 @@ private:
 public:
     SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~SelectedTrackNavigator() {}
-    
-    //virtual bool GetIsPinned() override { return false; }
-    //virtual void SetTrackGUID(string trackGUID) override {}
-    //virtual void SetIsPinned(bool pinned) override {}
-    
+   
     virtual MediaTrack* GetTrack() override;
 };
 
@@ -279,10 +259,6 @@ private:
 public:
     FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~FocusedFXTrackNavigator() {}
-    
-    //virtual bool GetIsPinned() override { return false; }
-    //virtual void SetTrackGUID(string trackGUID) override {}
-    //virtual void SetIsPinned(bool pinned) override {}
     
     virtual MediaTrack* GetTrack() override;
 };
@@ -757,7 +733,6 @@ private:
     string *previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
     int numTrackNavigators_ = 0;
-    bool currentlyRefreshingLayout_ = false;
     
     vector<string> trackGUIDs_;
     map<string, vector<string>> trackSendGUIDs_;
@@ -775,28 +750,6 @@ private:
             return false;
     }
 
-    /*
-    int GetNumPinnedTracks()
-    {
-        int numPinnedTracks = 0;
-        
-        for(auto* navigator : trackNavigators_)
-            if(navigator->GetIsPinned())
-                numPinnedTracks++;
-        
-        return numPinnedTracks;
-    }
-    
-    
-    void SetPinnedTracks();
-    
-    void GetPinnedChannelGUIDs(vector<string> & pinnedChannels)
-    {
-        for(auto* navigator : trackNavigators_)
-            if(navigator->GetIsPinned())
-                pinnedChannels.push_back(navigator->GetTrackGUID());
-    }
-*/
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     
@@ -810,12 +763,9 @@ public:
     
     void Init();
     void AdjustTrackBank(int stride);
-    void RefreshLayout();
     void OnTrackSelection(MediaTrack* track);
     void OnTrackSelectionBySurface(MediaTrack* track);
-    //void PinSelectedTracks();
-    //void UnpinSelectedTracks();
-    bool TrackListChanged();
+    void TrackListChanged();
 
     int AddTrackNavigator()
     {
@@ -1305,8 +1255,6 @@ public:
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
     MediaTrack* GetTrack(int channelNumber) { return trackNavigationManager_->GetTrack(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
-    //MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
-    //string GetTrackGUID(MediaTrack* track) { return trackNavigationManager_->GetTrackGUID(track); }
 
     int AddTrackNavigator()
     {
@@ -1317,11 +1265,6 @@ public:
     {
         if(touchedTracks_.size() == 0)
             trackNavigationManager_->AdjustTrackBank(stride);
-    }
-    
-    void RefreshLayout()
-    {
-        trackNavigationManager_->RefreshLayout();
     }
     
     void OnTrackSelectionBySurface(ControlSurface* surface, MediaTrack* track)
@@ -1349,8 +1292,6 @@ public:
         
         for(auto surface : surfaces_)
             surface->ClearCache();
-        
-        RefreshLayout();
     }
     
     void LeavePage()
@@ -1362,20 +1303,10 @@ public:
     {
         trackNavigationManager_->SetScrollLink(value);
     }
-    /*
-    void PinSelectedTracks()
+
+    void TrackListChanged()
     {
-        trackNavigationManager_->PinSelectedTracks();
-    }
-    
-    void UnpinSelectedTracks()
-    {
-        trackNavigationManager_->UnpinSelectedTracks();
-    }
-    */
-    bool TrackListChanged()
-    {
-        return trackNavigationManager_->TrackListChanged();
+        trackNavigationManager_->TrackListChanged();
     }
     
     /// GAW -- end TrackNavigationManager facade
@@ -1606,9 +1537,8 @@ public:
     
     void TrackListChanged()
     {
-        for(auto & page : pages_)
-            if(page->TrackListChanged() && page == pages_[currentPageIndex_])
-                page->RefreshLayout();
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->TrackListChanged();
     }
     
     void TrackFXListChanged(MediaTrack* track)
