@@ -1384,11 +1384,11 @@ void TrackNavigationManager::TrackListChanged()
     //trackSendGUIDs_.clear();
     
     
-    trackPointers_ = new MediaTrack* [DAW::CSurf_NumTracks(followMCP_)];
+    //trackPointers_ = new MediaTrack* [DAW::CSurf_NumTracks(followMCP_)];
     
-    for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-    {
-        trackPointers_[i] = GetTrackFromId(i);
+    //for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+    //{
+        //trackPointers_[i] = GetTrackFromId(i);
         /*
         MediaTrack* track = GetTrackFromId(i);
         
@@ -1402,7 +1402,7 @@ void TrackNavigationManager::TrackListChanged()
             for(int j = 0; j < numSends; j++)
                 trackSendGUIDs_[trackGUID].push_back(trackGUID);
          */
-    }
+    //}
     
     int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
     
@@ -1411,19 +1411,19 @@ void TrackNavigationManager::TrackListChanged()
     //DAW::ShowConsoleMsg(msgBuffer);
 
     
-    int currentNumVisibleTracks = 0;
+    //int currentNumVisibleTracks = 0;
     
-    for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-        if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
-            currentNumVisibleTracks++;
+    //for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        //if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
+            //currentNumVisibleTracks++;
     
-    if(currentNumVisibleTracks != previousNumVisibleTracks_)
-    {
-        if(previousTrackList_ != nullptr)
-            delete[] previousTrackList_;
+    //if(currentNumVisibleTracks != previousNumVisibleTracks_)
+    //{
+        //if(previousTrackList_ != nullptr)
+            //delete[] previousTrackList_;
         
-        previousNumVisibleTracks_ = currentNumVisibleTracks;
-        previousTrackList_ = new string [currentNumVisibleTracks];
+        //previousNumVisibleTracks_ = currentNumVisibleTracks;
+        //previousTrackList_ = new string [currentNumVisibleTracks];
         
         //for(int i = 0; i < currentNumVisibleTracks; i++)
             //previousTrackList_[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
@@ -1455,36 +1455,36 @@ void TrackNavigationManager::TrackListChanged()
         }
 */
 
-    }
-    else if(currentNumVisibleTracks == previousNumVisibleTracks_)
-    {
-        string *currentTrackList = new string [currentNumVisibleTracks];
+    //}
+    //else if(currentNumVisibleTracks == previousNumVisibleTracks_)
+    //{
+        //string *currentTrackList = new string [currentNumVisibleTracks];
         //for(int i = 0; i < currentNumVisibleTracks; i++)
             //currentTrackList[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
         
-        if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
-        {
-            if(previousTrackList_ != nullptr)
-                delete[] previousTrackList_;
-            previousTrackList_ = currentTrackList;
+        //if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
+        //{
+            //if(previousTrackList_ != nullptr)
+                //delete[] previousTrackList_;
+            //previousTrackList_ = currentTrackList;
             
-            int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+            //int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
             
             //char msgBuffer[250];
             //sprintf(msgBuffer, "%d Track Count same, Tracks are differnt \n", duration);
             //DAW::ShowConsoleMsg(msgBuffer);
 
             
-            return;
-        }
-        else
-        {
-            delete[]currentTrackList;
-            return;
-        }
-    }
+            //return;
+        //}
+        //else
+        //{
+            //delete[]currentTrackList;
+            //return;
+        //}
+    //}
     
-    return;
+    //return;
 }
 
 void TrackNavigationManager::AdjustTrackBank(int stride)
