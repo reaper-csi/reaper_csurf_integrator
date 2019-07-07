@@ -808,8 +808,6 @@ public:
         scrollLink_ = value;
     }
     
-    
-    //GAW TBD -- move this to TrackNavigator and fit to new design
     MediaTrack* GetSelectedTrack()
     {
         if(DAW::CountSelectedTracks(NULL) != 1)
