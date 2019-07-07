@@ -758,8 +758,6 @@ public:
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
     MediaTrack* GetTrack(int channelNumber) { return DAW::CSurf_TrackFromID(channelNumber + trackOffset_, followMCP_); }
     MediaTrack* GetTrackFromId(int trackNumber) { return DAW::CSurf_TrackFromID(trackNumber, followMCP_); }
-    //MediaTrack* GetTrackFromGUID(string GUID) { return DAW::GetTrackFromGUID(GUID, followMCP_); }
-    //string GetTrackGUID(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
     
     void Init();
     void AdjustTrackBank(int stride);
@@ -810,6 +808,8 @@ public:
         scrollLink_ = value;
     }
     
+    
+    //GAW TBD -- move this to TrackNavigator and fit to new design
     MediaTrack* GetSelectedTrack()
     {
         if(DAW::CountSelectedTracks(NULL) != 1)
