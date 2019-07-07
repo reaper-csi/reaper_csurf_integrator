@@ -47,7 +47,7 @@ struct TrackID
     MediaTrack* trackPointer;
 };
 
-static map<string, TrackID> GUIDTracks_;
+//static map<string, TrackID> GUIDTracks_;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DAW
@@ -223,6 +223,8 @@ public:
 
     static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
 
+/*
+    
     static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
     {
         if(trackNumber <= 0 || trackNumber > CSurf_NumTracks(mcpView))
@@ -274,6 +276,9 @@ public:
         else
             return nullptr;
     }
+    
+    
+    */
 };
 
 #endif /* control_surface_integrator_Reaper_h */

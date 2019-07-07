@@ -217,23 +217,34 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Page;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     //bool isPinned_ = false;
-    string trackGUID_ = "";
+    //string trackGUID_ = "";
+    
+    int offset_ = 0;
+    
+protected:
+    Page* page_ = nullptr;
+    TrackNavigator(Page* page) : page_(page) {}
     
 public:
+    TrackNavigator(Page* page, int offset) : page_(page), offset_(offset) {}
     virtual ~TrackNavigator() {}
     
     //virtual bool GetIsPinned() { return isPinned_; }
-    virtual string GetTrackGUID() { return trackGUID_; }
+    //virtual string GetTrackGUID() { return trackGUID_; }
     
-    virtual void SetTrackGUID(string trackGUID)
-    {
-        trackGUID_ = trackGUID;
-    }
+    //virtual void SetTrackGUID(string trackGUID)
+    //{
+        //trackGUID_ = trackGUID;
+    //}
+    
+    virtual MediaTrack* GetTrack();
     
     //virtual void SetIsPinned(bool pinned)
     //{
@@ -242,23 +253,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Page;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SelectedTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
     
 public:
-    SelectedTrackNavigator(Page* page) : page_(page) {}
+    SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~SelectedTrackNavigator() {}
     
     //virtual bool GetIsPinned() override { return false; }
-    virtual void SetTrackGUID(string trackGUID) override {}
+    //virtual void SetTrackGUID(string trackGUID) override {}
     //virtual void SetIsPinned(bool pinned) override {}
     
-    virtual string GetTrackGUID() override;
+    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -269,14 +277,14 @@ private:
     Page* page_ = nullptr;
     
 public:
-    FocusedFXTrackNavigator(Page* page) : page_(page) {}
+    FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~FocusedFXTrackNavigator() {}
     
     //virtual bool GetIsPinned() override { return false; }
-    virtual void SetTrackGUID(string trackGUID) override {}
+    //virtual void SetTrackGUID(string trackGUID) override {}
     //virtual void SetIsPinned(bool pinned) override {}
     
-    virtual string GetTrackGUID() override;
+    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -748,7 +756,7 @@ private:
     int trackOffset_ = 1;
     string *previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
-    vector<TrackNavigator*> trackNavigators_;
+    int numTrackNavigators_ = 0;
     bool currentlyRefreshingLayout_ = false;
     
     vector<string> trackGUIDs_;
@@ -795,9 +803,10 @@ public:
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
+    MediaTrack* GetTrack(int channelNumber) { return DAW::CSurf_TrackFromID(channelNumber + trackOffset_, followMCP_); }
     MediaTrack* GetTrackFromId(int trackNumber) { return DAW::CSurf_TrackFromID(trackNumber, followMCP_); }
-    MediaTrack* GetTrackFromGUID(string GUID) { return DAW::GetTrackFromGUID(GUID, followMCP_); }
-    string GetTrackGUID(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
+    //MediaTrack* GetTrackFromGUID(string GUID) { return DAW::GetTrackFromGUID(GUID, followMCP_); }
+    //string GetTrackGUID(MediaTrack* track) { return DAW::GetTrackGUIDAsString(track, followMCP_); }
     
     void Init();
     void AdjustTrackBank(int stride);
@@ -808,13 +817,18 @@ public:
     //void UnpinSelectedTracks();
     bool TrackListChanged();
 
-    void AddTrackNavigator(TrackNavigator* trackNavigator)
+    int AddTrackNavigator()
     {
-        trackNavigators_.push_back(trackNavigator);
+        int currentOffset = numTrackNavigators_;
+        
+        numTrackNavigators_++;
+        
+        return currentOffset;
     }
     
     void EnterPage()
     {
+        /*
         if(colourTracks_)
         {
             // capture track colors
@@ -822,10 +836,12 @@ public:
                 if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
                     trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
         }
+         */
     }
     
     void LeavePage()
     {
+        /*
         if(colourTracks_)
         {
             DAW::PreventUIRefresh(1);
@@ -836,6 +852,7 @@ public:
                         DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
             DAW::PreventUIRefresh(-1);
         }
+      */
     }
     
     void SetScrollLink(bool value)
@@ -1094,9 +1111,9 @@ private:
     bool isControl_ = false;
     bool isAlt_ = false;
     
-    vector<string> touchedTrackGUIDs_;
+    vector<MediaTrack*> touchedTracks_;
 
-    map<string, map<string, CSI_TrackInfo>> CSITrackSlotInfo_;
+    map<string, map<MediaTrack*, CSI_TrackInfo>> CSITrackSlotInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -1141,10 +1158,8 @@ public:
 
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        string touchedTrackGUID = trackNavigationManager_->GetTrackGUID(track);
-        
-        for(auto trackGUID : touchedTrackGUIDs_)
-            if(trackGUID == touchedTrackGUID)
+        for(auto touchedTrack : touchedTracks_)
+            if(track == touchedTrack)
                 return true;
         
         return false;
@@ -1152,37 +1167,32 @@ public:
     
     void SetTouchState(MediaTrack* track,  bool touched)
     {
-        string touchedTrackGUID = trackNavigationManager_->GetTrackGUID(track);
-        
+   
         if(touched)
-            touchedTrackGUIDs_.push_back(touchedTrackGUID);
+            touchedTracks_.push_back(track);
         else
-            touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), touchedTrackGUID), touchedTrackGUIDs_.end());
+            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
     }
     
     int GetTrackSlotIndex(string slotName, MediaTrack* track)
     {
-        string trackGUID = trackNavigationManager_->GetTrackGUID(track);
-        
         if(CSITrackSlotInfo_.count(slotName) < 1)
             return 0;
-        else if(CSITrackSlotInfo_[slotName].count(trackGUID) < 1)
+        else if(CSITrackSlotInfo_[slotName].count(track) < 1)
             return 0;
         else
-            return CSITrackSlotInfo_[slotName][trackGUID].index;
+            return CSITrackSlotInfo_[slotName][track].index;
     }
     
     void CycleTrackSlotIndex(string slotName, MediaTrack* track, int maxSize)
     {
-        string trackGUID = trackNavigationManager_->GetTrackGUID(track);
+        if(CSITrackSlotInfo_.count(slotName) < 1 || CSITrackSlotInfo_[slotName].count(track) < 1)
+                CSITrackSlotInfo_[slotName][track] = CSI_TrackInfo();
         
-        if(CSITrackSlotInfo_.count(slotName) < 1 || CSITrackSlotInfo_[slotName].count(trackGUID) < 1)
-                CSITrackSlotInfo_[slotName][trackGUID] = CSI_TrackInfo();
+        CSITrackSlotInfo_[slotName][track].index++;
         
-        CSITrackSlotInfo_[slotName][trackGUID].index++;
-        
-        if(CSITrackSlotInfo_[slotName][trackGUID].index > maxSize - 1)
-            CSITrackSlotInfo_[slotName][trackGUID].index = 0;
+        if(CSITrackSlotInfo_[slotName][track].index > maxSize - 1)
+            CSITrackSlotInfo_[slotName][track].index = 0;
         
         // GAW could save to rpp file here for recall after project reload
         // could get VERY verbose
@@ -1230,14 +1240,14 @@ public:
         return modifiers;
     }
     
-    void TrackHasBeenRemoved(string removedTrackGUID)
+    void TrackHasBeenRemoved(MediaTrack* removedTrack)
     {
-        touchedTrackGUIDs_.erase(remove(touchedTrackGUIDs_.begin(), touchedTrackGUIDs_.end(), removedTrackGUID), touchedTrackGUIDs_.end());
+        touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), removedTrack), touchedTracks_.end());
 
             for(auto [customModifierName, trackInfo] : CSITrackSlotInfo_)
-                if(CSITrackSlotInfo_[customModifierName].count(removedTrackGUID) > 0)
+                if(CSITrackSlotInfo_[customModifierName].count(removedTrack) > 0)
                 {
-                    CSITrackSlotInfo_[customModifierName].erase(removedTrackGUID);
+                    CSITrackSlotInfo_[customModifierName].erase(removedTrack);
                     break;
                 }
 
@@ -1293,18 +1303,19 @@ public:
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
+    MediaTrack* GetTrack(int channelNumber) { return trackNavigationManager_->GetTrack(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
-    MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
-    string GetTrackGUID(MediaTrack* track) { return trackNavigationManager_->GetTrackGUID(track); }
+    //MediaTrack* GetTrackFromGUID(string GUID) { return trackNavigationManager_->GetTrackFromGUID(GUID); }
+    //string GetTrackGUID(MediaTrack* track) { return trackNavigationManager_->GetTrackGUID(track); }
 
-    void AddTrackNavigator(TrackNavigator* trackNavigator)
+    int AddTrackNavigator()
     {
-        trackNavigationManager_->AddTrackNavigator(trackNavigator);
+        return trackNavigationManager_->AddTrackNavigator();
     }
     
     void AdjustTrackBank(int stride)
     {
-        if(touchedTrackGUIDs_.size() == 0)
+        if(touchedTracks_.size() == 0)
             trackNavigationManager_->AdjustTrackBank(stride);
     }
     
@@ -1528,6 +1539,7 @@ public:
 
     void Run()
     {
+        /*
         time_t timeNow = DAW::GetCurrentNumberOfMilliseconds();
         
         if(timeNow - lastTimeCacheCleared > 30000) // every 30 seconds
@@ -1535,6 +1547,7 @@ public:
             lastTimeCacheCleared = timeNow;
             DAW::ClearCache();
         }
+         */
         
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
