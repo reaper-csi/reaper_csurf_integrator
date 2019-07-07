@@ -292,15 +292,12 @@ void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, 
 
 map<string, TrackNavigator*> trackNavigators;
 
-static TrackNavigator* TrackNavigatorForChannel(string channel, Page* page)
+static TrackNavigator* TrackNavigatorForChannel(int channelNum, string channelName, Page* page)
 {
-        if(trackNavigators.count(channel) < 1)
-        {
-            trackNavigators[channel] = new TrackNavigator();
-            page->AddTrackNavigator(trackNavigators[channel]);
-        }
-        
-        return trackNavigators[channel];
+    if(trackNavigators.count(channelName) < 1)
+        trackNavigators[channelName] = new TrackNavigator(page, page->AddTrackNavigator());
+    
+    return trackNavigators[channelName];
 }
 
 static void listZoneFiles(const string &path, vector<string> &results)
@@ -407,7 +404,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             hasTrackNavigator = true;
             
             for(int i = 0; i < expandedZones.size(); i++)
-                expandedTrackNavigators.push_back(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface->GetPage()));
+                expandedTrackNavigators.push_back(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface->GetPage()));
             
             continue;
         }
@@ -1020,35 +1017,6 @@ void Manager::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 
-/*
-// subtracts b<T> from a<T>
-template <typename T>
-static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
-{
-    typename std::vector<T>::iterator       ita = a.begin();
-    typename std::vector<T>::const_iterator itb = b.begin();
-    typename std::vector<T>::iterator       enda = a.end();
-    typename std::vector<T>::const_iterator endb = b.end();
-    
-    while (ita != enda)
-    {
-        while (itb != endb)
-        {
-            if (*ita == *itb)
-            {
-                ita = a.erase(ita);
-                enda = a.end();
-                itb = b.begin();
-            }
-            else
-                ++itb;
-        }
-        ++ita;
-        
-        itb = b.begin();
-    }
-}
- */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
@@ -1175,12 +1143,20 @@ void Zone::Activate(MediaTrack* track, int sendsIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* TrackNavigator::GetTrack()
+{
+    return page_->GetTrack(offset_);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SelectedTrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-string SelectedTrackNavigator::GetTrackGUID()
+MediaTrack* SelectedTrackNavigator::GetTrack()
 {
     if(DAW::CountSelectedTracks(nullptr) != 1)
-        return "";
+        return nullptr;
     
     for(int i = 1; i <= page_->GetNumTracks(); i++)
     {
@@ -1191,25 +1167,25 @@ string SelectedTrackNavigator::GetTrackGUID()
         DAW::GetTrackInfo(track, &flags);
         
         if(flags & 0x02) // Selected
-            return page_->GetTrackGUID(track);
+            return track;
     }
     
-    return "";
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FocusedFXTrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-string FocusedFXTrackNavigator::GetTrackGUID()
+MediaTrack* FocusedFXTrackNavigator::GetTrack()
 {
     int trackNumber = 0;
     int itemNumber = 0;
     int fxIndex = 0;
     
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-        return page_->GetTrackGUID(page_->GetTrackFromId(trackNumber));
+        return page_->GetTrackFromId(trackNumber);
     else
-        return "";
+        return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1306,7 +1282,7 @@ MediaTrack* WidgetActionContextManager::GetTrack()
     if(trackNavigator_ == nullptr)
         return nullptr;
     else
-        return widget_->GetSurface()->GetPage()->GetTrackFromGUID(trackNavigator_->GetTrackGUID());
+        return trackNavigator_->GetTrack();
 }
 
 void WidgetActionContextManager::RequestUpdate()
@@ -1356,8 +1332,8 @@ void WidgetActionContextManager::Activate(MediaTrack* track, int contextIndex)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigationManager::Init()
 {
-    for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < trackNavigators_.size(); i++)
-        trackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
+    //for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_) && i < numTrackNavigators_; i++)
+        //numTrackNavigators_[i]->SetTrackGUID(DAW::GetTrackGUIDAsString(i, followMCP_));
     
     //SetPinnedTracks();
     
@@ -1386,7 +1362,7 @@ void TrackNavigationManager::OnTrackSelection(MediaTrack* track)
     {
         // Make sure selected track is visble on the control surface
         int low = trackOffset_;
-        int high = low + trackNavigators_.size() - 1;
+        int high = low + numTrackNavigators_ - 1;
         
         int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
         
@@ -1494,9 +1470,9 @@ bool TrackNavigationManager::TrackListChanged()
     
     int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
     
-    char msgBuffer[250];
-    sprintf(msgBuffer, "%d microseconds\n", duration);
-    DAW::ShowConsoleMsg(msgBuffer);
+    //char msgBuffer[250];
+    //sprintf(msgBuffer, "%d microseconds\n", duration);
+    //DAW::ShowConsoleMsg(msgBuffer);
 
     
     int currentNumVisibleTracks = 0;
@@ -1513,19 +1489,19 @@ bool TrackNavigationManager::TrackListChanged()
         previousNumVisibleTracks_ = currentNumVisibleTracks;
         previousTrackList_ = new string [currentNumVisibleTracks];
         
-        for(int i = 0; i < currentNumVisibleTracks; i++)
-            previousTrackList_[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
-        
+        //for(int i = 0; i < currentNumVisibleTracks; i++)
+            //previousTrackList_[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
+/*
         TrackNavigator* navigator = nullptr;
         char buffer[BUFSZ];
-        for(int i = 0; i < trackNavigators_.size(); i++)
+        for(int i = 0; i < numTrackNavigators_; i++)
         {
-            navigator = trackNavigators_[i];
+            navigator = numTrackNavigators_[i];
             
             if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
             {
                 page_->TrackHasBeenRemoved(navigator->GetTrackGUID());
-                /*
+ 
                 if(navigator->GetIsPinned())
                 {
                     navigator->SetIsPinned(false);
@@ -1538,17 +1514,17 @@ bool TrackNavigationManager::TrackListChanged()
                         DAW::MarkProjectDirty(nullptr);
                     }
                 }
-                */
+ 
             }
         }
-
+*/
         return true;
     }
     else if(currentNumVisibleTracks == previousNumVisibleTracks_)
     {
         string *currentTrackList = new string [currentNumVisibleTracks];
-        for(int i = 0; i < currentNumVisibleTracks; i++)
-            currentTrackList[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
+        //for(int i = 0; i < currentNumVisibleTracks; i++)
+            //currentTrackList[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
         
         if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
         {
@@ -1579,7 +1555,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int numTracks = DAW::CSurf_NumTracks(followMCP_);
     
-    if(numTracks <= trackNavigators_.size())
+    if(numTracks <= numTrackNavigators_)
         return;
     
     int previousTrackOffset = trackOffset_;
@@ -1589,15 +1565,15 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     if(trackOffset_ <  1)
         trackOffset_ =  1;
     
-    int top = numTracks - trackNavigators_.size() + 1;
+    int top = numTracks - numTrackNavigators_ + 1;
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
     
-    vector<string> pinnedChannels;
+    //vector<string> pinnedChannels;
     
     //GetPinnedChannelGUIDs(pinnedChannels);
-    
+    /*
     while(trackOffset_ <= numTracks)
     {
         string trackGUID = DAW::GetTrackGUIDAsString(trackOffset_, followMCP_);
@@ -1609,7 +1585,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
         else
             break;
     }
-    
+    */
     if(previousTrackOffset != trackOffset_)
     {
         DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
@@ -1627,7 +1603,7 @@ void TrackNavigationManager::RefreshLayout()
     
     //GetPinnedChannelGUIDs(pinnedChannels);
     
-    vector<string> layoutChannels(trackNavigators_.size());
+    vector<string> layoutChannels(numTrackNavigators_);
     
     int layoutChannelIndex = 0;
     
@@ -1636,11 +1612,11 @@ void TrackNavigationManager::RefreshLayout()
         //if(! IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
             //pinnedChannels.push_back(DAW::GetTrackGUIDAsString(i, followMCP_));
         //else
-            layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
+            //layoutChannels[layoutChannelIndex++] = DAW::GetTrackGUIDAsString(i, followMCP_);
     }
     
     //subtract_vector(layoutChannels, pinnedChannels);
-    
+    /*
     if(colourTracks_ && TheManager->GetCurrentPage() == page_)
     {
         DAW::PreventUIRefresh(1);
@@ -1651,16 +1627,16 @@ void TrackNavigationManager::RefreshLayout()
                 if(trackColours_.count(navigator->GetTrackGUID()) > 0)
                     DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
     }
-    
+    */
     
     // Apply new layout
     layoutChannelIndex = 0;
     
-    for(auto* navigator : trackNavigators_)
+    //for(auto* navigator : numTrackNavigators_)
         //if(! navigator->GetIsPinned())
-            navigator->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
+            //navigator->SetTrackGUID(layoutChannels[layoutChannelIndex++]);
     
-    
+    /*
     if(colourTracks_ && TheManager->GetCurrentPage() == page_)
     {
         // color tracks
@@ -1674,7 +1650,7 @@ void TrackNavigationManager::RefreshLayout()
         
         DAW::PreventUIRefresh(-1);
     }
-    
+    */
     currentlyRefreshingLayout_ = false;
 }
 
@@ -1795,3 +1771,34 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
     
     ActivateSendsZones(surface, selectedTrack);
 }
+
+
+/*
+ // subtracts b<T> from a<T>
+ template <typename T>
+ static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
+ {
+ typename std::vector<T>::iterator       ita = a.begin();
+ typename std::vector<T>::const_iterator itb = b.begin();
+ typename std::vector<T>::iterator       enda = a.end();
+ typename std::vector<T>::const_iterator endb = b.end();
+ 
+ while (ita != enda)
+ {
+ while (itb != endb)
+ {
+ if (*ita == *itb)
+ {
+ ita = a.erase(ita);
+ enda = a.end();
+ itb = b.begin();
+ }
+ else
+ ++itb;
+ }
+ ++ita;
+ 
+ itb = b.begin();
+ }
+ }
+ */
