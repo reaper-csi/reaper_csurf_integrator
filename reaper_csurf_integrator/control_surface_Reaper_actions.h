@@ -560,7 +560,7 @@ public:
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 1; i <= widget->GetSurface()->GetPage()->GetNumTracks(); i++)
+        for(int i = 0; i < widget->GetSurface()->GetPage()->GetNumTracks(); i++)
         {
            MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
             
@@ -717,7 +717,7 @@ public:
     {
         bool gotOne = false;
         
-        for(int i = 1; i <= context->GetPage()->GetNumTracks(); i++)
+        for(int i = 0; i < context->GetPage()->GetNumTracks(); i++)
         {
             MediaTrack* track = context->GetPage()->GetTrackFromId(i);
             
