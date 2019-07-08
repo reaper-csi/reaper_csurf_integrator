@@ -806,7 +806,6 @@ public:
         top = GetNumFolderTracks();
         if(folderTrackOffset_ >  top)
             folderTrackOffset_ = top;
-
     }
     
     int AddTrackNavigator()
