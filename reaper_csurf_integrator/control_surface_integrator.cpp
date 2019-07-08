@@ -1404,7 +1404,7 @@ int SendsNavigationManager::GetMaxSends()
 {
     int maxSends = 0;
     
-    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    for(int i = 0; i < page_->GetNumTracks(); i++)
     {
         MediaTrack* track = page_->GetTrackFromId(i);
         
@@ -1503,7 +1503,7 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
     
     MediaTrack* selectedTrack = nullptr;
     
-    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    for(int i = 0; i < page_->GetNumTracks(); i++)
     {
         if(DAW::GetMediaTrackInfo_Value(page_->GetTrackFromId(i), "I_SELECTED"))
         {

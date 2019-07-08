@@ -732,20 +732,9 @@ private:
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
     int numTrackNavigators_ = 0;
-    
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> folderTracks_;
     
-    bool IsTrackVisible(MediaTrack* track)
-    {
-        if(followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINMIXER"))
-            return true;
-        else if( ! followMCP_ && DAW::GetMediaTrackInfo_Value(track, "B_SHOWINTCP"))
-            return true;
-        else
-            return false;
-    }
-
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     

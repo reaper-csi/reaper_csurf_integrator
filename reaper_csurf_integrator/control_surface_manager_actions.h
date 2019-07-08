@@ -70,7 +70,7 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 1; i <= page->GetNumTracks(); i++)
+            for(int i = 0; i < page->GetNumTracks(); i++)
                 if(DAW::GetMediaTrackInfo_Value(page->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
@@ -82,8 +82,8 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > page->GetNumTracks())
-                trackIndex = page->GetNumTracks();
+            if(trackIndex > page->GetNumTracks() - 1)
+                trackIndex = page->GetNumTracks() - 1;
             
             DAW::SetOnlyTrackSelected(page->GetTrackFromId(trackIndex));
         }
