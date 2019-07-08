@@ -1158,7 +1158,7 @@ MediaTrack* SelectedTrackNavigator::GetTrack()
     if(DAW::CountSelectedTracks(nullptr) != 1)
         return nullptr;
     
-    for(int i = 1; i <= page_->GetNumTracks(); i++)
+    for(int i = 0; i < page_->GetNumTracks(); i++)
     {
         MediaTrack* track = page_->GetTrackFromId(i);
         
@@ -1368,123 +1368,7 @@ void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
 
 void TrackNavigationManager::TrackListChanged()
 {
-    // GAW TBD -- build the track list based on MCP/TCP and Folders
-    
-    if(trackPointers_ != nullptr)
-        delete[] trackPointers_;
-
-    
-    
-    
-  
-    int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-    
-    //trackGUIDs_.clear();
-    //trackSendGUIDs_.clear();
-    
-    
-    //trackPointers_ = new MediaTrack* [DAW::CSurf_NumTracks(followMCP_)];
-    
-    //for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-    //{
-        //trackPointers_[i] = GetTrackFromId(i);
-        /*
-        MediaTrack* track = GetTrackFromId(i);
-        
-        string trackGUID = GetTrackGUID(track);
-        
-        trackGUIDs_.push_back(trackGUID);
-        
-        int numSends = DAW::GetTrackNumSends(track, 0);
-        
-        if(numSends)
-            for(int j = 0; j < numSends; j++)
-                trackSendGUIDs_[trackGUID].push_back(trackGUID);
-         */
-    //}
-    
-    int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-    
-    //char msgBuffer[250];
-    //sprintf(msgBuffer, "%d microseconds\n", duration);
-    //DAW::ShowConsoleMsg(msgBuffer);
-
-    
-    //int currentNumVisibleTracks = 0;
-    
-    //for(int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-        //if(IsTrackVisible(DAW::CSurf_TrackFromID(i, followMCP_)))
-            //currentNumVisibleTracks++;
-    
-    //if(currentNumVisibleTracks != previousNumVisibleTracks_)
-    //{
-        //if(previousTrackList_ != nullptr)
-            //delete[] previousTrackList_;
-        
-        //previousNumVisibleTracks_ = currentNumVisibleTracks;
-        //previousTrackList_ = new string [currentNumVisibleTracks];
-        
-        //for(int i = 0; i < currentNumVisibleTracks; i++)
-            //previousTrackList_[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
-/*
-        TrackNavigator* navigator = nullptr;
-        char buffer[BUFSZ];
-        for(int i = 0; i < numTrackNavigators_; i++)
-        {
-            navigator = numTrackNavigators_[i];
-            
-            if(DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_) == nullptr) // track has been removed
-            {
-                page_->TrackHasBeenRemoved(navigator->GetTrackGUID());
- 
-                if(navigator->GetIsPinned())
-                {
-                    navigator->SetIsPinned(false);
-                    navigator->SetTrackGUID("");
-                    
-                    // GAW remove this from pinned tracks list in project
-                    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "Channel" + to_string(i + 1)).c_str(), buffer, sizeof(buffer)))
-                    {
-                        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "Channel" + to_string(i + 1)).c_str(), "");
-                        DAW::MarkProjectDirty(nullptr);
-                    }
-                }
- 
-            }
-        }
-*/
-
-    //}
-    //else if(currentNumVisibleTracks == previousNumVisibleTracks_)
-    //{
-        //string *currentTrackList = new string [currentNumVisibleTracks];
-        //for(int i = 0; i < currentNumVisibleTracks; i++)
-            //currentTrackList[i] = page_->GetTrackGUID(DAW::CSurf_TrackFromID(i, followMCP_));
-        
-        //if(memcmp(previousTrackList_, currentTrackList, currentNumVisibleTracks * sizeof(MediaTrack*)))
-        //{
-            //if(previousTrackList_ != nullptr)
-                //delete[] previousTrackList_;
-            //previousTrackList_ = currentTrackList;
-            
-            //int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-            
-            //char msgBuffer[250];
-            //sprintf(msgBuffer, "%d Track Count same, Tracks are differnt \n", duration);
-            //DAW::ShowConsoleMsg(msgBuffer);
-
-            
-            //return;
-        //}
-        //else
-        //{
-            //delete[]currentTrackList;
-            //return;
-        //}
-    //}
-    
-    //return;
+    // GAW TBD -- Future support for pinned tracks here
 }
 
 void TrackNavigationManager::AdjustTrackBank(int stride)
@@ -1498,10 +1382,10 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     
     trackOffset_ += stride;
     
-    if(trackOffset_ <  1)
-        trackOffset_ =  1;
+    if(trackOffset_ <  0)
+        trackOffset_ =  0;
     
-    int top = numTracks - numTrackNavigators_ + 1;
+    int top = numTracks - numTrackNavigators_;
     
     if(trackOffset_ >  top)
         trackOffset_ = top;

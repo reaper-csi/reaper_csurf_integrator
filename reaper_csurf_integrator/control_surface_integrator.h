@@ -729,16 +729,14 @@ private:
     int trackColourGreenValue_ = 0;
     int trackColourBlueValue_ = 0;
     map<string, int> trackColours_;
-    int trackOffset_ = 1;
+    int trackOffset_ = 0;
+    int folderTrackOffset_ = 0;
     string *previousTrackList_ = nullptr;
     int previousNumVisibleTracks_ = 0;
     int numTrackNavigators_ = 0;
     
-    vector<string> trackGUIDs_;
-    map<string, vector<string>> trackSendGUIDs_;
-    
-    MediaTrack* *trackPointers_ = nullptr;
-    
+    vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> folderTracks_;
     
     bool IsTrackVisible(MediaTrack* track)
     {
@@ -755,9 +753,23 @@ public:
     
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
-    int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
-    MediaTrack* GetTrack(int channelNumber) { return DAW::CSurf_TrackFromID(channelNumber + trackOffset_, followMCP_); }
-    MediaTrack* GetTrackFromId(int trackNumber) { return DAW::CSurf_TrackFromID(trackNumber, followMCP_); }
+    int  GetNumTracks() { return tracks_.size(); }
+    
+    MediaTrack* GetTrack(int channelNumber)
+    {
+        if(tracks_.size() > channelNumber + trackOffset_)
+            return tracks_[channelNumber + trackOffset_];
+        else
+            return nullptr;
+    }
+    
+    MediaTrack* GetTrackFromId(int trackNumber)
+    {
+        if(tracks_.size() > trackNumber)
+            return tracks_[trackNumber];
+        else
+            return nullptr;
+    }
     
     void Init();
     void AdjustTrackBank(int stride);
@@ -765,6 +777,35 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
 
+    void Run()
+    {
+        int flags;
+        MediaTrack* track;
+
+        tracks_.clear();
+        folderTracks_.clear();
+        
+        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        {
+            track = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            if(DAW::IsTrackVisible(track, followMCP_))
+            {
+                tracks_.push_back(track);
+                
+                DAW::GetTrackInfo(track, &flags);
+
+                if(flags & 0x01) // folder Track
+                    folderTracks_.push_back(track);
+            }
+        }
+        
+        int top = GetNumTracks() - numTrackNavigators_;
+        
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
+    }
+    
     int AddTrackNavigator()
     {
         int currentOffset = numTrackNavigators_;
@@ -815,7 +856,7 @@ public:
 
         MediaTrack* track = nullptr;
         
-        for(int i = 1; i <= GetNumTracks(); i++)
+        for(int i = 0; i < GetNumTracks(); i++)
         {
             if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
             {
@@ -1083,6 +1124,8 @@ public:
     
     void Run()
     {
+        trackNavigationManager_->Run();
+        
         for(auto surface : surfaces_)
             surface->Run();
     }
