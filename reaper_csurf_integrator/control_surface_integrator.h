@@ -752,7 +752,8 @@ public:
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return tracks_.size(); }
-    
+    int  GetNumFolderTracks() { return folderTracks_.size(); }
+
     MediaTrack* GetTrack(int channelNumber)
     {
         if(tracks_.size() > channelNumber + trackOffset_)
@@ -799,9 +800,13 @@ public:
         }
         
         int top = GetNumTracks() - numTrackNavigators_;
-        
         if(trackOffset_ >  top)
             trackOffset_ = top;
+        
+        top = GetNumFolderTracks();
+        if(folderTrackOffset_ >  top)
+            folderTrackOffset_ = top;
+
     }
     
     int AddTrackNavigator()
