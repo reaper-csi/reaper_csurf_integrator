@@ -731,8 +731,6 @@ private:
     map<string, int> trackColours_;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
-    string *previousTrackList_ = nullptr;
-    int previousNumVisibleTracks_ = 0;
     int numTrackNavigators_ = 0;
     
     vector<MediaTrack*> tracks_;
