@@ -1517,6 +1517,20 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 
 
 /*
+int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+
+int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+
+
+char msgBuffer[250];
+
+sprintf(msgBuffer, "%d microseconds\n", duration);
+DAW::ShowConsoleMsg(msgBuffer);
+
+*/
+
+
+/*
  // subtracts b<T> from a<T>
  template <typename T>
  static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
