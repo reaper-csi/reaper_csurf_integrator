@@ -1069,6 +1069,12 @@ void Widget::DoRelativeAction(double value)
         widgetActionContextManager_->DoAction(lastValue_ + value);
 }
 
+void Widget::SetIsTouched(bool isTouched)
+{
+    if(widgetActionContextManager_ != nullptr)
+        widgetActionContextManager_->SetIsTouched(isTouched);
+}
+
 void Widget::ClearCache()
 {
     for(auto feedbackProcessor : feedbackProcessors_)

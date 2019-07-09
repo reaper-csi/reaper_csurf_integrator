@@ -93,6 +93,8 @@ public:
     void DoAction(double value);
     void DoRelativeAction(double value);
 
+    void SetIsTouched(bool isTouched);
+    
     void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
@@ -224,7 +226,7 @@ class TrackNavigator
 {
 private:
     int offset_ = 0;
-    bool trackIsTouched_ = false;
+    bool isChannelTouched_ = false;
     
 protected:
     Page* page_ = nullptr;
@@ -235,6 +237,8 @@ public:
     virtual ~TrackNavigator() {}
     
     virtual MediaTrack* GetTrack();
+    void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -694,6 +698,12 @@ public:
     void Activate();
     void Activate(int contextIndex);
     void Activate(MediaTrack* track, int contextIndex);
+
+    void SetIsTouched(bool isTouched)
+    {
+        if(trackNavigator_ != nullptr)
+            trackNavigator_->SetTouchState((isTouched));
+    }    
     
     void AddActionContext(string modifiers, ActionContext* context)
     {
@@ -755,6 +765,15 @@ public:
             return nullptr;
     }
     
+    bool IsTrackTouched(MediaTrack* track)
+    {
+        for(int i = 0; i < trackNavigators_.size(); i++)
+            if(GetTrack(i) == track && trackNavigators_[i]->GetIsChannelTouched())
+                return true;
+
+        return false;
+    }
+        
     void Init();
     void AdjustTrackBank(int stride);
     void OnTrackSelection(MediaTrack* track);
@@ -1086,8 +1105,6 @@ private:
     bool isOption_ = false;
     bool isControl_ = false;
     bool isAlt_ = false;
-    
-    vector<MediaTrack*> touchedTracks_;
 
     map<string, map<MediaTrack*, CSI_TrackInfo>> CSITrackSlotInfo_;
 
@@ -1136,22 +1153,9 @@ public:
 
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        for(auto touchedTrack : touchedTracks_)
-            if(track == touchedTrack)
-                return true;
-        
-        return false;
+        return trackNavigationManager_->IsTrackTouched(track);
     }
-    
-    void SetTouchState(MediaTrack* track,  bool touched)
-    {
-   
-        if(touched)
-            touchedTracks_.push_back(track);
-        else
-            touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), track), touchedTracks_.end());
-    }
-    
+
     int GetTrackSlotIndex(string slotName, MediaTrack* track)
     {
         if(CSITrackSlotInfo_.count(slotName) < 1)
@@ -1220,8 +1224,6 @@ public:
     
     void TrackHasBeenRemoved(MediaTrack* removedTrack)
     {
-        touchedTracks_.erase(remove(touchedTracks_.begin(), touchedTracks_.end(), removedTrack), touchedTracks_.end());
-
             for(auto [customModifierName, trackInfo] : CSITrackSlotInfo_)
                 if(CSITrackSlotInfo_[customModifierName].count(removedTrack) > 0)
                 {
@@ -1291,8 +1293,7 @@ public:
     
     void AdjustTrackBank(int stride)
     {
-        if(touchedTracks_.size() == 0)
-            trackNavigationManager_->AdjustTrackBank(stride);
+        trackNavigationManager_->AdjustTrackBank(stride);
     }
     
     void OnTrackSelectionBySurface(ControlSurface* surface, MediaTrack* track)
