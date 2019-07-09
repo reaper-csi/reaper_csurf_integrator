@@ -224,6 +224,7 @@ class TrackNavigator
 {
 private:
     int offset_ = 0;
+    bool trackIsTouched_ = false;
     
 protected:
     Page* page_ = nullptr;
@@ -240,8 +241,6 @@ public:
 class SelectedTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    
 public:
     SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~SelectedTrackNavigator() {}
@@ -253,9 +252,6 @@ public:
 class FocusedFXTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Page* page_ = nullptr;
-    
 public:
     FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
     virtual ~FocusedFXTrackNavigator() {}
@@ -731,7 +727,7 @@ private:
     map<string, int> trackColours_;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
-    int numTrackNavigators_ = 0;
+    vector<TrackNavigator*> trackNavigators_;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> folderTracks_;
     
@@ -788,7 +784,7 @@ public:
             }
         }
         
-        int top = GetNumTracks() - numTrackNavigators_;
+        int top = GetNumTracks() - trackNavigators_.size();
         if(trackOffset_ >  top)
             trackOffset_ = top;
         
@@ -797,13 +793,13 @@ public:
             folderTrackOffset_ = top;
     }
     
-    int AddTrackNavigator()
+    TrackNavigator* AddTrackNavigator()
     {
-        int currentOffset = numTrackNavigators_;
+        int offset = trackNavigators_.size();
         
-        numTrackNavigators_++;
+        trackNavigators_.push_back(new TrackNavigator(page_, offset));
         
-        return currentOffset;
+        return trackNavigators_[offset];
     }
     
     void EnterPage()
@@ -1288,7 +1284,7 @@ public:
     MediaTrack* GetTrack(int channelNumber) { return trackNavigationManager_->GetTrack(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
 
-    int AddTrackNavigator()
+    TrackNavigator* AddTrackNavigator()
     {
         return trackNavigationManager_->AddTrackNavigator();
     }
