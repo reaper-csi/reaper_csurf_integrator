@@ -295,7 +295,7 @@ map<string, TrackNavigator*> trackNavigators;
 static TrackNavigator* TrackNavigatorForChannel(int channelNum, string channelName, Page* page)
 {
     if(trackNavigators.count(channelName) < 1)
-        trackNavigators[channelName] = new TrackNavigator(page, page->AddTrackNavigator());
+        trackNavigators[channelName] = page->AddTrackNavigator();
     
     return trackNavigators[channelName];
 }
@@ -1343,7 +1343,7 @@ void TrackNavigationManager::OnTrackSelection(MediaTrack* track)
     {
         // Make sure selected track is visble on the control surface
         int low = trackOffset_;
-        int high = low + numTrackNavigators_ - 1;
+        int high = low + trackNavigators_.size() - 1;
         
         int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
         
@@ -1375,7 +1375,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int numTracks = GetNumTracks();
 
-    if(numTracks <= numTrackNavigators_)
+    if(numTracks <= trackNavigators_.size())
         return;
     
     int previousTrackOffset = trackOffset_;
@@ -1385,7 +1385,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     if(trackOffset_ <  0)
         trackOffset_ =  0;
     
-    int top = numTracks - numTrackNavigators_;
+    int top = numTracks - trackNavigators_.size();
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
