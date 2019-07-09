@@ -649,7 +649,7 @@ class SetTrackTouch : public Action
 public:
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
-        widget->GetSurface()->GetPage()->SetTouchState(track, value == 0 ? false : true);
+        widget->SetIsTouched(value == 0 ? false : true);
     }
 };
 
@@ -671,7 +671,8 @@ class SetMasterTrackTouch : public Action
 public:
     void Do(Page* page, double value) override
     {
-        page->SetTouchState(DAW::GetMasterTrack(0), value == 0 ? false : true);
+        // GAW TBD -- if anyone ever asks for it :)
+        //page->SetTouchState(DAW::GetMasterTrack(0), value == 0 ? false : true);
     }
 };
 
