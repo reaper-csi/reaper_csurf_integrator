@@ -116,7 +116,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            action_->RequestUpdate(this, track, param_);
+            RequestTrackUpdateWithIntParam(track, param_);
         else
             widget_->Reset();
     }
@@ -228,7 +228,7 @@ public:
 class GlobalActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     int param_ = 0;
    
 public:
@@ -237,15 +237,10 @@ public:
         if(params.size() > 1)
             param_= atol(params[1].c_str());
     }
-    
-    virtual void RequestUpdate() override
-    {
-        action_->RequestUpdate(this, param_);
-    }
-    
+        
     virtual void DoAction(double value) override
     {
-        action_->Do(page_, param_);
+        Do(page_, param_);
     }
 };
 
