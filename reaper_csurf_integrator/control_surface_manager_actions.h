@@ -7,7 +7,7 @@
 #ifndef control_surface_manager_actions_h
 #define control_surface_manager_actions_h
 
-#include "control_surface_action_contexts.h"
+#include "control_surface_integrator.h"
 
 extern Manager* TheManager;
 
