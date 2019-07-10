@@ -89,15 +89,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackVolume : public ActionOld
+class MasterTrackVolume : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    MasterTrackVolume(WidgetActionManager* manager) : GlobalAction(manager) {}
+    
+    void RequestUpdate() override
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(DAW::GetMasterTrack(0), &vol, &pan);
-        context->SetWidgetValue(context->GetWidget(), volToNormalized(vol));
+        SetWidgetValue(widget_, volToNormalized(vol));
     }
     
     void Do(Page* page, double value) override
@@ -429,10 +431,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Rewind : public ActionOld
+class Rewind : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    Rewind(WidgetActionManager* manager) : GlobalAction(manager) { }
+
     void Do(Page* page, double value) override
     {
         DAW::CSurf_OnRew(1);
@@ -440,10 +444,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FastForward : public ActionOld
+class FastForward : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    FastForward(WidgetActionManager* manager) : GlobalAction(manager) { }
+
     void Do(Page* page, double value) override
     {
         DAW::CSurf_OnFwd(1);
@@ -451,17 +457,19 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Play : public ActionOld
+class Play : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    Play(WidgetActionManager* manager) : GlobalAction(manager) { }
+
+    void RequestUpdate() override
     {
         int playState = DAW::GetPlayState();
         if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
             playState = 1;
         else playState = 0;
-        context->SetWidgetValue(context->GetWidget(), playState);
+        SetWidgetValue(widget_, playState);
     }
     
     void Do(Page* page, double value) override
@@ -471,18 +479,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Stop : public ActionOld
+class Stop : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    Stop(WidgetActionManager* manager) : GlobalAction(manager) { }
+
+    void RequestUpdate() override
     {
         int stopState = DAW::GetPlayState();
         if(stopState == 0 || stopState == 2 || stopState == 6) // stopped or paused or paused whilst recording
             stopState = 1;
         else stopState = 0;
         
-        context->SetWidgetValue(context->GetWidget(), stopState);
+        SetWidgetValue(widget_, stopState);
     }
     
     void Do(Page* page, double value) override
@@ -492,18 +502,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Record : public ActionOld
+class Record : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    Record(WidgetActionManager* manager) : GlobalAction(manager) { }
+
+    void RequestUpdate() override
     {
         int recordState = DAW::GetPlayState();
         if(recordState == 5 || recordState == 6) // recording or paused whilst recording
             recordState = 1;
         else recordState = 0;
         
-        context->SetWidgetValue(context->GetWidget(), recordState);
+        SetWidgetValue(widget_, recordState);
     }
     
     void Do(Page* page, double value) override
@@ -674,10 +686,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetTrackTouch : public ActionOld
+class SetTrackTouch : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    SetTrackTouch(WidgetActionManager* manager) : GlobalAction(manager) {}
+
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
         widget->SetIsTouched(value == 0 ? false : true);
@@ -696,10 +710,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetMasterTrackTouch : public ActionOld
+class SetMasterTrackTouch : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    SetMasterTrackTouch(WidgetActionManager* manager) : GlobalAction(manager) {}
+
     void Do(Page* page, double value) override
     {
         // GAW TBD -- if anyone ever asks for it :)
@@ -773,24 +789,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TimeDisplay : public ActionOld
+class TimeDisplay : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    TimeDisplay(WidgetActionManager* manager) : GlobalAction(manager) { }
+    
+    void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), 0);
+        SetWidgetValue(widget_, 0);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycleTimeline : public ActionOld
+class CycleTimeline : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    CycleTimeline(WidgetActionManager* manager) : GlobalAction(manager) {}
+
+    void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), DAW::GetSetRepeatEx(nullptr, -1));
+        SetWidgetValue(widget_, DAW::GetSetRepeatEx(nullptr, -1));
     }
     
     void Do(Page* page, double value) override
