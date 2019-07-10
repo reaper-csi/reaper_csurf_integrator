@@ -471,7 +471,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 
                 if(params.size() > 0 && widget != nullptr)
                 {
-                    if(TheManager->IsActionContextAvailable(params[0]))
+                    if(TheManager->IsActionAvailable(params[0]))
                     {
                         
                         if(widgetActionContextManagerForWidget.count(widget) < 1)
@@ -488,7 +488,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
                         }
                         
-                        Action* context = TheManager->GetActionContext(widgetActionContextManagerForWidget[widget], params);
+                        Action* context = TheManager->GetAction(widgetActionContextManagerForWidget[widget], params);
 
                         // If there is a custom slot, ensure there is a wrapper (don't forget to account for modifiers)
                         // then add custom slot wrapper context to contextManager
@@ -499,7 +499,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             
                             if(customSlotContexts.count(zoneName) < 1 || customSlotContexts[zoneName].count(customSlotName) < 1 || customSlotContexts[zoneName][customSlotName].count(modifiers) < 1)
                             {
-                                customSlotContexts[zoneName][customSlotName][modifiers] = new TrackSlotCycleContext(widgetActionContextManagerForWidget[widget], new ActionOld(), customSlotName);
+                                customSlotContexts[zoneName][customSlotName][modifiers] = new TrackSlotCycleContext(widgetActionContextManagerForWidget[widget], customSlotName);
                                 
                                 widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, customSlotContexts[zoneName][customSlotName][modifiers]);
                             }
@@ -685,16 +685,16 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Manager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Manager::InitActionContextDictionary()
+void Manager::InitActionDictionary()
 {
-    actionContexts_["NoAction"] = [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager); };
-    actionContexts_["Reaper"] = [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
-    actionContexts_["FXParam"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
-    actionContexts_["FXParamNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(manager, params); };
-    actionContexts_["FXParamValueDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(manager, params); };
-    //actionContexts_["FXGainReductionMeter"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackAction(manager, actions_[params[0]]); };
-    actionContexts_["TrackVolume"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackVolume(manager); };
-    //actionContexts_["MasterTrackVolume"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
+    actions_["NoAction"] = [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager); };
+    actions_["Reaper"] = [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
+    actions_["FXParam"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
+    actions_["FXParamNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(manager, params); };
+    actions_["FXParamValueDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(manager, params); };
+    //actionContexts_["FXGainReductionMeter"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackAction(manager, actions_[params[0]]); }; // GAW TBD should be a FXParamValueDisplay or the like
+    actions_["TrackVolume"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackVolume(manager); };
+    actions_["MasterTrackVolume"] = [this](WidgetActionManager* manager, vector<string> params) { return new MasterTrackVolume(manager); };
     //actionContexts_["TrackSendVolume"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
     //actionContexts_["TrackSendPan"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
     //actionContexts_["TrackSendMute"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
@@ -702,53 +702,49 @@ void Manager::InitActionContextDictionary()
     //actionContexts_["TrackSendPrePost"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
     //actionContexts_["TrackPan"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackActionWithIntFeedbackParam(manager, actions_[params[0]], params); };
     //actionContexts_["TrackPanWidth"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackActionWithIntFeedbackParam(manager, actions_[params[0]], params); };
-    actionContexts_["TrackNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackNameDisplay(manager); };
-    actionContexts_["TrackVolumeDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackVolumeDisplay(manager); };
+    actions_["TrackNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackNameDisplay(manager); };
+    actions_["TrackVolumeDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackVolumeDisplay(manager); };
     //actionContexts_["TrackSendNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
     //actionContexts_["TrackSendVolumeDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendAction(manager, actions_[params[0]]); };
-    actionContexts_["TrackPanDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackPanDisplay(manager); };
-    actionContexts_["TrackPanWidthDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackPanWidthDisplay(manager); };
-    //actionContexts_["TimeDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Rewind"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["FastForward"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Play"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Stop"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Record"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    actionContexts_["TrackSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSelect(manager); };
-    actionContexts_["TrackUniqueSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackUniqueSelect(manager); };
+    actions_["TrackPanDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackPanDisplay(manager); };
+    actions_["TrackPanWidthDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackPanWidthDisplay(manager); };
+    actions_["TimeDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new TimeDisplay(manager); };
+    actions_["Rewind"] = [this](WidgetActionManager* manager, vector<string> params) { return new Rewind(manager); };
+    actions_["FastForward"] = [this](WidgetActionManager* manager, vector<string> params) { return new FastForward(manager); };
+    actions_["Play"] = [this](WidgetActionManager* manager, vector<string> params) { return new Play(manager); };
+    actions_["Stop"] = [this](WidgetActionManager* manager, vector<string> params) { return new Stop(manager); };
+    actions_["Record"] = [this](WidgetActionManager* manager, vector<string> params) { return new Record(manager); };
+    actions_["TrackSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSelect(manager); };
+    actions_["TrackUniqueSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackUniqueSelect(manager); };
     //actionContexts_["MasterTrackUniqueSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager); };
-    actionContexts_["TrackRangeSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackRangeSelect(manager); };
-    actionContexts_["TrackRecordArm"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackRecordArm(manager); };
-    actionContexts_["TrackMute"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackMute(manager); };
-    actionContexts_["TrackSolo"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSolo(manager); };
-    //actionContexts_[TrackTouch] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackAction(manager, actions_[params[0]]); };
-    //actionContexts_["MasterTrackTouch"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["CycleTimeline"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
+    actions_["TrackRangeSelect"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackRangeSelect(manager); };
+    actions_["TrackRecordArm"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackRecordArm(manager); };
+    actions_["TrackMute"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackMute(manager); };
+    actions_["TrackSolo"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackSolo(manager); };
+    actions_[TrackTouch] = [this](WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(manager); };
+    actions_["MasterTrackTouch"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetMasterTrackTouch(manager); };
+    actions_["CycleTimeline"] = [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeline(manager); };
     //actionContexts_["TrackOutputMeter"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackActionWithIntFeedbackParam(manager, actions_[params[0]], params); };
-    actionContexts_["TrackOutputMeterAverageLR"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterAverageLR(manager); };
-    actionContexts_["TrackOutputMeterMaxPeakLR"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterMaxPeakLR(manager); };
+    actions_["TrackOutputMeterAverageLR"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterAverageLR(manager); };
+    actions_["TrackOutputMeterMaxPeakLR"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterMaxPeakLR(manager); };
     //actionContexts_["MasterTrackOutputMeter"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
-    //actionContexts_["SetShowFXWindows"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["SetScrollLink"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["CycleTimeDisplayModes"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["NextPage"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
+    actions_["SetShowFXWindows"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetShowFXWindows(manager); };
+    actions_["SetScrollLink"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetScrollLink(manager); };
+    actions_["CycleTimeDisplayModes"] = [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeDisplayModes(manager); };
+    actions_["NextPage"] = [this](WidgetActionManager* manager, vector<string> params) { return new GoNextPage(manager); };
     //actionContexts_["GoPage"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithStringParam(manager, actions_[params[0]], params); };
-    //actionContexts_["ToggleZone"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceActionWithStringParam(manager, actions_[params[0]], params); };
     //actionContexts_["GoZone"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceActionWithStringParam(manager, actions_[params[0]], params); };
-    //actionContexts_["GoSubZone"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceActionWith2StringParams(manager, actions_[params[0]], params); };
     //actionContexts_["SelectTrackRelative"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
     //actionContexts_["TrackBank"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
     //actionContexts_["TrackSendBank"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
-    //actionContexts_["PinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
-    //actionContexts_["UnpinSelectedTracks"] = [this](WidgetActionContextManager* manager, vector<string> params) { return new GlobalContext(manager, actions_[params[0]]); };
-    //actionContexts_["Shift"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Option"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Control"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["Alt"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
+    actions_["Shift"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetShift(manager); };
+    actions_["Option"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetOption(manager); };
+    actions_["Control"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetControl(manager); };
+    actions_["Alt"] = [this](WidgetActionManager* manager, vector<string> params) { return new SetAlt(manager); };
     //actionContexts_["TrackCycle"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackActionWithStringAndIntParams(manager, actions_[params[0]], params); };
-    //actionContexts_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
-    //actionContexts_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAction(manager, actions_[params[0]]); };
+    actions_["MapSelectedTrackSendsToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
+    actions_["MapSelectedTrackFXToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
+    actions_["MapFocusedTrackFXToWidgets"] = [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
     //actionContexts_["ToggleMapSends"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceAction(manager, actions_[params[0]]); };
     //actionContexts_["TrackAutoMode"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
     //actionContexts_["GlobalAutoMode"] = [this](WidgetActionManager* manager, vector<string> params) { return new GlobalActionWithIntParam(manager, actions_[params[0]], params); };
