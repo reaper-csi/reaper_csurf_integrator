@@ -10,14 +10,14 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackContext : public ActionContext
+class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     Widget* widget_ = nullptr;
 
 public:
-    TrackContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
+    TrackAction(WidgetActionManager* manager, ActionOld* action) : Action(manager, action)
     {
         widget_ = GetWidget();
     }
@@ -38,12 +38,12 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSlotCycleContext : public TrackContext
+class TrackSlotCycleContext : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string customSlotName_ = "";
-    vector<ActionContext*> actionContexts_;
+    vector<Action*> actionContexts_;
     
     int GetCurrentIndex()
     {
@@ -54,9 +54,9 @@ private:
     }
     
 public:
-    TrackSlotCycleContext(WidgetActionContextManager* manager, Action* action, string customModifierName) : TrackContext(manager, action), customSlotName_(customModifierName) {}
+    TrackSlotCycleContext(WidgetActionManager* manager, ActionOld* action, string customModifierName) : TrackAction(manager, action), customSlotName_(customModifierName) {}
     
-    virtual void AddActionContext(ActionContext* actionContext) override
+    virtual void AddActionContext(Action* actionContext) override
     {
         actionContexts_.push_back(actionContext);
     }
@@ -77,14 +77,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendContext : public TrackContext
+class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     int sendsIndex_ = 0;
     MediaTrack* track_ = nullptr;
 
 public:
-    TrackSendContext(WidgetActionContextManager* manager, Action* action) : TrackContext(manager, action) {}
+    TrackSendAction(WidgetActionManager* manager, ActionOld* action) : TrackAction(manager, action) {}
     
     virtual void SetIndex(int sendsIndex) override { sendsIndex_ = sendsIndex; }
     virtual void SetTrack(MediaTrack* track) override { track_ = track; }
@@ -105,14 +105,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackContextWithIntFeedbackParam : public TrackContext
+class TrackActionWithIntFeedbackParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
     
 public:
-    TrackContextWithIntFeedbackParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
+    TrackActionWithIntFeedbackParam(WidgetActionManager* manager, ActionOld* action, vector<string> params) : TrackAction(manager, action)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -134,7 +134,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXContext : public TrackContext
+class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -143,7 +143,7 @@ private:
     int fxIndex_ = 0;
 
 public:
-    FXContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
+    FXAction(WidgetActionManager* manager, ActionOld* action, vector<string> params) : TrackAction(manager, action)
     {
         fxParamName_ = params[1];
         
@@ -180,7 +180,7 @@ public:
 //////// The next Contexts don't use the double value, so they can safely override all flavours
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackContextWithStringAndIntParams : public TrackContext
+class TrackActionWithStringAndIntParams : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -188,7 +188,7 @@ private:
     int intParam_ = 0;
     
 public:
-    TrackContextWithStringAndIntParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : TrackContext(manager, action)
+    TrackActionWithStringAndIntParams(WidgetActionManager* manager, ActionOld* action, vector<string> params) : TrackAction(manager, action)
     {
         if(params.size() > 2)
         {
@@ -214,11 +214,11 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalContext : public ActionContext
+class GlobalAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action) {}
+    GlobalAction(WidgetActionManager* manager, ActionOld* action) : Action(manager, action) {}
     
     virtual void RequestUpdate() override
     {
@@ -232,14 +232,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ReaperActionContext : public ActionContext
+class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int commandId_ = 0;
     
 public:
-    ReaperActionContext(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    ReaperAction(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {
         if(params.size() > 1)
         {
@@ -259,24 +259,24 @@ public:
     
     virtual void RequestUpdate() override
     {
-        action_->RequestUpdate(this, commandId_);
+        SetWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(commandId_);
+        DAW::SendCommandMessage(commandId_);
     }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalContextWithIntParam : public ActionContext
+class GlobalActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     int param_ = 0;
    
 public:
-    GlobalContextWithIntParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    GlobalActionWithIntParam(WidgetActionManager* manager, ActionOld* action, vector<string> params) : Action(manager, action)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -294,14 +294,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalContextWithStringParam : public ActionContext
+class GlobalActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string param_ = "";
     
 public:
-    GlobalContextWithStringParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    GlobalActionWithStringParam(WidgetActionManager* manager, ActionOld* action, vector<string> params) : Action(manager, action)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -319,14 +319,14 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceContext : public ActionContext
+class SurfaceAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     ControlSurface* surface_ = nullptr;
     
 public:
-    SurfaceContext(WidgetActionContextManager* manager, Action* action) : ActionContext(manager, action)
+    SurfaceAction(WidgetActionManager* manager, ActionOld* action) : Action(manager, action)
     {
         surface_ = GetWidget()->GetSurface();
     }
@@ -338,7 +338,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceContextWithStringParam : public ActionContext
+class SurfaceActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -346,7 +346,7 @@ private:
     string param_ = "";
     
 public:
-    SurfaceContextWithStringParam(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    SurfaceActionWithStringParam(WidgetActionManager* manager, ActionOld* action, vector<string> params) : Action(manager, action)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -361,7 +361,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceContextWith2StringParams : public ActionContext
+class SurfaceActionWith2StringParams : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -370,7 +370,7 @@ private:
     string param2_ = "";
     
 public:
-    SurfaceContextWith2StringParams(WidgetActionContextManager* manager, Action* action, vector<string> params) : ActionContext(manager, action)
+    SurfaceActionWith2StringParams(WidgetActionManager* manager, ActionOld* action, vector<string> params) : Action(manager, action)
     {
         if(params.size() > 2)
         {

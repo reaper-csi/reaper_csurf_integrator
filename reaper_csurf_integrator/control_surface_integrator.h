@@ -61,7 +61,7 @@ extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
 class FeedbackProcessor;
-class WidgetActionContextManager;
+class WidgetActionManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +70,7 @@ private:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
 
-    WidgetActionContextManager* widgetActionContextManager_ = nullptr;
+    WidgetActionManager* widgetActionContextManager_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
     
     double lastValue_ = 0.0;
@@ -95,7 +95,7 @@ public:
 
     void SetIsTouched(bool isTouched);
     
-    void SetWidgetActionContextManager(WidgetActionContextManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
+    void SetWidgetActionContextManager(WidgetActionManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
@@ -187,7 +187,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<WidgetActionContextManager*> actionContextManagers_;
+    vector<WidgetActionManager*> actionContextManagers_;
     vector<Zone*> includedZones_;
 
 protected:
@@ -207,7 +207,7 @@ public:
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
-    virtual void AddActionContextManager(WidgetActionContextManager* manager)
+    virtual void AddActionContextManager(WidgetActionManager* manager)
     {
         actionContextManagers_.push_back(manager);
     }
@@ -225,7 +225,7 @@ class TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int offset_ = 0;
+    int channelNum_ = 0;
     bool isChannelTouched_ = false;
     
 protected:
@@ -233,7 +233,7 @@ protected:
     TrackNavigator(Page* page) : page_(page) {}
     
 public:
-    TrackNavigator(Page* page, int offset) : page_(page), offset_(offset) {}
+    TrackNavigator(Page* page, int channelNum) : page_(page), channelNum_(channelNum) {}
     virtual ~TrackNavigator() {}
     
     virtual MediaTrack* GetTrack();
@@ -585,21 +585,21 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionContext;
-class WidgetActionContextManager;
+class Action;
+class WidgetActionManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
+class ActionOld
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Action() {}
+    virtual ~ActionOld() {}
     
-    virtual void RequestUpdate(ActionContext* context);
-    virtual void RequestUpdate(ActionContext* context, int commandId) { RequestUpdate(context); }
-    virtual void RequestUpdate(ActionContext* context, string param) { RequestUpdate(context); }
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track) { RequestUpdate(context); }
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int param) { RequestUpdate(context); }
-    virtual void RequestUpdate(ActionContext* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context);
+    virtual void RequestUpdate(Action* context, int commandId) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, string param) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
 
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
@@ -609,19 +609,19 @@ public:
     virtual void Do(Page* page, string value) {}
     virtual void Do(Widget* widget, MediaTrack* track, double value) {}
     virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}
-    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionContextManager* manager, string stringParam2, double value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionManager* manager, string stringParam2, double value) {}
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                 
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionContext
+class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     Page* page_ = nullptr;
-    WidgetActionContextManager* widgetActionContextManager_ = nullptr;
-    Action* action_ = nullptr;
+    WidgetActionManager* widgetActionContextManager_ = nullptr;
+    ActionOld* action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
@@ -629,13 +629,18 @@ protected:
     double delayStartTime_ = 0.0;
     
 public:
-    ActionContext(WidgetActionContextManager* widgetActionContextManager, Action* action) : widgetActionContextManager_(widgetActionContextManager), action_(action)
+    Action(WidgetActionManager* widgetActionContextManager, ActionOld* action) : widgetActionContextManager_(widgetActionContextManager), action_(action)
     {
         page_ = GetWidget()->GetSurface()->GetPage();
     }
-    virtual ~ActionContext() {}
     
-    WidgetActionContextManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
+    Action(WidgetActionManager* widgetActionContextManager) : widgetActionContextManager_(widgetActionContextManager)
+    {
+        page_ = GetWidget()->GetSurface()->GetPage();
+    }
+    virtual ~Action() {}
+    
+    WidgetActionManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
@@ -644,14 +649,39 @@ public:
     Widget* GetWidget();
     Page* GetPage() { return page_; }
     
-    virtual void AddActionContext(ActionContext* actionContext) {}
+    virtual void AddActionContext(Action* actionContext) {}
     virtual void SetIndex(int index) {}
     virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
-    virtual void RequestUpdate() {}
+    virtual void RequestUpdate() {  GetWidget()->Reset(); }
     virtual void DoAction(double value) {}
  
+    
+    virtual void RequestUpdate(Action* context) { RequestUpdate(); }
+    virtual void RequestUpdate(Action* context, int commandId) { RequestUpdate(nullptr); }
+    virtual void RequestUpdate(Action* context, string param) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { RequestUpdate(context); }
+    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
+    
+    virtual void Do(double value) {}
+    virtual void Do(Page* page, double value) {}
+    virtual void Do(Page* page, ControlSurface* surface) {}
+    virtual void Do(ControlSurface* surface, string value) {}
+    virtual void Do(ControlSurface* surface, string value1, string value2) {}
+    virtual void Do(Page* page, string value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, double value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}
+    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionManager* manager, string stringParam2, double value) {}
+    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+
+    
+    
+    
+    
+    
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
@@ -667,25 +697,25 @@ public:
         widget->SetValue(value);
     }
     
-    void Activate(WidgetActionContextManager* modifierActionContextManager)
+    void Activate(WidgetActionManager* modifierActionContextManager)
     {
         GetWidget()->SetWidgetActionContextManager(modifierActionContextManager);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionContextManager
+class WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     Widget* widget_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
-    map<string, vector <ActionContext*>> widgetActionContexts_;
+    map<string, vector <Action*>> widgetActionContexts_;
     
     string GetModifiers();
     
 public:
-    WidgetActionContextManager(Widget* widget) : widget_(widget) {}
+    WidgetActionManager(Widget* widget) : widget_(widget) {}
     
     Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
@@ -705,7 +735,7 @@ public:
             trackNavigator_->SetTouchState((isTouched));
     }    
     
-    void AddActionContext(string modifiers, ActionContext* context)
+    void AddActionContext(string modifiers, Action* context)
     {
         widgetActionContexts_[modifiers].push_back(context);
     }
@@ -749,7 +779,7 @@ public:
     int  GetNumTracks() { return tracks_.size(); }
     int  GetNumFolderTracks() { return folderTracks_.size(); }
 
-    MediaTrack* GetTrack(int channelNumber)
+    MediaTrack* GetTrackFromChannel(int channelNumber)
     {
         if(tracks_.size() > channelNumber + trackOffset_)
             return tracks_[channelNumber + trackOffset_];
@@ -768,7 +798,7 @@ public:
     bool IsTrackTouched(MediaTrack* track)
     {
         for(int i = 0; i < trackNavigators_.size(); i++)
-            if(GetTrack(i) == track && trackNavigators_[i]->GetIsChannelTouched())
+            if(GetTrackFromChannel(i) == track && trackNavigators_[i]->GetIsChannelTouched())
                 return true;
 
         return false;
@@ -814,11 +844,11 @@ public:
     
     TrackNavigator* AddTrackNavigator()
     {
-        int offset = trackNavigators_.size();
+        int channelNum = trackNavigators_.size();
         
-        trackNavigators_.push_back(new TrackNavigator(page_, offset));
+        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
         
-        return trackNavigators_[offset];
+        return trackNavigators_[channelNum];
     }
     
     void EnterPage()
@@ -1283,7 +1313,7 @@ public:
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
-    MediaTrack* GetTrack(int channelNumber) { return trackNavigationManager_->GetTrack(channelNumber); }
+    MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
 
     TrackNavigator* AddTrackNavigator()
@@ -1416,8 +1446,8 @@ class Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<string, Action*> actions_;
-    map<string , function<ActionContext*(WidgetActionContextManager* manager, vector<string>)>> actionContexts_;
+    map<string, ActionOld*> actions_;
+    map<string , function<Action*(WidgetActionManager* manager, vector<string>)>> actionContexts_;
     vector <Page*> pages_;
     
     time_t lastTimeCacheCleared = 0;
@@ -1470,7 +1500,7 @@ public:
             return nullptr;
     }
     
-    ActionContext* GetActionContext(WidgetActionContextManager* manager, vector<string> params)
+    Action* GetActionContext(WidgetActionManager* manager, vector<string> params)
     {
         if(actionContexts_.count(params[0]) > 0)
             return actionContexts_[params[0]](manager, params);
