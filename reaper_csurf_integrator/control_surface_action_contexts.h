@@ -124,7 +124,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            action_->Do(widget_, track, value);
+            Do(widget_, track, value);
     }
 };
 
@@ -176,7 +176,7 @@ public:
 };
 
 //////// The next Contexts don't use the double value, so they can safely override all flavours
-
+/*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackActionWithStringAndIntParams : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -207,10 +207,10 @@ public:
     {
         if(MediaTrack* track = widget_->GetTrack())
             if(widgetActionContextManager_ != nullptr)
-                action_->Do(widget_, track, widgetActionContextManager_, stringParam_, intParam_);
+                Do(widget_, track, widgetActionContextManager_, stringParam_, intParam_);
     }
 };
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GlobalAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -258,17 +258,12 @@ public:
             param_ = params[1];
     }
     
-    virtual void RequestUpdate() override
-    {
-        action_->RequestUpdate(this, param_);
-    }
-    
     virtual void DoAction(double value) override
     {
-        action_->Do(page_, param_);
+        Do(page_, param_);
     }
 };
-
+/*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -284,10 +279,10 @@ public:
     
     virtual void DoAction(double value) override
     {
-        action_->Do(page_, surface_);
+        Do(page_, surface_);
     }
 };
-
+*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -302,12 +297,12 @@ public:
         if(params.size() > 1)
             param_ = params[1];
         
-        surface_ = GetWidget()->GetSurface();
+        surface_ = widget_->GetSurface();
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(surface_, param_);
+        Do(surface_, param_);
     }
 };
 
@@ -329,12 +324,12 @@ public:
             param2_ = params[2];
         }
         
-        surface_ = GetWidget()->GetSurface();
+        surface_ = widget_->GetSurface();
     }
     
     virtual void DoAction(double value) override
     {
-        action_->Do(surface_, param1_, param2_);
+        Do(surface_, param1_, param2_);
     }
 };
 #endif /* control_surface_action_contexts_h */
