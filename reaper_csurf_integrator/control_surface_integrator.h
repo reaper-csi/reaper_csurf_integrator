@@ -1077,12 +1077,6 @@ public:
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct CSI_TrackInfo
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    int index = 0;
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
@@ -1096,8 +1090,6 @@ private:
     bool isOption_ = false;
     bool isControl_ = false;
     bool isAlt_ = false;
-
-    map<string, map<MediaTrack*, CSI_TrackInfo>> CSITrackSlotInfo_;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
@@ -1146,31 +1138,6 @@ public:
     {
         return trackNavigationManager_->IsTrackTouched(track);
     }
-
-    int GetTrackSlotIndex(string slotName, MediaTrack* track)
-    {
-        if(CSITrackSlotInfo_.count(slotName) < 1)
-            return 0;
-        else if(CSITrackSlotInfo_[slotName].count(track) < 1)
-            return 0;
-        else
-            return CSITrackSlotInfo_[slotName][track].index;
-    }
-    
-    void CycleTrackSlotIndex(string slotName, MediaTrack* track, int maxSize)
-    {
-        if(CSITrackSlotInfo_.count(slotName) < 1 || CSITrackSlotInfo_[slotName].count(track) < 1)
-                CSITrackSlotInfo_[slotName][track] = CSI_TrackInfo();
-        
-        CSITrackSlotInfo_[slotName][track].index++;
-        
-        if(CSITrackSlotInfo_[slotName][track].index > maxSize - 1)
-            CSITrackSlotInfo_[slotName][track].index = 0;
-        
-        // GAW could save to rpp file here for recall after project reload
-        // could get VERY verbose
-        // big downside - ties project to certain CSI config
-    }
     
     void SetShift(bool value)
     {
@@ -1215,18 +1182,7 @@ public:
     
     void TrackHasBeenRemoved(MediaTrack* removedTrack)
     {
-            for(auto [customModifierName, trackInfo] : CSITrackSlotInfo_)
-                if(CSITrackSlotInfo_[customModifierName].count(removedTrack) > 0)
-                {
-                    CSITrackSlotInfo_[customModifierName].erase(removedTrack);
-                    break;
-                }
 
-            
-            
-
-        
-        
     }
     
     void OnTrackSelection(MediaTrack* track)
