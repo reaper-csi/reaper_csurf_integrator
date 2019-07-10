@@ -657,6 +657,9 @@ public:
     virtual void DoAction(double value) {}
  
     virtual void RequestUpdate() {  GetWidget()->Reset(); }
+    
+    virtual void RequestUpdateForTrack(MediaTrack* track) {}
+    
     /*
     virtual void RequestUpdate(Action* context) { }
     virtual void RequestUpdate(Action* context, int commandId) { }
@@ -1452,7 +1455,6 @@ private:
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
-    void InitActionDictionary();
     void InitActionContextDictionary();
 
     double GetPrivateProfileDouble(string key)

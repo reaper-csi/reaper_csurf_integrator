@@ -27,6 +27,14 @@ public:
         widget_ = GetWidget();
     }
     
+    virtual void RequestUpdate() override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+            RequestUpdateForTrack(track);
+        else
+            widget_->Reset();
+    }
+    
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
