@@ -70,7 +70,7 @@ private:
     ControlSurface* surface_ = nullptr;
     string name_ = "";
 
-    WidgetActionManager* widgetActionContextManager_ = nullptr;
+    WidgetActionManager* widgetActionManager_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
     
     double lastValue_ = 0.0;
@@ -95,7 +95,7 @@ public:
 
     void SetIsTouched(bool isTouched);
     
-    void SetWidgetActionContextManager(WidgetActionManager* widgetActionContextManager) { widgetActionContextManager_ = widgetActionContextManager;  }
+    void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
@@ -187,7 +187,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<WidgetActionManager*> actionContextManagers_;
+    vector<WidgetActionManager*> widgetActionManagers_;
     vector<Zone*> includedZones_;
 
 protected:
@@ -201,15 +201,15 @@ public:
     
     void Deactivate();
     void Activate();
-    void Activate(int contextIndex);
-    void Activate(MediaTrack* track, int contextIndex);
+    void Activate(int actionIndex);
+    void Activate(MediaTrack* track, int actionIndex);
 
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
-    virtual void AddActionContextManager(WidgetActionManager* manager)
+    virtual void AddWidgetActionManager(WidgetActionManager* manager)
     {
-        actionContextManagers_.push_back(manager);
+        widgetActionManagers_.push_back(manager);
     }
     
     void AddZone(Zone* zone)
@@ -594,7 +594,7 @@ protected:
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
 
-    WidgetActionManager* widgetActionContextManager_ = nullptr;
+    WidgetActionManager* widgetActionManager_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
@@ -602,14 +602,14 @@ protected:
     double delayStartTime_ = 0.0;
     
 public:    
-    Action(WidgetActionManager* widgetActionContextManager) : widgetActionContextManager_(widgetActionContextManager)
+    Action(WidgetActionManager* widgetActionManager) : widgetActionManager_(widgetActionManager)
     {
         page_ = GetWidget()->GetSurface()->GetPage();
         widget_ = GetWidget();
     }
     virtual ~Action() {}
     
-    WidgetActionManager* GetWidgetActionContextManager() { return widgetActionContextManager_; }
+    WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
@@ -618,7 +618,7 @@ public:
     Widget* GetWidget();
     Page* GetPage() { return page_; }
     
-    virtual void AddActionContext(Action* actionContext) {}
+    virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
     virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
@@ -626,21 +626,10 @@ public:
     virtual void DoAction(double value) {}
  
     virtual void RequestUpdate() {  GetWidget()->Reset(); }
-    
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void RequestSendUpdate(MediaTrack* track, int sendIndex) {}
     virtual void RequestTrackUpdateWithIntParam(MediaTrack* track, int param) {}
 
-
-    /*
-    virtual void RequestUpdate(Action* context) { }
-    virtual void RequestUpdate(Action* context, int commandId) { }
-    virtual void RequestUpdate(Action* context, string param) { }
-    virtual void RequestUpdate(Action* context, MediaTrack* track) { }
-    virtual void RequestUpdate(MediaTrack* track) { }
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { }
-    virtual void RequestUpdate(MediaTrack* track, int fxIndex, int paramIndex) { }
-    */
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
     virtual void Do(Page* page, ControlSurface* surface) {}
@@ -669,9 +658,9 @@ public:
         widget->SetValue(value);
     }
     
-    void Activate(WidgetActionManager* modifierActionContextManager)
+    void Activate(WidgetActionManager* widgetActionManager)
     {
-        GetWidget()->SetWidgetActionContextManager(modifierActionContextManager);
+        GetWidget()->SetWidgetActionManager(widgetActionManager);
     }
 };
 
@@ -682,7 +671,7 @@ class WidgetActionManager
 private:
     Widget* widget_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
-    map<string, vector <Action*>> widgetActionContexts_;
+    map<string, vector <Action*>> widgetActions_;
     
     string GetModifiers();
     
@@ -698,8 +687,8 @@ public:
     void DoAction(double value);
 
     void Activate();
-    void Activate(int contextIndex);
-    void Activate(MediaTrack* track, int contextIndex);
+    void Activate(int actionIndex);
+    void Activate(MediaTrack* track, int actionIndex);
 
     void SetIsTouched(bool isTouched)
     {
@@ -707,9 +696,9 @@ public:
             trackNavigator_->SetTouchState((isTouched));
     }    
     
-    void AddActionContext(string modifiers, Action* context)
+    void AddAction(string modifiers, Action* action)
     {
-        widgetActionContexts_[modifiers].push_back(context);
+        widgetActions_[modifiers].push_back(action);
     }
 };
 

@@ -318,7 +318,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, string &customSlotName, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -349,9 +349,6 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 shouldToggle = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
-
-            else
-                customSlotName = modifier_tokens[i];
         }
     }
     
@@ -375,11 +372,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
-    map<Widget*, WidgetActionManager*> widgetActionContextManagerForWidget;
-    
-    
-    map< string, map<string, map <string, TrackSlotCycleContext*>>> customSlotContexts;
-    
+    map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
 
     bool hasTrackNavigator = false;
     vector<TrackNavigator*> expandedTrackNavigators;
@@ -443,13 +436,12 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
                 string modifiers = "";
-                string customSlotName = "";
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, customSlotName, isInverted, shouldToggle, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isInverted, shouldToggle, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -474,49 +466,32 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                     if(TheManager->IsActionAvailable(params[0]))
                     {
                         
-                        if(widgetActionContextManagerForWidget.count(widget) < 1)
+                        if(widgetActionManagerForWidget.count(widget) < 1)
                         {
-                            widgetActionContextManagerForWidget[widget] = new WidgetActionManager(widget);
+                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget);
                             
                             if(hasTrackNavigator)
-                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
+                                widgetActionManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
                             else if(hasSelectedTrackNavigator)
-                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(new SelectedTrackNavigator(widget->GetSurface()->GetPage()));
+                                widgetActionManagerForWidget[widget]->SetTrackNavigator(new SelectedTrackNavigator(widget->GetSurface()->GetPage()));
                             else if(hasFocusedFXTrackNavigator)
-                                widgetActionContextManagerForWidget[widget]->SetTrackNavigator(new FocusedFXTrackNavigator(widget->GetSurface()->GetPage()));
+                                widgetActionManagerForWidget[widget]->SetTrackNavigator(new FocusedFXTrackNavigator(widget->GetSurface()->GetPage()));
 
-                            expandedZones[i]->AddActionContextManager(widgetActionContextManagerForWidget[widget]);
+                            expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
                         }
                         
-                        Action* context = TheManager->GetAction(widgetActionContextManagerForWidget[widget], params);
+                        Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
 
-                        // If there is a custom slot, ensure there is a wrapper (don't forget to account for modifiers)
-                        // then add custom slot wrapper context to contextManager
-                        // then add context to custom slot wrapper
-                        if(customSlotName != "")
-                        {
-                            string zoneName = expandedZones[i]->GetName();
-                            
-                            if(customSlotContexts.count(zoneName) < 1 || customSlotContexts[zoneName].count(customSlotName) < 1 || customSlotContexts[zoneName][customSlotName].count(modifiers) < 1)
-                            {
-                                customSlotContexts[zoneName][customSlotName][modifiers] = new TrackSlotCycleContext(widgetActionContextManagerForWidget[widget], customSlotName);
-                                
-                                widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, customSlotContexts[zoneName][customSlotName][modifiers]);
-                            }
-
-                            customSlotContexts[zoneName][customSlotName][modifiers]->AddActionContext(context);
-                        }
-                        else // no custom slots ? -- just add directly to contextManager
-                            widgetActionContextManagerForWidget[widget]->AddActionContext(modifiers, context);
+                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
                         
                         if(isInverted)
-                            context->SetIsInverted();
+                            action->SetIsInverted();
                         
                         if(shouldToggle)
-                            context->SetShouldToggle();
+                            action->SetShouldToggle();
                         
                         if(isDelayed)
-                            context->SetDelayAmount(delayAmount * 1000.0);
+                            action->SetDelayAmount(delayAmount * 1000.0);
 
                         if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                             widget->SetIsModifier();
@@ -687,8 +662,7 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::InitActionDictionary()
 {
-    //actionContexts_["ToggleMapSends"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceAction(manager, actions_[params[0]]); };
-    //actionContexts_["TrackCycle"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackActionWithStringAndIntParams(manager, actions_[params[0]], params); };
+    //actions_["ToggleMapSends"] = [this](WidgetActionManager* manager, vector<string> params) { return new SurfaceAction(manager, actions_[params[0]]); };
 
     actions_["NoAction"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager); };
     actions_["Reaper"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
@@ -850,16 +824,16 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(widgetActionContextManager_ != nullptr)
-        return widgetActionContextManager_->GetTrack();
+    if(widgetActionManager_ != nullptr)
+        return widgetActionManager_->GetTrack();
     else
         return nullptr;
 }
 
 void Widget::RequestUpdate()
 {
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->RequestUpdate();
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->RequestUpdate();
 }
 
 void  Widget::SetValue(double value)
@@ -886,20 +860,20 @@ void  Widget::SetValue(string value)
 
 void Widget::DoAction(double value)
 {
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->DoAction(value);
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double value)
 {
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->DoAction(lastValue_ + value);
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->DoAction(lastValue_ + value);
 }
 
 void Widget::SetIsTouched(bool isTouched)
 {
-    if(widgetActionContextManager_ != nullptr)
-        widgetActionContextManager_->SetIsTouched(isTouched);
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->SetIsTouched(isTouched);
 }
 
 void Widget::ClearCache()
@@ -937,11 +911,11 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Deactivate()
 {
-    for(auto actionContextManager : actionContextManagers_)
-        if(actionContextManager->GetWidget() != nullptr)
+    for(auto widgetActionManager : widgetActionManagers_)
+        if(widgetActionManager->GetWidget() != nullptr)
         {
-            actionContextManager->GetWidget()->SetWidgetActionContextManager(nullptr);
-            actionContextManager->GetWidget()->Reset();
+            widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
+            widgetActionManager->GetWidget()->Reset();
         }
     
     for(auto zone : includedZones_)
@@ -950,8 +924,8 @@ void Zone::Deactivate()
 
 void Zone::Activate()
 {
-    for(auto actionContextManager : actionContextManagers_)
-        actionContextManager->Activate();
+    for(auto widgetActionManager : widgetActionManagers_)
+        widgetActionManager->Activate();
     
     for(auto zone : includedZones_)
         zone->Activate();
@@ -959,8 +933,8 @@ void Zone::Activate()
 
 void Zone::Activate(int fxIndex)
 {
-    for(auto actionContextManager : actionContextManagers_)
-        actionContextManager->Activate(fxIndex);
+    for(auto widgetActionManager : widgetActionManagers_)
+        widgetActionManager->Activate(fxIndex);
     
     for(auto zone : includedZones_)
         zone->Activate(fxIndex);
@@ -968,8 +942,8 @@ void Zone::Activate(int fxIndex)
 
 void Zone::Activate(MediaTrack* track, int sendsIndex)
 {
-    for(auto actionContextManager : actionContextManagers_)
-        actionContextManager->Activate(track, sendsIndex);
+    for(auto widgetActionManager : widgetActionManagers_)
+        widgetActionManager->Activate(track, sendsIndex);
     
     for(auto zone : includedZones_)
         zone->Activate(track, sendsIndex);
@@ -1090,11 +1064,11 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Widget* Action::GetWidget()
 {
-    return widgetActionContextManager_->GetWidget();
+    return widgetActionManager_->GetWidget();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// WidgetActionContextManager
+// WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WidgetActionManager::GetModifiers()
 {
@@ -1114,43 +1088,43 @@ MediaTrack* WidgetActionManager::GetTrack()
 
 void WidgetActionManager::RequestUpdate()
 {
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->RequestUpdate();
+    if(widgetActions_.count(GetModifiers()) > 0)
+        for(auto action : widgetActions_[GetModifiers()])
+            action->RequestUpdate();
 }
 
 void WidgetActionManager::DoAction(double value)
 {
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->DoAction(value);
+    if(widgetActions_.count(GetModifiers()) > 0)
+        for(auto action : widgetActions_[GetModifiers()])
+            action->DoAction(value);
 }
 
 void WidgetActionManager::Activate()
 {
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
-            context->Activate(this);
+    if(widgetActions_.count(GetModifiers()) > 0)
+        for(auto action : widgetActions_[GetModifiers()])
+            action->Activate(this);
 }
 
-void WidgetActionManager::Activate(int contextIndex)
+void WidgetActionManager::Activate(int actionIndex)
 {
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
+    if(widgetActions_.count(GetModifiers()) > 0)
+        for(auto action : widgetActions_[GetModifiers()])
         {
-            context->SetIndex(contextIndex);
-            context->Activate(this);
+            action->SetIndex(actionIndex);
+            action->Activate(this);
         }
 }
 
-void WidgetActionManager::Activate(MediaTrack* track, int contextIndex)
+void WidgetActionManager::Activate(MediaTrack* track, int actionIndex)
 {
-    if(widgetActionContexts_.count(GetModifiers()) > 0)
-        for(auto context : widgetActionContexts_[GetModifiers()])
+    if(widgetActions_.count(GetModifiers()) > 0)
+        for(auto action : widgetActions_[GetModifiers()])
         {
-            context->SetTrack(track);
-            context->SetIndex(contextIndex);
-            context->Activate(this);
+            action->SetTrack(track);
+            action->SetIndex(actionIndex);
+            action->Activate(this);
         }
 }
 
