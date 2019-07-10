@@ -54,14 +54,7 @@ class FXParam : public FXAction
 {   
 public:
     FXParam(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
-    
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) override
-    {
-        double min, max = 0;
 
-        SetWidgetValue(context->GetWidget(), DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
-    }
-    
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) override
     {
         DAW::TrackFX_SetParam(track, fxIndex, paramIndex, value);
@@ -76,15 +69,22 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolume : public ActionOld
+class TrackVolume : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, MediaTrack* track) override
+    TrackVolume(WidgetActionManager* manager) : TrackAction(manager) {}
+
+    void RequestUpdate() override
     {
-        double vol, pan = 0.0;
-        DAW::GetTrackUIVolPan(track, &vol, &pan);        
-        context->SetWidgetValue(context->GetWidget(), volToNormalized(vol));
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackUIVolPan(track, &vol, &pan);
+            SetWidgetValue(widget_, volToNormalized(vol));
+        }
+        else
+            widget_->Reset();
     }
     
     void Do(Widget* widget, MediaTrack* track, double value) override
@@ -216,22 +216,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackVolumeDB : public ActionOld
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    void RequestUpdate(Action* context, MediaTrack* track) override
-    {
-        context->SetWidgetValue(context->GetWidget(), VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-    }
-    
-    void Do(Widget* widget, MediaTrack* track, double value) override
-    {
-        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPan : public ActionOld
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -297,26 +281,35 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXParamNameDisplay : public ActionOld
+class FXParamNameDisplay : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) override
+    FXParamNameDisplay(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+
+    virtual void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), context->GetAlias());
+        SetWidgetValue(widget_, GetAlias());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXParamValueDisplay : public ActionOld
+class FXParamValueDisplay : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public:    
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) override
+public:
+    FXParamValueDisplay(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+
+    virtual void RequestUpdate() override
     {
-        char fxParamValue[128];
-        TrackFX_GetFormattedParamValue(track, fxIndex, paramIndex, fxParamValue, sizeof(fxParamValue));
-        context->SetWidgetValue(context->GetWidget(), string(fxParamValue));
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            char fxParamValue[128];
+            TrackFX_GetFormattedParamValue(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamValue), fxParamValue, sizeof(fxParamValue));
+            SetWidgetValue(GetWidget(), string(fxParamValue));
+        }
+        else
+            widget_->Reset();
     }
 };
 
