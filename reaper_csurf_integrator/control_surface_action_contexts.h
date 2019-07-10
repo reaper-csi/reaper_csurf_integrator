@@ -33,45 +33,6 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSlotCycleContext : public TrackAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string customSlotName_ = "";
-    vector<Action*> actionContexts_;
-    
-    int GetCurrentIndex()
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            return page_->GetTrackSlotIndex(customSlotName_, track);
-        else
-            return 0;
-    }
-    
-public:
-    TrackSlotCycleContext(WidgetActionManager* manager, string customModifierName) : TrackAction(manager), customSlotName_(customModifierName) {}
-    
-    virtual void AddActionContext(Action* actionContext) override
-    {
-        actionContexts_.push_back(actionContext);
-    }
-
-    virtual void RequestUpdate() override
-    {
-        if(actionContexts_.size() > 0 && GetCurrentIndex() < actionContexts_.size())
-            actionContexts_[GetCurrentIndex()]->RequestUpdate();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        int index = GetCurrentIndex();
-        
-        if(actionContexts_.size() > 0 && index < actionContexts_.size())
-            actionContexts_[index]->DoAction(value);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -175,42 +136,6 @@ public:
     }
 };
 
-//////// The next Contexts don't use the double value, so they can safely override all flavours
-/*
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackActionWithStringAndIntParams : public TrackAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string stringParam_ = "";
-    int intParam_ = 0;
-    
-public:
-    TrackActionWithStringAndIntParams(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
-    {
-        if(params.size() > 2)
-        {
-            stringParam_ = params[1];
-            intParam_ = atol(params[2].c_str());
-        }
-    }
-    
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            action_->RequestUpdate(this, track);
-        else
-            widget_->Reset();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            if(widgetActionContextManager_ != nullptr)
-                Do(widget_, track, widgetActionContextManager_, stringParam_, intParam_);
-    }
-};
-*/
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GlobalAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
