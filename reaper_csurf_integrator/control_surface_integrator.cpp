@@ -689,7 +689,7 @@ void Manager::InitActionDictionary()
 {
     actions_["NoAction"] = new ActionOld();
     //actions_["Reaper"] = new ReaperActionOLd();
-    actions_["FXParam"] = new FXParam();
+    //actions_["FXParam"] = new FXParam();
     actions_["FXParamNameDisplay"] = new FXParamNameDisplay();
     actions_["FXParamValueDisplay"] = new FXParamValueDisplay();
     actions_["FXGainReductionMeter"] = new FXGainReductionMeter();
@@ -759,9 +759,9 @@ void Manager::InitActionContextDictionary()
 {
     InitActionDictionary();
     
-    actionContexts_["NoAction"] = [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager, actions_[params[0]]); };
+    actionContexts_["NoAction"] = [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager); };
     actionContexts_["Reaper"] = [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
-    actionContexts_["FXParam"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXAction(manager, actions_[params[0]], params); };
+    actionContexts_["FXParam"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
     actionContexts_["FXParamNameDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXAction(manager, actions_[params[0]], params); };
     actionContexts_["FXParamValueDisplay"] = [this](WidgetActionManager* manager, vector<string> params) { return new FXAction(manager, actions_[params[0]], params); };
     actionContexts_["FXGainReductionMeter"] = [this](WidgetActionManager* manager, vector<string> params) { return new TrackAction(manager, actions_[params[0]]); };

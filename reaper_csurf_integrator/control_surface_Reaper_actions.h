@@ -12,31 +12,17 @@
 extern Manager* TheManager;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ReaperActionOLd : public ActionOld
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{    
-public:
-    void RequestUpdate(Action* context, int commandId) override
-    {
-        context->SetWidgetValue(context->GetWidget(), DAW::GetToggleCommandState(commandId));
-    }
-    
-    void Do(double commandId) override
-    {
-        DAW::SendCommandMessage(commandId);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXParam : public ActionOld
+class FXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {   
 public:
+    FXParam(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    
     virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) override
     {
         double min, max = 0;
 
-        context->SetWidgetValue(context->GetWidget(), DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
+        SetWidgetValue(context->GetWidget(), DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
     }
     
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) override
