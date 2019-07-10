@@ -658,6 +658,8 @@ public:
     
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void RequestSendUpdate(MediaTrack* track, int sendIndex) {}
+    virtual void RequestTrackUpdateWithIntParam(MediaTrack* track, int param) {}
+
 
     /*
     virtual void RequestUpdate(Action* context) { }
