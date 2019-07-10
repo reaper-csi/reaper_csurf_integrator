@@ -20,7 +20,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            RequestUpdateForTrack(track);
+            RequestTrackUpdate(track);
         else
             widget_->Reset();
     }
@@ -87,7 +87,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(track_)
-            action_->RequestUpdate(this, track_, sendsIndex_);
+            RequestSendUpdate(track_, sendsIndex_);
         else
             widget_->Reset();
     }
@@ -95,7 +95,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(track_)
-            action_->Do(widget_, track_, sendsIndex_, isInverted_ == false ? value : 1.0 - value);
+            Do(widget_, track_, sendsIndex_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
