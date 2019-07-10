@@ -585,7 +585,45 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionManager;
+class Action;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class WidgetActionManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Widget* widget_ = nullptr;
+    TrackNavigator* trackNavigator_ = nullptr;
+    map<string, vector <Action*>> widgetActions_;
+    
+    string GetModifiers();
+    
+public:
+    WidgetActionManager(Widget* widget) : widget_(widget) {}
+    
+    Widget* GetWidget() { return widget_; }
+    MediaTrack* GetTrack();
+    
+    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
+    
+    void RequestUpdate();
+    void DoAction(double value);
+    
+    void Activate();
+    void Activate(int actionIndex);
+    void Activate(MediaTrack* track, int actionIndex);
+    
+    void SetIsTouched(bool isTouched)
+    {
+        if(trackNavigator_ != nullptr)
+            trackNavigator_->SetTouchState((isTouched));
+    }
+    
+    void AddAction(string modifiers, Action* action)
+    {
+        widgetActions_[modifiers].push_back(action);
+    }
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -604,8 +642,8 @@ protected:
 public:    
     Action(WidgetActionManager* widgetActionManager) : widgetActionManager_(widgetActionManager)
     {
-        page_ = GetWidget()->GetSurface()->GetPage();
-        widget_ = GetWidget();
+        page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
+        widget_ = widgetActionManager_->GetWidget();
     }
     virtual ~Action() {}
     
@@ -615,9 +653,6 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
-    Widget* GetWidget();
-    Page* GetPage() { return page_; }
-    
     virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
     virtual void SetTrack(MediaTrack* track) {}
@@ -625,7 +660,7 @@ public:
     virtual string GetAlias() { return ""; }
     virtual void DoAction(double value) {}
  
-    virtual void RequestUpdate() {  GetWidget()->Reset(); }
+    virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void RequestSendUpdate(MediaTrack* track, int sendIndex) {}
     virtual void RequestTrackUpdateWithIntParam(MediaTrack* track, int param) {}
@@ -660,45 +695,7 @@ public:
     
     void Activate(WidgetActionManager* widgetActionManager)
     {
-        GetWidget()->SetWidgetActionManager(widgetActionManager);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* widget_ = nullptr;
-    TrackNavigator* trackNavigator_ = nullptr;
-    map<string, vector <Action*>> widgetActions_;
-    
-    string GetModifiers();
-    
-public:
-    WidgetActionManager(Widget* widget) : widget_(widget) {}
-    
-    Widget* GetWidget() { return widget_; }
-    MediaTrack* GetTrack();
-    
-    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
-    
-    void RequestUpdate();
-    void DoAction(double value);
-
-    void Activate();
-    void Activate(int actionIndex);
-    void Activate(MediaTrack* track, int actionIndex);
-
-    void SetIsTouched(bool isTouched)
-    {
-        if(trackNavigator_ != nullptr)
-            trackNavigator_->SetTouchState((isTouched));
-    }    
-    
-    void AddAction(string modifiers, Action* action)
-    {
-        widgetActions_[modifiers].push_back(action);
+        widget_->SetWidgetActionManager(widgetActionManager);
     }
 };
 
