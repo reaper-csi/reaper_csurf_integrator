@@ -656,8 +656,9 @@ public:
  
     virtual void RequestUpdate() {  GetWidget()->Reset(); }
     
-    virtual void RequestUpdateForTrack(MediaTrack* track) {}
-    
+    virtual void RequestTrackUpdate(MediaTrack* track) {}
+    virtual void RequestSendUpdate(MediaTrack* track, int sendIndex) {}
+
     /*
     virtual void RequestUpdate(Action* context) { }
     virtual void RequestUpdate(Action* context, int commandId) { }
