@@ -585,35 +585,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action;
 class WidgetActionManager;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionOld
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~ActionOld() {}
-    
-    virtual void RequestUpdate(Action* context);
-    virtual void RequestUpdate(Action* context, int commandId) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, string param) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
-
-    virtual void Do(double value) {}
-    virtual void Do(Page* page, double value) {}
-    virtual void Do(Page* page, ControlSurface* surface) {}
-    virtual void Do(ControlSurface* surface, string value) {}
-    virtual void Do(ControlSurface* surface, string value1, string value2) {}
-    virtual void Do(Page* page, string value) {}
-    virtual void Do(Widget* widget, MediaTrack* track, double value) {}
-    virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}
-    virtual void Do(Widget* widget, MediaTrack* track, WidgetActionManager* manager, string stringParam2, double value) {}
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
-    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}                 
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -623,7 +595,6 @@ protected:
     Widget* widget_ = nullptr;
 
     WidgetActionManager* widgetActionContextManager_ = nullptr;
-    ActionOld* action_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     bool shouldExecute_ = false;
