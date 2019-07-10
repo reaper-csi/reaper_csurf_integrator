@@ -27,18 +27,10 @@ public:
         widget_ = GetWidget();
     }
     
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            action_->RequestUpdate(this, track);
-        else
-            widget_->Reset();
-    }
-    
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            action_->Do(widget_, track, isInverted_ == false ? value : 1.0 - value);
+            Do(widget_, track, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -142,12 +134,11 @@ public:
 class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     string fxParamName_ = "";
     string fxParamNameAlias_ = "";
     int fxIndex_ = 0;
 
-protected:
     FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
     {
         fxParamName_ = params[1];
@@ -178,7 +169,7 @@ public:
         double min, max = 0;
         
         if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(GetWidget(), DAW::TrackFX_GetParam(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
+            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
         else
             widget_->Reset();
     }
