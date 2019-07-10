@@ -654,17 +654,18 @@ public:
     virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
-    virtual void RequestUpdate() {  GetWidget()->Reset(); }
     virtual void DoAction(double value) {}
  
-    
-    virtual void RequestUpdate(Action* context) { RequestUpdate(); }
-    virtual void RequestUpdate(Action* context, int commandId) { RequestUpdate(nullptr); }
-    virtual void RequestUpdate(Action* context, string param) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { RequestUpdate(context); }
-    virtual void RequestUpdate(Action* context, MediaTrack* track, int fxIndex, int paramIndex) { RequestUpdate(context); }
-    
+    virtual void RequestUpdate() {  GetWidget()->Reset(); }
+    /*
+    virtual void RequestUpdate(Action* context) { }
+    virtual void RequestUpdate(Action* context, int commandId) { }
+    virtual void RequestUpdate(Action* context, string param) { }
+    virtual void RequestUpdate(Action* context, MediaTrack* track) { }
+    virtual void RequestUpdate(MediaTrack* track) { }
+    virtual void RequestUpdate(Action* context, MediaTrack* track, int param) { }
+    virtual void RequestUpdate(MediaTrack* track, int fxIndex, int paramIndex) { }
+    */
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
     virtual void Do(Page* page, ControlSurface* surface) {}
@@ -677,10 +678,6 @@ public:
     virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
     virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 
-    
-    
-    
-    
     
     void SetWidgetValue(Widget* widget, double value)
     {
