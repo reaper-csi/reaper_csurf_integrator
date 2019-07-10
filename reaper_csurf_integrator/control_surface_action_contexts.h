@@ -16,13 +16,13 @@ class TrackAction : public Action
 protected:
     Widget* widget_ = nullptr;
 
-public:
-    TrackAction(WidgetActionManager* manager, ActionOld* action) : Action(manager, action)
+    TrackAction(WidgetActionManager* manager) : Action(manager)
     {
         widget_ = GetWidget();
     }
-    
-    TrackAction(WidgetActionManager* manager) : Action(manager)
+
+public:
+    TrackAction(WidgetActionManager* manager, ActionOld* action) : Action(manager, action)
     {
         widget_ = GetWidget();
     }
@@ -147,8 +147,8 @@ private:
     string fxParamNameAlias_ = "";
     int fxIndex_ = 0;
 
-public:
-    FXAction(WidgetActionManager* manager, ActionOld* action, vector<string> params) : TrackAction(manager, action)
+protected:
+    FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
     {
         fxParamName_ = params[1];
         
@@ -158,7 +158,8 @@ public:
             fxParamNameAlias_ = params[1];
     }
     
-    FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
+public:
+    FXAction(WidgetActionManager* manager, ActionOld* action, vector<string> params) : TrackAction(manager, action)
     {
         fxParamName_ = params[1];
         
@@ -245,43 +246,6 @@ public:
     virtual void DoAction(double value) override
     {
         action_->Do(page_, isInverted_ == false ? value : 1.0 - value);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ReaperAction : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int commandId_ = 0;
-    
-public:
-    ReaperAction(WidgetActionManager* manager, vector<string> params) : Action(manager)
-    {
-        if(params.size() > 1)
-        {
-            string commandStr = params[1];
-        
-            commandId_ =  atol(commandStr.c_str());
-            
-            if(commandId_ == 0) // unsuccessful conversion to number
-            {
-                commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
-            
-                if(commandId_ == 0) // can't find it
-                    commandId_ = 65535; // no-op
-            }
-        }
-    }
-    
-    virtual void RequestUpdate() override
-    {
-        SetWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        DAW::SendCommandMessage(commandId_);
     }
 };
 
