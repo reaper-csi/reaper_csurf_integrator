@@ -1029,21 +1029,7 @@ void ControlSurface::InitZones(string zoneFolder)
 void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
-    {
-        if(zoneName == "Home")
-        {
-            for(auto zone : activeZones_)
-                zone->Deactivate();
-            
-            activeZones_.clear();
-            activeSubZones_.clear();
-            page_->ClearActiveFXZones(this);
-        }
-        else if(HasActiveZone(zoneName))
-            DeactivateZone(zoneName);
-        
         ActivateZone(zoneName);
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1236,52 +1222,22 @@ void SendsActivationManager::ActivateSendsZones(ControlSurface* surface, MediaTr
     }
 }
 
-void SendsActivationManager::DeactivateSendsZones(ControlSurface* surface)
-{
-    if(! surface->GetUseZoneLink())
-    {
-        if(activeSendZoneNames_.count(surface) > 0)
-        {
-            for(auto zoneName :activeSendZoneNames_[surface])
-                surface->DeactivateZone(zoneName);
-            
-            activeSendZoneNames_[surface].clear();
-        }
-    }
-    else
-    {
-        for(auto surface : page_->GetSurfaces())
-        {
-            if(activeSendZoneNames_.count(surface) > 0)
-            {
-                for(auto zoneName :activeSendZoneNames_[surface])
-                    surface->DeactivateZone(zoneName);
-                
-                activeSendZoneNames_[surface].clear();
-            }
-        }
-    }
-}
-
 void SendsActivationManager::ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName)
 {
     if(! surface->GetUseZoneLink())
     {
-        if(surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex))
-            activeSendZoneNames_[surface].push_back(zoneName);
+        surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex);
     }
     else
     {
         for(auto surface : page_->GetSurfaces())
             if(surface->GetUseZoneLink())
-                if(surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex))
-                    activeSendZoneNames_[surface].push_back(zoneName);
+                surface->ActivateSendsZone(zoneName, selectedTrack, sendsIndex);
     }
 }
 
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
 {
-    DeactivateSendsZones(surface);
     ActivateSendsZones(surface, selectedTrack);
 }
 
@@ -1291,9 +1247,7 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
         return;
     
     shouldMapSends_ = ! shouldMapSends_;
-    
-    DeactivateSendsZones(surface);
-    
+        
     MediaTrack* selectedTrack = nullptr;
     
     for(int i = 0; i < page_->GetNumTracks(); i++)

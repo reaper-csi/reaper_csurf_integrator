@@ -278,8 +278,6 @@ protected:
     
     vector<Widget*> widgets_;
     map<string, Zone*> zones_;
-    map<string, vector<Zone*>> activeSubZones_;
-    vector<Zone*> activeZones_;
     
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
@@ -290,66 +288,6 @@ protected:
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
-    }
-    
-    bool HasActiveZone(string zoneName)
-    {
-        if(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]) != activeZones_.end())
-            return true;
-        else
-            return false;
-    }
-
-    void ActivateZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            AddActiveZone(zoneName);
-    }
-
-    void ReactivateZoneStack()
-    {
-        for(auto zone : activeZones_)
-            zone->Activate();
-    }
-    
-    void AddActiveZone(string zoneName)
-    {
-        zones_[zoneName]->Activate();
-        activeZones_.push_back(zones_[zoneName]);
-        ReactivateZoneStack();
-    }
-    
-    void AddActiveFXZone(string zoneName, int fxIndex)
-    {
-        zones_[zoneName]->Activate(fxIndex);
-        activeZones_.push_back(zones_[zoneName]);
-        ReactivateZoneStack();
-    }
-    
-    void AddActiveSendsZone(string zoneName, MediaTrack* track, int fxIndex)
-    {
-        zones_[zoneName]->Activate(track, fxIndex);
-        activeZones_.push_back(zones_[zoneName]);
-        ReactivateZoneStack();
-    }
-    
-    void RemoveActiveZone(string zoneName)
-    {
-        if(activeSubZones_.count(zoneName) > 0)
-        {
-            for(auto subZone : activeSubZones_[zoneName])
-            {
-                subZone->Deactivate();
-                activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), subZone));
-            }
-            
-            activeSubZones_.erase(zoneName);
-        }
-        
-        zones_[zoneName]->Deactivate();
-        activeZones_.erase(find(activeZones_.begin(), activeZones_.end(), zones_[zoneName]));
-        
-        ReactivateZoneStack();
     }
     
 public:
@@ -423,62 +361,33 @@ public:
                 widget->DoAction(0.0);
     }
 
-    bool ActivateFXZone(string zoneName, int fxIndex)
+    void ActivateZone(string zoneName)
     {
-        if((activeZones_.back())->GetName() == zoneName)
-            return false;
-
         if(zones_.count(zoneName) > 0)
-        {
-            AddActiveFXZone(zoneName, fxIndex);
-            return true;
-        }
-        
-        return false;
+            zones_[zoneName]->Activate();
     }
     
-    bool ActivateSendsZone(string zoneName, MediaTrack* track, int sendsIndex)
+    bool ActivateFXZone(string zoneName, int fxIndex)
     {
-        if((activeZones_.back())->GetName() == zoneName)
-            return false;
-
         if(zones_.count(zoneName) > 0)
         {
-            AddActiveSendsZone(zoneName, track, sendsIndex);
+            zones_[zoneName]->Activate(fxIndex);
             return true;
         }
-        
-        return false;
+        else
+            return false;
+    }
+    
+    void ActivateSendsZone(string zoneName, MediaTrack* track, int sendsIndex)
+    {
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->Activate(track, sendsIndex);
     }
     
     void DeactivateZone(string zoneName)
     {
-        if(zones_.count(zoneName) > 0)
-            RemoveActiveZone(zoneName);
-    }
-
-    void ToggleZone(string zoneName)
-    {
-        if(HasActiveZone(zoneName))
-            DeactivateZone(zoneName);
-        else if(zones_.count(zoneName) > 0)
-            ActivateZone(zoneName);
-    }
-    
-    void GoSubZone(string zoneName, string parentZoneName)
-    {
-        if((activeZones_.back())->GetName() == zoneName)
-            return;
-        
-        if(zones_.count(parentZoneName) > 0 && zones_.count(zoneName) > 0)
-        {
-            if(HasActiveZone(zoneName))
-                DeactivateZone(zoneName);
-            
-            activeSubZones_[parentZoneName].push_back(zones_[zoneName]);
-
-            ActivateZone(zoneName);
-        }
+        //if(zones_.count(zoneName) > 0)
+            //RemoveActiveZone(zoneName);
     }
 };
 
@@ -900,7 +809,6 @@ private:
     map<string, map<string, int>> fxParamIndices_;
 
     Page* page_ = nullptr;
-    map<ControlSurface*, vector<string>> activeFXZoneNames_;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -992,23 +900,10 @@ public:
         // GAW TBD -- clear all fx items and rebuild
     }
 
-    void ClearActiveFXZones(ControlSurface* surface)
-    {
-        if(activeFXZoneNames_.count(surface) > 0)
-            activeFXZoneNames_[surface].clear();
-    }
     
     void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
     {
         DeleteFXWindows();
-        
-        if(activeFXZoneNames_.count(surface) > 0)
-        {
-            for(auto zoneName :activeFXZoneNames_[surface])
-                surface->DeactivateZone(zoneName);
-            
-            activeFXZoneNames_[surface].clear();
-        }
         
         int flags;
         
@@ -1023,10 +918,7 @@ public:
                 DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
                 
                 if(surface->ActivateFXZone(FXName, i))
-                {
                     AddFXWindow(FXWindow(selectedTrack, i));
-                    activeFXZoneNames_[surface].push_back(FXName);
-                }
             }
             
             OpenFXWindows();
@@ -1035,20 +927,11 @@ public:
     
     void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
     {
-        if(activeFXZoneNames_.count(surface) > 0)
-        {
-            for(auto zoneName : activeFXZoneNames_[surface])
-                surface->DeactivateZone(zoneName);
-            
-            activeFXZoneNames_[surface].clear();
-        }
-        
         char FXName[BUFSZ];
         
         DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
         
-        if(surface->ActivateFXZone(FXName, fxIndex))
-            activeFXZoneNames_[surface].push_back(FXName);
+        surface->ActivateFXZone(FXName, fxIndex);
     }
 };
 
@@ -1062,7 +945,6 @@ private:
     
     map<ControlSurface*, vector<string>> activeSendZoneNames_;
 
-    void DeactivateSendsZones(ControlSurface* surface);
     void ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack);
     void ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName);
 
@@ -1192,15 +1074,6 @@ public:
  
     /// GAW -- start ZoneActivation facade
 
-    void GoSubZone(ControlSurface* surface, string zoneName, string parentZoneName)
-    {
-        if( ! surface->GetUseZoneLink())
-            surface->GoSubZone(zoneName, parentZoneName);
-        else
-            for(auto surface : surfaces_)
-                if(surface->GetUseZoneLink())
-                    surface->GoSubZone(zoneName, parentZoneName);
-    }
     
     void GoZone(ControlSurface* surface, string zoneName)
     {
@@ -1212,16 +1085,6 @@ public:
                     surface->GoZone(zoneName);
     }
     
-    void ToggleZone(ControlSurface* surface, string zoneName)
-    {
-        if( ! surface->GetUseZoneLink())
-            surface->ToggleZone(zoneName);
-        else
-            for(auto surface : surfaces_)
-                if(surface->GetUseZoneLink())
-                    surface->ToggleZone(zoneName);
-    }
-
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -1342,11 +1205,6 @@ public:
     void SetShowFXWindows(bool value)
     {
         FXActivationManager_->SetShowFXWindows(value);
-    }
-
-    void ClearActiveFXZones(ControlSurface* surface)
-    {
-        FXActivationManager_->ClearActiveFXZones(surface);
     }
 
     /// GAW -- end SendsActivationManager facade
