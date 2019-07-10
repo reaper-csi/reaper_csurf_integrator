@@ -21,7 +21,12 @@ public:
     {
         widget_ = GetWidget();
     }
-
+    
+    TrackAction(WidgetActionManager* manager) : Action(manager)
+    {
+        widget_ = GetWidget();
+    }
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
@@ -153,14 +158,26 @@ public:
             fxParamNameAlias_ = params[1];
     }
     
+    FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
+    {
+        fxParamName_ = params[1];
+        
+        if(params.size() > 2)
+            fxParamNameAlias_ = params[2];
+        else
+            fxParamNameAlias_ = params[1];
+    }
+    
     virtual string GetAlias() override { return fxParamNameAlias_; }
     
     virtual void SetIndex(int fxIndex) override { fxIndex_ = fxIndex; }
         
     virtual void RequestUpdate() override
     {
+        double min, max = 0;
+        
         if(MediaTrack* track = widget_->GetTrack())
-            action_->RequestUpdate(this, track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_));
+            SetWidgetValue(GetWidget(), DAW::TrackFX_GetParam(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
         else
             widget_->Reset();
     }
@@ -170,9 +187,9 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             if(shouldToggle_)
-                action_->DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
             else
-                action_->Do(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                Do(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
         }
     }
 };
