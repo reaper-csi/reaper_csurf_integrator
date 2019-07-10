@@ -620,6 +620,8 @@ class Action
 {
 protected:
     Page* page_ = nullptr;
+    Widget* widget_ = nullptr;
+
     WidgetActionManager* widgetActionContextManager_ = nullptr;
     ActionOld* action_ = nullptr;
     bool isInverted_ = false;
@@ -628,15 +630,11 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
-public:
-    Action(WidgetActionManager* widgetActionContextManager, ActionOld* action) : widgetActionContextManager_(widgetActionContextManager), action_(action)
-    {
-        page_ = GetWidget()->GetSurface()->GetPage();
-    }
-    
+public:    
     Action(WidgetActionManager* widgetActionContextManager) : widgetActionContextManager_(widgetActionContextManager)
     {
         page_ = GetWidget()->GetSurface()->GetPage();
+        widget_ = GetWidget();
     }
     virtual ~Action() {}
     
@@ -1446,8 +1444,7 @@ class Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<string, ActionOld*> actions_;
-    map<string , function<Action*(WidgetActionManager* manager, vector<string>)>> actionContexts_;
+    map<string, function<Action*(WidgetActionManager* manager, vector<string>)>> actions_;
     vector <Page*> pages_;
     
     time_t lastTimeCacheCleared = 0;
@@ -1455,7 +1452,7 @@ private:
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
     
-    void InitActionContextDictionary();
+    void InitActionDictionary();
 
     double GetPrivateProfileDouble(string key)
     {
@@ -1471,7 +1468,7 @@ public:
     ~Manager() {};
     Manager()
     {
-        InitActionContextDictionary();
+        InitActionDictionary();
     }
     
     void ResetAllWidgets()
@@ -1499,17 +1496,17 @@ public:
             return nullptr;
     }
     
-    Action* GetActionContext(WidgetActionManager* manager, vector<string> params)
+    Action* GetAction(WidgetActionManager* manager, vector<string> params)
     {
-        if(actionContexts_.count(params[0]) > 0)
-            return actionContexts_[params[0]](manager, params);
+        if(actions_.count(params[0]) > 0)
+            return actions_[params[0]](manager, params);
         
         return nullptr;
     }
 
-    bool IsActionContextAvailable(string contextName)
+    bool IsActionAvailable(string actionName)
     {
-        if(actionContexts_.count(contextName) > 0)
+        if(actions_.count(actionName) > 0)
             return true;
         else return false;
     }
