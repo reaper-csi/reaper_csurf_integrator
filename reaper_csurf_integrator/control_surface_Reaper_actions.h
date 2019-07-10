@@ -39,7 +39,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        SetWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
+        SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
     }
     
     virtual void DoAction(double value) override
