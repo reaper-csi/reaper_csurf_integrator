@@ -223,15 +223,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPan : public ActionOld
+class TrackPan : public TrackActionWithIntFeedbackParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public: 
-    void RequestUpdate(Action* context, MediaTrack* track, int displayMode) override
+public:
+    TrackPan(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+    
+    void RequestTrackUpdateWithIntParam(MediaTrack* track, int displayMode) override
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        context->SetWidgetValue(context->GetWidget(), displayMode, panToNormalized(pan));
+        SetWidgetValue(widget_, displayMode, panToNormalized(pan));
     }
 
     void Do(Widget* widget, MediaTrack* track, double value) override
@@ -241,13 +243,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPanWidth : public ActionOld
+class TrackPanWidth : public TrackActionWithIntFeedbackParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, MediaTrack* track, int displayMode) override
+    TrackPanWidth(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+
+    void RequestTrackUpdateWithIntParam(MediaTrack* track, int displayMode) override
     {
-        context->SetWidgetValue(context->GetWidget(), displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        SetWidgetValue(widget_, displayMode, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
     void Do(Widget* widget, MediaTrack* track, double value) override
@@ -317,7 +321,7 @@ public:
         {
             char fxParamValue[128];
             TrackFX_GetFormattedParamValue(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamValue), fxParamValue, sizeof(fxParamValue));
-            SetWidgetValue(GetWidget(), string(fxParamValue));
+            SetWidgetValue(widget_, string(fxParamValue));
         }
         else
             widget_->Reset();
@@ -577,13 +581,16 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackUniqueSelect : public ActionOld
+class MasterTrackUniqueSelect : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context) override
+    
+    MasterTrackUniqueSelect(WidgetActionManager* manager) : GlobalAction(manager) {}
+
+    void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), DAW::GetMediaTrackInfo_Value(DAW::GetMasterTrack(0), "I_SELECTED"));
+        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(DAW::GetMasterTrack(0), "I_SELECTED"));
     }
     
     void Do(Page* page, double value) override
@@ -751,13 +758,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalAutoMode : public ActionOld
+class GlobalAutoMode : public GlobalActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, int mode) override
+    GlobalAutoMode(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
+    
+    void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), DAW::GetGlobalAutomationOverride());
+        SetWidgetValue(widget_, DAW::GetGlobalAutomationOverride());
     }
     
     void Do(Page* page, double autoMode) override
@@ -771,19 +780,21 @@ public:
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackAutoMode : public ActionOld
+class TrackAutoMode : public GlobalActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, int mode) override
+    TrackAutoMode(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
+
+    void RequestUpdate() override
     {
         bool gotOne = false;
         
-        for(int i = 0; i < context->GetPage()->GetNumTracks(); i++)
+        for(int i = 0; i < page_->GetNumTracks(); i++)
         {
-            MediaTrack* track = context->GetPage()->GetTrackFromId(i);
+            MediaTrack* track = page_->GetTrackFromId(i);
             
-            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == mode)
+            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == param_)
             {
                 gotOne = true;
                 break;
@@ -791,9 +802,9 @@ public:
         }
         
         if(gotOne)
-            context->SetWidgetValue(context->GetWidget(), 1.0);
+            SetWidgetValue(widget_, 1.0);
         else
-            context->SetWidgetValue(context->GetWidget(), 0.0);
+            SetWidgetValue(widget_, 0.0);
     }
     
     virtual void Do(Page* page, double autoMode) override
@@ -834,13 +845,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackOutputMeter : public ActionOld
+class TrackOutputMeter : public TrackActionWithIntFeedbackParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, MediaTrack* track, int param) override
+    TrackOutputMeter(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+
+    void RequestTrackUpdateWithIntParam(MediaTrack* track, int param) override
     {
-        context->SetWidgetValue(context->GetWidget(), volToNormalized(DAW::Track_GetPeakInfo(track, param)));
+        SetWidgetValue(widget_, volToNormalized(DAW::Track_GetPeakInfo(track, param)));
     }
 };
 
@@ -878,13 +891,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackOutputMeter : public ActionOld
+class MasterTrackOutputMeter : public GlobalActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    void RequestUpdate(Action* context, int param) override
+    MasterTrackOutputMeter(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
+    
+    void RequestUpdate() override
     {
-        context->SetWidgetValue(context->GetWidget(), param, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param))); // param 0=left, 1=right, etc.
+        SetWidgetValue(widget_, param_, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param_))); // param 0=left, 1=right, etc.
     }
 };
 
