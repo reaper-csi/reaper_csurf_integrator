@@ -912,7 +912,6 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 void Zone::Deactivate()
 {
     for(auto widgetActionManager : widgetActionManagers_)
-        if(widgetActionManager->GetWidget() != nullptr)
         {
             widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
             widgetActionManager->GetWidget()->Reset();
