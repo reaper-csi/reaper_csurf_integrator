@@ -36,27 +36,28 @@ public:
 class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    int sendsIndex_ = 0;
-    MediaTrack* track_ = nullptr;
+protected:
+    int sendIndex_ = 0;
+    MediaTrack* sendTrack_ = nullptr;
 
 public:
     TrackSendAction(WidgetActionManager* manager) : TrackAction(manager) {}
     
-    virtual void SetIndex(int sendsIndex) override { sendsIndex_ = sendsIndex; }
-    virtual void SetTrack(MediaTrack* track) override { track_ = track; }
+    virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
+    virtual void SetTrack(MediaTrack* sendTrack) override { sendTrack_ = sendTrack; }
 
     virtual void RequestUpdate() override
     {
-        if(track_)
-            RequestSendUpdate(track_, sendsIndex_);
+        if(sendTrack_)
+            RequestTrackUpdate(sendTrack_);
         else
             widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(track_)
-            Do(widget_, track_, sendsIndex_, isInverted_ == false ? value : 1.0 - value);
+        if(sendTrack_)
+            Do(widget_, sendTrack_, sendIndex_, isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -64,7 +65,7 @@ public:
 class TrackActionWithIntFeedbackParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     int param_ = 0;
     
 public:
@@ -72,20 +73,6 @@ public:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
-    }
-    
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            RequestTrackUpdateWithIntParam(track, param_);
-        else
-            widget_->Reset();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            Do(widget_, track, value);
     }
 };
 
