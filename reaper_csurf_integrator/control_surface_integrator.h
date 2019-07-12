@@ -571,8 +571,6 @@ public:
  
     virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
-    virtual void RequestSendUpdate(MediaTrack* track, int sendIndex) {}
-    virtual void RequestTrackUpdateWithIntParam(MediaTrack* track, int param) {}
 
     virtual void Do(double value) {}
     virtual void Do(Page* page, double value) {}
