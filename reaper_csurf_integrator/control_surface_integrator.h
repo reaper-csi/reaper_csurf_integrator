@@ -229,11 +229,11 @@ private:
     bool isChannelTouched_ = false;
     
 protected:
-    Page* page_ = nullptr;
-    TrackNavigator(Page* page) : page_(page) {}
+    ControlSurface* surface_ = nullptr;   
+    TrackNavigator(ControlSurface* surface) : surface_(surface) {}
     
 public:
-    TrackNavigator(Page* page, int channelNum) : page_(page), channelNum_(channelNum) {}
+    TrackNavigator(ControlSurface* surface, int channelNum) : surface_(surface), channelNum_(channelNum) {}
     virtual ~TrackNavigator() {}
     
     virtual MediaTrack* GetTrack();
@@ -246,7 +246,7 @@ class SelectedTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
+    SelectedTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
     virtual ~SelectedTrackNavigator() {}
    
     virtual MediaTrack* GetTrack() override;
@@ -257,164 +257,10 @@ class FocusedFXTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
+    FocusedFXTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
     virtual ~FocusedFXTrackNavigator() {}
     
     virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Page* page_ = nullptr;
-    bool followMCP_ = true;
-    bool synchPages_ = false;
-    bool scrollLink_ = true;
-    bool colourTracks_ = false;
-    int trackColourRedValue_ = 0;
-    int trackColourGreenValue_ = 0;
-    int trackColourBlueValue_ = 0;
-    map<string, int> trackColours_;
-    int trackOffset_ = 0;
-    int folderTrackOffset_ = 0;
-    vector<TrackNavigator*> trackNavigators_;
-    vector<MediaTrack*> tracks_;
-    vector<MediaTrack*> folderTracks_;
-    
-public:
-    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
-    
-    bool GetSynchPages() { return synchPages_; }
-    bool GetScrollLink() { return scrollLink_; }
-    int  GetNumTracks() { return tracks_.size(); }
-    int  GetNumFolderTracks() { return folderTracks_.size(); }
-    
-    MediaTrack* GetTrackFromChannel(int channelNumber)
-    {
-        if(tracks_.size() > channelNumber + trackOffset_)
-            return tracks_[channelNumber + trackOffset_];
-        else
-            return nullptr;
-    }
-    
-    MediaTrack* GetTrackFromId(int trackNumber)
-    {
-        if(tracks_.size() > trackNumber)
-            return tracks_[trackNumber];
-        else
-            return nullptr;
-    }
-    
-    bool IsTrackTouched(MediaTrack* track)
-    {
-        for(int i = 0; i < trackNavigators_.size(); i++)
-            if(GetTrackFromChannel(i) == track && trackNavigators_[i]->GetIsChannelTouched())
-                return true;
-        
-        return false;
-    }
-    
-    void Init();
-    void AdjustTrackBank(int stride);
-    void OnTrackSelection(MediaTrack* track);
-    void OnTrackSelectionBySurface(MediaTrack* track);
-    void TrackListChanged();
-    
-    void Run()
-    {
-        int flags;
-        MediaTrack* track;
-        
-        tracks_.clear();
-        folderTracks_.clear();
-        
-        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-        {
-            track = DAW::CSurf_TrackFromID(i, followMCP_);
-            
-            if(DAW::IsTrackVisible(track, followMCP_))
-            {
-                tracks_.push_back(track);
-                
-                DAW::GetTrackInfo(track, &flags);
-                
-                if(flags & 0x01) // folder Track
-                    folderTracks_.push_back(track);
-            }
-        }
-        
-        int top = GetNumTracks() - trackNavigators_.size();
-        if(trackOffset_ >  top)
-            trackOffset_ = top;
-        
-        top = GetNumFolderTracks();
-        if(folderTrackOffset_ >  top)
-            folderTrackOffset_ = top;
-    }
-    
-    TrackNavigator* AddTrackNavigator()
-    {
-        int channelNum = trackNavigators_.size();
-        
-        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
-        
-        return trackNavigators_[channelNum];
-    }
-    
-    void EnterPage()
-    {
-        /*
-         if(colourTracks_)
-         {
-         // capture track colors
-         for(auto* navigator : trackNavigators_)
-         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-         trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
-         }
-         */
-    }
-    
-    void LeavePage()
-    {
-        /*
-         if(colourTracks_)
-         {
-         DAW::PreventUIRefresh(1);
-         // reset track colors
-         for(auto* navigator : trackNavigators_)
-         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-         if(trackColours_.count(navigator->GetTrackGUID()) > 0)
-         DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
-         DAW::PreventUIRefresh(-1);
-         }
-         */
-    }
-    
-    void SetScrollLink(bool value)
-    {
-        scrollLink_ = value;
-    }
-    
-    MediaTrack* GetSelectedTrack()
-    {
-        if(DAW::CountSelectedTracks(NULL) != 1)
-            return nullptr;
-        
-        MediaTrack* track = nullptr;
-        
-        for(int i = 0; i < GetNumTracks(); i++)
-        {
-            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
-            {
-                track = GetTrackFromId(i);
-                break;
-            }
-        }
-        
-        return track;
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -588,8 +434,12 @@ class ControlSurface
     //char prjFn[BUFSZ * 10] = "";
 
 protected:
+    ControlSurface(Page* page, const string name, bool useZoneLink);
     Page* page_ = nullptr;
     const string name_ = "";
+    int surfaceChannelOffset_ = 0;
+
+    vector<TrackNavigator*> trackNavigators_;
 
     bool useZoneLink_ = false;
     
@@ -599,8 +449,6 @@ protected:
     virtual void InitWidgets(string templateFilename) {}
     void InitZones(string zoneFolder);
     
-    ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink) {}
-
     void RequestUpdate()
     {
         for(auto widget : widgets_)
@@ -612,11 +460,21 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
-    
+    int GetSurfacChannelOffset() { return surfaceChannelOffset_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     
     virtual void TurnOffMonitoring() {}
     void GoZone(string zoneName);
+    TrackNavigator* AddTrackNavigator();
+    
+    bool IsTrackTouched(MediaTrack* track)
+    {
+        for(auto navigator : trackNavigators_)
+            if(navigator->GetTrack() == track && navigator->GetIsChannelTouched())
+                return true;
+        
+        return false;
+    }
 
     virtual void Run()
     {
@@ -663,7 +521,7 @@ public:
             return true;
         }
     }
-
+    
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto widget : widgets_)
@@ -924,6 +782,152 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    bool followMCP_ = true;
+    bool synchPages_ = false;
+    bool scrollLink_ = true;
+    bool colourTracks_ = false;
+    int trackColourRedValue_ = 0;
+    int trackColourGreenValue_ = 0;
+    int trackColourBlueValue_ = 0;
+    map<string, int> trackColours_;
+    int trackOffset_ = 0;
+    int folderTrackOffset_ = 0;
+    int totalNumChannels_ = 0;
+    vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> folderTracks_;
+    
+public:
+    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    
+    bool GetSynchPages() { return synchPages_; }
+    bool GetScrollLink() { return scrollLink_; }
+    int  GetNumTracks() { return tracks_.size(); }
+    int  GetNumFolderTracks() { return folderTracks_.size(); }
+    
+    void Init();
+    void AdjustTrackBank(int stride);
+    void OnTrackSelection(MediaTrack* track);
+    void OnTrackSelectionBySurface(MediaTrack* track);
+    void TrackListChanged();
+
+    MediaTrack* GetTrackFromChannel(int channelNumber)
+    {
+        if(tracks_.size() > channelNumber + trackOffset_)
+            return tracks_[channelNumber + trackOffset_];
+        else
+            return nullptr;
+    }
+    
+    MediaTrack* GetTrackFromId(int trackNumber)
+    {
+        if(tracks_.size() > trackNumber)
+            return tracks_[trackNumber];
+        else
+            return nullptr;
+    }
+    
+    int GetTotalNumChannels()
+    {
+        return totalNumChannels_;
+    }
+
+    void Run()
+    {
+        int flags;
+        MediaTrack* track;
+        
+        tracks_.clear();
+        folderTracks_.clear();
+        
+        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        {
+            track = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            if(DAW::IsTrackVisible(track, followMCP_))
+            {
+                tracks_.push_back(track);
+                
+                DAW::GetTrackInfo(track, &flags);
+                
+                if(flags & 0x01) // folder Track
+                    folderTracks_.push_back(track);
+            }
+        }
+        
+        int top = GetNumTracks() - totalNumChannels_;
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
+        
+        top = GetNumFolderTracks();
+        if(folderTrackOffset_ >  top)
+            folderTrackOffset_ = top;
+    }
+    
+    void AddTrackNavigator()
+    {
+        totalNumChannels_++;
+    }
+    
+    void EnterPage()
+    {
+        /*
+         if(colourTracks_)
+         {
+         // capture track colors
+         for(auto* navigator : trackNavigators_)
+         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+         trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
+         }
+         */
+    }
+    
+    void LeavePage()
+    {
+        /*
+         if(colourTracks_)
+         {
+         DAW::PreventUIRefresh(1);
+         // reset track colors
+         for(auto* navigator : trackNavigators_)
+         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+         if(trackColours_.count(navigator->GetTrackGUID()) > 0)
+         DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
+         DAW::PreventUIRefresh(-1);
+         }
+         */
+    }
+    
+    void SetScrollLink(bool value)
+    {
+        scrollLink_ = value;
+    }
+    
+    MediaTrack* GetSelectedTrack()
+    {
+        if(DAW::CountSelectedTracks(NULL) != 1)
+            return nullptr;
+        
+        MediaTrack* track = nullptr;
+        
+        for(int i = 0; i < GetNumTracks(); i++)
+        {
+            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
+            {
+                track = GetTrackFromId(i);
+                break;
+            }
+        }
+        
+        return track;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -981,7 +985,11 @@ public:
 
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        return trackNavigationManager_->IsTrackTouched(track);
+        for(auto surface : surfaces_)
+            if(surface->IsTrackTouched(track))
+                return true;
+        
+        return false;
     }
     
     void SetShift(bool value)
@@ -1056,12 +1064,14 @@ public:
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
+    int  GetTotalNumChannels() { return trackNavigationManager_->GetTotalNumChannels(); }
+
     MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
 
-    TrackNavigator* AddTrackNavigator()
+    void AddTrackNavigator()
     {
-        return trackNavigationManager_->AddTrackNavigator();
+        trackNavigationManager_->AddTrackNavigator();
     }
     
     void AdjustTrackBank(int stride)
