@@ -1262,6 +1262,44 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FXActivationManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+{
+    DeleteFXWindows();
+    
+    int flags;
+    
+    DAW::GetTrackInfo(selectedTrack, &flags);
+    
+    if(flags & 0x02) // track is selected -- not deselected
+    {
+        for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+        {
+            char FXName[BUFSZ];
+            
+            DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+            
+            if(surface->ActivateFXZone(FXName, i))
+                AddFXWindow(FXWindow(selectedTrack, i));
+        }
+        
+        OpenFXWindows();
+    }
+}
+
+void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
+{
+    char FXName[BUFSZ];
+    
+    DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+    
+    surface->ActivateFXZone(FXName, fxIndex);
+}
+
+
+
 /*
 int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
 

@@ -264,6 +264,323 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    bool followMCP_ = true;
+    bool synchPages_ = false;
+    bool scrollLink_ = true;
+    bool colourTracks_ = false;
+    int trackColourRedValue_ = 0;
+    int trackColourGreenValue_ = 0;
+    int trackColourBlueValue_ = 0;
+    map<string, int> trackColours_;
+    int trackOffset_ = 0;
+    int folderTrackOffset_ = 0;
+    vector<TrackNavigator*> trackNavigators_;
+    vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> folderTracks_;
+    
+public:
+    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    
+    bool GetSynchPages() { return synchPages_; }
+    bool GetScrollLink() { return scrollLink_; }
+    int  GetNumTracks() { return tracks_.size(); }
+    int  GetNumFolderTracks() { return folderTracks_.size(); }
+    
+    MediaTrack* GetTrackFromChannel(int channelNumber)
+    {
+        if(tracks_.size() > channelNumber + trackOffset_)
+            return tracks_[channelNumber + trackOffset_];
+        else
+            return nullptr;
+    }
+    
+    MediaTrack* GetTrackFromId(int trackNumber)
+    {
+        if(tracks_.size() > trackNumber)
+            return tracks_[trackNumber];
+        else
+            return nullptr;
+    }
+    
+    bool IsTrackTouched(MediaTrack* track)
+    {
+        for(int i = 0; i < trackNavigators_.size(); i++)
+            if(GetTrackFromChannel(i) == track && trackNavigators_[i]->GetIsChannelTouched())
+                return true;
+        
+        return false;
+    }
+    
+    void Init();
+    void AdjustTrackBank(int stride);
+    void OnTrackSelection(MediaTrack* track);
+    void OnTrackSelectionBySurface(MediaTrack* track);
+    void TrackListChanged();
+    
+    void Run()
+    {
+        int flags;
+        MediaTrack* track;
+        
+        tracks_.clear();
+        folderTracks_.clear();
+        
+        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        {
+            track = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            if(DAW::IsTrackVisible(track, followMCP_))
+            {
+                tracks_.push_back(track);
+                
+                DAW::GetTrackInfo(track, &flags);
+                
+                if(flags & 0x01) // folder Track
+                    folderTracks_.push_back(track);
+            }
+        }
+        
+        int top = GetNumTracks() - trackNavigators_.size();
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
+        
+        top = GetNumFolderTracks();
+        if(folderTrackOffset_ >  top)
+            folderTrackOffset_ = top;
+    }
+    
+    TrackNavigator* AddTrackNavigator()
+    {
+        int channelNum = trackNavigators_.size();
+        
+        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
+        
+        return trackNavigators_[channelNum];
+    }
+    
+    void EnterPage()
+    {
+        /*
+         if(colourTracks_)
+         {
+         // capture track colors
+         for(auto* navigator : trackNavigators_)
+         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+         trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
+         }
+         */
+    }
+    
+    void LeavePage()
+    {
+        /*
+         if(colourTracks_)
+         {
+         DAW::PreventUIRefresh(1);
+         // reset track colors
+         for(auto* navigator : trackNavigators_)
+         if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
+         if(trackColours_.count(navigator->GetTrackGUID()) > 0)
+         DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
+         DAW::PreventUIRefresh(-1);
+         }
+         */
+    }
+    
+    void SetScrollLink(bool value)
+    {
+        scrollLink_ = value;
+    }
+    
+    MediaTrack* GetSelectedTrack()
+    {
+        if(DAW::CountSelectedTracks(NULL) != 1)
+            return nullptr;
+        
+        MediaTrack* track = nullptr;
+        
+        for(int i = 0; i < GetNumTracks(); i++)
+        {
+            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
+            {
+                track = GetTrackFromId(i);
+                break;
+            }
+        }
+        
+        return track;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendsNavigationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    int sendsOffset_ = 0;
+    
+    int GetMaxSends();
+    
+public:
+    SendsNavigationManager(Page* page) : page_(page) {}
+    
+    int GetSendsOffset() { return sendsOffset_; }
+    
+    
+    void AdjustTrackSendBank(int stride)
+    {
+        int maxOffset = GetMaxSends() - 1;
+        
+        sendsOffset_ += stride;
+        
+        if(sendsOffset_ < 0)
+            sendsOffset_ = 0;
+        else if(sendsOffset_ > maxOffset)
+            sendsOffset_ = maxOffset;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendsActivationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* page_ = nullptr;
+    bool shouldMapSends_ = false;
+    
+    map<ControlSurface*, vector<string>> activeSendZoneNames_;
+    
+    void ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack);
+    void ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName);
+    
+public:
+    SendsActivationManager(Page* page) : page_(page) {}
+    
+    void ToggleMapSends(ControlSurface* surface);
+    
+    void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct FXWindow
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    MediaTrack* track = nullptr;;
+    int fxIndex = 0;
+    
+    FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXActivationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<string, map<string, int>> fxParamIndices_;
+    
+    Page* page_ = nullptr;
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
+    
+    void AddFXWindow(FXWindow fxWindow)
+    {
+        openFXWindows_.push_back(fxWindow);
+    }
+    
+    void OpenFXWindows()
+    {
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
+    }
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
+    }
+    
+    void DeleteFXWindows()
+    {
+        CloseFXWindows();
+        openFXWindows_.clear();
+    }
+    
+public:
+    FXActivationManager(Page* page) : page_(page) {}
+    
+    bool GetShowFXWindows() { return showFXWindows_; }
+    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+    
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
+    {
+        char fxName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+        
+        if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
+            return fxParamIndices_[fxName][fxParamName];
+        
+        char paramName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        {
+            DAW::TrackFX_GetParamName(track, fxIndex, i, paramName, sizeof(paramName));
+            
+            if(paramName == fxParamName)
+            {
+                fxParamIndices_[fxName][fxParamName] = i;
+                return i;
+            }
+        }
+        
+        return 0;
+    }
+    
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    {
+        char fxName[BUFSZ];
+        char fxParamName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            
+            if(VSTMonitor)
+            {
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
+            }
+        }
+        
+        // GAW TBD -- clear all fx items and rebuild
+    }
+    
+    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -605,355 +922,6 @@ public:
         widget_->SetWidgetActionManager(widgetActionManager);
     }
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXWindow
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    MediaTrack* track = nullptr;;
-    int fxIndex = 0;
-    
-    FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Page* page_ = nullptr;
-    bool followMCP_ = true;
-    bool synchPages_ = false;
-    bool scrollLink_ = true;
-    bool colourTracks_ = false;
-    int trackColourRedValue_ = 0;
-    int trackColourGreenValue_ = 0;
-    int trackColourBlueValue_ = 0;
-    map<string, int> trackColours_;
-    int trackOffset_ = 0;
-    int folderTrackOffset_ = 0;
-    vector<TrackNavigator*> trackNavigators_;
-    vector<MediaTrack*> tracks_;
-    vector<MediaTrack*> folderTracks_;
-    
-public:
-    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
-    
-    bool GetSynchPages() { return synchPages_; }
-    bool GetScrollLink() { return scrollLink_; }
-    int  GetNumTracks() { return tracks_.size(); }
-    int  GetNumFolderTracks() { return folderTracks_.size(); }
-
-    MediaTrack* GetTrackFromChannel(int channelNumber)
-    {
-        if(tracks_.size() > channelNumber + trackOffset_)
-            return tracks_[channelNumber + trackOffset_];
-        else
-            return nullptr;
-    }
-    
-    MediaTrack* GetTrackFromId(int trackNumber)
-    {
-        if(tracks_.size() > trackNumber)
-            return tracks_[trackNumber];
-        else
-            return nullptr;
-    }
-    
-    bool IsTrackTouched(MediaTrack* track)
-    {
-        for(int i = 0; i < trackNavigators_.size(); i++)
-            if(GetTrackFromChannel(i) == track && trackNavigators_[i]->GetIsChannelTouched())
-                return true;
-
-        return false;
-    }
-        
-    void Init();
-    void AdjustTrackBank(int stride);
-    void OnTrackSelection(MediaTrack* track);
-    void OnTrackSelectionBySurface(MediaTrack* track);
-    void TrackListChanged();
-
-    void Run()
-    {
-        int flags;
-        MediaTrack* track;
-
-        tracks_.clear();
-        folderTracks_.clear();
-        
-        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
-        {
-            track = DAW::CSurf_TrackFromID(i, followMCP_);
-            
-            if(DAW::IsTrackVisible(track, followMCP_))
-            {
-                tracks_.push_back(track);
-                
-                DAW::GetTrackInfo(track, &flags);
-
-                if(flags & 0x01) // folder Track
-                    folderTracks_.push_back(track);
-            }
-        }
-        
-        int top = GetNumTracks() - trackNavigators_.size();
-        if(trackOffset_ >  top)
-            trackOffset_ = top;
-        
-        top = GetNumFolderTracks();
-        if(folderTrackOffset_ >  top)
-            folderTrackOffset_ = top;
-    }
-    
-    TrackNavigator* AddTrackNavigator()
-    {
-        int channelNum = trackNavigators_.size();
-        
-        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
-        
-        return trackNavigators_[channelNum];
-    }
-    
-    void EnterPage()
-    {
-        /*
-        if(colourTracks_)
-        {
-            // capture track colors
-            for(auto* navigator : trackNavigators_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-                    trackColours_[navigator->GetTrackGUID()] = DAW::GetTrackColor(track);
-        }
-         */
-    }
-    
-    void LeavePage()
-    {
-        /*
-        if(colourTracks_)
-        {
-            DAW::PreventUIRefresh(1);
-            // reset track colors
-            for(auto* navigator : trackNavigators_)
-                if(MediaTrack* track = DAW::GetTrackFromGUID(navigator->GetTrackGUID(), followMCP_))
-                    if(trackColours_.count(navigator->GetTrackGUID()) > 0)
-                        DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", &trackColours_[navigator->GetTrackGUID()]);
-            DAW::PreventUIRefresh(-1);
-        }
-      */
-    }
-    
-    void SetScrollLink(bool value)
-    {
-        scrollLink_ = value;
-    }
-    
-    MediaTrack* GetSelectedTrack()
-    {
-        if(DAW::CountSelectedTracks(NULL) != 1)
-            return nullptr;
-
-        MediaTrack* track = nullptr;
-        
-        for(int i = 0; i < GetNumTracks(); i++)
-        {
-            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
-            {
-                track = GetTrackFromId(i);
-                break;
-            }
-        }
-        
-        return track;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendsNavigationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Page* page_ = nullptr;
-    int sendsOffset_ = 0;
-   
-    int GetMaxSends();
-
-public:
-    SendsNavigationManager(Page* page) : page_(page) {}
-    
-    int GetSendsOffset() { return sendsOffset_; }
-    
-    
-    void AdjustTrackSendBank(int stride)
-    {
-        int maxOffset = GetMaxSends() - 1;
-        
-        sendsOffset_ += stride;
-        
-        if(sendsOffset_ < 0)
-            sendsOffset_ = 0;
-        else if(sendsOffset_ > maxOffset)
-            sendsOffset_ = maxOffset;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    map<string, map<string, int>> fxParamIndices_;
-
-    Page* page_ = nullptr;
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
-    
-    void AddFXWindow(FXWindow fxWindow)
-    {
-        openFXWindows_.push_back(fxWindow);
-    }
-    
-    void OpenFXWindows()
-    {
-        if(showFXWindows_)
-            for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
-    }
-    
-    void CloseFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
-    }
-    
-    void DeleteFXWindows()
-    {
-        CloseFXWindows();
-        openFXWindows_.clear();
-    }
-    
-public:
-    FXActivationManager(Page* page) : page_(page) {}
-    
-    bool GetShowFXWindows() { return showFXWindows_; }
-    
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-    
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
-    {
-        char fxName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
-        
-        if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
-            return fxParamIndices_[fxName][fxParamName];
-        
-        char paramName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
-        {
-            DAW::TrackFX_GetParamName(track, fxIndex, i, paramName, sizeof(paramName));
-            
-            if(paramName == fxParamName)
-            {
-                fxParamIndices_[fxName][fxParamName] = i;
-                return i;
-            }
-        }
-        
-        return 0;
-    }
-
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
-    {
-        char fxName[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-        {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-            
-            if(VSTMonitor)
-            {
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-                }
-            }
-        }
-        
-        // GAW TBD -- clear all fx items and rebuild
-    }
-
-    
-    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
-    {
-        DeleteFXWindows();
-        
-        int flags;
-        
-        DAW::GetTrackInfo(selectedTrack, &flags);
-        
-        if(flags & 0x02) // track is selected -- not deselected
-        {
-            for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
-            {
-                char FXName[BUFSZ];
-                
-                DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-                
-                if(surface->ActivateFXZone(FXName, i))
-                    AddFXWindow(FXWindow(selectedTrack, i));
-            }
-            
-            OpenFXWindows();
-        }
-    }
-    
-    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
-    {
-        char FXName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
-        
-        surface->ActivateFXZone(FXName, fxIndex);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendsActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Page* page_ = nullptr;
-    bool shouldMapSends_ = false;
-    
-    map<ControlSurface*, vector<string>> activeSendZoneNames_;
-
-    void ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack);
-    void ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName);
-
-public:
-    SendsActivationManager(Page* page) : page_(page) {}
-    
-    void ToggleMapSends(ControlSurface* surface);
-    
-    void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
-};
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
