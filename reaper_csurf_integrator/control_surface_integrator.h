@@ -237,7 +237,7 @@ public:
     virtual ~TrackNavigator() {}
     
     virtual MediaTrack* GetTrack();
-    void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
     bool GetIsChannelTouched() { return isChannelTouched_; }
 };
 
@@ -249,6 +249,7 @@ public:
     SelectedTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
     virtual ~SelectedTrackNavigator() {}
    
+    virtual void SetTouchState(bool isChannelTouched) override {}
     virtual MediaTrack* GetTrack() override;
 };
 
@@ -259,7 +260,8 @@ class FocusedFXTrackNavigator : public TrackNavigator
 public:
     FocusedFXTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
     virtual ~FocusedFXTrackNavigator() {}
-    
+
+    virtual void SetTouchState(bool isChannelTouched) override {}
     virtual MediaTrack* GetTrack() override;
 };
 
