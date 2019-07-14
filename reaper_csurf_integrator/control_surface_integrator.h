@@ -681,6 +681,8 @@ private:
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
     
+    vector <Action*> trackTouchedActions_;
+    
     string GetModifiers();
     
 public:
@@ -705,6 +707,11 @@ public:
     void AddAction(string modifiers, Action* action)
     {
         actions_[modifiers].push_back(action);
+    }
+    
+    void AddTrackTouchedAction(Action* action)
+    {
+        trackTouchedActions_.push_back(action);
     }
 };
 
@@ -1016,8 +1023,6 @@ public:
     {
         string modifiers = "";
         
-        if(GetTouchState(track, 0))
-            modifiers += TrackTouch;
         if(isShift_)
             modifiers += Shift;
         if(isOption_)
