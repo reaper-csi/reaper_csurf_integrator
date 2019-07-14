@@ -30,9 +30,9 @@ class MapSelectedTrackSendsToWidgets  : public GlobalAction
 public:
     MapSelectedTrackSendsToWidgets(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->MapSelectedTrackSendsToWidgets();
+        page_->MapSelectedTrackSendsToWidgets();
     }
 };
 
@@ -43,9 +43,9 @@ class MapSelectedTrackFXToWidgets  : public GlobalAction
 public:
     MapSelectedTrackFXToWidgets(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->MapSelectedTrackFXToWidgets();
+        page_->MapSelectedTrackFXToWidgets();
     }
 };
 
@@ -57,9 +57,9 @@ public:
     MapFocusedTrackFXToWidgets(WidgetActionManager* manager) : GlobalAction(manager) {}
 
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->MapFocusedTrackFXToWidgets();
+        page_->MapFocusedTrackFXToWidgets();
     }
 };
 
@@ -70,14 +70,14 @@ class SelectTrackRelative : public GlobalActionWithIntParam
 public:
     SelectTrackRelative(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(Page* page, double stride) override
+    void Do(double stride) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
             int trackIndex = 0;
             
-            for(int i = 0; i < page->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(page->GetTrackFromId(i), "I_SELECTED"))
+            for(int i = 0; i < page_->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(page_->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
                     break;
@@ -88,10 +88,10 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > page->GetNumTracks() - 1)
-                trackIndex = page->GetNumTracks() - 1;
+            if(trackIndex > page_->GetNumTracks() - 1)
+                trackIndex = page_->GetNumTracks() - 1;
             
-            DAW::SetOnlyTrackSelected(page->GetTrackFromId(trackIndex));
+            DAW::SetOnlyTrackSelected(page_->GetTrackFromId(trackIndex));
         }
     }
 };
@@ -126,9 +126,9 @@ public:
         SetWidgetValue(widget_, page_->GetScrollLink());
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetScrollLink(! page->GetScrollLink());
+        page_->SetScrollLink(! page_->GetScrollLink());
     }
 };
 
@@ -139,7 +139,7 @@ class CycleTimeDisplayModes : public GlobalAction
 public:
     CycleTimeDisplayModes(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         int *tmodeptr = &__g_projectconfig_timemode2;
         if (tmodeptr && *tmodeptr>=0)
@@ -169,7 +169,7 @@ class GoNextPage : public GlobalAction
 public:
     GoNextPage(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         TheManager->NextPage();
     }
@@ -182,7 +182,7 @@ class GoPage : public GlobalActionWithStringParam
 public:
     GoPage(WidgetActionManager* manager, vector<string> params) : GlobalActionWithStringParam(manager, params) {}
 
-    void Do(Page* page, string value) override
+    void Do(string value) override
     {
         TheManager->GoPage(value);
     }
@@ -208,9 +208,9 @@ class TrackBank : public GlobalActionWithIntParam
 public:
     TrackBank(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(Page* page, double stride) override
+    void Do(double stride) override
     {
-        TheManager->AdjustTrackBank(page, stride);
+        TheManager->AdjustTrackBank(page_, stride);
     }
 };
 
@@ -221,9 +221,9 @@ class TrackSendBank : public GlobalActionWithIntParam
 public:
     TrackSendBank(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(Page* page, double stride) override
+    void Do(double stride) override
     {
-        page->AdjustTrackSendBank(stride);
+        page_->AdjustTrackSendBank(stride);
     }
 };
 /*
@@ -256,9 +256,9 @@ class SetShift : public GlobalAction
 public:
     SetShift(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetShift(value);
+        page_->SetShift(value);
     }
 };
 
@@ -269,9 +269,9 @@ class SetOption : public GlobalAction
 public:
     SetOption(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetOption(value);
+        page_->SetOption(value);
     }
 };
 
@@ -282,9 +282,9 @@ class SetControl : public GlobalAction
 public:
     SetControl(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetControl(value);
+        page_->SetControl(value);
     }
 };
 
@@ -295,9 +295,9 @@ class SetAlt : public GlobalAction
 public:
     SetAlt(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetAlt(value);
+        page_->SetAlt(value);
     }
 };
 

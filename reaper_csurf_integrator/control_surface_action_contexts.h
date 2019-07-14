@@ -132,7 +132,7 @@ public:
        
     virtual void DoAction(double value) override
     {
-        Do(page_, isInverted_ == false ? value : 1.0 - value);
+        Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -152,7 +152,7 @@ public:
         
     virtual void DoAction(double value) override
     {
-        Do(page_, param_);
+        Do(param_);
     }
 };
 
@@ -172,7 +172,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        Do(page_, param_);
+        Do(param_);
     }
 };
 
