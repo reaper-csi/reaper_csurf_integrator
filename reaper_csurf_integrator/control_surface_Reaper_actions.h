@@ -88,9 +88,10 @@ public:
         SetWidgetValue(widget_, volToNormalized(vol));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
 
@@ -128,11 +129,14 @@ public:
         SetWidgetValue(widget_, volToNormalized(vol));
     }
     
-    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(double value) override
     {
-        double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex, normalizedToVol(value), false);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, normalizedToVol(value), false);
 
-        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "D_VOL", &volume);
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_VOL", &volume);
+        }
     }
 };
 
@@ -150,11 +154,14 @@ public:
         SetWidgetValue(widget_, panToNormalized(pan));
     }
     
-    void Do( Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(double value) override
     {
-        double pan = DAW::CSurf_OnSendPanChange(track, sendIndex, normalizedToPan(value), false);
-        
-        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "D_PAN", &pan);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double pan = DAW::CSurf_OnSendPanChange(track, sendIndex_, normalizedToPan(value), false);
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_PAN", &pan);
+        }
     }
 };
 
@@ -172,11 +179,14 @@ public:
         SetWidgetValue(widget_, mute);
     }
     
-    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(double value) override
     {
-        bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_MUTE");
-        
-        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "B_MUTE", &isMuted);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_MUTE");
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_MUTE", &isMuted);
+        }
     }
 };
 
@@ -192,11 +202,14 @@ public:
         SetWidgetValue(widget_, DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE"));
     }
     
-    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(double value) override
     {
-        bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "B_PHASE");
-        
-        DAW::GetSetTrackSendInfo(track, 0, sendIndex, "B_PHASE", &reversed);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE");
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_PHASE", &reversed);
+        }
     }
 };
 
@@ -215,16 +228,19 @@ public:
             SetWidgetValue(widget_, 1);
     }
     
-    void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) override
+    void Do(double value) override
     {
-        bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex, "I_SENDMODE") == 0 ? 0 : 1;
-        
-        if(isPre == 0)
-            isPre = 3; // switch to post FX
-        else
-            isPre = 0; // switch to post fader
-        
-        DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "I_SENDMODE", &isPre);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0 ? 0 : 1;
+            
+            if(isPre == 0)
+                isPre = 3; // switch to post FX
+            else
+                isPre = 0; // switch to post fader
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "I_SENDMODE", &isPre);
+        }
     }
 };
 
@@ -242,9 +258,10 @@ public:
         SetWidgetValue(widget_, param_, panToNormalized(pan));
     }
 
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
 };
 
@@ -260,9 +277,10 @@ public:
         SetWidgetValue(widget_, param_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
 };
 
@@ -560,10 +578,13 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-        widget->GetSurface()->GetPage()->OnTrackSelection();
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
+            widget_->GetSurface()->GetPage()->OnTrackSelection();
+        }
     }
 };
 
@@ -579,10 +600,13 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::SetOnlyTrackSelected(track);
-        widget->GetSurface()->GetPage()->OnTrackSelection();
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            DAW::SetOnlyTrackSelected(track);
+            widget_->GetSurface()->GetPage()->OnTrackSelection();
+        }
     }
 };
 
@@ -618,17 +642,17 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
 
-    virtual void Do(Widget* widget, MediaTrack* track, double value) override
+    virtual void Do(double value) override
     {
         int currentlySelectedCount = 0;
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 0; i < widget->GetSurface()->GetPage()->GetNumTracks(); i++)
+        for(int i = 0; i < widget_->GetSurface()->GetPage()->GetNumTracks(); i++)
         {
-           MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
+           MediaTrack* currentTrack = widget_->GetSurface()->GetPage()->GetTrackFromId(i);
             
-            if(currentTrack == track)
+            if(currentTrack == widget_->GetTrack())
                 trackIndex = i;
             
             if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
@@ -646,10 +670,10 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
+            MediaTrack* currentTrack = widget_->GetSurface()->GetPage()->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-            widget->GetSurface()->GetPage()->OnTrackSelection();
+            widget_->GetSurface()->GetPage()->OnTrackSelection();
         }
     }
 };
@@ -666,9 +690,12 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
+        }
     }
 };
 
@@ -686,11 +713,14 @@ public:
         SetWidgetValue(widget_, mute);
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        bool mute = false;
-        DAW::GetTrackUIMute(track, &mute);
-        DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! mute), NULL);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool mute = false;
+            DAW::GetTrackUIMute(track, &mute);
+            DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! mute), NULL);
+        }
     }
 };
 
@@ -706,9 +736,12 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
     }
     
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
+        }
     }
 };
 
@@ -719,9 +752,9 @@ class SetTrackTouch : public TrackAction
 public:
     SetTrackTouch(WidgetActionManager* manager) : TrackAction(manager) {}
 
-    void Do(Widget* widget, MediaTrack* track, double value) override
+    void Do(double value) override
     {
-        widget->SetIsTouched(value == 0 ? false : true);
+        widget_->SetIsTouched(value == 0 ? false : true);
     }
 };
 

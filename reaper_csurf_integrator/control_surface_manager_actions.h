@@ -195,9 +195,9 @@ class GoZone : public SurfaceActionWithStringParam
 public:
     GoZone(WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(manager, params) {}
 
-    void Do(ControlSurface* surface, string zoneName) override
+    void Do(string zoneName) override
     {
-        surface->GetPage()->GoZone(surface, zoneName);
+        surface_->GetPage()->GoZone(surface_, zoneName);
     }
 };
 

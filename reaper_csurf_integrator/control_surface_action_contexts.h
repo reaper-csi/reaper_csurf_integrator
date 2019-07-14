@@ -28,7 +28,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            Do(widget_, track, isInverted_ == false ? value : 1.0 - value);
+            Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -57,7 +57,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(sendTrack_)
-            Do(widget_, sendTrack_, sendIndex_, isInverted_ == false ? value : 1.0 - value);
+            Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -199,7 +199,7 @@ public:
 class SurfaceActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     ControlSurface* surface_ = nullptr;
     string param_ = "";
     
@@ -214,34 +214,8 @@ public:
     
     virtual void DoAction(double value) override
     {
-        Do(surface_, param_);
+        Do(value);
     }
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceActionWith2StringParams : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* surface_ = nullptr;
-    string param1_ = "";
-    string param2_ = "";
-    
-public:
-    SurfaceActionWith2StringParams(WidgetActionManager* manager, vector<string> params) : Action(manager)
-    {
-        if(params.size() > 2)
-        {
-            param1_ = params[1];
-            param2_ = params[2];
-        }
-        
-        surface_ = widget_->GetSurface();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        Do(surface_, param1_, param2_);
-    }
-};
 #endif /* control_surface_action_contexts_h */
