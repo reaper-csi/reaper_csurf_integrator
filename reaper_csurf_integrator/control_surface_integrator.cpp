@@ -318,11 +318,11 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
-    vector<string> modifierSlots = { "", "", "", "", "" };
+    vector<string> modifierSlots = { "", "", "", "" };
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -332,17 +332,17 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     {
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
-            if(modifier_tokens[i] == TrackTouch)
-                modifierSlots[0] = TrackTouch;
-            else if(modifier_tokens[i] == Shift)
-                modifierSlots[1] = Shift;
+            if(modifier_tokens[i] == Shift)
+                modifierSlots[0] = Shift;
             else if(modifier_tokens[i] == Option)
-                modifierSlots[2] = Option;
+                modifierSlots[1] = Option;
             else if(modifier_tokens[i] == Control)
-                modifierSlots[3] = Control;
+                modifierSlots[2] = Control;
             else if(modifier_tokens[i] == Alt)
-                modifierSlots[4] = Alt;
+                modifierSlots[3] = Alt;
             
+            else if(modifier_tokens[i] == TrackTouch)
+                isTrackTouch = true;
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
@@ -354,7 +354,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
-    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4];
+    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
     
     if(modifiers == "")
         modifiers = NoModifiers;
@@ -436,12 +436,13 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 // GAW -- the first token is the Widget name, possibly decorated with modifiers
                 string widgetName = "";
                 string modifiers = "";
+                bool isTrackTouch = false;
                 bool isInverted = false;
                 bool shouldToggle = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isInverted, shouldToggle, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -483,7 +484,10 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         
                         Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
 
-                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
+                        if(isTrackTouch)
+                            widgetActionManagerForWidget[widget]->AddTrackTouchedAction(action);
+                        else
+                            widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
                         
                         if(isInverted)
                             action->SetIsInverted();
@@ -494,7 +498,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(isDelayed)
                             action->SetDelayAmount(delayAmount * 1000.0);
 
-                        if(params[0] == TrackTouch || params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
+                        if(params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
                             widget->SetIsModifier();
                     }
                     else
@@ -1080,9 +1084,17 @@ MediaTrack* WidgetActionManager::GetTrack()
 
 void WidgetActionManager::RequestUpdate()
 {
-    if(actions_.count(GetModifiers()) > 0)
-        for(auto action : actions_[GetModifiers()])
+    if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
+    {
+        for(auto action : trackTouchedActions_)
             action->RequestUpdate();
+    }
+    else
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+                action->RequestUpdate();
+    }
 }
 
 void WidgetActionManager::DoAction(double value)
