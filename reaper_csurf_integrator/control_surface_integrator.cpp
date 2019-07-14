@@ -465,17 +465,18 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 {
                     if(TheManager->IsActionAvailable(params[0]))
                     {
-                        
                         if(widgetActionManagerForWidget.count(widget) < 1)
                         {
-                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget);
+                            TrackNavigator* trackNavigator = nullptr;
                             
                             if(hasTrackNavigator)
-                                widgetActionManagerForWidget[widget]->SetTrackNavigator(expandedTrackNavigators[i]);
+                                trackNavigator = expandedTrackNavigators[i];
                             else if(hasSelectedTrackNavigator)
-                                widgetActionManagerForWidget[widget]->SetTrackNavigator(new SelectedTrackNavigator(surface));
+                                trackNavigator = new SelectedTrackNavigator(surface);
                             else if(hasFocusedFXTrackNavigator)
-                                widgetActionManagerForWidget[widget]->SetTrackNavigator(new FocusedFXTrackNavigator(surface));
+                                trackNavigator = new FocusedFXTrackNavigator(surface);
+                            
+                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, trackNavigator);
 
                             expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
                         }
@@ -1079,29 +1080,29 @@ MediaTrack* WidgetActionManager::GetTrack()
 
 void WidgetActionManager::RequestUpdate()
 {
-    if(widgetActions_.count(GetModifiers()) > 0)
-        for(auto action : widgetActions_[GetModifiers()])
+    if(actions_.count(GetModifiers()) > 0)
+        for(auto action : actions_[GetModifiers()])
             action->RequestUpdate();
 }
 
 void WidgetActionManager::DoAction(double value)
 {
-    if(widgetActions_.count(GetModifiers()) > 0)
-        for(auto action : widgetActions_[GetModifiers()])
+    if(actions_.count(GetModifiers()) > 0)
+        for(auto action : actions_[GetModifiers()])
             action->DoAction(value);
 }
 
 void WidgetActionManager::Activate()
 {
-    if(widgetActions_.count(GetModifiers()) > 0)
-        for(auto action : widgetActions_[GetModifiers()])
+    if(actions_.count(GetModifiers()) > 0)
+        for(auto action : actions_[GetModifiers()])
             action->Activate(this);
 }
 
 void WidgetActionManager::Activate(int actionIndex)
 {
-    if(widgetActions_.count(GetModifiers()) > 0)
-        for(auto action : widgetActions_[GetModifiers()])
+    if(actions_.count(GetModifiers()) > 0)
+        for(auto action : actions_[GetModifiers()])
         {
             action->SetIndex(actionIndex);
             action->Activate(this);
@@ -1110,8 +1111,8 @@ void WidgetActionManager::Activate(int actionIndex)
 
 void WidgetActionManager::Activate(MediaTrack* track, int actionIndex)
 {
-    if(widgetActions_.count(GetModifiers()) > 0)
-        for(auto action : widgetActions_[GetModifiers()])
+    if(actions_.count(GetModifiers()) > 0)
+        for(auto action : actions_[GetModifiers()])
         {
             action->SetTrack(track);
             action->SetIndex(actionIndex);
