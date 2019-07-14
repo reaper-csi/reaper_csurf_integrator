@@ -102,7 +102,7 @@ public:
         SetWidgetValue(widget_, volToNormalized(vol));
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_SetSurfaceVolume(DAW::GetMasterTrack(0), DAW::CSurf_OnVolumeChange(DAW::GetMasterTrack(0), normalizedToVol(value), false), NULL);
     }
@@ -455,7 +455,7 @@ class Rewind : public GlobalAction
 public:
     Rewind(WidgetActionManager* manager) : GlobalAction(manager) { }
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnRew(1);
     }
@@ -468,7 +468,7 @@ class FastForward : public GlobalAction
 public:
     FastForward(WidgetActionManager* manager) : GlobalAction(manager) { }
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnFwd(1);
     }
@@ -490,7 +490,7 @@ public:
         SetWidgetValue(widget_, playState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnPlay();
     }
@@ -513,7 +513,7 @@ public:
         SetWidgetValue(widget_, stopState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnStop();
     }
@@ -536,7 +536,7 @@ public:
         SetWidgetValue(widget_, recordState);
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::CSurf_OnRecord();
     }
@@ -593,10 +593,10 @@ public:
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(DAW::GetMasterTrack(0), "I_SELECTED"));
     }
     
-    void Do(Page* page, double value) override
+    void Do( double value) override
     {
         DAW::SetOnlyTrackSelected(DAW::GetMasterTrack(0));
-        page->OnTrackSelection();
+        page_->OnTrackSelection();
     }
 };
 
@@ -726,7 +726,7 @@ class SetMasterTrackTouch : public GlobalAction
 public:
     SetMasterTrackTouch(WidgetActionManager* manager) : GlobalAction(manager) {}
 
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         // GAW TBD -- if anyone ever asks for it :)
         //page->SetTouchState(DAW::GetMasterTrack(0), value == 0 ? false : true);
@@ -745,7 +745,7 @@ public:
         SetWidgetValue(widget_, DAW::GetGlobalAutomationOverride());
     }
     
-    void Do(Page* page, double autoMode) override
+    void Do(double autoMode) override
     {
         DAW::SetGlobalAutomationOverride(autoMode);
     }
@@ -783,7 +783,7 @@ public:
             SetWidgetValue(widget_, 0.0);
     }
     
-    virtual void Do(Page* page, double autoMode) override
+    virtual void Do(double autoMode) override
     {
         DAW::SetAutomationMode(autoMode, true);
     }
@@ -814,7 +814,7 @@ public:
         SetWidgetValue(widget_, DAW::GetSetRepeatEx(nullptr, -1));
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
