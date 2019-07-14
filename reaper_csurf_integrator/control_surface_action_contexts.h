@@ -214,7 +214,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        Do(value);
+        Do(param_);
     }
 };
 
