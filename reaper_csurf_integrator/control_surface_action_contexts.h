@@ -116,9 +116,9 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             if(shouldToggle_)
-                DoToggle(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                DoToggle(isInverted_ == false ? value : 1.0 - value);
             else
-                Do(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                Do(isInverted_ == false ? value : 1.0 - value);
         }
     }
 };

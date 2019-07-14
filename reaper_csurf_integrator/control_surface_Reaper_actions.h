@@ -55,16 +55,22 @@ class FXParam : public FXAction
 public:
     FXParam(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
 
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) override
+    virtual void Do(double value) override
     {
-        DAW::TrackFX_SetParam(track, fxIndex, paramIndex, value);
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::TrackFX_SetParam(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), value);
     }
     
-    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) override
+    virtual void DoToggle(double value) override
     {
-        double min, max = 0;
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            int paramIndex = TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_);
+            
+            double min, max = 0;
 
-        DAW::TrackFX_SetParam(track, fxIndex, paramIndex, ! DAW::TrackFX_GetParam(track, fxIndex, paramIndex, &min, &max));
+            DAW::TrackFX_SetParam(track, fxIndex_, paramIndex, ! DAW::TrackFX_GetParam(track, fxIndex_, paramIndex, &min, &max));
+        }
     }
 };
 
