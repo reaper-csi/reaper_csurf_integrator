@@ -152,7 +152,7 @@ public:
         
     virtual void DoAction(double value) override
     {
-        Do(param_);
+        Do(value);
     }
 };
 
@@ -160,7 +160,7 @@ public:
 class GlobalActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     string param_ = "";
     
 public:
@@ -172,7 +172,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        Do(param_);
+        Do(value);
     }
 };
 
@@ -214,7 +214,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        Do(param_);
+        Do(value);
     }
 };
 
