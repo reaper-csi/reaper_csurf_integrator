@@ -747,7 +747,9 @@ public:
     virtual void RequestTrackUpdate(MediaTrack* track) {}
 
     virtual void Do(double value) {}
-    virtual void Do(Page* page, double value) {}
+    virtual void Do(string value) {}
+
+    //virtual void Do(Page* page, double value) {}
     virtual void Do(Page* page, ControlSurface* surface) {}
     virtual void Do(ControlSurface* surface, string value) {}
     virtual void Do(ControlSurface* surface, string value1, string value2) {}
