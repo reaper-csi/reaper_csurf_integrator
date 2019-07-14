@@ -746,8 +746,9 @@ public:
     virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
 
-    virtual void Do(double value) {}
     virtual void Do(string value) {}
+    virtual void Do(double value) {}
+    virtual void DoToggle(double value) {}
 
     //virtual void Do(Page* page, double value) {}
     virtual void Do(Page* page, ControlSurface* surface) {}
@@ -757,8 +758,8 @@ public:
     virtual void Do(Widget* widget, MediaTrack* track, double value) {}
     virtual void Do(Widget* widget, MediaTrack* track, int sendIndex, double value) {}
     virtual void Do(Widget* widget, MediaTrack* track, WidgetActionManager* manager, string stringParam2, double value) {}
-    virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
-    virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    //virtual void Do(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
+    //virtual void DoToggle(MediaTrack* track, int fxIndex, int paramIndex, double value) {}
 
     
     void SetWidgetValue(Widget* widget, double value)
