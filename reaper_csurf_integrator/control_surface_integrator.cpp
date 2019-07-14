@@ -1006,6 +1006,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
 ControlSurface::ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink)
 {
     surfaceChannelOffset_ = page->GetTotalNumChannels();
+    FXActivationManager_ = new FXActivationManager(this);
 }
 
 void ControlSurface::InitZones(string zoneFolder)

@@ -330,9 +330,7 @@ class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<string, map<string, int>> fxParamIndices_;
-    
-    Page* page_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -361,7 +359,7 @@ private:
     }
     
 public:
-    FXActivationManager(Page* page) : page_(page) {}
+    FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -373,31 +371,6 @@ public:
             OpenFXWindows();
         else
             CloseFXWindows();
-    }
-    
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
-    {
-        char fxName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
-        
-        if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
-            return fxParamIndices_[fxName][fxParamName];
-        
-        char paramName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
-        {
-            DAW::TrackFX_GetParamName(track, fxIndex, i, paramName, sizeof(paramName));
-            
-            if(paramName == fxParamName)
-            {
-                fxParamIndices_[fxName][fxParamName] = i;
-                return i;
-            }
-        }
-        
-        return 0;
     }
     
     void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
@@ -443,6 +416,8 @@ protected:
 
     vector<TrackNavigator*> trackNavigators_;
 
+    FXActivationManager* FXActivationManager_ = nullptr;
+    
     bool useZoneLink_ = false;
     
     vector<Widget*> widgets_;
@@ -465,9 +440,21 @@ public:
     int GetSurfacChannelOffset() { return surfaceChannelOffset_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     
+    bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
+    
     virtual void TurnOffMonitoring() {}
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
+    
+    void MapSelectedTrackFXToWidgets(MediaTrack* track)
+    {
+        FXActivationManager_->MapSelectedTrackFXToWidgets(this, track);
+    }
+    
+    void MapFocusedTrackFXToWidgets(MediaTrack* track, int FXIndex)
+    {
+        FXActivationManager_->MapFocusedTrackFXToWidgets(this, track, FXIndex);
+    }
     
     bool IsTrackTouched(MediaTrack* track)
     {
@@ -523,7 +510,12 @@ public:
             return true;
         }
     }
-    
+
+    void SetShowFXWindows(bool value)
+    {
+        FXActivationManager_->SetShowFXWindows(value);
+    }
+
     void OnTrackSelection(MediaTrack* track)
     {
         for(auto widget : widgets_)
@@ -949,7 +941,6 @@ private:
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
-    FXActivationManager* FXActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
 public:
@@ -957,7 +948,6 @@ public:
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
         sendsNavigationManager_ = new SendsNavigationManager(this);
-        FXActivationManager_ = new FXActivationManager(this);
         sendsActivationManager_ = new SendsActivationManager(this);
     }
     
@@ -1051,8 +1041,34 @@ public:
             surface->OnTrackSelection(track);
     }
  
-    /// GAW -- start ZoneActivation facade
-
+    void MapSelectedTrackFXToWidgets()
+    {
+        if(MediaTrack* track = trackNavigationManager_->GetSelectedTrack())
+            for(auto surface : surfaces_)
+                surface->MapSelectedTrackFXToWidgets(track);
+    }
+    
+    void MapFocusedTrackFXToWidgets()
+    {
+        int tracknumberOut = 0;
+        int itemnumberOut = 0;
+        int fxnumberOut = 0;
+        
+        if( DAW::GetFocusedFX(&tracknumberOut, &itemnumberOut, &fxnumberOut) == 1)
+            for(auto surface : surfaces_)
+                surface->MapFocusedTrackFXToWidgets(GetTrackFromId(tracknumberOut), fxnumberOut);
+    }
+    
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    {
+        //FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
+    }
+    
+    void OnFXFocus(MediaTrack *track, int fxIndex)
+    {
+        for(auto surface : surfaces_)
+            surface->OnFXFocus(track, fxIndex);
+    }
     
     void GoZone(ControlSurface* surface, string zoneName)
     {
@@ -1082,20 +1098,6 @@ public:
     void AdjustTrackBank(int stride)
     {
         trackNavigationManager_->AdjustTrackBank(stride);
-    }
-    
-    void OnTrackSelectionBySurface(ControlSurface* surface, MediaTrack* track)
-    {
-        trackNavigationManager_->OnTrackSelectionBySurface(track);
-        
-        if(surface->GetUseZoneLink())
-        {
-            for(auto surface : surfaces_)
-                if(surface->GetUseZoneLink())
-                    surface->OnTrackSelection(track);
-        }
-        else
-            surface->OnTrackSelection(track);
     }
 
     void Init()
@@ -1141,51 +1143,13 @@ public:
     
     /// GAW -- end SendsNavigationManager facade
 
+    /// GAW -- start SendsActivationManager facade
 
-    /// GAW -- start FXActivationManager facade
-    
-    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName) { return FXActivationManager_->GetFXParamIndex(track, widget, fxIndex, fxParamName); }
-    bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
-    
     void MapSelectedTrackSendsToWidgets()
     {
         if(MediaTrack* track = trackNavigationManager_->GetSelectedTrack())
             for(auto surface : surfaces_)
                 sendsActivationManager_->MapSelectedTrackSendsToWidgets(surface, track);
-    }
-    
-    void MapSelectedTrackFXToWidgets()
-    {
-        if(MediaTrack* track = trackNavigationManager_->GetSelectedTrack())
-            for(auto surface : surfaces_)
-                FXActivationManager_->MapSelectedTrackFXToWidgets(surface, track);
-    }
-
-    void MapFocusedTrackFXToWidgets()
-    {
-        int tracknumberOut = 0;
-        int itemnumberOut = 0;
-        int fxnumberOut = 0;
-        
-        if( DAW::GetFocusedFX(&tracknumberOut, &itemnumberOut, &fxnumberOut) == 1)
-            for(auto surface : surfaces_)
-                FXActivationManager_->MapFocusedTrackFXToWidgets(surface, GetTrackFromId(tracknumberOut), fxnumberOut);
-    }
-    
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
-    {
-        FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
-    }
-    
-    void OnFXFocus(MediaTrack *track, int fxIndex)
-    {
-        for(auto surface : surfaces_)
-            surface->OnFXFocus(track, fxIndex);
-    }
-    
-    void SetShowFXWindows(bool value)
-    {
-        FXActivationManager_->SetShowFXWindows(value);
     }
 
     /// GAW -- end SendsActivationManager facade
@@ -1201,6 +1165,8 @@ class Manager
 private:
     map<string, function<Action*(WidgetActionManager* manager, vector<string>)>> actions_;
     vector <Page*> pages_;
+    
+    map<string, map<string, int>> fxParamIndices_;
     
     time_t lastTimeCacheCleared = 0;
     
@@ -1279,6 +1245,31 @@ public:
             pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
 
+    int GetFXParamIndex(MediaTrack* track, Widget* widget, int fxIndex, string fxParamName)
+    {
+        char fxName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(track, fxIndex, fxName, sizeof(fxName));
+        
+        if(fxParamIndices_.count(fxName) > 0 && fxParamIndices_[fxName].count(fxParamName) > 0)
+            return fxParamIndices_[fxName][fxParamName];
+        
+        char paramName[BUFSZ];
+        
+        for(int i = 0; i < DAW::TrackFX_GetNumParams(track, fxIndex); i++)
+        {
+            DAW::TrackFX_GetParamName(track, fxIndex, i, paramName, sizeof(paramName));
+            
+            if(paramName == fxParamName)
+            {
+                fxParamIndices_[fxName][fxParamName] = i;
+                return i;
+            }
+        }
+        
+        return 0;
+    }
+    
     void Run()
     {
         /*
