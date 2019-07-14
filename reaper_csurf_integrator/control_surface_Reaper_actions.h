@@ -320,7 +320,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             char fxParamValue[128];
-            TrackFX_GetFormattedParamValue(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamValue), fxParamValue, sizeof(fxParamValue));
+            TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamValue), fxParamValue, sizeof(fxParamValue));
             SetWidgetValue(widget_, string(fxParamValue));
         }
         else
@@ -557,7 +557,7 @@ public:
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(),  track);
+        widget->GetSurface()->GetPage()->OnTrackSelection(track);
     }
 };
 
@@ -576,7 +576,7 @@ public:
     void Do(Widget* widget, MediaTrack* track, double value) override
     {
         DAW::SetOnlyTrackSelected(track);
-        widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(),  track);
+        widget->GetSurface()->GetPage()->OnTrackSelection(track);
     }
 };
 
@@ -643,7 +643,7 @@ public:
             MediaTrack* currentTrack = widget->GetSurface()->GetPage()->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-            widget->GetSurface()->GetPage()->OnTrackSelectionBySurface(widget->GetSurface(), currentTrack);
+            widget->GetSurface()->GetPage()->OnTrackSelection(currentTrack);
         }
     }
 };
@@ -892,7 +892,7 @@ public:
         
         if(MediaTrack* track = widget_->GetTrack())
         {
-            if(DAW::TrackFX_GetNamedConfigParm(track, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), "GainReduction_dB", buffer, sizeof(buffer)))
+            if(DAW::TrackFX_GetNamedConfigParm(track, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), "GainReduction_dB", buffer, sizeof(buffer)))
                 SetWidgetValue(widget_, -atof(buffer)/20.0);
             else
                 SetWidgetValue(widget_, 0.0);

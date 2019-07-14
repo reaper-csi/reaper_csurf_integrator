@@ -106,7 +106,7 @@ public:
         double min, max = 0;
         
         if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
+            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
         else
             widget_->Reset();
     }
@@ -116,9 +116,9 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             if(shouldToggle_)
-                DoToggle(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                DoToggle(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
             else
-                Do(track, fxIndex_, page_->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
+                Do(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), isInverted_ == false ? value : 1.0 - value);
         }
     }
 };
@@ -175,26 +175,26 @@ public:
         Do(page_, param_);
     }
 };
-/*
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
+protected:
     ControlSurface* surface_ = nullptr;
     
 public:
     SurfaceAction(WidgetActionManager* manager) : Action(manager)
     {
-        surface_ = GetWidget()->GetSurface();
+        surface_ = widget_->GetSurface();
     }
     
     virtual void DoAction(double value) override
     {
-        Do(page_, surface_);
+        Do(value);
     }
 };
-*/
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SurfaceActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
