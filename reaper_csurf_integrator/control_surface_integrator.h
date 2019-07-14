@@ -74,10 +74,6 @@ private:
     
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
-
-    bool shouldRefresh_ = false;
-    double refreshInterval_ = 0.0;
-    double lastRefreshed_ = 0.0;
     
     bool isModifier_ = false;
     
@@ -96,7 +92,6 @@ public:
     
     void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
-    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
 
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
@@ -1020,7 +1015,7 @@ public:
     
     void TrackHasBeenRemoved(MediaTrack* removedTrack)
     {
-
+        // GAW TBD -- this matters for Pinned Tracks
     }
     
     void OnTrackSelection()
