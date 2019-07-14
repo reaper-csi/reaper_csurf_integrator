@@ -398,7 +398,7 @@ public:
     }
     
     void MapSelectedTrackFXToWidgets();
-    void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex);
+    void MapFocusedTrackFXToWidgets();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -451,9 +451,9 @@ public:
         FXActivationManager_->MapSelectedTrackFXToWidgets();
     }
     
-    void MapFocusedTrackFXToWidgets(MediaTrack* track, int FXIndex)
+    void MapFocusedTrackFXToWidgets()
     {
-        FXActivationManager_->MapFocusedTrackFXToWidgets(this, track, FXIndex);
+        FXActivationManager_->MapFocusedTrackFXToWidgets();
     }
     
     bool IsTrackTouched(MediaTrack* track)
@@ -1033,24 +1033,7 @@ public:
     }
  
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
-    
-    void MapSelectedTrackFXToWidgets()
-    {
-            for(auto surface : surfaces_)
-                surface->MapSelectedTrackFXToWidgets();
-    }
-    
-    void MapFocusedTrackFXToWidgets()
-    {
-        int tracknumberOut = 0;
-        int itemnumberOut = 0;
-        int fxnumberOut = 0;
-        
-        if( DAW::GetFocusedFX(&tracknumberOut, &itemnumberOut, &fxnumberOut) == 1)
-            for(auto surface : surfaces_)
-                surface->MapFocusedTrackFXToWidgets(GetTrackFromId(tracknumberOut), fxnumberOut);
-    }
-    
+
     void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
     {
         //FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
