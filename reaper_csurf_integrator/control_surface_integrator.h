@@ -397,7 +397,7 @@ public:
         // GAW TBD -- clear all fx items and rebuild
     }
     
-    void MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+    void MapSelectedTrackFXToWidgets();
     void MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex);
 };
 
@@ -446,9 +446,9 @@ public:
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
     
-    void MapSelectedTrackFXToWidgets(MediaTrack* track)
+    void MapSelectedTrackFXToWidgets()
     {
-        FXActivationManager_->MapSelectedTrackFXToWidgets(this, track);
+        FXActivationManager_->MapSelectedTrackFXToWidgets();
     }
     
     void MapFocusedTrackFXToWidgets(MediaTrack* track, int FXIndex)
@@ -516,7 +516,7 @@ public:
         FXActivationManager_->SetShowFXWindows(value);
     }
 
-    void OnTrackSelection(MediaTrack* track)
+    void OnTrackSelection()
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
@@ -810,8 +810,8 @@ public:
     
     void Init();
     void AdjustTrackBank(int stride);
-    void OnTrackSelection(MediaTrack* track);
-    void OnTrackSelectionBySurface(MediaTrack* track);
+    void OnTrackSelection();
+    //void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
 
     MediaTrack* GetTrackFromChannel(int channelNumber)
@@ -1033,19 +1033,20 @@ public:
 
     }
     
-    void OnTrackSelection(MediaTrack* track)
+    void OnTrackSelection()
     {
-        trackNavigationManager_->OnTrackSelection(track);
+        trackNavigationManager_->OnTrackSelection();
         
         for(auto surface : surfaces_)
-            surface->OnTrackSelection(track);
+            surface->OnTrackSelection();
     }
  
+    MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
+    
     void MapSelectedTrackFXToWidgets()
     {
-        if(MediaTrack* track = trackNavigationManager_->GetSelectedTrack())
             for(auto surface : surfaces_)
-                surface->MapSelectedTrackFXToWidgets(track);
+                surface->MapSelectedTrackFXToWidgets();
     }
     
     void MapFocusedTrackFXToWidgets()
@@ -1236,7 +1237,7 @@ public:
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->OnTrackSelection(track);
+            pages_[currentPageIndex_]->OnTrackSelection();
     }
     
     void OnFXFocus(MediaTrack *track, int fxIndex)
