@@ -37,29 +37,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackFXToWidgets  : public GlobalAction
+class MapSelectedTrackFXToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToWidgets(WidgetActionManager* manager) : GlobalAction(manager) {}
+    MapSelectedTrackFXToWidgets(WidgetActionManager* manager) : SurfaceAction(manager) {}
 
     void Do(double value) override
     {
-        page_->MapSelectedTrackFXToWidgets();
+        surface_->MapSelectedTrackFXToWidgets();
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapFocusedTrackFXToWidgets  : public GlobalAction
+class MapFocusedTrackFXToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapFocusedTrackFXToWidgets(WidgetActionManager* manager) : GlobalAction(manager) {}
+    MapFocusedTrackFXToWidgets(WidgetActionManager* manager) : SurfaceAction(manager) {}
 
-    
     void Do(double value) override
     {
-        page_->MapFocusedTrackFXToWidgets();
+        surface_->MapFocusedTrackFXToWidgets();
     }
 };
 
