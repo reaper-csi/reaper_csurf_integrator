@@ -1255,15 +1255,16 @@ public:
     {
         if(actions_.count(params[0]) > 0)
             return actions_[params[0]](manager, params);
-        
-        return nullptr;
+        else
+            return nullptr;
     }
 
     bool IsActionAvailable(string actionName)
     {
         if(actions_.count(actionName) > 0)
             return true;
-        else return false;
+        else
+            return false;
     }
     
     void OnTrackSelection(MediaTrack *track)
