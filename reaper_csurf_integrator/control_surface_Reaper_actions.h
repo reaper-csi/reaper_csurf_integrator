@@ -784,9 +784,9 @@ public:
         SetWidgetValue(widget_, DAW::GetGlobalAutomationOverride());
     }
     
-    void Do(double autoMode) override
+    void Do(double value) override
     {
-        DAW::SetGlobalAutomationOverride(autoMode);
+        DAW::SetGlobalAutomationOverride(param_);
     }
 };
 
@@ -822,9 +822,9 @@ public:
             SetWidgetValue(widget_, 0.0);
     }
     
-    virtual void Do(double autoMode) override
+    virtual void Do(double value) override
     {
-        DAW::SetAutomationMode(autoMode, true);
+        DAW::SetAutomationMode(param_, true);
     }
 };
 
