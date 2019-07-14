@@ -917,10 +917,10 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 void Zone::Deactivate()
 {
     for(auto widgetActionManager : widgetActionManagers_)
-        {
-            widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
-            widgetActionManager->GetWidget()->Reset();
-        }
+    {
+        widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
+        widgetActionManager->GetWidget()->Reset();
+    }
     
     for(auto zone : includedZones_)
         zone->Deactivate();
