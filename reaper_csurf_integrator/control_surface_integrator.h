@@ -679,17 +679,15 @@ class WidgetActionManager
 private:
     Widget* widget_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
-    map<string, vector <Action*>> widgetActions_;
+    map<string, vector <Action*>> actions_;
     
     string GetModifiers();
     
 public:
-    WidgetActionManager(Widget* widget) : widget_(widget) {}
+    WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
     MediaTrack* GetTrack();
-    
-    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
     
     void RequestUpdate();
     void DoAction(double value);
@@ -706,7 +704,7 @@ public:
     
     void AddAction(string modifiers, Action* action)
     {
-        widgetActions_[modifiers].push_back(action);
+        actions_[modifiers].push_back(action);
     }
 };
 
