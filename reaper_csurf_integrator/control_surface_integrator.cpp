@@ -1151,7 +1151,7 @@ void TrackNavigationManager::OnTrackSelection()
         int low = trackOffset_;
         int high = low + totalNumChannels_ - 1;
         
-        MediaTrack* selectedTrack = page_->GetSelectedTrack();
+        MediaTrack* selectedTrack = GetSelectedTrack();
         
         if(selectedTrack == nullptr)
             return;
@@ -1312,13 +1312,24 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
     }
 }
 
-void FXActivationManager::MapFocusedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack, int fxIndex)
+void FXActivationManager::MapFocusedTrackFXToWidgets()
 {
-    char FXName[BUFSZ];
     
-    DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
     
-    surface->ActivateFXZone(FXName, fxIndex);
+    int tracknumberOut = 0;
+    int itemnumberOut = 0;
+    int fxIndex = 0;
+    MediaTrack* selectedTrack = nullptr;
+    
+    if( DAW::GetFocusedFX(&tracknumberOut, &itemnumberOut, &fxIndex) == 1)
+        selectedTrack = surface_->GetPage()->GetTrackFromId(tracknumberOut);
+
+    if(selectedTrack)
+    {
+        char FXName[BUFSZ];
+        DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+        surface_->ActivateFXZone(FXName, fxIndex);
+    }
 }
 
 
