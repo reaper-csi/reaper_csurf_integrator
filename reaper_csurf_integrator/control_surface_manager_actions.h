@@ -97,20 +97,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetShowFXWindows : public GlobalAction
+class SetShowFXWindows : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows(WidgetActionManager* manager) : GlobalAction(manager) {}
+    SetShowFXWindows(WidgetActionManager* manager) : SurfaceAction(manager) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetShowFXWindows());
+        SetWidgetValue(widget_, surface_->GetShowFXWindows());
     }
     
-    void Do(Page* page, double value) override
+    void Do(double value) override
     {
-        page->SetShowFXWindows(value);
+        surface_->SetShowFXWindows(value);
     }
 };
 
