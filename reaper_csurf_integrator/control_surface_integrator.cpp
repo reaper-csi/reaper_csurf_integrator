@@ -1143,7 +1143,7 @@ void TrackNavigationManager::Init()
         trackOffset_ = atol(buffer);
 }
 
-void TrackNavigationManager::OnTrackSelection(MediaTrack* track)
+void TrackNavigationManager::OnTrackSelection()
 {
     if(scrollLink_)
     {
@@ -1151,24 +1151,17 @@ void TrackNavigationManager::OnTrackSelection(MediaTrack* track)
         int low = trackOffset_;
         int high = low + totalNumChannels_ - 1;
         
-        int selectedTrackOffset = DAW::CSurf_TrackToID(track, followMCP_);
+        MediaTrack* selectedTrack = page_->GetSelectedTrack();
+        
+        if(selectedTrack == nullptr)
+            return;
+        
+        int selectedTrackOffset = DAW::CSurf_TrackToID(selectedTrack, followMCP_);
         
         if(selectedTrackOffset < low)
             TheManager->AdjustTrackBank(page_, selectedTrackOffset - low);
         if(selectedTrackOffset > high)
             TheManager->AdjustTrackBank(page_, selectedTrackOffset - high);
-    }
-}
-
-void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
-{
-    if(scrollLink_)
-    {
-        if(DAW::IsTrackVisible(track, true))
-            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
-        
-        if(DAW::IsTrackVisible(track, false))
-            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
     }
 }
 
@@ -1293,9 +1286,11 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, MediaTrack* selectedTrack)
+void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
     DeleteFXWindows();
+    
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     int flags;
     
@@ -1309,7 +1304,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(ControlSurface* surface, M
             
             DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
             
-            if(surface->ActivateFXZone(FXName, i))
+            if(surface_->ActivateFXZone(FXName, i))
                 AddFXWindow(FXWindow(selectedTrack, i));
         }
         
