@@ -70,7 +70,7 @@ class SelectTrackRelative : public GlobalActionWithIntParam
 public:
     SelectTrackRelative(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(double stride) override
+    void Do(double value) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -83,7 +83,7 @@ public:
                     break;
                 }
             
-            trackIndex += stride;
+            trackIndex += param_;
             
             if(trackIndex < 0)
                 trackIndex = 0;
@@ -182,9 +182,9 @@ class GoPage : public GlobalActionWithStringParam
 public:
     GoPage(WidgetActionManager* manager, vector<string> params) : GlobalActionWithStringParam(manager, params) {}
 
-    void Do(string value) override
+    void Do(double value) override
     {
-        TheManager->GoPage(value);
+        TheManager->GoPage(param_);
     }
 };
 
@@ -195,9 +195,9 @@ class GoZone : public SurfaceActionWithStringParam
 public:
     GoZone(WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(manager, params) {}
 
-    void Do(string zoneName) override
+    void Do(double value) override
     {
-        surface_->GetPage()->GoZone(surface_, zoneName);
+        surface_->GetPage()->GoZone(surface_, param_);
     }
 };
 
@@ -208,9 +208,9 @@ class TrackBank : public GlobalActionWithIntParam
 public:
     TrackBank(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(double stride) override
+    void Do(double value) override
     {
-        TheManager->AdjustTrackBank(page_, stride);
+        TheManager->AdjustTrackBank(page_, param_);
     }
 };
 
@@ -221,9 +221,9 @@ class TrackSendBank : public GlobalActionWithIntParam
 public:
     TrackSendBank(WidgetActionManager* manager, vector<string> params) : GlobalActionWithIntParam(manager, params) {}
 
-    void Do(double stride) override
+    void Do(double value) override
     {
-        page_->AdjustTrackSendBank(stride);
+        page_->AdjustTrackSendBank(param_);
     }
 };
 /*
