@@ -341,7 +341,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
             else if(modifier_tokens[i] == Alt)
                 modifierSlots[3] = Alt;
             
-            else if(modifier_tokens[i] == TrackTouch)
+            else if(modifier_tokens[i] == "TrackTouch")
                 isTrackTouch = true;
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
@@ -703,7 +703,7 @@ void Manager::InitActionDictionary()
     actions_["TrackRecordArm"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new TrackRecordArm(manager); };
     actions_["TrackMute"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackMute(manager); };
     actions_["TrackSolo"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackSolo(manager); };
-    actions_[TrackTouch] =                          [this](WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(manager); };
+    actions_["TrackTouch"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(manager); };
     actions_["MasterTrackTouch"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new SetMasterTrackTouch(manager); };
     actions_["CycleTimeline"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeline(manager); };
     actions_["TrackOutputMeter"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeter(manager, params); };

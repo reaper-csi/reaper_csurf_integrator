@@ -49,7 +49,6 @@ const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string PageToken = "Page";
-const string TrackTouch = "TrackTouch";
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
