@@ -193,6 +193,7 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
+    void ResetWidgets();
     void Deactivate();
     void Activate();
     void Activate(int actionIndex);
@@ -325,6 +326,9 @@ class FXActivationManager
 {
 private:
     ControlSurface* surface_ = nullptr;
+    vector<string> currentFXNames_;
+    vector<Zone*> activeFXZones_;
+    
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -354,6 +358,11 @@ private:
     
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
+    
+    
+    void MapSelectedTrackFXToWidgets();
+    void MapFocusedTrackFXToWidgets();
+    void Run(map<string, Zone*> &zones);
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -390,9 +399,6 @@ public:
         
         // GAW TBD -- clear all fx items and rebuild
     }
-    
-    void MapSelectedTrackFXToWidgets();
-    void MapFocusedTrackFXToWidgets();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -467,8 +473,10 @@ public:
             for(auto widget : widgets_)
                 widget->Reset();
          */
-
-        RequestUpdate();
+        
+        FXActivationManager_->Run(zones_);
+        
+        RequestUpdate(); // this should always be last so that state changes are complete
     }
     
     void ResetAllWidgets()
