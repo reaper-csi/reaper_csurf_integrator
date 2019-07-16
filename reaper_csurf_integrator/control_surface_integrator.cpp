@@ -1292,26 +1292,40 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FXActivationManager::Run(map<string, Zone*> &zones )
+void FXActivationManager::Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones )
+{
+    MapSelectedTrackFXToWidgets(trackNavigators, zones);
+}
+
+void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
 {
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
     {
-        //DeleteFXWindows();
+        for(auto zone : activeFXZones_)
+            zone->Deactivate();
+        
+        activeFXZones_.clear();
+        currentFXNames_.clear();
+        DeleteFXWindows();
         return;
     }
     
-    vector<Zone*> oldActiveFXZones;
+    // GAW TBD -- add in check for trackNavigators if size > 0 -- make window logic work similar to activeFXZones
+    vector<FXWindow> oldOpenFXWindows;
+    for(auto fxWindow : openFXWindows_)
+        oldOpenFXWindows.push_back(fxWindow);
+    openFXWindows_.clear();
     
+    vector<Zone*> oldActiveFXZones;
     for(auto zone : activeFXZones_)
     {
         zone->Deactivate();
         oldActiveFXZones.push_back(zone);
     }
-
     activeFXZones_.clear();
-
+    
     currentFXNames_.clear();
     
     for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
@@ -1330,19 +1344,19 @@ void FXActivationManager::Run(map<string, Zone*> &zones )
             Zone* zone = zones[currentFXNames_[fxIndex]];
             zone->Activate(fxIndex);
             activeFXZones_.push_back(zone);
-            //AddFXWindow(FXWindow(selectedTrack, fxIndex));
+            openFXWindows_.push_back(FXWindow(selectedTrack, fxIndex));
         }
     }
-
+    
     if(oldActiveFXZones.size() != activeFXZones_.size())
         for(auto zone : oldActiveFXZones)
             zone->ResetWidgets();
     
-   // OpenFXWindows();
-}
+    //if(oldOpenFXWindows.size() != openFXWindows_.size())
+        //DeleteFXWindows();
+    
+    OpenFXWindows();
 
-void FXActivationManager::MapSelectedTrackFXToWidgets()
-{
     /*
     DeleteFXWindows();
     
@@ -1369,7 +1383,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
      */
 }
 
-void FXActivationManager::MapFocusedTrackFXToWidgets()
+void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
 {
     
     
