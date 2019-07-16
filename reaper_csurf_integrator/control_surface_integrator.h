@@ -316,6 +316,7 @@ struct FXWindow
 {
     MediaTrack* track = nullptr;;
     int fxIndex = 0;
+    HWND hwnd = nullptr;
     
     FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
 };
@@ -332,16 +333,16 @@ private:
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
-    void AddFXWindow(FXWindow fxWindow)
-    {
-        openFXWindows_.push_back(fxWindow);
-    }
-    
     void OpenFXWindows()
     {
         if(showFXWindows_)
+        {
             for(auto fxWindow : openFXWindows_)
+            {
                 DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
+                fxWindow.hwnd = DAW::TrackFX_GetFloatingWindow(fxWindow.track, fxWindow.fxIndex);
+            }
+        }
     }
     
     void CloseFXWindows()
@@ -352,17 +353,17 @@ private:
     
     void DeleteFXWindows()
     {
-        CloseFXWindows();
+        for(auto fxWindow : openFXWindows_)
+            CloseHandle(fxWindow.hwnd);
         openFXWindows_.clear();
     }
     
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
-    
-    void MapSelectedTrackFXToWidgets();
-    void MapFocusedTrackFXToWidgets();
-    void Run(map<string, Zone*> &zones);
+    void MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
     
     bool GetShowFXWindows() { return showFXWindows_; }
     
@@ -448,12 +449,13 @@ public:
     
     void MapSelectedTrackFXToWidgets()
     {
-        FXActivationManager_->MapSelectedTrackFXToWidgets();
+        // GAW TBD -- set bool in FXActivationManager
+        //FXActivationManager_->MapSelectedTrackFXToWidgets(trackNavigators_, zones_);
     }
     
     void MapFocusedTrackFXToWidgets()
     {
-        FXActivationManager_->MapFocusedTrackFXToWidgets();
+        FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
     }
     
     bool IsTrackTouched(MediaTrack* track)
@@ -474,7 +476,7 @@ public:
                 widget->Reset();
          */
         
-        FXActivationManager_->Run(zones_);
+        FXActivationManager_->Run(trackNavigators_, zones_);
         
         RequestUpdate(); // this should always be last so that state changes are complete
     }
