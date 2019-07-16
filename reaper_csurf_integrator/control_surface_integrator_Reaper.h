@@ -98,6 +98,8 @@ public:
 
     static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
 
+    static HWND TrackFX_GetFloatingWindow(MediaTrack* track, int index) { return ::TrackFX_GetFloatingWindow(track, index); }
+
     static void TrackFX_Show(MediaTrack* track, int index, int showFlag) { ::TrackFX_Show(track, index, showFlag); }
 
     static int TrackFX_GetCount(MediaTrack* track) { return ::TrackFX_GetCount(track); }
