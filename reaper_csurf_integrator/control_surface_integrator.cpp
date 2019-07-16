@@ -914,13 +914,19 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::ResetWidgets()
+{
+    for(auto widgetActionManager : widgetActionManagers_)
+        widgetActionManager->GetWidget()->Reset();
+    
+    for(auto zone : includedZones_)
+        zone->ResetWidgets();
+}
+
 void Zone::Deactivate()
 {
     for(auto widgetActionManager : widgetActionManagers_)
-    {
         widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
-        widgetActionManager->GetWidget()->Reset();
-    }
     
     for(auto zone : includedZones_)
         zone->Deactivate();
@@ -1286,8 +1292,58 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FXActivationManager::Run(map<string, Zone*> &zones )
+{
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    
+    if(selectedTrack == nullptr)
+    {
+        //DeleteFXWindows();
+        return;
+    }
+    
+    vector<Zone*> oldActiveFXZones;
+    
+    for(auto zone : activeFXZones_)
+    {
+        zone->Deactivate();
+        oldActiveFXZones.push_back(zone);
+    }
+
+    activeFXZones_.clear();
+
+    currentFXNames_.clear();
+    
+    for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+    {
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+        
+        currentFXNames_.push_back(FXName);
+    }
+    
+    for(int fxIndex = 0; fxIndex < currentFXNames_.size(); fxIndex++)
+    {
+        if(zones.count(currentFXNames_[fxIndex]) > 0)
+        {
+            Zone* zone = zones[currentFXNames_[fxIndex]];
+            zone->Activate(fxIndex);
+            activeFXZones_.push_back(zone);
+            //AddFXWindow(FXWindow(selectedTrack, fxIndex));
+        }
+    }
+
+    if(oldActiveFXZones.size() != activeFXZones_.size())
+        for(auto zone : oldActiveFXZones)
+            zone->ResetWidgets();
+    
+   // OpenFXWindows();
+}
+
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
+    /*
     DeleteFXWindows();
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
@@ -1310,6 +1366,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         
         OpenFXWindows();
     }
+     */
 }
 
 void FXActivationManager::MapFocusedTrackFXToWidgets()
