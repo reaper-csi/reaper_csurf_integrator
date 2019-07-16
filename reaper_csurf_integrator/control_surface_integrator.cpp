@@ -1306,17 +1306,28 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &t
         for(auto zone : activeFXZones_)
             zone->Deactivate();
         
+        for(auto zone : activeFXZones_)
+            zone->ResetWidgets();
+
         activeFXZones_.clear();
         currentFXNames_.clear();
-        DeleteFXWindows();
+        //DeleteFXWindows();
         return;
     }
     
-    // GAW TBD -- add in check for trackNavigators if size > 0 -- make window logic work similar to activeFXZones
+    // GAW TBD -- add in check for trackNavigators if size > 0
+    
+    
+    
+    /*
     vector<FXWindow> oldOpenFXWindows;
     for(auto fxWindow : openFXWindows_)
+    {
         oldOpenFXWindows.push_back(fxWindow);
+        fxWindow.hwnd = DAW::TrackFX_GetFloatingWindow(fxWindow.track, fxWindow.fxIndex);
+    }
     openFXWindows_.clear();
+    */
     
     vector<Zone*> oldActiveFXZones;
     for(auto zone : activeFXZones_)
@@ -1344,19 +1355,55 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &t
             Zone* zone = zones[currentFXNames_[fxIndex]];
             zone->Activate(fxIndex);
             activeFXZones_.push_back(zone);
-            openFXWindows_.push_back(FXWindow(selectedTrack, fxIndex));
+            //openFXWindows_.push_back(FXWindow(currentFXNames_[fxIndex], selectedTrack, fxIndex));
         }
     }
     
     if(oldActiveFXZones.size() != activeFXZones_.size())
         for(auto zone : oldActiveFXZones)
             zone->ResetWidgets();
+/*
+    for(auto oldFxWindow : oldOpenFXWindows)
+    {
+        bool gotIt = false;
+        
+        for(auto fxWindow : openFXWindows_)
+        {
+            if(oldFxWindow.fxIndex == fxWindow.fxIndex)
+            {
+                if(oldFxWindow.track != fxWindow.track || oldFxWindow.fxName != fxWindow.fxName )
+                {
+                    if(oldFxWindow.hwnd)
+                    {
+                        CloseHandle(oldFxWindow.hwnd);
+                    }
+                }
+                else
+                {
+                    gotIt = true;
+                }
+            }
+        }
+        
+        if(! gotIt)
+        {
+            if(oldFxWindow.hwnd)
+            {
+                CloseHandle(oldFxWindow.hwnd);
+            }
+        }
+    }
     
-    //if(oldOpenFXWindows.size() != openFXWindows_.size())
-        //DeleteFXWindows();
+    oldOpenFXWindows.clear();
     
     OpenFXWindows();
-
+*/
+    
+    
+    
+    
+    
+    
     /*
     DeleteFXWindows();
     

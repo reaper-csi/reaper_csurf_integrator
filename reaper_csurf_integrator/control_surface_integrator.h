@@ -314,11 +314,12 @@ public:
 struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    string fxName = "";
     MediaTrack* track = nullptr;;
     int fxIndex = 0;
     HWND hwnd = nullptr;
     
-    FXWindow(MediaTrack* aTrack, int anFxIndex) : track(aTrack), fxIndex(anFxIndex) {}
+    FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -336,13 +337,8 @@ private:
     void OpenFXWindows()
     {
         if(showFXWindows_)
-        {
             for(auto fxWindow : openFXWindows_)
-            {
                 DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
-                fxWindow.hwnd = DAW::TrackFX_GetFloatingWindow(fxWindow.track, fxWindow.fxIndex);
-            }
-        }
     }
     
     void CloseFXWindows()
