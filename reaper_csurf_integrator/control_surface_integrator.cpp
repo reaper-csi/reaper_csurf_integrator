@@ -1296,8 +1296,6 @@ void FXActivationManager::Run(vector<TrackNavigator*> &trackNavigators, map<stri
 {
     if(shouldMapSelectedTrackFXToWidgets_)
         MapSelectedTrackFXToWidgets(trackNavigators, zones);
-    else
-        ClearAll();
 }
 
 void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
