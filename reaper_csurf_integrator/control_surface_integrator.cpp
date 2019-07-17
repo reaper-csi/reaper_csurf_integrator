@@ -149,7 +149,7 @@ static vector<string> GetTokens(string line)
 
 static map<string, vector<Zone*>> includedZoneMembers;
 
-void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface)
+void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, int &numSendSlots)
 {
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
@@ -181,6 +181,9 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
         {
             rangeBegin = stoi(rangeTokens[0]);
             rangeEnd = stoi(rangeTokens[1]);
+            
+            if(zoneBaseName == "Send")
+                numSendSlots = rangeEnd - rangeBegin + 1;
             
             for(int i = rangeBegin; i <= rangeEnd; i++)
                 expandedZonesIds.push_back(to_string(i));
@@ -370,7 +373,12 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     vector<Zone*> expandedZones;
     vector<string> expandedZonesIds;
     
-    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
+    int numSendSlots = 0;
+    
+    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, numSendSlots);
+    
+    if(numSendSlots != 0)
+        surface->SetNumSendSlots(numSendSlots);
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
 
@@ -1060,8 +1068,7 @@ TrackNavigator* ControlSurface::AddTrackNavigator()
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
-    if(MediaTrack* track = page_->GetSelectedTrack())
-        sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_, track);
+    sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1232,47 +1239,50 @@ int SendsNavigationManager::GetMaxSends()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones, MediaTrack* selectedTrack)
+void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
-    if(selectedTrack == nullptr)
-        return;
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
+    if(selectedTrack == nullptr)
+    {
+        ClearAll();
+        return;
+    }
+
     if(shouldMapSends_)
     {
-        // GAW TBD -- Zero all Sends Zones for this surface (and all if zoneLink)
+        int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
         
-        for(int i = 0; i < DAW::GetTrackNumSends(selectedTrack, 0); i++)
+        for(int i = 0; i < numSendSlots_; i ++)
         {
             string zoneName = "Send" + to_string(i + 1);
-            
-            if(zones.count(zoneName) > 0)
-                zones[zoneName]->Activate(selectedTrack, i);
+           
+            if(i < numTrackSends)
+            {
+                if(zones.count(zoneName) > 0)
+                    zones[zoneName]->Activate(selectedTrack, i);
+            }
+            else
+            {
+                if(zones.count(zoneName) > 0)
+                {
+                    zones[zoneName]->Deactivate();
+                    zones[zoneName]->ResetWidgets();
+                }
+            }
         }
     }
 }
 
 void SendsActivationManager::ToggleMapSends(map<string, Zone*> &zones)
 {
-    if(DAW::CountSelectedTracks(NULL) != 1)
-        return;
-    
     shouldMapSends_ = ! shouldMapSends_;
-        
-    MediaTrack* selectedTrack = nullptr;
     
-    for(int i = 0; i < surface_->GetPage()->GetNumTracks(); i++)
-    {
-        if(DAW::GetMediaTrackInfo_Value(surface_->GetPage()->GetTrackFromId(i), "I_SELECTED"))
-        {
-            selectedTrack = surface_->GetPage()->GetTrackFromId(i - 1);
-            break;
-        }
-    }
-    
-    if(selectedTrack != nullptr && shouldMapSends_)
-        MapSelectedTrackSendsToWidgets(zones, selectedTrack);
+    if(shouldMapSends_)
+        MapSelectedTrackSendsToWidgets(zones);
+    else
+        surface_->GoZone("Home");
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
