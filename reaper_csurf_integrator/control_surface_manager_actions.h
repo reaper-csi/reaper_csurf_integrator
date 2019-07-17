@@ -45,7 +45,7 @@ public:
 
     void Do(double value) override
     {
-        surface_->MapSelectedTrackFXToWidgets();
+        surface_->MapSelectedTrackFXToWidgets(value);
     }
 };
 
