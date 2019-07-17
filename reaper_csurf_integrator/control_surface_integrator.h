@@ -275,7 +275,6 @@ public:
     
     int GetSendsOffset() { return sendsOffset_; }
     
-    
     void AdjustTrackSendBank(int stride)
     {
         int maxOffset = GetMaxSends() - 1;
@@ -296,6 +295,7 @@ class SendsActivationManager
 private:
     ControlSurface* surface_ = nullptr;
     bool shouldMapSends_ = false;
+    int numSendSlots_ = 0;
     
     map<ControlSurface*, vector<string>> activeSendZoneNames_;
     vector<Zone*> activeSendZones_;
@@ -303,8 +303,9 @@ private:
 public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
+    void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     void ToggleMapSends(map<string, Zone*> &zones);
-    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones, MediaTrack* selectedTrack);
+    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
     
     void ClearAll()
     {
@@ -437,11 +438,10 @@ protected:
     Page* page_ = nullptr;
     const string name_ = "";
     int surfaceChannelOffset_ = 0;
-
     vector<TrackNavigator*> trackNavigators_;
 
-    FXActivationManager* FXActivationManager_ = nullptr;
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
+    FXActivationManager* FXActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
     bool useZoneLink_ = false;
@@ -468,6 +468,7 @@ public:
     
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
     
+    void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
