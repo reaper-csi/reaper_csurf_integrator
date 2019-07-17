@@ -10,19 +10,20 @@
 #include "control_surface_integrator.h"
 
 extern Manager* TheManager;
-/*
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSends  : public ActionOld
+class ToggleMapSends : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    ToggleMapSends(WidgetActionManager* manager) : GlobalAction(manager) {}
     
-    void Do(Page* page, ControlSurface* surface) override
+    void Do(double value) override
     {
-        page->ToggleMapSends(surface);
+        page_->ToggleMapSends();
     }
 };
-*/
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapSelectedTrackSendsToWidgets  : public GlobalAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,7 +168,7 @@ class GoNextPage : public GlobalAction
 {
 public:
     GoNextPage(WidgetActionManager* manager) : GlobalAction(manager) {}
-
+    
     void Do(double value) override
     {
         TheManager->NextPage();
@@ -222,7 +223,7 @@ public:
 
     void Do(double value) override
     {
-        page_->AdjustTrackSendBank(param_);
+        //page_->AdjustTrackSendBank(param_);
     }
 };
 /*

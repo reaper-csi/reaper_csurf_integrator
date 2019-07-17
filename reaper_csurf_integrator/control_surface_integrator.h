@@ -265,13 +265,13 @@ class SendsNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     int sendsOffset_ = 0;
     
     int GetMaxSends();
     
 public:
-    SendsNavigationManager(Page* page) : page_(page) {}
+    SendsNavigationManager(ControlSurface* surface) : surface_(surface) {}
     
     int GetSendsOffset() { return sendsOffset_; }
     
@@ -294,20 +294,30 @@ class SendsActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
+    ControlSurface* surface_ = nullptr;
     bool shouldMapSends_ = false;
     
     map<ControlSurface*, vector<string>> activeSendZoneNames_;
-    
-    void ActivateSendsZones(ControlSurface* surface, MediaTrack* selectedTrack);
-    void ActivateSendsZone(ControlSurface* surface, MediaTrack* selectedTrack, int sendsIndex, string zoneName);
-    
+    vector<Zone*> activeSendZones_;
+        
 public:
-    SendsActivationManager(Page* page) : page_(page) {}
+    SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
-    void ToggleMapSends(ControlSurface* surface);
+    void ToggleMapSends(map<string, Zone*> &zones);
+    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones, MediaTrack* selectedTrack);
     
-    void MapSelectedTrackSendsToWidgets(ControlSurface* surface, MediaTrack* selectedTrack);
+    void ClearAll()
+    {
+        for(auto zone : activeSendZones_)
+            zone->Deactivate();
+        
+        for(auto zone : activeSendZones_)
+            zone->ResetWidgets();
+        
+        activeSendZones_.clear();
+        activeSendZoneNames_.clear();
+    }
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,7 +441,9 @@ protected:
     vector<TrackNavigator*> trackNavigators_;
 
     FXActivationManager* FXActivationManager_ = nullptr;
-    
+    SendsNavigationManager* sendsNavigationManager_ = nullptr;
+    SendsActivationManager* sendsActivationManager_ = nullptr;
+
     bool useZoneLink_ = false;
     
     vector<Widget*> widgets_;
@@ -469,6 +481,30 @@ public:
     {
         FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
     }
+    
+    /// GAW -- start SendsNavigationManager facade
+    
+    int GetSendsOffset() { return sendsNavigationManager_->GetSendsOffset(); }
+    
+    void AdjustTrackSendBank(int stride)
+    {
+        sendsNavigationManager_->AdjustTrackSendBank(stride);
+    }
+    
+    /// GAW -- end SendsNavigationManager facade
+
+    /// GAW -- start SendsActivationManager facade
+    
+    void MapSelectedTrackSendsToWidgets();
+    
+    void ToggleMapSends()
+    {
+        sendsActivationManager_->ToggleMapSends(zones_);
+    }
+    
+    /// GAW -- end SendsActivationManager facade
+
+    
     
     bool IsTrackTouched(MediaTrack* track)
     {
@@ -550,29 +586,6 @@ public:
     {
         if(zones_.count(zoneName) > 0)
             zones_[zoneName]->Activate();
-    }
-    
-    bool ActivateFXZone(string zoneName, int fxIndex)
-    {
-        if(zones_.count(zoneName) > 0)
-        {
-            zones_[zoneName]->Activate(fxIndex);
-            return true;
-        }
-        else
-            return false;
-    }
-    
-    void ActivateSendsZone(string zoneName, MediaTrack* track, int sendsIndex)
-    {
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->Activate(track, sendsIndex);
-    }
-    
-    void DeactivateZone(string zoneName)
-    {
-        //if(zones_.count(zoneName) > 0)
-            //RemoveActiveZone(zoneName);
     }
 };
 
@@ -947,15 +960,11 @@ private:
     bool isAlt_ = false;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
-    SendsNavigationManager* sendsNavigationManager_ = nullptr;
-    SendsActivationManager* sendsActivationManager_ = nullptr;
 
 public:
     Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
-        sendsNavigationManager_ = new SendsNavigationManager(this);
-        sendsActivationManager_ = new SendsActivationManager(this);
     }
     
     string GetName() { return name_; }
@@ -1066,6 +1075,18 @@ public:
                     surface->GoZone(zoneName);
     }
     
+    void MapSelectedTrackSendsToWidgets()
+    {
+        for(auto surface : surfaces_)
+            surface->MapSelectedTrackSendsToWidgets();
+    }
+    
+    void ToggleMapSends()
+    {
+        for(auto surface : surfaces_)
+            surface->ToggleMapSends();
+    }
+    
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -1115,33 +1136,6 @@ public:
     }
     
     /// GAW -- end TrackNavigationManager facade
-    
-    
-    /// GAW -- start SendsNavigationManager facade
-    
-    int GetSendsOffset() { return sendsNavigationManager_->GetSendsOffset(); }
-    
-    
-    void AdjustTrackSendBank(int stride)
-    {
-        sendsNavigationManager_->AdjustTrackSendBank(stride);
-    }
-    
-    /// GAW -- end SendsNavigationManager facade
-
-    /// GAW -- start SendsActivationManager facade
-
-    void MapSelectedTrackSendsToWidgets()
-    {
-        if(MediaTrack* track = trackNavigationManager_->GetSelectedTrack())
-            for(auto surface : surfaces_)
-                sendsActivationManager_->MapSelectedTrackSendsToWidgets(surface, track);
-    }
-
-    /// GAW -- end SendsActivationManager facade
-
-    void ToggleMapSends(ControlSurface* surface) { sendsActivationManager_->ToggleMapSends(surface); }
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
