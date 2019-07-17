@@ -1001,7 +1001,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
     int fxIndex = 0;
     
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-        return surface_->GetPage()->GetTrackFromId(trackNumber);
+        return surface_->GetPage()->GetTrackFromId(trackNumber - 1);
     else
         return nullptr;
 }
@@ -1294,7 +1294,10 @@ void SendsActivationManager::ToggleMapSends(ControlSurface* surface)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones )
 {
-    MapSelectedTrackFXToWidgets(trackNavigators, zones);
+    if(shouldMapSelectedTrackFXToWidgets_)
+        MapSelectedTrackFXToWidgets(trackNavigators, zones);
+    else
+        ClearAll();
 }
 
 void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
@@ -1303,19 +1306,24 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &t
     
     if(selectedTrack == nullptr)
     {
-        for(auto zone : activeFXZones_)
-            zone->Deactivate();
-        
-        for(auto zone : activeFXZones_)
-            zone->ResetWidgets();
-
-        activeFXZones_.clear();
-        currentFXNames_.clear();
-        //DeleteFXWindows();
+        ClearAll();
         return;
     }
     
-    // GAW TBD -- add in check for trackNavigators if size > 0
+    if(trackNavigators.size() != 0)
+    {
+        bool isTrackOnThisSurface = false;
+        
+        for(auto navigator : trackNavigators)
+            if(navigator->GetTrack() == selectedTrack)
+                isTrackOnThisSurface = true;
+        
+        if( ! isTrackOnThisSurface)
+        {
+            ClearAll();
+            return;
+        }
+    }
     
     
     
@@ -1432,21 +1440,33 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &t
 
 void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
 {
-    
-    
-    int tracknumberOut = 0;
-    int itemnumberOut = 0;
+    int tracknumber = 0;
+    int itemnumber = 0;
     int fxIndex = 0;
     MediaTrack* selectedTrack = nullptr;
     
-    if( DAW::GetFocusedFX(&tracknumberOut, &itemnumberOut, &fxIndex) == 1)
-        selectedTrack = surface_->GetPage()->GetTrackFromId(tracknumberOut);
+    if(DAW::GetFocusedFX(&tracknumber, &itemnumber, &fxIndex) == 1)
+        if(tracknumber != 0)
+            selectedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1);
 
     if(selectedTrack)
     {
+        for(auto zone : activeFXZones_)
+            zone->Deactivate();
+
+        for(auto zone : activeFXZones_)
+            zone->ResetWidgets();
+        
+        activeFXZones_.clear();
+        
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
-        surface_->ActivateFXZone(FXName, fxIndex);
+        if(zones.count(FXName) > 0)
+        {
+            Zone* zone = zones[FXName];
+            zone->Activate(fxIndex);
+            activeFXZones_.push_back(zone);
+        }
     }
 }
 

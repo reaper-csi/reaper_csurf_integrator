@@ -331,6 +331,8 @@ private:
     vector<string> currentFXNames_;
     vector<Zone*> activeFXZones_;
     
+    bool shouldMapSelectedTrackFXToWidgets_ = true;
+    
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -362,6 +364,21 @@ public:
     void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
     
     bool GetShowFXWindows() { return showFXWindows_; }
+    
+    void SetShouldMapSelectedTrackFXToWidgets(bool shouldMap) { shouldMapSelectedTrackFXToWidgets_ = shouldMap; }
+    
+    void ClearAll()
+    {
+        for(auto zone : activeFXZones_)
+            zone->Deactivate();
+        
+        for(auto zone : activeFXZones_)
+            zone->ResetWidgets();
+        
+        activeFXZones_.clear();
+        currentFXNames_.clear();
+        //DeleteFXWindows();
+    }
     
     void SetShowFXWindows(bool value)
     {
