@@ -42,13 +42,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     {
        TheManager->Init();
     }
-    
-    if(call == CSURF_EXT_SETFXCHANGE)
-    {
-        // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-        TheManager->TrackFXListChanged((MediaTrack*)parm1);
-    }
-    
+        
     if(call == CSURF_EXT_SETFOCUSEDFX)
     {
         // GAW TBD -- need to implement take FX and clear focus

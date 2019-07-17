@@ -331,7 +331,7 @@ private:
     vector<string> currentFXNames_;
     vector<Zone*> activeFXZones_;
     
-    bool shouldMapSelectedTrackFXToWidgets_ = true;
+    bool shouldMapSelectedTrackFXToWidgets_ = false;
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -460,10 +460,9 @@ public:
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
     
-    void MapSelectedTrackFXToWidgets()
+    void MapSelectedTrackFXToWidgets(bool shouldMapSelectedTrackFXToWidgets)
     {
-        // GAW TBD -- set bool in FXActivationManager
-        //FXActivationManager_->MapSelectedTrackFXToWidgets(trackNavigators_, zones_);
+        FXActivationManager_->SetShouldMapSelectedTrackFXToWidgets(shouldMapSelectedTrackFXToWidgets);
     }
     
     void MapFocusedTrackFXToWidgets()
@@ -537,14 +536,14 @@ public:
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnTrackSelection")
-                widget->DoAction(0.0);
+                widget->DoAction(1.0);
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
-                widget->DoAction(0.0);
+                widget->DoAction(1.0);
     }
 
     void ActivateZone(string zoneName)
@@ -1050,11 +1049,6 @@ public:
     }
  
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
-
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
-    {
-        //FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
-    }
     
     void OnFXFocus(MediaTrack *track, int fxIndex)
     {
@@ -1333,12 +1327,6 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->TrackListChanged();
-    }
-    
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        for(auto & page : pages_)
-            page->TrackFXListChanged(track, VSTMonitor_);
     }
 };
 
