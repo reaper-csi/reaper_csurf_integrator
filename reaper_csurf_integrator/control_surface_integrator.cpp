@@ -1053,7 +1053,9 @@ void ControlSurface::InitZones(string zoneFolder)
 
 void ControlSurface::GoZone(string zoneName)
 {
-    if(zones_.count(zoneName) > 0)
+    if(GetUseZoneLink())
+        page_->GoZone(zoneName);
+    else
         ActivateZone(zoneName);
 }
 

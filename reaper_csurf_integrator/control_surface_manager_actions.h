@@ -197,7 +197,7 @@ public:
 
     void Do(double value) override
     {
-        surface_->GetPage()->GoZone(surface_, param_);
+        surface_->GoZone(param_);
     }
 };
 

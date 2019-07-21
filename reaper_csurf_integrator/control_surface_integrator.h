@@ -1066,14 +1066,11 @@ public:
             surface->OnFXFocus(track, fxIndex);
     }
     
-    void GoZone(ControlSurface* surface, string zoneName)
+    void GoZone(string zoneName)
     {
-        if( ! surface->GetUseZoneLink())
-            surface->GoZone(zoneName);
-        else
-            for(auto surface : surfaces_)
-                if(surface->GetUseZoneLink())
-                    surface->GoZone(zoneName);
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateZone(zoneName);
     }
     
     void MapSelectedTrackSendsToWidgets()
