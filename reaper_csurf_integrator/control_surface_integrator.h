@@ -644,8 +644,17 @@ public:
     virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
-    virtual void DoAction(double value) {}
     
+    virtual void DoAction(double value)
+    {
+        value = isInverted_ == false ? value : 1.0 - value;
+        
+        if(shouldToggle_)
+            DoToggle(value);
+        else
+            Do(value);
+    }
+
     virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
