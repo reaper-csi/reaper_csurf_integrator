@@ -301,8 +301,6 @@ public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-    void ToggleMapSends(map<string, Zone*> &zones);
-    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
     
     void ClearAll()
     {
@@ -316,6 +314,8 @@ public:
         activeSendZoneNames_.clear();
     }
 
+    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
+    void ToggleMapSends(map<string, Zone*> &zones);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -367,14 +367,13 @@ private:
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
-    void MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-    void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-    void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-    
     bool GetShowFXWindows() { return showFXWindows_; }
-    
     void SetShouldMapSelectedTrackFXToWidgets(bool shouldMap) { shouldMapSelectedTrackFXToWidgets_ = shouldMap; }
     
+    void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+        
     void ClearAll()
     {
         for(auto zone : activeFXZones_)
@@ -435,18 +434,18 @@ protected:
     Page* page_ = nullptr;
     const string name_ = "";
     int surfaceChannelOffset_ = 0;
+    vector<Widget*> widgets_;
     vector<TrackNavigator*> trackNavigators_;
 
     SendsNavigationManager* sendsNavigationManager_ = nullptr;
     FXActivationManager* FXActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
-    bool useZoneLink_ = false;
-    
-    vector<Widget*> widgets_;
     map<string, Zone*> zones_;
-    
+    bool useZoneLink_ = false;
+
     virtual void InitWidgets(string templateFilename) {}
+
     void InitZones(string zoneFolder);
     
     void RequestUpdate()
@@ -462,11 +461,10 @@ public:
     string GetName() { return name_; }
     int GetSurfacChannelOffset() { return surfaceChannelOffset_; }
     bool GetUseZoneLink() { return useZoneLink_; }
-    
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
-    
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
+    
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
     
@@ -493,8 +491,11 @@ public:
 
     /// GAW -- start SendsActivationManager facade
     
-    void MapSelectedTrackSendsToWidgets();
-    
+    void MapSelectedTrackSendsToWidgets()
+    {
+        sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
+    }
+
     void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends(zones_);
@@ -629,6 +630,9 @@ private:
             controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
     }
     
+protected:
+    virtual void InitWidgets(string templateFilename) override;
+
 public:
     Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
     : ControlSurface(page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
@@ -643,7 +647,6 @@ public:
 
     virtual ~Midi_ControlSurface() {}
     
-    virtual void InitWidgets(string templateFilename) override;
 
     virtual void TurnOffMonitoring() override
     {
@@ -708,11 +711,10 @@ public:
     WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
-    MediaTrack* GetTrack();
     
+    MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
-    
     void Activate();
     void Activate(int actionIndex);
     void Activate(MediaTrack* track, int actionIndex);
@@ -1023,7 +1025,7 @@ public:
         isAlt_ = value;
     }
     
-    string GetModifiers(MediaTrack* track)
+    string GetModifiers()
     {
         string modifiers = "";
         
