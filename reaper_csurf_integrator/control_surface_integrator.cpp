@@ -709,7 +709,7 @@ void Manager::InitActionDictionary()
     actions_["TrackRecordArm"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new TrackRecordArm(manager); };
     actions_["TrackMute"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackMute(manager); };
     actions_["TrackSolo"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackSolo(manager); };
-    actions_["TrackTouch"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(manager); };
+    actions_["TrackTouch"] =                        [this](WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(manager); };
     actions_["MasterTrackTouch"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new SetMasterTrackTouch(manager); };
     actions_["CycleTimeline"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeline(manager); };
     actions_["TrackOutputMeter"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeter(manager, params); };
@@ -721,7 +721,7 @@ void Manager::InitActionDictionary()
     actions_["CycleTimeDisplayModes"] =             [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeDisplayModes(manager); };
     actions_["NextPage"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new GoNextPage(manager); };
     actions_["GoPage"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new class GoPage(manager, params); };
-    actions_["GoZone"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new class GoZone(manager, params); };
+    actions_["GoZone"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new GoZone(manager, params); };
     actions_["SelectTrackRelative"] =               [this](WidgetActionManager* manager, vector<string> params) { return new SelectTrackRelative(manager, params); };
     actions_["TrackBank"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackBank(manager, params); };
     actions_["TrackSendBank"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendBank(manager, params); };
