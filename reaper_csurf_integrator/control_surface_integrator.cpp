@@ -919,54 +919,6 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Zone
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::ResetWidgets()
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->GetWidget()->Reset();
-    
-    for(auto zone : includedZones_)
-        zone->ResetWidgets();
-}
-
-void Zone::Deactivate()
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
-    
-    for(auto zone : includedZones_)
-        zone->Deactivate();
-}
-
-void Zone::Activate()
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->Activate();
-    
-    for(auto zone : includedZones_)
-        zone->Activate();
-}
-
-void Zone::Activate(int fxIndex)
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->Activate(fxIndex);
-    
-    for(auto zone : includedZones_)
-        zone->Activate(fxIndex);
-}
-
-void Zone::Activate(MediaTrack* track, int sendsIndex)
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->Activate(track, sendsIndex);
-    
-    for(auto zone : includedZones_)
-        zone->Activate(track, sendsIndex);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* TrackNavigator::GetTrack()
@@ -1079,6 +1031,18 @@ void SendsActivationManager::ToggleMapSends(map<string, Zone*> &zones)
         MapSelectedTrackSendsToWidgets(zones);
     else
         surface_->GoZone("Home");
+}
+
+void SendsActivationManager::ClearAll()
+{
+    for(auto zone : activeSendZones_)
+        zone->Deactivate();
+    
+    for(auto zone : activeSendZones_)
+        zone->ResetWidgets();
+    
+    activeSendZones_.clear();
+    activeSendZoneNames_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1260,6 +1224,19 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &tr
     }
 }
 
+void FXActivationManager::ClearAll()
+{
+    for(auto zone : activeFXZones_)
+        zone->Deactivate();
+    
+    for(auto zone : activeFXZones_)
+        zone->ResetWidgets();
+    
+    activeFXZones_.clear();
+    currentFXNames_.clear();
+    //DeleteFXWindows();
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1313,6 +1290,29 @@ TrackNavigator* ControlSurface::AddTrackNavigator()
     int channelNum = trackNavigators_.size();
     trackNavigators_.push_back(new TrackNavigator(this, channelNum));
     return trackNavigators_[channelNum];
+}
+
+bool ControlSurface::AddZone(Zone* zone)
+{
+    if(zones_.count(zone->GetName()) > 0)
+    {
+        char buffer[5000];
+        sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+                zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
+        DAW::ShowConsoleMsg(buffer);
+        return false;
+    }
+    else
+    {
+        zones_[zone->GetName()] = zone;
+        return true;
+    }
+}
+
+void ControlSurface::ActivateZone(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+        zones_[zoneName]->Activate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
