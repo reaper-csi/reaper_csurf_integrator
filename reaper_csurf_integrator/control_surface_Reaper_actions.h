@@ -116,135 +116,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendVolume : public TrackSendAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackSendVolume(WidgetActionManager* manager) : TrackSendAction(manager) {}
-    
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        double vol, pan = 0.0;
-        DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
-        SetWidgetValue(widget_, volToNormalized(vol));
-    }
-    
-    void Do(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, normalizedToVol(value), false);
-
-            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_VOL", &volume);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendPan : public TrackSendAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackSendPan(WidgetActionManager* manager) : TrackSendAction(manager) {}
-    
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        double vol, pan = 0.0;
-        DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
-        SetWidgetValue(widget_, panToNormalized(pan));
-    }
-    
-    void Do(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            double pan = DAW::CSurf_OnSendPanChange(track, sendIndex_, normalizedToPan(value), false);
-            
-            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_PAN", &pan);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendMute : public TrackSendAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackSendMute(WidgetActionManager* manager) : TrackSendAction(manager) {}
-
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        bool mute = false;
-        DAW::GetTrackSendUIMute(track, sendIndex_, &mute);
-        SetWidgetValue(widget_, mute);
-    }
-    
-    void Do(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_MUTE");
-            
-            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_MUTE", &isMuted);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendInvertPolarity : public TrackSendAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackSendInvertPolarity(WidgetActionManager* manager) : TrackSendAction(manager) {}
-
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        SetWidgetValue(widget_, DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE"));
-    }
-    
-    void Do(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE");
-            
-            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_PHASE", &reversed);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackSendPrePost : public TrackSendAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TrackSendPrePost(WidgetActionManager* manager) : TrackSendAction(manager) {}
-
-    void RequestTrackUpdate( MediaTrack* track) override
-    {
-        if(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0)
-            SetWidgetValue(widget_, 0);
-        else
-            SetWidgetValue(widget_, 1);
-    }
-    
-    void Do(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0 ? 0 : 1;
-            
-            if(isPre == 0)
-                isPre = 3; // switch to post FX
-            else
-                isPre = 0; // switch to post fader
-            
-            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "I_SENDMODE", &isPre);
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPan : public TrackActionWithIntFeedbackParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -316,6 +187,135 @@ public:
         char trackVolume[128];
         sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
         SetWidgetValue(widget_, string(trackVolume));
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendVolume : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendVolume(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double vol, pan = 0.0;
+        DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
+        SetWidgetValue(widget_, volToNormalized(vol));
+    }
+    
+    void Do(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, normalizedToVol(value), false);
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_VOL", &volume);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPan : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendPan(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double vol, pan = 0.0;
+        DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
+        SetWidgetValue(widget_, panToNormalized(pan));
+    }
+    
+    void Do(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double pan = DAW::CSurf_OnSendPanChange(track, sendIndex_, normalizedToPan(value), false);
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_PAN", &pan);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendMute : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendMute(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        bool mute = false;
+        DAW::GetTrackSendUIMute(track, sendIndex_, &mute);
+        SetWidgetValue(widget_, mute);
+    }
+    
+    void Do(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_MUTE");
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_MUTE", &isMuted);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendInvertPolarity : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendInvertPolarity(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        SetWidgetValue(widget_, DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE"));
+    }
+    
+    void Do(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE");
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "B_PHASE", &reversed);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPrePost : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackSendPrePost(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    
+    void RequestTrackUpdate( MediaTrack* track) override
+    {
+        if(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0)
+            SetWidgetValue(widget_, 0);
+        else
+            SetWidgetValue(widget_, 1);
+    }
+    
+    void Do(double value) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0 ? 0 : 1;
+            
+            if(isPre == 0)
+                isPre = 3; // switch to post FX
+            else
+                isPre = 0; // switch to post fader
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "I_SENDMODE", &isPre);
+        }
     }
 };
 

@@ -848,6 +848,24 @@ void Widget::RequestUpdate()
         widgetActionManager_->RequestUpdate();
 }
 
+void Widget::DoAction(double value)
+{
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->DoAction(value);
+}
+
+void Widget::DoRelativeAction(double value)
+{
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->DoAction(lastValue_ + value);
+}
+
+void Widget::SetIsTouched(bool isTouched)
+{
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->SetIsTouched(isTouched);
+}
+
 void  Widget::SetValue(double value)
 {
     lastValue_ = value;
@@ -868,24 +886,6 @@ void  Widget::SetValue(string value)
 {
     for(auto feebackProcessor : feedbackProcessors_)
         feebackProcessor->SetValue(value);
-}
-
-void Widget::DoAction(double value)
-{
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(value);
-}
-
-void Widget::DoRelativeAction(double value)
-{
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(lastValue_ + value);
-}
-
-void Widget::SetIsTouched(bool isTouched)
-{
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->SetIsTouched(isTouched);
 }
 
 void Widget::ClearCache()

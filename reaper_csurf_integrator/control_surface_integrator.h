@@ -71,11 +71,10 @@ private:
 
     WidgetActionManager* widgetActionManager_ = nullptr;
     vector<FeedbackProcessor*> feedbackProcessors_;
-    
+
+    bool isModifier_ = false;
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
-    
-    bool isModifier_ = false;
     
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
@@ -83,23 +82,10 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    MediaTrack* GetTrack();
-    void RequestUpdate();
-    void DoAction(double value);
-    void DoRelativeAction(double value);
-
-    void SetIsTouched(bool isTouched);
-    
     void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
-
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
-    
-    void SetValue(double value);
-    void SetValue(int mode, double value);
-    void SetValue(string value);
-    void ClearCache();
 
     void Reset()
     {
@@ -107,6 +93,16 @@ public:
         SetValue(0, 0.0);
         SetValue("");
     }
+
+    MediaTrack* GetTrack();
+    void RequestUpdate();
+    void DoAction(double value);
+    void DoRelativeAction(double value);
+    void SetIsTouched(bool isTouched);
+    void SetValue(double value);
+    void SetValue(int mode, double value);
+    void SetValue(string value);
+    void ClearCache();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
