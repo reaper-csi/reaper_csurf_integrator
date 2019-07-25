@@ -693,49 +693,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* widget_ = nullptr;
-    TrackNavigator* trackNavigator_ = nullptr;
-    map<string, vector <Action*>> actions_;
-    
-    vector <Action*> trackTouchedActions_;
-    
-    string GetModifiers();
-    
-public:
-    WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
-    
-    Widget* GetWidget() { return widget_; }
-    
-    MediaTrack* GetTrack();
-    void RequestUpdate();
-    void DoAction(double value);
-    void Activate();
-    void Activate(int actionIndex);
-    void Activate(MediaTrack* track, int actionIndex);
-    
-    void SetIsTouched(bool isTouched)
-    {
-        if(trackNavigator_ != nullptr)
-            trackNavigator_->SetTouchState((isTouched));
-    }
-    
-    void AddAction(string modifiers, Action* action)
-    {
-        actions_[modifiers].push_back(action);
-    }
-    
-    void AddTrackTouchedAction(Action* action)
-    {
-        trackTouchedActions_.push_back(action);
-    }
-};
-
+class WidgetActionManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -743,7 +701,7 @@ class Action
 protected:
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
-
+    
     WidgetActionManager* widgetActionManager_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -751,12 +709,8 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
-public:    
-    Action(WidgetActionManager* widgetActionManager) : widgetActionManager_(widgetActionManager)
-    {
-        page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
-        widget_ = widgetActionManager_->GetWidget();
-    }
+public:
+    Action(WidgetActionManager* widgetActionManager);
     virtual ~Action() {}
     
     WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
@@ -771,10 +725,10 @@ public:
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     virtual void DoAction(double value) {}
- 
+    
     virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
-
+    
     virtual void Do(string value) {}
     virtual void Do(double value) {}
     virtual void DoToggle(double value) {}
@@ -797,6 +751,99 @@ public:
     void Activate(WidgetActionManager* widgetActionManager)
     {
         widget_->SetWidgetActionManager(widgetActionManager);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class WidgetActionManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Widget* widget_ = nullptr;
+    TrackNavigator* trackNavigator_ = nullptr;
+    map<string, vector <Action*>> actions_;
+    
+    vector <Action*> trackTouchedActions_;
+    
+    string GetModifiers();
+
+public:
+    WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
+    
+    Widget* GetWidget() { return widget_; }
+    
+    MediaTrack* GetTrack()
+    {
+        if(trackNavigator_ == nullptr)
+            return nullptr;
+        else
+            return trackNavigator_->GetTrack();
+    }
+    
+    void RequestUpdate()
+    {
+        if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
+        {
+            for(auto action : trackTouchedActions_)
+                action->RequestUpdate();
+        }
+        else
+        {
+            if(actions_.count(GetModifiers()) > 0)
+                for(auto action : actions_[GetModifiers()])
+                    action->RequestUpdate();
+        }
+    }
+    
+    void DoAction(double value)
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+                action->DoAction(value);
+    }
+    
+    void Activate()
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+                action->Activate(this);
+    }
+    
+    void Activate(int actionIndex)
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+            {
+                action->SetIndex(actionIndex);
+                action->Activate(this);
+            }
+    }
+    
+    void Activate(MediaTrack* track, int actionIndex)
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+            {
+                action->SetTrack(track);
+                action->SetIndex(actionIndex);
+                action->Activate(this);
+            }
+    }
+    
+    void SetIsTouched(bool isTouched)
+    {
+        if(trackNavigator_ != nullptr)
+            trackNavigator_->SetTouchState((isTouched));
+    }
+    
+    void AddAction(string modifiers, Action* action)
+    {
+        actions_[modifiers].push_back(action);
+    }
+    
+    void AddTrackTouchedAction(Action* action)
+    {
+        trackTouchedActions_.push_back(action);
     }
 };
 
@@ -829,10 +876,9 @@ public:
     int  GetNumFolderTracks() { return folderTracks_.size(); }
     
     void Init();
-    void AdjustTrackBank(int stride);
     void OnTrackSelection();
-    //void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
+    void AdjustTrackBank(int stride);
 
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {

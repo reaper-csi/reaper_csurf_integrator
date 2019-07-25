@@ -1328,6 +1328,15 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Action::Action(WidgetActionManager* widgetActionManager) : widgetActionManager_(widgetActionManager)
+{
+    page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
+    widget_ = widgetActionManager_->GetWidget();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WidgetActionManager::GetModifiers()
@@ -1336,64 +1345,6 @@ string WidgetActionManager::GetModifiers()
         return NoModifiers; // Modifier Widgets cannot have Modifiers
     else
         return widget_->GetSurface()->GetPage()->GetModifiers();
-}
-
-MediaTrack* WidgetActionManager::GetTrack()
-{
-    if(trackNavigator_ == nullptr)
-        return nullptr;
-    else
-        return trackNavigator_->GetTrack();
-}
-
-void WidgetActionManager::RequestUpdate()
-{
-    if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
-    {
-        for(auto action : trackTouchedActions_)
-            action->RequestUpdate();
-    }
-    else
-    {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
-                action->RequestUpdate();
-    }
-}
-
-void WidgetActionManager::DoAction(double value)
-{
-    if(actions_.count(GetModifiers()) > 0)
-        for(auto action : actions_[GetModifiers()])
-            action->DoAction(value);
-}
-
-void WidgetActionManager::Activate()
-{
-    if(actions_.count(GetModifiers()) > 0)
-        for(auto action : actions_[GetModifiers()])
-            action->Activate(this);
-}
-
-void WidgetActionManager::Activate(int actionIndex)
-{
-    if(actions_.count(GetModifiers()) > 0)
-        for(auto action : actions_[GetModifiers()])
-        {
-            action->SetIndex(actionIndex);
-            action->Activate(this);
-        }
-}
-
-void WidgetActionManager::Activate(MediaTrack* track, int actionIndex)
-{
-    if(actions_.count(GetModifiers()) > 0)
-        for(auto action : actions_[GetModifiers()])
-        {
-            action->SetTrack(track);
-            action->SetIndex(actionIndex);
-            action->Activate(this);
-        }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
