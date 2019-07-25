@@ -173,43 +173,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<WidgetActionManager*> widgetActionManagers_;
-    vector<Zone*> includedZones_;
-
-protected:
-    ControlSurface* surface_ = nullptr;
-    string name_ = "";
-    string sourceFilePath_ = "";
-    
-public:
-    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
-    virtual ~Zone() {}
-    
-    string GetName() { return name_ ;}
-    string GetSourceFilePath() { return sourceFilePath_; }
-       
-    virtual void AddWidgetActionManager(WidgetActionManager* manager)
-    {
-        widgetActionManagers_.push_back(manager);
-    }
-    
-    void AddZone(Zone* zone)
-    {
-        includedZones_.push_back(zone);
-    }
-    
-    void ResetWidgets();
-    void Deactivate();
-    void Activate();
-    void Activate(int actionIndex);
-    void Activate(MediaTrack* track, int actionIndex);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigator
@@ -286,6 +249,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SendsActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -302,20 +267,9 @@ public:
     
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     
-    void ClearAll()
-    {
-        for(auto zone : activeSendZones_)
-            zone->Deactivate();
-        
-        for(auto zone : activeSendZones_)
-            zone->ResetWidgets();
-        
-        activeSendZones_.clear();
-        activeSendZoneNames_.clear();
-    }
-
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
     void ToggleMapSends(map<string, Zone*> &zones);
+    void ClearAll();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -373,19 +327,7 @@ public:
     void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
     void MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
     void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-        
-    void ClearAll()
-    {
-        for(auto zone : activeFXZones_)
-            zone->Deactivate();
-        
-        for(auto zone : activeFXZones_)
-            zone->ResetWidgets();
-        
-        activeFXZones_.clear();
-        currentFXNames_.clear();
-        //DeleteFXWindows();
-    }
+    void ClearAll();
     
     void SetShowFXWindows(bool value)
     {
@@ -503,7 +445,8 @@ public:
     
     /// GAW -- end SendsActivationManager facade
 
-    
+    bool AddZone(Zone* zone);
+    void ActivateZone(string zoneName);
     
     bool IsTrackTouched(MediaTrack* track)
     {
@@ -544,23 +487,6 @@ public:
     {
         widgets_.push_back(widget);
     }
-    
-    bool AddZone(Zone* zone)
-    {
-        if(zones_.count(zone->GetName()) > 0)
-        {
-            char buffer[5000];
-            sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                    zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
-            DAW::ShowConsoleMsg(buffer);
-            return false;
-        }
-        else
-        {
-            zones_[zone->GetName()] = zone;
-            return true;
-        }
-    }
 
     void SetShowFXWindows(bool value)
     {
@@ -579,12 +505,6 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(1.0);
-    }
-
-    void ActivateZone(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->Activate();
     }
 };
 
@@ -845,6 +765,83 @@ public:
     {
         trackTouchedActions_.push_back(action);
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<WidgetActionManager*> widgetActionManagers_;
+    vector<Zone*> includedZones_;
+    
+protected:
+    ControlSurface* surface_ = nullptr;
+    string name_ = "";
+    string sourceFilePath_ = "";
+    
+public:
+    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
+    virtual ~Zone() {}
+    
+    string GetName() { return name_ ;}
+    string GetSourceFilePath() { return sourceFilePath_; }
+    
+    virtual void AddWidgetActionManager(WidgetActionManager* manager)
+    {
+        widgetActionManagers_.push_back(manager);
+    }
+    
+    void AddZone(Zone* zone)
+    {
+        includedZones_.push_back(zone);
+    }
+    
+    void ResetWidgets()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->GetWidget()->Reset();
+        
+        for(auto zone : includedZones_)
+            zone->ResetWidgets();
+    }
+    
+    void Deactivate()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
+        
+        for(auto zone : includedZones_)
+            zone->Deactivate();
+    }
+    
+    void Activate()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate();
+        
+        for(auto zone : includedZones_)
+            zone->Activate();
+    }
+    
+    void Activate(int fxIndex)
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate(fxIndex);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(fxIndex);
+    }
+    
+    void Activate(MediaTrack* track, int sendsIndex)
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate(track, sendsIndex);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(track, sendsIndex);
+    }
+    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
