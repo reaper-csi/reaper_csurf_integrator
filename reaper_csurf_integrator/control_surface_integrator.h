@@ -231,7 +231,6 @@ private:
     bool shouldMapSends_ = false;
     int numSendSlots_ = 0;
     
-    map<ControlSurface*, vector<string>> activeSendZoneNames_;
     vector<Zone*> activeSendZones_;
         
 public:

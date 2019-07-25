@@ -1022,7 +1022,6 @@ void SendsActivationManager::ClearAll()
         zone->ResetWidgets();
     
     activeSendZones_.clear();
-    activeSendZoneNames_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
