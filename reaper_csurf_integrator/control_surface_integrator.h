@@ -189,12 +189,6 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
-    void ResetWidgets();
-    void Deactivate();
-    void Activate();
-    void Activate(int actionIndex);
-    void Activate(MediaTrack* track, int actionIndex);
-
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
        
@@ -207,6 +201,12 @@ public:
     {
         includedZones_.push_back(zone);
     }
+    
+    void ResetWidgets();
+    void Deactivate();
+    void Activate();
+    void Activate(int actionIndex);
+    void Activate(MediaTrack* track, int actionIndex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -227,9 +227,10 @@ public:
     TrackNavigator(ControlSurface* surface, int channelNum) : surface_(surface), channelNum_(channelNum) {}
     virtual ~TrackNavigator() {}
     
-    virtual MediaTrack* GetTrack();
     virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
     bool GetIsChannelTouched() { return isChannelTouched_; }
+    
+    virtual MediaTrack* GetTrack();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
