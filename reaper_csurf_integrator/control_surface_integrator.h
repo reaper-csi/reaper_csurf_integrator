@@ -221,34 +221,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendsNavigationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* surface_ = nullptr;
-    int sendsOffset_ = 0;
-    
-    int GetMaxSends();
-    
-public:
-    SendsNavigationManager(ControlSurface* surface) : surface_(surface) {}
-    
-    int GetSendsOffset() { return sendsOffset_; }
-    
-    void AdjustTrackSendBank(int stride)
-    {
-        int maxOffset = GetMaxSends() - 1;
-        
-        sendsOffset_ += stride;
-        
-        if(sendsOffset_ < 0)
-            sendsOffset_ = 0;
-        else if(sendsOffset_ > maxOffset)
-            sendsOffset_ = maxOffset;
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SendsActivationManager
@@ -379,7 +351,6 @@ protected:
     vector<Widget*> widgets_;
     vector<TrackNavigator*> trackNavigators_;
 
-    SendsNavigationManager* sendsNavigationManager_ = nullptr;
     FXActivationManager* FXActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
@@ -420,17 +391,6 @@ public:
         FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
     }
     
-    /// GAW -- start SendsNavigationManager facade
-    
-    int GetSendsOffset() { return sendsNavigationManager_->GetSendsOffset(); }
-    
-    void AdjustTrackSendBank(int stride)
-    {
-        sendsNavigationManager_->AdjustTrackSendBank(stride);
-    }
-    
-    /// GAW -- end SendsNavigationManager facade
-
     /// GAW -- start SendsActivationManager facade
     
     void MapSelectedTrackSendsToWidgets()
@@ -1372,5 +1332,43 @@ public:
             pages_[currentPageIndex_]->TrackListChanged();
     }
 };
+
+
+/*
+ 
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ class SendsNavigationManager
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ {
+ private:
+ ControlSurface* surface_ = nullptr;
+ int sendsOffset_ = 0;
+ 
+ int GetMaxSends();
+ 
+ public:
+ SendsNavigationManager(ControlSurface* surface) : surface_(surface) {}
+ 
+ int GetSendsOffset() { return sendsOffset_; }
+ 
+ void AdjustTrackSendBank(int stride)
+ {
+ int maxOffset = GetMaxSends() - 1;
+ 
+ sendsOffset_ += stride;
+ 
+ if(sendsOffset_ < 0)
+ sendsOffset_ = 0;
+ else if(sendsOffset_ > maxOffset)
+ sendsOffset_ = maxOffset;
+ }
+ };
+
+ */
+
+
+
+
+
 
 #endif /* control_surface_integrator.h */

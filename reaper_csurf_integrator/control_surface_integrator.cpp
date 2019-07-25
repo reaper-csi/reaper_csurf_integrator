@@ -966,26 +966,6 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SendsNavigationManager
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-int SendsNavigationManager::GetMaxSends()
-{
-    int maxSends = 0;
-    /*
-     for(int i = 0; i < page_->GetNumTracks(); i++)
-     {
-     MediaTrack* track = page_->GetTrackFromId(i);
-     
-     int numSends = DAW::GetTrackNumSends(track, 0);
-     
-     if(numSends > maxSends)
-     maxSends = numSends;
-     }
-     */
-    return maxSends;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
@@ -1244,7 +1224,6 @@ ControlSurface::ControlSurface(Page* page, const string name, bool useZoneLink) 
 {
     surfaceChannelOffset_ = page->GetTotalNumChannels();
     FXActivationManager_ = new FXActivationManager(this);
-    sendsNavigationManager_ = new SendsNavigationManager(this);
     sendsActivationManager_ = new SendsActivationManager(this);
 }
 
