@@ -148,27 +148,13 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalAction : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    GlobalAction(WidgetActionManager* manager) : Action(manager) {}
-    
-public:
-    virtual void DoAction(double value) override
-    {
-        Do(isInverted_ == false ? value : 1.0 - value);
-    }
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalActionWithIntParam : public Action
+class ActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     int param_ = 0;
    
-    GlobalActionWithIntParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    ActionWithIntParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -176,13 +162,13 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GlobalActionWithStringParam : public Action
+class ActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     string param_ = "";
     
-    GlobalActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    ActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {
         if(params.size() > 1)
             param_ = params[1];
