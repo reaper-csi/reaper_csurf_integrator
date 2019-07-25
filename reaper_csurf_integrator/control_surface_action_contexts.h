@@ -80,25 +80,23 @@ class TrackSendAction : public TrackAction
 {
 protected:
     int sendIndex_ = 0;
-    MediaTrack* sendTrack_ = nullptr;
     
     TrackSendAction(WidgetActionManager* manager) : TrackAction(manager) {}
 
 public:
     virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
-    virtual void SetTrack(MediaTrack* sendTrack) override { sendTrack_ = sendTrack; }
 
     virtual void RequestUpdate() override
     {
-        if(sendTrack_)
-            RequestTrackUpdate(sendTrack_);
+        if(MediaTrack* track = widget_->GetTrack())
+            RequestTrackUpdate(track);
         else
             widget_->Reset();
     }
     
     virtual void DoAction(double value) override
     {
-        if(sendTrack_)
+        if(MediaTrack* track = widget_->GetTrack())
             Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
