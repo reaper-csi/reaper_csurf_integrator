@@ -10,6 +10,48 @@
 #include "control_surface_integrator.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ReaperAction : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int commandId_ = 0;
+    
+public:
+    ReaperAction(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    {
+        if(params.size() > 1)
+        {
+            string commandStr = params[1];
+            
+            commandId_ =  atol(commandStr.c_str());
+            
+            if(commandId_ == 0) // unsuccessful conversion to number
+            {
+                commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
+                
+                if(commandId_ == 0) // can't find it
+                    commandId_ = 65535; // no-op
+            }
+        }
+    }
+    
+    virtual void RequestUpdate() override
+    {
+        SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
+    }
+    
+    virtual void DoAction(double value) override
+    {
+         Do(value);;
+    }
+    
+    virtual void Do(double value) override
+    {
+        DAW::SendCommandMessage(commandId_);
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
