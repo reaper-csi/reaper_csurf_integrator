@@ -40,11 +40,6 @@ public:
         SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
     }
     
-    virtual void DoAction(double value) override
-    {
-         Do(value);;
-    }
-    
     virtual void Do(double value) override
     {
         DAW::SendCommandMessage(commandId_);
@@ -70,7 +65,14 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            Do(isInverted_ == false ? value : 1.0 - value);
+        {
+            value = isInverted_ == false ? value : 1.0 - value;
+            
+            if(shouldToggle_)
+                DoToggle(value);
+            else
+                Do(value);
+        }
     }
 };
 
@@ -92,12 +94,6 @@ public:
             RequestTrackUpdate(track);
         else
             widget_->Reset();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            Do(isInverted_ == false ? value : 1.0 - value);
     }
 };
 
@@ -149,17 +145,6 @@ public:
         else
             widget_->Reset();
     }
-    
-    virtual void DoAction(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            if(shouldToggle_)
-                DoToggle(isInverted_ == false ? value : 1.0 - value);
-            else
-                Do(isInverted_ == false ? value : 1.0 - value);
-        }
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,12 +173,6 @@ protected:
         if(params.size() > 1)
             param_= atol(params[1].c_str());
     }
-
-public:
-    virtual void DoAction(double value) override
-    {
-        Do(value);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,12 +187,6 @@ protected:
         if(params.size() > 1)
             param_ = params[1];
     }
-
-public:
-    virtual void DoAction(double value) override
-    {
-        Do(value);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,12 +199,6 @@ protected:
     SurfaceAction(WidgetActionManager* manager) : Action(manager)
     {
         surface_ = widget_->GetSurface();
-    }
-    
-public:
-    virtual void DoAction(double value) override
-    {
-        Do(value);
     }
 };
 
@@ -249,12 +216,6 @@ protected:
             param_ = params[1];
         
         surface_ = widget_->GetSurface();
-    }
-    
-public:
-    virtual void DoAction(double value) override
-    {
-        Do(value);
     }
 };
 
