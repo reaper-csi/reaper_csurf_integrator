@@ -237,7 +237,6 @@ public:
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
-    void ToggleMapSends(map<string, Zone*> &zones);
     void ClearAll();
 };
 
@@ -339,9 +338,6 @@ class Page;
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-//private:
-    //char prjFn[BUFSZ * 10] = "";
-
 protected:
     ControlSurface(Page* page, const string name, bool useZoneLink);
     Page* page_ = nullptr;
@@ -390,19 +386,11 @@ public:
         FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
     }
     
-    /// GAW -- start SendsActivationManager facade
-    
+   
     void MapSelectedTrackSendsToWidgets()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
-
-    void ToggleMapSends()
-    {
-        sendsActivationManager_->ToggleMapSends(zones_);
-    }
-    
-    /// GAW -- end SendsActivationManager facade
 
     bool AddZone(Zone* zone);
     void ActivateZone(string zoneName);
@@ -418,13 +406,6 @@ public:
 
     virtual void Run()
     {
-        /*
-        DAW::EnumProjects(-1, prjFn, sizeof(prjFn));
-        if (! *prjFn) // No projects open
-            for(auto widget : widgets_)
-                widget->Reset();
-         */
-        
         FXActivationManager_->Run(trackNavigators_, zones_);
         
         RequestUpdate(); // this should always be last so that state changes are complete
@@ -1088,13 +1069,7 @@ public:
         for(auto surface : surfaces_)
             surface->MapSelectedTrackSendsToWidgets();
     }
-    
-    void ToggleMapSends()
-    {
-        for(auto surface : surfaces_)
-            surface->ToggleMapSends();
-    }
-    
+        
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -1155,8 +1130,6 @@ private:
     vector <Page*> pages_;
     
     map<string, map<string, int>> fxParamIndices_;
-    
-    time_t lastTimeCacheCleared = 0;
     
     int currentPageIndex_ = 0;
     bool VSTMonitor_ = false;
@@ -1260,16 +1233,6 @@ public:
     
     void Run()
     {
-        /*
-        time_t timeNow = DAW::GetCurrentNumberOfMilliseconds();
-        
-        if(timeNow - lastTimeCacheCleared > 30000) // every 30 seconds
-        {
-            lastTimeCacheCleared = timeNow;
-            DAW::ClearCache();
-        }
-         */
-        
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
     }
@@ -1331,43 +1294,4 @@ public:
             pages_[currentPageIndex_]->TrackListChanged();
     }
 };
-
-
-/*
- 
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- class SendsNavigationManager
- /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- {
- private:
- ControlSurface* surface_ = nullptr;
- int sendsOffset_ = 0;
- 
- int GetMaxSends();
- 
- public:
- SendsNavigationManager(ControlSurface* surface) : surface_(surface) {}
- 
- int GetSendsOffset() { return sendsOffset_; }
- 
- void AdjustTrackSendBank(int stride)
- {
- int maxOffset = GetMaxSends() - 1;
- 
- sendsOffset_ += stride;
- 
- if(sendsOffset_ < 0)
- sendsOffset_ = 0;
- else if(sendsOffset_ > maxOffset)
- sendsOffset_ = maxOffset;
- }
- };
-
- */
-
-
-
-
-
-
 #endif /* control_surface_integrator.h */
