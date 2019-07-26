@@ -57,6 +57,9 @@ const string NoModifiers = "NoModifiers";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
+class Manager;
+extern Manager* TheManager;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface;
 class FeedbackProcessor;
