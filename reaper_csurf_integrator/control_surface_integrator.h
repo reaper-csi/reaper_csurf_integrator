@@ -291,7 +291,7 @@ public:
     bool GetShowFXWindows() { return showFXWindows_; }
     
     void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
-    void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void MapFocusedTrackFXToWidgets(map<string, Zone*> &zones);
     
     void SetShowFXWindows(bool value)
     {
@@ -379,7 +379,7 @@ public:
     
     void MapFocusedTrackFXToWidgets()
     {
-        FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
+        FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
     }
     
     void MapSelectedTrackSendsToWidgets()
