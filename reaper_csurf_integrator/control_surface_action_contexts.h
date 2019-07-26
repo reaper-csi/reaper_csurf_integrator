@@ -65,14 +65,7 @@ public:
     virtual void DoAction(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-        {
-            value = isInverted_ == false ? value : 1.0 - value;
-            
-            if(shouldToggle_)
-                DoToggle(value);
-            else
-                Do(value);
-        }
+            Action::DoAction(value);
     }
 };
 
@@ -91,7 +84,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            RequestTrackUpdate(track);
+            RequestTrackUpdate(track); // GAW TBD -- this needs to add send index
         else
             widget_->Reset();
     }
