@@ -8,6 +8,7 @@
 #include "control_surface_integrator_ui.h"
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
+
 Manager* TheManager = nullptr;
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
