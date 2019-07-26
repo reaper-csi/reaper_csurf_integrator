@@ -1047,7 +1047,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
     OpenFXWindows();
 }
 
-void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones)
+void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
 {
     int tracknumber = 0;
     int itemnumber = 0;
