@@ -250,7 +250,6 @@ struct FXWindow
     string fxName = "";
     MediaTrack* track = nullptr;;
     int fxIndex = 0;
-    HWND hwnd = nullptr;
     
     FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
 };
@@ -261,10 +260,7 @@ class FXActivationManager
 {
 private:
     ControlSurface* surface_ = nullptr;
-    vector<string> currentFXNames_;
     vector<Zone*> activeFXZones_;
-    
-    bool shouldMapSelectedTrackFXToWidgets_ = false;
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -285,7 +281,7 @@ private:
     void DeleteFXWindows()
     {
         for(auto fxWindow : openFXWindows_)
-            CloseHandle(fxWindow.hwnd);
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
         openFXWindows_.clear();
     }
     
@@ -293,10 +289,8 @@ public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShowFXWindows() { return showFXWindows_; }
-    void SetShouldMapSelectedTrackFXToWidgets(bool shouldMap) { shouldMapSelectedTrackFXToWidgets_ = shouldMap; }
     
-    void Run(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-    void MapSelectedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
+    void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
     void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
     void ClearAll();
     
@@ -379,9 +373,9 @@ public:
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
     
-    void MapSelectedTrackFXToWidgets(bool shouldMapSelectedTrackFXToWidgets)
+    void MapSelectedTrackFXToWidgets()
     {
-        FXActivationManager_->SetShouldMapSelectedTrackFXToWidgets(shouldMapSelectedTrackFXToWidgets);
+        FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
     }
     
     void MapFocusedTrackFXToWidgets()
@@ -389,7 +383,6 @@ public:
         FXActivationManager_->MapFocusedTrackFXToWidgets(trackNavigators_, zones_);
     }
     
-   
     void MapSelectedTrackSendsToWidgets()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
@@ -409,8 +402,6 @@ public:
 
     virtual void Run()
     {
-        FXActivationManager_->Run(trackNavigators_, zones_);
-        
         RequestUpdate(); // this should always be last so that state changes are complete
     }
     
@@ -748,20 +739,15 @@ public:
     {
         includedZones_.push_back(zone);
     }
-    
-    void ResetWidgets()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->GetWidget()->Reset();
         
-        for(auto zone : includedZones_)
-            zone->ResetWidgets();
-    }
-    
     void Deactivate()
     {
         for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->GetWidget()->SetWidgetActionManager(nullptr);
+        {
+            Widget* widget =  widgetActionManager->GetWidget();
+            widget->SetWidgetActionManager(nullptr);
+            widget->Reset();
+        }
         
         for(auto zone : includedZones_)
             zone->Deactivate();
