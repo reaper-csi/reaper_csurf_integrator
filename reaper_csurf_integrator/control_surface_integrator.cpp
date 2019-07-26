@@ -13,7 +13,7 @@
 extern Manager* TheManager;
 
 
-
+// GAW TBD OSC integration
 
 
 using namespace oscpkt;
@@ -60,6 +60,10 @@ void runServer()
         }
     }
 }
+
+// GAW TBD OSC integration
+
+
 
 
 
@@ -724,12 +728,10 @@ void Manager::InitActionDictionary()
     actions_["GoZone"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new GoZone(manager, params); };
     actions_["SelectTrackRelative"] =               [this](WidgetActionManager* manager, vector<string> params) { return new SelectTrackRelative(manager, params); };
     actions_["TrackBank"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TrackBank(manager, params); };
-    actions_["TrackSendBank"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new TrackSendBank(manager, params); };
     actions_["Shift"] =                             [this](WidgetActionManager* manager, vector<string> params) { return new SetShift(manager); };
     actions_["Option"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new SetOption(manager); };
     actions_["Control"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new SetControl(manager); };
     actions_["Alt"] =                               [this](WidgetActionManager* manager, vector<string> params) { return new SetAlt(manager); };
-    actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
     actions_["MapFocusedTrackFXToWidgets"] =        [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
@@ -1001,16 +1003,6 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
             }
         }
     }
-}
-
-void SendsActivationManager::ToggleMapSends(map<string, Zone*> &zones)
-{
-    shouldMapSends_ = ! shouldMapSends_;
-    
-    if(shouldMapSends_)
-        MapSelectedTrackSendsToWidgets(zones);
-    else
-        surface_->GoZone("Home");
 }
 
 void SendsActivationManager::ClearAll()
@@ -1387,190 +1379,3 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
         DAW::MarkProjectDirty(nullptr);
     }
 }
-
-
-
-
-/*
-int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-
-int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-
-
-char msgBuffer[250];
-
-sprintf(msgBuffer, "%d microseconds\n", duration);
-DAW::ShowConsoleMsg(msgBuffer);
-
-*/
-
-
-/*
- // subtracts b<T> from a<T>
- template <typename T>
- static void subtract_vector(std::vector<T>& a, const std::vector<T>& b)
- {
- typename std::vector<T>::iterator       ita = a.begin();
- typename std::vector<T>::const_iterator itb = b.begin();
- typename std::vector<T>::iterator       enda = a.end();
- typename std::vector<T>::const_iterator endb = b.end();
- 
- while (ita != enda)
- {
- while (itb != endb)
- {
- if (*ita == *itb)
- {
- ita = a.erase(ita);
- enda = a.end();
- itb = b.begin();
- }
- else
- ++itb;
- }
- ++ita;
- 
- itb = b.begin();
- }
- }
- */
-
-
-
-
-/*
-
-void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
-{
-    int lineNumber = 0;
-    
-    try
-    {
-        //string outFilePath = filePath;
-        //outFilePath[outFilePath.size() - 1] = 'x';
-        
-        //ofstream outfile(outFilePath);
-        
-        ifstream file(filePath);
-        
-        for (string line; getline(file, line) ; )
-        {
-            lineNumber++;
-            
-            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-                continue;
-            
-            vector<string> tokens(GetTokens(line));
-            
-            
-            
-            
-            
-            // old .mst -> new .msx
-
-             if(tokens.size() < 1)
-             continue;
-             
-             outfile << "Widget " + tokens[0] + "\n";
-             
-             
-             if(tokens.size() > 1)
-             {
-             if(tokens[1] == "Press" && tokens.size() == 5)
-             {
-             outfile << "\tPress " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "PressFB" && tokens.size() == 8)
-             {
-             outfile << "\tPress " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             outfile << "\tFB_TwoState " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] + "\n";
-             }
-             else if(tokens[1] == "PressRelease" && tokens.size() == 8)
-             {
-             outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
-             }
-             else if(tokens[1] == "PressReleaseFB" && tokens.size() == 8)
-             {
-             outfile << "\tPressRelease " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] +"\n";
-             outfile << "\tFB_TwoState " + tokens[2] + " " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[6] + " " + tokens[7] + "\n";
-             }
-             else if(tokens[1] == "Encoder" && tokens.size() == 8)
-             {
-             outfile << "\tEncoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "EncoderFB" && tokens.size() == 8)
-             {
-             outfile << "\tEncoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             outfile << "\tFB_Encoder " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "Fader7Bit" && tokens.size() == 8)
-             {
-             outfile << "\tFader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "Fader7BitFB" && tokens.size() == 8)
-             {
-             outfile << "\tFader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             outfile << "\tFB_Fader7Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "Fader14Bit" && tokens.size() == 8)
-             {
-             outfile << "\tFader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "Fader14BitFB" && tokens.size() == 8)
-             {
-             outfile << "\tFader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             outfile << "\tFB_Fader14Bit " + tokens[2] + " " + tokens[3] + " " + tokens[4] + "\n";
-             }
-             else if((tokens[1] == "MCUDisplayUpper" || tokens[1] == "MCUDisplayLower" || tokens[1] == "MCUXTDisplayUpper" || tokens[1] == "MCUXTDisplayLower") && tokens.size() == 3)
-             {
-             outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + "\n";
-             }
-             else if((tokens[1] == "C4DisplayUpper" || tokens[1] == "C4DisplayLower") && tokens.size() == 4)
-             {
-             outfile << "\tFB_" + tokens[1] + " "  + tokens[2] + " " + tokens[3] + "\n";
-             }
-             else if(tokens[1] == "MCUTimeDisplay" && tokens.size() == 2)
-             {
-             outfile << "\tFB_MCUTimeDisplay\n";
-             }
-             else if(tokens[1] == "MCUVUMeter" && tokens.size() == 3)
-             {
-             outfile << "\tFB_MCUVUMeter " + tokens[2] + "\n";
-             }
-             else if(tokens[1] == "VUMeter" && tokens.size() == 5)
-             {
-             outfile << "\tFB_VUMeter " + tokens[2] + " "  + tokens[3] + " "  + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "GainReductionMeter" && tokens.size() == 5)
-             {
-             outfile << "\tFB_GainReductionMeter " + tokens[2] + " "  + tokens[3] + " "  + tokens[4] + "\n";
-             }
-             else if(tokens[1] == "QConProXMasterVUMeter" && tokens.size() == 2)
-             {
-             outfile << "\tFB_QConProXMasterVUMeter\n";
-             }
-             }
-             
-             outfile << "WidgetEnd\n\n";
-             
-
-            // old .mst -> new .msx
-            
-            
-            if(tokens.size() > 0)
-            {
-                if(tokens[0] == "Zone")
-                    ProcessZone(lineNumber, file, tokens, filePath, surface, widgets);
-                else if(tokens[0] == "Widget")
-                    ProcessWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
-            }
-        }
-    }
-    catch (exception &e)
-    {
-        char buffer[250];
-        sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
-        DAW::ShowConsoleMsg(buffer);
-    }
-}
- */

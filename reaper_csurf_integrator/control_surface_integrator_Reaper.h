@@ -216,63 +216,6 @@ public:
     static void ColorFromNative(int col, int* rOut, int* gOut, int* bOut) { ::ColorFromNative(col, rOut, gOut, bOut); }
 
     static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
-
-/*
-    
-    static string GetTrackGUIDAsString(int trackNumber, bool mcpView)
-    {
-        if(trackNumber <= 0 || trackNumber > CSurf_NumTracks(mcpView))
-            return "";
-        else
-        {
-            char pBuffer[BUFSZ];
-            memset(pBuffer, 0, sizeof(pBuffer));
-            guidToString(GetTrackGUID(CSurf_TrackFromID(trackNumber, mcpView)), pBuffer);
-            return pBuffer;
-        }
-    }
-
-    static string GetTrackGUIDAsString(MediaTrack* track, bool mcpView)
-    {
-        return GetTrackGUIDAsString(CSurf_TrackToID(track, mcpView), mcpView);
-    }
-    
-    static void ClearCache()
-    {
-        GUIDTracks_.clear();
-    }
-
-    static MediaTrack *GetTrackFromGUID(string trackGUID, bool mcpView)
-    {
-        if(trackGUID == "")
-            return nullptr;
-        
-        if(GUIDTracks_.count(trackGUID) > 0)
-        {
-            if(GUIDTracks_[trackGUID].trackPointer == CSurf_TrackFromID(GUIDTracks_[trackGUID].trackIndex, mcpView))
-                return GUIDTracks_[trackGUID].trackPointer;
-            else
-                GUIDTracks_.erase(trackGUID); // remove the stale entry
-        }
-        
-        for(int i = 1; i <= CSurf_NumTracks(mcpView); i++)
-        {
-            if(GetTrackGUIDAsString(i, mcpView) == trackGUID)
-            {
-                GUIDTracks_[trackGUID].trackIndex = i;
-                GUIDTracks_[trackGUID].trackPointer = CSurf_TrackFromID(i, mcpView);
-                break;
-            }
-        }
-
-        if(GUIDTracks_.count(trackGUID) > 0)
-            return GUIDTracks_[trackGUID].trackPointer; // this one won't be stale because it was just built in the previous loop
-        else
-            return nullptr;
-    }
-    
-    
-    */
 };
 
 #endif /* control_surface_integrator_Reaper_h */
