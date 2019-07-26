@@ -292,7 +292,6 @@ public:
     
     void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
     void MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &trackNavigators, map<string, Zone*> &zones);
-    void ClearAll();
     
     void SetShowFXWindows(bool value)
     {

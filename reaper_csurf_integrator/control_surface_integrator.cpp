@@ -960,7 +960,12 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
     int fxIndex = 0;
     
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-        return surface_->GetPage()->GetTrackFromId(trackNumber - 1);
+    {
+        if(trackNumber > 0)
+            return surface_->GetPage()->GetTrackFromId(trackNumber - 1);
+        else
+            return nullptr;
+    }
     else
         return nullptr;
 }
@@ -1013,8 +1018,12 @@ void SendsActivationManager::ClearAll()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
 {
-    ClearAll();
+    for(auto zone : activeFXZones_)
+        zone->Deactivate();
     
+    activeFXZones_.clear();
+    DeleteFXWindows();
+
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
@@ -1043,21 +1052,21 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &tr
     int tracknumber = 0;
     int itemnumber = 0;
     int fxIndex = 0;
-    MediaTrack* selectedTrack = nullptr;
+    MediaTrack* focusedTrack = nullptr;
     
     if(DAW::GetFocusedFX(&tracknumber, &itemnumber, &fxIndex) == 1)
-        if(tracknumber != 0)
-            selectedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1);
+        if(tracknumber > 0)
+            focusedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1);
+ 
+    for(auto zone : activeFXZones_)
+        zone->Deactivate();
     
-    if(selectedTrack)
+    activeFXZones_.clear();
+
+    if(focusedTrack)
     {
-        for(auto zone : activeFXZones_)
-            zone->Deactivate();
-        
-        activeFXZones_.clear();
-        
         char FXName[BUFSZ];
-        DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+        DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
         if(zones.count(FXName) > 0)
         {
             Zone* zone = zones[FXName];
@@ -1065,15 +1074,6 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(vector<TrackNavigator*> &tr
             activeFXZones_.push_back(zone);
         }
     }
-}
-
-void FXActivationManager::ClearAll()
-{
-    for(auto zone : activeFXZones_)
-        zone->Deactivate();
-    
-    activeFXZones_.clear();
-    DeleteFXWindows();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
