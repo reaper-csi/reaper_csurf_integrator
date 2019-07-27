@@ -229,7 +229,6 @@ class SendsActivationManager
 {
 private:
     ControlSurface* surface_ = nullptr;
-    bool shouldMapSends_ = false;
     int numSendSlots_ = 0;
     
     vector<Zone*> activeSendZones_;
@@ -670,22 +669,12 @@ public:
                 action->Activate(this);
     }
     
-    void Activate(int fxIndex)
+    void Activate(int index)
     {
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
             {
-                action->SetIndex(fxIndex);
-                action->Activate(this);
-            }
-    }
-    
-    void Activate(MediaTrack* track, int sendsIndex)
-    {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
-            {
-                action->SetIndex(sendsIndex);
+                action->SetIndex(index);
                 action->Activate(this);
             }
     }
@@ -759,24 +748,14 @@ public:
             zone->Activate();
     }
     
-    void Activate(int fxIndex)
+    void Activate(int index)
     {
         for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(fxIndex);
+            widgetActionManager->Activate(index);
         
         for(auto zone : includedZones_)
-            zone->Activate(fxIndex);
+            zone->Activate(index);
     }
-    
-    void Activate(MediaTrack* track, int sendsIndex)
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(track, sendsIndex);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(track, sendsIndex);
-    }
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1049,13 +1028,14 @@ public:
             if(surface->GetUseZoneLink())
                 surface->ActivateZone(zoneName);
     }
-    
+
     void MapSelectedTrackSendsToWidgets()
     {
         for(auto surface : surfaces_)
-            surface->MapSelectedTrackSendsToWidgets();
+            if(surface->GetUseZoneLink())
+                surface->MapSelectedTrackSendsToWidgets();
     }
-        
+
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
