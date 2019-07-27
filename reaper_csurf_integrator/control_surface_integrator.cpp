@@ -151,7 +151,7 @@ static vector<string> GetTokens(string line)
 
 static map<string, vector<Zone*>> includedZoneMembers;
 
-void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, int &numSendSlots)
+void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface)
 {
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
@@ -185,7 +185,7 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
             rangeEnd = stoi(rangeTokens[1]);
             
             if(zoneBaseName == "Send")
-                numSendSlots = rangeEnd - rangeBegin + 1;
+                surface->SetNumSendSlots(rangeEnd - rangeBegin + 1);
             
             for(int i = rangeBegin; i <= rangeEnd; i++)
                 expandedZonesIds.push_back(to_string(i));
@@ -375,12 +375,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     vector<Zone*> expandedZones;
     vector<string> expandedZonesIds;
     
-    int numSendSlots = 0;
-    
-    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, numSendSlots);
-    
-    if(numSendSlots != 0)
-        surface->SetNumSendSlots(numSendSlots);
+    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
 
@@ -985,24 +980,21 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
     if(selectedTrack == nullptr)
         return;
     
-    if(shouldMapSends_)
+    int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
+    
+    for(int i = 0; i < numSendSlots_; i ++)
     {
-        int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
+        string zoneName = "Send" + to_string(i + 1);
         
-        for(int i = 0; i < numSendSlots_; i ++)
+        if(i < numTrackSends)
         {
-            string zoneName = "Send" + to_string(i + 1);
-            
-            if(i < numTrackSends)
-            {
-                if(zones.count(zoneName) > 0)
-                    zones[zoneName]->Activate(selectedTrack, i);
-            }
-            else
-            {
-                if(zones.count(zoneName) > 0)
-                    zones[zoneName]->Deactivate();
-            }
+            if(zones.count(zoneName) > 0)
+                zones[zoneName]->Activate(i);
+        }
+        else
+        {
+            if(zones.count(zoneName) > 0)
+                zones[zoneName]->Deactivate();
         }
     }
 }
