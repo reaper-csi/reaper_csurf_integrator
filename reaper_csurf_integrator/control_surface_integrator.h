@@ -371,22 +371,24 @@ public:
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
     void MapSelectedTrackSendsToWidgets();
+    void MapSelectedTrackFXToWidgets();
+    void MapFocusedTrackFXToWidgets();
     bool AddZone(Zone* zone);
     void ActivateZone(string zoneName);
 
-    void MapSelectedTrackFXToWidgets()
+    void ActivateSelectedTrackSends()
+    {
+        sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
+    }
+
+    void ActivateSelectedTrackFX()
     {
         FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
     }
     
-    void MapFocusedTrackFXToWidgets()
+    void ActivateFocusedTrackFX()
     {
         FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
-    }
-    
-    void ActivateSelectedTrackSends()
-    {
-        sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
     
     bool IsTrackTouched(MediaTrack* track)
@@ -1035,7 +1037,21 @@ public:
             if(surface->GetUseZoneLink())
                 surface->ActivateSelectedTrackSends();
     }
-
+    
+    void MapSelectedTrackFXToWidgets()
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateSelectedTrackFX();
+    }
+    
+    void MapFocusedTrackFXToWidgets()
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateFocusedTrackFX();
+    }
+    
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
