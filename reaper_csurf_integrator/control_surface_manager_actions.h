@@ -10,11 +10,11 @@
 #include "control_surface_integrator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackSendsToWidgets  : public Action
+class MapSelectedTrackSendsToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackSendsToWidgets(WidgetActionManager* manager) : Action(manager) {}
+    MapSelectedTrackSendsToWidgets(WidgetActionManager* manager) : SurfaceAction(manager) {}
 
     void Do(double value) override
     {
