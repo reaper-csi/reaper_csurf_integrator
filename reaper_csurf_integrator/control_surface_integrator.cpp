@@ -1124,6 +1124,23 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
         ActivateSelectedTrackSends();
 }
 
+void ControlSurface::MapSelectedTrackFXToWidgets()
+{
+    if(GetUseZoneLink())
+        page_->MapSelectedTrackFXToWidgets();
+    else
+        ActivateSelectedTrackFX();
+}
+
+void ControlSurface::MapFocusedTrackFXToWidgets()
+{
+    if(GetUseZoneLink())
+        page_->MapFocusedTrackFXToWidgets();
+    else
+        ActivateFocusedTrackFX();
+}
+
+
 bool ControlSurface::AddZone(Zone* zone)
 {
     if(zones_.count(zone->GetName()) > 0)
