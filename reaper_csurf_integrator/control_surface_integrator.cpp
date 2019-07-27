@@ -977,11 +977,13 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
 {
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
+    for(auto zone : activeSendZones_)
+        zone->Deactivate();
+    
+    activeSendZones_.clear();
+
     if(selectedTrack == nullptr)
-    {
-        ClearAll();
         return;
-    }
     
     if(shouldMapSends_)
     {
@@ -1003,14 +1005,6 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
             }
         }
     }
-}
-
-void SendsActivationManager::ClearAll()
-{
-    for(auto zone : activeSendZones_)
-        zone->Deactivate();
-    
-    activeSendZones_.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
