@@ -305,7 +305,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             char fxParamValue[128];
-            TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamValue), fxParamValue, sizeof(fxParamValue));
+            TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), fxParamValue, sizeof(fxParamValue));
             SetWidgetValue(widget_, string(fxParamValue));
         }
         else
