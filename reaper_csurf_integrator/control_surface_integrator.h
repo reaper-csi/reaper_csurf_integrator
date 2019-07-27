@@ -240,7 +240,7 @@ public:
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
-    void ClearAll();
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -574,7 +574,6 @@ public:
     
     virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
-    virtual void SetTrack(MediaTrack* track) {}
     virtual void SetAlias(string alias) {}
     virtual string GetAlias() { return ""; }
     
@@ -671,23 +670,22 @@ public:
                 action->Activate(this);
     }
     
-    void Activate(int actionIndex)
+    void Activate(int fxIndex)
     {
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
             {
-                action->SetIndex(actionIndex);
+                action->SetIndex(fxIndex);
                 action->Activate(this);
             }
     }
     
-    void Activate(MediaTrack* track, int actionIndex)
+    void Activate(MediaTrack* track, int sendsIndex)
     {
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
             {
-                action->SetTrack(track);
-                action->SetIndex(actionIndex);
+                action->SetIndex(sendsIndex);
                 action->Activate(this);
             }
     }
