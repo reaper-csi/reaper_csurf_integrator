@@ -370,7 +370,10 @@ public:
     
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
-    
+    void MapSelectedTrackSendsToWidgets();
+    bool AddZone(Zone* zone);
+    void ActivateZone(string zoneName);
+
     void MapSelectedTrackFXToWidgets()
     {
         FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
@@ -381,13 +384,10 @@ public:
         FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
     }
     
-    void MapSelectedTrackSendsToWidgets()
+    void ActivateSelectedTrackSends()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
-
-    bool AddZone(Zone* zone);
-    void ActivateZone(string zoneName);
     
     bool IsTrackTouched(MediaTrack* track)
     {
@@ -1033,7 +1033,7 @@ public:
     {
         for(auto surface : surfaces_)
             if(surface->GetUseZoneLink())
-                surface->MapSelectedTrackSendsToWidgets();
+                surface->ActivateSelectedTrackSends();
     }
 
     /// GAW -- start TrackNavigationManager facade

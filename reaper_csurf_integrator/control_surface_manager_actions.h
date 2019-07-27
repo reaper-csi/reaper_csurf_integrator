@@ -18,7 +18,7 @@ public:
 
     void Do(double value) override
     {
-        page_->MapSelectedTrackSendsToWidgets();
+        surface_->MapSelectedTrackSendsToWidgets();
     }
 };
 
