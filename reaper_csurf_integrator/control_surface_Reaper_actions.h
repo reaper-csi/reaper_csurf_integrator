@@ -305,7 +305,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             char fxParamValue[128];
-            TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), fxParamValue, sizeof(fxParamValue));
+            DAW::TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), fxParamValue, sizeof(fxParamValue));
             SetWidgetValue(widget_, string(fxParamValue));
         }
         else
@@ -323,7 +323,7 @@ public:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         string sendTrackName = "";
-        MediaTrack* destTrack = (MediaTrack *)GetSetTrackSendInfo(track, 0, sendIndex_, "P_DESTTRACK", 0);;
+        MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "P_DESTTRACK", 0);;
         if(destTrack)
             sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
         SetWidgetValue(widget_, sendTrackName);
