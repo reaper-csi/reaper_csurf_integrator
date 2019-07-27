@@ -725,6 +725,7 @@ void Manager::InitActionDictionary()
     actions_["Option"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new SetOption(manager); };
     actions_["Control"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new SetControl(manager); };
     actions_["Alt"] =                               [this](WidgetActionManager* manager, vector<string> params) { return new SetAlt(manager); };
+    actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
     actions_["MapFocusedTrackFXToWidgets"] =        [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
@@ -970,12 +971,15 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
-    
     for(auto zone : activeSendZones_)
         zone->Deactivate();
     
     activeSendZones_.clear();
+
+    if(! shouldMapSends_)
+        return;
+    
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
 
     if(selectedTrack == nullptr)
         return;
@@ -989,7 +993,11 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
         if(i < numTrackSends)
         {
             if(zones.count(zoneName) > 0)
-                zones[zoneName]->Activate(i);
+            {
+                Zone* zone =  zones[zoneName];
+                zone->Activate(i);
+                activeSendZones_.push_back(zone);
+            }
         }
         else
         {
@@ -1009,7 +1017,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
     
     activeFXZones_.clear();
     DeleteFXWindows();
-
+    
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
@@ -1122,6 +1130,14 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
         page_->MapSelectedTrackSendsToWidgets();
     else
         ActivateSelectedTrackSends();
+}
+
+void ControlSurface::ToggleMapSends()
+{
+    if(GetUseZoneLink())
+        page_->ToggleMapSends();
+    else
+        ActivateToggleMapSends();
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()

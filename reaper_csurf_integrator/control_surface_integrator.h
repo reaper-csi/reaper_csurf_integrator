@@ -230,16 +230,22 @@ class SendsActivationManager
 private:
     ControlSurface* surface_ = nullptr;
     int numSendSlots_ = 0;
-    
+    bool shouldMapSends_ = false;
     vector<Zone*> activeSendZones_;
         
 public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
+    bool GetShouldMapSends() { return shouldMapSends_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     
+    void ToggleMapSends(map<string, Zone*> &zones)
+    {
+        shouldMapSends_ = ! shouldMapSends_;
+        MapSelectedTrackSendsToWidgets(zones);
+    }
+    
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
-
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -370,11 +376,19 @@ public:
     
     void GoZone(string zoneName);
     TrackNavigator* AddTrackNavigator();
+    void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackFXToWidgets();
     void MapFocusedTrackFXToWidgets();
     bool AddZone(Zone* zone);
     void ActivateZone(string zoneName);
+
+    bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
+    
+    void ActivateToggleMapSends()
+    {
+        sendsActivationManager_->ToggleMapSends(zones_);
+    }
 
     void ActivateSelectedTrackSends()
     {
@@ -1031,6 +1045,13 @@ public:
                 surface->ActivateZone(zoneName);
     }
 
+    void ToggleMapSends()
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateToggleMapSends();
+    }
+    
     void MapSelectedTrackSendsToWidgets()
     {
         for(auto surface : surfaces_)
