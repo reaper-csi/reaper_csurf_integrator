@@ -84,7 +84,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            RequestTrackUpdate(track); // GAW TBD -- this needs to add send index
+            RequestTrackUpdate(track);
         else
             widget_->Reset();
     }
