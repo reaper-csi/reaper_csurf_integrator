@@ -1116,6 +1116,14 @@ TrackNavigator* ControlSurface::AddTrackNavigator()
     return trackNavigators_[channelNum];
 }
 
+void ControlSurface::MapSelectedTrackSendsToWidgets()
+{
+    if(GetUseZoneLink())
+        page_->MapSelectedTrackSendsToWidgets();
+    else
+        ActivateSelectedTrackSends();
+}
+
 bool ControlSurface::AddZone(Zone* zone)
 {
     if(zones_.count(zone->GetName()) > 0)
