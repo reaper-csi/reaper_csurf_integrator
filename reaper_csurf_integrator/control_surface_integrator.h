@@ -176,52 +176,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int channelNum_ = 0;
-    bool isChannelTouched_ = false;
-    
-protected:
-    ControlSurface* surface_ = nullptr;   
-    TrackNavigator(ControlSurface* surface) : surface_(surface) {}
-    
-public:
-    TrackNavigator(ControlSurface* surface, int channelNum) : surface_(surface), channelNum_(channelNum) {}
-    virtual ~TrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    
-    virtual MediaTrack* GetTrack();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SelectedTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
-    virtual ~SelectedTrackNavigator() {}
-   
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    FocusedFXTrackNavigator(ControlSurface* surface) : TrackNavigator(surface) {}
-    virtual ~FocusedFXTrackNavigator() {}
-
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SendsActivationManager
@@ -345,7 +299,6 @@ protected:
     const string name_ = "";
     int surfaceChannelOffset_ = 0;
     vector<Widget*> widgets_;
-    vector<TrackNavigator*> trackNavigators_;
 
     FXActivationManager* FXActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
@@ -375,7 +328,6 @@ public:
     virtual void TurnOffMonitoring() {}
     
     void GoZone(string zoneName);
-    TrackNavigator* AddTrackNavigator();
     void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackFXToWidgets();
@@ -405,15 +357,6 @@ public:
         FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
     }
     
-    bool IsTrackTouched(MediaTrack* track)
-    {
-        for(auto navigator : trackNavigators_)
-            if(navigator->GetTrack() == track && navigator->GetIsChannelTouched())
-                return true;
-        
-        return false;
-    }
-
     virtual void Run()
     {
         RequestUpdate(); // this should always be last so that state changes are complete
@@ -631,6 +574,52 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int channelNum_ = 0;
+    bool isChannelTouched_ = false;
+    
+protected:
+    Page* page_ = nullptr;
+    TrackNavigator(Page* surface) : page_(surface) {}
+    
+public:
+    TrackNavigator(Page* page, int channelNum) : page_(page), channelNum_(channelNum) {}
+    virtual ~TrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
+    
+    virtual MediaTrack* GetTrack();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
+    virtual ~FocusedFXTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -793,6 +782,7 @@ private:
     int totalNumChannels_ = 0;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> folderTracks_;
+    vector<TrackNavigator*> trackNavigators_;
     
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
@@ -827,7 +817,7 @@ public:
     {
         return totalNumChannels_;
     }
-
+    
     void Run()
     {
         int flags;
@@ -860,9 +850,22 @@ public:
             folderTrackOffset_ = top;
     }
     
-    void AddTrackNavigator()
+    bool GetIsTrackTouched(MediaTrack* track)
+    {
+        for(auto navigator : trackNavigators_)
+            if(navigator->GetTrack() == track && navigator->GetIsChannelTouched())
+                return true;
+        
+        return false;
+    }
+    
+    TrackNavigator* AddTrackNavigator()
     {
         totalNumChannels_++;
+
+        int channelNum = trackNavigators_.size();
+        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
+        return trackNavigators_[channelNum];        
     }
     
     void EnterPage()
@@ -968,14 +971,10 @@ public:
     {
         surfaces_.push_back(surface);
     }
-
+    
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        for(auto surface : surfaces_)
-            if(surface->IsTrackTouched(track))
-                return true;
-        
-        return false;
+        return trackNavigationManager_->GetIsTrackTouched(track);
     }
     
     void SetShift(bool value)
@@ -1083,9 +1082,9 @@ public:
     MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
 
-    void AddTrackNavigator()
+    TrackNavigator* AddTrackNavigator()
     {
-        trackNavigationManager_->AddTrackNavigator();
+        return trackNavigationManager_->AddTrackNavigator();
     }
     
     void AdjustTrackBank(int stride)
