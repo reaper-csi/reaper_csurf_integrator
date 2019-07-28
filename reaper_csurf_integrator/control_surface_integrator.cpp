@@ -300,7 +300,7 @@ map<string, TrackNavigator*> trackNavigators;
 static TrackNavigator* TrackNavigatorForChannel(int channelNum, string channelName, ControlSurface* surface)
 {
     if(trackNavigators.count(channelName) < 1)
-        trackNavigators[channelName] = surface->AddTrackNavigator();
+        trackNavigators[channelName] = surface->GetPage()->AddTrackNavigator();
     
     return trackNavigators[channelName];
 }
@@ -478,9 +478,9 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             if(hasTrackNavigator)
                                 trackNavigator = expandedTrackNavigators[i];
                             else if(hasSelectedTrackNavigator)
-                                trackNavigator = new SelectedTrackNavigator(surface);
+                                trackNavigator = new SelectedTrackNavigator(surface->GetPage());
                             else if(hasFocusedFXTrackNavigator)
-                                trackNavigator = new FocusedFXTrackNavigator(surface);
+                                trackNavigator = new FocusedFXTrackNavigator(surface->GetPage());
                             
                             widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, trackNavigator);
 
@@ -919,7 +919,7 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* TrackNavigator::GetTrack()
 {
-    return surface_->GetPage()->GetTrackFromChannel(channelNum_ + surface_->GetSurfacChannelOffset());
+    return page_->GetTrackFromChannel(channelNum_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -930,9 +930,9 @@ MediaTrack* SelectedTrackNavigator::GetTrack()
     if(DAW::CountSelectedTracks(nullptr) != 1)
         return nullptr;
     
-    for(int i = 0; i < surface_->GetPage()->GetNumTracks(); i++)
+    for(int i = 0; i < page_->GetNumTracks(); i++)
     {
-        if(MediaTrack* track = surface_->GetPage()->GetTrackFromId(i))
+        if(MediaTrack* track = page_->GetTrackFromId(i))
         {
             int flags = 0;
             
@@ -958,7 +958,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
     {
         if(trackNumber > 0)
-            return surface_->GetPage()->GetTrackFromId(trackNumber - 1);
+            return page_->GetTrackFromId(trackNumber - 1);
         else
             return nullptr;
     }
@@ -1115,15 +1115,6 @@ void ControlSurface::GoZone(string zoneName)
         ActivateZone(zoneName);
 }
 
-TrackNavigator* ControlSurface::AddTrackNavigator()
-{
-    page_->AddTrackNavigator();
-    
-    int channelNum = trackNavigators_.size();
-    trackNavigators_.push_back(new TrackNavigator(this, channelNum));
-    return trackNavigators_[channelNum];
-}
-
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
     if(GetUseZoneLink())
@@ -1155,7 +1146,6 @@ void ControlSurface::MapFocusedTrackFXToWidgets()
     else
         ActivateFocusedTrackFX();
 }
-
 
 bool ControlSurface::AddZone(Zone* zone)
 {
