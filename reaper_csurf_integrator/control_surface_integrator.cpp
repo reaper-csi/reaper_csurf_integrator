@@ -478,9 +478,9 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             if(hasTrackNavigator)
                                 trackNavigator = expandedTrackNavigators[i];
                             else if(hasSelectedTrackNavigator)
-                                trackNavigator = new SelectedTrackNavigator(surface->GetPage());
+                                trackNavigator = new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
                             else if(hasFocusedFXTrackNavigator)
-                                trackNavigator = new FocusedFXTrackNavigator(surface->GetPage());
+                                trackNavigator = new FocusedFXTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
                             
                             widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, trackNavigator);
 
@@ -919,7 +919,7 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* TrackNavigator::GetTrack()
 {
-    return page_->GetTrackFromChannel(channelNum_);
+    return manager_->GetTrackFromChannel(channelNum_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -930,9 +930,9 @@ MediaTrack* SelectedTrackNavigator::GetTrack()
     if(DAW::CountSelectedTracks(nullptr) != 1)
         return nullptr;
     
-    for(int i = 0; i < page_->GetNumTracks(); i++)
+    for(int i = 0; i < manager_->GetNumTracks(); i++)
     {
-        if(MediaTrack* track = page_->GetTrackFromId(i))
+        if(MediaTrack* track = manager_->GetTrackFromId(i))
         {
             int flags = 0;
             
@@ -958,7 +958,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
     {
         if(trackNumber > 0)
-            return page_->GetTrackFromId(trackNumber - 1);
+            return manager_->GetTrackFromId(trackNumber - 1); // GAW TBD -- thisi is  a bug waiting to happen -- should be DAW:: because of trackNumber !!
         else
             return nullptr;
     }
@@ -1050,7 +1050,7 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
     
     if(DAW::GetFocusedFX(&tracknumber, &itemnumber, &fxIndex) == 1)
         if(tracknumber > 0)
-            focusedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1);
+            focusedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1); // GAW TBD -- thisi is  a bug waiting to happen -- should be DAW:: because of trackNumber !!
  
     for(auto zone : activeFXZones_)
         zone->Deactivate();
@@ -1075,7 +1075,6 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ControlSurface::ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink)
 {
-    surfaceChannelOffset_ = page->GetTotalNumChannels();
     FXActivationManager_ = new FXActivationManager(this);
     sendsActivationManager_ = new SendsActivationManager(this);
 }
@@ -1212,13 +1211,20 @@ void TrackNavigationManager::Init()
         trackOffset_ = atol(buffer);
 }
 
+TrackNavigator* TrackNavigationManager::AddTrackNavigator()
+{
+    int channelNum = trackNavigators_.size();
+    trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
+    return trackNavigators_[channelNum];
+}
+
 void TrackNavigationManager::OnTrackSelection()
 {
     if(scrollLink_)
     {
         // Make sure selected track is visble on the control surface
         int low = trackOffset_;
-        int high = low + totalNumChannels_ - 1;
+        int high = low + trackNavigators_.size() - 1;
         
         MediaTrack* selectedTrack = GetSelectedTrack();
         
@@ -1243,7 +1249,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int numTracks = GetNumTracks();
 
-    if(numTracks <= totalNumChannels_)
+    if(numTracks <= trackNavigators_.size())
         return;
     
     int previousTrackOffset = trackOffset_;
@@ -1253,7 +1259,7 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     if(trackOffset_ <  0)
         trackOffset_ =  0;
     
-    int top = numTracks - totalNumChannels_;
+    int top = numTracks - trackNavigators_.size();
     
     if(trackOffset_ >  top)
         trackOffset_ = top;

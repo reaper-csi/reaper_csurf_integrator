@@ -297,7 +297,6 @@ protected:
     ControlSurface(Page* page, const string name, bool useZoneLink);
     Page* page_ = nullptr;
     const string name_ = "";
-    int surfaceChannelOffset_ = 0;
     vector<Widget*> widgets_;
 
     FXActivationManager* FXActivationManager_ = nullptr;
@@ -321,7 +320,6 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
-    int GetSurfacChannelOffset() { return surfaceChannelOffset_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
@@ -504,6 +502,54 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigationManager;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int channelNum_ = 0;
+    bool isChannelTouched_ = false;
+    
+protected:
+    TrackNavigationManager* manager_ = nullptr;
+    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
+    
+public:
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    virtual ~TrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
+    
+    virtual MediaTrack* GetTrack();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~FocusedFXTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetActionManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
@@ -571,52 +617,6 @@ public:
     {
         widget_->SetWidgetActionManager(widgetActionManager);
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int channelNum_ = 0;
-    bool isChannelTouched_ = false;
-    
-protected:
-    Page* page_ = nullptr;
-    TrackNavigator(Page* surface) : page_(surface) {}
-    
-public:
-    TrackNavigator(Page* page, int channelNum) : page_(page), channelNum_(channelNum) {}
-    virtual ~TrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    
-    virtual MediaTrack* GetTrack();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SelectedTrackNavigator(Page* page) : TrackNavigator(page) {}
-    virtual ~SelectedTrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    FocusedFXTrackNavigator(Page* page) : TrackNavigator(page) {}
-    virtual ~FocusedFXTrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -702,68 +702,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<WidgetActionManager*> widgetActionManagers_;
-    vector<Zone*> includedZones_;
-    
-protected:
-    ControlSurface* surface_ = nullptr;
-    string name_ = "";
-    string sourceFilePath_ = "";
-    
-public:
-    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
-    virtual ~Zone() {}
-    
-    string GetName() { return name_ ;}
-    string GetSourceFilePath() { return sourceFilePath_; }
-    
-    virtual void AddWidgetActionManager(WidgetActionManager* manager)
-    {
-        widgetActionManagers_.push_back(manager);
-    }
-    
-    void AddZone(Zone* zone)
-    {
-        includedZones_.push_back(zone);
-    }
-        
-    void Deactivate()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-        {
-            Widget* widget =  widgetActionManager->GetWidget();
-            widget->SetWidgetActionManager(nullptr);
-            widget->Reset();
-        }
-        
-        for(auto zone : includedZones_)
-            zone->Deactivate();
-    }
-    
-    void Activate()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate();
-        
-        for(auto zone : includedZones_)
-            zone->Activate();
-    }
-    
-    void Activate(int index)
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(index);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(index);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -779,7 +717,6 @@ private:
     map<string, int> trackColours_;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
-    int totalNumChannels_ = 0;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> folderTracks_;
     vector<TrackNavigator*> trackNavigators_;
@@ -793,6 +730,7 @@ public:
     int  GetNumFolderTracks() { return folderTracks_.size(); }
     
     void Init();
+    TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
     void TrackListChanged();
     void AdjustTrackBank(int stride);
@@ -811,11 +749,6 @@ public:
             return tracks_[trackNumber];
         else
             return nullptr;
-    }
-    
-    int GetTotalNumChannels()
-    {
-        return totalNumChannels_;
     }
     
     void Run()
@@ -841,7 +774,7 @@ public:
             }
         }
         
-        int top = GetNumTracks() - totalNumChannels_;
+        int top = GetNumTracks() - trackNavigators_.size();
         if(trackOffset_ >  top)
             trackOffset_ = top;
         
@@ -857,15 +790,6 @@ public:
                 return true;
         
         return false;
-    }
-    
-    TrackNavigator* AddTrackNavigator()
-    {
-        totalNumChannels_++;
-
-        int channelNum = trackNavigators_.size();
-        trackNavigators_.push_back(new TrackNavigator(page_, channelNum));
-        return trackNavigators_[channelNum];        
     }
     
     void EnterPage()
@@ -919,6 +843,68 @@ public:
         }
         
         return track;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<WidgetActionManager*> widgetActionManagers_;
+    vector<Zone*> includedZones_;
+    
+protected:
+    ControlSurface* surface_ = nullptr;
+    string name_ = "";
+    string sourceFilePath_ = "";
+    
+public:
+    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
+    virtual ~Zone() {}
+    
+    string GetName() { return name_ ;}
+    string GetSourceFilePath() { return sourceFilePath_; }
+    
+    virtual void AddWidgetActionManager(WidgetActionManager* manager)
+    {
+        widgetActionManagers_.push_back(manager);
+    }
+    
+    void AddZone(Zone* zone)
+    {
+        includedZones_.push_back(zone);
+    }
+    
+    void Deactivate()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+        {
+            Widget* widget =  widgetActionManager->GetWidget();
+            widget->SetWidgetActionManager(nullptr);
+            widget->Reset();
+        }
+        
+        for(auto zone : includedZones_)
+            zone->Deactivate();
+    }
+    
+    void Activate()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate();
+        
+        for(auto zone : includedZones_)
+            zone->Activate();
+    }
+    
+    void Activate(int index)
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate(index);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(index);
     }
 };
 
@@ -1077,10 +1063,9 @@ public:
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
-    int  GetTotalNumChannels() { return trackNavigationManager_->GetTotalNumChannels(); }
-
-    MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
     MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
+
+    TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
 
     TrackNavigator* AddTrackNavigator()
     {
