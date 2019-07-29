@@ -264,17 +264,17 @@ public:
     
     void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
     {
-        char fxName[BUFSZ];
-        char fxParamName[BUFSZ];
-        
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        if(VSTMonitor)
         {
-            DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+            char fxName[BUFSZ];
+            char fxParamName[BUFSZ];
             
-            if(VSTMonitor)
+            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+            
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
@@ -282,8 +282,6 @@ public:
                 }
             }
         }
-        
-        // GAW TBD -- clear all fx items and rebuild
     }
 };
 
@@ -394,6 +392,11 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(1.0);
+    }
+    
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    {
+        FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
     }
 };
 
@@ -701,6 +704,34 @@ public:
     }
 };
 
+// substracts b<T> from a<T>
+template <typename T>
+void
+substract_vector(std::vector<T>& a, const std::vector<T>& b)
+{
+    typename std::vector<T>::iterator       it = a.begin();
+    typename std::vector<T>::const_iterator it2 = b.begin();
+    typename std::vector<T>::iterator       end = a.end();
+    typename std::vector<T>::const_iterator end2 = b.end();
+    
+    while (it != end)
+    {
+        while (it2 != end2)
+        {
+            if (*it == *it2)
+            {
+                it = a.erase(it);
+                end = a.end();
+                it2 = b.begin();
+            }
+            else
+                ++it2;
+        }
+        ++it;
+        it2 = b.begin();
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -750,6 +781,20 @@ public:
         else
             return nullptr;
     }
+    
+    /*
+     int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+     
+     int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+     
+     
+     char msgBuffer[250];
+     
+     sprintf(msgBuffer, "%d microseconds\n", duration);
+     DAW::ShowConsoleMsg(msgBuffer);
+     
+     */
+
     
     void Run()
     {
@@ -1002,11 +1047,6 @@ public:
         return modifiers;
     }
     
-    void TrackHasBeenRemoved(MediaTrack* removedTrack)
-    {
-        // GAW TBD -- this matters for Pinned Tracks
-    }
-    
     void OnTrackSelection()
     {
         trackNavigationManager_->OnTrackSelection();
@@ -1058,6 +1098,12 @@ public:
                 surface->ActivateFocusedTrackFX();
     }
     
+    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    {
+        if(surfaces_.size() > 0)
+            surfaces_[0]->TrackFXListChanged(track, VSTMonitor);
+    }
+
     /// GAW -- start TrackNavigationManager facade
     
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
@@ -1142,6 +1188,8 @@ public:
     
     void ResetAllWidgets()
     {
+        VSTMonitor_ = false;
+        
         if(pages_.size() > 0)
         {
             pages_[currentPageIndex_]->TurnOffMonitoring();
@@ -1279,6 +1327,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->TrackListChanged();
+    }
+    
+    void TrackFXListChanged(MediaTrack* track)
+    {
+        for(auto & page : pages_)
+            page->TrackFXListChanged(track, VSTMonitor_);
     }
 };
 #endif /* control_surface_integrator.h */
