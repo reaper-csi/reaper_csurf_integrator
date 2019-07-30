@@ -221,6 +221,9 @@ private:
     ControlSurface* surface_ = nullptr;
     vector<Zone*> activeFXZones_;
     
+    bool mapsSelectedTrackFXToWidgets_ = false;
+    bool mapsFocusedTrackFXToWidgets_ = false;
+
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
     
@@ -262,26 +265,12 @@ public:
             CloseFXWindows();
     }
     
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    void TrackFXListChanged(map<string, Zone*> &zones)
     {
-        if(VSTMonitor)
-        {
-            char fxName[BUFSZ];
-            char fxParamName[BUFSZ];
-            
-            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-            {
-                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-            
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-                }
-            }
-        }
+        if(mapsSelectedTrackFXToWidgets_)
+            MapSelectedTrackFXToWidgets(zones);
+        else if(mapsFocusedTrackFXToWidgets_)
+            MapFocusedTrackFXToWidgets(zones);
     }
 };
 
@@ -394,9 +383,9 @@ public:
                 widget->DoAction(1.0);
     }
     
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    void TrackFXListChanged(MediaTrack* track)
     {
-        FXActivationManager_->TrackFXListChanged(track, VSTMonitor);
+        FXActivationManager_->TrackFXListChanged(zones_);
     }
 };
 
@@ -1100,8 +1089,27 @@ public:
     
     void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
     {
-        if(surfaces_.size() > 0)
-            surfaces_[0]->TrackFXListChanged(track, VSTMonitor);
+        for(auto surface : surfaces_)
+            surface->TrackFXListChanged(track);
+        
+        if(VSTMonitor)
+        {
+            char fxName[BUFSZ];
+            char fxParamName[BUFSZ];
+            
+            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+            {
+                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+                
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
+            }
+        }
     }
 
     /// GAW -- start TrackNavigationManager facade

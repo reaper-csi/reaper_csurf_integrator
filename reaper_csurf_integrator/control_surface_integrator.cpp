@@ -1012,6 +1012,8 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
 {
+    mapsSelectedTrackFXToWidgets_ = true;
+    
     for(auto zone : activeFXZones_)
         zone->Deactivate();
     
@@ -1043,6 +1045,8 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
 
 void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
 {
+    mapsFocusedTrackFXToWidgets_ = true;
+    
     int tracknumber = 0;
     int itemnumber = 0;
     int fxIndex = 0;
