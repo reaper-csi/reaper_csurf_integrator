@@ -1087,29 +1087,10 @@ public:
                 surface->ActivateFocusedTrackFX();
     }
     
-    void TrackFXListChanged(MediaTrack* track, bool VSTMonitor)
+    void TrackFXListChanged(MediaTrack* track)
     {
         for(auto surface : surfaces_)
             surface->TrackFXListChanged(track);
-        
-        if(VSTMonitor)
-        {
-            char fxName[BUFSZ];
-            char fxParamName[BUFSZ];
-            
-            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
-            {
-                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
-                
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
-                }
-            }
-        }
     }
 
     /// GAW -- start TrackNavigationManager facade
@@ -1340,7 +1321,26 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto & page : pages_)
-            page->TrackFXListChanged(track, VSTMonitor_);
+            page->TrackFXListChanged(track);
+        
+        if(VSTMonitor_)
+        {
+            char fxName[BUFSZ];
+            char fxParamName[BUFSZ];
+            
+            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+            {
+                DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
+                
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                {
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                }
+            }
+        }
     }
 };
 #endif /* control_surface_integrator.h */
