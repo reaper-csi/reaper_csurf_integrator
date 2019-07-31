@@ -1251,16 +1251,14 @@ void TrackNavigationManager::OnTrackSelection()
     }
 }
 
-void TrackNavigationManager::AdjustTrackBank(int stride)
+void TrackNavigationManager::AdjustTrackBank(int amount)
 {
     int numTracks = GetNumTracks();
 
     if(numTracks <= trackNavigators_.size())
         return;
     
-    int previousTrackOffset = trackOffset_;
-    
-    trackOffset_ += stride;
+    trackOffset_ += amount;
     
     if(trackOffset_ <  0)
         trackOffset_ =  0;

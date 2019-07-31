@@ -818,7 +818,7 @@ public:
     TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
     void TrackListChanged();
-    void AdjustTrackBank(int stride);
+    void AdjustTrackBank(int amount);
 
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
@@ -1222,9 +1222,9 @@ public:
         trackNavigationManager_->TogglePin(track);
     }
     
-    void AdjustTrackBank(int stride)
+    void AdjustTrackBank(int amount)
     {
-        trackNavigationManager_->AdjustTrackBank(stride);
+        trackNavigationManager_->AdjustTrackBank(amount);
     }
 
     void EnterPage()
@@ -1366,14 +1366,14 @@ public:
             pages_[currentPageIndex_]->Run();
     }
     
-    void AdjustTrackBank(Page* sendingPage, int stride)
+    void AdjustTrackBank(Page* sendingPage, int amount)
     {
         if(! sendingPage->GetSynchPages())
-            sendingPage->AdjustTrackBank(stride);
+            sendingPage->AdjustTrackBank(amount);
         else
             for(auto page: pages_)
                 if(page->GetSynchPages())
-                    page->AdjustTrackBank(stride);
+                    page->AdjustTrackBank(amount);
     }
     
     void NextPage()
