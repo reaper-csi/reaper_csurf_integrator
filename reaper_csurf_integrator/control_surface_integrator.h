@@ -779,7 +779,10 @@ public:
     
     void UnpinTrackFromChannel(MediaTrack* track, int channelNum)
     {
-        pinnedTracks_.erase(remove(pinnedTracks_.begin(), pinnedTracks_.end(), track), pinnedTracks_.end());
+        vector<MediaTrack*>::iterator it = find(pinnedTracks_.begin(), pinnedTracks_.end(), track);
+        
+        if(it != pinnedTracks_.end())
+            pinnedTracks_.erase(it);
         
         for(int i = channelNum + 1; i < trackNavigators_.size(); i++)
             trackNavigators_[i]->DecBias();
