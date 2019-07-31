@@ -501,7 +501,11 @@ class TrackNavigator
 {
 private:
     int channelNum_ = 0;
+    int bias_ = 0;
     bool isChannelTouched_ = false;
+    MediaTrack* pinnedTrack_ = nullptr;
+    bool isChannelPinned_ = false;
+    bool isChannelPinnedToSelectedTrack_ = false;
     
 protected:
     TrackNavigationManager* manager_ = nullptr;
@@ -513,6 +517,15 @@ public:
     
     virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
     bool GetIsChannelTouched() { return isChannelTouched_; }
+    MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
+    bool GetIsChannelPinned() { return isChannelPinned_; }
+    bool GetIsChannelPinnedToSelectedTrack() { return isChannelPinnedToSelectedTrack_; }
+    void IncBias() { bias_++; }
+    void DecBias() { bias_--; }
+    
+    virtual void PinToTrack();
+    virtual void PinToSelectedTrack();
+    virtual void Unpin();
     
     virtual MediaTrack* GetTrack();
 };
@@ -526,6 +539,10 @@ public:
     virtual ~SelectedTrackNavigator() {}
     
     virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void PinToTrack() override {}
+    virtual void PinToSelectedTrack() override {}
+    virtual void Unpin() override {}
+
     virtual MediaTrack* GetTrack() override;
 };
 
@@ -538,6 +555,10 @@ public:
     virtual ~FocusedFXTrackNavigator() {}
     
     virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void PinToTrack() override {}
+    virtual void PinToSelectedTrack() override {}
+    virtual void Unpin() override {}
+    
     virtual MediaTrack* GetTrack() override;
 };
 
@@ -654,6 +675,8 @@ public:
     
     void DoAction(double value)
     {
+        string mods = GetModifiers();
+        
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
                 action->DoAction(value);
@@ -696,7 +719,7 @@ public:
 // substracts b<T> from a<T>
 template <typename T>
 void
-substract_vector(std::vector<T>& a, const std::vector<T>& b)
+subtract_vector(std::vector<T>& a, const std::vector<T>& b)
 {
     typename std::vector<T>::iterator       it = a.begin();
     typename std::vector<T>::const_iterator it2 = b.begin();
@@ -738,18 +761,54 @@ private:
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> pinnedTracks_;
+    vector<MediaTrack*> unpinnedTracks_;
     vector<MediaTrack*> folderTracks_;
     vector<TrackNavigator*> trackNavigators_;
     
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
     
+    void PinTrackToChannel(MediaTrack* track, int channelNum)
+    {
+        pinnedTracks_.push_back(track);
+        
+        for(int i = channelNum + 1; i < trackNavigators_.size(); i++)
+            trackNavigators_[i]->IncBias();
+    }
+    
+    void UnpinTrackFromChannel(MediaTrack* track, int channelNum)
+    {
+        pinnedTracks_.erase(remove(pinnedTracks_.begin(), pinnedTracks_.end(), track), pinnedTracks_.end());
+        
+        for(int i = channelNum + 1; i < trackNavigators_.size(); i++)
+            trackNavigators_[i]->DecBias();
+    }
+    
+    void TogglePin(MediaTrack* track)
+    {
+        for(auto navigator : trackNavigators_)
+        {
+            if(track == navigator->GetTrack())
+            {
+                if(navigator->GetIsChannelPinned())
+                    navigator->Unpin();
+                else
+                    navigator->PinToTrack();
+                
+                break;
+            }
+        }
+    }
+
+    
+    Page* GetPage() { return page_; }
+    bool GetFollowMCP() { return followMCP_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return tracks_.size(); }
     int  GetNumFolderTracks() { return folderTracks_.size(); }
     
-    void Init();
     TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
     void TrackListChanged();
@@ -757,8 +816,8 @@ public:
 
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
-        if(tracks_.size() > channelNumber + trackOffset_)
-            return tracks_[channelNumber + trackOffset_];
+        if(unpinnedTracks_.size() > channelNumber + trackOffset_)
+            return unpinnedTracks_[channelNumber + trackOffset_];
         else
             return nullptr;
     }
@@ -793,6 +852,7 @@ public:
         tracks_.clear();
         folderTracks_.clear();
         
+        // Get Visible Tracks
         for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
         {
             track = DAW::CSurf_TrackFromID(i, followMCP_);
@@ -807,6 +867,37 @@ public:
                     folderTracks_.push_back(track);
             }
         }
+        
+        // find pinnedTracks_ that are no longer in tracks_
+        vector<MediaTrack*> tracksToRemove;
+        for(auto track : pinnedTracks_)
+        {
+            if(find(tracks_.begin(), tracks_.end(), track) == tracks_.end())
+            {
+                tracksToRemove.push_back(track);
+                break;
+            }
+        }
+        
+        // Unpin any removed tracks
+        for(auto track : tracksToRemove)
+        {
+            for(auto navigator : trackNavigators_)
+            {
+                if(track == navigator->GetTrack())
+                {
+                    navigator->Unpin();
+                    break;
+                }
+            }
+        }
+
+        // remove removed tracks from pinnedTracks_
+        subtract_vector(pinnedTracks_, tracksToRemove);
+        
+        // clone tracks_ and remove pinnedTracks_
+        unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
+        subtract_vector(unpinnedTracks_, pinnedTracks_);
         
         int top = GetNumTracks() - trackNavigators_.size();
         if(trackOffset_ >  top)
@@ -1094,7 +1185,7 @@ public:
     }
 
     /// GAW -- start TrackNavigationManager facade
-    
+    bool GetFollowMCP() { return trackNavigationManager_->GetFollowMCP(); }
     bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
     bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
     int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
@@ -1107,16 +1198,16 @@ public:
         return trackNavigationManager_->AddTrackNavigator();
     }
     
+    void TogglePin(MediaTrack* track)
+    {
+        trackNavigationManager_->TogglePin(track);
+    }
+    
     void AdjustTrackBank(int stride)
     {
         trackNavigationManager_->AdjustTrackBank(stride);
     }
 
-    void Init()
-    {
-        trackNavigationManager_->Init();
-    }
-    
     void EnterPage()
     {
         trackNavigationManager_->EnterPage();
@@ -1133,11 +1224,6 @@ public:
     void SetScrollLink(bool value)
     {
         trackNavigationManager_->SetScrollLink(value);
-    }
-
-    void TrackListChanged()
-    {
-        trackNavigationManager_->TrackListChanged();
     }
     
     /// GAW -- end TrackNavigationManager facade
@@ -1277,7 +1363,6 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
-            SavePageIndexToProjectFile();
             pages_[currentPageIndex_]->EnterPage();
         }
     }
@@ -1290,18 +1375,11 @@ public:
             {
                 pages_[currentPageIndex_]->LeavePage();
                 currentPageIndex_ = i;
-                SavePageIndexToProjectFile();
                 pages_[currentPageIndex_]->EnterPage();
 
                 break;
             }
         }
-    }
-    
-    void SavePageIndexToProjectFile()
-    {
-        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", to_string(currentPageIndex_).c_str());
-        DAW::MarkProjectDirty(nullptr);
     }
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
@@ -1311,13 +1389,7 @@ public:
         else
             return false;
     }
-    
-    void TrackListChanged()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->TrackListChanged();
-    }
-    
+        
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto & page : pages_)

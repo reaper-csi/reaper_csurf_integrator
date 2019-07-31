@@ -78,7 +78,7 @@ void CSurfIntegrator::Run()
 
 void CSurfIntegrator::SetTrackListChange()
 {
-    TheManager->TrackListChanged();
+    //TheManager->TrackListChanged();
 }
 
 const char *CSurfIntegrator::GetTypeString()

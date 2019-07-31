@@ -725,6 +725,7 @@ void Manager::InitActionDictionary()
     actions_["Option"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new SetOption(manager); };
     actions_["Control"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new SetControl(manager); };
     actions_["Alt"] =                               [this](WidgetActionManager* manager, vector<string> params) { return new SetAlt(manager); };
+    actions_["TogglePin"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TogglePin(manager); };
     actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
@@ -803,16 +804,6 @@ void Manager::Init()
                 }
             }
         }
-        
-        for(auto page : pages_)
-            page->Init();
-        
-        char buffer[BUFSZ];
-        if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), "PageIndex", buffer, sizeof(buffer)))
-            currentPageIndex_ = atol(buffer);
-        
-        if(currentPageIndex_ >= pages_.size())
-            currentPageIndex_ = pages_.size() - 1;
     }
     catch (exception &e)
     {
@@ -917,9 +908,48 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void TrackNavigator::PinToTrack()
+{
+    if(isChannelPinned_)
+        return;
+        
+    pinnedTrack_ = GetTrack();
+
+    isChannelPinned_ = true;
+    
+    manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+}
+
+void TrackNavigator::PinToSelectedTrack()
+{
+    if(isChannelPinnedToSelectedTrack_)
+        return;
+}
+
+void TrackNavigator::Unpin()
+{
+    if(isChannelPinned_)
+    {
+        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
+        
+        isChannelPinned_ = false;
+        
+        pinnedTrack_ = nullptr;
+    }
+    else if(isChannelPinnedToSelectedTrack_)
+    {
+        
+    }
+}
+
 MediaTrack* TrackNavigator::GetTrack()
 {
-    return manager_->GetTrackFromChannel(channelNum_);
+    if(isChannelPinnedToSelectedTrack_)
+        return manager_->GetSelectedTrack();
+    else if(isChannelPinned_)
+        return pinnedTrack_;
+    else
+        return manager_->GetTrackFromChannel(channelNum_ - bias_);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -927,23 +957,7 @@ MediaTrack* TrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* SelectedTrackNavigator::GetTrack()
 {
-    if(DAW::CountSelectedTracks(nullptr) != 1)
-        return nullptr;
-    
-    for(int i = 0; i < manager_->GetNumTracks(); i++)
-    {
-        if(MediaTrack* track = manager_->GetTrackFromId(i))
-        {
-            int flags = 0;
-            
-            DAW::GetTrackInfo(track, &flags);
-            
-            if(flags & 0x02) // Selected
-                return track;
-        }
-    }
-    
-    return nullptr;
+    return manager_->GetSelectedTrack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -958,7 +972,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
     {
         if(trackNumber > 0)
-            return manager_->GetTrackFromId(trackNumber - 1); // GAW TBD -- thisi is  a bug waiting to happen -- should be DAW:: because of trackNumber !!
+            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetFollowMCP());
         else
             return nullptr;
     }
@@ -1047,14 +1061,14 @@ void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
 {
     mapsFocusedTrackFXToWidgets_ = true;
     
-    int tracknumber = 0;
-    int itemnumber = 0;
+    int trackNumber = 0;
+    int itemNumber = 0;
     int fxIndex = 0;
     MediaTrack* focusedTrack = nullptr;
     
-    if(DAW::GetFocusedFX(&tracknumber, &itemnumber, &fxIndex) == 1)
-        if(tracknumber > 0)
-            focusedTrack = surface_->GetPage()->GetTrackFromId(tracknumber - 1); // GAW TBD -- thisi is  a bug waiting to happen -- should be DAW:: because of trackNumber !!
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1)
+        if(trackNumber > 0)
+            focusedTrack = DAW::CSurf_TrackFromID(trackNumber, surface_->GetPage()->GetFollowMCP());
  
     for(auto zone : activeFXZones_)
         zone->Deactivate();
@@ -1208,13 +1222,6 @@ string WidgetActionManager::GetModifiers()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigationManager::Init()
-{
-    char buffer[BUFSZ];
-    if(1 == DAW::GetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "BankOffset").c_str(), buffer, sizeof(buffer)))
-        trackOffset_ = atol(buffer);
-}
-
 TrackNavigator* TrackNavigationManager::AddTrackNavigator()
 {
     int channelNum = trackNavigators_.size();
@@ -1244,11 +1251,6 @@ void TrackNavigationManager::OnTrackSelection()
     }
 }
 
-void TrackNavigationManager::TrackListChanged()
-{
-    // GAW TBD -- Future support for pinned tracks here
-}
-
 void TrackNavigationManager::AdjustTrackBank(int stride)
 {
     int numTracks = GetNumTracks();
@@ -1267,10 +1269,4 @@ void TrackNavigationManager::AdjustTrackBank(int stride)
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
-    
-    if(previousTrackOffset != trackOffset_)
-    {
-        DAW::SetProjExtState(nullptr, ControlSurfaceIntegrator.c_str(), (page_->GetName() + "BankOffset").c_str(), to_string(trackOffset_).c_str());
-        DAW::MarkProjectDirty(nullptr);
-    }
 }
