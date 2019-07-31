@@ -752,7 +752,7 @@ private:
     Page* page_ = nullptr;
     bool followMCP_ = true;
     bool synchPages_ = false;
-    bool scrollLink_ = true;
+    bool scrollLink_ = false;
     bool colourTracks_ = false;
     int trackColourRedValue_ = 0;
     int trackColourGreenValue_ = 0;
@@ -790,6 +790,9 @@ public:
     
     void TogglePin(MediaTrack* track)
     {
+        if(track == tracks_[tracks_.size() - 1]) // GAW TDB -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors
+            return;
+        
         for(auto navigator : trackNavigators_)
         {
             if(track == navigator->GetTrack())
@@ -833,22 +836,25 @@ public:
             return nullptr;
     }
     
-    /*
-     int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-     
-     int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-     
-     
-     char msgBuffer[250];
-     
-     sprintf(msgBuffer, "%d microseconds\n", duration);
-     DAW::ShowConsoleMsg(msgBuffer);
-     
-     */
-
     
+    int cycles = 0;
+
     void Run()
     {
+        /*
+        cycles++;
+        
+
+        if(cycles < 60)
+            return;
+        
+        cycles = 0;
+
+        int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        */
+        
+        
+        
         int flags;
         MediaTrack* track;
         
@@ -909,6 +915,16 @@ public:
         top = GetNumFolderTracks();
         if(folderTrackOffset_ >  top)
             folderTrackOffset_ = top;
+        
+        /*
+        int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+        
+        
+        char msgBuffer[250];
+        
+        sprintf(msgBuffer, "%d microseconds\n", duration);
+        DAW::ShowConsoleMsg(msgBuffer);
+        */
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
@@ -1418,4 +1434,30 @@ public:
         }
     }
 };
+
+
+
+
+/*
+ int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+ 
+ 
+ // code you wish to time goes here
+ // code you wish to time goes here
+ // code you wish to time goes here
+ // code you wish to time goes here
+ // code you wish to time goes here
+ // code you wish to time goes here
+ 
+ 
+ 
+ int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+ 
+ char msgBuffer[250];
+ 
+ sprintf(msgBuffer, "%d microseconds\n", duration);
+ DAW::ShowConsoleMsg(msgBuffer);
+ 
+ */
+
 #endif /* control_surface_integrator.h */
