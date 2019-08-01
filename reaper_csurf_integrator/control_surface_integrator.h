@@ -192,6 +192,7 @@ public:
     
     bool GetShouldMapSends() { return shouldMapSends_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
+    vector<Zone*> &GetActiveZones() { return activeSendZones_; }
     
     void ToggleMapSends(map<string, Zone*> &zones)
     {
@@ -251,6 +252,7 @@ public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShowFXWindows() { return showFXWindows_; }
+    vector<Zone*> &GetActiveZones() { return activeFXZones_; }
     
     void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
     void MapFocusedTrackFXToWidgets(map<string, Zone*> &zones);
@@ -312,6 +314,7 @@ public:
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
     
+    int GetParentZoneIndex(Zone* childZone);
     void GoZone(string zoneName);
     void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets();
@@ -965,9 +968,17 @@ public:
          */
     }
     
-    void SetScrollLink(bool value)
+    void ToggleScrollLink(int targetChannel)
     {
-        scrollLink_ = value;
+        scrollLink_ = ! scrollLink_;
+        
+        MediaTrack* selectedTrack = GetSelectedTrack();
+        
+        if(scrollLink_ && selectedTrack != nullptr)
+        {
+            // GAW TBD -- set the trackOffset_ such that the Selected Track is as close as possible to the targetChannel  
+            
+        }
     }
     
     MediaTrack* GetSelectedTrack()
@@ -997,8 +1008,9 @@ class Zone
 private:
     vector<WidgetActionManager*> widgetActionManagers_;
     vector<Zone*> includedZones_;
-    
-protected:
+    int zoneIndex_ = 0;
+    string parentZoneName_ = "";
+
     ControlSurface* surface_ = nullptr;
     string name_ = "";
     string sourceFilePath_ = "";
@@ -1007,6 +1019,9 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
     virtual ~Zone() {}
     
+    int GetZoneIndex() { return zoneIndex_; }
+    string GetParentZoneName() { return parentZoneName_; }
+    void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
     
@@ -1035,20 +1050,35 @@ public:
     
     void Activate()
     {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate();
-        
-        for(auto zone : includedZones_)
-            zone->Activate();
+        if(parentZoneName_ != "")
+        {
+            int index = surface_->GetParentZoneIndex(this);
+            
+            for(auto widgetActionManager : widgetActionManagers_)
+                widgetActionManager->Activate(index);
+            
+            for(auto zone : includedZones_)
+                zone->Activate(index);
+        }
+        else
+        {
+            for(auto widgetActionManager : widgetActionManagers_)
+                widgetActionManager->Activate();
+            
+            for(auto zone : includedZones_)
+                zone->Activate();
+        }
     }
     
-    void Activate(int index)
+    void Activate(int zoneIndex)
     {
+        zoneIndex_ = zoneIndex;
+        
         for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(index);
+            widgetActionManager->Activate(zoneIndex);
         
         for(auto zone : includedZones_)
-            zone->Activate(index);
+            zone->Activate(zoneIndex);
     }
 };
 
@@ -1240,9 +1270,9 @@ public:
         trackNavigationManager_->LeavePage();
     }
     
-    void SetScrollLink(bool value)
+    void ToggleScrollLink(int targetChannel)
     {
-        trackNavigationManager_->SetScrollLink(value);
+        trackNavigationManager_->ToggleScrollLink(targetChannel);
     }
     
     /// GAW -- end TrackNavigationManager facade

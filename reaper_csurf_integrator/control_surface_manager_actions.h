@@ -132,11 +132,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetScrollLink : public Action
+class ToggleScrollLink : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetScrollLink(WidgetActionManager* manager) : Action(manager) {}
+    ToggleScrollLink(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
 
     void RequestUpdate() override
     {
@@ -145,7 +145,7 @@ public:
     
     void Do(double value) override
     {
-        page_->SetScrollLink(! page_->GetScrollLink());
+        page_->ToggleScrollLink(param_);
     }
 };
 
