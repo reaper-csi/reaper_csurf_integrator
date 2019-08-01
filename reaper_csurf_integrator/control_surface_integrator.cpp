@@ -384,6 +384,8 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     
     bool hasSelectedTrackNavigator = false;
     bool hasFocusedFXTrackNavigator = false;
+    
+    string parentZone = "";
 
     for (string line; getline(zoneFile, line) ; )
     {
@@ -422,8 +424,20 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             continue;
         }
         
+        if(tokens.size() == 2 && tokens[0] == "ParentZone")
+        {
+            parentZone = tokens[1];
+            continue;
+        }
+
         for(int i = 0; i < expandedZones.size(); i++)
         {
+            // Pre-process for "Channel|1-8" syntax
+
+            string parentZoneLine(parentZone);
+            parentZoneLine = regex_replace(parentZoneLine, regex("\\|"), expandedZonesIds[i]);
+            expandedZones[i]->SetParentZoneName(parentZoneLine);
+            
             // Pre-process for "Channel|1-8" syntax
             string localZoneLine(line);
             localZoneLine = regex_replace(localZoneLine, regex("\\|"), expandedZonesIds[i]);
@@ -714,7 +728,7 @@ void Manager::InitActionDictionary()
     actions_["TrackOutputMeterMaxPeakLR"] =         [this](WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterMaxPeakLR(manager); };
     actions_["MasterTrackOutputMeter"] =            [this](WidgetActionManager* manager, vector<string> params) { return new MasterTrackOutputMeter(manager, params); };
     actions_["SetShowFXWindows"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new SetShowFXWindows(manager); };
-    actions_["SetScrollLink"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new SetScrollLink(manager); };
+    actions_["ToggleScrollLink"] =                  [this](WidgetActionManager* manager, vector<string> params) { return new ToggleScrollLink(manager, params); };
     actions_["CycleTimeDisplayModes"] =             [this](WidgetActionManager* manager, vector<string> params) { return new CycleTimeDisplayModes(manager); };
     actions_["NextPage"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new GoNextPage(manager); };
     actions_["GoPage"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new class GoPage(manager, params); };
@@ -1122,6 +1136,19 @@ void ControlSurface::InitZones(string zoneFolder)
         sprintf(buffer, "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
     }
+}
+
+int ControlSurface::GetParentZoneIndex(Zone* childZone)
+{
+    for(auto zone : FXActivationManager_->GetActiveZones())
+        if(childZone->GetParentZoneName() == zone->GetName())
+            return zone->GetZoneIndex();
+
+    for(auto zone : sendsActivationManager_->GetActiveZones())
+        if(childZone->GetParentZoneName() == zone->GetName())
+            return zone->GetZoneIndex();
+    
+    return 0;
 }
 
 void ControlSurface::GoZone(string zoneName)
