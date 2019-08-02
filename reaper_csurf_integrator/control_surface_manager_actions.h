@@ -48,6 +48,8 @@ class MapSelectedTrackSendsToWidgets  : public SurfaceAction
 public:
     MapSelectedTrackSendsToWidgets(WidgetActionManager* manager) : SurfaceAction(manager) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         surface_->MapSelectedTrackSendsToWidgets();
@@ -156,6 +158,8 @@ class CycleTimeDisplayModes : public Action
 public:
     CycleTimeDisplayModes(WidgetActionManager* manager) : Action(manager) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         int *tmodeptr = &__g_projectconfig_timemode2;
@@ -186,6 +190,8 @@ class GoNextPage : public Action
 public:
     GoNextPage(WidgetActionManager* manager) : Action(manager) {}
     
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         TheManager->NextPage();
@@ -199,6 +205,8 @@ class GoPage : public ActionWithStringParam
 public:
     GoPage(WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(manager, params) {}
 
+    void RequestUpdate() override {}
+    
     void Do(double value) override
     {
         TheManager->GoPage(param_);
@@ -212,6 +220,8 @@ class GoZone : public SurfaceActionWithStringParam
 public:
     GoZone(WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(manager, params) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         surface_->GoZone(param_);
@@ -224,6 +234,8 @@ class TrackBank : public ActionWithIntParam
 {
 public:
     TrackBank(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
+
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -261,6 +273,8 @@ class SetShift : public Action
 public:
     SetShift(WidgetActionManager* manager) : Action(manager) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         page_->SetShift(value);
@@ -273,6 +287,8 @@ class SetOption : public Action
 {
 public:
     SetOption(WidgetActionManager* manager) : Action(manager) {}
+
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -287,6 +303,8 @@ class SetControl : public Action
 public:
     SetControl(WidgetActionManager* manager) : Action(manager) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         page_->SetControl(value);
@@ -299,6 +317,8 @@ class SetAlt : public Action
 {
 public:
     SetAlt(WidgetActionManager* manager) : Action(manager) {}
+
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
