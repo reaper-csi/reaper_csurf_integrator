@@ -1453,13 +1453,27 @@ public:
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName) + "\n").c_str());
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
+
+                string filename(fxName);
+                filename = regex_replace(filename, regex("[\\:*?<>|.,()]"), "_");
+                filename += ".zon";
+
+                ofstream rawFXFile(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename);
                 
-                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                if(rawFXFile.is_open())
                 {
-                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg((string(fxParamName) + "\n").c_str());
+                    rawFXFile << string(fxName);
+                    
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    {
+                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                        DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
+                        rawFXFile << "\n" + string(fxParamName);
+                    }
                 }
+                
+                rawFXFile.close();
             }
         }
     }
