@@ -1003,28 +1003,38 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
         zone->Deactivate();
     
     activeSendZones_.clear();
-
-    if(! shouldMapSends_)
-        return;
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
 
     if(selectedTrack == nullptr)
         return;
-    
+
     int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
     
     for(int i = 0; i < numSendSlots_; i ++)
     {
         string zoneName = "Send" + to_string(i + 1);
         
-        if(i < numTrackSends)
+        if(shouldMapSends_)
         {
-            if(zones.count(zoneName) > 0)
+            if(i < numTrackSends)
             {
-                Zone* zone =  zones[zoneName];
-                zone->Activate(i);
-                activeSendZones_.push_back(zone);
+                if(zones.count(zoneName) > 0)
+                {
+                    Zone* zone =  zones[zoneName];
+                    zone->Activate(i);
+                    activeSendZones_.push_back(zone);
+                }
+            }
+            else
+            {
+                if(zones.count(zoneName) > 0)
+                {
+                    Zone* zone =  zones[zoneName];
+                    zone->ActivateNoAction(i);
+                    activeSendZones_.push_back(zone);
+                    zone->SetWidgetsToZero();
+                }
             }
         }
         else
@@ -1136,6 +1146,14 @@ void ControlSurface::InitZones(string zoneFolder)
         sprintf(buffer, "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
     }
+}
+
+WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget* widget)
+{
+    if(zones_.count("Home") > 0)
+        return zones_["Home"]->GetHomeWidgetActionManagerForWidget(widget);
+    else
+        return nullptr;
 }
 
 int ControlSurface::GetParentZoneIndex(Zone* childZone)
