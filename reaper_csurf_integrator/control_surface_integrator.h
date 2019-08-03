@@ -1457,7 +1457,7 @@ public:
 
                 string filename(fxName);
                 filename = regex_replace(filename, regex("[\\:*?<>|.,()]"), "_");
-                filename += ".zon";
+                filename += ".txt";
 
                 ofstream rawFXFile(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename);
                 
