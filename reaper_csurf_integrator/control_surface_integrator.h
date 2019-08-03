@@ -314,6 +314,7 @@ public:
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
     
+    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     int GetParentZoneIndex(Zone* childZone);
     void GoZone(string zoneName);
     void ToggleMapSends();
@@ -633,6 +634,11 @@ public:
     {
         widget_->SetWidgetActionManager(widgetActionManager);
     }
+    
+    void ActivateNoAction()
+    {
+        widget_->SetWidgetActionManager(nullptr);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -699,6 +705,16 @@ public:
             {
                 action->SetIndex(index);
                 action->Activate(this);
+            }
+    }
+    
+    void ActivateNoAction(int index)
+    {
+        if(actions_.count(GetModifiers()) > 0)
+            for(auto action : actions_[GetModifiers()])
+            {
+                action->SetIndex(index);
+                action->ActivateNoAction();
             }
     }
     
@@ -1035,17 +1051,38 @@ public:
         includedZones_.push_back(zone);
     }
     
+    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget)
+    {
+        for(auto manager : widgetActionManagers_)
+            if(manager->GetWidget() == widget)
+                return manager;
+        
+        for(auto zone : includedZones_)
+            if(WidgetActionManager* manager = zone->GetHomeWidgetActionManagerForWidget(widget))
+                return manager;
+        
+        return nullptr;
+    }
+
     void Deactivate()
     {
         for(auto widgetActionManager : widgetActionManagers_)
         {
             Widget* widget =  widgetActionManager->GetWidget();
-            widget->SetWidgetActionManager(nullptr);
-            widget->Reset();
+            WidgetActionManager* manager = surface_->GetHomeWidgetActionManagerForWidget(widget);
+            if(manager == nullptr)
+                widget->Reset();
+            widget->SetWidgetActionManager(manager);
         }
         
         for(auto zone : includedZones_)
             zone->Deactivate();
+    }
+    
+    void SetWidgetsToZero()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->GetWidget()->Reset();
     }
     
     void Activate()
@@ -1068,6 +1105,17 @@ public:
             for(auto zone : includedZones_)
                 zone->Activate();
         }
+    }
+    
+    void ActivateNoAction(int zoneIndex)
+    {
+        zoneIndex_ = zoneIndex;
+        
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->ActivateNoAction(zoneIndex);
+        
+        for(auto zone : includedZones_)
+            zone->ActivateNoAction(zoneIndex);
     }
     
     void Activate(int zoneIndex)
