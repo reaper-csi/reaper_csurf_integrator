@@ -463,6 +463,7 @@ public:
         
         ResetAllWidgets();
         
+        
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
