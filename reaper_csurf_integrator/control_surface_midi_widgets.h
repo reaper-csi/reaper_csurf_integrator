@@ -371,7 +371,6 @@ public:
     }
 };
 
-
 int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 int __g_projectconfig_measoffs;
 int __g_projectconfig_timeoffs; // double
