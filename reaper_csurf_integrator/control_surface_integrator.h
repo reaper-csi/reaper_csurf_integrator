@@ -95,7 +95,6 @@ public:
         SetValue(0.0);
         SetValue(0, 0.0);
         SetValue("");
-        ClearCache();
     }
 
     MediaTrack* GetTrack();
