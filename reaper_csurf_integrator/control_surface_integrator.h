@@ -626,7 +626,7 @@ public:
             Do(value);
     }
 
-    virtual void RequestUpdate() {}
+    virtual void RequestUpdate() { widget_->Reset(); }
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
     virtual void Do(string value) {}

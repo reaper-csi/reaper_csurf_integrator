@@ -206,6 +206,8 @@ class GoNextPage : public Action
 public:
     GoNextPage(WidgetActionManager* manager) : Action(manager) {}
 
+    void RequestUpdate() override {}
+
     void Do(double value) override
     {
         TheManager->NextPage();
