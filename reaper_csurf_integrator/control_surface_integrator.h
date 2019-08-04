@@ -220,6 +220,7 @@ class FXActivationManager
 {
 private:
     ControlSurface* surface_ = nullptr;
+    bool shouldMapFX_ = false;
     vector<Zone*> activeFXZones_;
     
     bool mapsSelectedTrackFXToWidgets_ = false;
@@ -251,6 +252,7 @@ private:
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
+    bool GetShouldMapFX() { return shouldMapFX_; }
     bool GetShowFXWindows() { return showFXWindows_; }
     vector<Zone*> &GetActiveZones() { return activeFXZones_; }
     
@@ -265,6 +267,12 @@ public:
             OpenFXWindows();
         else
             CloseFXWindows();
+    }
+    
+    void ToggleMapFX(map<string, Zone*> &zones)
+    {
+        shouldMapFX_ = ! shouldMapFX_;
+        MapSelectedTrackFXToWidgets(zones);
     }
     
     void TrackFXListChanged(map<string, Zone*> &zones)
@@ -318,6 +326,7 @@ public:
     int GetParentZoneIndex(Zone* childZone);
     void GoZone(string zoneName);
     void ToggleMapSends();
+    void ToggleMapFX();
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackFXToWidgets();
     void MapFocusedTrackFXToWidgets();
@@ -330,7 +339,14 @@ public:
     {
         sendsActivationManager_->ToggleMapSends(zones_);
     }
-
+    
+    bool GetShouldMapFX() { return FXActivationManager_->GetShouldMapFX(); }
+    
+    void ActivateToggleMapFX()
+    {
+        FXActivationManager_->ToggleMapFX(zones_);
+    }
+    
     void ActivateSelectedTrackSends()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
@@ -1252,6 +1268,13 @@ public:
         for(auto surface : surfaces_)
             if(surface->GetUseZoneLink())
                 surface->ActivateToggleMapSends();
+    }
+    
+    void ToggleMapFX()
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateToggleMapFX();
     }
     
     void MapSelectedTrackSendsToWidgets()

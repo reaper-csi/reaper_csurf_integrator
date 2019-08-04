@@ -741,6 +741,7 @@ void Manager::InitActionDictionary()
     actions_["Alt"] =                               [this](WidgetActionManager* manager, vector<string> params) { return new SetAlt(manager); };
     actions_["TogglePin"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TogglePin(manager); };
     actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
+    actions_["ToggleMapFX"] =                       [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFX(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
     actions_["MapFocusedTrackFXToWidgets"] =        [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
@@ -1015,32 +1016,28 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
     {
         string zoneName = "Send" + to_string(i + 1);
         
-        if(shouldMapSends_)
+        if(zones.count(zoneName) > 0)
         {
-            if(i < numTrackSends)
+            Zone* zone =  zones[zoneName];
+
+            if(shouldMapSends_)
             {
-                if(zones.count(zoneName) > 0)
+                if(i < numTrackSends)
                 {
-                    Zone* zone =  zones[zoneName];
-                    zone->Activate(i);
-                    activeSendZones_.push_back(zone);
+                        zone->Activate(i);
+                        activeSendZones_.push_back(zone);
+                }
+                else
+                {
+                        zone->ActivateNoAction(i);
+                        activeSendZones_.push_back(zone);
+                        zone->SetWidgetsToZero();
                 }
             }
             else
             {
-                if(zones.count(zoneName) > 0)
-                {
-                    Zone* zone =  zones[zoneName];
-                    zone->ActivateNoAction(i);
-                    activeSendZones_.push_back(zone);
-                    zone->SetWidgetsToZero();
-                }
+                zone->Deactivate();
             }
-        }
-        else
-        {
-            if(zones.count(zoneName) > 0)
-                zones[zoneName]->Deactivate();
         }
     }
 }
@@ -1072,9 +1069,17 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
         if(zones.count(FXName) > 0)
         {
             Zone* zone = zones[FXName];
-            zone->Activate(i);
-            activeFXZones_.push_back(zone);
-            openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
+
+            if(shouldMapFX_)
+            {
+                zone->Activate(i);
+                activeFXZones_.push_back(zone);
+                openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
+            }
+            else
+            {
+                zone->Deactivate();
+            }
         }
     }
     
@@ -1191,6 +1196,14 @@ void ControlSurface::ToggleMapSends()
         page_->ToggleMapSends();
     else
         ActivateToggleMapSends();
+}
+
+void ControlSurface::ToggleMapFX()
+{
+    if(GetUseZoneLink())
+        page_->ToggleMapFX();
+    else
+        ActivateToggleMapFX();
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
