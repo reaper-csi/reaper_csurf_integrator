@@ -684,7 +684,7 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::InitActionDictionary()
 {
-    actions_["NoAction"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new Action(manager); };
+    actions_["NoAction"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new NoAction(manager); };
     actions_["Reaper"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
     actions_["FXParam"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
     actions_["FXParamNameDisplay"] =                [this](WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(manager, params); };
