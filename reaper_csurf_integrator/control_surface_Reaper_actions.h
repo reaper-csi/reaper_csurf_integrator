@@ -289,7 +289,10 @@ public:
 
     virtual void RequestUpdate() override
     {
-        SetWidgetValue(widget_, GetAlias());
+        if(MediaTrack* track = widget_->GetTrack())
+            SetWidgetValue(widget_, GetAlias());
+        else
+            widget_->Reset();
     }
 };
 
