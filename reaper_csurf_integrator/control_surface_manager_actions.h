@@ -174,8 +174,6 @@ class CycleTimeDisplayModes : public Action
 public:
     CycleTimeDisplayModes(WidgetActionManager* manager) : Action(manager) {}
 
-    void RequestUpdate() override {}
-
     void Do(double value) override
     {
         int *tmodeptr = &__g_projectconfig_timemode2;
@@ -205,8 +203,6 @@ class GoNextPage : public Action
 {
 public:
     GoNextPage(WidgetActionManager* manager) : Action(manager) {}
-
-    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -283,8 +279,6 @@ class SetShift : public Action
 public:
     SetShift(WidgetActionManager* manager) : Action(manager) {}
 
-    void RequestUpdate() override {}
-
     void Do(double value) override
     {
         page_->SetShift(value);
@@ -297,8 +291,6 @@ class SetOption : public Action
 {
 public:
     SetOption(WidgetActionManager* manager) : Action(manager) {}
-
-    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -313,8 +305,6 @@ class SetControl : public Action
 public:
     SetControl(WidgetActionManager* manager) : Action(manager) {}
 
-    void RequestUpdate() override {}
-
     void Do(double value) override
     {
         page_->SetControl(value);
@@ -327,8 +317,6 @@ class SetAlt : public Action
 {
 public:
     SetAlt(WidgetActionManager* manager) : Action(manager) {}
-
-    void RequestUpdate() override {}
 
     void Do(double value) override
     {
