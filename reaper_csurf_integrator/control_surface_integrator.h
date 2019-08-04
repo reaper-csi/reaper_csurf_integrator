@@ -95,6 +95,7 @@ public:
         SetValue(0.0);
         SetValue(0, 0.0);
         SetValue("");
+        ClearCache();
     }
 
     MediaTrack* GetTrack();
@@ -944,7 +945,10 @@ public:
         subtract_vector(unpinnedTracks_, pinnedTracks_);
         
         int top = GetNumTracks() - trackNavigators_.size();
-        if(trackOffset_ >  top)
+        
+        if(top < 0)
+            trackOffset_ = 0;
+        else if(trackOffset_ >  top)
             trackOffset_ = top;
         
         top = GetNumFolderTracks();

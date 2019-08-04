@@ -308,7 +308,8 @@ public:
     
     virtual void ClearCache() override
     {
-        lastStringSent_ = " ";
+        lastStringSent_ = "";
+        SendData("");
     }
     
     virtual void SetValue(string displayText) override
@@ -330,6 +331,11 @@ public:
         
         lastStringSent_ = displayText;
         
+        SendData(displayText);
+    }
+    
+    void SendData(string displayText)
+    {
         int pad = 7;
         const char* text = displayText.c_str();
         
