@@ -442,6 +442,8 @@ class Rewind : public Action
 {
 public:
     Rewind(WidgetActionManager* manager) : Action(manager) { }
+    
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -455,6 +457,8 @@ class FastForward : public Action
 {
 public:
     FastForward(WidgetActionManager* manager) : Action(manager) { }
+
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -728,6 +732,8 @@ class SetMasterTrackTouch : public Action
 {
 public:
     SetMasterTrackTouch(WidgetActionManager* manager) : Action(manager) {}
+
+    void RequestUpdate() override {}
 
     void Do(double value) override
     {
