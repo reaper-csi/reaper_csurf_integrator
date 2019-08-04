@@ -146,8 +146,6 @@ class ActionWithIntParam : public Action
 {
 protected:
     int param_ = 0;
-   
-    void RequestUpdate() override {}
 
     ActionWithIntParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {
@@ -162,8 +160,6 @@ class ActionWithStringParam : public Action
 {
 protected:
     string param_ = "";
-    
-    void RequestUpdate() override {}
 
     ActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {
@@ -178,8 +174,6 @@ class SurfaceAction : public Action
 {
 protected:
     ControlSurface* surface_ = nullptr;
-    
-    void RequestUpdate() override {}
 
     SurfaceAction(WidgetActionManager* manager) : Action(manager)
     {
@@ -194,8 +188,6 @@ class SurfaceActionWithStringParam : public Action
 protected:
     ControlSurface* surface_ = nullptr;
     string param_ = "";
-    
-    void RequestUpdate() override {}
 
     SurfaceActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
     {

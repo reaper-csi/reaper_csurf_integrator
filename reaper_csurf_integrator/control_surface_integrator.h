@@ -625,8 +625,8 @@ public:
         else
             Do(value);
     }
-
-    virtual void RequestUpdate() { widget_->Reset(); }
+    
+    virtual void RequestUpdate() {}
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
     virtual void Do(string value) {}
@@ -657,6 +657,17 @@ public:
     {
         widget_->SetWidgetActionManager(nullptr);
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class NoAction : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    NoAction(WidgetActionManager* widgetActionManager) : Action(widgetActionManager) {}
+    virtual ~NoAction() {}
+    
+    virtual void RequestUpdate() { widget_->Reset(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
