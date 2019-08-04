@@ -461,6 +461,8 @@ public:
     {
         InitWidgets(templateFilename);
         
+        ResetAllWidgets();
+        
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
@@ -625,7 +627,7 @@ public:
             Do(value);
     }
 
-    virtual void RequestUpdate() { widget_->Reset(); }
+    virtual void RequestUpdate() {}
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
     virtual void Do(string value) {}

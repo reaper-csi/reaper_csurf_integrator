@@ -66,8 +66,6 @@ class MapSelectedTrackSendsToWidgets  : public SurfaceAction
 public:
     MapSelectedTrackSendsToWidgets(WidgetActionManager* manager) : SurfaceAction(manager) {}
 
-    void RequestUpdate() override {}
-
     void Do(double value) override
     {
         surface_->MapSelectedTrackSendsToWidgets();
@@ -207,8 +205,6 @@ class GoNextPage : public Action
 {
 public:
     GoNextPage(WidgetActionManager* manager) : Action(manager) {}
-    
-    void RequestUpdate() override {}
 
     void Do(double value) override
     {
@@ -222,8 +218,6 @@ class GoPage : public ActionWithStringParam
 {
 public:
     GoPage(WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(manager, params) {}
-
-    void RequestUpdate() override {}
     
     void Do(double value) override
     {
@@ -238,8 +232,6 @@ class GoZone : public SurfaceActionWithStringParam
 public:
     GoZone(WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(manager, params) {}
 
-    void RequestUpdate() override {}
-
     void Do(double value) override
     {
         surface_->GoZone(param_);
@@ -252,8 +244,6 @@ class TrackBank : public ActionWithIntParam
 {
 public:
     TrackBank(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
-
-    void RequestUpdate() override {}
 
     void Do(double value) override
     {
