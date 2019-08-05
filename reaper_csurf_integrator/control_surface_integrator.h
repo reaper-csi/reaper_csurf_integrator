@@ -192,7 +192,7 @@ public:
     
     bool GetShouldMapSends() { return shouldMapSends_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-    vector<Zone*> &GetActiveZones() { return activeSendZones_; }
+    vector<Zone*> GetActiveZones() { return activeSendZones_; }
     
     void ToggleMapSends(map<string, Zone*> &zones)
     {
@@ -221,8 +221,9 @@ class FXActivationManager
 private:
     ControlSurface* surface_ = nullptr;
     bool shouldMapFX_ = false;
-    vector<Zone*> activeFXZones_;
-    
+    vector<Zone*> activeSelectedTrackFXZones_;
+    vector<Zone*> activeFocusedFXZones_;
+
     bool mapsSelectedTrackFXToWidgets_ = false;
     bool mapsFocusedTrackFXToWidgets_ = false;
 
@@ -254,7 +255,18 @@ public:
     
     bool GetShouldMapFX() { return shouldMapFX_; }
     bool GetShowFXWindows() { return showFXWindows_; }
-    vector<Zone*> &GetActiveZones() { return activeFXZones_; }
+    vector<Zone*> GetActiveZones()
+    {
+        vector<Zone*> activeFXZones;
+        
+        for(auto zone : activeSelectedTrackFXZones_)
+            activeFXZones.push_back(zone);
+        
+        for(auto zone : activeFocusedFXZones_)
+            activeFXZones.push_back(zone);
+        
+        return activeFXZones;
+    }
     
     void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
     void MapFocusedTrackFXToWidgets(map<string, Zone*> &zones);
@@ -279,7 +291,8 @@ public:
     {
         if(mapsSelectedTrackFXToWidgets_)
             MapSelectedTrackFXToWidgets(zones);
-        else if(mapsFocusedTrackFXToWidgets_)
+        
+        if(mapsFocusedTrackFXToWidgets_)
             MapFocusedTrackFXToWidgets(zones);
     }
 };
@@ -542,6 +555,7 @@ public:
     MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
     bool GetIsChannelPinned() { return isChannelPinned_; }
     bool GetIsChannelPinnedToSelectedTrack() { return isChannelPinnedToSelectedTrack_; }
+    virtual bool GetIsFocusedFXTrackNavigator() { return false; }
     void IncBias() { bias_++; }
     void DecBias() { bias_--; }
     
@@ -576,6 +590,8 @@ public:
     FocusedFXTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
     virtual ~FocusedFXTrackNavigator() {}
     
+    virtual bool GetIsFocusedFXTrackNavigator() override { return true; }
+
     virtual void SetTouchState(bool isChannelTouched) override {}
     virtual void PinToTrack() override {}
     virtual void PinToSelectedTrack() override {}
@@ -687,6 +703,8 @@ public:
     WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
+    
+    bool GetHasFocusedFXTrackNavigator() { return trackNavigator_->GetIsFocusedFXTrackNavigator(); }
     
     MediaTrack* GetTrack()
     {
@@ -1072,6 +1090,14 @@ public:
     void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
+    
+    bool GetHasFocusedFXTrackNavigator()
+    {
+        if(widgetActionManagers_.size() > 0)
+            return widgetActionManagers_[0]->GetHasFocusedFXTrackNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
+        else
+            return false;
+    }
     
     virtual void AddWidgetActionManager(WidgetActionManager* manager)
     {
@@ -1540,7 +1566,7 @@ public:
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
+                //DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
 
                 string filename(fxName);
                 filename = regex_replace(filename, regex("[\\:*?<>|.,()]"), "_");
@@ -1555,7 +1581,7 @@ public:
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                     {
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                        DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
+                        //DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
                         rawFXFile << "\n" + string(fxParamName);
                     }
                 }
