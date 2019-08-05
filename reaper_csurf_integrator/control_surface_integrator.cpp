@@ -1289,21 +1289,25 @@ void TrackNavigationManager::OnTrackSelection()
 {
     if(scrollLink_)
     {
-        // Make sure selected track is visble on the control surface
-        int low = trackOffset_;
-        int high = low + trackNavigators_.size() - 1;
-        
+        // Make sure selected track is visble on the control surface      
         MediaTrack* selectedTrack = GetSelectedTrack();
         
-        if(selectedTrack == nullptr)
-            return;
-        
-        int selectedTrackOffset = DAW::CSurf_TrackToID(selectedTrack, followMCP_);
-        
-        if(selectedTrackOffset < low)
-            TheManager->AdjustTrackBank(page_, selectedTrackOffset - low);
-        if(selectedTrackOffset > high)
-            TheManager->AdjustTrackBank(page_, selectedTrackOffset - high);
+        if(selectedTrack != nullptr)
+        {
+            for(int i = 0; i < unpinnedTracks_.size(); i++)
+                if(selectedTrack == unpinnedTracks_[i])
+                    trackOffset_ = i;
+            
+            trackOffset_ -= targetScrollLinkChannel_;
+            
+            if(trackOffset_ <  0)
+                trackOffset_ =  0;
+
+            int top = GetNumTracks() - trackNavigators_.size();
+            
+            if(trackOffset_ >  top)
+                trackOffset_ = top;
+        }
     }
 }
 
