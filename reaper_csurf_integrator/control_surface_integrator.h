@@ -819,6 +819,7 @@ private:
     bool followMCP_ = true;
     bool synchPages_ = false;
     bool scrollLink_ = false;
+    int targetScrollLinkChannel_ = 0;
     bool colourTracks_ = false;
     int trackColourRedValue_ = 0;
     int trackColourGreenValue_ = 0;
@@ -1036,15 +1037,11 @@ public:
     
     void ToggleScrollLink(int targetChannel)
     {
+        targetScrollLinkChannel_ = targetChannel - 1 < 0 ? 0 : targetChannel - 1;
+        
         scrollLink_ = ! scrollLink_;
         
-        MediaTrack* selectedTrack = GetSelectedTrack();
-        
-        if(scrollLink_ && selectedTrack != nullptr)
-        {
-            // GAW TBD -- set the trackOffset_ such that the Selected Track is as close as possible to the targetChannel  
-            
-        }
+        OnTrackSelection();
     }
     
     MediaTrack* GetSelectedTrack()
