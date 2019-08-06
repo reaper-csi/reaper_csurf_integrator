@@ -1070,16 +1070,18 @@ private:
 
     ControlSurface* surface_ = nullptr;
     string name_ = "";
+    string alias_ = "";
     string sourceFilePath_ = "";
     
 public:
-    Zone(ControlSurface* surface, string name, string sourceFilePath) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
     virtual ~Zone() {}
     
     int GetZoneIndex() { return zoneIndex_; }
     string GetParentZoneName() { return parentZoneName_; }
     void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
+    string GetAlias() { return alias_ ;}
     string GetSourceFilePath() { return sourceFilePath_; }
     
     bool GetHasFocusedFXTrackNavigator()

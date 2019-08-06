@@ -149,7 +149,7 @@ static vector<string> GetTokens(string line)
 
 static map<string, vector<Zone*>> includedZoneMembers;
 
-void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface)
+void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, string alias)
 {
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
@@ -190,7 +190,7 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
             
             for(int i = 0; i <= rangeEnd - rangeBegin; i++)
             {
-                Zone* zone = new Zone(surface, zoneBaseName + expandedZonesIds[i], filePath);
+                Zone* zone = new Zone(surface, zoneBaseName + expandedZonesIds[i], filePath, alias + expandedZonesIds[i]);
                 if(surface->AddZone(zone))
                     expandedZones.push_back(zone);
             }
@@ -202,7 +202,7 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
         /// Just regular syntax of type "Channel1"
         //////////////////////////////////////////////////////////////////////////////////////////////
 
-        Zone* zone = new Zone(surface, tokens[1], filePath);
+        Zone* zone = new Zone(surface, tokens[1], filePath, alias);
         if(surface->AddZone(zone))
         {
             expandedZones.push_back(zone);
@@ -370,10 +370,18 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
     if(passedTokens.size() < 2)
         return;
     
+    string alias = "";
+    
+    if(passedTokens.size() > 2)
+        alias = passedTokens[2];
+    else
+        alias = passedTokens[1];
+
+    
     vector<Zone*> expandedZones;
     vector<string> expandedZonesIds;
     
-    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface);
+    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, alias);
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
 
