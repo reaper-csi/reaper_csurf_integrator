@@ -377,7 +377,7 @@ public:
     
     virtual void Run()
     {
-        RequestUpdate(); // this should always be last so that state changes are complete
+        RequestUpdate(); // if you add any more code here RequestUpdate() should always be last so that state changes are complete
     }
     
     void ResetAllWidgets()
@@ -540,7 +540,6 @@ private:
     bool isChannelTouched_ = false;
     MediaTrack* pinnedTrack_ = nullptr;
     bool isChannelPinned_ = false;
-    bool isChannelPinnedToSelectedTrack_ = false;
     
 protected:
     TrackNavigationManager* manager_ = nullptr;
@@ -554,13 +553,11 @@ public:
     bool GetIsChannelTouched() { return isChannelTouched_; }
     MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
     bool GetIsChannelPinned() { return isChannelPinned_; }
-    bool GetIsChannelPinnedToSelectedTrack() { return isChannelPinnedToSelectedTrack_; }
     virtual bool GetIsFocusedFXTrackNavigator() { return false; }
     void IncBias() { bias_++; }
     void DecBias() { bias_--; }
     
-    virtual void PinToTrack();
-    virtual void PinToSelectedTrack();
+    virtual void Pin();
     virtual void Unpin();
     
     virtual MediaTrack* GetTrack();
@@ -575,8 +572,7 @@ public:
     virtual ~SelectedTrackNavigator() {}
     
     virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void PinToTrack() override {}
-    virtual void PinToSelectedTrack() override {}
+    virtual void Pin() override {}
     virtual void Unpin() override {}
 
     virtual MediaTrack* GetTrack() override;
@@ -593,8 +589,7 @@ public:
     virtual bool GetIsFocusedFXTrackNavigator() override { return true; }
 
     virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void PinToTrack() override {}
-    virtual void PinToSelectedTrack() override {}
+    virtual void Pin() override {}
     virtual void Unpin() override {}
     
     virtual MediaTrack* GetTrack() override;
@@ -857,7 +852,7 @@ public:
     
     void TogglePin(MediaTrack* track)
     {
-        if(track == tracks_[tracks_.size() - 1]) // GAW TDB -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors
+        if(track == tracks_[tracks_.size() - 1]) // GAW TBD -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors
             return;
         
         for(auto navigator : trackNavigators_)
@@ -867,13 +862,12 @@ public:
                 if(navigator->GetIsChannelPinned())
                     navigator->Unpin();
                 else
-                    navigator->PinToTrack();
+                    navigator->Pin();
                 
                 break;
             }
         }
     }
-
     
     Page* GetPage() { return page_; }
     bool GetFollowMCP() { return followMCP_; }
