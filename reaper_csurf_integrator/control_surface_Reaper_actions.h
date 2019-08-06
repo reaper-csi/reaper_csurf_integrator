@@ -77,11 +77,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPan : public TrackActionWithIntFeedbackParam
+class TrackPan : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPan(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+    TrackPan(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -98,11 +98,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackPanWidth : public TrackActionWithIntFeedbackParam
+class TrackPanWidth : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanWidth(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+    TrackPanWidth(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -824,11 +824,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackOutputMeter : public TrackActionWithIntFeedbackParam
+class TrackOutputMeter : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackOutputMeter(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntFeedbackParam(manager, params) {}
+    TrackOutputMeter(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
