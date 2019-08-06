@@ -921,7 +921,7 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigator::PinToTrack()
+void TrackNavigator::Pin()
 {
     if(isChannelPinned_)
         return;
@@ -931,12 +931,6 @@ void TrackNavigator::PinToTrack()
     isChannelPinned_ = true;
     
     manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
-}
-
-void TrackNavigator::PinToSelectedTrack()
-{
-    if(isChannelPinnedToSelectedTrack_)
-        return;
 }
 
 void TrackNavigator::Unpin()
@@ -949,17 +943,11 @@ void TrackNavigator::Unpin()
         
         pinnedTrack_ = nullptr;
     }
-    else if(isChannelPinnedToSelectedTrack_)
-    {
-        
-    }
 }
 
 MediaTrack* TrackNavigator::GetTrack()
 {
-    if(isChannelPinnedToSelectedTrack_)
-        return manager_->GetSelectedTrack();
-    else if(isChannelPinned_)
+    if(isChannelPinned_)
         return pinnedTrack_;
     else
         return manager_->GetTrackFromChannel(channelNum_ - bias_);

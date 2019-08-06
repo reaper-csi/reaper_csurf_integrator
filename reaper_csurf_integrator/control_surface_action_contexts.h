@@ -91,13 +91,13 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackActionWithIntFeedbackParam : public TrackAction
+class TrackActionWithIntParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     int param_ = 0;
 
-    TrackActionWithIntFeedbackParam(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
+    TrackActionWithIntParam(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
