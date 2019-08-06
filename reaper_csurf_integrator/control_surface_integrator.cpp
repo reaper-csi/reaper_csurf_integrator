@@ -1294,6 +1294,10 @@ void TrackNavigationManager::OnTrackSelection()
         
         if(selectedTrack != nullptr)
         {
+            for(auto navigator : trackNavigators_)
+                if(selectedTrack == navigator->GetTrack())
+                    return;
+
             for(int i = 0; i < unpinnedTracks_.size(); i++)
                 if(selectedTrack == unpinnedTracks_[i])
                     trackOffset_ = i;
