@@ -1311,6 +1311,18 @@ void TrackNavigationManager::OnTrackSelection()
     }
 }
 
+void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
+{
+    if(scrollLink_)
+    {
+        if(DAW::IsTrackVisible(track, true))
+            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
+        
+        if(DAW::IsTrackVisible(track, false))
+            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+    }
+}
+
 void TrackNavigationManager::AdjustTrackBank(int amount)
 {
     int numTracks = GetNumTracks();
