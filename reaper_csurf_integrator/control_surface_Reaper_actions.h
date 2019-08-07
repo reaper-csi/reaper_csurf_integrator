@@ -547,7 +547,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-            widget_->GetSurface()->GetPage()->OnTrackSelection();
+            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
 };
@@ -569,7 +569,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::SetOnlyTrackSelected(track);
-            widget_->GetSurface()->GetPage()->OnTrackSelection();
+            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
 };
@@ -590,7 +590,7 @@ public:
     void Do( double value) override
     {
         DAW::SetOnlyTrackSelected(DAW::GetMasterTrack(0));
-        page_->OnTrackSelection();
+        widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(GetMasterTrack(0));
     }
 };
 
@@ -612,9 +612,11 @@ public:
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        for(int i = 0; i < widget_->GetSurface()->GetPage()->GetNumTracks(); i++)
+        Page* page = widget_->GetSurface()->GetPage();
+        
+        for(int i = 0; i < page->GetNumTracks(); i++)
         {
-           MediaTrack* currentTrack = widget_->GetSurface()->GetPage()->GetTrackFromId(i);
+           MediaTrack* currentTrack = page->GetTrackFromId(i);
             
             if(currentTrack == widget_->GetTrack())
                 trackIndex = i;
@@ -634,11 +636,12 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = widget_->GetSurface()->GetPage()->GetTrackFromId(i);
+            MediaTrack* currentTrack = page->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-            widget_->GetSurface()->GetPage()->OnTrackSelection();
         }
+        
+        page->OnTrackSelectionBySurface(page->GetTrackFromId(lowerBound));
     }
 };
 

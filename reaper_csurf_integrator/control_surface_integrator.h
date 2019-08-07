@@ -878,6 +878,7 @@ public:
     
     TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
+    void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
     void AdjustTrackBank(int amount);
 
@@ -1281,6 +1282,11 @@ public:
         
         for(auto surface : surfaces_)
             surface->OnTrackSelection();
+    }
+    
+    void OnTrackSelectionBySurface(MediaTrack* track)
+    {
+        trackNavigationManager_->OnTrackSelectionBySurface(track);
     }
  
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
