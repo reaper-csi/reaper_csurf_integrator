@@ -697,6 +697,7 @@ void Manager::InitActionDictionary()
 {
     actions_["NoAction"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new NoAction(manager); };
     actions_["Reaper"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
+    actions_["FXNameDisplay"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new FXNameDisplay(manager, params); };
     actions_["FXParam"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
     actions_["FXParamNameDisplay"] =                [this](WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(manager, params); };
     actions_["FXParamValueDisplay"] =               [this](WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(manager, params); };
@@ -751,8 +752,10 @@ void Manager::InitActionDictionary()
     actions_["TogglePin"] =                         [this](WidgetActionManager* manager, vector<string> params) { return new TogglePin(manager); };
     actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
     actions_["ToggleMapFX"] =                       [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFX(manager); };
+    actions_["ToggleMapFXMenu"] =                   [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFXMenu(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
+    actions_["GoFXSlot"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new GoFXSlot(manager, params); };
     actions_["MapFocusedTrackFXToWidgets"] =        [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
     actions_["TrackAutoMode"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new TrackAutoMode(manager, params); };
     actions_["GlobalAutoMode"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new GlobalAutoMode(manager, params); };
@@ -1085,10 +1088,17 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
 
 void FXActivationManager::MapSelectedTrackFXToMenu(map<string, Zone*> &zones)
 {
+    mapsFXMenus_ = true;
+    
     for(auto zone : activeFXMenuZones_)
         zone->Deactivate();
     
     activeFXMenuZones_.clear();
+    
+    for(auto zone : activeFXMenuFXZones_)
+        zone->Deactivate();
+    
+    activeFXMenuFXZones_.clear();
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
@@ -1124,6 +1134,26 @@ void FXActivationManager::MapSelectedTrackFXToMenu(map<string, Zone*> &zones)
                 zone->Deactivate();
             }
         }
+    }
+}
+
+void FXActivationManager::MapSelectedTrackFXSlotToWidgets(map<string, Zone*> &zones, int fxIndex)
+{
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    
+    if(selectedTrack == nullptr)
+        return;
+
+    if(fxIndex >= DAW::TrackFX_GetCount(selectedTrack))
+        return;
+    
+    char FXName[BUFSZ];
+    DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
+    
+    if(zones.count(FXName) > 0 && ! zones[FXName]->GetHasFocusedFXTrackNavigator())
+    {
+        zones[FXName]->Activate(fxIndex);
+        activeFXMenuFXZones_.push_back(zones[FXName]);
     }
 }
 
@@ -1202,6 +1232,14 @@ WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget*
         return nullptr;
 }
 
+string ControlSurface::GetZoneAlias(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+        return zones_[zoneName]->GetAlias();
+    else
+        return "";
+}
+
 int ControlSurface::GetParentZoneIndex(Zone* childZone)
 {
     for(auto zone : FXActivationManager_->GetActiveZones())
@@ -1247,12 +1285,28 @@ void ControlSurface::ToggleMapFX()
         ActivateToggleMapSelectedFX();
 }
 
+void ControlSurface::ToggleMapFXMenu()
+{
+    if(GetUseZoneLink())
+        page_->ToggleMapFXMenu();
+    else
+        ActivateToggleMapFXMenu();
+}
+
 void ControlSurface::MapSelectedTrackFXToWidgets()
 {
     if(GetUseZoneLink())
         page_->MapSelectedTrackFXToWidgets();
     else
         ActivateSelectedTrackFX();
+}
+
+void ControlSurface::MapSelectedTrackFXSlotToWidgets(int fxIndex)
+{
+    if(GetUseZoneLink())
+        page_->MapSelectedTrackFXSlotToWidgets(fxIndex);
+    else
+        ActivateSelectedTrackSlotFX(fxIndex);
 }
 
 void ControlSurface::MapFocusedTrackFXToWidgets()
