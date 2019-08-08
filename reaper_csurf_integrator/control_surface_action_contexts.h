@@ -109,23 +109,22 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    string fxParamName_ = "";
-    string fxParamNameAlias_ = "";
+    int fxParamIndex_ = 0;
+    string fxParamDisplayName_ = "";
     int fxIndex_ = 0;
 
     FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
     {
-        fxParamName_ = params[1];
-        
         if(params.size() > 2)
-            fxParamNameAlias_ = params[2];
-        else
-            fxParamNameAlias_ = params[1];
+        {
+            fxParamIndex_ = atol(params[1].c_str());
+            fxParamDisplayName_ = params[2];
+        }
     }
     
 public:
     
-    virtual string GetAlias() override { return fxParamNameAlias_; }
+    virtual string GetDisplayName() override { return fxParamDisplayName_; }
     
     virtual void SetIndex(int fxIndex) override { fxIndex_ = fxIndex; }
         
@@ -134,7 +133,7 @@ public:
         double min, max = 0;
         
         if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), &min, &max));
+            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max));
         else
             widget_->Reset();
     }
