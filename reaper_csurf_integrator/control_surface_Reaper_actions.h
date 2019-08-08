@@ -295,7 +295,7 @@ public:
             
             DAW::TrackFX_GetFXName(track, param, fxName, sizeof(fxName));
 
-            SetWidgetValue(widget_, page_->GetZoneAlias(fxName));
+            SetWidgetValue(widget_, widget_->GetSurface()->GetLocalZoneAlias(fxName));
         }
         else
             widget_->Reset();
