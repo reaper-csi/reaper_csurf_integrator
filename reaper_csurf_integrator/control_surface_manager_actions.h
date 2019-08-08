@@ -50,7 +50,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetShouldMapFX());
+        SetWidgetValue(widget_, surface_->GetShouldMapSelectedFX());
     }
     
     void Do(double value) override

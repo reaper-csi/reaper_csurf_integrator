@@ -185,6 +185,9 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
             if(zoneBaseName == "Send")
                 surface->SetNumSendSlots(rangeEnd - rangeBegin + 1);
             
+            if(zoneBaseName == "FXMenu")
+                surface->SetNumFXSlots(rangeEnd - rangeBegin + 1);
+            
             for(int i = rangeBegin; i <= rangeEnd; i++)
                 expandedZonesIds.push_back(to_string(i));
             
@@ -1064,7 +1067,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
         {
             Zone* zone = zones[FXName];
 
-            if(shouldMapFX_)
+            if(shouldMapSelectedFX_)
             {
                 zone->Activate(i);
                 activeSelectedTrackFXZones_.push_back(zone);
@@ -1078,6 +1081,50 @@ void FXActivationManager::MapSelectedTrackFXToWidgets(map<string, Zone*> &zones)
     }
     
     OpenFXWindows();
+}
+
+void FXActivationManager::MapSelectedTrackFXToMenu(map<string, Zone*> &zones)
+{
+    for(auto zone : activeFXMenuZones_)
+        zone->Deactivate();
+    
+    activeFXMenuZones_.clear();
+    
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    
+    if(selectedTrack == nullptr)
+        return;
+    
+    int numTrackFX = DAW::TrackFX_GetCount(selectedTrack);
+    
+    for(int i = 0; i < numFXlots_; i ++)
+    {
+        string zoneName = "FXMenu" + to_string(i + 1);
+        
+        if(zones.count(zoneName) > 0)
+        {
+            Zone* zone =  zones[zoneName];
+            
+            if(shouldMapFXMenus_)
+            {
+                if(i < numTrackFX)
+                {
+                    zone->Activate(i);
+                    activeFXMenuZones_.push_back(zone);
+                }
+                else
+                {
+                    zone->ActivateNoAction(i);
+                    activeFXMenuZones_.push_back(zone);
+                    zone->SetWidgetsToZero();
+                }
+            }
+            else
+            {
+                zone->Deactivate();
+            }
+        }
+    }
 }
 
 void FXActivationManager::MapFocusedTrackFXToWidgets(map<string, Zone*> &zones)
@@ -1195,9 +1242,9 @@ void ControlSurface::ToggleMapSends()
 void ControlSurface::ToggleMapFX()
 {
     if(GetUseZoneLink())
-        page_->ToggleMapFX();
+        page_->ToggleMapSelectedFX();
     else
-        ActivateToggleMapFX();
+        ActivateToggleMapSelectedFX();
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
