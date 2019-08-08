@@ -1240,6 +1240,14 @@ string ControlSurface::GetZoneAlias(string zoneName)
         return "";
 }
 
+string ControlSurface::GetLocalZoneAlias(string zoneName)
+{
+    if(GetZoneAlias(zoneName) != "")
+        return GetZoneAlias(zoneName);
+    else
+        return page_->GetZoneAlias(zoneName);
+}
+
 int ControlSurface::GetParentZoneIndex(Zone* childZone)
 {
     for(auto zone : FXActivationManager_->GetActiveZones())
