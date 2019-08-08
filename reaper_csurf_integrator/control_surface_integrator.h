@@ -360,6 +360,7 @@ public:
     
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
+    string GetLocalZoneAlias(string ZoneName);
     int GetParentZoneIndex(Zone* childZone);
     void GoZone(string zoneName);
     void ToggleMapSends();
@@ -1096,7 +1097,7 @@ public:
     string GetParentZoneName() { return parentZoneName_; }
     void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
-    string GetAlias() { return alias_  == "" ? name_ : alias_;}
+    string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     
     bool GetHasFocusedFXTrackNavigator()
@@ -1301,6 +1302,9 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track)
     {
         trackNavigationManager_->OnTrackSelectionBySurface(track);
+        
+        for(auto surface : surfaces_)
+            surface->OnTrackSelection();
     }
  
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
@@ -1310,7 +1314,7 @@ public:
         for(auto surface : surfaces_)
             surface->OnFXFocus(track, fxIndex);
     }
-    
+
     string GetZoneAlias(string zoneName)
     {
         for(auto surface : surfaces_)
