@@ -19,18 +19,16 @@ public:
     virtual void Do(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            DAW::TrackFX_SetParam(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), value);
+            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, value);
     }
     
     virtual void DoToggle(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
         {
-            int paramIndex = TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_);
-            
             double min, max = 0;
 
-            DAW::TrackFX_SetParam(track, fxIndex_, paramIndex, ! DAW::TrackFX_GetParam(track, fxIndex_, paramIndex, &min, &max));
+            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, ! DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max));
         }
     }
 };
@@ -290,7 +288,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(widget_, GetAlias());
+            SetWidgetValue(widget_, GetDisplayName());
         else
             widget_->Reset();
     }
@@ -308,7 +306,7 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             char fxParamValue[128];
-            DAW::TrackFX_GetFormattedParamValue(track, fxIndex_, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), fxParamValue, sizeof(fxParamValue));
+            DAW::TrackFX_GetFormattedParamValue(track, fxIndex_, fxParamIndex_, fxParamValue, sizeof(fxParamValue));
             SetWidgetValue(widget_, string(fxParamValue));
         }
         else
@@ -898,7 +896,7 @@ public:
         
         if(MediaTrack* track = widget_->GetTrack())
         {
-            if(DAW::TrackFX_GetNamedConfigParm(track, TheManager->GetFXParamIndex(track, widget_, fxIndex_, fxParamName_), "GainReduction_dB", buffer, sizeof(buffer)))
+            if(DAW::TrackFX_GetNamedConfigParm(track, fxParamIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
                 SetWidgetValue(widget_, -atof(buffer)/20.0);
             else
                 SetWidgetValue(widget_, 0.0);
