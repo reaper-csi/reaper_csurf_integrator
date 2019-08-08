@@ -181,18 +181,28 @@ protected:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SurfaceActionWithStringParam : public Action
+class SurfaceActionWithStringParam : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     ControlSurface* surface_ = nullptr;
-    string param_ = "";
-
-    SurfaceActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    
+    SurfaceActionWithStringParam(WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(manager, params)
     {
-        if(params.size() > 1)
-            param_ = params[1];
-        
+        surface_ = widget_->GetSurface();
+    }
+};
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SurfaceActionWithIntParam : public ActionWithIntParam
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    ControlSurface* surface_ = nullptr;
+    int param_ = 0;
+    
+    SurfaceActionWithIntParam(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params)
+    {
         surface_ = widget_->GetSurface();
     }
 };

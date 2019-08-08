@@ -225,10 +225,12 @@ private:
     bool shouldMapFXMenus_ = false;
     vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeFXMenuZones_;
+    vector<Zone*> activeFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
 
     bool mapsSelectedTrackFXToWidgets_ = false;
     bool mapsFocusedTrackFXToWidgets_ = false;
+    bool mapsFXMenus_ = false;
 
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -256,9 +258,11 @@ private:
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
+    bool GetShouldMapFXMenus() { return shouldMapFXMenus_; }
     bool GetShouldMapSelectedFX() { return shouldMapSelectedFX_; }
     void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
     bool GetShowFXWindows() { return showFXWindows_; }
+    
     vector<Zone*> GetActiveZones()
     {
         vector<Zone*> activeFXZones;
@@ -274,6 +278,7 @@ public:
     
     void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
     void MapSelectedTrackFXToMenu(map<string, Zone*> &zones);
+    void MapSelectedTrackFXSlotToWidgets(map<string, Zone*> &zones, int slot);
     void MapFocusedTrackFXToWidgets(map<string, Zone*> &zones);
     
     void SetShowFXWindows(bool value)
@@ -292,6 +297,12 @@ public:
         MapSelectedTrackFXToWidgets(zones);
     }
     
+    void ToggleMapFXMenu(map<string, Zone*> &zones)
+    {
+        shouldMapFXMenus_ = ! shouldMapFXMenus_;
+        MapSelectedTrackFXToMenu(zones);
+    }
+    
     void TrackFXListChanged(map<string, Zone*> &zones)
     {
         if(mapsSelectedTrackFXToWidgets_)
@@ -299,6 +310,9 @@ public:
         
         if(mapsFocusedTrackFXToWidgets_)
             MapFocusedTrackFXToWidgets(zones);
+        
+        if(mapsFXMenus_)
+            MapSelectedTrackFXToMenu(zones);
     }
 };
 
@@ -338,23 +352,26 @@ public:
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
     bool GetShouldMapSelectedFX() { return FXActivationManager_->GetShouldMapSelectedFX(); }
+    bool GetShouldMapFXMenus() { return FXActivationManager_->GetShouldMapFXMenus(); }
     void SetNumFXSlots(int numFXSlots) { FXActivationManager_->SetNumFXSlots(numFXSlots); }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
     
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
+    string GetZoneAlias(string ZoneName);
     int GetParentZoneIndex(Zone* childZone);
     void GoZone(string zoneName);
     void ToggleMapSends();
     void ToggleMapFX();
+    void ToggleMapFXMenu();
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackFXToWidgets();
+    void MapSelectedTrackFXSlotToWidgets(int fxIndex);
     void MapFocusedTrackFXToWidgets();
     bool AddZone(Zone* zone);
     void ActivateZone(string zoneName);
 
-    
     void ActivateToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends(zones_);
@@ -365,6 +382,11 @@ public:
         FXActivationManager_->ToggleMapSelectedFX(zones_);
     }
     
+    void ActivateToggleMapFXMenu()
+    {
+        FXActivationManager_->ToggleMapFXMenu(zones_);
+    }
+    
     void ActivateSelectedTrackSends()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
@@ -373,6 +395,11 @@ public:
     void ActivateSelectedTrackFX()
     {
         FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
+    }
+    
+    void ActivateSelectedTrackSlotFX(int fxIndex)
+    {
+        FXActivationManager_->MapSelectedTrackFXSlotToWidgets(zones_, fxIndex);
     }
     
     void ActivateFocusedTrackFX()
@@ -613,7 +640,6 @@ protected:
     WidgetActionManager* widgetActionManager_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
-    bool shouldExecute_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
@@ -730,8 +756,6 @@ public:
     
     void DoAction(double value)
     {
-        string mods = GetModifiers();
-        
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
                 action->DoAction(value);
@@ -829,7 +853,6 @@ private:
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> pinnedTracks_;
     vector<MediaTrack*> unpinnedTracks_;
-    vector<MediaTrack*> folderTracks_;
     vector<TrackNavigator*> trackNavigators_;
     
 public:
@@ -878,7 +901,6 @@ public:
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return tracks_.size(); }
-    int  GetNumFolderTracks() { return folderTracks_.size(); }
     
     TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
@@ -917,7 +939,7 @@ public:
         cycles = 0;
 
         int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        */
+        //*/
         
         
         
@@ -925,7 +947,6 @@ public:
         MediaTrack* track;
         
         tracks_.clear();
-        folderTracks_.clear();
         
         // Get Visible Tracks
         for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
@@ -933,14 +954,7 @@ public:
             track = DAW::CSurf_TrackFromID(i, followMCP_);
             
             if(DAW::IsTrackVisible(track, followMCP_))
-            {
                 tracks_.push_back(track);
-                
-                DAW::GetTrackInfo(track, &flags);
-                
-                if(flags & 0x01) // folder Track
-                    folderTracks_.push_back(track);
-            }
         }
         
         // find pinnedTracks_ that are no longer in tracks_
@@ -981,10 +995,6 @@ public:
         else if(trackOffset_ >  top)
             trackOffset_ = top;
         
-        top = GetNumFolderTracks();
-        if(folderTrackOffset_ >  top)
-            folderTrackOffset_ = top;
-        
         /*
         int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
         
@@ -993,7 +1003,7 @@ public:
         
         sprintf(msgBuffer, "%d microseconds\n", duration);
         DAW::ShowConsoleMsg(msgBuffer);
-        */
+        //*/
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
@@ -1086,7 +1096,7 @@ public:
     string GetParentZoneName() { return parentZoneName_; }
     void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
-    string GetAlias() { return alias_ ;}
+    string GetAlias() { return alias_  == "" ? name_ : alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     
     bool GetHasFocusedFXTrackNavigator()
@@ -1301,6 +1311,15 @@ public:
             surface->OnFXFocus(track, fxIndex);
     }
     
+    string GetZoneAlias(string zoneName)
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetZoneAlias(zoneName) != "")
+                return surface->GetZoneAlias(zoneName);
+            
+        return "";
+    }
+    
     void GoZone(string zoneName)
     {
         for(auto surface : surfaces_)
@@ -1322,6 +1341,13 @@ public:
                 surface->ActivateToggleMapSelectedFX();
     }
     
+    void ToggleMapFXMenu()
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateToggleMapFXMenu();
+    }
+    
     void MapSelectedTrackSendsToWidgets()
     {
         for(auto surface : surfaces_)
@@ -1341,6 +1367,13 @@ public:
         for(auto surface : surfaces_)
             if(surface->GetUseZoneLink())
                 surface->ActivateFocusedTrackFX();
+    }
+    
+    void MapSelectedTrackFXSlotToWidgets(int fxIndex)
+    {
+        for(auto surface : surfaces_)
+            if(surface->GetUseZoneLink())
+                surface->ActivateSelectedTrackSlotFX(fxIndex);
     }
     
     void TrackFXListChanged(MediaTrack* track)
