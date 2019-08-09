@@ -203,6 +203,9 @@ protected:
     
     SurfaceActionWithIntParam(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params)
     {
+        if(params.size() > 1)
+            param_= atol(params[1].c_str());
+
         surface_ = widget_->GetSurface();
     }
 };
