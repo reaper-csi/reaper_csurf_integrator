@@ -115,11 +115,11 @@ protected:
 
     FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
     {
-        if(params.size() > 2)
-        {
+        if(params.size() > 1)
             fxParamIndex_ = atol(params[1].c_str());
+        
+        if(params.size() > 2)
             fxParamDisplayName_ = params[2];
-        }
     }
     
 public:
