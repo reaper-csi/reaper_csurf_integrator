@@ -1597,7 +1597,11 @@ public:
                     {
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                         //DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
-                        rawFXFile << "\r\n" + string(fxParamName);
+                        #ifdef _WIN32
+                            rawFXFile << "\n" + string(fxParamName);
+                        #else
+                            rawFXFile << "\r\n" + string(fxParamName);
+                        #endif
                     }
                 }
                 
