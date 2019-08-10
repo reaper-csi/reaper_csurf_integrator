@@ -943,19 +943,19 @@ public:
         //*/
         
         
-        
-        int flags;
-        MediaTrack* track;
-        
         tracks_.clear();
         
         // Get Visible Tracks
         for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
         {
-            track = DAW::CSurf_TrackFromID(i, followMCP_);
+            MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
             if(DAW::IsTrackVisible(track, followMCP_))
                 tracks_.push_back(track);
+             
+                // I_FOLDERDEPTH : int * : folder depth change (0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc
+
+                //int retVal = DAW::GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH");
         }
         
         // find pinnedTracks_ that are no longer in tracks_
