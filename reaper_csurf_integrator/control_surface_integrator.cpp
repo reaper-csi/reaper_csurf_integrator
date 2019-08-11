@@ -1261,70 +1261,6 @@ int ControlSurface::GetParentZoneIndex(Zone* childZone)
     return 0;
 }
 
-void ControlSurface::GoZone(string zoneName)
-{
-    if(GetUseZoneLink())
-        page_->GoZone(zoneName);
-    else
-        ActivateZone(zoneName);
-}
-
-void ControlSurface::MapSelectedTrackSendsToWidgets()
-{
-    if(GetUseZoneLink())
-        page_->MapSelectedTrackSendsToWidgets();
-    else
-        ActivateSelectedTrackSends();
-}
-
-void ControlSurface::ToggleMapSends()
-{
-    if(GetUseZoneLink())
-        page_->ToggleMapSends();
-    else
-        ActivateToggleMapSends();
-}
-
-void ControlSurface::ToggleMapFX()
-{
-    if(GetUseZoneLink())
-        page_->ToggleMapSelectedFX();
-    else
-        ActivateToggleMapSelectedFX();
-}
-
-void ControlSurface::ToggleMapFXMenu()
-{
-    if(GetUseZoneLink())
-        page_->ToggleMapFXMenu();
-    else
-        ActivateToggleMapFXMenu();
-}
-
-void ControlSurface::MapSelectedTrackFXToWidgets()
-{
-    if(GetUseZoneLink())
-        page_->MapSelectedTrackFXToWidgets();
-    else
-        ActivateSelectedTrackFX();
-}
-
-void ControlSurface::MapSelectedTrackFXSlotToWidgets(int fxIndex)
-{
-    if(GetUseZoneLink())
-        page_->MapSelectedTrackFXSlotToWidgets(fxIndex);
-    else
-        ActivateSelectedTrackSlotFX(fxIndex);
-}
-
-void ControlSurface::MapFocusedTrackFXToWidgets()
-{
-    if(GetUseZoneLink())
-        page_->MapFocusedTrackFXToWidgets();
-    else
-        ActivateFocusedTrackFX();
-}
-
 bool ControlSurface::AddZone(Zone* zone)
 {
     if(zones_.count(zone->GetName()) > 0)
@@ -1342,7 +1278,7 @@ bool ControlSurface::AddZone(Zone* zone)
     }
 }
 
-void ControlSurface::ActivateZone(string zoneName)
+void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
         zones_[zoneName]->Activate();
