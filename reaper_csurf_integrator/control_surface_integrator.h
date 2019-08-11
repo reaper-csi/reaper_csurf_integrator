@@ -362,48 +362,40 @@ public:
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
     int GetParentZoneIndex(Zone* childZone);
-    void GoZone(string zoneName);
-    void ToggleMapSends();
-    void ToggleMapFX();
-    void ToggleMapFXMenu();
-    void MapSelectedTrackSendsToWidgets();
-    void MapSelectedTrackFXToWidgets();
-    void MapSelectedTrackFXSlotToWidgets(int fxIndex);
-    void MapFocusedTrackFXToWidgets();
     bool AddZone(Zone* zone);
-    void ActivateZone(string zoneName);
+    void GoZone(string zoneName);
 
-    void ActivateToggleMapSends()
+    void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends(zones_);
     }
     
-    void ActivateToggleMapSelectedFX()
+    void ToggleMapSelectedFX()
     {
         FXActivationManager_->ToggleMapSelectedFX(zones_);
     }
     
-    void ActivateToggleMapFXMenu()
+    void ToggleMapFXMenu()
     {
         FXActivationManager_->ToggleMapFXMenu(zones_);
     }
     
-    void ActivateSelectedTrackSends()
+    void MapSelectedTrackSendsToWidgets()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
 
-    void ActivateSelectedTrackFX()
+    void MapSelectedTrackFXToWidgets()
     {
         FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
     }
     
-    void ActivateSelectedTrackSlotFX(int fxIndex)
+    void MapSelectedTrackFXSlotToWidgets(int fxIndex)
     {
         FXActivationManager_->MapSelectedTrackFXSlotToWidgets(zones_, fxIndex);
     }
     
-    void ActivateFocusedTrackFX()
+    void MapFocusedTrackFXToWidgets()
     {
         FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
     }
@@ -511,7 +503,7 @@ public:
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
-        ActivateZone("Home");
+        GoZone("Home");
     }
 
     virtual ~Midi_ControlSurface() {}
@@ -1324,60 +1316,84 @@ public:
         return "";
     }
     
-    void GoZone(string zoneName)
+    void GoZone(ControlSurface* surface, string zoneName)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateZone(zoneName);
+        if(! surface->GetUseZoneLink())
+          surface->GoZone(zoneName);
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->GoZone(zoneName);
     }
 
-    void ToggleMapSends()
+    void ToggleMapSends(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateToggleMapSends();
+        if(! surface->GetUseZoneLink())
+            surface->ToggleMapSends();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->ToggleMapSends();
     }
     
-    void ToggleMapSelectedFX()
+    void ToggleMapSelectedFX(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateToggleMapSelectedFX();
+        if(! surface->GetUseZoneLink())
+            surface->ToggleMapSelectedFX();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->ToggleMapSelectedFX();
     }
     
-    void ToggleMapFXMenu()
+    void ToggleMapFXMenu(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateToggleMapFXMenu();
+        if(! surface->GetUseZoneLink())
+            surface->ToggleMapFXMenu();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->ToggleMapFXMenu();
     }
     
-    void MapSelectedTrackSendsToWidgets()
+    void MapSelectedTrackSendsToWidgets(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateSelectedTrackSends();
+        if(! surface->GetUseZoneLink())
+            surface->MapSelectedTrackSendsToWidgets();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->MapSelectedTrackSendsToWidgets();
     }
     
-    void MapSelectedTrackFXToWidgets()
+    void MapSelectedTrackFXToWidgets(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateSelectedTrackFX();
+        if(! surface->GetUseZoneLink())
+            surface->MapSelectedTrackFXToWidgets();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->MapSelectedTrackFXToWidgets();
     }
     
-    void MapFocusedTrackFXToWidgets()
+    void MapFocusedTrackFXToWidgets(ControlSurface* surface)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateFocusedTrackFX();
+        if(! surface->GetUseZoneLink())
+            surface->MapFocusedTrackFXToWidgets();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->MapFocusedTrackFXToWidgets();
     }
     
-    void MapSelectedTrackFXSlotToWidgets(int fxIndex)
+    void MapSelectedTrackFXSlotToWidgets(ControlSurface* surface, int fxIndex)
     {
-        for(auto surface : surfaces_)
-            if(surface->GetUseZoneLink())
-                surface->ActivateSelectedTrackSlotFX(fxIndex);
+        if(! surface->GetUseZoneLink())
+            surface->MapSelectedTrackFXSlotToWidgets(fxIndex);
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->MapSelectedTrackFXSlotToWidgets(fxIndex);
     }
     
     void TrackFXListChanged(MediaTrack* track)

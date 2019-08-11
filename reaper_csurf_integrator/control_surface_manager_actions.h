@@ -37,7 +37,7 @@ public:
     
     void Do(double value) override
     {
-        surface_->ToggleMapSends();
+        page_->ToggleMapSends(surface_);
     }
 };
 
@@ -55,7 +55,7 @@ public:
     
     void Do(double value) override
     {
-        surface_->ToggleMapFX();
+        page_->ToggleMapSelectedFX(surface_);
     }
 };
 
@@ -73,7 +73,7 @@ public:
     
     void Do(double value) override
     {
-        surface_->ToggleMapFXMenu();
+        page_->ToggleMapFXMenu(surface_);
     }
 };
 
@@ -88,7 +88,7 @@ public:
     {
         int fxIndex = param_ - 1 < 0 ? 0 : param_ - 1;
         
-        surface_->MapSelectedTrackFXSlotToWidgets(fxIndex);
+        page_->MapSelectedTrackFXSlotToWidgets(surface_, fxIndex);
     }
 };
 
@@ -101,7 +101,7 @@ public:
 
     void Do(double value) override
     {
-        surface_->MapSelectedTrackSendsToWidgets();
+        page_->MapSelectedTrackSendsToWidgets(surface_);
     }
 };
 
@@ -114,7 +114,7 @@ public:
     
     void Do(double value) override
     {
-        surface_->MapSelectedTrackFXToWidgets();
+        page_->MapSelectedTrackFXToWidgets(surface_);
     }
 };
 
@@ -127,7 +127,7 @@ public:
 
     void Do(double value) override
     {
-        surface_->MapFocusedTrackFXToWidgets();
+        page_->MapFocusedTrackFXToWidgets(surface_);
     }
 };
 
@@ -265,7 +265,7 @@ public:
 
     void Do(double value) override
     {
-        surface_->GoZone(param_);
+        page_->GoZone(surface_, param_);
     }
 };
 
