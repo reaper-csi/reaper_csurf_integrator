@@ -19,7 +19,7 @@ public:
     void Do(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            page_->TogglePin(track);
+            page_->GetTrackNavigationManager()->TogglePin(track);
     }
 };
 
@@ -50,7 +50,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetShouldMapSelectedFX());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedFX());
     }
     
     void Do(double value) override
@@ -68,7 +68,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetShouldMapFXMenus());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFXMenus());
     }
     
     void Do(double value) override
@@ -144,8 +144,8 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 0; i < page_->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(page_->GetTrackFromId(i), "I_SELECTED"))
+            for(int i = 0; i < page_->GetTrackNavigationManager()->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(page_->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
                     break;
@@ -156,10 +156,10 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > page_->GetNumTracks() - 1)
-                trackIndex = page_->GetNumTracks() - 1;
+            if(trackIndex > page_->GetTrackNavigationManager()->GetNumTracks() - 1)
+                trackIndex = page_->GetTrackNavigationManager()->GetNumTracks() - 1;
             
-            DAW::SetOnlyTrackSelected(page_->GetTrackFromId(trackIndex));
+            DAW::SetOnlyTrackSelected(page_->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
         }
     }
 };
@@ -173,12 +173,12 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetShowFXWindows());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShowFXWindows());
     }
     
     void Do(double value) override
     {
-        surface_->SetShowFXWindows(value);
+        surface_->GetFXActivationManager()->SetShowFXWindows(value);
     }
 };
 
@@ -191,12 +191,12 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetScrollLink());
+        SetWidgetValue(widget_, page_->GetTrackNavigationManager()->GetScrollLink());
     }
     
     void Do(double value) override
     {
-        page_->ToggleScrollLink(param_);
+        page_->GetTrackNavigationManager()->ToggleScrollLink(param_);
     }
 };
 

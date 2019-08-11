@@ -636,9 +636,9 @@ public:
         
         Page* page = widget_->GetSurface()->GetPage();
         
-        for(int i = 0; i < page->GetNumTracks(); i++)
+        for(int i = 0; i < page->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
-           MediaTrack* currentTrack = page->GetTrackFromId(i);
+           MediaTrack* currentTrack = page->GetTrackNavigationManager()->GetTrackFromId(i);
             
             if(currentTrack == widget_->GetTrack())
                 trackIndex = i;
@@ -658,12 +658,12 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = page->GetTrackFromId(i);
+            MediaTrack* currentTrack = page->GetTrackNavigationManager()->GetTrackFromId(i);
             
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
         }
         
-        page->OnTrackSelectionBySurface(page->GetTrackFromId(lowerBound));
+        page->OnTrackSelectionBySurface(page->GetTrackNavigationManager()->GetTrackFromId(lowerBound));
     }
 };
 
@@ -794,9 +794,9 @@ public:
     {
         bool gotOne = false;
         
-        for(int i = 0; i < page_->GetNumTracks(); i++)
+        for(int i = 0; i < page_->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
-            MediaTrack* track = page_->GetTrackFromId(i);
+            MediaTrack* track = page_->GetTrackNavigationManager()->GetTrackFromId(i);
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == param_)
             {

@@ -204,120 +204,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXWindow
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    string fxName = "";
-    MediaTrack* track = nullptr;;
-    int fxIndex = 0;
-    
-    FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* surface_ = nullptr;
-    int numFXlots_ = 0;
-    bool shouldMapSelectedFX_ = false;
-    bool shouldMapFXMenus_ = false;
-    vector<Zone*> activeSelectedTrackFXZones_;
-    vector<Zone*> activeFXMenuZones_;
-    vector<Zone*> activeFXMenuFXZones_;
-    vector<Zone*> activeFocusedFXZones_;
-
-    bool mapsSelectedTrackFXToWidgets_ = false;
-    bool mapsFocusedTrackFXToWidgets_ = false;
-    bool mapsFXMenus_ = false;
-
-    vector<FXWindow> openFXWindows_;
-    bool showFXWindows_ = false;
-    
-    void OpenFXWindows()
-    {
-        if(showFXWindows_)
-            for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
-    }
-    
-    void CloseFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
-    }
-    
-    void DeleteFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
-        openFXWindows_.clear();
-    }
-    
-public:
-    FXActivationManager(ControlSurface* surface) : surface_(surface) {}
-    
-    bool GetShouldMapFXMenus() { return shouldMapFXMenus_; }
-    bool GetShouldMapSelectedFX() { return shouldMapSelectedFX_; }
-    void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
-    bool GetShowFXWindows() { return showFXWindows_; }
-    
-    vector<Zone*> GetActiveZones()
-    {
-        vector<Zone*> activeFXZones;
-        
-        for(auto zone : activeSelectedTrackFXZones_)
-            activeFXZones.push_back(zone);
-        
-        for(auto zone : activeFocusedFXZones_)
-            activeFXZones.push_back(zone);
-        
-        return activeFXZones;
-    }
-    
-    void MapSelectedTrackFXToWidgets(map<string, Zone*> &zones);
-    void MapSelectedTrackFXToMenu(map<string, Zone*> &zones);
-    void MapSelectedTrackFXSlotToWidgets(map<string, Zone*> &zones, int slot);
-    void MapFocusedTrackFXToWidgets(map<string, Zone*> &zones);
-    
-    void SetShowFXWindows(bool value)
-    {
-        showFXWindows_ = ! showFXWindows_;
-        
-        if(showFXWindows_ == true)
-            OpenFXWindows();
-        else
-            CloseFXWindows();
-    }
-    
-    void ToggleMapSelectedFX(map<string, Zone*> &zones)
-    {
-        shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
-        MapSelectedTrackFXToWidgets(zones);
-    }
-    
-    void ToggleMapFXMenu(map<string, Zone*> &zones)
-    {
-        shouldMapFXMenus_ = ! shouldMapFXMenus_;
-        MapSelectedTrackFXToMenu(zones);
-    }
-    
-    void TrackFXListChanged(map<string, Zone*> &zones)
-    {
-        if(mapsSelectedTrackFXToWidgets_)
-            MapSelectedTrackFXToWidgets(zones);
-        
-        if(mapsFocusedTrackFXToWidgets_)
-            MapFocusedTrackFXToWidgets(zones);
-        
-        if(mapsFXMenus_)
-            MapSelectedTrackFXToMenu(zones);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page;
+class FXActivationManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -349,11 +237,9 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
+    map<string, Zone*> &GetZones() { return zones_;}
+    FXActivationManager* GetFXActivationManager() { return FXActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
-    bool GetShowFXWindows() { return FXActivationManager_->GetShowFXWindows(); }
-    bool GetShouldMapSelectedFX() { return FXActivationManager_->GetShouldMapSelectedFX(); }
-    bool GetShouldMapFXMenus() { return FXActivationManager_->GetShouldMapFXMenus(); }
-    void SetNumFXSlots(int numFXSlots) { FXActivationManager_->SetNumFXSlots(numFXSlots); }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
@@ -370,34 +256,9 @@ public:
         sendsActivationManager_->ToggleMapSends(zones_);
     }
     
-    void ToggleMapSelectedFX()
-    {
-        FXActivationManager_->ToggleMapSelectedFX(zones_);
-    }
-    
-    void ToggleMapFXMenu()
-    {
-        FXActivationManager_->ToggleMapFXMenu(zones_);
-    }
-    
     void MapSelectedTrackSendsToWidgets()
     {
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
-    }
-
-    void MapSelectedTrackFXToWidgets()
-    {
-        FXActivationManager_->MapSelectedTrackFXToWidgets(zones_);
-    }
-    
-    void MapSelectedTrackFXSlotToWidgets(int fxIndex)
-    {
-        FXActivationManager_->MapSelectedTrackFXSlotToWidgets(zones_, fxIndex);
-    }
-    
-    void MapFocusedTrackFXToWidgets()
-    {
-        FXActivationManager_->MapFocusedTrackFXToWidgets(zones_);
     }
     
     virtual void Run()
@@ -422,11 +283,6 @@ public:
         widgets_.push_back(widget);
     }
 
-    void SetShowFXWindows(bool value)
-    {
-        FXActivationManager_->SetShowFXWindows(value);
-    }
-
     void OnTrackSelection()
     {
         for(auto widget : widgets_)
@@ -439,11 +295,6 @@ public:
         for(auto widget : widgets_)
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(1.0);
-    }
-    
-    void TrackFXListChanged(MediaTrack* track)
-    {
-        FXActivationManager_->TrackFXListChanged(zones_);
     }
 };
 
@@ -554,73 +405,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigationManager;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int channelNum_ = 0;
-    int bias_ = 0;
-    bool isChannelTouched_ = false;
-    MediaTrack* pinnedTrack_ = nullptr;
-    bool isChannelPinned_ = false;
-    
-protected:
-    TrackNavigationManager* manager_ = nullptr;
-    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
-    
-public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
-    virtual ~TrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
-    bool GetIsChannelPinned() { return isChannelPinned_; }
-    virtual bool GetIsFocusedFXTrackNavigator() { return false; }
-    void IncBias() { bias_++; }
-    void DecBias() { bias_--; }
-    
-    virtual void Pin();
-    virtual void Unpin();
-    
-    virtual MediaTrack* GetTrack();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~SelectedTrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    FocusedFXTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~FocusedFXTrackNavigator() {}
-    
-    virtual bool GetIsFocusedFXTrackNavigator() override { return true; }
-
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-    
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetActionManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
@@ -705,6 +489,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -721,31 +507,10 @@ public:
     WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
-    
-    bool GetHasFocusedFXTrackNavigator() { return trackNavigator_->GetIsFocusedFXTrackNavigator(); }
-    
-    MediaTrack* GetTrack()
-    {
-        if(trackNavigator_ == nullptr)
-            return nullptr;
-        else
-            return trackNavigator_->GetTrack();
-    }
-    
-    void RequestUpdate()
-    {
-        if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
-        {
-            for(auto action : trackTouchedActions_)
-                action->RequestUpdate();
-        }
-        else
-        {
-            if(actions_.count(GetModifiers()) > 0)
-                for(auto action : actions_[GetModifiers()])
-                    action->RequestUpdate();
-        }
-    }
+    bool GetHasFocusedFXTrackNavigator();
+    MediaTrack* GetTrack();
+    void RequestUpdate();
+    void SetIsTouched(bool isTouched);
     
     void DoAction(double value)
     {
@@ -781,12 +546,6 @@ public:
             }
     }
     
-    void SetIsTouched(bool isTouched)
-    {
-        if(trackNavigator_ != nullptr)
-            trackNavigator_->SetTouchState((isTouched));
-    }
-    
     void AddAction(string modifiers, Action* action)
     {
         actions_[modifiers].push_back(action);
@@ -798,33 +557,188 @@ public:
     }
 };
 
-// substracts b<T> from a<T>
-template <typename T>
-void
-subtract_vector(std::vector<T>& a, const std::vector<T>& b)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct FXWindow
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    typename std::vector<T>::iterator       it = a.begin();
-    typename std::vector<T>::const_iterator it2 = b.begin();
-    typename std::vector<T>::iterator       end = a.end();
-    typename std::vector<T>::const_iterator end2 = b.end();
+    string fxName = "";
+    MediaTrack* track = nullptr;;
+    int fxIndex = 0;
     
-    while (it != end)
+    FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXActivationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    ControlSurface* surface_ = nullptr;
+    int numFXlots_ = 0;
+    bool shouldMapSelectedFX_ = false;
+    bool shouldMapFXMenus_ = false;
+    vector<Zone*> activeSelectedTrackFXZones_;
+    vector<Zone*> activeFXMenuZones_;
+    vector<Zone*> activeFXMenuFXZones_;
+    vector<Zone*> activeFocusedFXZones_;
+    
+    bool mapsSelectedTrackFXToWidgets_ = false;
+    bool mapsFocusedTrackFXToWidgets_ = false;
+    bool mapsFXMenus_ = false;
+    
+    vector<FXWindow> openFXWindows_;
+    bool showFXWindows_ = false;
+    
+    void OpenFXWindows()
     {
-        while (it2 != end2)
-        {
-            if (*it == *it2)
-            {
-                it = a.erase(it);
-                end = a.end();
-                it2 = b.begin();
-            }
-            else
-                ++it2;
-        }
-        ++it;
-        it2 = b.begin();
+        if(showFXWindows_)
+            for(auto fxWindow : openFXWindows_)
+                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
     }
-}
+    
+    void CloseFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
+    }
+    
+    void DeleteFXWindows()
+    {
+        for(auto fxWindow : openFXWindows_)
+            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
+        openFXWindows_.clear();
+    }
+    
+public:
+    FXActivationManager(ControlSurface* surface) : surface_(surface) {}
+    
+    bool GetShouldMapFXMenus() { return shouldMapFXMenus_; }
+    bool GetShouldMapSelectedFX() { return shouldMapSelectedFX_; }
+    void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
+    bool GetShowFXWindows() { return showFXWindows_; }
+    
+    vector<Zone*> GetActiveZones()
+    {
+        vector<Zone*> activeFXZones;
+        
+        for(auto zone : activeSelectedTrackFXZones_)
+            activeFXZones.push_back(zone);
+        
+        for(auto zone : activeFocusedFXZones_)
+            activeFXZones.push_back(zone);
+        
+        return activeFXZones;
+    }
+    
+    void MapSelectedTrackFXToWidgets();
+    
+    
+    
+    void MapSelectedTrackFXToMenu();
+    void MapSelectedTrackFXSlotToWidgets(int slot);
+    void MapFocusedTrackFXToWidgets();
+    
+    void SetShowFXWindows(bool value)
+    {
+        showFXWindows_ = ! showFXWindows_;
+        
+        if(showFXWindows_ == true)
+            OpenFXWindows();
+        else
+            CloseFXWindows();
+    }
+    
+    void ToggleMapSelectedFX()
+    {
+        shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
+        MapSelectedTrackFXToWidgets();
+    }
+    
+    void ToggleMapFXMenu()
+    {
+        shouldMapFXMenus_ = ! shouldMapFXMenus_;
+        MapSelectedTrackFXToMenu();
+    }
+    
+    void TrackFXListChanged()
+    {
+        if(mapsSelectedTrackFXToWidgets_)
+            MapSelectedTrackFXToWidgets();
+        
+        if(mapsFocusedTrackFXToWidgets_)
+            MapFocusedTrackFXToWidgets();
+        
+        if(mapsFXMenus_)
+            MapSelectedTrackFXToMenu();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigationManager;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int channelNum_ = 0;
+    int bias_ = 0;
+    bool isChannelTouched_ = false;
+    MediaTrack* pinnedTrack_ = nullptr;
+    bool isChannelPinned_ = false;
+    
+protected:
+    TrackNavigationManager* manager_ = nullptr;
+    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
+    
+public:
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    virtual ~TrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
+    MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
+    bool GetIsChannelPinned() { return isChannelPinned_; }
+    virtual bool GetIsFocusedFXTrackNavigator() { return false; }
+    void IncBias() { bias_++; }
+    void DecBias() { bias_--; }
+    
+    virtual void Pin();
+    virtual void Unpin();
+    
+    virtual MediaTrack* GetTrack();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~FocusedFXTrackNavigator() {}
+    
+    virtual bool GetIsFocusedFXTrackNavigator() override { return true; }
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual MediaTrack* GetTrack() override;
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNavigationManager
@@ -1067,129 +981,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<WidgetActionManager*> widgetActionManagers_;
-    vector<Zone*> includedZones_;
-    int zoneIndex_ = 0;
-    string parentZoneName_ = "";
-
-    ControlSurface* surface_ = nullptr;
-    string name_ = "";
-    string alias_ = "";
-    string sourceFilePath_ = "";
-    
-public:
-    Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
-    virtual ~Zone() {}
-    
-    int GetZoneIndex() { return zoneIndex_; }
-    string GetParentZoneName() { return parentZoneName_; }
-    void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
-    string GetName() { return name_ ;}
-    string GetAlias() { return alias_;}
-    string GetSourceFilePath() { return sourceFilePath_; }
-    
-    bool GetHasFocusedFXTrackNavigator()
-    {
-        if(widgetActionManagers_.size() > 0)
-            return widgetActionManagers_[0]->GetHasFocusedFXTrackNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
-        else
-            return false;
-    }
-    
-    virtual void AddWidgetActionManager(WidgetActionManager* manager)
-    {
-        widgetActionManagers_.push_back(manager);
-    }
-    
-    void AddZone(Zone* zone)
-    {
-        includedZones_.push_back(zone);
-    }
-    
-    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget)
-    {
-        for(auto manager : widgetActionManagers_)
-            if(manager->GetWidget() == widget)
-                return manager;
-        
-        for(auto zone : includedZones_)
-            if(WidgetActionManager* manager = zone->GetHomeWidgetActionManagerForWidget(widget))
-                return manager;
-        
-        return nullptr;
-    }
-
-    void Deactivate()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-        {
-            Widget* widget =  widgetActionManager->GetWidget();
-            WidgetActionManager* manager = surface_->GetHomeWidgetActionManagerForWidget(widget);
-            if(manager == nullptr)
-                widget->Reset();
-            widget->SetWidgetActionManager(manager);
-        }
-        
-        for(auto zone : includedZones_)
-            zone->Deactivate();
-    }
-    
-    void SetWidgetsToZero()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->GetWidget()->Reset();
-    }
-    
-    void Activate()
-    {
-        if(parentZoneName_ != "")
-        {
-            int index = surface_->GetParentZoneIndex(this);
-            
-            for(auto widgetActionManager : widgetActionManagers_)
-                widgetActionManager->Activate(index);
-            
-            for(auto zone : includedZones_)
-                zone->Activate(index);
-        }
-        else
-        {
-            for(auto widgetActionManager : widgetActionManagers_)
-                widgetActionManager->Activate();
-            
-            for(auto zone : includedZones_)
-                zone->Activate();
-        }
-    }
-    
-    void ActivateNoAction(int zoneIndex)
-    {
-        zoneIndex_ = zoneIndex;
-        
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->ActivateNoAction(zoneIndex);
-        
-        for(auto zone : includedZones_)
-            zone->ActivateNoAction(zoneIndex);
-    }
-    
-    void Activate(int zoneIndex)
-    {
-        zoneIndex_ = zoneIndex;
-        
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(zoneIndex);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(zoneIndex);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1211,6 +1002,7 @@ public:
     }
     
     string GetName() { return name_; }
+    TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
@@ -1339,21 +1131,21 @@ public:
     void ToggleMapSelectedFX(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->ToggleMapSelectedFX();
+            surface->GetFXActivationManager()->ToggleMapSelectedFX();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->ToggleMapSelectedFX();
+                    surface->GetFXActivationManager()->ToggleMapSelectedFX();
     }
     
     void ToggleMapFXMenu(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->ToggleMapFXMenu();
+            surface->GetFXActivationManager()->ToggleMapFXMenu();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->ToggleMapFXMenu();
+                    surface->GetFXActivationManager()->ToggleMapFXMenu();
     }
     
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface)
@@ -1369,61 +1161,37 @@ public:
     void MapSelectedTrackFXToWidgets(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->MapSelectedTrackFXToWidgets();
+            surface->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->MapSelectedTrackFXToWidgets();
+                    surface->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
     }
     
     void MapFocusedTrackFXToWidgets(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->MapFocusedTrackFXToWidgets();
+            surface->GetFXActivationManager()->MapFocusedTrackFXToWidgets();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->MapFocusedTrackFXToWidgets();
+                    surface->GetFXActivationManager()->MapFocusedTrackFXToWidgets();
     }
     
     void MapSelectedTrackFXSlotToWidgets(ControlSurface* surface, int fxIndex)
     {
         if(! surface->GetUseZoneLink())
-            surface->MapSelectedTrackFXSlotToWidgets(fxIndex);
+            surface->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(fxIndex);
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->MapSelectedTrackFXSlotToWidgets(fxIndex);
+                    surface->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(fxIndex);
     }
     
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto surface : surfaces_)
-            surface->TrackFXListChanged(track);
-    }
-
-    /// GAW -- start TrackNavigationManager facade
-    bool GetFollowMCP() { return trackNavigationManager_->GetFollowMCP(); }
-    bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
-    bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
-    int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
-    MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
-
-    TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
-
-    TrackNavigator* AddTrackNavigator()
-    {
-        return trackNavigationManager_->AddTrackNavigator();
-    }
-    
-    void TogglePin(MediaTrack* track)
-    {
-        trackNavigationManager_->TogglePin(track);
-    }
-    
-    void AdjustTrackBank(int amount)
-    {
-        trackNavigationManager_->AdjustTrackBank(amount);
+            surface->GetFXActivationManager()->TrackFXListChanged();
     }
 
     void EnterPage()
@@ -1438,13 +1206,6 @@ public:
     {
         trackNavigationManager_->LeavePage();
     }
-    
-    void ToggleScrollLink(int targetChannel)
-    {
-        trackNavigationManager_->ToggleScrollLink(targetChannel);
-    }
-    
-    /// GAW -- end TrackNavigationManager facade
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1542,12 +1303,12 @@ public:
     
     void AdjustTrackBank(Page* sendingPage, int amount)
     {
-        if(! sendingPage->GetSynchPages())
-            sendingPage->AdjustTrackBank(amount);
+        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
+            sendingPage->GetTrackNavigationManager()->AdjustTrackBank(amount);
         else
             for(auto page: pages_)
-                if(page->GetSynchPages())
-                    page->AdjustTrackBank(amount);
+                if(page->GetTrackNavigationManager()->GetSynchPages())
+                    page->GetTrackNavigationManager()->AdjustTrackBank(amount);
     }
     
     void NextPage()
@@ -1624,6 +1385,129 @@ public:
                 rawFXFile.close();
             }
         }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<WidgetActionManager*> widgetActionManagers_;
+    vector<Zone*> includedZones_;
+    int zoneIndex_ = 0;
+    string parentZoneName_ = "";
+    
+    ControlSurface* surface_ = nullptr;
+    string name_ = "";
+    string alias_ = "";
+    string sourceFilePath_ = "";
+    
+public:
+    Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
+    virtual ~Zone() {}
+    
+    int GetZoneIndex() { return zoneIndex_; }
+    string GetParentZoneName() { return parentZoneName_; }
+    void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
+    string GetName() { return name_ ;}
+    string GetAlias() { return alias_;}
+    string GetSourceFilePath() { return sourceFilePath_; }
+    
+    bool GetHasFocusedFXTrackNavigator()
+    {
+        if(widgetActionManagers_.size() > 0)
+            return widgetActionManagers_[0]->GetHasFocusedFXTrackNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
+        else
+            return false;
+    }
+    
+    virtual void AddWidgetActionManager(WidgetActionManager* manager)
+    {
+        widgetActionManagers_.push_back(manager);
+    }
+    
+    void AddZone(Zone* zone)
+    {
+        includedZones_.push_back(zone);
+    }
+    
+    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget)
+    {
+        for(auto manager : widgetActionManagers_)
+            if(manager->GetWidget() == widget)
+                return manager;
+        
+        for(auto zone : includedZones_)
+            if(WidgetActionManager* manager = zone->GetHomeWidgetActionManagerForWidget(widget))
+                return manager;
+        
+        return nullptr;
+    }
+    
+    void Deactivate()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+        {
+            Widget* widget =  widgetActionManager->GetWidget();
+            WidgetActionManager* manager = surface_->GetHomeWidgetActionManagerForWidget(widget);
+            if(manager == nullptr)
+                widget->Reset();
+            widget->SetWidgetActionManager(manager);
+        }
+        
+        for(auto zone : includedZones_)
+            zone->Deactivate();
+    }
+    
+    void SetWidgetsToZero()
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->GetWidget()->Reset();
+    }
+    
+    void Activate()
+    {
+        if(parentZoneName_ != "")
+        {
+            int index = surface_->GetParentZoneIndex(this);
+            
+            for(auto widgetActionManager : widgetActionManagers_)
+                widgetActionManager->Activate(index);
+            
+            for(auto zone : includedZones_)
+                zone->Activate(index);
+        }
+        else
+        {
+            for(auto widgetActionManager : widgetActionManagers_)
+                widgetActionManager->Activate();
+            
+            for(auto zone : includedZones_)
+                zone->Activate();
+        }
+    }
+    
+    void ActivateNoAction(int zoneIndex)
+    {
+        zoneIndex_ = zoneIndex;
+        
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->ActivateNoAction(zoneIndex);
+        
+        for(auto zone : includedZones_)
+            zone->ActivateNoAction(zoneIndex);
+    }
+    
+    void Activate(int zoneIndex)
+    {
+        zoneIndex_ = zoneIndex;
+        
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate(zoneIndex);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(zoneIndex);
     }
 };
 
