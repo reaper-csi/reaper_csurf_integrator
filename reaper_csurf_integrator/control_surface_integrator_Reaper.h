@@ -41,6 +41,34 @@ struct MIDI_event_ex_t : MIDI_event_t
     }
 };
 
+// substracts b<T> from a<T>
+template <typename T>
+void
+subtract_vector(std::vector<T>& a, const std::vector<T>& b)
+{
+    typename std::vector<T>::iterator       it = a.begin();
+    typename std::vector<T>::const_iterator it2 = b.begin();
+    typename std::vector<T>::iterator       end = a.end();
+    typename std::vector<T>::const_iterator end2 = b.end();
+    
+    while (it != end)
+    {
+        while (it2 != end2)
+        {
+            if (*it == *it2)
+            {
+                it = a.erase(it);
+                end = a.end();
+                it2 = b.begin();
+            }
+            else
+                ++it2;
+        }
+        ++it;
+        it2 = b.begin();
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class DAW
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
