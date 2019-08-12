@@ -631,9 +631,6 @@ public:
     }
     
     void MapSelectedTrackFXToWidgets();
-    
-    
-    
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXSlotToWidgets(int slot);
     void MapFocusedTrackFXToWidgets();
