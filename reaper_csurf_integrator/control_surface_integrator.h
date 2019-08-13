@@ -194,12 +194,7 @@ public:
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     vector<Zone*> GetActiveZones() { return activeSendZones_; }
     
-    void ToggleMapSends(map<string, Zone*> &zones)
-    {
-        shouldMapSends_ = ! shouldMapSends_;
-        MapSelectedTrackSendsToWidgets(zones);
-    }
-    
+    void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
 };
 
@@ -253,7 +248,7 @@ public:
 
     void ToggleMapSends()
     {
-        sendsActivationManager_->ToggleMapSends(zones_);
+        sendsActivationManager_->ToggleMapSends();
     }
     
     void MapSelectedTrackSendsToWidgets()
@@ -628,6 +623,8 @@ public:
         return activeFXZones;
     }
     
+    void ToggleMapSelectedFX();
+    void ToggleMapFXMenu();
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXSlotToWidgets(int slot);
@@ -643,17 +640,6 @@ public:
             CloseFXWindows();
     }
     
-    void ToggleMapSelectedFX()
-    {
-        shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
-        MapSelectedTrackFXToWidgets();
-    }
-    
-    void ToggleMapFXMenu()
-    {
-        shouldMapFXMenus_ = ! shouldMapFXMenus_;
-        MapSelectedTrackFXToMenu();
-    }
     
     void TrackFXListChanged()
     {

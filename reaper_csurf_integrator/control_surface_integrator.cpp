@@ -1161,6 +1161,21 @@ void WidgetActionManager::SetIsTouched(bool isTouched)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void SendsActivationManager::ToggleMapSends()
+{
+    shouldMapSends_ = ! shouldMapSends_;
+    
+    if( ! shouldMapSends_)
+    {
+        for(auto zone : activeSendZones_)
+            zone->Deactivate();
+        
+        activeSendZones_.clear();
+    }
+    
+    surface_->GetPage()->OnTrackSelection();
+}
+
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
     for(auto zone : activeSendZones_)
@@ -1201,6 +1216,38 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void FXActivationManager::ToggleMapSelectedFX()
+{
+    shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
+    
+    if( ! shouldMapSelectedFX_)
+    {
+        for(auto zone : activeSelectedTrackFXZones_)
+            zone->Deactivate();
+    
+        activeSelectedTrackFXZones_.clear();
+        
+        DeleteFXWindows();
+    }
+
+    surface_->GetPage()->OnTrackSelection();
+}
+
+void FXActivationManager::ToggleMapFXMenu()
+{
+    shouldMapFXMenus_ = ! shouldMapFXMenus_;
+    
+    if( ! shouldMapFXMenus_)
+    {
+        for(auto zone : activeFXMenuZones_)
+            zone->Deactivate();
+    
+        activeFXMenuZones_.clear();
+    }
+
+    surface_->GetPage()->OnTrackSelection();
+}
+
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
     for(auto zone : activeSelectedTrackFXZones_)
