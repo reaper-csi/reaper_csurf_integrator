@@ -582,9 +582,7 @@ private:
     vector<Zone*> activeFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    bool mapsSelectedTrackFXToWidgets_ = false;
     bool mapsFocusedTrackFXToWidgets_ = false;
-    bool mapsFXMenus_ = false;
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -659,13 +657,13 @@ public:
     
     void TrackFXListChanged()
     {
-        if(mapsSelectedTrackFXToWidgets_)
+        if(shouldMapSelectedFX_)
             MapSelectedTrackFXToWidgets();
         
         if(mapsFocusedTrackFXToWidgets_)
             MapFocusedTrackFXToWidgets();
         
-        if(mapsFXMenus_)
+        if(shouldMapFXMenus_)
             MapSelectedTrackFXToMenu();
     }
 };
@@ -1163,6 +1161,16 @@ public:
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
                     surface->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
+    }
+    
+    void MapSelectedTrackFXToMenu(ControlSurface* surface)
+    {
+        if(! surface->GetUseZoneLink())
+            surface->GetFXActivationManager()->MapSelectedTrackFXToMenu();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->GetFXActivationManager()->MapSelectedTrackFXToMenu();
     }
     
     void MapFocusedTrackFXToWidgets(ControlSurface* surface)
