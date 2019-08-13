@@ -755,6 +755,7 @@ void Manager::InitActionDictionary()
     actions_["ToggleMapFXMenu"] =                   [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFXMenu(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
+    actions_["MapSelectedTrackFXToMenu"] =          [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToMenu(manager); };
     actions_["GoFXSlot"] =                          [this](WidgetActionManager* manager, vector<string> params) { return new GoFXSlot(manager, params); };
     actions_["MapFocusedTrackFXToWidgets"] =        [this](WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(manager); };
     actions_["TrackAutoMode"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new TrackAutoMode(manager, params); };
@@ -1202,8 +1203,6 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-    mapsSelectedTrackFXToWidgets_ = true;
-    
     for(auto zone : activeSelectedTrackFXZones_)
         zone->Deactivate();
     
@@ -1236,8 +1235,6 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
-    mapsFXMenus_ = true;
-    
     for(auto zone : activeFXMenuZones_)
         zone->Deactivate();
     
@@ -1271,8 +1268,8 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             else
             {
                 zone->ActivateNoAction(i);
-                activeFXMenuZones_.push_back(zone);
                 zone->SetWidgetsToZero();
+                activeFXMenuZones_.push_back(zone);
             }
         }
     }
