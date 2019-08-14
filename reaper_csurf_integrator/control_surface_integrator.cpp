@@ -938,14 +938,14 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigator::Pin()
 {
-    if(isChannelPinned_)
-        return;
-        
-    pinnedTrack_ = GetTrack();
+    if( ! isChannelPinned_)
+    {
+        pinnedTrack_ = GetTrack();
 
-    isChannelPinned_ = true;
+        isChannelPinned_ = true;
     
-    manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+    }
 }
 
 void TrackNavigator::Unpin()
