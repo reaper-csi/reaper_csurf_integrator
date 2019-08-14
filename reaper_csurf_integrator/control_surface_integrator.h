@@ -406,6 +406,8 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    Action(WidgetActionManager* widgetActionManager);
+
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
     
@@ -416,7 +418,6 @@ protected:
     double delayStartTime_ = 0.0;
     
 public:
-    Action(WidgetActionManager* widgetActionManager);
     virtual ~Action() {}
     
     WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
