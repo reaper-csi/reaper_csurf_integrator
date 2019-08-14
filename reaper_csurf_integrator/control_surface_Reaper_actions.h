@@ -553,12 +553,41 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackFolderDive : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TrackFolderDive(WidgetActionManager* manager) : TrackAction(manager) {}
+    
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double folderDepth = DAW::GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH");
+        
+        if(folderDepth == 1)
+            SetWidgetValue(widget_, 1);
+        else
+            SetWidgetValue(widget_, 0);
+    }
+    
+    void Do(double value) override
+    {
+        /*
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
+            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
+        }
+         */
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSelect : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     TrackSelect(WidgetActionManager* manager) : TrackAction(manager) {}
-
+    
     void RequestTrackUpdate(MediaTrack* track) override
     {
         SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
