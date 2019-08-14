@@ -723,6 +723,7 @@ void Manager::InitActionDictionary()
     actions_["Play"] =                              [this](WidgetActionManager* manager, vector<string> params) { return new Play(manager); };
     actions_["Stop"] =                              [this](WidgetActionManager* manager, vector<string> params) { return new Stop(manager); };
     actions_["Record"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new Record(manager); };
+    actions_["TrackFolderDive"] =                   [this](WidgetActionManager* manager, vector<string> params) { return new TrackFolderDive(manager); };
     actions_["TrackSelect"] =                       [this](WidgetActionManager* manager, vector<string> params) { return new TrackSelect(manager); };
     actions_["TrackUniqueSelect"] =                 [this](WidgetActionManager* manager, vector<string> params) { return new TrackUniqueSelect(manager); };
     actions_["MasterTrackUniqueSelect"] =           [this](WidgetActionManager* manager, vector<string> params) { return new MasterTrackUniqueSelect(manager); };
