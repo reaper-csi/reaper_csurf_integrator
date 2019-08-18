@@ -10,59 +10,6 @@
 #include "control_surface_Reaper_actions.h"
 #include "control_surface_manager_actions.h"
 
-// GAW TBD OSC integration
-
-using namespace oscpkt;
-
-
-
-const int PORT_NUM = 9109;
-
-void runServer()
-{
-    UdpSocket sock;
-    sock.bindTo(PORT_NUM);
-    if (!sock.isOk())
-    {
-        //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
-    }
-    else
-    {
-        //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
-        PacketReader pr;
-        PacketWriter pw;
-        while (sock.isOk())
-        {
-            if (sock.receiveNextPacket(30 /* timeout, in ms */))
-            {
-                pr.init(sock.packetData(), sock.packetSize());
-                oscpkt::Message *msg;
-                while (pr.isOk() && (msg = pr.popMessage()) != 0)
-                {
-                    int iarg;
-                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
-                    {
-                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
-                        Message repl; repl.init("/pong").pushInt32(iarg+1);
-                        pw.init().addMessage(repl);
-                        sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
-                    }
-                    else
-                    {
-                        //cout << "Server: unhandled message: " << *msg << "\n";
-                    }
-                }
-            }
-        }
-    }
-}
-
-// GAW TBD OSC integration
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MidiChannelInput
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -549,7 +496,7 @@ static double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-void ProcessWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface, vector<Widget*> &widgets)
+void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface, vector<Widget*> &widgets)
 {
     if(tokens.size() < 2)
         return;
@@ -678,7 +625,10 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
                 if(tokens[0] == "Zone")
                     ProcessZone(lineNumber, file, tokens, filePath, surface, widgets);
                 else if(tokens[0] == "Widget")
-                    ProcessWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
+                {
+                    if(filePath[filePath.length() - 3] == 'm')
+                        ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
+                }
             }
         }
     }
@@ -1098,7 +1048,7 @@ void ControlSurface::GoZone(string zoneName)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, (ControlSurface*)this, widgets_);
+    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "OnTrackSelection"));
