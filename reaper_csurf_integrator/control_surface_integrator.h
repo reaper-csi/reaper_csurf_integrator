@@ -192,10 +192,22 @@ class Midi_ControlSignalGenerator : public ControlSignalGenerator
 {
 protected:
     Midi_ControlSignalGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
-
+    
 public:
     virtual ~Midi_ControlSignalGenerator() {}
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class OSC_ControlSignalGenerator : public ControlSignalGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    OSC_ControlSignalGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
+    
+public:
+    virtual ~OSC_ControlSignalGenerator() {}
+    virtual void ProcessOSCMessage(oscpkt::Message *msg) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -433,7 +445,7 @@ public:
     virtual void Run() override
     {
         HandleMidiInput();
-        ControlSurface::Run();
+        ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
     }
     
     void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
@@ -1063,8 +1075,6 @@ public:
         
         
         
-        // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
-        // if (sock.isOk())
         if(sock.isOk())
         {
             if (sock.receiveNextPacket(30))  // timeout, in ms
@@ -1074,6 +1084,12 @@ public:
                 
                 while (pr.isOk() && (msg = pr.popMessage()) != 0)
                 {
+                    float value = 0;
+                    
+                    if(msg->arg().isFloat())
+                        msg->arg().popFloat(value);
+                    
+                    /*
                     int iarg;
                     if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
                     {
@@ -1086,10 +1102,13 @@ public:
                     {
                         //cout << "Server: unhandled message: " << *msg << "\n";
                     }
+                    */
+                    
+                    
                 }
             }
         }
-        // End -- Thinking of chucking this in the Run() function
+
 
         
         

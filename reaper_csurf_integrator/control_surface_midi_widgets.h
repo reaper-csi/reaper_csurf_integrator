@@ -9,7 +9,6 @@
 
 #include "control_surface_integrator.h"
 #include "handy_functions.h"
-#include "WDL/ptrlist.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Press_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
