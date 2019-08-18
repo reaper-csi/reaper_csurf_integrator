@@ -155,17 +155,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // structs
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct MidiSurfaceLine
-{
-    string name = "";
-    int midiIn = 0;
-    int midiOut = 0;
-    string templateFilename = "";
-    string zoneTemplateFolder = "";
-    bool useZoneLink = false;
-};
-
-struct OSCSurfaceLine
+struct SurfaceLine
 {
     string name = "";
     string remoteDeviceIP = "";
@@ -185,8 +175,7 @@ struct PageLine
     int red = 0;
     int green = 0;
     int blue = 0;
-    vector<MidiSurfaceLine*> midiSurfaces;
-    vector<OSCSurfaceLine*> oscSurfaces;
+    vector<SurfaceLine*> surfaces;
 };
 
 // Scratch pad to get in and out of dialogs easily
@@ -196,8 +185,6 @@ static int dlgResult = 0;
 static int pageIndex = 0;
 
 static char name[BUFSZ];
-static int midiIn = 0;
-static int midiOut = 0;
 static int portIn = 0;
 static int portOut = 0;
 static string remoteDeviceIP = "";
@@ -317,7 +304,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
-                    if(editMode && midiIn == i)
+                    if(editMode && portIn == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -328,7 +315,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
-                    if(editMode && midiOut == i)
+                    if(editMode && portOut == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -385,10 +372,10 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            midiIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
+                            portIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
                         currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            midiOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                            portOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
@@ -439,7 +426,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
-                    if(editMode && midiIn == i)
+                    if(editMode && portIn == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -450,7 +437,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
-                    if(editMode && midiOut == i)
+                    if(editMode && portOut == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -507,10 +494,10 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            midiIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
+                            portIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
                         currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            midiOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                            portOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
@@ -579,7 +566,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                                 pageIndex = index;
                                 
-                                for(auto* surface : pages[index]->midiSurfaces)
+                                for(auto* surface : pages[index]->surfaces)
                                     AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
                             }
                             else
@@ -619,18 +606,18 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                                 if(dlgResult == IDOK)
                                 {
-                                    MidiSurfaceLine* surface = new MidiSurfaceLine();
+                                    SurfaceLine* surface = new SurfaceLine();
                                     surface->name = name;
-                                    surface->midiIn = midiIn;
-                                    surface->midiOut = midiOut;
+                                    surface->portIn = portIn;
+                                    surface->portOut = portOut;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
                                     
-                                    pages[pageIndex]->midiSurfaces.push_back(surface);
+                                    pages[pageIndex]->surfaces.push_back(surface);
                                     
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->surfaces.size() - 1, 0);
                                 }
                             }
                         }
@@ -646,7 +633,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface1), hwndDlg, dlgProcOSCSurface);
                                 if(dlgResult == IDOK)
                                 {
-                                    OSCSurfaceLine* surface = new OSCSurfaceLine();
+                                    SurfaceLine* surface = new SurfaceLine();
                                     surface->name = name;
                                     surface->remoteDeviceIP = remoteDeviceIP;
                                     surface->portIn = portIn;
@@ -655,10 +642,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
                                     
-                                    pages[pageIndex]->oscSurfaces.push_back(surface);
+                                    pages[pageIndex]->surfaces.push_back(surface);
                                     
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->surfaces.size() - 1, 0);
                                 }
                             }
                         }
@@ -699,23 +686,23 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                midiIn = pages[pageIndex]->midiSurfaces[index]->midiIn;
-                                midiOut = pages[pageIndex]->midiSurfaces[index]->midiOut;
-                                strcpy(templateFilename, pages[pageIndex]->midiSurfaces[index]->templateFilename.c_str());
-                                strcpy(zoneTemplateFolder, pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder.c_str());
-                                useZoneLink = pages[pageIndex]->midiSurfaces[index]->useZoneLink;
+                                portIn = pages[pageIndex]->surfaces[index]->portIn;
+                                portOut = pages[pageIndex]->surfaces[index]->portOut;
+                                strcpy(templateFilename, pages[pageIndex]->surfaces[index]->templateFilename.c_str());
+                                strcpy(zoneTemplateFolder, pages[pageIndex]->surfaces[index]->zoneTemplateFolder.c_str());
+                                useZoneLink = pages[pageIndex]->surfaces[index]->useZoneLink;
                                 dlgResult = false;
                                 editMode = true;
                                 
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                                 if(dlgResult == IDOK)
                                 {
-                                    pages[pageIndex]->midiSurfaces[index]->name = name;
-                                    pages[pageIndex]->midiSurfaces[index]->midiIn = midiIn;
-                                    pages[pageIndex]->midiSurfaces[index]->midiOut = midiOut;
-                                    pages[pageIndex]->midiSurfaces[index]->templateFilename = templateFilename;
-                                    pages[pageIndex]->midiSurfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
-                                    pages[pageIndex]->midiSurfaces[index]->useZoneLink = useZoneLink;
+                                    pages[pageIndex]->surfaces[index]->name = name;
+                                    pages[pageIndex]->surfaces[index]->portIn = portIn;
+                                    pages[pageIndex]->surfaces[index]->portOut = portOut;
+                                    pages[pageIndex]->surfaces[index]->templateFilename = templateFilename;
+                                    pages[pageIndex]->surfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
+                                    pages[pageIndex]->surfaces[index]->useZoneLink = useZoneLink;
                                 }
                             }
                         }
@@ -744,10 +731,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Surfaces, LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                pages[pageIndex]->midiSurfaces.erase(pages[pageIndex]->midiSurfaces.begin() + index);
+                                pages[pageIndex]->surfaces.erase(pages[pageIndex]->surfaces.begin() + index);
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_RESETCONTENT, 0, 0);
-                                for(auto* surface: pages[pageIndex]->midiSurfaces)
+                                for(auto* surface: pages[pageIndex]->surfaces)
                                     AddListEntry(hwndDlg, surface->name, IDC_LIST_Surfaces);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, index, 0);
                             }
@@ -834,16 +821,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens.size() != 7)
                             continue;
                         
-                        MidiSurfaceLine* surface = new MidiSurfaceLine();
+                        SurfaceLine* surface = new SurfaceLine();
                         surface->name = tokens[1];
-                        surface->midiIn = atoi(tokens[2].c_str());
-                        surface->midiOut = atoi(tokens[3].c_str());
+                        surface->portIn = atoi(tokens[2].c_str());
+                        surface->portOut = atoi(tokens[3].c_str());
                         surface->templateFilename = tokens[4];
                         surface->zoneTemplateFolder = tokens[5];
                         surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
                         
                         if(pages.size() > 0)
-                            pages[pages.size() - 1]->midiSurfaces.push_back(surface);
+                            pages[pages.size() - 1]->surfaces.push_back(surface);
                     }
                 }
             }
@@ -908,12 +895,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     iniFile << line;
 
-                    for(auto surface : page->midiSurfaces)
+                    for(auto surface : page->surfaces)
                     {
                         line = MidiSurfaceToken + " ";
                         line += surface->name + " ";
-                        line += to_string(surface->midiIn) + " " ;
-                        line += to_string(surface->midiOut) + " " ;
+                        line += to_string(surface->portIn) + " " ;
+                        line += to_string(surface->portOut) + " " ;
                         line += surface->templateFilename + " ";
                         line += surface->zoneTemplateFolder + " " ;
                         line += surface->useZoneLink == true ? "UseZoneLink\n" : "NoZoneLink\n";
