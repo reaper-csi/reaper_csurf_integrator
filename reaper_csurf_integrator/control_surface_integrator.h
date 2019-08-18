@@ -40,6 +40,75 @@
 #include "udp.hh"
 #endif
 
+
+
+
+// GAW TBD OSC integration
+
+static const int PORT_NUM = 8000;
+static oscpkt::UdpSocket sock;
+static oscpkt::PacketReader pr;
+static oscpkt::PacketWriter pw;
+
+
+static void runServer()
+{
+    sock.bindTo(PORT_NUM);
+    //oscpkt::UdpSocket sock;
+    if (!sock.isOk())
+    {
+        //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
+    }
+    else
+    {
+        //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
+        //oscpkt::PacketReader pr;
+        //oscpkt::PacketWriter pw;
+        
+        /*
+        // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
+        // if (sock.isOk())
+        while (sock.isOk())
+        {
+            if (sock.receiveNextPacket(30)) // timeout, in ms 
+            {
+                pr.init(sock.packetData(), sock.packetSize());
+                oscpkt::Message *msg;
+                
+                while (pr.isOk() && (msg = pr.popMessage()) != 0)
+                {
+                    int iarg;
+                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
+                    {
+                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
+                        oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
+                        pw.init().addMessage(repl);
+                        sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
+                    }
+                    else
+                    {
+                        //cout << "Server: unhandled message: " << *msg << "\n";
+                    }
+                }
+            }
+        }
+        // End -- Thinking of chucking this in the Run() function
+        */
+        
+        
+        
+    }
+}
+
+// GAW TBD OSC integration
+
+
+
+
+
+
+
+
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
 // CSI.ini tokens used by GUI and initialization
@@ -990,6 +1059,49 @@ public:
     
     void Run()
     {
+        
+        
+        
+        
+        // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
+        // if (sock.isOk())
+        if(sock.isOk())
+        {
+            if (sock.receiveNextPacket(30))  // timeout, in ms
+            {
+                pr.init(sock.packetData(), sock.packetSize());
+                oscpkt::Message *msg;
+                
+                while (pr.isOk() && (msg = pr.popMessage()) != 0)
+                {
+                    int iarg;
+                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
+                    {
+                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
+                        //oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
+                        //pw.init().addMessage(repl);
+                        //sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
+                    }
+                    else
+                    {
+                        //cout << "Server: unhandled message: " << *msg << "\n";
+                    }
+                }
+            }
+        }
+        // End -- Thinking of chucking this in the Run() function
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         trackNavigationManager_->Run();
         
         for(auto surface : surfaces_)
@@ -1230,6 +1342,7 @@ public:
     Manager()
     {
         InitActionDictionary();
+        runServer();
     }
     
     void ResetAllWidgets()
