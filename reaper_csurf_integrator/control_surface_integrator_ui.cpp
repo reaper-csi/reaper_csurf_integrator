@@ -165,6 +165,17 @@ struct MidiSurfaceLine
     bool useZoneLink = false;
 };
 
+struct OSCSurfaceLine
+{
+    string name = "";
+    string remoteDeviceIP = "";
+    int portIn = 0;
+    int portOut = 0;
+    string templateFilename = "";
+    string zoneTemplateFolder = "";
+    bool useZoneLink = false;
+};
+
 struct PageLine
 {
     string name = "";
@@ -175,6 +186,7 @@ struct PageLine
     int green = 0;
     int blue = 0;
     vector<MidiSurfaceLine*> midiSurfaces;
+    vector<OSCSurfaceLine*> oscSurfaces;
 };
 
 // Scratch pad to get in and out of dialogs easily
@@ -186,6 +198,9 @@ static int pageIndex = 0;
 static char name[BUFSZ];
 static int midiIn = 0;
 static int midiOut = 0;
+static int portIn = 0;
+static int portOut = 0;
+static string remoteDeviceIP = "";
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
 
@@ -297,7 +312,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
         {
             char buf[BUFSZ];
             int currentIndex = 0;
-
+            
             for (int i = 0; i < GetNumMIDIInputs(); i++)
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
                 {
@@ -319,7 +334,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 }
             
             string resourcePath(DAW::GetResourcePath());
-           
+            
             int i = 0;
             for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/Midi/"))
             {
@@ -336,7 +351,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
-
+                
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
@@ -344,7 +359,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-
+                
                 if(useZoneLink)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
                 else
@@ -358,7 +373,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
             }
         }
-
+            
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -367,22 +382,144 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
-
+                        
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
                             midiIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
                         currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
                             midiOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
-
+                        
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
-
+                        
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
                             useZoneLink = true;
                         else
                             useZoneLink = false;
-                       
+                        
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            char buf[BUFSZ];
+            int currentIndex = 0;
+            
+            for (int i = 0; i < GetNumMIDIInputs(); i++)
+                if (GetMIDIInputName(i, buf, sizeof(buf)))
+                {
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
+                    if(editMode && midiIn == i)
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
+                    currentIndex++;
+                }
+            
+            currentIndex = 0;
+            
+            for (int i = 0; i < GetNumMIDIOutputs(); i++)
+                if (GetMIDIOutputName(i, buf, sizeof(buf)))
+                {
+                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
+                    if(editMode && midiOut == i)
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
+                    currentIndex++;
+                }
+            
+            string resourcePath(DAW::GetResourcePath());
+            
+            int i = 0;
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/Midi/"))
+            {
+                int length = filename.length();
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'm' && filename[length - 2] == 's' &&filename[length - 1] == 't')
+                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
+            }
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/Zones/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ZoneTemplates);
+            
+            if(editMode)
+            {
+                editMode = false;
+                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
+                
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
+                
+                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+                
+                if(useZoneLink)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
+            }
+            else
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
+            }
+        }
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
+                        
+                        int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
+                        if (currentSelection >= 0)
+                            midiIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
+                        currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
+                        if (currentSelection >= 0)
+                            midiOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                        
+                        GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
+                            useZoneLink = true;
+                        else
+                            useZoneLink = false;
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -498,7 +635,35 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             }
                         }
                         break ;
-
+                        
+                    case IDC_BUTTON_AddOSCSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
+                            {
+                                dlgResult = false;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface1), hwndDlg, dlgProcOSCSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    OSCSurfaceLine* surface = new OSCSurfaceLine();
+                                    surface->name = name;
+                                    surface->remoteDeviceIP = remoteDeviceIP;
+                                    surface->portIn = portIn;
+                                    surface->portOut = portOut;
+                                    surface->templateFilename = templateFilename;
+                                    surface->zoneTemplateFolder = zoneTemplateFolder;
+                                    surface->useZoneLink = useZoneLink;
+                                    
+                                    pages[pageIndex]->oscSurfaces.push_back(surface);
+                                    
+                                    AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->midiSurfaces.size() - 1, 0);
+                                }
+                            }
+                        }
+                        break ;
+                        
                     case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
