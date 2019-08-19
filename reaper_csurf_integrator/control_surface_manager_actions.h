@@ -18,9 +18,6 @@ public:
        
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
             page_->GetTrackNavigationManager()->TogglePin(track);
     }
@@ -40,9 +37,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->ToggleMapSends(surface_);
     }
 };
@@ -61,9 +55,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->ToggleMapSelectedFX(surface_);
     }
 };
@@ -82,9 +73,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->ToggleMapFXMenu(surface_);
     }
 };
@@ -98,9 +86,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         int fxIndex = param_ - 1 < 0 ? 0 : param_ - 1;
         
         page_->MapSelectedTrackFXSlotToWidgets(surface_, fxIndex);
@@ -116,9 +101,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->MapSelectedTrackSendsToWidgets(surface_);
     }
 };
@@ -132,9 +114,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->MapSelectedTrackFXToWidgets(surface_);
     }
 };
@@ -148,9 +127,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->MapSelectedTrackFXToMenu(surface_);
     }
 };
@@ -164,9 +140,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->MapFocusedTrackFXToWidgets(surface_);
     }
 };
@@ -180,9 +153,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
             int trackIndex = 0;
@@ -239,9 +209,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->GetTrackNavigationManager()->ToggleScrollLink(param_);
     }
 };
@@ -255,9 +222,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         int *tmodeptr = &__g_projectconfig_timemode2;
         if (tmodeptr && *tmodeptr>=0)
         {
@@ -288,9 +252,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         TheManager->NextPage();
     }
 };
@@ -304,9 +265,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         TheManager->GoPage(param_);
     }
 };
@@ -320,9 +278,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         page_->GoZone(surface_, param_);
     }
 };
@@ -336,9 +291,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         TheManager->AdjustTrackBank(page_, param_);
     }
 };

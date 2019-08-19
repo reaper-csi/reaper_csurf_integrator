@@ -215,9 +215,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_MUTE");
@@ -241,9 +238,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE");
@@ -270,9 +264,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0 ? 0 : 1;
@@ -476,9 +467,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::CSurf_OnRew(1);
     }
 };
@@ -492,9 +480,6 @@ public:
 
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::CSurf_OnFwd(1);
     }
 };
@@ -517,9 +502,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::CSurf_OnPlay();
     }
 };
@@ -543,9 +525,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::CSurf_OnStop();
     }
 };
@@ -569,9 +548,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::CSurf_OnRecord();
     }
 };
@@ -595,9 +571,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         /*
         if(MediaTrack* track = widget_->GetTrack())
         {
@@ -622,9 +595,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
@@ -647,9 +617,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::SetOnlyTrackSelected(track);
@@ -673,9 +640,6 @@ public:
     
     void Do( double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::SetOnlyTrackSelected(DAW::GetMasterTrack(0));
         widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(GetMasterTrack(0));
     }
@@ -695,9 +659,6 @@ public:
 
     virtual void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         int currentlySelectedCount = 0;
         int selectedTrackIndex = 0;
         int trackIndex = 0;
@@ -749,9 +710,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
@@ -775,9 +733,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             bool mute = false;
@@ -801,9 +756,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         if(MediaTrack* track = widget_->GetTrack())
         {
             DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
@@ -852,9 +804,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::SetGlobalAutomationOverride(param_);
     }
 };
@@ -893,9 +842,6 @@ public:
     
     virtual void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::SetAutomationMode(param_, true);
     }
 };
@@ -927,9 +873,6 @@ public:
     
     void Do(double value) override
     {
-        if(value != 1.0)
-            return;
-        
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
 };
