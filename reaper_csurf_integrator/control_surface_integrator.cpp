@@ -603,6 +603,11 @@ void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<st
     }
 }
 
+void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface, vector<Widget*> &widgets)
+{
+
+}
+
 void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
     int lineNumber = 0;
@@ -628,6 +633,8 @@ void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widg
                 {
                     if(filePath[filePath.length() - 3] == 'm')
                         ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
+                    if(filePath[filePath.length() - 3] == 'o')
+                        ProcessOSCWidget(lineNumber, file, tokens, (OSC_ControlSurface*)surface, widgets);
                 }
             }
         }
@@ -799,8 +806,8 @@ void Manager::Init()
                     {
                         if(tokens[0] == MidiSurfaceToken)
                             currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
-                        else if(tokens[0] == OSCSurfaceToken)
-                            currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() > 7)
+                            currentPage->AddSurface(new OSC_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[7]));
                     }
                 }
             }
@@ -1071,6 +1078,18 @@ void ControlSurface::GoZone(string zoneName)
 void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
+    
+    // Add the "hardcoded" widgets
+    widgets_.push_back(new Widget(this, "OnTrackSelection"));
+    widgets_.push_back(new Widget(this, "OnFXFocus"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC_ControlSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void OSC_ControlSurface::InitWidgets(string templateFilename)
+{
+    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
     
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "OnTrackSelection"));

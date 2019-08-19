@@ -40,75 +40,6 @@
 #include "udp.hh"
 #endif
 
-
-
-
-// GAW TBD OSC integration
-
-static const int PORT_NUM = 8000;
-static oscpkt::UdpSocket sock;
-static oscpkt::PacketReader pr;
-static oscpkt::PacketWriter pw;
-
-
-static void runServer()
-{
-    sock.bindTo(PORT_NUM);
-    //oscpkt::UdpSocket sock;
-    if (!sock.isOk())
-    {
-        //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
-    }
-    else
-    {
-        //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
-        //oscpkt::PacketReader pr;
-        //oscpkt::PacketWriter pw;
-        
-        /*
-        // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
-        // if (sock.isOk())
-        while (sock.isOk())
-        {
-            if (sock.receiveNextPacket(30)) // timeout, in ms 
-            {
-                pr.init(sock.packetData(), sock.packetSize());
-                oscpkt::Message *msg;
-                
-                while (pr.isOk() && (msg = pr.popMessage()) != 0)
-                {
-                    int iarg;
-                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
-                    {
-                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
-                        oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
-                        pw.init().addMessage(repl);
-                        sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
-                    }
-                    else
-                    {
-                        //cout << "Server: unhandled message: " << *msg << "\n";
-                    }
-                }
-            }
-        }
-        // End -- Thinking of chucking this in the Run() function
-        */
-        
-        
-        
-    }
-}
-
-// GAW TBD OSC integration
-
-
-
-
-
-
-
-
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
 // CSI.ini tokens used by GUI and initialization
@@ -210,7 +141,7 @@ protected:
     
 public:
     virtual ~OSC_ControlSignalGenerator() {}
-    virtual void ProcessOSCMessage(oscpkt::Message *msg) {}
+    virtual void ProcessOSCMessage(oscpkt::Message *message, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -301,8 +232,6 @@ protected:
     map<string, Zone*> zones_;
     bool useZoneLink_ = false;
 
-    virtual void InitWidgets(string templateFilename) {}
-
     void InitZones(string zoneFolder);
     
     void RequestUpdate()
@@ -388,6 +317,8 @@ private:
     bool midiOutMonitor_ = false;
     map<int, Midi_ControlSignalGenerator*> controlGeneratorsByMessage_;
     
+    void InitWidgets(string templateFilename);
+
     void HandleMidiInput()
     {
         if(midiInput_)
@@ -400,7 +331,7 @@ private:
                 ProcessMidiMessage((MIDI_event_ex_t*)evt);
         }
     }
-
+    
     void ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
         if(midiInMonitor_)
@@ -419,9 +350,6 @@ private:
             controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
     }
     
-protected:
-    virtual void InitWidgets(string templateFilename) override;
-
 public:
     Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
     : ControlSurface(page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
@@ -429,22 +357,22 @@ public:
         InitWidgets(templateFilename);
         
         ResetAllWidgets();
-                
+        
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
         GoZone("Home");
     }
-
+    
     virtual ~Midi_ControlSurface() {}
     
-
+    
     virtual void TurnOffMonitoring() override
     {
         midiInMonitor_ = false;
         midiOutMonitor_ = false;
     }
-
+    
     virtual void Run() override
     {
         HandleMidiInput();
@@ -478,6 +406,175 @@ public:
         {
             char buffer[250];
             sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class OSC_ControlSurface : public ControlSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string remoteDeviceIP_ = "";
+    int inPort_ = 0;
+    int outPort_ = 0;
+    bool oscInMonitor_ = false;
+    bool oscOutMonitor_ = false;
+    oscpkt::UdpSocket socket_;
+    oscpkt::PacketReader packetReader_;
+    oscpkt::PacketWriter packetWriter_;
+    map<string, OSC_ControlSignalGenerator*> controlGeneratorsByMessage_;
+    
+    void InitWidgets(string templateFilename);
+    
+    void runServer()
+    {
+        socket_.bindTo(inPort_);
+        //oscpkt::UdpSocket sock;
+        if (!socket_.isOk())
+        {
+            //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
+        }
+        else
+        {
+            //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
+            //oscpkt::PacketReader pr;
+            //oscpkt::PacketWriter pw;
+            
+            /*
+             // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
+             // if (sock.isOk())
+             while (sock.isOk())
+             {
+             if (sock.receiveNextPacket(30)) // timeout, in ms
+             {
+             pr.init(sock.packetData(), sock.packetSize());
+             oscpkt::Message *msg;
+             
+             while (pr.isOk() && (msg = pr.popMessage()) != 0)
+             {
+             int iarg;
+             if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
+             {
+             //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
+             oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
+             pw.init().addMessage(repl);
+             sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
+             }
+             else
+             {
+             //cout << "Server: unhandled message: " << *msg << "\n";
+             }
+             }
+             }
+             }
+             // End -- Thinking of chucking this in the Run() function
+             */
+            
+            
+            
+        }
+    }
+   
+    void HandleOSCInput()
+    {
+        if(socket_.isOk())
+        {
+            if (socket_.receiveNextPacket(30))  // timeout, in ms
+            {
+                packetReader_.init(socket_.packetData(), socket_.packetSize());
+                oscpkt::Message *msg;
+                
+                while (packetReader_.isOk() && (msg = packetReader_.popMessage()) != 0)
+                {
+                    float value = 0;
+                    
+                    if(msg->arg().isFloat())
+                    {
+                        msg->arg().popFloat(value);
+                        ProcessOSCMessage(msg->addressPattern(), value);
+                    }
+                    
+                    /*
+                     int iarg;
+                     if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
+                     {
+                     //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
+                     //oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
+                     //pw.init().addMessage(repl);
+                     //sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
+                     }
+                     else
+                     {
+                     //cout << "Server: unhandled message: " << *msg << "\n";
+                     }
+                     */
+                    
+                    
+                }
+            }
+        }
+    }
+    
+    void ProcessOSCMessage(string message, double value)
+    {
+        if(oscInMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
+            DAW::ShowConsoleMsg(buffer);
+        }
+
+        
+        
+    }
+
+public:
+    OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
+    : ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
+    {
+        InitWidgets(templateFilename);
+        
+        ResetAllWidgets();
+        
+        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
+        InitZones(zoneFolder);
+        
+        runServer();
+        
+        GoZone("Home");
+    }
+    
+    virtual ~OSC_ControlSurface() {}
+    
+    
+    virtual void TurnOffMonitoring() override
+    {
+        oscInMonitor_ = false;
+        oscOutMonitor_ = false;
+    }
+    
+    virtual void Run() override
+    {
+        HandleOSCInput();
+        ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
+    }
+    
+    void AddControlGenerator(string message, OSC_ControlSignalGenerator* controlSignalGenerator)
+    {
+        controlGeneratorsByMessage_[message] = controlSignalGenerator;
+    }
+    
+    void SendOSCMessage(string message, double value)
+    {
+        //if(outPort_)
+           // outPort_->SendMsg(midiMessage, -1);
+        
+        if(oscOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
             DAW::ShowConsoleMsg(buffer);
         }
     }
@@ -1074,56 +1171,6 @@ public:
     
     void Run()
     {
-        
-        
-        
-        
-        if(sock.isOk())
-        {
-            if (sock.receiveNextPacket(30))  // timeout, in ms
-            {
-                pr.init(sock.packetData(), sock.packetSize());
-                oscpkt::Message *msg;
-                
-                while (pr.isOk() && (msg = pr.popMessage()) != 0)
-                {
-                    float value = 0;
-                    
-                    if(msg->arg().isFloat())
-                        msg->arg().popFloat(value);
-                    
-                    /*
-                    int iarg;
-                    if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
-                    {
-                        //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
-                        //oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
-                        //pw.init().addMessage(repl);
-                        //sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
-                    }
-                    else
-                    {
-                        //cout << "Server: unhandled message: " << *msg << "\n";
-                    }
-                    */
-                    
-                    
-                }
-            }
-        }
-
-
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         trackNavigationManager_->Run();
         
         for(auto surface : surfaces_)
@@ -1364,7 +1411,6 @@ public:
     Manager()
     {
         InitActionDictionary();
-        runServer();
     }
     
     void ResetAllWidgets()
