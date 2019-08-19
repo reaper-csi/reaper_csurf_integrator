@@ -11,62 +11,62 @@
 #include "control_surface_manager_actions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct MidiChannelInput
+struct MidiInputPort
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    int channel_ = 0;
+    int port_ = 0;
     midi_Input* midiInput_ = nullptr;
     
-    MidiChannelInput(int channel, midi_Input* midiInput)
-    : channel_(channel), midiInput_(midiInput) {}
+    MidiInputPort(int port, midi_Input* midiInput)
+    : port_(port), midiInput_(midiInput) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct MidiChannelOutput
+struct MidiOutputPort
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    int channel_ = 0;
+    int port_ = 0;
     midi_Output* midiOutput_ = nullptr;
     
-    MidiChannelOutput(int channel, midi_Output* midiOutput)
-    : channel_(channel), midiOutput_(midiOutput) {}
+    MidiOutputPort(int port, midi_Output* midiOutput)
+    : port_(port), midiOutput_(midiOutput) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi I/O Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static map<int, MidiChannelInput*> midiInputs_;
-static map<int, MidiChannelOutput*> midiOutputs_;
+static map<int, MidiInputPort*> midiInputs_;
+static map<int, MidiOutputPort*> midiOutputs_;
 
-static midi_Input* GetMidiInputForChannel(int inputChannel)
+static midi_Input* GetMidiInputForPort(int inputPort)
 {
-    if(midiInputs_.count(inputChannel) > 0)
-        return midiInputs_[inputChannel]->midiInput_; // return existing
+    if(midiInputs_.count(inputPort) > 0)
+        return midiInputs_[inputPort]->midiInput_; // return existing
     
     // otherwise make new
-    midi_Input* newInput = DAW::CreateMIDIInput(inputChannel);
+    midi_Input* newInput = DAW::CreateMIDIInput(inputPort);
     
     if(newInput)
     {
         newInput->start();
-        midiInputs_[inputChannel] = new MidiChannelInput(inputChannel, newInput);
+        midiInputs_[inputPort] = new MidiInputPort(inputPort, newInput);
         return newInput;
     }
     
     return nullptr;
 }
 
-static midi_Output* GetMidiOutputForChannel(int outputChannel)
+static midi_Output* GetMidiOutputForPort(int outputPort)
 {
-    if(midiOutputs_.count(outputChannel) > 0)
-        return midiOutputs_[outputChannel]->midiOutput_; // return existing
+    if(midiOutputs_.count(outputPort) > 0)
+        return midiOutputs_[outputPort]->midiOutput_; // return existing
     
     // otherwise make new
-    midi_Output* newOutput = DAW::CreateMIDIOutput(outputChannel, false, NULL);
+    midi_Output* newOutput = DAW::CreateMIDIOutput(outputPort, false, NULL);
     
     if(newOutput)
     {
-        midiOutputs_[outputChannel] = new MidiChannelOutput(outputChannel, newOutput);
+        midiOutputs_[outputPort] = new MidiOutputPort(outputPort, newOutput);
         return newOutput;
     }
     
@@ -720,7 +720,9 @@ void Manager::Init()
     bool midiInMonitor = false;
     bool midiOutMonitor = false;
     VSTMonitor_ = false;
-    
+    bool oscInMonitor = false;
+    bool oscOutMonitor = false;
+
     Page* currentPage = nullptr;
     
     string iniFilePath = string(DAW::GetResourcePath()) + "/CSI/CSI.ini";
@@ -761,6 +763,22 @@ void Manager::Init()
                     if(tokens[1] == "On")
                         VSTMonitor_ = true;
                 }
+                if(tokens[0] == OSCInMonitorToken)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        oscInMonitor = true;
+                }
+                else if(tokens[0] == OSCOutMonitorToken)
+                {
+                    if(tokens.size() != 2)
+                        continue;
+                    
+                    if(tokens[1] == "On")
+                        oscOutMonitor = true;
+                }
                 else if(tokens[0] == PageToken)
                 {
                     if(tokens.size() != 8)
@@ -768,18 +786,22 @@ void Manager::Init()
                     
                     currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseTrackColoring" ? true : false, atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), atoi(tokens[7].c_str()));
                     pages_.push_back(currentPage);
-                    
                 }
-                else if(tokens[0] == MidiSurfaceToken)
+                else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                 {
-                    if(tokens.size() != 7)
+                    if(tokens.size() != 7 && tokens.size() != 8)
                         continue;
                     
-                    int channelIn = atoi(tokens[2].c_str());
-                    int channelOut = atoi(tokens[3].c_str());
+                    int inPort = atoi(tokens[2].c_str());
+                    int outPort = atoi(tokens[3].c_str());
                     
                     if(currentPage)
-                        currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForChannel(channelIn), GetMidiOutputForChannel(channelOut), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
+                    {
+                        if(tokens[0] == MidiSurfaceToken)
+                            currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
+                        else if(tokens[0] == OSCSurfaceToken)
+                            currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
+                    }
                 }
             }
         }
