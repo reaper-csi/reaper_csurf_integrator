@@ -158,8 +158,8 @@ struct SurfaceLine
 {
     string name = "";
     string remoteDeviceIP = "";
-    int portIn = 0;
-    int portOut = 0;
+    int inPort = 0;
+    int outPort = 0;
     string templateFilename = "";
     string zoneTemplateFolder = "";
     bool useZoneLink = false;
@@ -184,8 +184,8 @@ static int dlgResult = 0;
 static int pageIndex = 0;
 
 static char name[BUFSZ];
-static int portIn = 0;
-static int portOut = 0;
+static int inPort = 0;
+static int outPort = 0;
 static string remoteDeviceIP = "";
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
@@ -303,7 +303,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if (GetMIDIInputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
-                    if(editMode && portIn == i)
+                    if(editMode && inPort == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -314,7 +314,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 if (GetMIDIOutputName(i, buf, sizeof(buf)))
                 {
                     AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
-                    if(editMode && portOut == i)
+                    if(editMode && outPort == i)
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
                     currentIndex++;
                 }
@@ -371,10 +371,10 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            portIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
+                            inPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
                         currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            portOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                            outPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
@@ -418,36 +418,13 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
     {
         case WM_INITDIALOG:
         {
-            char buf[BUFSZ];
-            int currentIndex = 0;
-            
-            for (int i = 0; i < GetNumMIDIInputs(); i++)
-                if (GetMIDIInputName(i, buf, sizeof(buf)))
-                {
-                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiIn);
-                    if(editMode && portIn == i)
-                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, currentIndex, 0);
-                    currentIndex++;
-                }
-            
-            currentIndex = 0;
-            
-            for (int i = 0; i < GetNumMIDIOutputs(); i++)
-                if (GetMIDIOutputName(i, buf, sizeof(buf)))
-                {
-                    AddComboEntry(hwndDlg, i, buf, IDC_COMBO_MidiOut);
-                    if(editMode && portOut == i)
-                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, currentIndex, 0);
-                    currentIndex++;
-                }
-            
             string resourcePath(DAW::GetResourcePath());
             
             int i = 0;
-            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/Midi/"))
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/OSC/"))
             {
                 int length = filename.length();
-                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'm' && filename[length - 2] == 's' &&filename[length - 1] == 't')
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'o' && filename[length - 2] == 's' &&filename[length - 1] == 't')
                     AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
             }
             
@@ -458,8 +435,10 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             if(editMode)
             {
                 editMode = false;
-                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
-                
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
+
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
@@ -475,8 +454,9 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
             else
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, "");
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
             }
@@ -493,10 +473,10 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            portIn = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
+                            inPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
                         currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
                         if (currentSelection >= 0)
-                            portOut = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                            outPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
@@ -607,8 +587,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 {
                                     SurfaceLine* surface = new SurfaceLine();
                                     surface->name = name;
-                                    surface->portIn = portIn;
-                                    surface->portOut = portOut;
+                                    surface->inPort = inPort;
+                                    surface->outPort = outPort;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
@@ -635,8 +615,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     SurfaceLine* surface = new SurfaceLine();
                                     surface->name = name;
                                     surface->remoteDeviceIP = remoteDeviceIP;
-                                    surface->portIn = portIn;
-                                    surface->portOut = portOut;
+                                    surface->inPort = inPort;
+                                    surface->outPort = outPort;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
@@ -685,8 +665,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(index >= 0)
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
-                                portIn = pages[pageIndex]->surfaces[index]->portIn;
-                                portOut = pages[pageIndex]->surfaces[index]->portOut;
+                                inPort = pages[pageIndex]->surfaces[index]->inPort;
+                                outPort = pages[pageIndex]->surfaces[index]->outPort;
                                 strcpy(templateFilename, pages[pageIndex]->surfaces[index]->templateFilename.c_str());
                                 strcpy(zoneTemplateFolder, pages[pageIndex]->surfaces[index]->zoneTemplateFolder.c_str());
                                 useZoneLink = pages[pageIndex]->surfaces[index]->useZoneLink;
@@ -697,8 +677,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 if(dlgResult == IDOK)
                                 {
                                     pages[pageIndex]->surfaces[index]->name = name;
-                                    pages[pageIndex]->surfaces[index]->portIn = portIn;
-                                    pages[pageIndex]->surfaces[index]->portOut = portOut;
+                                    pages[pageIndex]->surfaces[index]->inPort = inPort;
+                                    pages[pageIndex]->surfaces[index]->outPort = outPort;
                                     pages[pageIndex]->surfaces[index]->templateFilename = templateFilename;
                                     pages[pageIndex]->surfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
                                     pages[pageIndex]->surfaces[index]->useZoneLink = useZoneLink;
@@ -822,8 +802,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         SurfaceLine* surface = new SurfaceLine();
                         surface->name = tokens[1];
-                        surface->portIn = atoi(tokens[2].c_str());
-                        surface->portOut = atoi(tokens[3].c_str());
+                        surface->inPort = atoi(tokens[2].c_str());
+                        surface->outPort = atoi(tokens[3].c_str());
                         surface->templateFilename = tokens[4];
                         surface->zoneTemplateFolder = tokens[5];
                         surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
@@ -898,8 +878,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     {
                         line = MidiSurfaceToken + " ";
                         line += surface->name + " ";
-                        line += to_string(surface->portIn) + " " ;
-                        line += to_string(surface->portOut) + " " ;
+                        line += to_string(surface->inPort) + " " ;
+                        line += to_string(surface->outPort) + " " ;
                         line += surface->templateFilename + " ";
                         line += surface->zoneTemplateFolder + " " ;
                         line += surface->useZoneLink == true ? "UseZoneLink\n" : "NoZoneLink\n";

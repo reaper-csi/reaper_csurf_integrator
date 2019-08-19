@@ -117,6 +117,7 @@ const string MidiOutMonitorToken = "MidiOutMonitor";
 const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
+const string OSCSurfaceToken = "OSCSurface";
 const string PageToken = "Page";
 const string Shift = "Shift";
 const string Option = "Option";
