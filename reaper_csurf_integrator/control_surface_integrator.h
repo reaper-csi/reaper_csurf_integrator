@@ -141,7 +141,7 @@ protected:
     
 public:
     virtual ~OSC_ControlSignalGenerator() {}
-    virtual void ProcessOSCMessage(oscpkt::Message *message, double value) {}
+    virtual void ProcessOSCMessage(string message, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -484,16 +484,16 @@ private:
             if (socket_.receiveNextPacket(30))  // timeout, in ms
             {
                 packetReader_.init(socket_.packetData(), socket_.packetSize());
-                oscpkt::Message *msg;
+                oscpkt::Message *message;
                 
-                while (packetReader_.isOk() && (msg = packetReader_.popMessage()) != 0)
+                while (packetReader_.isOk() && (message = packetReader_.popMessage()) != 0)
                 {
                     float value = 0;
                     
-                    if(msg->arg().isFloat())
+                    if(message->arg().isFloat())
                     {
-                        msg->arg().popFloat(value);
-                        ProcessOSCMessage(msg->addressPattern(), value);
+                        message->arg().popFloat(value);
+                        ProcessOSCMessage(message->addressPattern(), value);
                     }
                     
                     /*
@@ -519,15 +519,15 @@ private:
     
     void ProcessOSCMessage(string message, double value)
     {
+        if(controlGeneratorsByMessage_.count(message) > 0)
+            controlGeneratorsByMessage_[message]->ProcessOSCMessage(message, value);
+        
         if(oscInMonitor_)
         {
             char buffer[250];
             sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
             DAW::ShowConsoleMsg(buffer);
         }
-
-        
-        
     }
 
 public:

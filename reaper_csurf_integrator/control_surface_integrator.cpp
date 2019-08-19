@@ -605,6 +605,109 @@ void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<st
 
 void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface, vector<Widget*> &widgets)
 {
+    if(tokens.size() < 2)
+        return;
+    
+    Widget* widget = new Widget(surface, tokens[1]);
+    widgets.push_back(widget);
+    
+    for (string line; getline(surfaceTemplateFile, line) ; )
+    {
+        lineNumber++;
+        
+        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            continue;
+        
+        vector<string> tokens(GetTokens(line));
+        
+        if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
+            return;
+        
+        if(tokens.size() > 1)
+        {
+            string widgetClass = tokens[0];
+
+            // Control Signal Generators
+            if(widgetClass == "Normal")
+                new Normal_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
+            else if(widgetClass == "Press")
+                new Press_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
+       
+            
+            // Feedback Processors
+            /*
+             
+             
+             //Midi_FeedbackProcessor* feedbackProcessor = nullptr;
+
+             
+            else if(widgetClass == "FB_TwoState" && (tokens.size() == 7 || tokens.size() == 8))
+            {
+                feedbackProcessor = new TwoState_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])), new MIDI_event_ex_t(strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
+                
+                if(tokens.size() == 8)
+                    feedbackProcessor->SetRefreshInterval(strToDouble(tokens[7]));
+            }
+            else if(tokens.size() == 4 || tokens.size() == 5)
+            {
+                if(widgetClass == "FB_Fader14Bit")
+                    feedbackProcessor = new Fader14Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                else if(widgetClass == "FB_Fader7Bit")
+                    feedbackProcessor = new Fader7Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                else if(widgetClass == "FB_Encoder")
+                    feedbackProcessor = new Encoder_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                else if(widgetClass == "FB_VUMeter")
+                    feedbackProcessor = new VUMeter_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                else if(widgetClass == "FB_GainReductionMeter")
+                    feedbackProcessor = new GainReductionMeter_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                else if(widgetClass == "FB_QConProXMasterVUMeter")
+                    feedbackProcessor = new QConProXMasterVUMeter_Midi_FeedbackProcessor(surface);
+                
+                if(tokens.size() == 5 && feedbackProcessor != nullptr)
+                    feedbackProcessor->SetRefreshInterval(strToDouble(tokens[4]));
+            }
+            else if(widgetClass == "FB_MCUTimeDisplay" && tokens.size() == 1)
+            {
+                feedbackProcessor = new MCU_TimeDisplay_Midi_FeedbackProcessor(surface);
+            }
+            else if(widgetClass == "FB_MCUVUMeter" && (tokens.size() == 2 || tokens.size() == 3))
+            {
+                feedbackProcessor = new MCUVUMeter_Midi_FeedbackProcessor(surface, stoi(tokens[1]));
+                
+                if(tokens.size() == 3 && feedbackProcessor != nullptr)
+                    feedbackProcessor->SetRefreshInterval(strToDouble(tokens[2]));
+            }
+            else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && (tokens.size() == 2 || tokens.size() == 3))
+            {
+                if(widgetClass == "FB_MCUDisplayUpper")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 0, 0x14, 0x12, stoi(tokens[1]));
+                else if(widgetClass == "FB_MCUDisplayLower")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 1, 0x14, 0x12, stoi(tokens[1]));
+                else if(widgetClass == "FB_MCUXTDisplayUpper")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 0, 0x15, 0x12, stoi(tokens[1]));
+                else if(widgetClass == "FB_MCUXTDisplayLower")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 1, 0x15, 0x12, stoi(tokens[1]));
+                
+                if(tokens.size() == 3 && feedbackProcessor != nullptr)
+                    feedbackProcessor->SetRefreshInterval(strToDouble(tokens[2]));
+            }
+            
+            else if((widgetClass == "FB_C4DisplayUpper" || widgetClass == "FB_C4DisplayLower") && (tokens.size() == 3 || tokens.size() == 4))
+            {
+                if(widgetClass == "FB_C4DisplayUpper")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 0, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
+                else if(widgetClass == "FB_C4DisplayLower")
+                    feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, 1, 0x17, stoi(tokens[1]) + 0x30, stoi(tokens[2]));
+                
+                if(tokens.size() == 4 && feedbackProcessor != nullptr)
+                    feedbackProcessor->SetRefreshInterval(strToDouble(tokens[3]));
+            }
+            
+            if(feedbackProcessor != nullptr)
+                widget->AddFeedbackProcessor(feedbackProcessor);
+             */
+        }
+    }
 
 }
 
