@@ -114,6 +114,8 @@ const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 // CSI.ini tokens used by GUI and initialization
 const string MidiInMonitorToken = "MidiInMonitor";
 const string MidiOutMonitorToken = "MidiOutMonitor";
+const string OSCInMonitorToken = "OSCInMonitor";
+const string OSCOutMonitorToken = "OSCOutMonitor";
 const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
