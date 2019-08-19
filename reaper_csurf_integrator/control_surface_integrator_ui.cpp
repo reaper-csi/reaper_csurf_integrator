@@ -156,6 +156,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SurfaceLine
 {
+    string type = "";
     string name = "";
     string remoteDeviceIP = "";
     int inPort = 0;
@@ -183,6 +184,7 @@ static int dlgResult = 0;
 
 static int pageIndex = 0;
 
+static string type = "";
 static char name[BUFSZ];
 static int inPort = 0;
 static int outPort = 0;
@@ -591,6 +593,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 if(dlgResult == IDOK)
                                 {
                                     SurfaceLine* surface = new SurfaceLine();
+                                    surface->type = MidiSurfaceToken;
                                     surface->name = name;
                                     surface->inPort = inPort;
                                     surface->outPort = outPort;
@@ -618,6 +621,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 if(dlgResult == IDOK)
                                 {
                                     SurfaceLine* surface = new SurfaceLine();
+                                    surface->type = OSCSurfaceToken;
                                     surface->name = name;
                                     surface->remoteDeviceIP = remoteDeviceIP;
                                     surface->inPort = inPort;
@@ -679,9 +683,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 dlgResult = false;
                                 editMode = true;
                                 
-                                if(strcmp(remoteDeviceIP, "") == 0)
+                                if(pages[pageIndex]->surfaces[index]->type == MidiSurfaceToken)
                                     DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
-                                else
+                                else if(pages[pageIndex]->surfaces[index]->type == OSCSurfaceToken)
                                     DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface1), hwndDlg, dlgProcOSCSurface);
 
                                 if(dlgResult == IDOK)
@@ -775,6 +779,22 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(tokens[1] == "On")
                             CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
                     }
+                    if(tokens[0] == OSCInMonitorToken)
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "On")
+                            CheckDlgButton(hwndDlg, IDC_CHECK_OSCInMon, BST_CHECKED);
+                    }
+                    else if(tokens[0] == OSCOutMonitorToken)
+                    {
+                        if(tokens.size() != 2)
+                            continue;
+                        
+                        if(tokens[1] == "On")
+                            CheckDlgButton(hwndDlg, IDC_CHECK_OSCOutMon, BST_CHECKED);
+                    }
                     else if(tokens[0] == PageToken)
                     {
                         if(tokens.size() != 8)
@@ -806,18 +826,22 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                     }
-                    else if(tokens[0] == MidiSurfaceToken)
+                    else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                     {
-                        if(tokens.size() != 7)
+                        if(tokens.size() != 7 && tokens.size() != 8)
                             continue;
                         
                         SurfaceLine* surface = new SurfaceLine();
+                        surface->type = tokens[0];
                         surface->name = tokens[1];
                         surface->inPort = atoi(tokens[2].c_str());
                         surface->outPort = atoi(tokens[3].c_str());
                         surface->templateFilename = tokens[4];
                         surface->zoneTemplateFolder = tokens[5];
                         surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
+                        
+                        if(tokens[0] == OSCSurfaceToken && tokens.size() > 7)
+                            surface->remoteDeviceIP = tokens[7];
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->surfaces.push_back(surface);
@@ -858,6 +882,21 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     line += "Off";
                 iniFile << line + "\n";
                 
+                line = OSCInMonitorToken + " ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_OSCInMon))
+                    line += "On";
+                else
+                    line += "Off";
+                iniFile << line + "\n";
+                
+                line = OSCOutMonitorToken + " ";
+                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_OSCOutMon))
+                    line += "On";
+                else
+                    line += "Off";
+                iniFile << line + "\n";
+
+                
                 iniFile << "\n";
                 
                 for(auto page : pages)
@@ -887,13 +926,17 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     for(auto surface : page->surfaces)
                     {
-                        line = MidiSurfaceToken + " ";
+                        line = surface->type + " ";
                         line += surface->name + " ";
                         line += to_string(surface->inPort) + " " ;
                         line += to_string(surface->outPort) + " " ;
                         line += surface->templateFilename + " ";
                         line += surface->zoneTemplateFolder + " " ;
-                        line += surface->useZoneLink == true ? "UseZoneLink\n" : "NoZoneLink\n";
+                        line += surface->useZoneLink == true ? "UseZoneLink" : "NoZoneLink";
+                        if(surface->type == OSCSurfaceToken)
+                            line += " " + surface->remoteDeviceIP;
+                        
+                        line += "\n";
                         
                         iniFile << line;
                     }
