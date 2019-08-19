@@ -186,7 +186,7 @@ static int pageIndex = 0;
 static char name[BUFSZ];
 static int inPort = 0;
 static int outPort = 0;
-static string remoteDeviceIP = "";
+static char remoteDeviceIP[BUFSZ];
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
 
@@ -353,6 +353,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             }
             else
             {
+                SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, "");
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiIn), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
@@ -436,6 +437,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
 
@@ -455,6 +457,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             else
             {
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, "");
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, "");
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, "");
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
@@ -469,14 +472,16 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
+
+                        char buf[BUFSZ];
                         
-                        int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
-                        if (currentSelection >= 0)
-                            inPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETITEMDATA, currentSelection, 0);
-                        currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETCURSEL, 0, 0);
-                        if (currentSelection >= 0)
-                            outPort = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiOut, CB_GETITEMDATA, currentSelection, 0);
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, buf, sizeof(buf));
+                        inPort = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, buf, sizeof(buf));
+                        outPort = atoi(buf);
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
@@ -667,16 +672,22 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 inPort = pages[pageIndex]->surfaces[index]->inPort;
                                 outPort = pages[pageIndex]->surfaces[index]->outPort;
+                                strcpy(remoteDeviceIP, pages[pageIndex]->surfaces[index]->remoteDeviceIP.c_str());
                                 strcpy(templateFilename, pages[pageIndex]->surfaces[index]->templateFilename.c_str());
                                 strcpy(zoneTemplateFolder, pages[pageIndex]->surfaces[index]->zoneTemplateFolder.c_str());
                                 useZoneLink = pages[pageIndex]->surfaces[index]->useZoneLink;
                                 dlgResult = false;
                                 editMode = true;
                                 
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
+                                if(strcmp(remoteDeviceIP, "") == 0)
+                                    DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
+                                else
+                                    DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface1), hwndDlg, dlgProcOSCSurface);
+
                                 if(dlgResult == IDOK)
                                 {
                                     pages[pageIndex]->surfaces[index]->name = name;
+                                    pages[pageIndex]->surfaces[index]->remoteDeviceIP = remoteDeviceIP;
                                     pages[pageIndex]->surfaces[index]->inPort = inPort;
                                     pages[pageIndex]->surfaces[index]->outPort = outPort;
                                     pages[pageIndex]->surfaces[index]->templateFilename = templateFilename;
