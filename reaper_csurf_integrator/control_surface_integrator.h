@@ -169,7 +169,8 @@ class Midi_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Midi_ControlSurface* surface_;
+    Midi_ControlSurface* surface_ = nullptr;
+    
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiFeedbackMessage1_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiFeedbackMessage2_ = new MIDI_event_ex_t(0, 0, 0);
@@ -177,7 +178,7 @@ protected:
     Midi_FeedbackProcessor(Midi_ControlSurface* surface) : surface_(surface) {}
     Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : surface_(surface), midiFeedbackMessage1_(feedback1) {}
     Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : surface_(surface), midiFeedbackMessage1_(feedback1), midiFeedbackMessage2_(feedback2) {}
-
+    
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
     
@@ -187,6 +188,34 @@ public:
         lastMessageSent_->midi_message[0] = 0;
         lastMessageSent_->midi_message[1] = 0;
         lastMessageSent_->midi_message[2] = 0;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class OSC_ControlSurface;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class OSC_FeedbackProcessor : public FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    OSC_ControlSurface* surface_ = nullptr;
+    string oscAddress_ = "";
+    float lastFloatValue_ = 0.0;
+    string lastStringValue_ = "";
+    
+public:
+    
+    OSC_FeedbackProcessor(OSC_ControlSurface* surface, string oscAddress) : surface_(surface), oscAddress_(oscAddress) {}
+    ~OSC_FeedbackProcessor() {}
+    
+    virtual void SetValue(double value) override;
+    virtual void SetValue(int param, double value) override;
+    virtual void SetValue(string value) override;
+
+    virtual void ClearCache() override
+    {
+        lastFloatValue_ = 0.0;
+        lastStringValue_ = "";
     }
 };
 
@@ -421,7 +450,8 @@ private:
     int outPort_ = 0;
     bool oscInMonitor_ = false;
     bool oscOutMonitor_ = false;
-    oscpkt::UdpSocket socket_;
+    oscpkt::UdpSocket inSocket_;
+    oscpkt::UdpSocket outSocket_;
     oscpkt::PacketReader packetReader_;
     oscpkt::PacketWriter packetWriter_;
     map<string, OSC_ControlSignalGenerator*> controlGeneratorsByMessage_;
@@ -430,60 +460,36 @@ private:
     
     void runServer()
     {
-        socket_.bindTo(inPort_);
-        //oscpkt::UdpSocket sock;
-        if (!socket_.isOk())
+        inSocket_.bindTo(inPort_);
+
+        if (!inSocket_.isOk())
         {
-            //cerr << "Error opening port " << PORT_NUM << ": " << sock.errorMessage() << "\n";
+            //cerr << "Error opening port " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
+            return;
         }
-        else
+        
+        if( ! outSocket_.connectTo(remoteDeviceIP_, outPort_))
         {
-            //cout << "Server started, will listen to packets on port " << PORT_NUM << std::endl;
-            //oscpkt::PacketReader pr;
-            //oscpkt::PacketWriter pw;
-            
-            /*
-             // Thinking of chucking this in the Run() function (changing while to if), does that make sense ?
-             // if (sock.isOk())
-             while (sock.isOk())
-             {
-             if (sock.receiveNextPacket(30)) // timeout, in ms
-             {
-             pr.init(sock.packetData(), sock.packetSize());
-             oscpkt::Message *msg;
-             
-             while (pr.isOk() && (msg = pr.popMessage()) != 0)
-             {
-             int iarg;
-             if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
-             {
-             //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
-             oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
-             pw.init().addMessage(repl);
-             sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
-             }
-             else
-             {
-             //cout << "Server: unhandled message: " << *msg << "\n";
-             }
-             }
-             }
-             }
-             // End -- Thinking of chucking this in the Run() function
-             */
-            
-            
-            
+            //cerr << "Error connecting " << remoteDeviceIP_ << ": " << outSocket_.errorMessage() << "\n";
+            return;
+        }
+        
+        outSocket_.bindTo(outPort_);
+       
+        if ( outSocket_.isOk())
+        {
+            //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
+            return;
         }
     }
    
     void HandleOSCInput()
     {
-        if(socket_.isOk())
+        if(inSocket_.isOk())
         {
-            if (socket_.receiveNextPacket(30))  // timeout, in ms
+            if (inSocket_.receiveNextPacket(30))  // timeout, in ms
             {
-                packetReader_.init(socket_.packetData(), socket_.packetSize());
+                packetReader_.init(inSocket_.packetData(), inSocket_.packetSize());
                 oscpkt::Message *message;
                 
                 while (packetReader_.isOk() && (message = packetReader_.popMessage()) != 0)
@@ -495,23 +501,6 @@ private:
                         message->arg().popFloat(value);
                         ProcessOSCMessage(message->addressPattern(), value);
                     }
-                    
-                    /*
-                     int iarg;
-                     if (msg->match("/ping").popInt32(iarg).isOkNoMoreArgs())
-                     {
-                     //cout << "Server: received /ping " << iarg << " from " << sock.packetOrigin() << "\n";
-                     //oscpkt::Message repl; repl.init("/pong").pushInt32(iarg+1);
-                     //pw.init().addMessage(repl);
-                     //sock.sendPacketTo(pw.packetData(), pw.packetSize(), sock.packetOrigin());
-                     }
-                     else
-                     {
-                     //cout << "Server: unhandled message: " << *msg << "\n";
-                     }
-                     */
-                    
-                    
                 }
             }
         }
@@ -566,15 +555,38 @@ public:
         controlGeneratorsByMessage_[message] = controlSignalGenerator;
     }
     
-    void SendOSCMessage(string message, double value)
+    void SendOSCMessage(string oscAddress, double value)
     {
-        //if(outPort_)
-           // outPort_->SendMsg(midiMessage, -1);
+        if(outSocket_.isOk())
+        {
+            oscpkt::Message message;
+            message.init(oscAddress).pushFloat(value);
+            packetWriter_.init().addMessage(message);
+            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        }
         
         if(oscOutMonitor_)
         {
             char buffer[250];
-            sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
+            sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+            DAW::ShowConsoleMsg(buffer);
+        }
+    }
+    
+    void SendOSCMessage(string oscAddress, string value)
+    {
+        if(outSocket_.isOk())
+        {
+            oscpkt::Message message;
+            message.init(oscAddress).pushStr(value);
+            packetWriter_.init().addMessage(message);
+            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        }
+        
+        if(oscOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
             DAW::ShowConsoleMsg(buffer);
         }
     }
