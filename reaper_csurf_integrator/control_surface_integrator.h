@@ -476,7 +476,7 @@ private:
         
         outSocket_.bindTo(outPort_);
        
-        if ( outSocket_.isOk())
+        if ( ! outSocket_.isOk())
         {
             //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
             return;
@@ -1543,7 +1543,7 @@ public:
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 
-                //DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
+                DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
 
                 string filename(fxName);
                 filename = regex_replace(filename, regex("[\\:*?<>|.,()]"), "_");
@@ -1558,7 +1558,23 @@ public:
                     for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                     {
                         DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                        //DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
+                        
+                        double stepOut = 0;
+                        double smallstepOut = 0;
+                        double largestepOut = 0;
+                        bool istoggleOut = false;
+                        
+                        DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
+                        
+                        bool isOk = TrackFX_GetParameterStepSizes(track, i, j, &stepOut, &smallstepOut, &largestepOut, &istoggleOut);
+                        
+                        DAW::ShowConsoleMsg(("\n" + to_string(stepOut) + " " +  to_string(smallstepOut) + " " + to_string(largestepOut) + " " + to_string(istoggleOut) + " ").c_str());
+
+                        
+                        
+                        
+
+                        
                         #ifdef _WIN32
                             rawFXFile << "\n" + string(fxParamName);
                         #else
