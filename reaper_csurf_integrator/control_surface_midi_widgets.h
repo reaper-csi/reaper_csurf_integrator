@@ -29,13 +29,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Press_OSC_ControlSignalGenerator : public OSC_ControlSignalGenerator
+class Toggle_OSC_ControlSignalGenerator : public OSC_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Press_OSC_ControlSignalGenerator() {}
+    virtual ~Toggle_OSC_ControlSignalGenerator() {}
     
-    Press_OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : OSC_ControlSignalGenerator(widget)
+    Toggle_OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : OSC_ControlSignalGenerator(widget)
     {
         surface->AddControlGenerator(message, this);
     }
