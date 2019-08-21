@@ -628,8 +628,8 @@ void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<str
             // Control Signal Generators
             if(widgetClass == "Normal")
                 new Normal_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
-            else if(widgetClass == "Press")
-                new Press_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
+            else if(widgetClass == "Toggle")
+                new Toggle_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
             // Feedback Processors
             else if(widgetClass == "FB_Processor")
                 widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, tokens[1]));
