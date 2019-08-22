@@ -626,10 +626,8 @@ void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<str
             string widgetClass = tokens[0];
 
             // Control Signal Generators
-            if(widgetClass == "Normal")
-                new Normal_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
-            else if(widgetClass == "Toggle")
-                new Toggle_OSC_ControlSignalGenerator(surface, widget, tokens[1]);
+            if(widgetClass == "Control")
+                new OSC_ControlSignalGenerator(surface, widget, tokens[1]);
             // Feedback Processors
             else if(widgetClass == "FB_Processor")
                 widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, tokens[1]));
@@ -916,6 +914,14 @@ void Widget::ClearCache()
 {
     for(auto feedbackProcessor : feedbackProcessors_)
         feedbackProcessor->ClearCache();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC_ControlSignalGenerator : public ControlSignalGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+OSC_ControlSignalGenerator::OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : ControlSignalGenerator(widget)
+{
+    surface->AddControlGenerator(message, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

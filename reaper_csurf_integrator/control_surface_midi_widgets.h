@@ -11,43 +11,6 @@
 #include "handy_functions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Normal_OSC_ControlSignalGenerator : public OSC_ControlSignalGenerator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Normal_OSC_ControlSignalGenerator() {}
-    
-    Normal_OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : OSC_ControlSignalGenerator(widget)
-    {
-        surface->AddControlGenerator(message, this);
-    }
-    
-    virtual void ProcessOSCMessage(string message, double value)override
-    {
-        widget_->DoAction(value);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Toggle_OSC_ControlSignalGenerator : public OSC_ControlSignalGenerator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Toggle_OSC_ControlSignalGenerator() {}
-    
-    Toggle_OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : OSC_ControlSignalGenerator(widget)
-    {
-        surface->AddControlGenerator(message, this);
-    }
-    
-    virtual void ProcessOSCMessage(string message, double value)override
-    {
-        if(value == 1.0)
-             widget_->DoAction(value);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Press_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
