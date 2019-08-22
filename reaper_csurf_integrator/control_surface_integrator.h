@@ -549,7 +549,7 @@ public:
         if(outSocket_.isOk())
         {
             string address(fxName);
-            address = regex_replace(address, regex("[ \\:*?<>|.,()]"), "_");
+            address = regex_replace(address, regex("[ \\:*?<>|.,()/]"), "_");
 
             oscpkt::Message message;
             message.init("/" + address);
@@ -1550,7 +1550,7 @@ public:
                 DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
 
                 string filename(fxName);
-                filename = regex_replace(filename, regex("[ \\:*?<>|.,()]"), "_");
+                filename = regex_replace(filename, regex("[ \\:*?<>|.,()/]"), "_");
                 filename += ".txt";
 
                 ofstream rawFXFile(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename);
