@@ -255,7 +255,7 @@ protected:
     const string name_ = "";
     vector<Widget*> widgets_;
 
-    FXActivationManager* FXActivationManager_ = nullptr;
+    FXActivationManager* fxActivationManager_ = nullptr;
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
     map<string, Zone*> zones_;
@@ -275,11 +275,12 @@ public:
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
     map<string, Zone*> &GetZones() { return zones_;}
-    FXActivationManager* GetFXActivationManager() { return FXActivationManager_; }
+    FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void TurnOffMonitoring() {}
+    virtual void LoadingFX(string fxName) {}
     
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -520,23 +521,8 @@ private:
     }
 
 public:
-    OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
-    : ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
-    {
-        InitWidgets(templateFilename);
-        
-        ResetAllWidgets();
-        
-        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-        InitZones(zoneFolder);
-        
-        runServer();
-        
-        GoZone("Home");
-    }
-    
+    OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
-    
     
     virtual void TurnOffMonitoring() override
     {
@@ -555,6 +541,17 @@ public:
         controlGeneratorsByMessage_[message] = controlSignalGenerator;
     }
     
+    virtual void LoadingFX(string fxName) override
+    {
+        if(outSocket_.isOk())
+        {
+            oscpkt::Message message;
+            message.init("/" + fxName);
+            packetWriter_.init().addMessage(message);
+            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        }
+    }
+
     void SendOSCMessage(string oscAddress, double value)
     {
         if(outSocket_.isOk())
@@ -817,6 +814,7 @@ public:
         return activeFXZones;
     }
     
+    void SetShouldMapSelectedFX(bool shouldMapSelectedFX) { shouldMapSelectedFX_ = shouldMapSelectedFX; }
     void ToggleMapSelectedFX();
     void ToggleMapFXMenu();
     void MapSelectedTrackFXToWidgets();
