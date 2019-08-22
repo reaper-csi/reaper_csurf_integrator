@@ -1040,7 +1040,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ControlSurface::ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink)
 {
-    FXActivationManager_ = new FXActivationManager(this);
+    fxActivationManager_ = new FXActivationManager(this);
     sendsActivationManager_ = new SendsActivationManager(this);
 }
 
@@ -1097,7 +1097,7 @@ string ControlSurface::GetLocalZoneAlias(string zoneName)
 
 int ControlSurface::GetParentZoneIndex(Zone* childZone)
 {
-    for(auto zone : FXActivationManager_->GetActiveZones())
+    for(auto zone : fxActivationManager_->GetActiveZones())
         if(childZone->GetParentZoneName() == zone->GetName())
             return zone->GetZoneIndex();
 
@@ -1146,6 +1146,23 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+OSC_ControlSurface::OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
+: ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
+{
+    fxActivationManager_->SetShouldMapSelectedFX(true);
+    
+    InitWidgets(templateFilename);
+    
+    ResetAllWidgets();
+    
+    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
+    InitZones(zoneFolder);
+    
+    runServer();
+    
+    GoZone("Home");
+}
+
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
@@ -1321,7 +1338,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         if(shouldMapSelectedFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
             Zone* zone = surface_->GetZones()[FXName];
-            
+            surface_->LoadingFX(FXName);
             zone->Activate(i);
             activeSelectedTrackFXZones_.push_back(zone);
             openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
@@ -1418,6 +1435,7 @@ void FXActivationManager::MapFocusedTrackFXToWidgets()
         if(surface_->GetZones().count(FXName) > 0 && surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
             Zone* zone = surface_->GetZones()[FXName];
+            surface_->LoadingFX(FXName);
             zone->Activate(fxIndex);
             activeFocusedFXZones_.push_back(zone);
         }
