@@ -1150,7 +1150,8 @@ OSC_ControlSurface::OSC_ControlSurface(Page* page, const string name, string tem
 : ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
 {
     fxActivationManager_->SetShouldMapSelectedFX(true);
-    
+    fxActivationManager_->SetShowFXWindows(true);
+
     InitWidgets(templateFilename);
     
     ResetAllWidgets();
@@ -1319,7 +1320,10 @@ void FXActivationManager::ToggleMapFXMenu()
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
     for(auto zone : activeSelectedTrackFXZones_)
+    {
+        surface_->LoadingFX("Home");
         zone->Deactivate();
+    }
     
     activeSelectedTrackFXZones_.clear();
     DeleteFXWindows();
