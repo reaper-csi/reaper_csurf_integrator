@@ -12,10 +12,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{   
+{
 public:
     FXParam(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
-
+    
     virtual void Do(double value) override
     {
         if(MediaTrack* track = widget_->GetTrack())
@@ -27,8 +27,28 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             double min, max = 0;
+            double toggledValue = ! DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
+            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, toggledValue);
+        }
+    }
+};
 
-            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, ! DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max));
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXParamRelative : public FXAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FXParamRelative(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+       
+    virtual void Do(double relativeValue) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double min, max = 0;
+            double value = DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
+            value +=  relativeValue;
+            
+            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, value);
         }
     }
 };
