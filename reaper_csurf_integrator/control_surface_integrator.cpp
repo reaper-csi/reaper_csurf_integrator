@@ -683,6 +683,7 @@ void Manager::InitActionDictionary()
     actions_["Reaper"] =                            [this](WidgetActionManager* manager, vector<string> params) { return new ReaperAction(manager, params); };
     actions_["FXNameDisplay"] =                     [this](WidgetActionManager* manager, vector<string> params) { return new FXNameDisplay(manager, params); };
     actions_["FXParam"] =                           [this](WidgetActionManager* manager, vector<string> params) { return new FXParam(manager, params); };
+    actions_["FXParamRelative"] =                   [this](WidgetActionManager* manager, vector<string> params) { return new FXParamRelative(manager, params); };
     actions_["FXParamNameDisplay"] =                [this](WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(manager, params); };
     actions_["FXParamValueDisplay"] =               [this](WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(manager, params); };
     actions_["FXGainReductionMeter"] =              [this](WidgetActionManager* manager, vector<string> params) { return new FXGainReductionMeter(manager, params); };
@@ -1265,7 +1266,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
     
     int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
     
-    for(int i = 0; i < numSendSlots_; i ++)
+    for(int i = 0; i < numSendSlots_; i++)
     {
         string zoneName = "Send" + to_string(i + 1);
         
