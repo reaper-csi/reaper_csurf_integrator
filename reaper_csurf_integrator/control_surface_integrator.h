@@ -283,8 +283,8 @@ public:
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
-    virtual void TurnOffMonitoring() {}
-    virtual void LoadingFX(string fxName) {}
+    virtual void ResetAll() {}
+    virtual void LoadingZone(string zoneName) {}
     
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -401,7 +401,7 @@ public:
     virtual ~Midi_ControlSurface() {}
     
     
-    virtual void TurnOffMonitoring() override
+    virtual void ResetAll() override
     {
         midiInMonitor_ = false;
         midiOutMonitor_ = false;
@@ -528,8 +528,9 @@ public:
     OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
     
-    virtual void TurnOffMonitoring() override
+    virtual void ResetAll() override
     {
+        LoadingZone("Home");
         oscInMonitor_ = false;
         oscOutMonitor_ = false;
     }
@@ -545,11 +546,11 @@ public:
         controlGeneratorsByMessage_[message] = controlSignalGenerator;
     }
     
-    virtual void LoadingFX(string fxName) override
+    virtual void LoadingZone(string zoneName) override
     {
         if(outSocket_.isOk())
         {
-            string address(fxName);
+            string address(zoneName);
             address = regex_replace(address, regex(BadFileChars), "_");
 
             oscpkt::Message message;
@@ -1016,18 +1017,7 @@ public:
 
     void Run()
     {
-        /*
-        cycles++;
-        
-
-        if(cycles < 60)
-            return;
-        
-        cycles = 0;
-
         int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        //*/
-        
         
         tracks_.clear();
         
@@ -1083,14 +1073,20 @@ public:
             trackOffset_ = top;
         
         /*
-        int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-        
-        
-        char msgBuffer[250];
-        
-        sprintf(msgBuffer, "%d microseconds\n", duration);
-        DAW::ShowConsoleMsg(msgBuffer);
-        //*/
+         cycles++;
+         
+         if(cycles > 60)
+         {
+         cycles = 0;
+         
+         int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+         
+         char msgBuffer[250];
+         
+         sprintf(msgBuffer, "%d microseconds for TrackNavigator run method\n", duration);
+         DAW::ShowConsoleMsg(msgBuffer);
+         }
+         */
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
@@ -1194,10 +1190,10 @@ public:
             surface->Run();
     }
     
-    void TurnOffMonitoring()
+    void ResetAll()
     {
         for(auto surface : surfaces_)
-            surface->TurnOffMonitoring();
+            surface->ResetAll();
     }
 
     void ResetAllWidgets()
@@ -1436,7 +1432,7 @@ public:
         
         if(pages_.size() > 0)
         {
-            pages_[currentPageIndex_]->TurnOffMonitoring();
+            pages_[currentPageIndex_]->ResetAll();
             pages_[currentPageIndex_]->ResetAllWidgets();
         }
     }
