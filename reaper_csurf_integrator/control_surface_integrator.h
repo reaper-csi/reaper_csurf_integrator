@@ -492,7 +492,7 @@ private:
     {
         if(inSocket_.isOk())
         {
-            if (inSocket_.receiveNextPacket(30))  // timeout, in ms
+            if (inSocket_.receiveNextPacket(1))  // timeout, in ms
             {
                 packetReader_.init(inSocket_.packetData(), inSocket_.packetSize());
                 oscpkt::Message *message;
