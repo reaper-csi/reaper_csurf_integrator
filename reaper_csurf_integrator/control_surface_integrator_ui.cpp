@@ -19,12 +19,18 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager();
+    SetTimer(g_hwnd, 1, 1, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
 {
     if(TheManager)
         TheManager->ResetAllWidgets();
+}
+
+void CSurfIntegrator::HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
+{
+    TheManager->HandleOSCInput();
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
