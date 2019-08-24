@@ -19,7 +19,7 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager();
-    SetTimer(g_hwnd, 1, 1, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
+    SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
