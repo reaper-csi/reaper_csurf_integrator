@@ -285,7 +285,8 @@ public:
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
-    
+    virtual void HandleOSCInput() {}
+
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
@@ -488,7 +489,7 @@ private:
         }
     }
    
-    void HandleOSCInput()
+    void HandleOSCInput() override
     {
         if(inSocket_.isOk())
         {
@@ -537,7 +538,6 @@ public:
     
     virtual void Run() override
     {
-        HandleOSCInput();
         ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
     }
     
@@ -548,15 +548,23 @@ public:
     
     virtual void LoadingZone(string zoneName) override
     {
+        string oscAddress(zoneName);
+        oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
+        oscAddress = "/" + oscAddress;
+        
         if(outSocket_.isOk())
         {
-            string address(zoneName);
-            address = regex_replace(address, regex(BadFileChars), "_");
-
             oscpkt::Message message;
-            message.init("/" + address);
+            message.init(oscAddress);
             packetWriter_.init().addMessage(message);
             outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        }
+        
+        if(oscOutMonitor_)
+        {
+            char buffer[250];
+            sprintf(buffer, "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
+            DAW::ShowConsoleMsg(buffer);
         }
     }
 
@@ -1182,6 +1190,12 @@ public:
     
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
+    void HandleOSCInput()
+    {
+        for(auto surface : surfaces_)
+            surface->HandleOSCInput();
+    }
+    
     void Run()
     {
         trackNavigationManager_->Run();
@@ -1479,6 +1493,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
+    }
+    
+    void HandleOSCInput()
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->HandleOSCInput();
     }
     
     void Run()

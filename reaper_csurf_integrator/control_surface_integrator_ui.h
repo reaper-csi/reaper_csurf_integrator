@@ -27,7 +27,7 @@ public:
     virtual bool GetTouchState(MediaTrack *trackid, int touchedControl) override;
     virtual void Run() override;
     virtual void SetTrackListChange() override;
-    void LayoutChanged();
+    static void HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc);
     const char *GetTypeString() override;
     const char *GetDescString() override;
     const char *GetConfigString() override; // string of configuration data
