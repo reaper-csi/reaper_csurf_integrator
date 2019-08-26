@@ -1250,11 +1250,11 @@ public:
     {
         string modifiers = "";
         
-        if(isShift_)
+        if(isShift_ || GetAsyncKeyState(VK_SHIFT))
             modifiers += Shift;
         if(isOption_)
             modifiers += Option;
-        if(isControl_)
+        if(isControl_  || GetAsyncKeyState(VK_CONTROL))
             modifiers +=  Control;
         if(isAlt_)
             modifiers += Alt;
