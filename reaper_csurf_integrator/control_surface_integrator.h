@@ -239,6 +239,7 @@ public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShouldMapSends() { return shouldMapSends_; }
+    int GetNumSendSlots() { return numSendSlots_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     vector<Zone*> GetActiveZones() { return activeSendZones_; }
     
@@ -282,6 +283,7 @@ public:
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
+    int GetNumSendSlots() { return sendsActivationManager_->GetNumSendSlots(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
@@ -814,6 +816,7 @@ public:
     
     bool GetShouldMapFXMenus() { return shouldMapFXMenus_; }
     bool GetShouldMapSelectedFX() { return shouldMapSelectedFX_; }
+    int GetNumFXSlots() { return numFXlots_; }
     void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
     bool GetShowFXWindows() { return showFXWindows_; }
     

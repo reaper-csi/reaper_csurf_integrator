@@ -153,6 +153,10 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
         Zone* zone = new Zone(surface, tokens[1], filePath, alias);
         if(surface->AddZone(zone))
         {
+            if((tokens[1].compare(0, 4, "Send")) == 0)
+                surface->SetNumSendSlots(surface->GetNumSendSlots() + 1);
+            if((tokens[1].compare(0, 6, "FXMenu")) == 0)
+                surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
             expandedZones.push_back(zone);
             expandedZonesIds.push_back("");
         }
