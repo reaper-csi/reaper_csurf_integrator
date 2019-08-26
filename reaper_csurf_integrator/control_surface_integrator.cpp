@@ -1157,7 +1157,6 @@ OSC_ControlSurface::OSC_ControlSurface(Page* page, const string name, string tem
 : ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
 {
     fxActivationManager_->SetShouldMapSelectedFX(true);
-    fxActivationManager_->SetShowFXWindows(true);
 
     InitWidgets(templateFilename);
     
