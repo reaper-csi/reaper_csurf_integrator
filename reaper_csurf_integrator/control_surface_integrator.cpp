@@ -1303,13 +1303,20 @@ void FXActivationManager::ToggleMapSelectedFX()
     {
         for(auto zone : activeSelectedTrackFXZones_)
             zone->Deactivate();
-    
+        
         activeSelectedTrackFXZones_.clear();
         
         DeleteFXWindows();
     }
-
+    
     surface_->GetPage()->OnTrackSelection();
+}
+
+void FXActivationManager::ToggleMapFocusedTrackFX()
+{
+    shouldMapFocusedTrackFX_ = ! shouldMapFocusedTrackFX_;
+    
+    MapFocusedTrackFXToWidgets();
 }
 
 void FXActivationManager::ToggleMapFXMenu()
@@ -1426,8 +1433,6 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
 
 void FXActivationManager::MapFocusedTrackFXToWidgets()
 {
-    mapsFocusedTrackFXToWidgets_ = true;
-    
     int trackNumber = 0;
     int itemNumber = 0;
     int fxIndex = 0;
@@ -1445,7 +1450,7 @@ void FXActivationManager::MapFocusedTrackFXToWidgets()
     
     activeFocusedFXZones_.clear();
     
-    if(focusedTrack)
+    if(shouldMapFocusedTrackFX_ && focusedTrack)
     {
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
