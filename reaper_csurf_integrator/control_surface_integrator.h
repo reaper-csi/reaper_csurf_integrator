@@ -781,12 +781,12 @@ private:
     int numFXlots_ = 0;
     bool shouldMapSelectedFX_ = false;
     bool shouldMapFXMenus_ = false;
+    bool shouldMapFocusedTrackFX_ = false;
     vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeFXMenuZones_;
     vector<Zone*> activeFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    bool mapsFocusedTrackFXToWidgets_ = false;
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -834,7 +834,10 @@ public:
     }
     
     void SetShouldMapSelectedFX(bool shouldMapSelectedFX) { shouldMapSelectedFX_ = shouldMapSelectedFX; }
+    void SetShouldMapFXMenus(bool shouldMapFXMenus) { shouldMapFXMenus_ = shouldMapFXMenus; }
+    void SetShouldMapFocusedTrackFX(bool shouldMapFocusedTrackFX) { shouldMapFocusedTrackFX_ = shouldMapFocusedTrackFX; }
     void ToggleMapSelectedFX();
+    void ToggleMapFocusedTrackFX();
     void ToggleMapFXMenu();
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
@@ -851,13 +854,12 @@ public:
             CloseFXWindows();
     }
     
-    
     void TrackFXListChanged()
     {
         if(shouldMapSelectedFX_)
             MapSelectedTrackFXToWidgets();
         
-        if(mapsFocusedTrackFXToWidgets_)
+        if(shouldMapFocusedTrackFX_)
             MapFocusedTrackFXToWidgets();
         
         if(shouldMapFXMenus_)
