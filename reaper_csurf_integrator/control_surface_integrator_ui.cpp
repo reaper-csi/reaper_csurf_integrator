@@ -170,6 +170,10 @@ struct SurfaceLine
     string templateFilename = "";
     string zoneTemplateFolder = "";
     bool useZoneLink = false;
+    bool autoMapSends = false;
+    bool autoMapFX = false;
+    bool autoMapFXMenu = false;
+    bool autoMapFocusedFX = false;
 };
 
 struct PageLine
@@ -177,6 +181,7 @@ struct PageLine
     string name = "";
     bool followMCP = true;
     bool synchPages = false;
+    bool useScrollLink = false;
     bool trackColouring = false;
     int red = 0;
     int green = 0;
@@ -200,8 +205,14 @@ static char zoneTemplateFolder[BUFSZ];
 
 static bool followMCP = true;
 static bool synchPages = false;
-static bool useZoneLink = false;
 static bool trackColouring = false;
+static bool useScrollLink = false;
+
+static bool useZoneLink = false;
+static bool autoMapSends = false;
+static bool autoMapFX = false;
+static bool autoMapFXMenu = false;
+static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
 
@@ -226,6 +237,11 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                     CheckDlgButton(hwndDlg, IDC_CHECK_SynchPages, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_SynchPages, BST_UNCHECKED);
+                
+                if(useScrollLink)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_UNCHECKED);
                 
                 if(trackColouring)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
@@ -264,6 +280,11 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                             synchPages = true;
                         else
                             synchPages = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ScrollLink))
+                            useScrollLink = true;
+                        else
+                            useScrollLink = false;
                         
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
                             trackColouring = true;
@@ -358,6 +379,26 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
+                
+                if(autoMapSends)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
+                
+                if(autoMapFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
+                
+                if(autoMapFXMenu)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
+                
+                if(autoMapFocusedFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
             }
             else
             {
@@ -392,6 +433,26 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                             useZoneLink = true;
                         else
                             useZoneLink = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
+                            autoMapSends = true;
+                        else
+                            autoMapSends = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
+                            autoMapFX = true;
+                        else
+                            autoMapFX = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
+                            autoMapFXMenu = true;
+                        else
+                            autoMapFXMenu = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
+                            autoMapFocusedFX = true;
+                        else
+                            autoMapFocusedFX = false;
                         
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
@@ -461,6 +522,26 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
+                
+                if(autoMapSends)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
+                
+                if(autoMapFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
+                
+                if(autoMapFXMenu)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
+                
+                if(autoMapFocusedFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
             }
             else
             {
@@ -498,7 +579,27 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             useZoneLink = true;
                         else
                             useZoneLink = false;
+
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
+                            autoMapSends = true;
+                        else
+                            autoMapSends = false;
                         
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
+                            autoMapFX = true;
+                        else
+                            autoMapFX = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
+                            autoMapFXMenu = true;
+                        else
+                            autoMapFXMenu = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
+                            autoMapFocusedFX = true;
+                        else
+                            autoMapFocusedFX = false;
+
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -580,6 +681,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 page->name = name;
                                 page->followMCP = followMCP;
                                 page->synchPages = synchPages;
+                                page->useScrollLink = useScrollLink;
                                 page->trackColouring = trackColouring;
                                 pages.push_back(page);
                                 AddListEntry(hwndDlg, name, IDC_LIST_Pages);
@@ -606,7 +708,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
-                                    
+                                    surface->autoMapSends = autoMapSends;
+                                    surface->autoMapFX = autoMapFX;
+                                    surface->autoMapFXMenu = autoMapFXMenu;
+                                    surface->autoMapFocusedFX = autoMapFocusedFX;
+
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
@@ -635,6 +741,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->useZoneLink = useZoneLink;
+                                    surface->autoMapSends = autoMapSends;
+                                    surface->autoMapFX = autoMapFX;
+                                    surface->autoMapFXMenu = autoMapFXMenu;
+                                    surface->autoMapFocusedFX = autoMapFocusedFX;
                                     
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
@@ -654,6 +764,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(name));
                                 followMCP = pages[index]->followMCP;
                                 synchPages = pages[index]->synchPages;
+                                useScrollLink = pages[index]->useScrollLink;
                                 trackColouring = pages[index]->trackColouring;
                                 dlgResult = false;
                                 editMode = true;
@@ -663,6 +774,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[index]->name = name;
                                     pages[index]->followMCP = followMCP;
                                     pages[index]->synchPages = synchPages;
+                                    pages[index]->useScrollLink = useScrollLink;
                                     pages[index]->trackColouring = trackColouring;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                     for(auto* page :  pages)
@@ -686,6 +798,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 strcpy(templateFilename, pages[pageIndex]->surfaces[index]->templateFilename.c_str());
                                 strcpy(zoneTemplateFolder, pages[pageIndex]->surfaces[index]->zoneTemplateFolder.c_str());
                                 useZoneLink = pages[pageIndex]->surfaces[index]->useZoneLink;
+                                autoMapSends = pages[pageIndex]->surfaces[index]->autoMapSends;
+                                autoMapFX = pages[pageIndex]->surfaces[index]->autoMapFX;
+                                autoMapFXMenu = pages[pageIndex]->surfaces[index]->autoMapFXMenu;
+                                autoMapFocusedFX = pages[pageIndex]->surfaces[index]->autoMapFocusedFX;
                                 dlgResult = false;
                                 editMode = true;
                                 
@@ -703,6 +819,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->templateFilename = templateFilename;
                                     pages[pageIndex]->surfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
                                     pages[pageIndex]->surfaces[index]->useZoneLink = useZoneLink;
+                                    pages[pageIndex]->surfaces[index]->autoMapSends = autoMapSends;
+                                    pages[pageIndex]->surfaces[index]->autoMapFX =autoMapFX;
+                                    pages[pageIndex]->surfaces[index]->autoMapFXMenu = autoMapFXMenu;
+                                    pages[pageIndex]->surfaces[index]->autoMapFocusedFX = autoMapFocusedFX;
                                 }
                             }
                         }
@@ -803,7 +923,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == PageToken)
                     {
-                        if(tokens.size() != 8)
+                        if(tokens.size() != 9)
                             continue;
  
                         PageLine* page = new PageLine();
@@ -819,14 +939,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else
                             page->synchPages = false;
                         
-                        if(tokens[4] == "UseTrackColoring")
+                        if(tokens[4] == "UseScrollLink")
+                            page->useScrollLink = true;
+                        else
+                            page->useScrollLink = false;
+                        
+                        if(tokens[5] == "UseTrackColoring")
                             page->trackColouring = true;
                         else
                             page->trackColouring = false;
                         
-                        page->red = atoi(tokens[5].c_str());
-                        page->green = atoi(tokens[6].c_str());
-                        page->blue = atoi(tokens[7].c_str());
+                        page->red = atoi(tokens[6].c_str());
+                        page->green = atoi(tokens[7].c_str());
+                        page->blue = atoi(tokens[8].c_str());
                         
                         pages.push_back(page);
                         
@@ -834,7 +959,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                     {
-                        if(tokens.size() != 7 && tokens.size() != 8)
+                        if(tokens.size() != 11 && tokens.size() != 12)
                             continue;
                         
                         SurfaceLine* surface = new SurfaceLine();
@@ -845,9 +970,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->templateFilename = tokens[4];
                         surface->zoneTemplateFolder = tokens[5];
                         surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
-                        
-                        if(tokens[0] == OSCSurfaceToken && tokens.size() > 7)
-                            surface->remoteDeviceIP = tokens[7];
+                        surface->autoMapSends = tokens[7] == "AutoMapSends" ? true : false;
+                        surface->autoMapFX = tokens[8] == "AutoMapFX" ? true : false;
+                        surface->autoMapFXMenu = tokens[9] == "AutoMapFXMenu" ? true : false;
+                        surface->autoMapFocusedFX = tokens[10] == "AutoMapFocusedFX" ? true : false;
+
+                        if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
+                            surface->remoteDeviceIP = tokens[11];
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->surfaces.push_back(surface);
@@ -919,6 +1048,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     else
                         line += "NoSynchPages ";
                     
+                    if(page->useScrollLink)
+                        line += "UseScrollLink ";
+                    else
+                        line += "NoScrollLink ";
+                    
                     if(page->trackColouring)
                         line += "UseTrackColoring ";
                     else
@@ -938,7 +1072,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         line += to_string(surface->outPort) + " " ;
                         line += surface->templateFilename + " ";
                         line += surface->zoneTemplateFolder + " " ;
-                        line += surface->useZoneLink == true ? "UseZoneLink" : "NoZoneLink";
+                        line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
+                        line += surface->autoMapSends == true ? "AutoMapSends " : "NoAutoMapSends ";
+                        line += surface->autoMapFX == true ? "AutoMapFX " : "NoAutoMapFX ";
+                        line += surface->autoMapFXMenu == true ? "AutoMapFXMenu " : "NoAutoMapFXMenu ";
+                        line += surface->autoMapFocusedFX == true ? "AutoMapFocusedFX " : "NoAutoMapFocusedFX ";
                         if(surface->type == OSCSurfaceToken)
                             line += " " + surface->remoteDeviceIP;
                         

@@ -820,15 +820,20 @@ void Manager::Init()
                 }
                 else if(tokens[0] == PageToken)
                 {
-                    if(tokens.size() != 8)
+                    if(tokens.size() != 9)
                         continue;
                     
-                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseTrackColoring" ? true : false, atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), atoi(tokens[7].c_str()));
+                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[5] == "UseTrackColoring" ? true : false, atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()));
                     pages_.push_back(currentPage);
+                    
+                    if(tokens[4] == "UseScrollLink")
+                        currentPage->GetTrackNavigationManager()->SetScrollLink(true);
+                    else
+                        currentPage->GetTrackNavigationManager()->SetScrollLink(false);
                 }
                 else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                 {
-                    if(tokens.size() != 7 && tokens.size() != 8)
+                    if(tokens.size() != 11 && tokens.size() != 12)
                         continue;
                     
                     int inPort = atoi(tokens[2].c_str());
@@ -836,10 +841,26 @@ void Manager::Init()
                     
                     if(currentPage)
                     {
+                        ControlSurface* surface = nullptr;
+                        
                         if(tokens[0] == MidiSurfaceToken)
-                            currentPage->AddSurface(new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false));
-                        else if(tokens[0] == OSCSurfaceToken && tokens.size() > 7)
-                            currentPage->AddSurface(new OSC_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[7]));
+                            surface = new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false);
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
+                            surface = new OSC_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
+
+                        currentPage->AddSurface(surface);
+                        
+                        if(tokens[7] == "AutoMapSends")
+                            surface->SetShouldMapSends(true);
+                        
+                        if(tokens[8] == "AutoMapFX")
+                            surface->GetFXActivationManager()->SetShouldMapSelectedFX(true);
+                        
+                        if(tokens[9] == "AutoMapFXMenu")
+                            surface->GetFXActivationManager()->SetShouldMapFXMenus(true);
+                        
+                        if(tokens[10] == "AutoMapFocusedFX")
+                            surface->GetFXActivationManager()->SetShouldMapFocusedTrackFX(true);
                     }
                 }
             }
@@ -1302,7 +1323,10 @@ void FXActivationManager::ToggleMapSelectedFX()
     if( ! shouldMapSelectedFX_)
     {
         for(auto zone : activeSelectedTrackFXZones_)
+        {
+            surface_->LoadingZone(zone->GetName());
             zone->Deactivate();
+        }
         
         activeSelectedTrackFXZones_.clear();
         
@@ -1326,8 +1350,11 @@ void FXActivationManager::ToggleMapFXMenu()
     if( ! shouldMapFXMenus_)
     {
         for(auto zone : activeFXMenuZones_)
+        {
+            surface_->LoadingZone(zone->GetName());
             zone->Deactivate();
-    
+        }
+
         activeFXMenuZones_.clear();
     }
 
