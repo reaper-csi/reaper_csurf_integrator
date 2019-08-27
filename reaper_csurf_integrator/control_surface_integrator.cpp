@@ -526,15 +526,15 @@ void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<st
             
             // Control Signal Generators
             if(widgetClass == "Press" && tokens.size() == 4)
-                new Press_Midi_ControlSignalGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                new Press_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             else if(widgetClass == "PressRelease" && tokens.size() == 7)
-                new PressRelease_Midi_ControlSignalGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])), new MIDI_event_ex_t(strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
+                new PressRelease_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])), new MIDI_event_ex_t(strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
             else if(widgetClass == "Fader14Bit" && tokens.size() == 4)
-                new Fader14Bit_Midi_ControlSignalGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                new Fader14Bit_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             else if(widgetClass == "Fader7Bit" && tokens.size() == 4)
-                new Fader7Bit_Midi_ControlSignalGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                new Fader7Bit_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             else if(widgetClass == "Encoder" && tokens.size() == 4)
-                new Encoder_Midi_ControlSignalGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                new Encoder_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             
             // Feedback Processors
             else if(widgetClass == "FB_TwoState" && (tokens.size() == 7 || tokens.size() == 8))
@@ -631,7 +631,7 @@ void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<str
 
             // Control Signal Generators
             if(widgetClass == "Control")
-                new OSC_ControlSignalGenerator(surface, widget, tokens[1]);
+                new OSC_CSIMessageGenerator(surface, widget, tokens[1]);
             // Feedback Processors
             else if(widgetClass == "FB_Processor")
                 widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, tokens[1]));
@@ -922,11 +922,11 @@ void Widget::ClearCache()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// OSC_ControlSignalGenerator : public ControlSignalGenerator
+// OSC_CSIMessageGenerator : public CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSignalGenerator::OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : ControlSignalGenerator(widget)
+OSC_CSIMessageGenerator::OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(widget)
 {
-    surface->AddControlGenerator(message, this);
+    surface->AddCSIMessageGenerator(message, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
