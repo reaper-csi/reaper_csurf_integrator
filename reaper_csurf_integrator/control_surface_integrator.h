@@ -239,6 +239,7 @@ public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShouldMapSends() { return shouldMapSends_; }
+    void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
     int GetNumSendSlots() { return numSendSlots_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
     vector<Zone*> GetActiveZones() { return activeSendZones_; }
@@ -283,6 +284,7 @@ public:
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
+    void SetShouldMapSends(bool shouldMapSends) { sendsActivationManager_->SetShouldMapSends(shouldMapSends); }
     int GetNumSendSlots() { return sendsActivationManager_->GetNumSendSlots(); }
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void ResetAll() {}
@@ -1003,6 +1005,8 @@ public:
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return tracks_.size(); }
     
+    void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
+    
     TrackNavigator* AddTrackNavigator();
     void OnTrackSelection();
     void OnTrackSelectionBySurface(MediaTrack* track);
@@ -1255,11 +1259,11 @@ public:
     {
         string modifiers = "";
         
-        if(isShift_ || GetAsyncKeyState(VK_SHIFT))
+        if(isShift_ /*|| GetAsyncKeyState(VK_SHIFT)*/)
             modifiers += Shift;
         if(isOption_)
             modifiers += Option;
-        if(isControl_  || GetAsyncKeyState(VK_CONTROL))
+        if(isControl_  /*|| GetAsyncKeyState(VK_CONTROL)*/)
             modifiers +=  Control;
         if(isAlt_)
             modifiers += Alt;
