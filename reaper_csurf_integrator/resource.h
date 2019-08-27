@@ -33,9 +33,15 @@
 #define IDC_RADIO_TCP                   1037
 #define IDC_CHECK_ZoneLink              1038
 #define IDC_EDIT_OSCSurfaceName         1039
-#define IDC_EDIT_OSCRemoteDeviceIP      1040
-#define IDC_EDIT_OSCOutPort             1041
-#define IDC_EDIT_OSCInPort              1042
+#define IDC_CHECK_ScrollLink            1040
+#define IDC_EDIT_OSCRemoteDeviceIP      1041
+#define IDC_CHECK_AutoMapSends          1042
+#define IDC_EDIT_OSCOutPort             1043
+#define IDC_CHECK_AutoMapFX             1044
+#define IDC_EDIT_OSCInPort              1045
+#define IDC_CHECK_AutoMapFXMenu         1046
+#define IDC_CHECK_AutoMapFocusedFX      1047
+
 
 // Next default values for new objects
 // 
