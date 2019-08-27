@@ -113,34 +113,34 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ControlSignalGenerator
+class CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
     Widget* widget_ = nullptr;
-    ControlSignalGenerator(Widget* widget) : widget_(widget) {}
+    CSIMessageGenerator(Widget* widget) : widget_(widget) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Midi_ControlSignalGenerator : public ControlSignalGenerator
+class Midi_CSIMessageGenerator : public CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Midi_ControlSignalGenerator(Widget* widget) : ControlSignalGenerator(widget) {}
+    Midi_CSIMessageGenerator(Widget* widget) : CSIMessageGenerator(widget) {}
     
 public:
-    virtual ~Midi_ControlSignalGenerator() {}
+    virtual ~Midi_CSIMessageGenerator() {}
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class OSC_ControlSurface;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class OSC_ControlSignalGenerator : public ControlSignalGenerator
+class OSC_CSIMessageGenerator : public CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    OSC_ControlSignalGenerator(OSC_ControlSurface* surface, Widget* widget, string message);
+    OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message);
     
     void ProcessOSCMessage(string message, double value)
     {
@@ -352,7 +352,7 @@ private:
     midi_Output* midiOutput_ = nullptr;
     bool midiInMonitor_ = false;
     bool midiOutMonitor_ = false;
-    map<int, Midi_ControlSignalGenerator*> controlGeneratorsByMessage_;
+    map<int, Midi_CSIMessageGenerator*> CSIMessageGeneratorsByMidiMessage_;
     
     void InitWidgets(string templateFilename);
 
@@ -379,12 +379,12 @@ private:
         }
         
         // At this point we don't know how much of the message comprises the key, so try all three
-        if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
-            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
-        else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
-        else if(controlGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
-            controlGeneratorsByMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+        if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
+        else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+        else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
     }
     
 public:
@@ -416,9 +416,9 @@ public:
         ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
     }
     
-    void AddControlGenerator(int message, Midi_ControlSignalGenerator* controlGenerator)
+    void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
     {
-        controlGeneratorsByMessage_[message] = controlGenerator;
+        CSIMessageGeneratorsByMidiMessage_[message] = messageGenerator;
     }
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage)
@@ -462,7 +462,7 @@ private:
     oscpkt::UdpSocket outSocket_;
     oscpkt::PacketReader packetReader_;
     oscpkt::PacketWriter packetWriter_;
-    map<string, OSC_ControlSignalGenerator*> controlGeneratorsByMessage_;
+    map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
     void InitWidgets(string templateFilename);
     
@@ -516,8 +516,8 @@ private:
     
     void ProcessOSCMessage(string message, double value)
     {
-        if(controlGeneratorsByMessage_.count(message) > 0)
-            controlGeneratorsByMessage_[message]->ProcessOSCMessage(message, value);
+        if(CSIMessageGeneratorsByOSCMessage_.count(message) > 0)
+            CSIMessageGeneratorsByOSCMessage_[message]->ProcessOSCMessage(message, value);
         
         if(oscInMonitor_)
         {
@@ -543,9 +543,9 @@ public:
         ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
     }
     
-    void AddControlGenerator(string message, OSC_ControlSignalGenerator* controlSignalGenerator)
+    void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
     {
-        controlGeneratorsByMessage_[message] = controlSignalGenerator;
+        CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
     }
     
     virtual void LoadingZone(string zoneName) override

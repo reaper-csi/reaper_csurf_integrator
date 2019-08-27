@@ -11,14 +11,14 @@
 #include "handy_functions.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Press_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
+class Press_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Press_Midi_ControlSignalGenerator() {}
-    Press_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_ControlSignalGenerator(widget)
+    virtual ~Press_Midi_CSIMessageGenerator() {}
+    Press_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_CSIMessageGenerator(widget)
     {
-        surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
+        surface->AddCSIMessageGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -28,7 +28,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class PressRelease_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
+class PressRelease_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -36,11 +36,11 @@ private:
     MIDI_event_ex_t* release_;
 
 public:
-    virtual ~PressRelease_Midi_ControlSignalGenerator() {}
-    PressRelease_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_ControlSignalGenerator(widget), press_(press), release_(release)
+    virtual ~PressRelease_Midi_CSIMessageGenerator() {}
+    PressRelease_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press, MIDI_event_ex_t* release) : Midi_CSIMessageGenerator(widget), press_(press), release_(release)
     {
-        surface->AddControlGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
-        surface->AddControlGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
+        surface->AddCSIMessageGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100 + press->midi_message[2], this);
+        surface->AddCSIMessageGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -50,14 +50,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader14Bit_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
+class Fader14Bit_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Fader14Bit_Midi_ControlSignalGenerator() {}
-    Fader14Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
+    virtual ~Fader14Bit_Midi_CSIMessageGenerator() {}
+    Fader14Bit_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
     {
-        surface->AddControlGenerator(message->midi_message[0] * 0x10000, this);
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -67,14 +67,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Fader7Bit_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
+class Fader7Bit_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Fader7Bit_Midi_ControlSignalGenerator() {}
-    Fader7Bit_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
+    virtual ~Fader7Bit_Midi_CSIMessageGenerator() {}
+    Fader7Bit_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
     {
-        surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
@@ -84,14 +84,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Encoder_Midi_ControlSignalGenerator : public Midi_ControlSignalGenerator
+class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual ~Encoder_Midi_ControlSignalGenerator() {}
-    Encoder_Midi_ControlSignalGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_ControlSignalGenerator(widget)
+    virtual ~Encoder_Midi_CSIMessageGenerator() {}
+    Encoder_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
     {
-        surface->AddControlGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
