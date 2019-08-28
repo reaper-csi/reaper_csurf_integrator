@@ -743,6 +743,7 @@ void Manager::InitActionDictionary()
     actions_["ToggleMapSends"] =                    [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(manager); };
     actions_["ToggleMapFX"] =                       [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFX(manager); };
     actions_["ToggleMapFXMenu"] =                   [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFXMenu(manager); };
+    actions_["ToggleMapFocusedTrackFX"] =           [this](WidgetActionManager* manager, vector<string> params) { return new ToggleMapFocusedTrackFX(manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(manager); };
     actions_["MapSelectedTrackFXToMenu"] =          [this](WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToMenu(manager); };

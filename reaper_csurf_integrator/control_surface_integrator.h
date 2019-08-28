@@ -1347,6 +1347,16 @@ public:
                     surface->GetFXActivationManager()->ToggleMapFXMenu();
     }
     
+    void ToggleMapFocusedTrackFX(ControlSurface* surface)
+    {
+        if(! surface->GetUseZoneLink())
+            surface->GetFXActivationManager()->ToggleMapFocusedTrackFX();
+        else
+            for(auto surface : surfaces_)
+                if(surface->GetUseZoneLink())
+                    surface->GetFXActivationManager()->ToggleMapFocusedTrackFX();
+    }
+    
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
