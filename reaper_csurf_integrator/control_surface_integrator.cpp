@@ -1227,7 +1227,10 @@ string WidgetActionManager::GetModifiers()
 
 bool WidgetActionManager::GetHasFocusedFXTrackNavigator()
 {
-    return trackNavigator_->GetIsFocusedFXTrackNavigator();
+    if(trackNavigator_ == nullptr)
+        return false;
+    else
+        return trackNavigator_->GetIsFocusedFXTrackNavigator();
 }
 
 MediaTrack* WidgetActionManager::GetTrack()
