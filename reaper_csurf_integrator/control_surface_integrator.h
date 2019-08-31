@@ -141,8 +141,9 @@ class OSC_CSIMessageGenerator : public CSIMessageGenerator
 {
 public:
     OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message);
+    virtual ~OSC_CSIMessageGenerator() {}
     
-    void ProcessOSCMessage(string message, double value)
+    virtual void ProcessOSCMessage(string message, double value)
     {
         widget_->DoAction(value);
     }
@@ -154,8 +155,9 @@ class PressOnly_OSC_CSIMessageGenerator : public OSC_CSIMessageGenerator
 {
 public:
     PressOnly_OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : OSC_CSIMessageGenerator(surface, widget, message) {}
+    virtual ~PressOnly_OSC_CSIMessageGenerator() {}
     
-    void ProcessOSCMessage(string message, double value)
+    virtual void ProcessOSCMessage(string message, double value) override
     {
         if(value == 1)
             widget_->DoAction(value);
