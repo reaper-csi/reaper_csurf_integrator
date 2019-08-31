@@ -892,7 +892,6 @@ public:
     
     virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
     bool GetIsChannelTouched() { return isChannelTouched_; }
-    MediaTrack* GetPinnedTrack() { return pinnedTrack_; }
     bool GetIsChannelPinned() { return isChannelPinned_; }
     virtual bool GetIsFocusedFXTrackNavigator() { return false; }
     void IncBias() { bias_++; }
