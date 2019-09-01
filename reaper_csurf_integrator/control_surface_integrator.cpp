@@ -9,6 +9,9 @@
 #include "control_surface_action_contexts.h"
 #include "control_surface_Reaper_actions.h"
 #include "control_surface_manager_actions.h"
+#include "control_surface_integrator_ui.h"
+
+extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MidiInputPort
@@ -847,9 +850,9 @@ void Manager::Init()
                         ControlSurface* surface = nullptr;
                         
                         if(tokens[0] == MidiSurfaceToken)
-                            surface = new Midi_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false);
+                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false);
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
-                            surface = new OSC_ControlSurface(currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
 
                         currentPage->AddSurface(surface);
                         
@@ -1073,7 +1076,7 @@ MediaTrack* FocusedFXTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(Page* page, const string name, bool useZoneLink) : page_(page), name_(name), useZoneLink_(useZoneLink)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), useZoneLink_(useZoneLink)
 {
     fxActivationManager_ = new FXActivationManager(this);
     sendsActivationManager_ = new SendsActivationManager(this);
@@ -1181,8 +1184,8 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSurface::OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
-: ControlSurface(page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
+OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
 {
     fxActivationManager_->SetShouldMapSelectedFX(true);
 
@@ -1319,11 +1322,67 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
     }
 }
 
+
+static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            
+        }
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_RADIO_MCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDC_RADIO_TCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        //dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::ToggleMapSelectedFX()
 {
+    //HWND hwndLearn = CreateDialog(g_hinst, MAKEINTRESOURCE(IDD_DIALOG_Page), g_hwnd, dlgProcLearn);
+    //ShowWindow(hwndLearn, true);
+    
     shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
     
     if( ! shouldMapSelectedFX_)

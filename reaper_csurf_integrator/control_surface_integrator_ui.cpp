@@ -18,7 +18,7 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 CSurfIntegrator::CSurfIntegrator()
 {
-    TheManager = new Manager();
+    TheManager = new Manager(this);
     SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
 }
 
@@ -768,7 +768,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 trackColouring = pages[index]->trackColouring;
                                 dlgResult = false;
                                 editMode = true;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                                //DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                                HWND hwndPageDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), g_hwnd, dlgProcPage);
+                                ShowWindow(hwndPageDlg, true);
                                 if(dlgResult == IDOK)
                                 {
                                     pages[index]->name = name;
