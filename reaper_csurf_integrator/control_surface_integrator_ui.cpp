@@ -768,9 +768,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 trackColouring = pages[index]->trackColouring;
                                 dlgResult = false;
                                 editMode = true;
-                                //DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
-                                HWND hwndPageDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), g_hwnd, dlgProcPage);
-                                ShowWindow(hwndPageDlg, true);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
+                                //HWND hwndPageDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), g_hwnd, dlgProcPage);
+                                //ShowWindow(hwndPageDlg, true);
                                 if(dlgResult == IDOK)
                                 {
                                     pages[index]->name = name;
