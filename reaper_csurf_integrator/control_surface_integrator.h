@@ -265,6 +265,8 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CSurfIntegrator;
 class Page;
 class FXActivationManager;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -272,7 +274,8 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(Page* page, const string name, bool useZoneLink);
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink);
+    CSurfIntegrator* CSurfIntegrator_ = nullptr;
     Page* page_ = nullptr;
     const string name_ = "";
     vector<Widget*> widgets_;
@@ -406,8 +409,8 @@ private:
     }
     
 public:
-    Midi_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
-    : ControlSurface(page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
+    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
     {
         InitWidgets(templateFilename);
         
@@ -546,7 +549,7 @@ private:
     }
 
 public:
-    OSC_ControlSurface(Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP);
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
     
     virtual void ResetAll() override
@@ -1443,10 +1446,13 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CSurfIntegrator;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    CSurfIntegrator* CSurfIntegrator_ = nullptr;
     map<string, function<Action*(WidgetActionManager* manager, vector<string>)>> actions_;
     vector <Page*> pages_;
     
@@ -1469,7 +1475,7 @@ private:
     
 public:
     ~Manager() {};
-    Manager()
+    Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionDictionary();
     }
