@@ -7,8 +7,6 @@
 #include "control_surface_integrator.h"
 #include "control_surface_integrator_ui.h"
 
-extern REAPER_PLUGIN_HINSTANCE g_hInst;
-
 Manager* TheManager = nullptr;
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
@@ -769,8 +767,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 dlgResult = false;
                                 editMode = true;
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
-                                //HWND hwndPageDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), g_hwnd, dlgProcPage);
-                                //ShowWindow(hwndPageDlg, true);
                                 if(dlgResult == IDOK)
                                 {
                                     pages[index]->name = name;

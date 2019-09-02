@@ -635,8 +635,9 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Action(WidgetActionManager* widgetActionManager);
+    Action(string name, WidgetActionManager* widgetActionManager);
 
+    string name_ = "";
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
     
@@ -651,13 +652,15 @@ public:
     
     WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
     
+    virtual string GetDisplayName() { return ""; }
+    string GetName() { return name_; }
+    
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
-    virtual string GetDisplayName() { return ""; }
     
     virtual void DoAction(double value)
     {
@@ -707,7 +710,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NoAction(WidgetActionManager* widgetActionManager) : Action(widgetActionManager) {}
+    NoAction(string name, WidgetActionManager* widgetActionManager) : Action(name, widgetActionManager) {}
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() { widget_->Reset(); }
@@ -1453,7 +1456,7 @@ class Manager
 {
 private:
     CSurfIntegrator* CSurfIntegrator_ = nullptr;
-    map<string, function<Action*(WidgetActionManager* manager, vector<string>)>> actions_;
+    map<string, function<Action*(string name, WidgetActionManager* manager, vector<string>)>> actions_;
     vector <Page*> pages_;
     
     map<string, map<string, int>> fxParamIndices_;
@@ -1510,7 +1513,7 @@ public:
     Action* GetAction(WidgetActionManager* manager, vector<string> params)
     {
         if(actions_.count(params[0]) > 0)
-            return actions_[params[0]](manager, params);
+            return actions_[params[0]](params[0], manager, params);
         else
             return nullptr;
     }
