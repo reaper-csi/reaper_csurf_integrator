@@ -4,6 +4,7 @@
 //
 #define IDCHOOSECOLOUR                  4
 #define IDD_DIALOG_Page                 103
+#define IDD_DIALOG_Learn                105
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_MidiSurface          268
 #define IDD_DIALOG_MidiSurface1         269
@@ -34,22 +35,54 @@
 #define IDC_CHECK_ZoneLink              1038
 #define IDC_EDIT_OSCSurfaceName         1039
 #define IDC_CHECK_ScrollLink            1040
+#define IDC_LIST_ZoneComponents         1040
 #define IDC_EDIT_OSCRemoteDeviceIP      1041
+#define IDC_LIST_WidgetNames            1041
 #define IDC_CHECK_AutoMapSends          1042
+#define IDC_LIST_ActionNames            1042
 #define IDC_EDIT_OSCOutPort             1043
+#define IDC_LIST_IncludedZones          1043
 #define IDC_CHECK_AutoMapFX             1044
+#define IDC_LIST_ActionsForWidget       1044
 #define IDC_EDIT_OSCInPort              1045
+#define IDC_LIST_Zones                  1045
 #define IDC_CHECK_AutoMapFXMenu         1046
+#define IDC_COMBO_Navigator             1046
 #define IDC_CHECK_AutoMapFocusedFX      1047
-
+#define IDC_COMBO_ParentZone            1047
+#define IDC_STATIC_SurfaceName          1048
+#define IDC_EDIT_WidgetName             1050
+#define IDC_EDIT_ActionName             1051
+#define IDC_EDIT_ActionParameter        1052
+#define IDC_BUTTON_AddAction            1053
+#define IDC_BUTTON_DeleteAction         1054
+#define IDC_BUTTON_AddZone              1055
+#define IDC_BUTTON_DeleteZone           1056
+#define IDC_BUTTON_AddIncludedZone      1057
+#define IDC_BUTTON_DeleteIncludedZone   1058
+#define IDC_STATIC_CurrentZone          1059
+#define IDC_STATIC_ZoneFilename         1060
+#define IDC_EDIT_ActionAlias            1061
+#define IDC_STATIC_CurrentZoneEntry     1062
+#define IDC_BUTTON_GenerateZoneEntry    1063
+#define IDC_CHECK_Shift                 1064
+#define IDC_CHECK_Control               1065
+#define IDC_CHECK_Option                1066
+#define IDC_CHECK_Alt                   1067
+#define IDC_CHECK_Toggle                1068
+#define IDC_CHECK_Touch                 1069
+#define IDC_CHECK_Invert                1070
+#define IDC_CHECK_Hold                  1071
+#define IDC_BUTTON_SaveZone             1072
+#define IDC_BUTTON_SaveFile             1072
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        105
+#define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1065
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
