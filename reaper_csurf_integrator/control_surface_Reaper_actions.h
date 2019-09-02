@@ -14,7 +14,7 @@ class FXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXParam(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    FXParam(string name, WidgetActionManager* manager, vector<string> params) : FXAction(name, manager, params) {}
     
     virtual void Do(double value) override
     {
@@ -38,7 +38,7 @@ class FXParamRelative : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXParamRelative(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    FXParamRelative(string name, WidgetActionManager* manager, vector<string> params) : FXAction(name, manager, params) {}
        
     virtual void Do(double relativeValue) override
     {
@@ -58,7 +58,7 @@ class TrackVolume : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolume(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackVolume(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -79,7 +79,7 @@ class MasterTrackVolume : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackVolume(WidgetActionManager* manager) : Action(manager) {}
+    MasterTrackVolume(string name, WidgetActionManager* manager) : Action(name, manager) {}
     
     void RequestUpdate() override
     {
@@ -99,7 +99,7 @@ class TrackPan : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPan(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
+    TrackPan(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -120,7 +120,7 @@ class TrackPanWidth : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanWidth(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
+    TrackPanWidth(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -139,7 +139,7 @@ class TrackNameDisplay : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackNameDisplay(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackNameDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -159,7 +159,7 @@ class TrackVolumeDisplay : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackVolumeDisplay(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackVolumeDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -174,7 +174,7 @@ class TrackSendVolume : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendVolume(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendVolume(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -199,7 +199,7 @@ class TrackSendPan : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendPan(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendPan(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -224,7 +224,7 @@ class TrackSendMute : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendMute(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendMute(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -249,7 +249,7 @@ class TrackSendInvertPolarity : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendInvertPolarity(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendInvertPolarity(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -272,7 +272,7 @@ class TrackSendPrePost : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendPrePost(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendPrePost(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
     
     void RequestTrackUpdate( MediaTrack* track) override
     {
@@ -303,7 +303,7 @@ class FXNameDisplay : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXNameDisplay(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
+    FXNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
     
     virtual void RequestUpdate() override
     {
@@ -327,7 +327,7 @@ class FXParamNameDisplay : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXParamNameDisplay(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    FXParamNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : FXAction(name, manager, params) {}
 
     virtual void RequestUpdate() override
     {
@@ -343,7 +343,7 @@ class FXParamValueDisplay : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXParamValueDisplay(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    FXParamValueDisplay(string name, WidgetActionManager* manager, vector<string> params) : FXAction(name, manager, params) {}
 
     virtual void RequestUpdate() override
     {
@@ -363,7 +363,7 @@ class TrackSendNameDisplay : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendNameDisplay(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendNameDisplay(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -380,7 +380,7 @@ class TrackSendVolumeDisplay : public TrackSendAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSendVolumeDisplay(WidgetActionManager* manager) : TrackSendAction(manager) {}
+    TrackSendVolumeDisplay(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -395,7 +395,7 @@ class TrackPanDisplay : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanDisplay(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackPanDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -449,7 +449,7 @@ class TrackPanWidthDisplay : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackPanWidthDisplay(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackPanWidthDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -483,7 +483,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind(WidgetActionManager* manager) : Action(manager) { }
+    Rewind(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
     void Do(double value) override
     {
@@ -496,7 +496,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward(WidgetActionManager* manager) : Action(manager) { }
+    FastForward(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
     void Do(double value) override
     {
@@ -509,7 +509,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play(WidgetActionManager* manager) : Action(manager) { }
+    Play(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -531,7 +531,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop(WidgetActionManager* manager) : Action(manager) { }
+    Stop(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -554,7 +554,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record(WidgetActionManager* manager) : Action(manager) { }
+    Record(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -577,7 +577,7 @@ class TrackFolderDive : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackFolderDive(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackFolderDive(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -606,7 +606,7 @@ class TrackSelect : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSelect(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
     
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -628,7 +628,7 @@ class TrackUniqueSelect : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackUniqueSelect(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackUniqueSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -651,7 +651,7 @@ class MasterTrackUniqueSelect : public Action
 {
 public:
     
-    MasterTrackUniqueSelect(WidgetActionManager* manager) : Action(manager) {}
+    MasterTrackUniqueSelect(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
     void RequestUpdate() override
     {
@@ -670,7 +670,7 @@ class TrackRangeSelect : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRangeSelect(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackRangeSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -721,7 +721,7 @@ class TrackRecordArm : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackRecordArm(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackRecordArm(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -742,7 +742,7 @@ class TrackMute : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackMute(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackMute(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -767,7 +767,7 @@ class TrackSolo : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackSolo(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackSolo(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -788,7 +788,7 @@ class SetTrackTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackTouch(WidgetActionManager* manager) : TrackAction(manager) {}
+    SetTrackTouch(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void Do(double value) override
     {
@@ -801,7 +801,7 @@ class SetMasterTrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetMasterTrackTouch(WidgetActionManager* manager) : Action(manager) {}
+    SetMasterTrackTouch(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
     void Do(double value) override
     {
@@ -815,7 +815,7 @@ class GlobalAutoMode : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GlobalAutoMode(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
+    GlobalAutoMode(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -837,7 +837,7 @@ class TrackAutoMode : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackAutoMode(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
+    TrackAutoMode(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
 
     void RequestUpdate() override
     {
@@ -871,7 +871,7 @@ class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TimeDisplay(WidgetActionManager* manager) : Action(manager) { }
+    TimeDisplay(string name, WidgetActionManager* manager) : Action(name, manager) { }
     
     void RequestUpdate() override
     {
@@ -884,7 +884,7 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline(WidgetActionManager* manager) : Action(manager) {}
+    CycleTimeline(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
     void RequestUpdate() override
     {
@@ -902,7 +902,7 @@ class TrackOutputMeter : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackOutputMeter(WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(manager, params) {}
+    TrackOutputMeter(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -915,7 +915,7 @@ class TrackOutputMeterAverageLR : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackOutputMeterAverageLR(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackOutputMeterAverageLR(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -930,7 +930,7 @@ class TrackOutputMeterMaxPeakLR : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackOutputMeterMaxPeakLR(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -948,7 +948,7 @@ class MasterTrackOutputMeter : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackOutputMeter(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params) {}
+    MasterTrackOutputMeter(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -961,7 +961,7 @@ class FXGainReductionMeter : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FXGainReductionMeter(WidgetActionManager* manager, vector<string> params) : FXAction(manager, params) {}
+    FXGainReductionMeter(string name, WidgetActionManager* manager, vector<string> params) : FXAction(name, manager, params) {}
 
     void RequestUpdate() override
     {

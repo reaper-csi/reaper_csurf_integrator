@@ -17,7 +17,7 @@ private:
     int commandId_ = 0;
     
 public:
-    ReaperAction(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    ReaperAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
     {
         if(params.size() > 1)
         {
@@ -51,7 +51,7 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackAction(WidgetActionManager* manager) : Action(manager) { }
+    TrackAction(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
 public:
     virtual void RequestUpdate() override
@@ -76,7 +76,7 @@ class TrackSendAction : public TrackAction
 protected:
     int sendIndex_ = 0;
     
-    TrackSendAction(WidgetActionManager* manager) : TrackAction(manager) {}
+    TrackSendAction(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
 
 public:
     virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
@@ -97,7 +97,7 @@ class TrackActionWithIntParam : public TrackAction
 protected:
     int param_ = 0;
 
-    TrackActionWithIntParam(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
+    TrackActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -113,7 +113,7 @@ protected:
     string fxParamDisplayName_ = "";
     int fxIndex_ = 0;
 
-    FXAction(WidgetActionManager* manager, vector<string> params) : TrackAction(manager)
+    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager)
     {
         if(params.size() > 1)
             fxParamIndex_ = atol(params[1].c_str());
@@ -146,7 +146,7 @@ class ActionWithIntParam : public Action
 protected:
     int param_ = 0;
 
-    ActionWithIntParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    ActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -160,7 +160,7 @@ class ActionWithStringParam : public Action
 protected:
     string param_ = "";
 
-    ActionWithStringParam(WidgetActionManager* manager, vector<string> params) : Action(manager)
+    ActionWithStringParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -174,7 +174,7 @@ class SurfaceAction : public Action
 protected:
     ControlSurface* surface_ = nullptr;
 
-    SurfaceAction(WidgetActionManager* manager) : Action(manager)
+    SurfaceAction(string name, WidgetActionManager* manager) : Action(name, manager)
     {
         surface_ = widget_->GetSurface();
     }
@@ -187,7 +187,7 @@ class SurfaceActionWithStringParam : public ActionWithStringParam
 protected:
     ControlSurface* surface_ = nullptr;
     
-    SurfaceActionWithStringParam(WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(manager, params)
+    SurfaceActionWithStringParam(string name, WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(name, manager, params)
     {
         surface_ = widget_->GetSurface();
     }
@@ -201,7 +201,7 @@ protected:
     ControlSurface* surface_ = nullptr;
     int param_ = 0;
     
-    SurfaceActionWithIntParam(WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(manager, params)
+    SurfaceActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
