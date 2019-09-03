@@ -42,11 +42,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSends  : public SurfaceAction
+class ToggleMapSelectedTrackSends  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSends(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
     void RequestUpdate() override
     {
@@ -60,15 +60,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapFX  : public SurfaceAction
+class ToggleMapSelectedTrackFX  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFX(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedFX());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
     }
     
     void Do(double value) override
@@ -78,15 +78,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapFXMenu  : public SurfaceAction
+class ToggleMapSelectedTrackFXMenu  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFXMenu(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFXMenus());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
     }
     
     void Do(double value) override
@@ -96,15 +96,15 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapFocusedTrackFX  : public SurfaceAction
+class ToggleMapFocusedFX  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFocusedTrackFX(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
+    ToggleMapFocusedFX(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFXMenus());
+        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFocusedFX());
     }
     
     void Do(double value) override
@@ -168,11 +168,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapFocusedTrackFXToWidgets  : public SurfaceAction
+class MapFocusedFXToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapFocusedTrackFXToWidgets(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
+    MapFocusedFXToWidgets(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
 
     void Do(double value) override
     {
