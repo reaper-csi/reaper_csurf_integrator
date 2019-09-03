@@ -734,6 +734,7 @@ public:
     
     Widget* GetWidget() { return widget_; }
     bool GetHasFocusedFXNavigator();
+    string GetNavigatorName();
     MediaTrack* GetTrack();
     void RequestUpdate();
     void SetIsTouched(bool isTouched);
@@ -921,6 +922,8 @@ public:
     virtual void Pin();
     virtual void Unpin();
     
+    virtual string GetName() { return "TrackNavigator"; }
+    
     virtual MediaTrack* GetTrack();
 };
 
@@ -935,6 +938,8 @@ public:
     virtual void SetTouchState(bool isChannelTouched) override {}
     virtual void Pin() override {}
     virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "SelectedTrackNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
 };
@@ -952,6 +957,8 @@ public:
     virtual void SetTouchState(bool isChannelTouched) override {}
     virtual void Pin() override {}
     virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "FocusedFXNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
 };
