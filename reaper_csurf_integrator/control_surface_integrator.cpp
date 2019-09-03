@@ -1596,14 +1596,11 @@ void AddComboBoxEntry(HWND hwndDlg, int x, char * buf, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-void AddListBoxEntry(HWND hwndDlg, string buf, int comboId)
-{
-    SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
-}
-
 HWND hwndLearn = nullptr;
 
 Widget* currentWidget = nullptr;
+
+static char name[BUFSZ];
 
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1614,6 +1611,30 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
+            
+            for(auto widget : currentWidget->GetSurface()->GetWidgets())
+                SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
+
+            
+            for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
+                if(string(name) == currentWidget->GetName())
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
+                    break;
+                }
+            }
+            
+            
+            
+            //int index = SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), B_FINDSTRING, -1, (LPARAM)currentWidget->GetName().c_str());
+            //if(index >= 0)
+                //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, index, 0);
+
+            //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, widgetIndex, 0);
+
         }
             
         case WM_INITDIALOG:
