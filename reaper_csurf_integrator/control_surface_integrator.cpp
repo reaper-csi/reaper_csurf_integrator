@@ -1221,7 +1221,7 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 
 void Action::DoAction(double value)
 {
-    // GAW TBD Tell Page we GotIncoming(surface, widgetActionManager, action)
+    GetWidgetActionManager()->GetWidget()->GetSurface()->GetPage()->PerformedAction(GetWidgetActionManager(), this);
     
     value = isInverted_ == false ? value : 1.0 - value;
     
@@ -1602,6 +1602,10 @@ Widget* currentWidget = nullptr;
 
 static char name[BUFSZ];
 
+WidgetActionManager* currentWidgetActionManager = nullptr;
+
+Action* currentAction = nullptr;
+
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -1615,7 +1619,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             for(auto widget : currentWidget->GetSurface()->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
-
             
             for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
             {
@@ -1626,20 +1629,37 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             }
-            
-            
-            
-            //int index = SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), B_FINDSTRING, -1, (LPARAM)currentWidget->GetName().c_str());
-            //if(index >= 0)
-                //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, index, 0);
-
-            //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, widgetIndex, 0);
-
         }
+            break;
+            
+        case WM_USER+1025:
+        {
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
+            /*
+            SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+            
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
+            
+            for(auto widget : currentWidget->GetSurface()->GetWidgets())
+                SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
+            
+            for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
+                if(string(name) == currentWidget->GetName())
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
+                    break;
+                }
+            }
+             */
+        }
+            break;
             
         case WM_INITDIALOG:
         {
         }
+            break;
             
         case WM_COMMAND:
         {
@@ -1734,4 +1754,18 @@ void Page::ReceivedInput(Widget* widget)
     currentWidget = widget;
     
     SendMessage(hwndLearn, WM_USER+1024, 0, 0);
+}
+
+void Page::PerformedAction(WidgetActionManager* widgetActionManager, Action* action)
+{
+    if(hwndLearn == nullptr)
+        return;
+
+    if(widgetActionManager == nullptr || action == nullptr)
+        return;
+    
+    currentWidgetActionManager = widgetActionManager;
+    currentAction = action;
+    
+    SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
