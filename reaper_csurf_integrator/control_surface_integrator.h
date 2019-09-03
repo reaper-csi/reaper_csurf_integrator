@@ -996,7 +996,7 @@ public:
     
     void TogglePin(MediaTrack* track)
     {
-        if(track == tracks_[tracks_.size() - 1]) // GAW TBD -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors
+        if(track == tracks_[tracks_.size() - 1]) // GAW TBD -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors, or maybe ny usage :)
             return;
         
         for(auto navigator : trackNavigators_)
@@ -1215,6 +1215,8 @@ public:
     
     void ToggleLearnMode();
     void ReceivedInput(Widget* widget);
+    void PerformedAction(WidgetActionManager* widgetActionManager, Action* action);
+
     
     void HandleOSCInput()
     {

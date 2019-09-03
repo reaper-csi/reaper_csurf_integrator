@@ -251,6 +251,7 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
             }
         }
+            break;
             
         case WM_COMMAND:
         {
@@ -407,6 +408,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
             }
         }
+            break;
             
         case WM_COMMAND:
         {
@@ -551,6 +553,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
             }
         }
+            break;
             
         case WM_COMMAND:
         {
