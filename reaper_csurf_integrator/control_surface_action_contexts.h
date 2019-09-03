@@ -15,24 +15,30 @@ class ReaperAction : public Action
 {
 private:
     int commandId_ = 0;
+    string commandStr_ = "";
     
 public:
     ReaperAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
     {
         if(params.size() > 1)
         {
-            string commandStr = params[1];
+            commandStr_ = params[1];
             
-            commandId_ =  atol(commandStr.c_str());
+            commandId_ =  atol(commandStr_.c_str());
             
             if(commandId_ == 0) // unsuccessful conversion to number
             {
-                commandId_ = DAW::NamedCommandLookup(commandStr.c_str()); // look up by string
+                commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
                 
                 if(commandId_ == 0) // can't find it
                     commandId_ = 65535; // no-op
             }
         }
+    }
+    
+    virtual string GetParamAsString() override
+    {
+        return commandStr_;
     }
     
     virtual void RequestUpdate() override
@@ -81,6 +87,11 @@ protected:
 public:
     virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
 
+    virtual string GetParamAsString() override
+    {
+        return to_string(sendIndex_);
+    }
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
@@ -101,6 +112,12 @@ protected:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
+    }
+    
+public:
+    virtual string GetParamAsString() override
+    {
+        return to_string(param_);
     }
 };
 
@@ -127,7 +144,17 @@ public:
     virtual string GetDisplayName() override { return fxParamDisplayName_; }
     
     virtual void SetIndex(int fxIndex) override { fxIndex_ = fxIndex; }
-        
+    
+    virtual string GetParamAsString() override
+    {
+        return to_string(fxParamIndex_);
+    }
+    
+    virtual string GetAlias() override
+    {
+        return fxParamDisplayName_;
+    }
+    
     virtual void RequestUpdate() override
     {
         double min, max = 0;
@@ -151,6 +178,12 @@ protected:
         if(params.size() > 1)
             param_= atol(params[1].c_str());
     }
+    
+public:
+    virtual string GetParamAsString() override
+    {
+        return to_string(param_);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,6 +197,12 @@ protected:
     {
         if(params.size() > 1)
             param_ = params[1];
+    }
+
+public:
+    virtual string GetParamAsString() override
+    {
+        return param_;
     }
 };
 
@@ -207,6 +246,12 @@ protected:
             param_= atol(params[1].c_str());
 
         surface_ = widget_->GetSurface();
+    }
+    
+public:
+    virtual string GetParamAsString() override
+    {
+        return to_string(param_);
     }
 };
 
