@@ -730,7 +730,7 @@ public:
     WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
-    bool GetHasFocusedFXTrackNavigator();
+    bool GetHasFocusedFXNavigator();
     MediaTrack* GetTrack();
     void RequestUpdate();
     void SetIsTouched(bool isTouched);
@@ -798,12 +798,12 @@ class FXActivationManager
 private:
     ControlSurface* surface_ = nullptr;
     int numFXlots_ = 0;
-    bool shouldMapSelectedFX_ = false;
-    bool shouldMapFXMenus_ = false;
-    bool shouldMapFocusedTrackFX_ = false;
+    bool shouldMapSelectedTrackFX_ = false;
+    bool shouldMapSelectedTrackFXMenus_ = false;
+    bool shouldMapFocusedFX_ = false;
     vector<Zone*> activeSelectedTrackFXZones_;
-    vector<Zone*> activeFXMenuZones_;
-    vector<Zone*> activeFXMenuFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuZones_;
+    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
     
@@ -833,8 +833,9 @@ private:
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
-    bool GetShouldMapFXMenus() { return shouldMapFXMenus_; }
-    bool GetShouldMapSelectedFX() { return shouldMapSelectedFX_; }
+    bool GetShouldMapSelectedTrackFXMenus() { return shouldMapSelectedTrackFXMenus_; }
+    bool GetShouldMapSelectedTrackFX() { return shouldMapSelectedTrackFX_; }
+    bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
     int GetNumFXSlots() { return numFXlots_; }
     void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
     bool GetShowFXWindows() { return showFXWindows_; }
@@ -852,16 +853,16 @@ public:
         return activeFXZones;
     }
     
-    void SetShouldMapSelectedFX(bool shouldMapSelectedFX) { shouldMapSelectedFX_ = shouldMapSelectedFX; }
-    void SetShouldMapFXMenus(bool shouldMapFXMenus) { shouldMapFXMenus_ = shouldMapFXMenus; }
-    void SetShouldMapFocusedTrackFX(bool shouldMapFocusedTrackFX) { shouldMapFocusedTrackFX_ = shouldMapFocusedTrackFX; }
-    void ToggleMapSelectedFX();
-    void ToggleMapFocusedTrackFX();
-    void ToggleMapFXMenu();
+    void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
+    void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
+    void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
+    void ToggleMapSelectedTrackFX();
+    void ToggleMapFocusedFX();
+    void ToggleMapSelectedTrackFXMenu();
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXSlotToWidgets(int slot);
-    void MapFocusedTrackFXToWidgets();
+    void MapFocusedFXToWidgets();
     
     void SetShowFXWindows(bool value)
     {
@@ -875,13 +876,13 @@ public:
     
     void TrackFXListChanged()
     {
-        if(shouldMapSelectedFX_)
+        if(shouldMapSelectedTrackFX_)
             MapSelectedTrackFXToWidgets();
         
-        if(shouldMapFocusedTrackFX_)
-            MapFocusedTrackFXToWidgets();
+        if(shouldMapFocusedFX_)
+            MapFocusedFXToWidgets();
         
-        if(shouldMapFXMenus_)
+        if(shouldMapSelectedTrackFXMenus_)
             MapSelectedTrackFXToMenu();
     }
 };
@@ -910,7 +911,7 @@ public:
     virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
     bool GetIsChannelTouched() { return isChannelTouched_; }
     bool GetIsChannelPinned() { return isChannelPinned_; }
-    virtual bool GetIsFocusedFXTrackNavigator() { return false; }
+    virtual bool GetIsFocusedFXNavigator() { return false; }
     void IncBias() { bias_++; }
     void DecBias() { bias_--; }
     
@@ -936,14 +937,14 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXTrackNavigator : public TrackNavigator
+class FocusedFXNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~FocusedFXTrackNavigator() {}
+    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~FocusedFXNavigator() {}
     
-    virtual bool GetIsFocusedFXTrackNavigator() override { return true; }
+    virtual bool GetIsFocusedFXNavigator() override { return true; }
     
     virtual void SetTouchState(bool isChannelTouched) override {}
     virtual void Pin() override {}
@@ -1351,31 +1352,31 @@ public:
     void ToggleMapSelectedFX(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->GetFXActivationManager()->ToggleMapSelectedFX();
+            surface->GetFXActivationManager()->ToggleMapSelectedTrackFX();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GetFXActivationManager()->ToggleMapSelectedFX();
+                    surface->GetFXActivationManager()->ToggleMapSelectedTrackFX();
     }
     
     void ToggleMapFXMenu(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->GetFXActivationManager()->ToggleMapFXMenu();
+            surface->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GetFXActivationManager()->ToggleMapFXMenu();
+                    surface->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
     }
     
     void ToggleMapFocusedTrackFX(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->GetFXActivationManager()->ToggleMapFocusedTrackFX();
+            surface->GetFXActivationManager()->ToggleMapFocusedFX();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GetFXActivationManager()->ToggleMapFocusedTrackFX();
+                    surface->GetFXActivationManager()->ToggleMapFocusedFX();
     }
     
     void MapSelectedTrackSendsToWidgets(ControlSurface* surface)
@@ -1411,11 +1412,11 @@ public:
     void MapFocusedTrackFXToWidgets(ControlSurface* surface)
     {
         if(! surface->GetUseZoneLink())
-            surface->GetFXActivationManager()->MapFocusedTrackFXToWidgets();
+            surface->GetFXActivationManager()->MapFocusedFXToWidgets();
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GetFXActivationManager()->MapFocusedTrackFXToWidgets();
+                    surface->GetFXActivationManager()->MapFocusedFXToWidgets();
     }
     
     void MapSelectedTrackFXSlotToWidgets(ControlSurface* surface, int fxIndex)
@@ -1682,7 +1683,7 @@ public:
     bool GetHasFocusedFXTrackNavigator()
     {
         if(widgetActionManagers_.size() > 0)
-            return widgetActionManagers_[0]->GetHasFocusedFXTrackNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
+            return widgetActionManagers_[0]->GetHasFocusedFXNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
         else
             return false;
     }
