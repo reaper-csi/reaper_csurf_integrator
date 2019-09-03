@@ -377,7 +377,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
             continue;
         }
         
-        if(tokens.size() == 1 && tokens[0] == "FocusedFXTrackNavigator")
+        if(tokens.size() == 1 && tokens[0] == "FocusedFXNavigator")
         {
             hasFocusedFXTrackNavigator = true;
             continue;
@@ -453,7 +453,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             else if(hasSelectedTrackNavigator)
                                 trackNavigator = new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
                             else if(hasFocusedFXTrackNavigator)
-                                trackNavigator = new FocusedFXTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
+                                trackNavigator = new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager());
                             
                             widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, trackNavigator);
 
@@ -744,15 +744,15 @@ void Manager::InitActionDictionary()
     actions_["Alt"] =                               [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetAlt(name, manager); };
     actions_["TogglePin"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TogglePin(name, manager); };
     actions_["ToggleLearnMode"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleLearnMode(name, manager); };
-    actions_["ToggleMapSends"] =                    [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(name, manager); };
-    actions_["ToggleMapFX"] =                       [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFX(name, manager); };
-    actions_["ToggleMapFXMenu"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFXMenu(name, manager); };
-    actions_["ToggleMapFocusedTrackFX"] =           [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFocusedTrackFX(name, manager); };
+    actions_["ToggleMapSelectedTrackSends"] =       [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackSends(name, manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(name, manager); };
+    actions_["ToggleMapSelectedTrackFX"] =          [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackFX(name, manager); };
     actions_["MapSelectedTrackFXToWidgets"] =       [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToWidgets(name, manager); };
+    actions_["ToggleMapSelectedTrackFXMenu"] =      [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackFXMenu(name, manager); };
     actions_["MapSelectedTrackFXToMenu"] =          [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackFXToMenu(name, manager); };
+    actions_["ToggleMapFocusedFX"] =                [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFocusedFX(name, manager); };
+    actions_["MapFocusedFXToWidgets"] =             [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapFocusedFXToWidgets(name, manager); };
     actions_["GoFXSlot"] =                          [this](string name, WidgetActionManager* manager, vector<string> params) { return new GoFXSlot(name, manager, params); };
-    actions_["MapFocusedTrackFXToWidgets"] =        [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapFocusedTrackFXToWidgets(name, manager); };
     actions_["TrackAutoMode"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackAutoMode(name, manager, params); };
     actions_["GlobalAutoMode"] =                    [this](string name, WidgetActionManager* manager, vector<string> params) { return new GlobalAutoMode(name, manager, params); };
 }
@@ -859,13 +859,13 @@ void Manager::Init()
                             surface->SetShouldMapSends(true);
                         
                         if(tokens[8] == "AutoMapFX")
-                            surface->GetFXActivationManager()->SetShouldMapSelectedFX(true);
+                            surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
                         
                         if(tokens[9] == "AutoMapFXMenu")
-                            surface->GetFXActivationManager()->SetShouldMapFXMenus(true);
+                            surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
                         
                         if(tokens[10] == "AutoMapFocusedFX")
-                            surface->GetFXActivationManager()->SetShouldMapFocusedTrackFX(true);
+                            surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
                     }
                 }
             }
@@ -1054,9 +1054,9 @@ MediaTrack* SelectedTrackNavigator::GetTrack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FocusedFXTrackNavigator
+// FocusedFXNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* FocusedFXTrackNavigator::GetTrack()
+MediaTrack* FocusedFXNavigator::GetTrack()
 {
     int trackNumber = 0;
     int itemNumber = 0;
@@ -1187,7 +1187,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
 : ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
 {
-    fxActivationManager_->SetShouldMapSelectedFX(true);
+    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
 
     InitWidgets(templateFilename);
     
@@ -1242,12 +1242,12 @@ string WidgetActionManager::GetModifiers()
         return widget_->GetSurface()->GetPage()->GetModifiers();
 }
 
-bool WidgetActionManager::GetHasFocusedFXTrackNavigator()
+bool WidgetActionManager::GetHasFocusedFXNavigator()
 {
     if(trackNavigator_ == nullptr)
         return false;
     else
-        return trackNavigator_->GetIsFocusedFXTrackNavigator();
+        return trackNavigator_->GetIsFocusedFXNavigator();
 }
 
 MediaTrack* WidgetActionManager::GetTrack()
@@ -1337,15 +1337,11 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void FXActivationManager::ToggleMapSelectedFX()
+void FXActivationManager::ToggleMapSelectedTrackFX()
 {
-    //HWND hwndLearnDlg = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
-    //ShowWindow(hwndLearnDlg, true);
-
+    shouldMapSelectedTrackFX_ = ! shouldMapSelectedTrackFX_;
     
-    shouldMapSelectedFX_ = ! shouldMapSelectedFX_;
-    
-    if( ! shouldMapSelectedFX_)
+    if( ! shouldMapSelectedTrackFX_)
     {
         for(auto zone : activeSelectedTrackFXZones_)
         {
@@ -1361,26 +1357,26 @@ void FXActivationManager::ToggleMapSelectedFX()
     surface_->GetPage()->OnTrackSelection();
 }
 
-void FXActivationManager::ToggleMapFocusedTrackFX()
+void FXActivationManager::ToggleMapFocusedFX()
 {
-    shouldMapFocusedTrackFX_ = ! shouldMapFocusedTrackFX_;
+    shouldMapFocusedFX_ = ! shouldMapFocusedFX_;
     
-    MapFocusedTrackFXToWidgets();
+    MapFocusedFXToWidgets();
 }
 
-void FXActivationManager::ToggleMapFXMenu()
+void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 {
-    shouldMapFXMenus_ = ! shouldMapFXMenus_;
+    shouldMapSelectedTrackFXMenus_ = ! shouldMapSelectedTrackFXMenus_;
     
-    if( ! shouldMapFXMenus_)
+    if( ! shouldMapSelectedTrackFXMenus_)
     {
-        for(auto zone : activeFXMenuZones_)
+        for(auto zone : activeSelectedTrackFXMenuZones_)
         {
             surface_->LoadingZone(zone->GetName());
             zone->Deactivate();
         }
 
-        activeFXMenuZones_.clear();
+        activeSelectedTrackFXMenuZones_.clear();
     }
 
     surface_->GetPage()->OnTrackSelection();
@@ -1408,7 +1404,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         
         DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
         
-        if(shouldMapSelectedFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
+        if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
@@ -1423,15 +1419,15 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
-    for(auto zone : activeFXMenuZones_)
+    for(auto zone : activeSelectedTrackFXMenuZones_)
         zone->Deactivate();
     
-    activeFXMenuZones_.clear();
+    activeSelectedTrackFXMenuZones_.clear();
     
-    for(auto zone : activeFXMenuFXZones_)
+    for(auto zone : activeSelectedTrackFXMenuFXZones_)
         zone->Deactivate();
     
-    activeFXMenuFXZones_.clear();
+    activeSelectedTrackFXMenuFXZones_.clear();
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
@@ -1444,20 +1440,20 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     {
         string zoneName = "FXMenu" + to_string(i + 1);
         
-        if(shouldMapFXMenus_ && surface_->GetZones().count(zoneName) > 0)
+        if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
         {
             Zone* zone =  surface_->GetZones()[zoneName];
             
             if(i < numTrackFX)
             {
                 zone->Activate(i);
-                activeFXMenuZones_.push_back(zone);
+                activeSelectedTrackFXMenuZones_.push_back(zone);
             }
             else
             {
                 zone->ActivateNoAction(i);
                 zone->SetWidgetsToZero();
-                activeFXMenuZones_.push_back(zone);
+                activeSelectedTrackFXMenuZones_.push_back(zone);
             }
         }
     }
@@ -1479,11 +1475,11 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
         surface_->GetZones()[FXName]->Activate(fxIndex);
-        activeFXMenuFXZones_.push_back(surface_->GetZones()[FXName]);
+        activeSelectedTrackFXMenuFXZones_.push_back(surface_->GetZones()[FXName]);
     }
 }
 
-void FXActivationManager::MapFocusedTrackFXToWidgets()
+void FXActivationManager::MapFocusedFXToWidgets()
 {
     int trackNumber = 0;
     int itemNumber = 0;
@@ -1502,7 +1498,7 @@ void FXActivationManager::MapFocusedTrackFXToWidgets()
     
     activeFocusedFXZones_.clear();
     
-    if(shouldMapFocusedTrackFX_ && focusedTrack)
+    if(shouldMapFocusedFX_ && focusedTrack)
     {
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
