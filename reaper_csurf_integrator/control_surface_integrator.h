@@ -299,6 +299,7 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
+    vector<Widget*> &GetWidgets() { return widgets_; }
     map<string, Zone*> &GetZones() { return zones_;}
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
@@ -662,15 +663,7 @@ public:
     virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
     
-    virtual void DoAction(double value)
-    {
-        value = isInverted_ == false ? value : 1.0 - value;
-        
-        if(shouldToggle_)
-            DoToggle(value);
-        else
-            Do(value);
-    }
+    virtual void DoAction(double value);
     
     virtual void RequestUpdate() {}
     virtual void RequestTrackUpdate(MediaTrack* track) {}
@@ -1219,6 +1212,9 @@ public:
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
+    
+    void ToggleLearnMode();
+    void ReceivedInput(Widget* widget);
     
     void HandleOSCInput()
     {
