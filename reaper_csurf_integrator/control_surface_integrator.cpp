@@ -1251,6 +1251,14 @@ bool WidgetActionManager::GetHasFocusedFXNavigator()
         return trackNavigator_->GetIsFocusedFXNavigator();
 }
 
+string WidgetActionManager::GetNavigatorName()
+{
+    if(trackNavigator_ == nullptr)
+        return "";
+    else
+        return trackNavigator_->GetName();
+}
+
 MediaTrack* WidgetActionManager::GetTrack()
 {
     if(trackNavigator_ == nullptr)
@@ -1587,9 +1595,9 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void AddComboBoxEntry(HWND hwndDlg, int x, char * buf, int comboId)
+void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
 {
-    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
+    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)entryName.c_str());
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
@@ -1661,9 +1669,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
 
+            int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)currentWidgetActionManager->GetNavigatorName().c_str());
+            if(index >= 0)
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
-            
-            
             
             
             /*
@@ -1689,6 +1698,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_INITDIALOG:
         {
+            AddComboBoxEntry(hwndDlg, 0, "None", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
+
+            
+            
         }
             break;
             
