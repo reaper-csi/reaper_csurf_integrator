@@ -43,7 +43,6 @@
 #define IDC_EDIT_OSCOutPort             1043
 #define IDC_LIST_IncludedZones          1043
 #define IDC_CHECK_AutoMapFX             1044
-#define IDC_LIST_ActionsForWidget       1044
 #define IDC_EDIT_OSCInPort              1045
 #define IDC_LIST_Zones                  1045
 #define IDC_CHECK_AutoMapFXMenu         1046
@@ -54,8 +53,6 @@
 #define IDC_EDIT_WidgetName             1050
 #define IDC_EDIT_ActionName             1051
 #define IDC_EDIT_ActionParameter        1052
-#define IDC_BUTTON_AddAction            1053
-#define IDC_BUTTON_DeleteAction         1054
 #define IDC_BUTTON_AddZone              1055
 #define IDC_BUTTON_DeleteZone           1056
 #define IDC_BUTTON_AddIncludedZone      1057
@@ -73,8 +70,9 @@
 #define IDC_CHECK_Touch                 1069
 #define IDC_CHECK_Invert                1070
 #define IDC_CHECK_Hold                  1071
-#define IDC_BUTTON_SaveZone             1072
 #define IDC_BUTTON_SaveFile             1072
+#define IDC_BUTTON_GenerateZoneEntry2   1073
+#define IDC_BUTTON_DeleteZoneEntry      1073
 
 // Next default values for new objects
 // 
