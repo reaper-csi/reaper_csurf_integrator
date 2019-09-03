@@ -40,6 +40,8 @@
 #include "udp.hh"
 #endif
 
+extern REAPER_PLUGIN_HINSTANCE g_hInst;
+
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
 // CSI.ini tokens used by GUI and initialization
