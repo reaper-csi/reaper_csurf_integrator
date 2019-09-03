@@ -11,82 +11,6 @@
 #include "control_surface_manager_actions.h"
 #include "control_surface_integrator_ui.h"
 
-static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-        }
-            
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                    /*
-                     case IDC_RADIO_MCP:
-                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
-                     break;
-                     
-                     case IDC_RADIO_TCP:
-                     CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
-                     break;
-                     
-                     case IDOK:
-                     if (HIWORD(wParam) == BN_CLICKED)
-                     {
-                     GetDlgItemText(hwndDlg, IDC_EDIT_PageName , name, sizeof(name));
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
-                     followMCP = true;
-                     else
-                     followMCP = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SynchPages))
-                     synchPages = true;
-                     else
-                     synchPages = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ScrollLink))
-                     useScrollLink = true;
-                     else
-                     useScrollLink = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
-                     trackColouring = true;
-                     else
-                     trackColouring = false;
-                     
-                     dlgResult = IDOK;
-                     EndDialog(hwndDlg, 0);
-                     }
-                     break ;
-                     
-                     case IDCANCEL:
-                     if (HIWORD(wParam) == BN_CLICKED)
-                     EndDialog(hwndDlg, 0);
-                     break ;
-                     */
-            }
-        }
-            break ;
-            
-        case WM_CLOSE:
-            DestroyWindow(hwndDlg) ;
-            break ;
-            
-        case WM_DESTROY:
-            EndDialog(hwndDlg, 0);
-            break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
-    }
-    
-    return 0 ;
-}
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MidiInputPort
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -819,6 +743,7 @@ void Manager::InitActionDictionary()
     actions_["Control"] =                           [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetControl(name, manager); };
     actions_["Alt"] =                               [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetAlt(name, manager); };
     actions_["TogglePin"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TogglePin(name, manager); };
+    actions_["ToggleLearnMode"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleLearnMode(name, manager); };
     actions_["ToggleMapSends"] =                    [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSends(name, manager); };
     actions_["ToggleMapFX"] =                       [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFX(name, manager); };
     actions_["ToggleMapFXMenu"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapFXMenu(name, manager); };
@@ -980,12 +905,13 @@ void Widget::DoAction(double value)
 {
     if(widgetActionManager_ != nullptr)
         widgetActionManager_->DoAction(value);
+    
+    GetSurface()->GetPage()->ReceivedInput(this);
 }
 
 void Widget::DoRelativeAction(double value)
 {
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(lastValue_ + value);
+    DoAction(lastValue_ + value);
 }
 
 void Widget::SetIsTouched(bool isTouched)
@@ -1291,6 +1217,18 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 {
     page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
     widget_ = widgetActionManager_->GetWidget();
+}
+
+void Action::DoAction(double value)
+{
+    // GAW TBD Tell Page we GotIncoming(surface, widgetActionManager, action)
+    
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    if(shouldToggle_)
+        DoToggle(value);
+    else
+        Do(value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1646,4 +1584,133 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Learn Mode
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void AddComboBoxEntry(HWND hwndDlg, int x, char * buf, int comboId)
+{
+    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
+    SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
+}
+
+void AddListBoxEntry(HWND hwndDlg, string buf, int comboId)
+{
+    SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
+}
+
+HWND hwndLearn = nullptr;
+
+Widget* currentWidget = nullptr;
+
+static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_USER+1024:
+        {
+            SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
+            SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+            
+        }
+            
+        case WM_INITDIALOG:
+        {
+        }
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                    /*
+                     case IDC_RADIO_MCP:
+                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                     break;
+                     
+                     case IDC_RADIO_TCP:
+                     CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                     break;
+                     
+                     case IDOK:
+                     if (HIWORD(wParam) == BN_CLICKED)
+                     {
+                     GetDlgItemText(hwndDlg, IDC_EDIT_PageName , name, sizeof(name));
+                     
+                     if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
+                     followMCP = true;
+                     else
+                     followMCP = false;
+                     
+                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SynchPages))
+                     synchPages = true;
+                     else
+                     synchPages = false;
+                     
+                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ScrollLink))
+                     useScrollLink = true;
+                     else
+                     useScrollLink = false;
+                     
+                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
+                     trackColouring = true;
+                     else
+                     trackColouring = false;
+                     
+                     dlgResult = IDOK;
+                     EndDialog(hwndDlg, 0);
+                     }
+                     break ;
+                     
+                     case IDCANCEL:
+                     if (HIWORD(wParam) == BN_CLICKED)
+                     EndDialog(hwndDlg, 0);
+                     break ;
+                     */
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Page
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Page::ToggleLearnMode()
+{
+    if(hwndLearn == nullptr)
+    {
+        hwndLearn = CreateDialog(g_hinst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        ShowWindow(hwndLearn, true);
+    }
+    else
+    {
+        ShowWindow(hwndLearn, false);
+        DestroyWindow(hwndLearn);
+        hwndLearn = nullptr;
+    }
+}
+
+void Page::ReceivedInput(Widget* widget)
+{
+    if(hwndLearn == nullptr)
+        return;
+    
+    currentWidget = widget;
+    
+    SendMessage(hwndLearn, WM_USER+1024, 0, 0);
 }
