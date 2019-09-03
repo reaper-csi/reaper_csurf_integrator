@@ -1735,7 +1735,7 @@ void Page::ToggleLearnMode()
 {
     if(hwndLearn == nullptr)
     {
-        hwndLearn = CreateDialog(g_hinst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
         ShowWindow(hwndLearn, true);
     }
     else
