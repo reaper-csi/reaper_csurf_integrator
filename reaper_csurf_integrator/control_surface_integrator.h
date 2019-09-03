@@ -658,6 +658,9 @@ public:
     virtual string GetDisplayName() { return ""; }
     string GetName() { return name_; }
     
+    virtual string GetParamAsString() { return ""; }
+    virtual string GetAlias() { return ""; }
+
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }

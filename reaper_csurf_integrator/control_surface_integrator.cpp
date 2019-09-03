@@ -906,7 +906,8 @@ void Widget::DoAction(double value)
     if(widgetActionManager_ != nullptr)
         widgetActionManager_->DoAction(value);
     
-    GetSurface()->GetPage()->ReceivedInput(this);
+    if( ! GetIsModifier())
+        GetSurface()->GetPage()->ReceivedInput(this);
 }
 
 void Widget::DoRelativeAction(double value)
@@ -1602,6 +1603,11 @@ WidgetActionManager* currentWidgetActionManager = nullptr;
 
 Action* currentAction = nullptr;
 
+bool isShift = false;
+bool isOption = false;
+bool isControl = false;
+bool isAlt = false;
+
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -1630,7 +1636,36 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_USER+1025:
         {
+            if(isShift)
+                CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_UNCHECKED);
+            
+            if(isOption)
+                CheckDlgButton(hwndDlg, IDC_CHECK_Option, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_Option, BST_UNCHECKED);
+            
+            if(isControl)
+                CheckDlgButton(hwndDlg, IDC_CHECK_Control, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_Control, BST_UNCHECKED);
+            
+            if(isAlt)
+                CheckDlgButton(hwndDlg, IDC_CHECK_Alt, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_Alt, BST_UNCHECKED);
+            
+            
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
+
+
+            
+            
+            
+            
             /*
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
@@ -1763,5 +1798,10 @@ void Page::PerformedAction(WidgetActionManager* widgetActionManager, Action* act
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
+    isShift = isShift_;
+    isOption = isOption_;
+    isControl = isControl_;
+    isAlt = isAlt_;
+
     SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
