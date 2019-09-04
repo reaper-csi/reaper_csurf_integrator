@@ -1454,7 +1454,10 @@ bool ControlSurface::AddZone(Zone* zone)
 void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
+    {
         zones_[zoneName]->Activate();
+        activeZone_ = zones_[zoneName];
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
