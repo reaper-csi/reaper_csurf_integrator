@@ -1650,6 +1650,17 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
+    
+    vector<string> GetActionNames()
+    {
+        vector<string> actionNames;
+        
+        for(auto [key, value] : actions_)
+            actionNames.push_back(key);
+        
+        return actionNames;
+    }
+    
     Page* GetCurrentPage()
     {
         if(pages_.size() > 0)
