@@ -423,6 +423,15 @@ public:
     void Activate();
     void Deactivate();
     
+    bool ContainsWidgetActionManager(WidgetActionManager* widgetActionManager)
+    {
+        for(auto manager : widgetActionManagers_)
+            if(widgetActionManager == manager)
+                return true;
+        
+        return false;
+    }
+    
     bool GetHasFocusedFXTrackNavigator()
     {
         if(widgetActionManagers_.size() > 0)
@@ -504,6 +513,15 @@ public:
     
     void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
+
+    Zone* GetActiveZone(WidgetActionManager* widgetActionManager)
+    {
+        for(auto zone : activeSendZones_)
+            if(zone->ContainsWidgetActionManager(widgetActionManager))
+                return zone;
+
+        return nullptr;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -531,7 +549,6 @@ private:
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
-    
     
     vector<FXWindow> openFXWindows_;
     bool showFXWindows_ = false;
@@ -566,6 +583,34 @@ public:
     void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
     bool GetShowFXWindows() { return showFXWindows_; }
     
+    void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
+    void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
+    void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
+    void ToggleMapSelectedTrackFX();
+    void ToggleMapFocusedFX();
+    void ToggleMapSelectedTrackFXMenu();
+    void MapSelectedTrackFXToWidgets();
+    void MapSelectedTrackFXToMenu();
+    void MapSelectedTrackFXSlotToWidgets(int slot);
+    void MapFocusedFXToWidgets();
+    
+    Zone* GetActiveZone(WidgetActionManager* widgetActionManager)
+    {
+        for(auto zone : activeSelectedTrackFXZones_)
+            if(zone->ContainsWidgetActionManager(widgetActionManager))
+                return zone;
+        
+        for(auto zone : activeSelectedTrackFXMenuFXZones_)
+            if(zone->ContainsWidgetActionManager(widgetActionManager))
+                return zone;
+        
+        for(auto zone : activeFocusedFXZones_)
+            if(zone->ContainsWidgetActionManager(widgetActionManager))
+                return zone;
+
+        return nullptr;
+    }
+    
     vector<Zone*> GetActiveZones()
     {
         vector<Zone*> activeFXZones;
@@ -578,18 +623,7 @@ public:
         
         return activeFXZones;
     }
-    
-    void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
-    void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
-    void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
-    void ToggleMapSelectedTrackFX();
-    void ToggleMapFocusedFX();
-    void ToggleMapSelectedTrackFXMenu();
-    void MapSelectedTrackFXToWidgets();
-    void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXSlotToWidgets(int slot);
-    void MapFocusedFXToWidgets();
-    
+
     void SetShowFXWindows(bool value)
     {
         showFXWindows_ = ! showFXWindows_;
@@ -666,10 +700,14 @@ public:
     {
         Zone* zone = nullptr;
         
-        string navigatorName = widgetActionManager->GetNavigatorName();
+        zone = fxActivationManager_->GetActiveZone(widgetActionManager);
         
+        if( ! zone)
+            zone = sendsActivationManager_->GetActiveZone(widgetActionManager);
         
-        
+        if( ! zone && zones_.count("Home") > 0)
+            if(zones_["Home"]->ContainsWidgetActionManager(widgetActionManager))
+                zone = zones_["Home"];
         
         return zone;
     }

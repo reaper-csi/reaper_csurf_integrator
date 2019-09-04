@@ -1712,28 +1712,27 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             if(index >= 0)
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
+            Zone* zone = currentWidget->GetSurface()->GetActiveZone(currentWidgetActionManager, currentAction);
             
-            
-            
-            
-            /*
-            SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
-            
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
-            
-            for(auto widget : currentWidget->GetSurface()->GetWidgets())
-                SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
-            
-            for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
+            if(zone)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
-                if(string(name) == currentWidget->GetName())
-                {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
-                    break;
-                }
+                istringstream filePath(zone->GetSourceFilePath());
+                vector<string> filePath_tokens;
+                string filePathComponent;
+                
+                while (getline(filePath, filePathComponent, '/'))
+                    filePath_tokens.push_back(filePathComponent);
+                
+                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
+                
+                
+                
+                
+                
+                
+                
+                
             }
-             */
         }
             break;
             
@@ -1743,9 +1742,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
-
-            
-            
         }
             break;
             
