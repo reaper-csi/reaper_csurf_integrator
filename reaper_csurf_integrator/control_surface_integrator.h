@@ -429,6 +429,10 @@ public:
             if(widgetActionManager == manager)
                 return true;
         
+        for(auto zone : includedZones_)
+            if(zone->ContainsWidgetActionManager(widgetActionManager))
+                return true;
+        
         return false;
     }
     
@@ -662,6 +666,7 @@ protected:
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
     map<string, Zone*> zones_;
+    Zone* activeZone_ = nullptr;
     bool useZoneLink_ = false;
 
     void InitZones(string zoneFolder);
@@ -708,6 +713,10 @@ public:
         if( ! zone && zones_.count("Home") > 0)
             if(zones_["Home"]->ContainsWidgetActionManager(widgetActionManager))
                 zone = zones_["Home"];
+        
+        if( ! zone && activeZone_)
+            if(activeZone_->ContainsWidgetActionManager(widgetActionManager))
+                zone = activeZone_;
         
         return zone;
     }
