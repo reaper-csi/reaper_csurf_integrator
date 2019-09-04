@@ -1728,6 +1728,77 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 
                 SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
                 
+                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), zone->GetName().c_str());
+
+                
+                
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+
+
+                bool isInIncludedZonesSection = false;
+                
+                int lineNumber = 0;
+                
+                try
+                {
+                    ifstream file(zone->GetSourceFilePath());
+                    
+                    for (string line; getline(file, line) ; )
+                    {
+                        lineNumber++;
+                        
+                        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                            continue;
+                        
+                        vector<string> tokens(GetTokens(line));
+                        
+                        if(tokens.size() > 0)
+                        {
+                            if(tokens[0] == "Zone")
+                            {
+                                if(tokens.size() > 1)
+                                    SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
+
+                            }
+                            else if(tokens[0] == "ZoneEnd")
+                            {
+                                continue;
+                            }
+                            else if(tokens[0] == "IncludedZones")
+                            {
+                                isInIncludedZonesSection = true;
+                                continue;
+                            }
+                            else if(tokens[0] == "IncludedZonesEnd")
+                            {
+                                isInIncludedZonesSection = false;
+                                continue;
+                            }
+                            else if(isInIncludedZonesSection)
+                            {
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)tokens[0].c_str());
+                                continue;
+                            }
+                            
+                        }
+                    }
+                }
+                catch (exception &e)
+                {
+                    char buffer[250];
+                    sprintf(buffer, "Trouble loadong Zone file\n");
+                    DAW::ShowConsoleMsg(buffer);
+                }
+
+                
+                for(auto name : TheManager->GetActionNames())
+                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+
+                
+                
+                
                 
                 
                 
