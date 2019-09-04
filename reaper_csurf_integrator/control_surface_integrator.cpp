@@ -1731,11 +1731,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), zone->GetName().c_str());
 
                 
-                
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
 
                 bool isInIncludedZonesSection = false;
                 
@@ -1769,12 +1770,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             else if(tokens[0] == "IncludedZones")
                             {
                                 isInIncludedZonesSection = true;
-                                continue;
                             }
                             else if(tokens[0] == "IncludedZonesEnd")
                             {
                                 isInIncludedZonesSection = false;
-                                continue;
+                            }
+                            else if(tokens[0] == "TrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator")
+                            {
+                                if(tokens[0] == "TrackNavigator")
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 1, 0);
+                                
+                                else if(tokens[0] == "SelectedTrackNavigator")
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
+                                
+                                else if(tokens[0] == "FocusedFXNavigator")
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 3, 0);
+                                
                             }
                             else if(isInIncludedZonesSection)
                             {
@@ -1789,6 +1800,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     actionNameEntry += " - " + tokens[3];
                                 
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionNameEntry.c_str());
+                                
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
+                            }
+                            else
+                            {
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
                             }
                         }
                     }
