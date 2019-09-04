@@ -1650,7 +1650,6 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
-    
     vector<string> GetActionNames()
     {
         vector<string> actionNames;
