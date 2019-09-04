@@ -1781,7 +1781,15 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)tokens[0].c_str());
                                 continue;
                             }
-                            
+                            else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
+                            {
+                                string actionNameEntry = tokens[2];
+                               
+                                if(tokens.size() > 3)
+                                    actionNameEntry += " - " + tokens[3];
+                                
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionNameEntry.c_str());
+                            }
                         }
                     }
                 }
