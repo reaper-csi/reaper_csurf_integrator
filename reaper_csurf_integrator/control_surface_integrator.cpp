@@ -907,7 +907,7 @@ void Widget::DoAction(double value)
         widgetActionManager_->DoAction(value);
     
     if( ! GetIsModifier())
-        GetSurface()->GetPage()->ReceivedInput(this);
+        GetSurface()->GetPage()->InputReceived(this);
 }
 
 void Widget::DoRelativeAction(double value)
@@ -1011,206 +1011,6 @@ void OSC_FeedbackProcessor::SetValue(string value)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigator::Pin()
-{
-    if( ! isChannelPinned_)
-    {
-        pinnedTrack_ = GetTrack();
-
-        isChannelPinned_ = true;
-    
-        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
-    }
-}
-
-void TrackNavigator::Unpin()
-{
-    if(isChannelPinned_)
-    {
-        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
-        
-        isChannelPinned_ = false;
-        
-        pinnedTrack_ = nullptr;
-    }
-}
-
-MediaTrack* TrackNavigator::GetTrack()
-{
-    if(isChannelPinned_)
-        return pinnedTrack_;
-    else
-        return manager_->GetTrackFromChannel(channelNum_ - bias_);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SelectedTrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* SelectedTrackNavigator::GetTrack()
-{
-    return manager_->GetSelectedTrack();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FocusedFXNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* FocusedFXNavigator::GetTrack()
-{
-    int trackNumber = 0;
-    int itemNumber = 0;
-    int fxIndex = 0;
-    
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-    {
-        if(trackNumber > 0)
-            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
-        else
-            return nullptr;
-    }
-    else
-        return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ControlSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), useZoneLink_(useZoneLink)
-{
-    fxActivationManager_ = new FXActivationManager(this);
-    sendsActivationManager_ = new SendsActivationManager(this);
-}
-
-void ControlSurface::InitZones(string zoneFolder)
-{
-    includedZoneMembers.clear();
-    trackNavigators.clear();
-    
-    try
-    {
-        vector<string> zoneFilesToProcess;
-        listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
-        
-        for(auto zoneFilename : zoneFilesToProcess)
-            ProcessFile(zoneFilename, this, widgets_);
-        
-        // now add appropriate included zones to zones
-        for(auto [includedZoneName, includedZones] : includedZoneMembers)
-            if(zones_.count(includedZoneName) > 0)
-                for(auto includedZone : includedZones)
-                        includedZone->AddZone(zones_[includedZoneName]);
-    }
-    catch (exception &e)
-    {
-        char buffer[250];
-        sprintf(buffer, "Trouble parsing Zone folders\n");
-        DAW::ShowConsoleMsg(buffer);
-    }
-}
-
-WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget* widget)
-{
-    if(zones_.count("Home") > 0)
-        return zones_["Home"]->GetHomeWidgetActionManagerForWidget(widget);
-    else
-        return nullptr;
-}
-
-string ControlSurface::GetZoneAlias(string zoneName)
-{
-    if(zones_.count(zoneName) > 0)
-        return zones_[zoneName]->GetAlias();
-    else
-        return "";
-}
-
-string ControlSurface::GetLocalZoneAlias(string zoneName)
-{
-    if(GetZoneAlias(zoneName) != "")
-        return GetZoneAlias(zoneName);
-    else
-        return page_->GetZoneAlias(zoneName);
-}
-
-int ControlSurface::GetParentZoneIndex(Zone* childZone)
-{
-    for(auto zone : fxActivationManager_->GetActiveZones())
-        if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetZoneIndex();
-
-    for(auto zone : sendsActivationManager_->GetActiveZones())
-        if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetZoneIndex();
-    
-    return 0;
-}
-
-bool ControlSurface::AddZone(Zone* zone)
-{
-    if(zones_.count(zone->GetName()) > 0)
-    {
-        char buffer[5000];
-        sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
-        DAW::ShowConsoleMsg(buffer);
-        return false;
-    }
-    else
-    {
-        zones_[zone->GetName()] = zone;
-        return true;
-    }
-}
-
-void ControlSurface::GoZone(string zoneName)
-{
-    if(zones_.count(zoneName) > 0)
-        zones_[zoneName]->Activate();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Midi_ControlSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Midi_ControlSurface::InitWidgets(string templateFilename)
-{
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
-    
-    // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget(this, "OnTrackSelection"));
-    widgets_.push_back(new Widget(this, "OnFXFocus"));
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// OSC_ControlSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
-{
-    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
-
-    InitWidgets(templateFilename);
-    
-    ResetAllWidgets();
-    
-    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-    InitZones(zoneFolder);
-    
-    runServer();
-    
-    GoZone("Home");
-}
-
-void OSC_ControlSurface::InitWidgets(string templateFilename)
-{
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
-    
-    // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget(this, "OnTrackSelection"));
-    widgets_.push_back(new Widget(this, "OnFXFocus"));
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1222,7 +1022,7 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 
 void Action::DoAction(double value)
 {
-    GetWidgetActionManager()->GetWidget()->GetSurface()->GetPage()->PerformedAction(GetWidgetActionManager(), this);
+    GetWidgetActionManager()->GetWidget()->GetSurface()->GetPage()->ActionPerformed(GetWidgetActionManager(), this);
     
     value = isInverted_ == false ? value : 1.0 - value;
     
@@ -1286,6 +1086,46 @@ void WidgetActionManager::SetIsTouched(bool isTouched)
 {
     if(trackNavigator_ != nullptr)
         trackNavigator_->SetTouchState((isTouched));
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::Activate()
+{
+    if(parentZoneName_ != "")
+    {
+        int index = surface_->GetParentZoneIndex(this);
+        
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate(index);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(index);
+    }
+    else
+    {
+        for(auto widgetActionManager : widgetActionManagers_)
+            widgetActionManager->Activate();
+        
+        for(auto zone : includedZones_)
+            zone->Activate();
+    }
+}
+
+void Zone::Deactivate()
+{
+    for(auto widgetActionManager : widgetActionManagers_)
+    {
+        Widget* widget =  widgetActionManager->GetWidget();
+        WidgetActionManager* manager = surface_->GetHomeWidgetActionManagerForWidget(widget);
+        if(manager == nullptr)
+            widget->Reset();
+        widget->SetWidgetActionManager(manager);
+    }
+    
+    for(auto zone : includedZones_)
+        zone->Deactivate();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1522,6 +1362,206 @@ void FXActivationManager::MapFocusedFXToWidgets()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ControlSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), useZoneLink_(useZoneLink)
+{
+    fxActivationManager_ = new FXActivationManager(this);
+    sendsActivationManager_ = new SendsActivationManager(this);
+}
+
+void ControlSurface::InitZones(string zoneFolder)
+{
+    includedZoneMembers.clear();
+    trackNavigators.clear();
+    
+    try
+    {
+        vector<string> zoneFilesToProcess;
+        listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
+        
+        for(auto zoneFilename : zoneFilesToProcess)
+            ProcessFile(zoneFilename, this, widgets_);
+        
+        // now add appropriate included zones to zones
+        for(auto [includedZoneName, includedZones] : includedZoneMembers)
+            if(zones_.count(includedZoneName) > 0)
+                for(auto includedZone : includedZones)
+                    includedZone->AddZone(zones_[includedZoneName]);
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        sprintf(buffer, "Trouble parsing Zone folders\n");
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget* widget)
+{
+    if(zones_.count("Home") > 0)
+        return zones_["Home"]->GetHomeWidgetActionManagerForWidget(widget);
+    else
+        return nullptr;
+}
+
+string ControlSurface::GetZoneAlias(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+        return zones_[zoneName]->GetAlias();
+    else
+        return "";
+}
+
+string ControlSurface::GetLocalZoneAlias(string zoneName)
+{
+    if(GetZoneAlias(zoneName) != "")
+        return GetZoneAlias(zoneName);
+    else
+        return page_->GetZoneAlias(zoneName);
+}
+
+int ControlSurface::GetParentZoneIndex(Zone* childZone)
+{
+    for(auto zone : fxActivationManager_->GetActiveZones())
+        if(childZone->GetParentZoneName() == zone->GetName())
+            return zone->GetZoneIndex();
+    
+    for(auto zone : sendsActivationManager_->GetActiveZones())
+        if(childZone->GetParentZoneName() == zone->GetName())
+            return zone->GetZoneIndex();
+    
+    return 0;
+}
+
+bool ControlSurface::AddZone(Zone* zone)
+{
+    if(zones_.count(zone->GetName()) > 0)
+    {
+        char buffer[5000];
+        sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+                zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
+        DAW::ShowConsoleMsg(buffer);
+        return false;
+    }
+    else
+    {
+        zones_[zone->GetName()] = zone;
+        return true;
+    }
+}
+
+void ControlSurface::GoZone(string zoneName)
+{
+    if(zones_.count(zoneName) > 0)
+        zones_[zoneName]->Activate();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Midi_ControlSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Midi_ControlSurface::InitWidgets(string templateFilename)
+{
+    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
+    
+    // Add the "hardcoded" widgets
+    widgets_.push_back(new Widget(this, "OnTrackSelection"));
+    widgets_.push_back(new Widget(this, "OnFXFocus"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC_ControlSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
+{
+    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
+    
+    InitWidgets(templateFilename);
+    
+    ResetAllWidgets();
+    
+    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
+    InitZones(zoneFolder);
+    
+    runServer();
+    
+    GoZone("Home");
+}
+
+void OSC_ControlSurface::InitWidgets(string templateFilename)
+{
+    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
+    
+    // Add the "hardcoded" widgets
+    widgets_.push_back(new Widget(this, "OnTrackSelection"));
+    widgets_.push_back(new Widget(this, "OnFXFocus"));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void TrackNavigator::Pin()
+{
+    if( ! isChannelPinned_)
+    {
+        pinnedTrack_ = GetTrack();
+        
+        isChannelPinned_ = true;
+        
+        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+    }
+}
+
+void TrackNavigator::Unpin()
+{
+    if(isChannelPinned_)
+    {
+        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
+        
+        isChannelPinned_ = false;
+        
+        pinnedTrack_ = nullptr;
+    }
+}
+
+MediaTrack* TrackNavigator::GetTrack()
+{
+    if(isChannelPinned_)
+        return pinnedTrack_;
+    else
+        return manager_->GetTrackFromChannel(channelNum_ - bias_);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SelectedTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* SelectedTrackNavigator::GetTrack()
+{
+    return manager_->GetSelectedTrack();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FocusedFXNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* FocusedFXNavigator::GetTrack()
+{
+    int trackNumber = 0;
+    int itemNumber = 0;
+    int fxIndex = 0;
+    
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+    {
+        if(trackNumber > 0)
+            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+        else
+            return nullptr;
+    }
+    else
+        return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 TrackNavigator* TrackNavigationManager::AddTrackNavigator()
@@ -1590,7 +1630,6 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
     if(trackOffset_ >  top)
         trackOffset_ = top;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
@@ -1673,6 +1712,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             if(index >= 0)
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
+            
+            
             
             
             /*
@@ -1793,17 +1834,19 @@ void Page::ToggleLearnMode()
     }
 }
 
-void Page::ReceivedInput(Widget* widget)
+void Page::InputReceived(Widget* widget)
 {
     if(hwndLearn == nullptr)
         return;
     
     currentWidget = widget;
-    
+    currentWidgetActionManager = nullptr;
+    currentAction = nullptr;
+
     SendMessage(hwndLearn, WM_USER+1024, 0, 0);
 }
 
-void Page::PerformedAction(WidgetActionManager* widgetActionManager, Action* action)
+void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
 {
     if(hwndLearn == nullptr)
         return;
@@ -1811,6 +1854,7 @@ void Page::PerformedAction(WidgetActionManager* widgetActionManager, Action* act
     if(widgetActionManager == nullptr || action == nullptr)
         return;
     
+    currentWidget = widgetActionManager->GetWidget();
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
