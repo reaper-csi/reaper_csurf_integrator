@@ -1022,14 +1022,15 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 
 void Action::DoAction(double value)
 {
-    GetWidgetActionManager()->GetWidget()->GetSurface()->GetPage()->ActionPerformed(GetWidgetActionManager(), this);
-    
     value = isInverted_ == false ? value : 1.0 - value;
     
     if(shouldToggle_)
         DoToggle(value);
     else
         Do(value);
+    
+    if( ! widget_->GetIsModifier())
+        page_->ActionPerformed(GetWidgetActionManager(), this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
