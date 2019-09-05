@@ -62,6 +62,7 @@
 #define IDC_STATIC_ZoneFilename         1060
 #define IDC_EDIT_ActionAlias            1061
 #define IDC_STATIC_CurrentZoneEntry     1062
+#define IDC_STATIC_CurrentWidget        1081
 #define IDC_BUTTON_GenerateZoneEntry    1063
 #define IDC_CHECK_Shift                 1064
 #define IDC_CHECK_Control               1065
@@ -75,6 +76,8 @@
 #define IDC_BUTTON_DeleteZoneEntry      1073
 #define IDC_BUTTON_LoadFile             1074
 #define IDC_BUTTON_NewFile              1075
+#define IDC_STATIC_CurrentAction        1076
+#define IDC_CHECK_IgnoreRelease         1082
 
 // Next default values for new objects
 // 
@@ -86,4 +89,3 @@
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
-
