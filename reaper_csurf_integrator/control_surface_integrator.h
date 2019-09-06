@@ -773,8 +773,7 @@ private:
                 ProcessMidiMessage((MIDI_event_ex_t*)evt);
         }
     }
-    
-    
+
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool useZoneLink)
     : ControlSurface(CSurfIntegrator, page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput)
@@ -1674,11 +1673,7 @@ public:
                         
                         DAW::ShowConsoleMsg(("\n" + to_string(stepOut) + " " +  to_string(smallstepOut) + " " + to_string(largestepOut) + " " + to_string(istoggleOut) + " ").c_str());
 
-                        #ifdef _WIN32
-                            rawFXFile << "\n" + string(fxParamName);
-                        #else
-                            rawFXFile << "\r\n" + string(fxParamName);
-                        #endif
+                        rawFXFile << "\n" + string(fxParamName);
                     }
                 }
                 
