@@ -8,12 +8,10 @@
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_MidiSurface          268
 #define IDD_DIALOG_MidiSurface1         269
-#define IDC_CHECK_MidiInMon             1000
-#define IDC_CHECK_MidiOutMon            1001
-#define IDC_CHECK_VSTParamMon           1002
+#define IDC_CHECK_SurfaceInMon          1000
+#define IDC_CHECK_SurfaceOutMon         1001
+#define IDC_CHECK_FXParamMon           1002
 #define IDC_EDIT_PageName               1003
-#define IDC_CHECK_OSCInMon              1003
-#define IDC_CHECK_OSCOutMon             1004
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_CHECK_SynchPages            1009
 #define IDC_COMBO_ZoneTemplates         1017

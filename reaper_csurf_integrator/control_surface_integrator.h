@@ -44,12 +44,6 @@ extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
-// CSI.ini tokens used by GUI and initialization
-const string MidiInMonitorToken = "MidiInMonitor";
-const string MidiOutMonitorToken = "MidiOutMonitor";
-const string OSCInMonitorToken = "OSCInMonitor";
-const string OSCOutMonitorToken = "OSCOutMonitor";
-const string VSTMonitorToken = "VSTMonitor";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string OSCSurfaceToken = "OSCSurface";
@@ -775,11 +769,10 @@ class Midi_ControlSurface : public ControlSurface
 private:
     midi_Input* midiInput_ = nullptr;
     midi_Output* midiOutput_ = nullptr;
-    bool midiInMonitor_ = false;
-    bool midiOutMonitor_ = false;
     map<int, Midi_CSIMessageGenerator*> CSIMessageGeneratorsByMidiMessage_;
     
     void InitWidgets(string templateFilename);
+    void ProcessMidiMessage(const MIDI_event_ex_t* evt);
 
     void HandleMidiInput()
     {
@@ -794,27 +787,10 @@ private:
         }
     }
     
-    void ProcessMidiMessage(const MIDI_event_ex_t* evt)
-    {
-        if(midiInMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
-            DAW::ShowConsoleMsg(buffer);
-        }
-        
-        // At this point we don't know how much of the message comprises the key, so try all three
-        if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
-            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
-        else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
-        else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
-            CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
-    }
     
 public:
-    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool midiInMonitor, bool midiOutMonitor, bool useZoneLink)
-    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput), midiInMonitor_(midiInMonitor), midiOutMonitor_(midiOutMonitor)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool useZoneLink)
+    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename);
         
@@ -828,12 +804,8 @@ public:
     
     virtual ~Midi_ControlSurface() {}
     
-    
-    virtual void ResetAll() override
-    {
-        midiInMonitor_ = false;
-        midiOutMonitor_ = false;
-    }
+    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    void SendMidiMessage(int first, int second, int third);
     
     virtual void Run() override
     {
@@ -845,32 +817,6 @@ public:
     {
         CSIMessageGeneratorsByMidiMessage_[message] = messageGenerator;
     }
-    
-    void SendMidiMessage(MIDI_event_ex_t* midiMessage)
-    {
-        if(midiOutput_)
-            midiOutput_->SendMsg(midiMessage, -1);
-        
-        if(midiOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s SysEx \n", name_.c_str());
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-    
-    void SendMidiMessage(int first, int second, int third)
-    {
-        if(midiOutput_)
-            midiOutput_->Send(first, second, third, -1);
-        
-        if(midiOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -881,8 +827,6 @@ private:
     string remoteDeviceIP_ = "";
     int inPort_ = 0;
     int outPort_ = 0;
-    bool oscInMonitor_ = false;
-    bool oscOutMonitor_ = false;
     oscpkt::UdpSocket inSocket_;
     oscpkt::UdpSocket outSocket_;
     oscpkt::PacketReader packetReader_;
@@ -890,6 +834,7 @@ private:
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
     void InitWidgets(string templateFilename);
+    void ProcessOSCMessage(string message, double value);
     
     void runServer()
     {
@@ -939,28 +884,17 @@ private:
         }
     }
     
-    void ProcessOSCMessage(string message, double value)
-    {
-        if(CSIMessageGeneratorsByOSCMessage_.count(message) > 0)
-            CSIMessageGeneratorsByOSCMessage_[message]->ProcessOSCMessage(message, value);
-        
-        if(oscInMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP);
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
+    
+    virtual void LoadingZone(string zoneName) override;
+    void SendOSCMessage(string oscAddress, double value);
+    void SendOSCMessage(string oscAddress, string value);
     
     virtual void ResetAll() override
     {
         LoadingZone("Home");
-        oscInMonitor_ = false;
-        oscOutMonitor_ = false;
     }
     
     virtual void Run() override
@@ -971,64 +905,6 @@ public:
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
-    }
-    
-    virtual void LoadingZone(string zoneName) override
-    {
-        string oscAddress(zoneName);
-        oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
-        oscAddress = "/" + oscAddress;
-        
-        if(outSocket_.isOk())
-        {
-            oscpkt::Message message;
-            message.init(oscAddress);
-            packetWriter_.init().addMessage(message);
-            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
-        }
-        
-        if(oscOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-
-    void SendOSCMessage(string oscAddress, double value)
-    {
-        if(outSocket_.isOk())
-        {
-            oscpkt::Message message;
-            message.init(oscAddress).pushFloat(value);
-            packetWriter_.init().addMessage(message);
-            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
-        }
-        
-        if(oscOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
-            DAW::ShowConsoleMsg(buffer);
-        }
-    }
-    
-    void SendOSCMessage(string oscAddress, string value)
-    {
-        if(outSocket_.isOk())
-        {
-            oscpkt::Message message;
-            message.init(oscAddress).pushStr(value);
-            packetWriter_.init().addMessage(message);
-            outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
-        }
-        
-        if(oscOutMonitor_)
-        {
-            char buffer[250];
-            sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
-            DAW::ShowConsoleMsg(buffer);
-        }
     }
 };
 
@@ -1610,7 +1486,15 @@ private:
     map<string, map<string, int>> fxParamIndices_;
     
     int currentPageIndex_ = 0;
-    bool VSTMonitor_ = false;
+    bool surfaceInMonitor_ = false;
+    bool surfaceOutMonitor_ = false;
+    bool fxMonitor_ = false;
+
+    
+    
+    bool oscInMonitor_ = false;
+    bool oscOutMonitor_ = false;
+    
     
     void InitActionDictionary();
 
@@ -1633,8 +1517,12 @@ public:
     
     void ResetAllWidgets()
     {
-        VSTMonitor_ = false;
-        
+        fxMonitor_ = false;
+        surfaceInMonitor_ = false;
+        surfaceOutMonitor_ = false;
+        oscInMonitor_ = false;
+        oscOutMonitor_ = false;
+
         if(pages_.size() > 0)
         {
             pages_[currentPageIndex_]->ResetAll();
@@ -1644,7 +1532,14 @@ public:
     
     void Init();
 
-    bool GetVSTMonitor() { return VSTMonitor_; }
+    void SetFXMonitor(bool value) { fxMonitor_ = value;  }
+    void SetSurfaceInMonitor(bool value) { surfaceInMonitor_ = value;  }
+    void SetSurfaceOutMonitor(bool value) { surfaceOutMonitor_ = value;  }
+    
+    bool GetFXMonitor() { return fxMonitor_;  }
+    bool GetSurfaceInMonitor() { return surfaceInMonitor_;  }
+    bool GetSurfaceOutMonitor() { return surfaceOutMonitor_;  }
+    
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
@@ -1756,7 +1651,7 @@ public:
         for(auto & page : pages_)
             page->TrackFXListChanged(track);
         
-        if(VSTMonitor_)
+        if(fxMonitor_)
         {
             char fxName[BUFSZ];
             char fxParamName[BUFSZ];

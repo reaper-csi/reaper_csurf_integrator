@@ -763,7 +763,7 @@ void Manager::Init()
     
     bool midiInMonitor = false;
     bool midiOutMonitor = false;
-    VSTMonitor_ = false;
+    fxMonitor_ = false;
     bool oscInMonitor = false;
     bool oscOutMonitor = false;
 
@@ -783,47 +783,7 @@ void Manager::Init()
             
             if(tokens.size() > 0) // ignore comment lines and blank lines
             {
-                if(tokens[0] == MidiInMonitorToken)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        midiInMonitor = true;
-                }
-                else if(tokens[0] == MidiOutMonitorToken)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        midiOutMonitor = true;
-                }
-                else if(tokens[0] == VSTMonitorToken)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        VSTMonitor_ = true;
-                }
-                if(tokens[0] == OSCInMonitorToken)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        oscInMonitor = true;
-                }
-                else if(tokens[0] == OSCOutMonitorToken)
-                {
-                    if(tokens.size() != 2)
-                        continue;
-                    
-                    if(tokens[1] == "On")
-                        oscOutMonitor = true;
-                }
-                else if(tokens[0] == PageToken)
+                if(tokens[0] == PageToken)
                 {
                     if(tokens.size() != 9)
                         continue;
@@ -849,9 +809,9 @@ void Manager::Init()
                         ControlSurface* surface = nullptr;
                         
                         if(tokens[0] == MidiSurfaceToken)
-                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), midiInMonitor, midiOutMonitor, tokens[6] == "UseZoneLink" ? true : false);
+                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), tokens[6] == "UseZoneLink" ? true : false);
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, oscInMonitor, oscOutMonitor, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
 
                         currentPage->AddSurface(surface);
                         
@@ -1473,11 +1433,56 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     widgets_.push_back(new Widget(this, "OnFXFocus"));
 }
 
+void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
+{
+    if(TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    // At this point we don't know how much of the message comprises the key, so try all three
+    if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
+    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+}
+
+void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
+{
+    if(midiOutput_)
+        midiOutput_->SendMsg(midiMessage, -1);
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s SysEx \n", name_.c_str());
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
+{
+    if(midiOutput_)
+        midiOutput_->Send(first, second, third, -1);
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool oscInMonitor, bool oscOutnMonitor, bool useZoneLink, string remoteDeviceIP)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), oscInMonitor_(oscInMonitor), oscOutMonitor_(oscOutnMonitor), remoteDeviceIP_(remoteDeviceIP)
+OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
 {
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
     
@@ -1500,6 +1505,77 @@ void OSC_ControlSurface::InitWidgets(string templateFilename)
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "OnTrackSelection"));
     widgets_.push_back(new Widget(this, "OnFXFocus"));
+}
+
+void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
+{
+    if(CSIMessageGeneratorsByOSCMessage_.count(message) > 0)
+        CSIMessageGeneratorsByOSCMessage_[message]->ProcessOSCMessage(message, value);
+    
+    if(TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void OSC_ControlSurface::LoadingZone(string zoneName)
+{
+    string oscAddress(zoneName);
+    oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
+    oscAddress = "/" + oscAddress;
+    
+    if(outSocket_.isOk())
+    {
+        oscpkt::Message message;
+        message.init(oscAddress);
+        packetWriter_.init().addMessage(message);
+        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+    }
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
+{
+    if(outSocket_.isOk())
+    {
+        oscpkt::Message message;
+        message.init(oscAddress).pushFloat(value);
+        packetWriter_.init().addMessage(message);
+        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+    }
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
+{
+    if(outSocket_.isOk())
+    {
+        oscpkt::Message message;
+        message.init(oscAddress).pushStr(value);
+        packetWriter_.init().addMessage(message);
+        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+    }
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
+        DAW::ShowConsoleMsg(buffer);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1896,6 +1972,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
+            
+            if(TheManager->GetSurfaceInMonitor())
+                CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_UNCHECKED);
+            
+            if(TheManager->GetSurfaceOutMonitor())
+                CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceOutMon, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceOutMon, BST_UNCHECKED);
+            
+            if(TheManager->GetFXMonitor())
+                CheckDlgButton(hwndDlg, IDC_CHECK_FXParamMon, BST_CHECKED);
+            else
+                CheckDlgButton(hwndDlg, IDC_CHECK_FXParamMon, BST_UNCHECKED);
+            
         }
             break;
             
@@ -1903,6 +1995,35 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             switch(LOWORD(wParam))
             {
+                case IDC_CHECK_SurfaceInMon:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
+                        TheManager->SetSurfaceInMonitor(true);
+                    else
+                        TheManager->SetSurfaceInMonitor(false);
+                }
+                    break;
+                    
+                case IDC_CHECK_SurfaceOutMon:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceOutMon))
+                        TheManager->SetSurfaceOutMonitor(true);
+                    else
+                        TheManager->SetSurfaceOutMonitor(false);
+                }
+                    break;
+                    
+                case IDC_CHECK_FXParamMon:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_FXParamMon))
+                        TheManager->SetFXMonitor(true);
+                    else
+                        TheManager->SetFXMonitor(false);
+                }
+                    break;
+                    
+
+                    
                     /*
                      case IDC_RADIO_MCP:
                      CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
