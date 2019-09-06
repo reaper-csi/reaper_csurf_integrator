@@ -991,7 +991,7 @@ void Action::DoAction(double value)
     value = isInverted_ == false ? value : 1.0 - value;
     
     if(shouldToggle_)
-        DoToggle(value);
+        Do( ! GetCurrentValue());
     else
         Do(value);
     

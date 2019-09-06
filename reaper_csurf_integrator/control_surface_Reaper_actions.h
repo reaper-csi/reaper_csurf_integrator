@@ -21,16 +21,6 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
             DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, value);
     }
-    
-    virtual void DoToggle(double value) override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-        {
-            double min, max = 0;
-            double toggledValue = ! DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
-            DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, toggledValue);
-        }
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -232,6 +222,8 @@ public:
         DAW::GetTrackSendUIMute(track, sendIndex_, &mute);
         SetWidgetValue(widget_, mute);
     }
+    
+    
     
     void Do(double value) override
     {
