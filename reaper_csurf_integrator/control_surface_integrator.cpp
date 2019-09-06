@@ -760,12 +760,6 @@ void Manager::InitActionDictionary()
 void Manager::Init()
 {
     pages_.clear();
-    
-    bool midiInMonitor = false;
-    bool midiOutMonitor = false;
-    fxMonitor_ = false;
-    bool oscInMonitor = false;
-    bool oscOutMonitor = false;
 
     Page* currentPage = nullptr;
     
