@@ -1645,39 +1645,23 @@ public:
             for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                
                 DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
-
-                string filename(fxName);
-                filename = regex_replace(filename, regex(BadFileChars), "_");
-                filename += ".txt";
-
-                ofstream rawFXFile(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename);
-                
-                if(rawFXFile.is_open())
+            
+                for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
-                    rawFXFile << string(fxName);
+                    DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
                     
-                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
-                    {
-                        DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                        
-                        double stepOut = 0;
-                        double smallstepOut = 0;
-                        double largestepOut = 0;
-                        bool istoggleOut = false;
-                        
-                        DAW::ShowConsoleMsg(("\n" + string(fxParamName)).c_str());
-                        
-                        bool isOk = TrackFX_GetParameterStepSizes(track, i, j, &stepOut, &smallstepOut, &largestepOut, &istoggleOut);
-                        
-                        DAW::ShowConsoleMsg(("\n" + to_string(stepOut) + " " +  to_string(smallstepOut) + " " + to_string(largestepOut) + " " + to_string(istoggleOut) + " ").c_str());
-
-                        rawFXFile << "\n" + string(fxParamName);
-                    }
+                    double stepOut = 0;
+                    double smallstepOut = 0;
+                    double largestepOut = 0;
+                    bool istoggleOut = false;
+                    
+                    DAW::ShowConsoleMsg(("\n\n" + string(fxParamName)).c_str());
+                    
+                    TrackFX_GetParameterStepSizes(track, i, j, &stepOut, &smallstepOut, &largestepOut, &istoggleOut);
+                    
+                    DAW::ShowConsoleMsg(("\n" + to_string(stepOut) + " " +  to_string(smallstepOut) + " " + to_string(largestepOut) + " " + to_string(istoggleOut) + " ").c_str());
                 }
-                
-                rawFXFile.close();
             }
         }
     }
