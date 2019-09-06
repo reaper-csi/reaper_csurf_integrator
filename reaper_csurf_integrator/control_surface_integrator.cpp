@@ -274,7 +274,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, bool &shouldIgnoreRelease, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -303,6 +303,8 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
                 shouldToggle = true;
+            else if(modifier_tokens[i] == "Press")
+                shouldIgnoreRelease = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
         }
@@ -417,10 +419,11 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                 bool isTrackTouch = false;
                 bool isInverted = false;
                 bool shouldToggle = false;
+                bool shouldIgnoreRelease = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, shouldIgnoreRelease, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -473,6 +476,9 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                         if(shouldToggle)
                             action->SetShouldToggle();
                         
+                        if(shouldIgnoreRelease)
+                            action->SetShouldIgnoreRelease();
+
                         if(isDelayed)
                             action->SetDelayAmount(delayAmount * 1000.0);
 
@@ -976,6 +982,9 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 
 void Action::DoAction(double value)
 {
+    if(shouldIgnoreRelease_ && value == 0)
+        return;
+    
     value = isInverted_ == false ? value : 1.0 - value;
     
     if(shouldToggle_)
