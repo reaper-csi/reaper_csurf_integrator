@@ -41,9 +41,14 @@ public:
         return commandStr_;
     }
     
+    virtual double GetCurrentValue() override
+    {
+        return DAW::GetToggleCommandState(commandId_);
+    }
+    
     virtual void RequestUpdate() override
     {
-        SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
+        SetWidgetValue(widget_, GetCurrentValue());
     }
     
     virtual void Do(double value) override
@@ -154,13 +159,23 @@ public:
     {
         return fxParamDisplayName_;
     }
+
+    virtual double GetCurrentValue() override
+    {
+        double min = 0.0;
+        double max = 0.0;
+        double retVal = 0.0;
+        
+        if(MediaTrack* track = widget_->GetTrack())
+            retVal = DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
+        
+        return retVal;
+    }
     
     virtual void RequestUpdate() override
     {
-        double min, max = 0;
-        
         if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(widget_, DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max));
+            SetWidgetValue(widget_, GetCurrentValue());
         else
             widget_->Reset();
     }
