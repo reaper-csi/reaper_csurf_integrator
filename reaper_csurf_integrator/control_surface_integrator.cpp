@@ -474,7 +474,10 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             action->SetIsInverted();
                         
                         if(shouldToggle)
+                        {
                             action->SetShouldToggle();
+                            action->SetShouldIgnoreRelease();
+                        }
                         
                         if(shouldIgnoreRelease)
                             action->SetShouldIgnoreRelease();
