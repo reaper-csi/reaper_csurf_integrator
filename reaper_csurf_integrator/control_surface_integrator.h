@@ -278,12 +278,12 @@ public:
     
     virtual void DoAction(double value);
     
+    virtual double GetCurrentValue() { return 0.0; }
     virtual void RequestUpdate() {}
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
     virtual void Do(string value) {}
     virtual void Do(double value) {}
-    virtual void DoToggle(double value) {}
     
     void SetWidgetValue(Widget* widget, double value)
     {
