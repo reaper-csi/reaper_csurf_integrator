@@ -1644,20 +1644,63 @@ void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-HWND hwndLearn = nullptr;
-
-Widget* currentWidget = nullptr;
-
 static char name[BUFSZ];
-
+HWND hwndLearn = nullptr;
+Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
-
 Action* currentAction = nullptr;
+string zoneName = "";
 
 bool isShift = false;
 bool isOption = false;
 bool isControl = false;
 bool isAlt = false;
+
+static void LoadRawFXFile(HWND hwndDlg)
+{
+    MediaTrack* track = nullptr;
+    int index = 0;
+    
+    if(zoneName == "")
+        return;
+    
+    char fxName[BUFSZ];
+    char fxParamName[BUFSZ];
+    
+    DAW::TrackFX_GetFXName(track, index, fxName, sizeof(fxName));
+    
+    DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
+    
+    string filename(fxName);
+    filename = regex_replace(filename, regex(BadFileChars), "_");
+    filename += ".txt";
+    
+    ofstream rawFXFile(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename);
+    
+    if(rawFXFile.is_open())
+    {
+        rawFXFile << string(fxName);
+        
+        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, index); j++)
+        {
+            DAW::TrackFX_GetParamName(track, index, j, fxParamName, sizeof(fxParamName));
+                        
+#ifdef _WIN32
+            rawFXFile << "\n" + string(fxParamName);
+#else
+            rawFXFile << "\r\n" + string(fxParamName);
+#endif
+        }
+    }
+    
+    rawFXFile.close();
+    
+    
+    
+    
+    
+    
+}
 
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1720,6 +1763,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             if(zone)
             {
+                bool hasLoadedRawFile = false;
+                
                 istringstream filePath(zone->GetSourceFilePath());
                 vector<string> filePath_tokens;
                 string filePathComponent;
@@ -1761,7 +1806,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(tokens[0] == "Zone")
                             {
                                 if(tokens.size() > 1)
+                                {
                                     SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
+                                    zoneName = tokens[1];
+                                }
 
                             }
                             else if(tokens[0] == "ZoneEnd")
@@ -1795,6 +1843,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
                             else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                             {
+                                if(hasLoadedRawFile == false)
+                                {
+                                    LoadRawFXFile(hwndDlg);
+                                    hasLoadedRawFile = true;
+                                }
+                            
                                 string actionNameEntry = tokens[2];
                                
                                 if(tokens.size() > 3)
