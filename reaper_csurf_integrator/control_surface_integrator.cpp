@@ -536,8 +536,8 @@ void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<st
             
             // Control Signal Generators
             if(widgetClass == "Press" && tokens.size() == 4)
-                new Press_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
-            else if(widgetClass == "PressRelease" && tokens.size() == 7)
+                new PressRelease_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+            else if(widgetClass == "Press" && tokens.size() == 7)
                 new PressRelease_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])), new MIDI_event_ex_t(strToHex(tokens[4]), strToHex(tokens[5]), strToHex(tokens[6])));
             else if(widgetClass == "Fader14Bit" && tokens.size() == 4)
                 new Fader14Bit_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
@@ -639,12 +639,10 @@ void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<str
         {
             string widgetClass = tokens[0];
 
-            // Control Signal Generators
+            // Control Signal Generator
             if(widgetClass == "Control")
                 new OSC_CSIMessageGenerator(surface, widget, tokens[1]);
-            else if(widgetClass == "PressOnly")
-                new PressOnly_OSC_CSIMessageGenerator(surface, widget, tokens[1]);
-            // Feedback Processors
+            // Feedback Processor
             else if(widgetClass == "FB_Processor")
                 widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, tokens[1]));
         }
