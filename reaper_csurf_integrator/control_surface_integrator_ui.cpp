@@ -882,47 +882,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     while (iss >> quoted(token))
                         tokens.push_back(token);
                     
-                    if(tokens[0] == MidiInMonitorToken)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "On")
-                            CheckDlgButton(hwndDlg, IDC_CHECK_MidiInMon, BST_CHECKED);
-                    }
-                    else if(tokens[0] == MidiOutMonitorToken)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "On")
-                            CheckDlgButton(hwndDlg, IDC_CHECK_MidiOutMon, BST_CHECKED);
-                    }
-                    else if(tokens[0] == VSTMonitorToken)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "On")
-                            CheckDlgButton(hwndDlg, IDC_CHECK_VSTParamMon, BST_CHECKED);
-                    }
-                    if(tokens[0] == OSCInMonitorToken)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "On")
-                            CheckDlgButton(hwndDlg, IDC_CHECK_OSCInMon, BST_CHECKED);
-                    }
-                    else if(tokens[0] == OSCOutMonitorToken)
-                    {
-                        if(tokens.size() != 2)
-                            continue;
-                        
-                        if(tokens[1] == "On")
-                            CheckDlgButton(hwndDlg, IDC_CHECK_OSCOutMon, BST_CHECKED);
-                    }
-                    else if(tokens[0] == PageToken)
+                    if(tokens[0] == PageToken)
                     {
                         if(tokens.size() != 9)
                             continue;
@@ -997,43 +957,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
             if(iniFile.is_open())
             {
-                string line = MidiInMonitorToken + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiInMon))
-                    line += "On";
-                else
-                    line += "Off";
-                iniFile << line + "\n";
-                
-                line = MidiOutMonitorToken + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_MidiOutMon))
-                    line += "On";
-                else
-                    line += "Off";
-                iniFile << line + "\n";
-                
-                line = VSTMonitorToken + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_VSTParamMon))
-                    line += "On";
-                else
-                    line += "Off";
-                iniFile << line + "\n";
-                
-                line = OSCInMonitorToken + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_OSCInMon))
-                    line += "On";
-                else
-                    line += "Off";
-                iniFile << line + "\n";
-                
-                line = OSCOutMonitorToken + " ";
-                if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_OSCOutMon))
-                    line += "On";
-                else
-                    line += "Off";
-                iniFile << line + "\n";
-
-                
-                iniFile << "\n";
+                string line = "";
                 
                 for(auto page : pages)
                 {
