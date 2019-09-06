@@ -41,14 +41,9 @@ public:
         return commandStr_;
     }
     
-    virtual double GetCurrentValue() override
-    {
-        return DAW::GetToggleCommandState(commandId_);
-    }
-    
     virtual void RequestUpdate() override
     {
-        SetWidgetValue(widget_, GetCurrentValue());
+        SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
     }
     
     virtual void Do(double value) override

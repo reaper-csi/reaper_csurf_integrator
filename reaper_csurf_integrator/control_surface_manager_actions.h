@@ -29,12 +29,7 @@ class ToggleLearnMode  : public SurfaceAction
 {
 public:
     ToggleLearnMode(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
-    /*
-    void RequestUpdate() override
-    {
-        SetWidgetValue(widget_, surface_->GetShouldMapSends());
-    }
-    */
+
     void Do(double value) override
     {
         page_->ToggleLearnMode();
