@@ -253,6 +253,7 @@ protected:
     WidgetActionManager* widgetActionManager_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
+    bool shouldIgnoreRelease_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
@@ -269,6 +270,7 @@ public:
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
+    void SetShouldIgnoreRelease() { shouldIgnoreRelease_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void AddAction(Action* action) {}
