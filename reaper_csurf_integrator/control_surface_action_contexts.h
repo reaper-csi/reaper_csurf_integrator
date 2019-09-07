@@ -92,6 +92,11 @@ public:
         return to_string(sendIndex_);
     }
     
+    virtual int GetParam() override
+    {
+        return sendIndex_;
+    }
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = widget_->GetTrack())
@@ -119,6 +124,12 @@ public:
     {
         return to_string(param_);
     }
+    
+    virtual int GetParam() override
+    {
+        return param_;
+    }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,6 +159,11 @@ public:
     virtual string GetParamAsString() override
     {
         return to_string(fxParamIndex_);
+    }
+    
+    virtual int GetParam() override
+    {
+        return fxParamIndex_;
     }
     
     virtual string GetAlias() override
@@ -193,6 +209,11 @@ public:
     virtual string GetParamAsString() override
     {
         return to_string(param_);
+    }
+    
+    virtual int GetParam() override
+    {
+        return param_;
     }
 };
 
@@ -262,6 +283,11 @@ public:
     virtual string GetParamAsString() override
     {
         return to_string(param_);
+    }
+    
+    virtual int GetParam() override
+    {
+        return param_;
     }
 };
 

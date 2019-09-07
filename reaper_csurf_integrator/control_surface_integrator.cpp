@@ -1730,6 +1730,7 @@ Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
 Action* currentAction = nullptr;
 string zoneName = "";
+int actionListSize = 0;
 
 bool isShift = false;
 bool isOption = false;
@@ -1793,8 +1794,8 @@ static void LoadRawFXFile(HWND hwndDlg)
         string actionName = to_string(rawFileLineIndex) + " - " + line;
         
         SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionName.c_str());
-        
         rawFileLineIndex++;
+        actionListSize++;
     }
 }
 
@@ -1826,6 +1827,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_USER+1025:
         {
+            actionListSize = 0;
+            
             if(isShift)
                 CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_CHECKED);
             else
@@ -1969,10 +1972,26 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 
                 for(auto name : TheManager->GetActionNames())
                     if(name != Shift && name != Option && name != Control && name != Alt)
+                    {
                         SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                        actionListSize++;
+                    }
+                        
+                if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+                else
+                {
+                    for(int i = 0; i < actionListSize; i++)
+                    {
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
+                        if(string(name) == currentAction->GetName())
+                        {
+                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                            break;
+                        }
+                    }
+                }
 
-                
-                
                 
                 
                 
