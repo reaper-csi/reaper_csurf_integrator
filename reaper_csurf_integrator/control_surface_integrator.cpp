@@ -1731,6 +1731,7 @@ WidgetActionManager* currentWidgetActionManager = nullptr;
 Action* currentAction = nullptr;
 string zoneName = "";
 int actionListSize = 0;
+int zoneComponentsListSize = 0;
 
 bool isShift = false;
 bool isOption = false;
@@ -1828,6 +1829,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_USER+1025:
         {
             actionListSize = 0;
+            zoneComponentsListSize = 0;
             
             if(isShift)
                 CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_CHECKED);
@@ -1948,16 +1950,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     hasLoadedRawFile = true;
                                 }
                             
-                                string actionNameEntry = tokens[2];
+                                string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
                                
                                 if(tokens.size() > 3)
-                                    actionNameEntry += " - " + tokens[3];
+                                    zoneComponentEntry += " " + tokens[3];
                                 
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
+                                zoneComponentsListSize++;
                             }
                             else
                             {
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
+                                zoneComponentsListSize++;
                             }
                         }
                     }
@@ -1992,14 +1996,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                 }
 
-                
-                
-                
-                
-                
-                
-                
-                
+                string testString = currentWidget->GetName() + " " + currentAction->GetName();
+                char lineStringBuf[BUFSZ];
+
+                for(int i = 0; i < zoneComponentsListSize; i++)
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                    string lineString = string(lineStringBuf);
+                    
+                    size_t found = lineString.find(testString);
+                    
+                    if (found != string::npos)
+                    {
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                        break;
+                    }
+                }
             }
         }
             break;
