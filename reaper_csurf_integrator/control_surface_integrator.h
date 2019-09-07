@@ -251,6 +251,7 @@ public:
     string GetName() { return name_; }
     
     virtual string GetParamAsString() { return ""; }
+    virtual int GetParam() { return 0; }
     virtual string GetAlias() { return ""; }
     
     void SetIsInverted() { isInverted_ = true; }
