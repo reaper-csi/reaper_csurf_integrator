@@ -864,11 +864,11 @@ void Widget::RequestUpdate()
 
 void Widget::DoAction(double value)
 {
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(value);
-    
     if( ! GetIsModifier())
         GetSurface()->GetPage()->InputReceived(this);
+
+    if(widgetActionManager_ != nullptr)
+        widgetActionManager_->DoAction(value);    
 }
 
 void Widget::DoRelativeAction(double value)
@@ -1738,14 +1738,14 @@ bool isOption = false;
 bool isControl = false;
 bool isAlt = false;
 
-static void LoadRawFXFile(HWND hwndDlg)
+static bool LoadRawFXFile(HWND hwndDlg)
 {
     MediaTrack* track = currentWidget->GetTrack();
     Zone* zone = currentWidget->GetSurface()->GetActiveZone(currentWidgetActionManager, currentAction);
     int index = zone->GetZoneIndex();
     
     if(zoneName == "")
-        return;
+        return false;
     
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -1783,7 +1783,7 @@ static void LoadRawFXFile(HWND hwndDlg)
     ifstream rawFXFile(filePath);
     
     if(!rawFXFile)
-        return;
+        return false;
     
     int rawFileLineIndex = 0;
     
@@ -1798,6 +1798,8 @@ static void LoadRawFXFile(HWND hwndDlg)
         rawFileLineIndex++;
         actionListSize++;
     }
+    
+    return true;
 }
 
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1806,6 +1808,19 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     {
         case WM_USER+1024:
         {
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+
+            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), "");
+            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), "");
+            
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+            
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
@@ -1945,10 +1960,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                             {
                                 if(hasLoadedRawFile == false)
-                                {
-                                    LoadRawFXFile(hwndDlg);
-                                    hasLoadedRawFile = true;
-                                }
+                                    hasLoadedRawFile = LoadRawFXFile(hwndDlg);
                             
                                 string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
                                
