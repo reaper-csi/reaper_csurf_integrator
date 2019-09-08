@@ -7,6 +7,8 @@
 extern  void ShutdownMidiIO();
 
 extern reaper_csurf_reg_t csurf_integrator_reg;
+extern bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode, HWND hwnd);
+
 
 REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs, if any
 HWND g_hwnd;
@@ -37,6 +39,10 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
         }
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
+        
+        
+        plugin_register("hookcommand2", (void *)onAction);
+        
       
         // plugin registered
         return 1;
