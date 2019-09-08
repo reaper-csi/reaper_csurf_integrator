@@ -2072,6 +2072,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
                     break;
                     
+                case IDC_BUTTON_Close:
+                {
+                    TheManager->CloseLearnModeWindow();
+                }
+                    break;
+
 
                     
                     /*
@@ -2140,6 +2146,25 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Page::OpenLearnModeWindow()
+{
+    if(hwndLearn == nullptr)
+    {
+        hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        ShowWindow(hwndLearn, true);
+    }
+}
+
+void Page::CloseLearnModeWindow()
+{
+    if(hwndLearn != nullptr)
+    {
+        ShowWindow(hwndLearn, false);
+        DestroyWindow(hwndLearn);
+        hwndLearn = nullptr;
+    }
+}
+
 void Page::ToggleLearnMode()
 {
     if(hwndLearn == nullptr)

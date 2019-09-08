@@ -10,7 +10,7 @@
 #define IDD_DIALOG_MidiSurface1         269
 #define IDC_CHECK_SurfaceInMon          1000
 #define IDC_CHECK_SurfaceOutMon         1001
-#define IDC_CHECK_FXParamMon           1002
+#define IDC_CHECK_FXParamMon            1002
 #define IDC_EDIT_PageName               1003
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_CHECK_SynchPages            1009
@@ -60,7 +60,6 @@
 #define IDC_STATIC_ZoneFilename         1060
 #define IDC_EDIT_ActionAlias            1061
 #define IDC_STATIC_CurrentZoneEntry     1062
-#define IDC_STATIC_CurrentWidget        1081
 #define IDC_BUTTON_GenerateZoneEntry    1063
 #define IDC_CHECK_Shift                 1064
 #define IDC_CHECK_Control               1065
@@ -75,6 +74,8 @@
 #define IDC_BUTTON_LoadFile             1074
 #define IDC_BUTTON_NewFile              1075
 #define IDC_STATIC_CurrentAction        1076
+#define IDC_BUTTON_Close                1078
+#define IDC_STATIC_CurrentWidget        1081
 #define IDC_CHECK_IgnoreRelease         1082
 
 // Next default values for new objects

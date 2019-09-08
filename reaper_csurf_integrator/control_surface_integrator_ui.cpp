@@ -11,6 +11,14 @@ Manager* TheManager = nullptr;
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
 
+bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode, HWND hwnd)
+{
+    if(command == 65535 && TheManager != nullptr)
+        TheManager->OpenLearnModeWindow();
+    
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
