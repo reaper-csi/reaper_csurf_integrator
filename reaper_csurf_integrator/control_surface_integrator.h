@@ -314,6 +314,7 @@ class WidgetActionManager
 {
 private:
     Widget* widget_ = nullptr;
+    Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
     
@@ -322,9 +323,10 @@ private:
     string GetModifiers();
     
 public:
-    WidgetActionManager(Widget* widget, TrackNavigator* trackNavigator) : widget_(widget), trackNavigator_(trackNavigator) {}
+    WidgetActionManager(Widget* widget, Zone* zone, TrackNavigator* trackNavigator) : widget_(widget), zone_(zone), trackNavigator_(trackNavigator) {}
     
     Widget* GetWidget() { return widget_; }
+    Zone* GetZone() { return zone_; }
     bool GetHasFocusedFXNavigator();
     string GetNavigatorName();
     MediaTrack* GetTrack();
@@ -682,27 +684,7 @@ public:
     int GetParentZoneIndex(Zone* childZone);
     bool AddZone(Zone* zone);
     void GoZone(string zoneName);
-
-    Zone* GetActiveZone(WidgetActionManager* widgetActionManager, Action* action)
-    {
-        Zone* zone = nullptr;
-        
-        zone = fxActivationManager_->GetActiveZone(widgetActionManager);
-        
-        if( ! zone)
-            zone = sendsActivationManager_->GetActiveZone(widgetActionManager);
-        
-        if( ! zone && zones_.count("Home") > 0)
-            if(zones_["Home"]->ContainsWidgetActionManager(widgetActionManager))
-                zone = zones_["Home"];
-        
-        if( ! zone && activeZone_)
-            if(activeZone_->ContainsWidgetActionManager(widgetActionManager))
-                zone = activeZone_;
-        
-        return zone;
-    }
-    
+   
     void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends();
