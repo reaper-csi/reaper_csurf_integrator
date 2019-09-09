@@ -458,7 +458,7 @@ void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedToken
                             else if(hasFocusedFXTrackNavigator)
                                 trackNavigator = new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager());
                             
-                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, trackNavigator);
+                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, expandedZones[i], trackNavigator);
 
                             expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
                         }
@@ -1742,7 +1742,7 @@ bool isAlt = false;
 static bool LoadRawFXFile(HWND hwndDlg)
 {
     MediaTrack* track = currentWidget->GetTrack();
-    Zone* zone = currentWidget->GetSurface()->GetActiveZone(currentWidgetActionManager, currentAction);
+    Zone* zone = currentWidgetActionManager->GetZone();
     int index = zone->GetZoneIndex();
     
     if(zoneName == "")
@@ -1868,7 +1868,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             else
                 CheckDlgButton(hwndDlg, IDC_CHECK_Alt, BST_UNCHECKED);
             
-            
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
@@ -1884,11 +1883,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             if(index >= 0)
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
-            Zone* zone = currentWidget->GetSurface()->GetActiveZone(currentWidgetActionManager, currentAction);
-            
+            Zone* zone = currentWidgetActionManager->GetZone();
+
             if(zone)
             {
-                bool hasLoadedRawFile = false;
+                bool hasLoadedRawFXFile = false;
                 
                 istringstream filePath(zone->GetSourceFilePath());
                 vector<string> filePath_tokens;
@@ -1961,8 +1960,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
                             else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                             {
-                                if(hasLoadedRawFile == false)
-                                    hasLoadedRawFile = LoadRawFXFile(hwndDlg);
+                                if(hasLoadedRawFXFile == false)
+                                    hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
                             
                                 string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
                                
