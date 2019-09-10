@@ -95,7 +95,7 @@ static vector<string> GetTokens(string line)
 
 static map<string, vector<Zone*>> includedZoneMembers;
 
-void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, string alias)
+static void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, string alias)
 {
     istringstream expandedZone(tokens[1]);
     vector<string> expandedZoneTokens;
@@ -164,7 +164,7 @@ void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZ
     }
 }
 
-void ExpandIncludedZone(vector<string> tokens, vector<string> &expandedZones)
+static void ExpandIncludedZone(vector<string> tokens, vector<string> &expandedZones)
 {
     //////////////////////////////////////////////////////////////////////////////////////////////
     /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
@@ -217,7 +217,7 @@ void ExpandIncludedZone(vector<string> tokens, vector<string> &expandedZones)
     }
 }
 
-void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, Zone* zone)
+static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, Zone* zone)
 {
     for (string line; getline(zoneFile, line) ; )
     {
@@ -246,7 +246,7 @@ void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, 
     }
 }
 
-map<string, TrackNavigator*> trackNavigators;
+static map<string, TrackNavigator*> trackNavigators;
 
 static TrackNavigator* TrackNavigatorForChannel(int channelNum, string channelName, ControlSurface* surface)
 {
@@ -318,7 +318,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
         modifiers = NoModifiers;
 }
 
-void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
     
@@ -508,7 +508,7 @@ static double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface, vector<Widget*> &widgets)
 {
     if(tokens.size() < 2)
         return;
@@ -615,7 +615,7 @@ void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<st
     }
 }
 
-void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface, vector<Widget*> &widgets)
 {
     if(tokens.size() < 2)
         return;
@@ -649,7 +649,7 @@ void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<str
     }
 }
 
-void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
     int lineNumber = 0;
     
@@ -1721,11 +1721,13 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
+static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
 {
     int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)entryName.c_str());
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
+
+bool reentranceGuard = false;
 
 char name[BUFSZ * 2];
 HWND hwndLearn = nullptr;
@@ -1867,43 +1869,61 @@ static bool LoadRawFXFile(HWND hwndDlg)
     return true;
 }
 
+static void ClearWidgets(HWND hwndDlg)
+{
+    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
+    SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, "");
+    SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, "");
+}
+
+static void ClearZones(HWND hwndDlg)
+{
+    SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), "");
+    SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), "");
+    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+}
+
+static void ClearActions(HWND hwndDlg)
+{
+    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
+    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
+    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
+    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+}
+
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         case WM_USER+1024:
         {
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
-
-            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), "");
-            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), "");
-            
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+            ClearWidgets(hwndDlg);
+            ClearZones(hwndDlg);
+            ClearActions(hwndDlg);
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
-            
             for(auto widget : currentWidget->GetSurface()->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
+            
+            reentranceGuard = true;
             
             for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
                 if(string(name) == currentWidget->GetName())
                 {
+                    reentranceGuard = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
                     break;
                 }
             }
+            
+            reentranceGuard = false;
         }
             break;
             
@@ -2158,6 +2178,37 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             switch(LOWORD(wParam))
             {
+                case IDC_LIST_WidgetNames:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case LBN_SELCHANGE:
+                        {
+                            // Get selected index.
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                currentWidget = currentWidget->GetSurface()->GetWidgets()[index];
+                                
+                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
+                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+
+                                if( reentranceGuard)
+                                    reentranceGuard = false;
+                                else
+                                {
+                                    ClearActions(hwndDlg);
+                                    ClearActions(hwndDlg);
+                                    currentWidget->DoAction(currentWidget->GetLastValue());
+                                }
+                            }
+                        }
+                    }
+                }
+                    break;
+
+                    
+                    
                 case IDC_CHECK_SurfaceInMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
