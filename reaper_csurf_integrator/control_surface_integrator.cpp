@@ -1729,10 +1729,7 @@ HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
 Action* currentAction = nullptr;
-string zoneName = "";
 int actionListSize = 0;
-int zoneComponentsListSize = 0;
-int zoneNameListSize = 0;
 
 bool isShift = false;
 bool isOption = false;
@@ -1764,9 +1761,6 @@ static bool LoadRawFXFile(HWND hwndDlg)
     MediaTrack* track = currentWidget->GetTrack();
     Zone* zone = currentWidgetActionManager->GetZone();
     int index = zone->GetZoneIndex();
-    
-    if(zoneName == "")
-        return false;
     
     char fxName[BUFSZ];
     char fxParamName[BUFSZ];
@@ -1865,8 +1859,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_USER+1025:
         {
             actionListSize = 0;
-            zoneComponentsListSize = 0;
-            zoneNameListSize = 0;
+            zones.clear();
+            
+            bool hasLoadedRawFXFile = false;
             
             if(isShift)
                 CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_CHECKED);
@@ -1905,8 +1900,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
             Zone* zone = currentWidgetActionManager->GetZone();
             
-            bool hasLoadedRawFXFile = false;
-            
             istringstream filePath(zone->GetSourceFilePath());
             vector<string> filePath_tokens;
             string filePathComponent;
@@ -1942,11 +1935,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(tokens.size() > 1)
                             {
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
-                                zoneName = tokens[1];
-                                zoneNameListSize++;
                                 
                                 LM_Zone newZone;
-                                newZone.name = zone->GetName();
+                                newZone.name = tokens[1];
                                 zones.push_back(newZone);
                             }
                         }
@@ -1991,7 +1982,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                         else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                         {
-                            if(hasLoadedRawFXFile == false)
+                            if(hasLoadedRawFXFile == false && zones.size() > 0 && zones[zones.size() - 1].name != "")
                                 hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
                         
                             string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
@@ -2000,8 +1991,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 zoneComponentEntry += " " + tokens[3];
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
-                            zoneComponentsListSize++;
-                            
                             
                             if(zones.size() > 0)
                             {
@@ -2013,12 +2002,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 zones[zones.size() - 1].zoneEntries.push_back(entry);
                             }
-
                         }
                         else
                         {
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
-                            zoneComponentsListSize++;
 
                             if(tokens.size() > 1 && zones.size() > 0)
                             {
@@ -2067,22 +2054,25 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             string testString = currentWidget->GetName() + " " + currentAction->GetName();
             char lineStringBuf[BUFSZ];
 
-            for(int i = 0; i < zoneComponentsListSize; i++)
+            if(zones.size() > 0)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
-                
-                string lineString = string(lineStringBuf);
-                
-                size_t found = lineString.find(testString);
-                
-                if (found != string::npos)
+                for(int i = 0; i < zones[zones.size() - 1].zoneEntries.size(); i++)
                 {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
-                    break;
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                    
+                    string lineString = string(lineStringBuf);
+                    
+                    size_t found = lineString.find(testString);
+                    
+                    if (found != string::npos)
+                    {
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                        break;
+                    }
                 }
             }
 
-            for(int i = 0; i < zoneNameListSize; i++)
+            for(int i = 0; i < zones.size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
                 
@@ -2094,7 +2084,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             }
-
         }
             break;
             
