@@ -95,7 +95,9 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
+    double GetLastValue() { return lastValue_; }
     void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
+    WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
