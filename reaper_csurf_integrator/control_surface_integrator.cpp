@@ -1715,6 +1715,9 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
         trackOffset_ = top;
 }
 
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1724,7 +1727,7 @@ void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-char name[BUFSZ];
+char name[BUFSZ * 2];
 HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
@@ -1882,6 +1885,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
@@ -1933,15 +1937,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
+ 
+            string navigatorName = currentWidgetActionManager->GetNavigatorName();
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+            if(navigatorName == "")
+                navigatorName = "No Navigator";
             
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
-
-            int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)currentWidgetActionManager->GetNavigatorName().c_str());
+            int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
             if(index >= 0)
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
@@ -2001,16 +2003,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             isInIncludedZonesSection = false;
                         }
                         else if(tokens[0] == "TrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator")
-                        {
-                            if(tokens[0] == "TrackNavigator")
-                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 1, 0);
-                            
-                            else if(tokens[0] == "SelectedTrackNavigator")
-                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
-                            
-                            else if(tokens[0] == "FocusedFXNavigator")
-                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 3, 0);
-                            
+                        {                         
                             if(zones.size() > 0)
                                 zones[zones.size() - 1].navigator = tokens[0];
                         }
@@ -2138,7 +2131,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_INITDIALOG:
         {
-            AddComboBoxEntry(hwndDlg, 0, "None", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
