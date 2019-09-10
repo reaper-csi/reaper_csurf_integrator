@@ -1739,7 +1739,18 @@ bool isAlt = false;
 struct LM_ZoneEntry
 {
     vector<string> modifiers;
-    string widget = "";
+    bool isShift = false;
+    bool isOption = false;
+    bool isControl = false;
+    bool isAlt = false;
+
+    bool isTouch = false;
+    bool shouldToggle = false;
+    bool shouldIgnoreRelease = false;
+    bool isHold = false;
+    bool isInvert = false;
+    
+    string widgetName = "";
     string action = "";
     string param = "";
     string alias = "";
@@ -1755,6 +1766,42 @@ struct LM_Zone
 };
 
 vector<LM_Zone> zones;
+
+static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
+{
+    string widgetName = "";
+    string modifiers = "";
+    bool isTrackTouch = false;
+    bool isInverted = false;
+    bool shouldToggle = false;
+    bool shouldIgnoreRelease = false;
+    double delayAmount = 0.0;
+
+    GetWidgetNameAndModifiers(line, widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, shouldIgnoreRelease, delayAmount);
+    
+    entry.widgetName = widgetName;
+    entry.isTouch = isTrackTouch;
+    entry.isInvert = isInverted;
+    entry.shouldToggle = shouldToggle;
+    entry.shouldIgnoreRelease = shouldIgnoreRelease;
+    entry.isHold = delayAmount == 0.0 ? false : true;
+    
+    size_t found = line.find(Shift);
+    if (found != string::npos)
+        entry.isShift = true;
+    
+    found = line.find(Option);
+    if (found != string::npos)
+        entry.isOption = true;
+    
+    found = line.find(Control);
+    if (found != string::npos)
+        entry.isControl = true;
+    
+    found = line.find(Alt);
+    if (found != string::npos)
+        entry.isAlt = true;
+}
 
 static bool LoadRawFXFile(HWND hwndDlg)
 {
@@ -1995,6 +2042,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(zones.size() > 0)
                             {
                                 LM_ZoneEntry entry;
+                                GetEntryWidgetNameAndModifiers(tokens[0], entry);
                                 entry.action = tokens[1];
                                 entry.param = tokens[2];
                                 if(tokens.size() > 3)
@@ -2010,6 +2058,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(tokens.size() > 1 && zones.size() > 0)
                             {
                                 LM_ZoneEntry entry;
+                                GetEntryWidgetNameAndModifiers(tokens[0], entry);
                                 entry.action = tokens[1];
                                 if(tokens.size() > 2)
                                     entry.param = tokens[2];
