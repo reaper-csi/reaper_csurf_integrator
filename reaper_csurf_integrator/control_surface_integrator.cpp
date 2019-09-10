@@ -1724,7 +1724,7 @@ void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-static char name[BUFSZ];
+char name[BUFSZ];
 HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
@@ -1738,6 +1738,26 @@ bool isShift = false;
 bool isOption = false;
 bool isControl = false;
 bool isAlt = false;
+
+struct LM_ZoneEntry
+{
+    vector<string> modifiers;
+    string widget = "";
+    string action = "";
+    string param = "";
+    string alias = "";
+};
+
+struct LM_Zone
+{
+    string name = "";
+    string parentZone = "";
+    string navigator = "";
+    vector<string> includedZones;
+    vector<LM_ZoneEntry> zoneEntries;
+};
+
+vector<LM_Zone> zones;
 
 static bool LoadRawFXFile(HWND hwndDlg)
 {
@@ -1884,162 +1904,197 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
             Zone* zone = currentWidgetActionManager->GetZone();
+            
+            bool hasLoadedRawFXFile = false;
+            
+            istringstream filePath(zone->GetSourceFilePath());
+            vector<string> filePath_tokens;
+            string filePathComponent;
+            
+            while (getline(filePath, filePathComponent, '/'))
+                filePath_tokens.push_back(filePathComponent);
+            
+            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
+            
+            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), zone->GetName().c_str());
 
-            if(zone)
+            bool isInIncludedZonesSection = false;
+            
+            int lineNumber = 0;
+            
+            try
             {
-                bool hasLoadedRawFXFile = false;
+                ifstream file(zone->GetSourceFilePath());
                 
-                istringstream filePath(zone->GetSourceFilePath());
-                vector<string> filePath_tokens;
-                string filePathComponent;
-                
-                while (getline(filePath, filePathComponent, '/'))
-                    filePath_tokens.push_back(filePathComponent);
-                
-                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
-                
-                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), zone->GetName().c_str());
-
-                bool isInIncludedZonesSection = false;
-                
-                int lineNumber = 0;
-                
-                try
+                for (string line; getline(file, line) ; )
                 {
-                    ifstream file(zone->GetSourceFilePath());
+                    lineNumber++;
                     
-                    for (string line; getline(file, line) ; )
+                    if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                        continue;
+                    
+                    vector<string> tokens(GetTokens(line));
+                    
+                    if(tokens.size() > 0)
                     {
-                        lineNumber++;
-                        
-                        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                        if(tokens[0] == "Zone")
+                        {
+                            if(tokens.size() > 1)
+                            {
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
+                                zoneName = tokens[1];
+                                zoneNameListSize++;
+                                
+                                LM_Zone newZone;
+                                newZone.name = zone->GetName();
+                                zones.push_back(newZone);
+                            }
+                        }
+                        else if(tokens[0] == "ZoneEnd")
+                        {
                             continue;
-                        
-                        vector<string> tokens(GetTokens(line));
-                        
-                        if(tokens.size() > 0)
+                        }
+                        else if(tokens[0] == "IncludedZones")
                         {
-                            if(tokens[0] == "Zone")
-                            {
-                                if(tokens.size() > 1)
-                                {
-                                    SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
-                                    zoneName = tokens[1];
-                                    zoneNameListSize++;
-                                }
-
-                            }
-                            else if(tokens[0] == "ZoneEnd")
-                            {
-                                continue;
-                            }
-                            else if(tokens[0] == "IncludedZones")
-                            {
-                                isInIncludedZonesSection = true;
-                            }
-                            else if(tokens[0] == "IncludedZonesEnd")
-                            {
-                                isInIncludedZonesSection = false;
-                            }
-                            else if(tokens[0] == "TrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator")
-                            {
-                                if(tokens[0] == "TrackNavigator")
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 1, 0);
-                                
-                                else if(tokens[0] == "SelectedTrackNavigator")
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
-                                
-                                else if(tokens[0] == "FocusedFXNavigator")
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 3, 0);
-                                
-                            }
-                            else if(isInIncludedZonesSection)
-                            {
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)tokens[0].c_str());
-                                continue;
-                            }
-                            else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
-                            {
-                                if(hasLoadedRawFXFile == false)
-                                    hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
+                            isInIncludedZonesSection = true;
+                        }
+                        else if(tokens[0] == "IncludedZonesEnd")
+                        {
+                            isInIncludedZonesSection = false;
+                        }
+                        else if(tokens[0] == "TrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator")
+                        {
+                            if(tokens[0] == "TrackNavigator")
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 1, 0);
                             
-                                string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
-                               
-                                if(tokens.size() > 3)
-                                    zoneComponentEntry += " " + tokens[3];
-                                
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
-                                zoneComponentsListSize++;
-                            }
-                            else
-                            {
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
-                                zoneComponentsListSize++;
-                            }
+                            else if(tokens[0] == "SelectedTrackNavigator")
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
+                            
+                            else if(tokens[0] == "FocusedFXNavigator")
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 3, 0);
+                            
+                            if(zones.size() > 0)
+                                zones[zones.size() - 1].navigator = tokens[0];
                         }
-                    }
-                }
-                catch (exception &e)
-                {
-                    char buffer[250];
-                    sprintf(buffer, "Trouble loadong Zone file\n");
-                    DAW::ShowConsoleMsg(buffer);
-                }
-
-                
-                for(auto name : TheManager->GetActionNames())
-                    if(name != Shift && name != Option && name != Control && name != Alt)
-                    {
-                        SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
-                        actionListSize++;
-                    }
-                        
-                if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
-                else
-                {
-                    for(int i = 0; i < actionListSize; i++)
-                    {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
-                        if(string(name) == currentAction->GetName())
+                        else if(isInIncludedZonesSection)
                         {
-                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
-                            break;
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)tokens[0].c_str());
+                            if(zones.size() > 0)
+                                zones[zones.size() - 1].includedZones.push_back(tokens[0]);
+                        }
+                        else if(tokens[0] == "ParentZone")
+                        {
+                            // TBD select right one from dropdown -- needs two pass
+                            
+                            if(tokens.size() > 1 && zones.size() > 0)
+                                zones[zones.size() - 1].parentZone = tokens[1];
+                        }
+                        else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
+                        {
+                            if(hasLoadedRawFXFile == false)
+                                hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
+                        
+                            string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
+                           
+                            if(tokens.size() > 3)
+                                zoneComponentEntry += " " + tokens[3];
+                            
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
+                            zoneComponentsListSize++;
+                            
+                            
+                            if(zones.size() > 0)
+                            {
+                                LM_ZoneEntry entry;
+                                entry.action = tokens[1];
+                                entry.param = tokens[2];
+                                if(tokens.size() > 3)
+                                    entry.alias = tokens[3];
+                                
+                                zones[zones.size() - 1].zoneEntries.push_back(entry);
+                            }
+
+                        }
+                        else
+                        {
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
+                            zoneComponentsListSize++;
+
+                            if(tokens.size() > 1 && zones.size() > 0)
+                            {
+                                LM_ZoneEntry entry;
+                                entry.action = tokens[1];
+                                if(tokens.size() > 2)
+                                    entry.param = tokens[2];
+                                if(tokens.size() > 3)
+                                    entry.alias = tokens[3];
+                                
+                                zones[zones.size() - 1].zoneEntries.push_back(entry);
+                            }
                         }
                     }
                 }
+            }
+            catch (exception &e)
+            {
+                char buffer[250];
+                sprintf(buffer, "Trouble loadong Zone file\n");
+                DAW::ShowConsoleMsg(buffer);
+            }
 
-                string testString = currentWidget->GetName() + " " + currentAction->GetName();
-                char lineStringBuf[BUFSZ];
-
-                for(int i = 0; i < zoneComponentsListSize; i++)
+            for(auto name : TheManager->GetActionNames())
+                if(name != Shift && name != Option && name != Control && name != Alt)
                 {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
-                    
-                    string lineString = string(lineStringBuf);
-                    
-                    size_t found = lineString.find(testString);
-                    
-                    if (found != string::npos)
-                    {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
-                        break;
-                    }
+                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                    actionListSize++;
                 }
-
-                for(int i = 0; i < zoneNameListSize; i++)
+            
+            if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+            else
+            {
+                for(int i = 0; i < actionListSize; i++)
                 {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
-                    
-                    string lineString = string(lineStringBuf);
-                    
-                    if (lineString == zone->GetName())
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
+                    if(string(name) == currentAction->GetName())
                     {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
                         break;
                     }
                 }
             }
+
+            string testString = currentWidget->GetName() + " " + currentAction->GetName();
+            char lineStringBuf[BUFSZ];
+
+            for(int i = 0; i < zoneComponentsListSize; i++)
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                
+                string lineString = string(lineStringBuf);
+                
+                size_t found = lineString.find(testString);
+                
+                if (found != string::npos)
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                    break;
+                }
+            }
+
+            for(int i = 0; i < zoneNameListSize; i++)
+            {
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                
+                string lineString = string(lineStringBuf);
+                
+                if (lineString == zone->GetName())
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+                    break;
+                }
+            }
+
         }
             break;
             
