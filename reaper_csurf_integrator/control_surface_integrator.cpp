@@ -2242,14 +2242,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 else
                                 {
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "FXParam");
-                                    
-                                    string param = "";
-                                    
-                                    for(int i = 0; buffer[i] != ' '; i++)
-                                        param += buffer[i];
-                                    
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, param.c_str());
-                                    
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, to_string(index).c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
                                 }
                                 
