@@ -1727,8 +1727,6 @@ static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-bool reentranceGuard = false;
-
 char name[BUFSZ * 2];
 HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
@@ -1910,20 +1908,15 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             for(auto widget : currentWidget->GetSurface()->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
             
-            reentranceGuard = true;
-            
             for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
                 if(string(name) == currentWidget->GetName())
                 {
-                    reentranceGuard = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
                     break;
                 }
             }
-            
-            reentranceGuard = false;
         }
             break;
             
@@ -2184,6 +2177,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         case LBN_SELCHANGE:
                         {
+                            /*
                             // Get selected index.
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
@@ -2199,16 +2193,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 {
                                     ClearActions(hwndDlg);
                                     ClearActions(hwndDlg);
+                                    reentranceGuard = true;
                                     currentWidget->DoAction(currentWidget->GetLastValue());
                                 }
                             }
+                             */
                         }
                     }
                 }
                     break;
 
-                    
-                    
                 case IDC_CHECK_SurfaceInMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
