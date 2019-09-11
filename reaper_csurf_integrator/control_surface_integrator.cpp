@@ -1727,9 +1727,12 @@ static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-bool wasSelectedBySurface = false;
+bool widgetNameWasSelectedBySurface = false;
+bool actionNameWasSelectedBySurface = false;
+bool zoneComponentWasSelectedBySurface = false;
+bool zoneWasSelectedBySurface = false;
 
-char name[BUFSZ * 2];
+char buffer[BUFSZ * 2];
 HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
@@ -1879,7 +1882,6 @@ static void ClearWidgets(HWND hwndDlg)
 static void ClearZones(HWND hwndDlg)
 {
     SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), "");
-    SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), "");
     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
@@ -1912,16 +1914,17 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
-                if(string(name) == currentWidget->GetName())
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                if(string(buffer) == currentWidget->GetName())
                 {
-                    wasSelectedBySurface = true;
+                    widgetNameWasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
                     break;
                 }
             }
-        }
+            
             break;
+        }
             
         case WM_USER+1025:
         {
@@ -1974,8 +1977,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
             
-            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_CurrentZone), zone->GetName().c_str());
-
             bool isInIncludedZonesSection = false;
             
             int lineNumber = 0;
@@ -2095,14 +2096,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             
             if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
+            {
+                actionNameWasSelectedBySurface = true;
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+            }
             else
             {
                 for(int i = 0; i < actionListSize; i++)
                 {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
-                    if(string(name) == currentAction->GetName())
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                    if(string(buffer) == currentAction->GetName())
                     {
+                        actionNameWasSelectedBySurface = true;
                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
                         break;
                     }
@@ -2124,6 +2129,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     if (found != string::npos)
                     {
+                        zoneComponentWasSelectedBySurface = true;
                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
                         break;
                     }
@@ -2138,12 +2144,14 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 
                 if (lineString == zone->GetName())
                 {
+                    zoneWasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
                     break;
                 }
             }
-        }
+            
             break;
+        }
             
         case WM_INITDIALOG:
         {
@@ -2167,8 +2175,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             else
                 CheckDlgButton(hwndDlg, IDC_CHECK_FXParamMon, BST_UNCHECKED);
             
-        }
             break;
+        }
             
         case WM_COMMAND:
         {
@@ -2180,9 +2188,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         case LBN_SELCHANGE:
                         {
-                            if(wasSelectedBySurface)
+                            if(widgetNameWasSelectedBySurface)
                             {
-                                wasSelectedBySurface = false;
+                                widgetNameWasSelectedBySurface = false;
                                 break;
                             }
                             
@@ -2197,19 +2205,139 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
                             }
+
+                            break;
                         }
                     }
-                }
-                    break;
 
+                    break;
+                }
+
+                case IDC_LIST_ActionNames:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case LBN_SELCHANGE:
+                        {
+                            if(actionNameWasSelectedBySurface)
+                            {
+                                actionNameWasSelectedBySurface = false;
+                                break;
+                            }
+                            
+                            // Get selected index.
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                currentAction = nullptr;
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
+
+                                if( ! isdigit(buffer[0]))
+                                {
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, buffer);
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
+                                }
+                                else
+                                {
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "FXParam");
+                                    
+                                    string param = "";
+                                    
+                                    for(int i = 0; buffer[i] != ' '; i++)
+                                        param += buffer[i];
+                                    
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, param.c_str());
+                                    
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
+                                }
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                            }
+                            
+                            break;
+                        }
+                    }
+                    
+                    break;
+                }
+
+                case IDC_LIST_Zones:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case LBN_SELCHANGE:
+                        {
+                            if(zoneWasSelectedBySurface)
+                            {
+                                zoneWasSelectedBySurface = false;
+                                break;
+                            }
+                            
+                            // Get selected index.
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+
+                                
+                                
+                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
+                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                            }
+                            
+                            break;
+                        }
+                    }
+                    
+                    break;
+                }
+                
+
+/*
+                case IDC_LIST_ZoneComponents:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case LBN_SELCHANGE:
+                        {
+                            if(zoneComponentWasSelectedBySurface)
+                            {
+                                zoneComponentWasSelectedBySurface = false;
+                                break;
+                            }
+                            
+                            // Get selected index.
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                currentWidget = currentWidget->GetSurface()->GetWidgets()[index];
+                                
+                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
+                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                            }
+                            
+                            break;
+                        }
+                    }
+                    
+                    break;
+                }
+*/
                 case IDC_CHECK_SurfaceInMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
                         TheManager->SetSurfaceInMonitor(true);
                     else
                         TheManager->SetSurfaceInMonitor(false);
-                }
+                    
                     break;
+                }
                     
                 case IDC_CHECK_SurfaceOutMon:
                 {
@@ -2217,8 +2345,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         TheManager->SetSurfaceOutMonitor(true);
                     else
                         TheManager->SetSurfaceOutMonitor(false);
-                }
+                    
                     break;
+                }
                     
                 case IDC_CHECK_FXParamMon:
                 {
@@ -2226,14 +2355,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         TheManager->SetFXMonitor(true);
                     else
                         TheManager->SetFXMonitor(false);
-                }
+                    
                     break;
+                }
                     
                 case IDC_BUTTON_Close:
                 {
                     TheManager->CloseLearnModeWindow();
-                }
+                    
                     break;
+                }
 
 
                     
