@@ -48,7 +48,6 @@
 #define IDC_CHECK_AutoMapFocusedFX      1047
 #define IDC_COMBO_ParentZone            1047
 #define IDC_STATIC_SurfaceName          1048
-#define IDC_STATIC_Actions              1049
 #define IDC_EDIT_WidgetName             1050
 #define IDC_EDIT_ActionName             1051
 #define IDC_EDIT_ActionParameter        1052
@@ -56,10 +55,8 @@
 #define IDC_BUTTON_DeleteZone           1056
 #define IDC_BUTTON_AddIncludedZone      1057
 #define IDC_BUTTON_DeleteIncludedZone   1058
-#define IDC_STATIC_CurrentZone          1059
 #define IDC_STATIC_ZoneFilename         1060
 #define IDC_EDIT_ActionAlias            1061
-#define IDC_STATIC_CurrentZoneEntry     1062
 #define IDC_BUTTON_GenerateZoneEntry    1063
 #define IDC_CHECK_Shift                 1064
 #define IDC_CHECK_Control               1065
@@ -73,9 +70,7 @@
 #define IDC_BUTTON_DeleteZoneEntry      1073
 #define IDC_BUTTON_LoadFile             1074
 #define IDC_BUTTON_NewFile              1075
-#define IDC_STATIC_CurrentAction        1076
 #define IDC_BUTTON_Close                1078
-#define IDC_STATIC_CurrentWidget        1081
 #define IDC_CHECK_IgnoreRelease         1082
 
 // Next default values for new objects
