@@ -1822,7 +1822,6 @@ static bool LoadRawFXFile(HWND hwndDlg)
     
     DAW::TrackFX_GetFXName(track, index, fxName, sizeof(fxName));
     
-    
     string filename(fxName);
     filename = regex_replace(filename, regex(BadFileChars), "_");
     filename += ".txt";
@@ -1831,7 +1830,11 @@ static bool LoadRawFXFile(HWND hwndDlg)
     
     ifstream fileExists(filePath);
     
-    if( ! fileExists)
+    if(fileExists)
+    {
+        fileExists.close();
+    }
+    else
     {
         ofstream rawFXFile(filePath);
         
