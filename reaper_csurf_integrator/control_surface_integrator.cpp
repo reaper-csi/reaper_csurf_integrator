@@ -2042,16 +2042,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                         else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                         {
-                            if(hasLoadedRawFXFile == false && zones.size() > 0 && zones[zones.size() - 1].name != "")
-                                hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
-                        
-                            string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
-                           
-                            if(tokens.size() > 3)
-                                zoneComponentEntry += " " + tokens[3];
-                            
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
-                            
                             if(zones.size() > 0)
                             {
                                 LM_ZoneEntry entry;
@@ -2062,14 +2052,25 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     entry.alias = tokens[3];
                                 
                                 zones[zones.size() - 1].zoneEntries.push_back(entry);
+
+                                string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
+                                
+                                if(tokens.size() > 3)
+                                    zoneComponentEntry += " " + tokens[3];
+                                
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
+                                
+                                if(hasLoadedRawFXFile == false && zone->GetName() == zones[zones.size() - 1].name)
+                                        hasLoadedRawFXFile = LoadRawFXFile(hwndDlg);
                             }
                         }
                         else
                         {
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
-
                             if(tokens.size() > 1 && zones.size() > 0)
                             {
+                                if(zone->GetName() == zones[zones.size() - 1].name)
+                                    SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
+                                
                                 LM_ZoneEntry entry;
                                 GetEntryWidgetNameAndModifiers(tokens[0], entry);
                                 entry.action = tokens[1];
