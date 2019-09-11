@@ -1734,9 +1734,11 @@ bool zoneWasSelectedBySurface = false;
 
 char buffer[BUFSZ * 2];
 HWND hwndLearn = nullptr;
+ControlSurface* currentSurface = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
 Action* currentAction = nullptr;
+
 
 bool isShift = false;
 bool isOption = false;
@@ -1765,6 +1767,7 @@ struct LM_ZoneEntry
 
 struct LM_Zone
 {
+    string filename = "";
     string name = "";
     string parentZone = "";
     string navigator = "";
@@ -1903,6 +1906,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     {
         case WM_USER+1024:
         {
+            currentSurface = currentWidget->GetSurface();
+            
             ClearWidgets(hwndDlg);
             ClearZones(hwndDlg);
             ClearActions(hwndDlg);
@@ -1910,7 +1915,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
-            for(auto widget : currentWidget->GetSurface()->GetWidgets())
+            for(auto widget : currentSurface->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
             
             for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
@@ -2198,7 +2203,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                currentWidget = currentWidget->GetSurface()->GetWidgets()[index];
+                                currentWidget = currentSurface->GetWidgets()[index];
                                 
                                 SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
                                 SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
