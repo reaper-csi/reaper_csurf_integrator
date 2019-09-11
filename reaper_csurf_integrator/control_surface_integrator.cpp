@@ -1737,7 +1737,6 @@ HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
 WidgetActionManager* currentWidgetActionManager = nullptr;
 Action* currentAction = nullptr;
-int actionListSize = 0;
 
 bool isShift = false;
 bool isOption = false;
@@ -1869,7 +1868,6 @@ static bool LoadRawFXFile(HWND hwndDlg)
         
         SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionName.c_str());
         rawFileLineIndex++;
-        actionListSize++;
     }
     
     return true;
@@ -1915,7 +1913,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             for(auto widget : currentWidget->GetSurface()->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
             
-            for(int i = 0; i < currentWidget->GetSurface()->GetWidgets().size(); i++)
+            for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
                 if(string(buffer) == currentWidget->GetName())
@@ -1931,7 +1929,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_USER+1025:
         {
-            actionListSize = 0;
             zones.clear();
             
             bool hasLoadedRawFXFile = false;
@@ -2096,7 +2093,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(name != Shift && name != Option && name != Control && name != Alt)
                 {
                     SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
-                    actionListSize++;
                 }
             
             if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
@@ -2106,7 +2102,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             }
             else
             {
-                for(int i = 0; i < actionListSize; i++)
+                for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
                 {
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
                     if(string(buffer) == currentAction->GetName())
@@ -2330,9 +2326,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     break;
                 }
-                
 
-/*
                 case IDC_LIST_ZoneComponents:
                 {
                     switch (HIWORD(wParam))
@@ -2346,15 +2340,54 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             }
                             
                             // Get selected index.
-                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                currentWidget = currentWidget->GetSurface()->GetWidgets()[index];
+                                currentWidget = nullptr;
+                                currentWidgetActionManager = nullptr;
+                                currentAction = nullptr;
                                 
-                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
-                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+                                int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
                                 
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                                if(zoneIndex >= 0)
+                                {
+                                    LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
+                                    
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.action.c_str());
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, entry.alias.c_str());
+
+                                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
+                                    {
+                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                                        if(string(buffer) == entry.widgetName)
+                                        {
+                                            widgetNameWasSelectedBySurface = true;
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if(entry.action == "FXParam" || entry.action == "FXParamNameDisplay" || entry.action == "FXParamValueDisplay" || entry.action == "FXParamRelative")
+                                    {
+                                        actionNameWasSelectedBySurface = true;
+                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, atoi(entry.param.c_str()), 0);
+                                    }
+                                    else
+                                    {
+                                        for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
+                                        {
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                                            if(string(buffer) == entry.action)
+                                            {
+                                                actionNameWasSelectedBySurface = true;
+                                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                             
                             break;
@@ -2363,7 +2396,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     break;
                 }
-*/
+
                 case IDC_CHECK_SurfaceInMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
