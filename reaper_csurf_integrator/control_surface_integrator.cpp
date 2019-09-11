@@ -2279,14 +2279,52 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
 
-                                
-                                
-                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
-                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
-                                
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                                if(zones.size() > index)
+                                {
+                                    LM_Zone zone = zones[index];
+
+                                    for(auto includedZone : zone.includedZones)
+                                        SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone.c_str());
+
+                                    
+                                    for(auto entry : zone.zoneEntries)
+                                    {
+                                        string entryLine = "";
+                                        
+                                        if(entry.isShift)
+                                            entryLine += "Shift+";
+                                        if(entry.isOption)
+                                            entryLine += "Option+";
+                                        if(entry.isControl)
+                                            entryLine += "Control+";
+                                        if(entry.isAlt)
+                                            entryLine += "Alt+";
+
+                                        if(entry.isTouch)
+                                            entryLine += "Touch+";
+                                        if(entry.shouldToggle)
+                                            entryLine += "Toggle+";
+                                        if(entry.shouldIgnoreRelease)
+                                            entryLine += "Press+";
+                                        if(entry.isHold)
+                                            entryLine += "Hold+";
+                                        if(entry.isInvert)
+                                            entryLine += "Invert+";
+
+                                        entryLine += entry.widgetName + " " + entry.action;
+                                        
+                                        if(entry.param != "")
+                                            entryLine +=  " " + entry.param;
+                                        
+                                        if(entry.alias != "")
+                                            entryLine +=  " " + entry.alias;
+                                        
+                                        SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)entryLine.c_str());
+                                    }
+                                }
                             }
                             
                             break;
