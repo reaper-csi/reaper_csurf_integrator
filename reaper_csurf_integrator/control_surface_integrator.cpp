@@ -2235,6 +2235,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(index >= 0)
                             {
                                 currentAction = nullptr;
+                                currentWidgetActionManager = nullptr;
                                 
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
 
@@ -2287,7 +2288,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     for(auto includedZone : zone.includedZones)
                                         SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone.c_str());
 
-                                    
                                     for(auto entry : zone.zoneEntries)
                                     {
                                         string entryLine = "";
