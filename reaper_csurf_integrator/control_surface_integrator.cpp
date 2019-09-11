@@ -1727,6 +1727,8 @@ static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
+bool wasSelectedBySurface = false;
+
 char name[BUFSZ * 2];
 HWND hwndLearn = nullptr;
 Widget* currentWidget = nullptr;
@@ -1913,6 +1915,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(name));
                 if(string(name) == currentWidget->GetName())
                 {
+                    wasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
                     break;
                 }
@@ -2177,7 +2180,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         case LBN_SELCHANGE:
                         {
-                            /*
+                            if(wasSelectedBySurface)
+                            {
+                                wasSelectedBySurface = false;
+                                break;
+                            }
+                            
                             // Get selected index.
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
@@ -2187,17 +2195,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
                                 SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
 
-                                if( reentranceGuard)
-                                    reentranceGuard = false;
-                                else
-                                {
-                                    ClearActions(hwndDlg);
-                                    ClearActions(hwndDlg);
-                                    reentranceGuard = true;
-                                    currentWidget->DoAction(currentWidget->GetLastValue());
-                                }
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
                             }
-                             */
                         }
                     }
                 }
