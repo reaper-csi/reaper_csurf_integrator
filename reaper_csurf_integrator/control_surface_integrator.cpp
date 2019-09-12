@@ -1727,6 +1727,32 @@ static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
+static void EnableButtons(HWND hwndDlg)
+{
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_GenerateZoneEntry), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZoneEntry), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddZone), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZone), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NewFile), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_LoadFile), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_SaveFile), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), true);
+}
+
+static void DisableButtons(HWND hwndDlg)
+{
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_GenerateZoneEntry), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZoneEntry), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddZone), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZone), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NewFile), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_LoadFile), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_SaveFile), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), false);
+}
+
 bool widgetNameWasSelectedBySurface = false;
 bool actionNameWasSelectedBySurface = false;
 bool zoneComponentWasSelectedBySurface = false;
@@ -1907,7 +1933,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_USER+1024:
         {
             currentSurface = currentWidget->GetSurface();
-            
+            EnableButtons(hwndDlg);
+
             ClearWidgets(hwndDlg);
             ClearZones(hwndDlg);
             ClearActions(hwndDlg);
@@ -2512,6 +2539,7 @@ void Page::OpenLearnModeWindow()
     if(hwndLearn == nullptr)
     {
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        DisableButtons(hwndLearn);
         ShowWindow(hwndLearn, true);
     }
 }
@@ -2531,6 +2559,7 @@ void Page::ToggleLearnMode()
     if(hwndLearn == nullptr)
     {
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        DisableButtons(hwndLearn);
         ShowWindow(hwndLearn, true);
     }
     else
