@@ -53,7 +53,9 @@ const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
 const string NoModifiers = "NoModifiers";
+
 const string BadFileChars = "[ \\:*?<>|.,()/]";
+const string CRLFChars = "[\r\n]";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
