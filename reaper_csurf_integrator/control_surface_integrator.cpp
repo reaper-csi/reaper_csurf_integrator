@@ -1733,11 +1733,11 @@ static void EnableButtons(HWND hwndDlg)
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZoneEntry), true);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddZone), true);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZone), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), true);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), true);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NewFile), true);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_LoadFile), true);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_SaveFile), true);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), true);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), true);
 }
 
 static void DisableButtons(HWND hwndDlg)
@@ -1746,11 +1746,11 @@ static void DisableButtons(HWND hwndDlg)
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZoneEntry), false);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddZone), false);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteZone), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), false);
+    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), false);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_NewFile), false);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_LoadFile), false);
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_SaveFile), false);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_AddIncludedZone), false);
-    EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_DeleteIncludedZone), false);
 }
 
 bool widgetNameWasSelectedBySurface = false;
