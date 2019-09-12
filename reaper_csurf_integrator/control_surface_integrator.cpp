@@ -221,6 +221,8 @@ static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string fil
 {
     for (string line; getline(zoneFile, line) ; )
     {
+        line = regex_replace(line, regex(CRLFChars), "");
+
         lineNumber++;
         
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -350,6 +352,8 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
 
     for (string line; getline(zoneFile, line) ; )
     {
+        line = regex_replace(line, regex(CRLFChars), "");
+
         lineNumber++;
         
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -518,6 +522,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
+        line = regex_replace(line, regex(CRLFChars), "");
+
         lineNumber++;
         
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -625,6 +631,8 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
+        line = regex_replace(line, regex(CRLFChars), "");
+
         lineNumber++;
         
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -659,6 +667,8 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
         
         for (string line; getline(file, line) ; )
         {
+            line = regex_replace(line, regex(CRLFChars), "");
+
             lineNumber++;
             
             if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -780,6 +790,8 @@ void Manager::Init()
         
         for (string line; getline(iniFile, line) ; )
         {
+            line = regex_replace(line, regex(CRLFChars), "");
+            
             vector<string> tokens(GetTokens(line));
             
             if(tokens.size() > 0) // ignore comment lines and blank lines
@@ -1890,6 +1902,8 @@ static bool LoadRawFXFile(HWND hwndDlg)
     
     for (string line; getline(rawFXFile, line) ; )
     {
+        line = regex_replace(line, regex(CRLFChars), "");
+        
         if(line == zone->GetName())
             continue;
         
@@ -2019,6 +2033,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 
                 for (string line; getline(file, line) ; )
                 {
+                    line = regex_replace(line, regex(CRLFChars), "");
+
                     lineNumber++;
                     
                     if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
