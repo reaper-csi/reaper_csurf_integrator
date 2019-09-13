@@ -5,6 +5,10 @@
 #define IDCHOOSECOLOUR                  4
 #define IDD_DIALOG_Page                 103
 #define IDD_DIALOG_Learn                105
+#define IDD_DIALOG_AddIncludedZone      107
+#define IDD_DIALOG_AddZone              108
+#define IDD_DIALOG_LoadZoneFile         111
+#define IDD_DIALOG_NewZoneFile          112
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_MidiSurface          268
 #define IDD_DIALOG_MidiSurface1         269
@@ -60,9 +64,14 @@
 #define IDC_BUTTON_GenerateZoneEntry    1063
 #define IDC_CHECK_Shift                 1064
 #define IDC_CHECK_Control               1065
+#define IDC_COMBO_IncludedZone          1065
 #define IDC_CHECK_Option                1066
+#define IDC_EDIT_ZoneName               1066
 #define IDC_CHECK_Alt                   1067
+#define IDC_EDIT_ZoneAlias              1067
+#define IDC_COMBO_LoadZoneFile          1067
 #define IDC_CHECK_Toggle                1068
+#define IDC_EDIT_ZoneFileName           1068
 #define IDC_CHECK_Touch                 1069
 #define IDC_CHECK_Invert                1070
 #define IDC_CHECK_Hold                  1071
@@ -77,9 +86,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        107
+#define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1065
+#define _APS_NEXT_CONTROL_VALUE         1069
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
