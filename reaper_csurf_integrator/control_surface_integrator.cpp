@@ -2591,7 +2591,8 @@ void Page::InputReceived(Widget* widget)
     currentWidgetActionManager = nullptr;
     currentAction = nullptr;
 
-    SendMessage(hwndLearn, WM_USER+1024, 0, 0);
+    if(currentWidget != nullptr)
+        SendMessage(hwndLearn, WM_USER+1024, 0, 0);
 }
 
 void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
@@ -2610,6 +2611,7 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     isOption = isOption_;
     isControl = isControl_;
     isAlt = isAlt_;
-
-    SendMessage(hwndLearn, WM_USER+1025, 0, 0);
+   
+    if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
+        SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
