@@ -1765,23 +1765,27 @@ static void DisableButtons(HWND hwndDlg)
     EnableWindow(GetDlgItem(hwndDlg, IDC_BUTTON_SaveFile), false);
 }
 
-bool widgetNameWasSelectedBySurface = false;
-bool actionNameWasSelectedBySurface = false;
-bool zoneComponentWasSelectedBySurface = false;
-bool zoneWasSelectedBySurface = false;
+static bool widgetNameWasSelectedBySurface = false;
+static bool actionNameWasSelectedBySurface = false;
+static bool zoneComponentWasSelectedBySurface = false;
+static bool zoneWasSelectedBySurface = false;
 
-char buffer[BUFSZ * 2];
-HWND hwndLearn = nullptr;
-ControlSurface* currentSurface = nullptr;
-Widget* currentWidget = nullptr;
-WidgetActionManager* currentWidgetActionManager = nullptr;
-Action* currentAction = nullptr;
+static char buffer[BUFSZ * 2];
+static HWND hwndLearn = nullptr;
+static int dlgResult = 0;
+static ControlSurface* currentSurface = nullptr;
+static Widget* currentWidget = nullptr;
+static WidgetActionManager* currentWidgetActionManager = nullptr;
+static Action* currentAction = nullptr;
 
+static string newZoneFilename = "";
+static string newZoneName = "";
+static string newZoneAlias = "";
 
-bool isShift = false;
-bool isOption = false;
-bool isControl = false;
-bool isAlt = false;
+static bool isShift = false;
+static bool isOption = false;
+static bool isControl = false;
+static bool isAlt = false;
 
 struct LM_ZoneEntry
 {
@@ -1807,13 +1811,14 @@ struct LM_Zone
 {
     string filename = "";
     string name = "";
+    string alias = "";
     string parentZone = "";
     string navigator = "";
     vector<string> includedZones;
     vector<LM_ZoneEntry> zoneEntries;
 };
 
-vector<LM_Zone> zones;
+static vector<LM_Zone> zones;
 
 static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
 {
@@ -1935,6 +1940,69 @@ static void ClearActions(HWND hwndDlg)
     SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 }
+
+static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+        {
+            // GAW TBD -- check for Focused FX and pre-populate fields
+        }
+            break;
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_RADIO_MCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDC_RADIO_TCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName , buffer, sizeof(buffer));
+                        newZoneFilename = string(buffer);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName , buffer, sizeof(buffer));
+                        newZoneName = string(buffer);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
+                        newZoneAlias = string(buffer);
+
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
 
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -2226,10 +2294,36 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             switch(LOWORD(wParam))
             {
+                case IDC_BUTTON_NewFile:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        dlgResult = false;
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_NewZoneFile), g_hwnd, dlgProcNewZoneFile);
+                        if(dlgResult == IDOK)
+                        {
+                            ClearZones(hwndDlg);
+                            
+                            newZoneFilename += ".zon";
+                            
+                            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+
+                            LM_Zone newZone;
+                            
+                            newZone.filename = newZoneFilename;
+                            newZone.name = newZoneName;
+                            newZone.alias = newZoneAlias;
+                            
+                            zones.push_back(newZone);
+                        }
+                    }
+                    break ;
+
                 case IDC_LIST_WidgetNames:
                 {
                     switch (HIWORD(wParam))
                     {
+
                         case LBN_SELCHANGE:
                         {
                             if(widgetNameWasSelectedBySurface)
