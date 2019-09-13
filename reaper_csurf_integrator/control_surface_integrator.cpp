@@ -1809,7 +1809,6 @@ struct LM_ZoneEntry
 
 struct LM_Zone
 {
-    string filename = "";
     string name = "";
     string alias = "";
     string parentZone = "";
@@ -1941,6 +1940,59 @@ static void ClearActions(HWND hwndDlg)
     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 }
 
+static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_RADIO_MCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDC_RADIO_TCP:
+                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
+                    break;
+                    
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName , buffer, sizeof(buffer));
+                        newZoneName = string(buffer);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
+                        newZoneAlias = string(buffer);
+                        
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
 static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -1974,7 +2026,7 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
-
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -2002,7 +2054,6 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
     
     return 0 ;
 }
-
 
 static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -2307,10 +2358,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
-
+                            
                             LM_Zone newZone;
                             
-                            newZone.filename = newZoneFilename;
                             newZone.name = newZoneName;
                             newZone.alias = newZoneAlias;
                             
@@ -2318,7 +2368,26 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                     }
                     break ;
-
+                    
+                case IDC_BUTTON_AddZone:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        dlgResult = false;
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcNewZoneFile);
+                        if(dlgResult == IDOK)
+                        {
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+                            
+                            LM_Zone newZone;
+                            
+                            newZone.name = newZoneName;
+                            newZone.alias = newZoneAlias;
+                            
+                            zones.push_back(newZone);
+                        }
+                    }
+                    break ;
+                    
                 case IDC_LIST_WidgetNames:
                 {
                     switch (HIWORD(wParam))
