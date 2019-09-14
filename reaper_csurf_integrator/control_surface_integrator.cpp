@@ -1815,6 +1815,43 @@ struct LM_ZoneEntry
     string actionName = "";
     string param = "";
     string alias = "";
+    
+    string GetLineAsString()
+    {
+        string entryLine = "";
+        
+        if(isShift)
+            entryLine += "Shift+";
+        if(isOption)
+            entryLine += "Option+";
+        if(isControl)
+            entryLine += "Control+";
+        if(isAlt)
+            entryLine += "Alt+";
+        
+        if(shouldToggle)
+            entryLine += "Toggle+";
+        if(isInvert)
+            entryLine += "Invert+";
+        if(isTouch)
+            entryLine += "Touch+";
+        if(shouldIgnoreRelease)
+            entryLine += "Press+";
+        if(isHold)
+            entryLine += "Hold+";
+        
+        entryLine += widgetName + " " + actionName;
+        
+        if(param != "")
+            entryLine +=  " " + param;
+        
+        if(alias != "")
+            entryLine +=  " " + alias;
+        
+        return entryLine;
+    }
+
+    
 };
 
 struct LM_Zone
@@ -1829,41 +1866,54 @@ struct LM_Zone
 
 static vector<LM_Zone> zones;
 
-static string GetEntryLineAsString(LM_ZoneEntry entry)
+
+static void SetCheckBoxes()
 {
-    string entryLine = "";
+    if(isShift)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_UNCHECKED);
     
-    if(entry.isShift)
-        entryLine += "Shift+";
-    if(entry.isOption)
-        entryLine += "Option+";
-    if(entry.isControl)
-        entryLine += "Control+";
-    if(entry.isAlt)
-        entryLine += "Alt+";
+    if(isOption)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_UNCHECKED);
     
-    if(entry.shouldToggle)
-        entryLine += "Toggle+";
-    if(entry.isInvert)
-        entryLine += "Invert+";
-    if(entry.isTouch)
-        entryLine += "Touch+";
-    if(entry.shouldIgnoreRelease)
-        entryLine += "Press+";
-    if(entry.isHold)
-        entryLine += "Hold+";
-   
-    entryLine += entry.widgetName + " " + entry.actionName;
+    if(isControl)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_UNCHECKED);
     
-    if(entry.param != "")
-        entryLine +=  " " + entry.param;
+    if(isAlt)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_UNCHECKED);
     
-    if(entry.alias != "")
-        entryLine +=  " " + entry.alias;
-
-    return entryLine;
+    if(shouldToggle)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_UNCHECKED);
+    
+    if(isInvert)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_UNCHECKED);
+    
+    if(isTouch)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_UNCHECKED);
+    
+    if(shouldIgnoreRelease)
+        CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_UNCHECKED);
+    
+    if(isHold)
+        CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_CHECKED);
+    else
+        CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_UNCHECKED);
 }
-
 
 static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
 {
@@ -2163,26 +2213,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             bool hasLoadedRawFXFile = false;
             
-            if(isShift)
-                CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_CHECKED);
-            else
-                CheckDlgButton(hwndDlg, IDC_CHECK_Shift, BST_UNCHECKED);
-            
-            if(isOption)
-                CheckDlgButton(hwndDlg, IDC_CHECK_Option, BST_CHECKED);
-            else
-                CheckDlgButton(hwndDlg, IDC_CHECK_Option, BST_UNCHECKED);
-            
-            if(isControl)
-                CheckDlgButton(hwndDlg, IDC_CHECK_Control, BST_CHECKED);
-            else
-                CheckDlgButton(hwndDlg, IDC_CHECK_Control, BST_UNCHECKED);
-            
-            if(isAlt)
-                CheckDlgButton(hwndDlg, IDC_CHECK_Alt, BST_CHECKED);
-            else
-                CheckDlgButton(hwndDlg, IDC_CHECK_Alt, BST_UNCHECKED);
-            
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
@@ -2346,16 +2376,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
 
+            
+            // GAW TBD -- take modifiers into account here
             string testString = currentWidget->GetName() + " " + currentAction->GetName();
-            char lineStringBuf[BUFSZ];
+
 
             if(zones.size() > 0)
             {
                 for(int i = 0; i < zones[zones.size() - 1].zoneEntries.size(); i++)
                 {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
                     
-                    string lineString = string(lineStringBuf);
+                    string lineString = string(buffer);
+                    
+                    LM_ZoneEntry entry = zones[zones.size() - 1].zoneEntries[i];
+                    
+                    
                     
                     size_t found = lineString.find(testString);
                     
@@ -2363,6 +2399,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         zoneComponentWasSelectedBySurface = true;
                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                        SetCheckBoxes();
                         break;
                     }
                 }
@@ -2370,9 +2407,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
             for(int i = 0; i < zones.size(); i++)
             {
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(lineStringBuf));
+                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
                 
-                string lineString = string(lineStringBuf);
+                string lineString = string(buffer);
                 
                 if (lineString == zone->GetName())
                 {
@@ -2502,7 +2539,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             zones[zoneIndex].zoneEntries.push_back(entry);
 
-                            string zoneEntryLine = GetEntryLineAsString(entry);
+                            string zoneEntryLine = entry.GetLineAsString();
     
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
                             zoneComponentWasSelectedBySurface = true;
@@ -2623,8 +2660,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                     for(auto entry : zone.zoneEntries)
                                     {
-                                        string entryLine = GetEntryLineAsString(entry);
-                                        
+                                        string entryLine = entry.GetLineAsString();
                                         SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)entryLine.c_str());
                                     }
                                 }
@@ -2662,6 +2698,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 if(zoneIndex >= 0)
                                 {
                                     LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
+                                    
+                                    isShift = entry.isShift;
+                                    isOption = entry.isOption;
+                                    isControl = entry.isControl;
+                                    isAlt = entry.isAlt;
+                                    shouldToggle = entry.shouldToggle;
+                                    isInvert = entry.isInvert;
+                                    isTouch = entry.isTouch;
+                                    shouldIgnoreRelease = entry.shouldIgnoreRelease;
+                                    isHold = entry.isHold;
+                                    
+                                    
+                                    
+                                    
                                     
                                     SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
