@@ -2408,6 +2408,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     {
                         zoneComponentWasSelectedBySurface = true;
                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                        LM_ZoneEntry entry = zones[zones.size() - 1].zoneEntries[i];
+                        entry.SetGlobalModifers();
                         SetCheckBoxes();
                         break;
                     }
