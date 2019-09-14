@@ -1842,16 +1842,16 @@ static string GetEntryLineAsString(LM_ZoneEntry entry)
     if(entry.isAlt)
         entryLine += "Alt+";
     
-    if(entry.isTouch)
-        entryLine += "Touch+";
     if(entry.shouldToggle)
         entryLine += "Toggle+";
+    if(entry.isInvert)
+        entryLine += "Invert+";
+    if(entry.isTouch)
+        entryLine += "Touch+";
     if(entry.shouldIgnoreRelease)
         entryLine += "Press+";
     if(entry.isHold)
         entryLine += "Hold+";
-    if(entry.isInvert)
-        entryLine += "Invert+";
    
     entryLine += entry.widgetName + " " + entry.actionName;
     
@@ -2506,12 +2506,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
                             zoneComponentWasSelectedBySurface = true;
-                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
+                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCOUNT, 0, 0) - 1, 0);
                         }
                     
                     }
 
                     break ;
+                    
+                    
+                    
+                    
+                    
+                    //vec.erase(vec.begin() + 1);
                     
                 case IDC_LIST_WidgetNames:
                 {
@@ -2701,6 +2707,96 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
 
+                case IDC_CHECK_Shift:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Shift))
+                        isShift = true;
+                    else
+                        isShift = false;
+
+                    break;
+                }
+                    
+                case IDC_CHECK_Option:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Option))
+                        isOption = true;
+                    else
+                        isOption = false;
+
+                    break;
+                }
+                    
+                case IDC_CHECK_Control:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Control))
+                        isControl = true;
+                    else
+                        isControl = false;
+
+                    break;
+                }
+                    
+                case IDC_CHECK_Alt:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Alt))
+                        isAlt = true;
+                    else
+                        isAlt = false;
+
+                    break;
+                }
+                    
+                case IDC_CHECK_Toggle:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Toggle))
+                        shouldToggle = true;
+                    else
+                        shouldToggle = false;
+
+                    break;
+                }
+                    
+                case IDC_CHECK_Invert:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Invert))
+                        isInvert = true;
+                    else
+                        isInvert = false;
+                    
+                    break;
+                }
+                    
+                case IDC_CHECK_Touch:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Touch))
+                        isTouch = true;
+                    else
+                        isTouch = false;
+                    
+                    break;
+                }
+                    
+                case IDC_CHECK_IgnoreRelease:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IgnoreRelease))
+                        shouldIgnoreRelease = true;
+                    else
+                        shouldIgnoreRelease = false;
+                    
+                    break;
+                }
+                    
+                case IDC_CHECK_Hold:
+                {
+                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Hold))
+                        isHold = true;
+                    else
+                        isHold = false;
+                    
+                    break;
+                }
+                    
                 case IDC_CHECK_SurfaceInMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceInMon))
@@ -2710,7 +2806,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     break;
                 }
-                    
+
                 case IDC_CHECK_SurfaceOutMon:
                 {
                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SurfaceOutMon))
