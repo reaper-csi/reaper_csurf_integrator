@@ -291,13 +291,13 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
             if(modifier_tokens[i] == Shift)
-                modifierSlots[0] = Shift;
+                modifierSlots[0] = Shift + "+";
             else if(modifier_tokens[i] == Option)
-                modifierSlots[1] = Option;
+                modifierSlots[1] = Option + "+";
             else if(modifier_tokens[i] == Control)
-                modifierSlots[2] = Control;
+                modifierSlots[2] = Control + "+";
             else if(modifier_tokens[i] == Alt)
-                modifierSlots[3] = Alt;
+                modifierSlots[3] = Alt + "+";
             
             else if(modifier_tokens[i] == "TrackTouch")
                 isTrackTouch = true;
@@ -2388,23 +2388,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
 
+            string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
             
-            // GAW TBD -- take modifiers into account here
-            string testString = currentWidget->GetName() + " " + currentAction->GetName();
-
+            if(testString == NoModifiers)
+                testString = "";
+            
+            testString += currentWidget->GetName();
 
             if(zones.size() > 0)
             {
                 for(int i = 0; i < zones[zones.size() - 1].zoneEntries.size(); i++)
                 {
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                    
                     string lineString = string(buffer);
-                    
-                    LM_ZoneEntry entry = zones[zones.size() - 1].zoneEntries[i];
-                    
-                    
-                    
+
                     size_t found = lineString.find(testString);
                     
                     if (found != string::npos)
