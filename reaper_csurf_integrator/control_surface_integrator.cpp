@@ -1761,6 +1761,12 @@ static bool isOption = false;
 static bool isControl = false;
 static bool isAlt = false;
 
+static bool isTouch = false;
+static bool shouldToggle = false;
+static bool shouldIgnoreRelease = false;
+static bool isHold = false;
+static bool isInvert = false;
+
 static int trackNumber = 0;
 static int itemNumber = 0;
 static int focusedFXIndex = 0;
@@ -1806,7 +1812,7 @@ struct LM_ZoneEntry
     bool isInvert = false;
     
     string widgetName = "";
-    string action = "";
+    string actionName = "";
     string param = "";
     string alias = "";
 };
@@ -1822,6 +1828,42 @@ struct LM_Zone
 };
 
 static vector<LM_Zone> zones;
+
+static string GetEntryLineAsString(LM_ZoneEntry entry)
+{
+    string entryLine = "";
+    
+    if(entry.isShift)
+        entryLine += "Shift+";
+    if(entry.isOption)
+        entryLine += "Option+";
+    if(entry.isControl)
+        entryLine += "Control+";
+    if(entry.isAlt)
+        entryLine += "Alt+";
+    
+    if(entry.isTouch)
+        entryLine += "Touch+";
+    if(entry.shouldToggle)
+        entryLine += "Toggle+";
+    if(entry.shouldIgnoreRelease)
+        entryLine += "Press+";
+    if(entry.isHold)
+        entryLine += "Hold+";
+    if(entry.isInvert)
+        entryLine += "Invert+";
+   
+    entryLine += entry.widgetName + " " + entry.actionName;
+    
+    if(entry.param != "")
+        entryLine +=  " " + entry.param;
+    
+    if(entry.alias != "")
+        entryLine +=  " " + entry.alias;
+
+    return entryLine;
+}
+
 
 static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
 {
@@ -2233,7 +2275,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             {
                                 LM_ZoneEntry entry;
                                 GetEntryWidgetNameAndModifiers(tokens[0], entry);
-                                entry.action = tokens[1];
+                                entry.actionName = tokens[1];
                                 entry.param = tokens[2];
                                 if(tokens.size() > 3)
                                     entry.alias = tokens[3];
@@ -2260,7 +2302,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 LM_ZoneEntry entry;
                                 GetEntryWidgetNameAndModifiers(tokens[0], entry);
-                                entry.action = tokens[1];
+                                entry.actionName = tokens[1];
                                 if(tokens.size() > 2)
                                     entry.param = tokens[2];
                                 if(tokens.size() > 3)
@@ -2415,7 +2457,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
-
+                            
                             LM_Zone newZone;
                             
                             newZone.name = newZoneName;
@@ -2424,6 +2466,51 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             zones.push_back(newZone);
                         }
                     }
+                    break ;
+                    
+                case IDC_BUTTON_GenerateZoneEntry:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+                        
+                        if(zoneIndex >= 0)
+                        {
+                            LM_ZoneEntry entry;
+                            
+                            entry.isShift = isShift;
+                            entry.isOption = isOption;
+                            entry.isControl = isControl;
+                            entry.isAlt = isAlt;
+                            entry.shouldToggle = shouldToggle;
+                            entry.isInvert = isInvert;
+                            entry.shouldIgnoreRelease = shouldIgnoreRelease;
+                            entry.isTouch = isTouch;
+                            entry.isHold = isHold;
+                            
+                            
+                            GetDlgItemText(hwndDlg, IDC_EDIT_WidgetName , buffer, sizeof(buffer));
+                            entry.widgetName = string(buffer);
+                            
+                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionName , buffer, sizeof(buffer));
+                            entry.actionName = string(buffer);
+                            
+                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter , buffer, sizeof(buffer));
+                            entry.param = string(buffer);
+                            
+                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias , buffer, sizeof(buffer));
+                            entry.alias = string(buffer);
+                            
+                            zones[zoneIndex].zoneEntries.push_back(entry);
+
+                            string zoneEntryLine = GetEntryLineAsString(entry);
+    
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
+                            zoneComponentWasSelectedBySurface = true;
+                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
+                        }
+                    
+                    }
+
                     break ;
                     
                 case IDC_LIST_WidgetNames:
@@ -2530,35 +2617,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                     for(auto entry : zone.zoneEntries)
                                     {
-                                        string entryLine = "";
-                                        
-                                        if(entry.isShift)
-                                            entryLine += "Shift+";
-                                        if(entry.isOption)
-                                            entryLine += "Option+";
-                                        if(entry.isControl)
-                                            entryLine += "Control+";
-                                        if(entry.isAlt)
-                                            entryLine += "Alt+";
-
-                                        if(entry.isTouch)
-                                            entryLine += "Touch+";
-                                        if(entry.shouldToggle)
-                                            entryLine += "Toggle+";
-                                        if(entry.shouldIgnoreRelease)
-                                            entryLine += "Press+";
-                                        if(entry.isHold)
-                                            entryLine += "Hold+";
-                                        if(entry.isInvert)
-                                            entryLine += "Invert+";
-
-                                        entryLine += entry.widgetName + " " + entry.action;
-                                        
-                                        if(entry.param != "")
-                                            entryLine +=  " " + entry.param;
-                                        
-                                        if(entry.alias != "")
-                                            entryLine +=  " " + entry.alias;
+                                        string entryLine = GetEntryLineAsString(entry);
                                         
                                         SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)entryLine.c_str());
                                     }
@@ -2599,7 +2658,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
                                     
                                     SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.action.c_str());
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, entry.alias.c_str());
 
@@ -2614,7 +2673,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         }
                                     }
                                     
-                                    if(entry.action == "FXParam" || entry.action == "FXParamNameDisplay" || entry.action == "FXParamValueDisplay" || entry.action == "FXParamRelative")
+                                    if(entry.actionName == "FXParam" || entry.actionName == "FXParamNameDisplay" || entry.actionName == "FXParamValueDisplay" || entry.actionName == "FXParamRelative")
                                     {
                                         actionNameWasSelectedBySurface = true;
                                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, atoi(entry.param.c_str()), 0);
@@ -2624,7 +2683,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
                                         {
                                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                                            if(string(buffer) == entry.action)
+                                            if(string(buffer) == entry.actionName)
                                             {
                                                 actionNameWasSelectedBySurface = true;
                                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
