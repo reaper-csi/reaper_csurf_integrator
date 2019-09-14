@@ -1770,7 +1770,6 @@ static void EnableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddIncludedZone), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteIncludedZone), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_NewFile), true);
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_LoadFile), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), true);
 }
 
@@ -1783,7 +1782,6 @@ static void DisableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddIncludedZone), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteIncludedZone), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_NewFile), false);
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_LoadFile), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), false);
 }
 
