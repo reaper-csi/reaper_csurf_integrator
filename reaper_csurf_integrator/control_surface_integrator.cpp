@@ -1851,6 +1851,18 @@ struct LM_ZoneEntry
         return entryLine;
     }
 
+    void SetGlobalModifers()
+    {
+        ::isShift = isShift;
+        ::isOption = isOption;
+        ::isControl = isControl;
+        ::isAlt = isAlt;
+        ::shouldToggle = shouldToggle;
+        ::isInvert = isInvert;
+        ::isTouch = isTouch;
+        ::shouldIgnoreRelease = shouldIgnoreRelease;
+        ::isHold = isHold;
+    }
     
 };
 
@@ -2698,21 +2710,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 if(zoneIndex >= 0)
                                 {
                                     LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
-                                    
-                                    isShift = entry.isShift;
-                                    isOption = entry.isOption;
-                                    isControl = entry.isControl;
-                                    isAlt = entry.isAlt;
-                                    shouldToggle = entry.shouldToggle;
-                                    isInvert = entry.isInvert;
-                                    isTouch = entry.isTouch;
-                                    shouldIgnoreRelease = entry.shouldIgnoreRelease;
-                                    isHold = entry.isHold;
-                                    
-                                    
-                                    
-                                    
-                                    
+                                    entry.SetGlobalModifers();
+                                    SetCheckBoxes();
+
                                     SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
