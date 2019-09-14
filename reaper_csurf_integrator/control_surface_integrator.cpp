@@ -1916,28 +1916,28 @@ static bool LoadRawFXFile(MediaTrack* track, int index, string zoneName)
     return true;
 }
 
-static void ClearWidgets(HWND hwndDlg)
+static void ClearWidgets()
 {
-    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
-    SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, "");
-    SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, "");
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
+    SetDlgItemText(hwndLearn, IDC_EDIT_WidgetName, "");
+    SetDlgItemText(hwndLearn, IDC_STATIC_SurfaceName, "");
 }
 
-static void ClearZones(HWND hwndDlg)
+static void ClearZones()
 {
-    SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), "");
-    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
 }
 
-static void ClearActions(HWND hwndDlg)
+static void ClearActions()
 {
-    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
-    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
-    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
-    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+    SetDlgItemText(hwndLearn, IDC_EDIT_ActionName, "");
+    SetDlgItemText(hwndLearn, IDC_EDIT_ActionParameter, "");
+    SetDlgItemText(hwndLearn, IDC_EDIT_ActionAlias, "");
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 }
 
 static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1993,13 +1993,32 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     return 0 ;
 }
 
+static int trackNumber = 0;
+static int itemNumber = 0;
+static int focusedFXIndex = 0;
+static MediaTrack* focusedFXTrack = nullptr;
+static string focusedFXName = "";
+
 static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            // GAW TBD -- check for Focused FX and pre-populate fields
+            if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &focusedFXIndex) == 1)
+                if(trackNumber > 0)
+                {
+                    focusedFXTrack = DAW::CSurf_TrackFromID(trackNumber, currentSurface->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+                
+                    DAW::TrackFX_GetFXName(focusedFXTrack, focusedFXIndex, buffer, sizeof(buffer));
+
+                    focusedFXName = string(buffer);
+                    
+                    string focusedFXFilename =  regex_replace(focusedFXName, regex(BadFileChars), "_");
+
+                    SetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName, focusedFXFilename.c_str());
+                    SetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, focusedFXName.c_str());
+                }
         }
             break;
             
@@ -2018,6 +2037,9 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        ClearZones();
+                        ClearActions();
+
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName , buffer, sizeof(buffer));
                         newZoneFilename = string(buffer);
                         
@@ -2027,6 +2049,13 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
                         
+                        if(focusedFXTrack && focusedFXName == newZoneName)
+                            LoadRawFXFile(focusedFXTrack, focusedFXIndex, focusedFXName);
+
+                        for(auto name : TheManager->GetActionNames())
+                            if(name != Shift && name != Option && name != Control && name != Alt)
+                                SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -2064,9 +2093,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             currentSurface = currentWidget->GetSurface();
             EnableButtons(hwndDlg);
 
-            ClearWidgets(hwndDlg);
-            ClearZones(hwndDlg);
-            ClearActions(hwndDlg);
+            ClearWidgets();
+            ClearZones();
+            ClearActions();
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
@@ -2348,16 +2377,24 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_BUTTON_NewFile:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        trackNumber = 0;
+                        itemNumber = 0;
+                        focusedFXIndex = 0;
+                        focusedFXTrack = nullptr;
+                        focusedFXName = "";
+                        
                         dlgResult = false;
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_NewZoneFile), g_hwnd, dlgProcNewZoneFile);
                         if(dlgResult == IDOK)
                         {
-                            ClearZones(hwndDlg);
+                            ClearZones();
                             
                             newZoneFilename += ".zon";
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+                            // GAW TBD -- light up the one just added
+
                             
                             LM_Zone newZone;
                             
@@ -2373,10 +2410,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         dlgResult = false;
-                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcNewZoneFile);
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcAddZone);
                         if(dlgResult == IDOK)
                         {
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+                            // GAW TBD -- light up the one just added
                             
                             LM_Zone newZone;
                             
