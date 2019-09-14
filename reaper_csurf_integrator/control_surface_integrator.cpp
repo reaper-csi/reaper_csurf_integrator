@@ -2560,6 +2560,19 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     break ;
                     
+                case IDC_BUTTON_DeleteZone:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                        if (index >= 0)
+                        {
+                            zones.erase(zones.begin() + index);
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
+                            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+                        }
+                    }
+                    break ;
+                    
                 case IDC_BUTTON_DeleteZoneEntry:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
@@ -2576,7 +2589,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                     }
                     break ;
-                   
+                    
                 case IDC_LIST_WidgetNames:
                 {
                     switch (HIWORD(wParam))
