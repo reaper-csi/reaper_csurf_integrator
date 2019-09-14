@@ -1761,6 +1761,12 @@ static bool isOption = false;
 static bool isControl = false;
 static bool isAlt = false;
 
+static int trackNumber = 0;
+static int itemNumber = 0;
+static int focusedFXIndex = 0;
+static MediaTrack* focusedFXTrack = nullptr;
+static string focusedFXName = "";
+
 static void EnableButtons()
 {
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_GenerateZoneEntry), true);
@@ -1990,12 +1996,6 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     
     return 0 ;
 }
-
-static int trackNumber = 0;
-static int itemNumber = 0;
-static int focusedFXIndex = 0;
-static MediaTrack* focusedFXTrack = nullptr;
-static string focusedFXName = "";
 
 static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
