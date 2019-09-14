@@ -77,7 +77,6 @@
 #define IDC_CHECK_Hold                  1071
 #define IDC_BUTTON_SaveFile             1072
 #define IDC_BUTTON_DeleteZoneEntry      1073
-#define IDC_BUTTON_LoadFile             1074
 #define IDC_BUTTON_NewFile              1075
 #define IDC_BUTTON_Close                1078
 #define IDC_CHECK_IgnoreRelease         1082
