@@ -1863,7 +1863,6 @@ struct LM_ZoneEntry
         ::shouldIgnoreRelease = shouldIgnoreRelease;
         ::isHold = isHold;
     }
-    
 };
 
 struct LM_Zone
@@ -2561,12 +2560,23 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                     break ;
                     
-                    
-                    
-                    
-                    
-                    //vec.erase(vec.begin() + 1);
-                    
+                case IDC_BUTTON_DeleteZoneEntry:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        int index = SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_GETCURSEL, 0, 0);
+                        if (index >= 0)
+                        {
+                            int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                            
+                            if(zoneIndex >= 0)
+                            {
+                                zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
+                            }
+                        }
+                    }
+                    break ;
+                   
                 case IDC_LIST_WidgetNames:
                 {
                     switch (HIWORD(wParam))
