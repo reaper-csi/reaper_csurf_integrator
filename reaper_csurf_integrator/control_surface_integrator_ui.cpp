@@ -995,7 +995,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     line += to_string(page->red) + " ";
                     line += to_string(page->green) + " ";
-                    line += to_string(page->blue) + "\n";
+                    line += to_string(page->blue) + "\r\n";
 
                     iniFile << line;
 
@@ -1015,12 +1015,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(surface->type == OSCSurfaceToken)
                             line += " " + surface->remoteDeviceIP;
                         
-                        line += "\n";
+                        line += "\r\n";
                         
                         iniFile << line;
                     }
                     
-                    iniFile << "\n";
+                    iniFile << "\r\n";
                 }
 
                 iniFile.close();
