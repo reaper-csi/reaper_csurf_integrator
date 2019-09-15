@@ -1993,7 +1993,7 @@ static bool LoadRawFXFile(MediaTrack* track, int index, string zoneName)
             {
                 DAW::TrackFX_GetParamName(track, index, j, fxParamName, sizeof(fxParamName));
 
-                rawFXFile << "\n" + string(fxParamName);
+                rawFXFile << "\r\n" + string(fxParamName);
             }
         }
         
