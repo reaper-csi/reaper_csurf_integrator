@@ -1746,6 +1746,7 @@ static bool zoneWasSelectedBySurface = false;
 
 static char buffer[BUFSZ * 2];
 static HWND hwndLearn = nullptr;
+static bool hasEdits = false;
 static int dlgResult = 0;
 static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
@@ -2434,11 +2435,17 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
         case WM_INITDIALOG:
         {
+            hasEdits = false;
+            
             AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
-            
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+
+            AddComboBoxEntry(hwndDlg, 0, "No Parent Zone", IDC_COMBO_ParentZone);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
+
             if(TheManager->GetSurfaceInMonitor())
                 CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_CHECKED);
             else
@@ -2474,6 +2481,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_NewZoneFile), g_hwnd, dlgProcNewZoneFile);
                         if(dlgResult == IDOK)
                         {
+                            hasEdits = true;
+
                             zones.clear();
                             ClearZones();
                             
@@ -2501,6 +2510,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcAddZone);
                         if(dlgResult == IDOK)
                         {
+                            hasEdits = true;
+
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
@@ -2522,6 +2533,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         
                         if(zoneIndex >= 0)
                         {
+                            hasEdits = true;
+
                             LM_ZoneEntry entry;
                             
                             entry.isShift = isShift;
@@ -2566,6 +2579,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                         if (index >= 0)
                         {
+                            hasEdits = true;
                             zones.erase(zones.begin() + index);
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
@@ -2583,6 +2597,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             if(zoneIndex >= 0)
                             {
+                                hasEdits = true;
                                 zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
                             }
@@ -2594,7 +2609,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     switch (HIWORD(wParam))
                     {
-
                         case LBN_SELCHANGE:
                         {
                             if(widgetNameWasSelectedBySurface)
@@ -2905,63 +2919,23 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     break;
                 }
-
-
-                    
-                    /*
-                     case IDC_RADIO_MCP:
-                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
-                     break;
-                     
-                     case IDC_RADIO_TCP:
-                     CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
-                     break;
-                     
-                     case IDOK:
-                     if (HIWORD(wParam) == BN_CLICKED)
-                     {
-                     GetDlgItemText(hwndDlg, IDC_EDIT_PageName , name, sizeof(name));
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_RADIO_MCP))
-                     followMCP = true;
-                     else
-                     followMCP = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_SynchPages))
-                     synchPages = true;
-                     else
-                     synchPages = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ScrollLink))
-                     useScrollLink = true;
-                     else
-                     useScrollLink = false;
-                     
-                     if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
-                     trackColouring = true;
-                     else
-                     trackColouring = false;
-                     
-                     dlgResult = IDOK;
-                     EndDialog(hwndDlg, 0);
-                     }
-                     break ;
-                     
-                     case IDCANCEL:
-                     if (HIWORD(wParam) == BN_CLICKED)
-                     EndDialog(hwndDlg, 0);
-                     break ;
-                     */
             }
         }
             break ;
             
         case WM_CLOSE:
-            DestroyWindow(hwndDlg) ;
+            if(hasEdits)
+            {
+                if(MessageBox(hwndDlg, "You have unsaved changes, are you sure you want to close the Learn Mode Window ?", "Unsaved Changes", MB_YESNO) == IDYES)
+                    DestroyWindow(hwndDlg);
+            }
+            else
+                DestroyWindow(hwndDlg) ;
             break ;
             
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
+            hwndLearn = nullptr;
             break;
             
         default:
@@ -2987,11 +2961,7 @@ void Page::OpenLearnModeWindow()
 void Page::CloseLearnModeWindow()
 {
     if(hwndLearn != nullptr)
-    {
-        ShowWindow(hwndLearn, false);
-        DestroyWindow(hwndLearn);
-        hwndLearn = nullptr;
-    }
+        SendMessage(hwndLearn, WM_CLOSE, 0, 0);
 }
 
 void Page::ToggleLearnMode()
@@ -3004,9 +2974,7 @@ void Page::ToggleLearnMode()
     }
     else
     {
-        ShowWindow(hwndLearn, false);
-        DestroyWindow(hwndLearn);
-        hwndLearn = nullptr;
+        SendMessage(hwndLearn, WM_CLOSE, 0, 0);
     }
 }
 
