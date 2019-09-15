@@ -2915,8 +2915,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                 case IDC_BUTTON_Close:
                 {
-                    TheManager->CloseLearnModeWindow();
-                    
+                    SendMessage(hwndLearn, WM_CLOSE, 0, 0);
                     break;
                 }
             }
@@ -2956,12 +2955,6 @@ void Page::OpenLearnModeWindow()
         DisableButtons();
         ShowWindow(hwndLearn, true);
     }
-}
-
-void Page::CloseLearnModeWindow()
-{
-    if(hwndLearn != nullptr)
-        SendMessage(hwndLearn, WM_CLOSE, 0, 0);
 }
 
 void Page::ToggleLearnMode()

@@ -1214,7 +1214,6 @@ public:
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
     void OpenLearnModeWindow();
-    void CloseLearnModeWindow();
     void ToggleLearnMode();
     void InputReceived(Widget* widget);
     void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
@@ -1624,12 +1623,6 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OpenLearnModeWindow();
-    }
-    
-    void CloseLearnModeWindow()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->CloseLearnModeWindow();
     }
         
     void TrackFXListChanged(MediaTrack* track)
