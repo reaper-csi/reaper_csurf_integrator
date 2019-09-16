@@ -19,6 +19,8 @@ bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode,
     return false;
 }
 
+extern string GetLineEnding();
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -995,7 +997,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     line += to_string(page->red) + " ";
                     line += to_string(page->green) + " ";
-                    line += to_string(page->blue) + "\r\n";
+                    line += to_string(page->blue) + GetLineEnding();
 
                     iniFile << line;
 
@@ -1015,12 +1017,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(surface->type == OSCSurfaceToken)
                             line += " " + surface->remoteDeviceIP;
                         
-                        line += "\r\n";
+                        line += GetLineEnding();
                         
                         iniFile << line;
                     }
                     
-                    iniFile << "\r\n";
+                    iniFile << GetLineEnding();
                 }
 
                 iniFile.close();
