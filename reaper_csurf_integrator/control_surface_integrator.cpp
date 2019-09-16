@@ -2164,7 +2164,7 @@ static WDL_DLGRET dlgProcAddInckudedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        int index = (int)SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_IncludedZone), LB_GETCURSEL, 0, 0);
+                        int index = (int)SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_IncludedZone), CB_GETCURSEL, 0, 0);
                         
                         if(index >= 0)
                         {
@@ -2172,6 +2172,11 @@ static WDL_DLGRET dlgProcAddInckudedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                            
                             if(string(buffer) != "")
                                 SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)buffer);
+                            
+                            
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
+                                zones[index].includedZones.push_back(string(buffer));
                         }
                         
                         dlgResult = IDOK;
