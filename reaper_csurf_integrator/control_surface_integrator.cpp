@@ -11,6 +11,15 @@
 #include "control_surface_manager_actions.h"
 #include "control_surface_integrator_ui.h"
 
+string GetLineEnding()
+{
+#ifdef WIN32
+    return "\n";
+#else
+    return "\r\n" ;
+#endif
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct MidiInputPort
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2030,13 +2039,13 @@ static bool LoadRawFXFile(MediaTrack* track, int index, string zoneName)
         
         if(rawFXFile.is_open())
         {
-            rawFXFile << string(fxName);
+            rawFXFile << string(fxName) + GetLineEnding();
             
             for(int j = 0; j < DAW::TrackFX_GetNumParams(track, index); j++)
             {
                 DAW::TrackFX_GetParamName(track, index, j, fxParamName, sizeof(fxParamName));
 
-                rawFXFile << "\r\n" + string(fxParamName);
+                rawFXFile << string(fxParamName) + GetLineEnding();
             }
         }
         
