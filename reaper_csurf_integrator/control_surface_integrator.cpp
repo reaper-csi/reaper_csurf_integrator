@@ -1878,6 +1878,48 @@ struct LM_Zone
 
 static vector<LM_Zone> zones;
 
+static vector<string> GetAvailableZones()
+{
+    vector<string> availableZones;
+    
+    int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+    
+    if(zoneIndex >= 0)
+    {
+        vector<string> zones;
+        
+        for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCOUNT, 0, 0); i++)
+        {
+            if(i != zoneIndex)
+            {
+                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+
+                zones.push_back(string(buffer));
+            }
+        }
+        
+        for(auto zone : zones)
+        {
+            bool foundIt = false;
+            
+            for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_GETCOUNT, 0, 0); i++)
+            {
+                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                if(string(buffer) == zone)
+                {
+                    foundIt = true;
+                    break;
+                }
+            }
+
+            
+            if( ! foundIt)
+                availableZones.push_back(zone);
+        }
+    }
+    
+    return availableZones;
+}
 
 static void SetCheckBoxes()
 {
@@ -2067,11 +2109,70 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName , buffer, sizeof(buffer));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, buffer, sizeof(buffer));
                         newZoneName = string(buffer);
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias, buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
+                        
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+            
+        default:
+            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcAddInckudedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_RESETCONTENT, 0, 0);
+            for(auto zone : GetAvailableZones())
+            {
+                AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_IncludedZone);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_SETCURSEL, 0, 0);
+            }
+            
+            break;
+            
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        int index = (int)SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_IncludedZone), LB_GETCURSEL, 0, 0);
+                        
+                        if(index >= 0)
+                        {
+                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETLBTEXT, index, (LPARAM)(LPCTSTR)(buffer));
+                           
+                            if(string(buffer) != "")
+                                SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)buffer);
+                        }
                         
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
@@ -2511,7 +2612,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if(dlgResult == IDOK)
                         {
                             hasEdits = true;
-
+                            
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
@@ -2525,6 +2626,32 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                     }
                     break ;
+                    
+                case IDC_BUTTON_AddIncludedZone:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        dlgResult = false;
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddIncludedZone), g_hwnd, dlgProcAddInckudedZone);
+                        if(dlgResult == IDOK)
+                        {
+                            hasEdits = true;
+                            
+                            //SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+                            //zoneWasSelectedBySurface = true;
+                            //SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
+                            
+                            //LM_Zone newZone;
+                            
+                            //newZone.name = newZoneName;
+                            //newZone.alias = newZoneAlias;
+                            
+                            //zones.push_back(newZone);
+                        }
+                    }
+                    break ;
+                    
+                    
+                    
                     
                 case IDC_BUTTON_GenerateZoneEntry:
                     if (HIWORD(wParam) == BN_CLICKED)
