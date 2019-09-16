@@ -1887,47 +1887,40 @@ struct LM_Zone
 
 static vector<LM_Zone> zones;
 
-static vector<string> GetAvailableZones()
+static vector<string> GetAvailableZones(int zoneIndex)
 {
     vector<string> availableZones;
     
-    int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
-    
     if(zoneIndex >= 0)
-    {
-        vector<string> zones;
-        
-        for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCOUNT, 0, 0); i++)
-        {
-            if(i != zoneIndex)
-            {
-                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-
-                zones.push_back(string(buffer));
-            }
-        }
-        
-        for(auto zone : zones)
+    {       
+        for(int i = 0; i < zones.size(); i++)
         {
             bool foundIt = false;
-            
-            for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_GETCOUNT, 0, 0); i++)
+
+            for(int j = 0; j < zones[zoneIndex].includedZones.size(); j++)
             {
-                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                if(string(buffer) == zone)
+                if(zones[zoneIndex].includedZones[j] == zones[i].name)
                 {
                     foundIt = true;
                     break;
                 }
             }
 
-            
-            if( ! foundIt)
-                availableZones.push_back(zone);
+            if( ! foundIt && i != zoneIndex)
+                availableZones.push_back(zones[i].name);
         }
     }
     
     return availableZones;
+}
+
+static vector<string> GetAvailableZones()
+{
+    vector<string> availableZones;
+    
+    int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+    
+    return GetAvailableZones(zoneIndex);
 }
 
 static void SetCheckBoxes()
@@ -2152,7 +2145,7 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
     return 0 ;
 }
 
-static WDL_DLGRET dlgProcAddInckudedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
@@ -2531,6 +2524,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
 
+          
             for(int i = 0; i < zones.size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
@@ -2645,7 +2639,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         dlgResult = false;
-                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddIncludedZone), g_hwnd, dlgProcAddInckudedZone);
+                        DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddIncludedZone), g_hwnd, dlgProcAddIncludedZone);
                         if(dlgResult == IDOK)
                         {
                             hasEdits = true;
@@ -2840,7 +2834,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
 
+                                for(auto zone : GetAvailableZones(index))
+                                    AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
+                                
                                 if(zones.size() > index)
                                 {
                                     LM_Zone zone = zones[index];
