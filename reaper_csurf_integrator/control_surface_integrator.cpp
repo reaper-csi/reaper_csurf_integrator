@@ -2236,14 +2236,6 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
         {
             switch(LOWORD(wParam))
             {
-                case IDC_RADIO_MCP:
-                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
-                    break;
-                    
-                case IDC_RADIO_TCP:
-                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
-                    break;
-                    
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
@@ -2524,7 +2516,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
 
-          
             for(int i = 0; i < zones.size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
