@@ -335,7 +335,8 @@ public:
     MediaTrack* GetTrack();
     void RequestUpdate();
     void SetIsTouched(bool isTouched);
-    
+    void Deactivate();
+
     void DoAction(double value)
     {
         if(actions_.count(GetModifiers()) > 0)
