@@ -886,7 +886,7 @@ void Widget::RequestUpdate()
 void Widget::DoAction(double value)
 {
     if( ! GetIsModifier())
-        GetSurface()->GetPage()->InputReceived(this);
+        GetSurface()->GetPage()->InputReceived(this, value);
 
     if(widgetActionManager_ != nullptr)
         widgetActionManager_->DoAction(value);    
@@ -2296,12 +2296,19 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             EnableButtons();
 
             ClearWidgets();
-            ClearZones();
-            ClearActions();
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
             
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
+
+            zoneComponentWasSelectedBySurface = true;
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+            actionNameWasSelectedBySurface = true;
+            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, -1, 0);
+
             for(auto widget : currentSurface->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
             
@@ -2322,6 +2329,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_USER+1025:
         {
             zones.clear();
+            ClearZones();
+            ClearActions();
             
             bool hasLoadedRawFXFile = false;
             
@@ -3102,9 +3111,9 @@ void Page::ToggleLearnMode()
     }
 }
 
-void Page::InputReceived(Widget* widget)
+void Page::InputReceived(Widget* widget, double value)
 {
-    if(hwndLearn == nullptr)
+    if(hwndLearn == nullptr || value == 0.0)
         return;
     
     currentWidget = widget;

@@ -1215,7 +1215,7 @@ public:
     
     void OpenLearnModeWindow();
     void ToggleLearnMode();
-    void InputReceived(Widget* widget);
+    void InputReceived(Widget* widget, double value);
     void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
 
     
