@@ -1074,6 +1074,14 @@ void WidgetActionManager::SetIsTouched(bool isTouched)
         trackNavigator_->SetTouchState((isTouched));
 }
 
+void WidgetActionManager::Deactivate()
+{
+    WidgetActionManager* managerForHome = widget_->GetSurface()->GetHomeWidgetActionManagerForWidget(widget_);
+    if(managerForHome == nullptr)
+        widget_->Reset();
+    widget_->SetWidgetActionManager(managerForHome);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1102,13 +1110,7 @@ void Zone::Activate()
 void Zone::Deactivate()
 {
     for(auto widgetActionManager : widgetActionManagers_)
-    {
-        Widget* widget =  widgetActionManager->GetWidget();
-        WidgetActionManager* manager = surface_->GetHomeWidgetActionManagerForWidget(widget);
-        if(manager == nullptr)
-            widget->Reset();
-        widget->SetWidgetActionManager(manager);
-    }
+        widgetActionManager->Deactivate();
     
     for(auto zone : includedZones_)
         zone->Deactivate();
