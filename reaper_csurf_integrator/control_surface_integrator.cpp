@@ -2706,7 +2706,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     
                             Zone* entryToAddZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
 
-                            WidgetActionManager* manager = new WidgetActionManager(currentWidget, entryToAddZone, nullptr);
+                            TrackNavigator* entryTrackNavigator = new SelectedTrackNavigator(currentWidget->GetSurface()->GetPage()->GetTrackNavigationManager());
+                            
+                            WidgetActionManager* manager = new WidgetActionManager(currentWidget, entryToAddZone, entryTrackNavigator);
                             
                             vector<string> entryParams;
                             
