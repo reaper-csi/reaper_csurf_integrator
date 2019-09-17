@@ -2537,6 +2537,23 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         break;
                     }
                 }
+                
+                for(auto zone : GetAvailableZones(currentZoneIndex))
+                    AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
+                
+                if(zones[currentZoneIndex].parentZone != "")
+                {
+                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETCOUNT, 0, 0); i++)
+                    {
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETLBTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                        
+                        if(string(buffer) == zones[currentZoneIndex].parentZone)
+                        {
+                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i, 0);
+                            break;
+                        }
+                    }
+                }
             }
             
             break;
