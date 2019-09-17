@@ -2415,8 +2415,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                         else if(tokens[0] == "ParentZone")
                         {
-                            // TBD select right one from dropdown -- needs two pass
-                            
                             if(tokens.size() > 1 && zones.size() > 0)
                                 zones[zones.size() - 1].parentZone = tokens[1];
                         }
@@ -2837,9 +2835,26 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
+                                
+                                AddComboBoxEntry(hwndDlg, 0, "No Parent Zone", IDC_COMBO_ParentZone);
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
 
                                 for(auto zone : GetAvailableZones(index))
                                     AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
+                                
+                                if(zones[index].parentZone != "")
+                                {
+                                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETCOUNT, 0, 0); i++)
+                                    {
+                                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETLBTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+
+                                        if(string(buffer) == zones[index].parentZone)
+                                        {
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i, 0);
+                                            break;
+                                        }
+                                    }
+                                }
                                 
                                 if(zones.size() > index)
                                 {
