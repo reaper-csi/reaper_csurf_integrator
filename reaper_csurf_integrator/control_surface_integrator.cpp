@@ -2712,9 +2712,15 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             entryParams.push_back(entry.actionName);
                             
+                            if(entry.param != "")
+                                entryParams.push_back(entry.param);
+                            
+                            if(entry.alias != "")
+                                entryParams.push_back(entry.alias);
+                            
                             Action* actionToAdd = TheManager->GetAction(manager, entryParams);
                             
-                            manager->AddAction("", actionToAdd);
+                            manager->AddAction(NoModifiers, actionToAdd);
                             
                             manager->Activate();
                             
