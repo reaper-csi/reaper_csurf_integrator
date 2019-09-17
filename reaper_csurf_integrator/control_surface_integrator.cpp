@@ -2496,35 +2496,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                 }
             }
-
-            string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
             
-            if(testString == NoModifiers)
-                testString = "";
-            
-            testString += currentWidget->GetName();
-
-            if(zones.size() > 0)
-            {
-                for(int i = 0; i < zones[zones.size() - 1].zoneEntries.size(); i++)
-                {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                    string lineString = string(buffer);
-
-                    size_t found = lineString.find(testString);
-                    
-                    if (found != string::npos)
-                    {
-                        zoneComponentWasSelectedBySurface = true;
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
-                        LM_ZoneEntry entry = zones[zones.size() - 1].zoneEntries[i];
-                        entry.SetGlobalModifers();
-                        SetCheckBoxes();
-                        break;
-                    }
-                }
-            }
-
             for(int i = 0; i < zones.size(); i++)
             {
                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
@@ -2536,6 +2508,36 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     zoneWasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
                     break;
+                }
+            }
+
+            int currentZoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+
+            string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
+            
+            if(testString == NoModifiers)
+                testString = "";
+            
+            testString += currentWidget->GetName();
+
+            if(currentZoneIndex >= 0)
+            {
+                for(int i = 0; i < zones[currentZoneIndex].zoneEntries.size(); i++)
+                {
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                    string lineString = string(buffer);
+
+                    size_t found = lineString.find(testString);
+                    
+                    if (found != string::npos)
+                    {
+                        zoneComponentWasSelectedBySurface = true;
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                        LM_ZoneEntry entry = zones[currentZoneIndex].zoneEntries[i];
+                        entry.SetGlobalModifers();
+                        SetCheckBoxes();
+                        break;
+                    }
                 }
             }
             
