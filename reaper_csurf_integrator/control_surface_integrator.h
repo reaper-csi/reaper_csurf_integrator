@@ -424,6 +424,26 @@ public:
         return false;
     }
     
+    void RemoveWidgetActionManager(WidgetActionManager* widgetActionManager)
+    {
+        bool foundIt = false;
+        int locationToDelete = 0;
+        
+        for(int i = 0; i < widgetActionManagers_.size(); i++)
+            if(widgetActionManagers_[i] == widgetActionManager)
+            {
+                foundIt = true;
+                locationToDelete = i;
+                break;
+            }
+        
+        if(foundIt)
+        {
+            widgetActionManagers_[locationToDelete]->Deactivate();
+            widgetActionManagers_.erase(widgetActionManagers_.begin() + locationToDelete);
+        }
+    }
+    
     bool GetHasFocusedFXTrackNavigator()
     {
         if(widgetActionManagers_.size() > 0)

@@ -2704,6 +2704,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                             string zoneEntryLine = entry.GetLineAsString();
     
+                            Zone* entryToAddZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
+
+                            WidgetActionManager* manager = new WidgetActionManager(currentWidget, entryToAddZone, nullptr);
+                            
+                            vector<string> entryParams;
+                            
+                            entryParams.push_back(entry.actionName);
+                            
+                            Action* actionToAdd = TheManager->GetAction(manager, entryParams);
+                            
+                            manager->AddAction("", actionToAdd);
+                            
+                            manager->Activate();
+                            
+                            entryToAddZone->AddWidgetActionManager(manager);
+                            
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
                             zoneComponentWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCOUNT, 0, 0) - 1, 0);
@@ -2752,6 +2768,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             if(zoneIndex >= 0)
                             {
+                                Zone* zoneEntryToDeleteZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
+                                zoneEntryToDeleteZone->RemoveWidgetActionManager(currentWidgetActionManager);
+                                
                                 hasEdits = true;
                                 zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
@@ -2913,10 +2932,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                currentWidget = nullptr;
-                                currentWidgetActionManager = nullptr;
-                                currentAction = nullptr;
-                                
                                 int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
                                 
                                 if(zoneIndex >= 0)
