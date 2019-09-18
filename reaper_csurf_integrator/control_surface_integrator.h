@@ -76,6 +76,13 @@ class FXActivationManager;
 class FeedbackProcessor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+struct ZoneLineItem
+{
+    string widgetName = "";
+    string modifiers = "";
+    string action = "";
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -274,6 +281,33 @@ public:
     virtual void Do(string value) {}
     virtual void Do(double value) {}
     
+    ZoneLineItem GetDescription()
+    {
+        ZoneLineItem zli;
+        
+        zli.action = name_;
+        
+        if(GetParamAsString() != "")
+            zli.action += " " + GetParamAsString();
+        
+        if(GetAlias() != "")
+            zli.action += " " + GetAlias();
+
+        if(shouldToggle_)
+            zli.modifiers = "Toggle+";
+        
+        if(isInverted_)
+            zli.modifiers + "Invert+";
+        
+        if(shouldIgnoreRelease_)
+            zli.modifiers + "Press+";
+        
+        if(delayAmount_ != 0.0)
+            zli.modifiers + "Hold+";
+        
+        return zli;
+    }
+    
     void SetWidgetValue(Widget* widget, double value)
     {
         isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
@@ -320,8 +354,9 @@ private:
     Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
+    vector<string> actionLineItems;
     
-    vector <Action*> trackTouchedActions_;
+    map<string, vector <Action*>> trackTouchedActions_;
     
     string GetModifiers();
     
@@ -337,6 +372,39 @@ public:
     void SetIsTouched(bool isTouched);
     void Deactivate();
 
+    vector<string> GetActionLineItems()
+    {
+        actionLineItems.clear();
+        
+        for(auto [modifiers, actions] : actions_)
+        {
+            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
+            
+            for(auto action : actions)
+            {
+                ZoneLineItem zli = action->GetDescription();
+                
+                zli.modifiers = modifiersAsString + zli.modifiers;
+                actionLineItems.push_back(zli.modifiers + widget_->GetName() + " " + zli.action);
+            }
+        }
+
+        for(auto [modifiers, actions] : trackTouchedActions_)
+        {
+            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
+            
+            for(auto action : actions)
+            {
+                ZoneLineItem zli = action->GetDescription();
+                
+                zli.modifiers = modifiersAsString + "Touch+" + zli.modifiers;
+                actionLineItems.push_back(zli.modifiers + widget_->GetName() + " " + zli.action);
+            }
+        }
+
+        return actionLineItems;
+    }
+    
     void DoAction(double value)
     {
         if(actions_.count(GetModifiers()) > 0)
@@ -376,9 +444,9 @@ public:
         actions_[modifiers].push_back(action);
     }
     
-    void AddTrackTouchedAction(Action* action)
+    void AddTrackTouchedAction(string modifiers, Action* action)
     {
-        trackTouchedActions_.push_back(action);
+        trackTouchedActions_[modifiers].push_back(action);
     }
 };
 
@@ -391,7 +459,8 @@ private:
     vector<Zone*> includedZones_;
     int zoneIndex_ = 0;
     string parentZoneName_ = "";
-    
+    vector<string> actionLineItems;
+
     ControlSurface* surface_ = nullptr;
     string name_ = "";
     string alias_ = "";
@@ -410,6 +479,17 @@ public:
     
     void Activate();
     void Deactivate();
+    
+    vector<string> &GetActionLineItems()
+    {
+        actionLineItems.clear();
+        
+        for(auto manager : widgetActionManagers_)
+            for(auto lineItem : manager->GetActionLineItems())
+                actionLineItems.push_back(lineItem);
+        
+        return actionLineItems;
+    }
     
     bool ContainsWidgetActionManager(WidgetActionManager* widgetActionManager)
     {
