@@ -294,16 +294,16 @@ public:
             zli.action += " " + GetAlias();
 
         if(shouldToggle_)
-            zli.modifiers = "Toggle+";
+            zli.modifiers += "Toggle+";
         
         if(isInverted_)
-            zli.modifiers + "Invert+";
+            zli.modifiers += "Invert+";
         
         if(shouldIgnoreRelease_)
-            zli.modifiers + "Press+";
+            zli.modifiers += "Press+";
         
         if(delayAmount_ != 0.0)
-            zli.modifiers + "Hold+";
+            zli.modifiers += "Hold+";
         
         return zli;
     }
