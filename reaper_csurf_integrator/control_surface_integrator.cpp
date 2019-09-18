@@ -479,7 +479,7 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
                         Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
 
                         if(isTrackTouch)
-                            widgetActionManagerForWidget[widget]->AddTrackTouchedAction(action);
+                            widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
                         else
                             widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
                         
@@ -1057,8 +1057,9 @@ void WidgetActionManager::RequestUpdate()
 {
     if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
     {
-        for(auto action : trackTouchedActions_)
-            action->RequestUpdate();
+        if(trackTouchedActions_.count(GetModifiers()) > 0)
+            for(auto action : trackTouchedActions_[GetModifiers()])
+                action->RequestUpdate();
     }
     else
     {
@@ -2351,14 +2352,24 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
             Zone* zone = currentWidgetActionManager->GetZone();
             
-            istringstream filePath(zone->GetSourceFilePath());
-            vector<string> filePath_tokens;
-            string filePathComponent;
+            vector<string> lineItems = zone->GetActionLineItems();
             
-            while (getline(filePath, filePathComponent, '/'))
-                filePath_tokens.push_back(filePathComponent);
+            smatch match;
+            string zoneFilename = zone->GetSourceFilePath();
+            if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
+            {
+                zoneFilename = match.str(0);
+                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
+            }
+   
             
-            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), filePath_tokens[filePath_tokens.size() - 1].c_str());
+            
+            
+            
+            
+            
+            
+            
             
             bool isInIncludedZonesSection = false;
             
@@ -2560,6 +2571,21 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             break;
         }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             
         case WM_INITDIALOG:
         {
