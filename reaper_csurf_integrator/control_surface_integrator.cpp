@@ -2010,18 +2010,13 @@ static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
         entry.isAlt = true;
 }
 
-static bool LoadRawFXFile(MediaTrack* track, int index, string zoneName)
+static bool LoadRawFXFile(MediaTrack* track, string zoneName)
 {
-    char fxName[BUFSZ];
-    char fxParamName[BUFSZ];
+    string zoneFilename(zoneName);
+    zoneFilename = regex_replace(zoneFilename, regex(BadFileChars), "_");
+    zoneFilename += ".txt";
     
-    DAW::TrackFX_GetFXName(track, index, fxName, sizeof(fxName));
-    
-    string filename(fxName);
-    filename = regex_replace(filename, regex(BadFileChars), "_");
-    filename += ".txt";
-    
-    string filePath = string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + filename;
+    string filePath = string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + zoneFilename;
     
     ifstream fileExists(filePath);
     
@@ -2031,21 +2026,29 @@ static bool LoadRawFXFile(MediaTrack* track, int index, string zoneName)
     }
     else
     {
-        ofstream rawFXFile(filePath);
-        
-        if(rawFXFile.is_open())
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
         {
-            rawFXFile << string(fxName) + GetLineEnding();
+            DAW::TrackFX_GetFXName(track, i, buffer, sizeof(buffer));
             
-            for(int j = 0; j < DAW::TrackFX_GetNumParams(track, index); j++)
+            if(string(buffer) == zoneName)
             {
-                DAW::TrackFX_GetParamName(track, index, j, fxParamName, sizeof(fxParamName));
-
-                rawFXFile << string(fxParamName) + GetLineEnding();
+                ofstream rawFXFile(filePath);
+                
+                if(rawFXFile.is_open())
+                {
+                    rawFXFile << string(zoneName) + GetLineEnding();
+                    
+                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    {
+                        DAW::TrackFX_GetParamName(track, i, j, buffer, sizeof(buffer));
+                        
+                        rawFXFile << string(buffer) + GetLineEnding();
+                    }
+                }
+                
+                rawFXFile.close();
             }
         }
-        
-        rawFXFile.close();
     }
     
     ifstream rawFXFile(filePath);
@@ -2255,7 +2258,7 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         newZoneAlias = string(buffer);
                         
                         if(focusedFXTrack && focusedFXName == newZoneName)
-                            LoadRawFXFile(focusedFXTrack, focusedFXIndex, focusedFXName);
+                            LoadRawFXFile(focusedFXTrack, focusedFXName);
 
                         for(auto name : TheManager->GetActionNames())
                             if(name != Shift && name != Option && name != Control && name != Alt)
@@ -2352,8 +2355,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
             Zone* zone = currentWidgetActionManager->GetZone();
             
-            vector<string> lineItems = zone->GetActionLineItems();
-            
             smatch match;
             string zoneFilename = zone->GetSourceFilePath();
             if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
@@ -2361,14 +2362,15 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 zoneFilename = match.str(0);
                 SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
             }
-   
             
-            
-            
-            
-            
-            
-            
+            for(auto lineItem : zone->GetActionLineItems())
+            {
+                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineItem.c_str());
+
+                size_t found = lineItem.find("FXParam");
+                if (found != string::npos && hasLoadedRawFXFile == false)
+                    hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
+            }
             
             
             bool isInIncludedZonesSection = false;
@@ -2433,6 +2435,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                         else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
                         {
+                            /*
                             if(zones.size() > 0)
                             {
                                 LM_ZoneEntry entry;
@@ -2454,9 +2457,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 if(hasLoadedRawFXFile == false && zone->GetName() == zones[zones.size() - 1].name)
                                     hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetZoneIndex(), zone->GetName());
                             }
+                             */
                         }
                         else
                         {
+                            /*
                             if(tokens.size() > 1 && zones.size() > 0)
                             {
                                 if(zone->GetName() == zones[zones.size() - 1].name)
@@ -2472,6 +2477,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 zones[zones.size() - 1].zoneEntries.push_back(entry);
                             }
+                             */
                         }
                     }
                 }
