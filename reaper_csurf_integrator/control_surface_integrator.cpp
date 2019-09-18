@@ -2367,10 +2367,19 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineItem.c_str());
 
-                size_t found = lineItem.find("FXParam");
+                size_t found = lineItem.find(" FXParam ");
                 if (found != string::npos && hasLoadedRawFXFile == false)
                     hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
             }
+            
+            for(auto name : TheManager->GetActionNames())
+                if(name != Shift && name != Option && name != Control && name != Alt)
+                {
+                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                }
+
+            
+            
             
             
             bool isInIncludedZonesSection = false;
