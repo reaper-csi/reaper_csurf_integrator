@@ -2229,6 +2229,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
  
+            // Navigator
             string navigatorName = currentWidgetActionManager->GetNavigatorName();
             
             if(navigatorName == "")
@@ -2237,9 +2238,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
             if(index >= 0)
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
-
+            
             Zone* zone = currentWidgetActionManager->GetZone();
             
+            // Zone Filename
             smatch match;
             string zoneFilename = zone->GetSourceFilePath();
             if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
@@ -2337,10 +2339,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
             
+            // GAW TDB Parent Zone
             
-            // GAW TBD Parent Zones, Navigator
             
             
+
             break;
         }
 
