@@ -1812,75 +1812,6 @@ static void DisableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_NewFile), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), false);
 }
-/*
-struct LM_ZoneEntry
-{
-    vector<string> modifiers;
-    bool isShift = false;
-    bool isOption = false;
-    bool isControl = false;
-    bool isAlt = false;
-
-    bool isTouch = false;
-    bool shouldToggle = false;
-    bool shouldIgnoreRelease = false;
-    bool isHold = false;
-    bool isInvert = false;
-    
-    string widgetName = "";
-    string actionName = "";
-    string param = "";
-    string alias = "";
-    
-    string GetLineAsString()
-    {
-        string entryLine = "";
-        
-        if(isShift)
-            entryLine += "Shift+";
-        if(isOption)
-            entryLine += "Option+";
-        if(isControl)
-            entryLine += "Control+";
-        if(isAlt)
-            entryLine += "Alt+";
-        
-        if(shouldToggle)
-            entryLine += "Toggle+";
-        if(isInvert)
-            entryLine += "Invert+";
-        if(isTouch)
-            entryLine += "Touch+";
-        if(shouldIgnoreRelease)
-            entryLine += "Press+";
-        if(isHold)
-            entryLine += "Hold+";
-        
-        entryLine += widgetName + " " + actionName;
-        
-        if(param != "")
-            entryLine +=  " " + param;
-        
-        if(alias != "")
-            entryLine +=  " " + alias;
-        
-        return entryLine;
-    }
-
-    void SetGlobalModifers()
-    {
-        ::isShift = isShift;
-        ::isOption = isOption;
-        ::isControl = isControl;
-        ::isAlt = isAlt;
-        ::shouldToggle = shouldToggle;
-        ::isInvert = isInvert;
-        ::isTouch = isTouch;
-        ::shouldIgnoreRelease = shouldIgnoreRelease;
-        ::isHold = isHold;
-    }
-};
-*/
 
 static vector<Zone*> GetAvailableZones(int zoneIndex)
 {
@@ -1916,90 +1847,54 @@ static vector<Zone*> GetAvailableZones()
     return GetAvailableZones(zoneIndex);
 }
 
-static void SetCheckBoxes()
+static void SetCheckBoxes(ActionLineItem lineItem)
 {
-    if(isShift)
+    if(lineItem.isShift)
         CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_UNCHECKED);
     
-    if(isOption)
+    if(lineItem.isOption)
         CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_UNCHECKED);
     
-    if(isControl)
+    if(lineItem.isControl)
         CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_UNCHECKED);
     
-    if(isAlt)
+    if(lineItem.isAlt)
         CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_UNCHECKED);
     
-    if(shouldToggle)
+    if(lineItem.isToggle)
         CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_UNCHECKED);
     
-    if(isInvert)
+    if(lineItem.isInvert)
         CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_UNCHECKED);
     
-    if(isTouch)
+    if(lineItem.isTouch)
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_UNCHECKED);
     
-    if(shouldIgnoreRelease)
+    if(lineItem.isPress)
         CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_UNCHECKED);
     
-    if(isHold)
+    if(lineItem.isHold)
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_UNCHECKED);
 }
-/*
-static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
-{
-    string widgetName = "";
-    string modifiers = "";
-    bool isTrackTouch = false;
-    bool isInverted = false;
-    bool shouldToggle = false;
-    bool shouldIgnoreRelease = false;
-    double delayAmount = 0.0;
 
-    GetWidgetNameAndModifiers(line, widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, shouldIgnoreRelease, delayAmount);
-    
-    entry.widgetName = widgetName;
-    entry.isTouch = isTrackTouch;
-    entry.isInvert = isInverted;
-    entry.shouldToggle = shouldToggle;
-    entry.shouldIgnoreRelease = shouldIgnoreRelease;
-    entry.isHold = delayAmount == 0.0 ? false : true;
-    
-    size_t found = line.find(Shift);
-    if (found != string::npos)
-        entry.isShift = true;
-    
-    found = line.find(Option);
-    if (found != string::npos)
-        entry.isOption = true;
-    
-    found = line.find(Control);
-    if (found != string::npos)
-        entry.isControl = true;
-    
-    found = line.find(Alt);
-    if (found != string::npos)
-        entry.isAlt = true;
-}
-*/
 static bool LoadRawFXFile(MediaTrack* track, string zoneName)
 {
     string zoneFilename(zoneName);
@@ -2410,11 +2305,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 if(isAlt)
                     currentModifiers += "Alt+";
                 
-                
                 if(currentModifiers == lineItem.modifiers && currentWidget->GetName() == lineItem.widgetName)
                 {
                     zoneComponentWasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+                    
+                    SetCheckBoxes(lineItem);
                 }
             }
             
@@ -2863,7 +2759,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 {
                                     //LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
                                     //entry.SetGlobalModifers();
-                                    SetCheckBoxes();
+                                    //SetCheckBoxes();
 
                                     //SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
                                     //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());

@@ -84,6 +84,15 @@ struct ActionLineItem
     string actionName = "";
     string param = "";
     string alias = "";
+    bool isShift = false;
+    bool isOption = false;
+    bool isControl = false;
+    bool isAlt = false;
+    bool isToggle = false;
+    bool isInvert = false;
+    bool isTouch = false;
+    bool isPress = false;
+    bool isHold = false;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,16 +304,28 @@ public:
         zli.alias = GetAlias();
 
         if(shouldToggle_)
+        {
             zli.allModifiers += "Toggle+";
+            zli.isToggle = true;
+        }
         
         if(isInverted_)
+        {
             zli.allModifiers += "Invert+";
+            zli.isInvert = true;
+        }
         
         if(shouldIgnoreRelease_)
+        {
             zli.allModifiers += "Press+";
+            zli.isPress = true;
+        }
         
         if(delayAmount_ != 0.0)
+        {
             zli.allModifiers += "Hold+";
+            zli.isHold = true;
+        }
         
         return zli;
     }
@@ -388,6 +409,23 @@ public:
                 zli.widgetName = widget_->GetName();
                 zli.allModifiers = modifiersAsString + zli.allModifiers;
                 zli.modifiers = modifiersAsString;
+                
+                size_t found = zli.modifiers.find("Shift");
+                if (found != string::npos)
+                    zli.isShift = true;
+                
+                found = zli.modifiers.find("Option");
+                if (found != string::npos)
+                    zli.isOption = true;
+                
+                found = zli.modifiers.find("Control");
+                if (found != string::npos)
+                    zli.isControl = true;
+                
+                found = zli.modifiers.find("Alt");
+                if (found != string::npos)
+                    zli.isAlt = true;
+
                 actionLineItems.push_back(zli);
             }
         }
@@ -400,7 +438,26 @@ public:
             {
                 ActionLineItem zli = action->GetDescription();
                 
+                zli.widgetName = widget_->GetName();
                 zli.allModifiers = modifiersAsString + "Touch+" + zli.allModifiers;
+                zli.modifiers = modifiersAsString;
+
+                size_t found = zli.modifiers.find("Shift");
+                if (found != string::npos)
+                    zli.isShift = true;
+                
+                found = zli.modifiers.find("Option");
+                if (found != string::npos)
+                    zli.isOption = true;
+                
+                found = zli.modifiers.find("Control");
+                if (found != string::npos)
+                    zli.isControl = true;
+                
+                found = zli.modifiers.find("Alt");
+                if (found != string::npos)
+                    zli.isAlt = true;
+                
                 actionLineItems.push_back(zli);
             }
         }
