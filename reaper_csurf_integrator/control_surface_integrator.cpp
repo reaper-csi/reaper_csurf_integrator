@@ -2005,6 +2005,8 @@ static void ClearActions()
 
 static int FillZones(Zone* zone)
 {
+    ClearZones();
+
     // Zone Filename
     smatch match;
     string zoneFilename = zone->GetSourceFilePath();
@@ -2123,6 +2125,8 @@ static void FillSubZones(Zone* zone, int zoneIndex)
 
 static void FillActionNames()
 {
+    ClearActions();
+    
     vector<string> actionNames = TheManager->GetActionNames();
     
     int negBias = 0;
@@ -2352,11 +2356,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
 
-            zoneComponentWasSelectedBySurface = true;
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
-            actionNameWasSelectedBySurface = true;
-            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, -1, 0);
-
             for(auto widget : currentSurface->GetWidgets())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
             
@@ -2375,9 +2374,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            ClearZones();
-            ClearActions();
-            
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
@@ -2727,54 +2723,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 zoneWasSelectedBySurface = false;
                                 break;
                             }
-                            
-                            // Get selected index.
+
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
-                            {
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
-                                
-                                AddComboBoxEntry(hwndDlg, 0, "No Parent Zone", IDC_COMBO_ParentZone);
-                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
-
-                                /*
-                                for(auto zone : GetAvailableZones(index))
-                                    AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
-                                
-                                if(zones[index].parentZone != "")
-                                {
-                                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETCOUNT, 0, 0); i++)
-                                    {
-                                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETLBTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-
-                                        if(string(buffer) == zones[index].parentZone)
-                                        {
-                                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i, 0);
-                                            break;
-                                        }
-                                    }
-                                }
-                               
-                                
-                                if(zones.size() > index)
-                                {
-                                    LM_Zone zone = zones[index];
-
-                                    for(auto includedZone : zone.includedZones)
-                                        SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone.c_str());
-
-                                    for(auto entry : zone.zoneEntries)
-                                    {
-                                        string entryLine = entry.GetLineAsString();
-                                        SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)entryLine.c_str());
-                                    }
-                                }
-                                  */
-                            }
-                            
-                            break;
+                                FillSubZones(zonesInThisFile[index], index);
                         }
                     }
                     
