@@ -80,6 +80,7 @@ struct ActionLineItem
 {
     string widgetName = "";
     string modifiers = "";
+    string allModifiers = "";
     string actionName = "";
     string param = "";
     string alias = "";
@@ -294,16 +295,16 @@ public:
         zli.alias = GetAlias();
 
         if(shouldToggle_)
-            zli.modifiers += "Toggle+";
+            zli.allModifiers += "Toggle+";
         
         if(isInverted_)
-            zli.modifiers += "Invert+";
+            zli.allModifiers += "Invert+";
         
         if(shouldIgnoreRelease_)
-            zli.modifiers += "Press+";
+            zli.allModifiers += "Press+";
         
         if(delayAmount_ != 0.0)
-            zli.modifiers += "Hold+";
+            zli.allModifiers += "Hold+";
         
         return zli;
     }
@@ -385,7 +386,8 @@ public:
                 ActionLineItem zli = action->GetDescription();
                 
                 zli.widgetName = widget_->GetName();
-                zli.modifiers = modifiersAsString + zli.modifiers;
+                zli.allModifiers = modifiersAsString + zli.allModifiers;
+                zli.modifiers = modifiersAsString;
                 actionLineItems.push_back(zli);
             }
         }
@@ -398,7 +400,7 @@ public:
             {
                 ActionLineItem zli = action->GetDescription();
                 
-                zli.modifiers = modifiersAsString + "Touch+" + zli.modifiers;
+                zli.allModifiers = modifiersAsString + "Touch+" + zli.allModifiers;
                 actionLineItems.push_back(zli);
             }
         }
@@ -477,6 +479,7 @@ public:
     string GetName() { return name_ ;}
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
+    vector<Zone*> &GetIncludedZones() { return includedZones_; }
     
     void Activate();
     void Deactivate();
@@ -1383,11 +1386,11 @@ public:
     {
         string modifiers = "";
         
-        if(isShift_ /*|| GetAsyncKeyState(VK_SHIFT)*/)
+        if(isShift_)
             modifiers += Shift + "+";
         if(isOption_)
             modifiers += Option + "+";
-        if(isControl_  /*|| GetAsyncKeyState(VK_CONTROL)*/)
+        if(isControl_)
             modifiers +=  Control + "+";
         if(isAlt_)
             modifiers += Alt + "+";
