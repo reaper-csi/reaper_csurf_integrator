@@ -1812,7 +1812,7 @@ static void DisableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_NewFile), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), false);
 }
-
+/*
 struct LM_ZoneEntry
 {
     vector<string> modifiers;
@@ -1880,32 +1880,21 @@ struct LM_ZoneEntry
         ::isHold = isHold;
     }
 };
+*/
 
-struct LM_Zone
+static vector<Zone*> GetAvailableZones(int zoneIndex)
 {
-    string name = "";
-    string alias = "";
-    string parentZone = "";
-    string navigator = "";
-    vector<string> includedZones;
-    vector<LM_ZoneEntry> zoneEntries;
-};
-
-static vector<LM_Zone> zones;
-
-static vector<string> GetAvailableZones(int zoneIndex)
-{
-    vector<string> availableZones;
+    vector<Zone*> availableZones;
     
     if(zoneIndex >= 0)
     {       
-        for(int i = 0; i < zones.size(); i++)
+        for(int i = 0; i < zonesInThisFile.size(); i++)
         {
             bool foundIt = false;
 
-            for(int j = 0; j < zones[zoneIndex].includedZones.size(); j++)
+            for(int j = 0; j < zonesInThisFile[zoneIndex]->GetIncludedZones().size(); j++)
             {
-                if(zones[zoneIndex].includedZones[j] == zones[i].name)
+                if(zonesInThisFile[zoneIndex]->GetIncludedZones()[j]->GetName() == zonesInThisFile[i]->GetName())
                 {
                     foundIt = true;
                     break;
@@ -1913,17 +1902,15 @@ static vector<string> GetAvailableZones(int zoneIndex)
             }
 
             if( ! foundIt && i != zoneIndex)
-                availableZones.push_back(zones[i].name);
+                availableZones.push_back(zonesInThisFile[i]);
         }
     }
     
     return availableZones;
 }
 
-static vector<string> GetAvailableZones()
+static vector<Zone*> GetAvailableZones()
 {
-    vector<string> availableZones;
-    
     int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
     
     return GetAvailableZones(zoneIndex);
@@ -1976,7 +1963,7 @@ static void SetCheckBoxes()
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_UNCHECKED);
 }
-
+/*
 static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
 {
     string widgetName = "";
@@ -2012,7 +1999,7 @@ static void GetEntryWidgetNameAndModifiers(string line, LM_ZoneEntry &entry)
     if (found != string::npos)
         entry.isAlt = true;
 }
-
+*/
 static bool LoadRawFXFile(MediaTrack* track, string zoneName)
 {
     string zoneFilename(zoneName);
@@ -2162,7 +2149,7 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_RESETCONTENT, 0, 0);
             for(auto zone : GetAvailableZones())
             {
-                AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_IncludedZone);
+                //AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_IncludedZone);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_SETCURSEL, 0, 0);
             }
             
@@ -2187,7 +2174,9 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                             // GAW TBD -- add included Zone to Surface
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                             if (index >= 0)
-                                zones[index].includedZones.push_back(string(buffer));
+                            {
+                                //zones[index].includedZones.push_back(string(buffer));
+                            }
                         }
                         
                         dlgResult = IDOK;
@@ -2336,7 +2325,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            zones.clear();
             ClearZones();
             ClearActions();
             
@@ -2510,7 +2498,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             hasEdits = true;
 
-                            zones.clear();
                             ClearZones();
                             
                             newZoneFilename += ".zon";
@@ -2525,12 +2512,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             
                             
-                            LM_Zone newZone;
+                            //LM_Zone newZone;
                             
-                            newZone.name = newZoneName;
-                            newZone.alias = newZoneAlias;
+                            //newZone.name = newZoneName;
+                            //newZone.alias = newZoneAlias;
                             
-                            zones.push_back(newZone);
+                            //zones.push_back(newZone);
                             
                             
                             //////////
@@ -2556,12 +2543,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             
                             
-                            LM_Zone newZone;
+                            //LM_Zone newZone;
                             
-                            newZone.name = newZoneName;
-                            newZone.alias = newZoneAlias;
+                            //newZone.name = newZoneName;
+                            //newZone.alias = newZoneAlias;
                             
-                            zones.push_back(newZone);
+                            //zones.push_back(newZone);
                             
                             
                             //////////
@@ -2591,7 +2578,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if(zoneIndex >= 0)
                         {
                             hasEdits = true;
-
+                            /*
                             LM_ZoneEntry entry;
                             
                             entry.isShift = isShift;
@@ -2618,7 +2605,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             entry.alias = string(buffer);
                             
                             // GAW TBD -- Add Widget Action Manager To Zone
-                            
+
                             zones[zoneIndex].zoneEntries.push_back(entry);
 
                             string zoneEntryLine = entry.GetLineAsString();
@@ -2646,14 +2633,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             manager->Activate();
                             
                             entryToAddZone->AddWidgetActionManager(manager);
+                          
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
                             zoneComponentWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCOUNT, 0, 0) - 1, 0);
                         }
-                    
+                      */
                     }
                     break ;
+                }
                     
                 case IDC_BUTTON_DeleteZone:
                     if (HIWORD(wParam) == BN_CLICKED)
@@ -2664,7 +2653,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             hasEdits = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
                             string deletedZone = string(buffer);
-                            
+                            /*
                             for(int i = 0; i < zones.size(); i++)
                             {
                                 for(int j = 0; j < zones[i].includedZones.size(); j++)
@@ -2679,7 +2668,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             // GAW TBD -- Zones, Parent, Included
                             zones.erase(zones.begin() + index);
-                            
+                            */
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
                         }
@@ -2687,6 +2676,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break ;
                     
                 case IDC_BUTTON_DeleteZoneEntry:
+                {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         int index = SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_GETCURSEL, 0, 0);
@@ -2696,19 +2686,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             if(zoneIndex >= 0)
                             {
-                                Zone* zoneEntryToDeleteZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
-                                zoneEntryToDeleteZone->RemoveWidgetActionManager(currentWidgetActionManager);
+                                //Zone* zoneEntryToDeleteZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
+                                //zoneEntryToDeleteZone->RemoveWidgetActionManager(currentWidgetActionManager);
                                 
                                 hasEdits = true;
                                 
                                 // GAW TBD -- Delete Zone Widget Action Manager
-                                zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
+                                //zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
                                 
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
                             }
                         }
                     }
                     break ;
+                }
                     
                 case IDC_LIST_WidgetNames:
                 {
@@ -2808,6 +2799,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 AddComboBoxEntry(hwndDlg, 0, "No Parent Zone", IDC_COMBO_ParentZone);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
 
+                                /*
                                 for(auto zone : GetAvailableZones(index))
                                     AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
                                 
@@ -2824,6 +2816,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         }
                                     }
                                 }
+                               
                                 
                                 if(zones.size() > index)
                                 {
@@ -2838,6 +2831,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)entryLine.c_str());
                                     }
                                 }
+                                  */
                             }
                             
                             break;
@@ -2867,26 +2861,26 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 if(zoneIndex >= 0)
                                 {
-                                    LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
-                                    entry.SetGlobalModifers();
+                                    //LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
+                                    //entry.SetGlobalModifers();
                                     SetCheckBoxes();
 
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, entry.alias.c_str());
+                                    //SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
+                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
+                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
+                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, entry.alias.c_str());
 
                                     for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
                                     {
                                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                                        if(string(buffer) == entry.widgetName)
+                                        //if(string(buffer) == entry.widgetName)
                                         {
                                             widgetNameWasSelectedBySurface = true;
                                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
                                             break;
                                         }
                                     }
-                                    
+                                    /*
                                     if(entry.actionName == "FXParam" || entry.actionName == "FXParamNameDisplay" || entry.actionName == "FXParamValueDisplay" || entry.actionName == "FXParamRelative")
                                     {
                                         actionNameWasSelectedBySurface = true;
@@ -2905,6 +2899,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             }
                                         }
                                     }
+                                     */
                                 }
                             }
                             
