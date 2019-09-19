@@ -1973,6 +1973,8 @@ static void ClearZones()
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
+    AddComboBoxEntry(hwndLearn, 0, "No Parent Zone", IDC_COMBO_ParentZone);
 }
 
 static void ClearActions()
@@ -2251,7 +2253,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             }
             
             // Zones
+            int zoneIndex = -1;
+            
             zonesInThisFile = currentWidget->GetSurface()->GetZonesInZoneFile()[zone->GetSourceFilePath()];
+            
             for(int i = 0; i < zonesInThisFile.size(); i++)
             {
                 SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)zonesInThisFile[i]->GetName().c_str());
@@ -2260,10 +2265,29 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     zoneWasSelectedBySurface = true;
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+                    zoneIndex = i;
                 }
             }
             
-            //Included Zones
+            // Parent Zone
+            if(zoneIndex >= 0)
+            {
+                for(int i = 0; i < GetAvailableZones(zoneIndex).size(); i++)
+                {
+                    Zone* availableZone = GetAvailableZones(zoneIndex)[i];
+                    AddComboBoxEntry(hwndDlg, 0, availableZone->GetName().c_str(), IDC_COMBO_ParentZone);
+                    
+                    if(zone->GetParentZoneName() == "")
+                    {
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
+                    }
+                    else if(zone->GetParentZoneName() == availableZone->GetName())
+                        
+                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i + 1, 0);
+                }
+            }
+
+            // Included Zones
             for(auto includedZone : zone->GetIncludedZones())
                 SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
 
@@ -2338,11 +2362,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                 }
             }
-            
-            // GAW TDB Parent Zone
-            
-            
-            
 
             break;
         }
@@ -2356,9 +2375,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
-
-            AddComboBoxEntry(hwndDlg, 0, "No Parent Zone", IDC_COMBO_ParentZone);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
 
             if(TheManager->GetSurfaceInMonitor())
                 CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_CHECKED);
