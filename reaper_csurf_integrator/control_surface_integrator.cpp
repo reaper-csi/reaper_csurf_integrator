@@ -1436,6 +1436,7 @@ bool ControlSurface::AddZone(Zone* zone)
     else
     {
         zones_[zone->GetName()] = zone;
+        zonesInZoneFile_[zone->GetSourceFilePath()].push_back(zone);
         return true;
     }
 }
@@ -1764,6 +1765,8 @@ static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
 static WidgetActionManager* currentWidgetActionManager = nullptr;
 static Action* currentAction = nullptr;
+
+static vector<Zone*> zonesInThisFile;
 
 static string newZoneFilename = "";
 static string newZoneName = "";
@@ -2328,9 +2331,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             }
-            
-            break;
         }
+            break;
+
             
         case WM_USER+1025:
         {
@@ -2363,22 +2366,65 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
             }
             
-            for(auto lineItem : zone->GetActionLineItems())
+            // Zones
+            zonesInThisFile = currentWidget->GetSurface()->GetZonesInZoneFile()[zone->GetSourceFilePath()];
+            for(int i = 0; i < zonesInThisFile.size(); i++)
             {
-                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineItem.c_str());
+                SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)zonesInThisFile[i]->GetName().c_str());
+                
+                if(zonesInThisFile[i]->GetName() == zone->GetName())
+                {
+                    zoneWasSelectedBySurface = true;
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+                }
+            }
 
-                size_t found = lineItem.find(" FXParam ");
-                if (found != string::npos && hasLoadedRawFXFile == false)
+            
+            for(int i = 0; i < zone->GetActionLineItems().size(); i++)
+            {
+                ActionLineItem lineItem = zone->GetActionLineItems()[i];
+                
+                string lineString = lineItem.modifiers + lineItem.widgetName + " " + lineItem.actionName;
+                
+                if(lineItem.param != "")
+                    lineString += lineItem.param;
+                
+                if(lineItem.alias != "")
+                    lineString += lineItem.alias;
+                
+                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
+
+                if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
                     hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
+                
+                
+                if(hasLoadedRawFXFile && lineItem.param != "" && lineItem.param == currentAction->GetParamAsString())
+                {
+                    actionNameWasSelectedBySurface = true;
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                }
             }
             
-            for(auto name : TheManager->GetActionNames())
+            for(int i = 0; i < TheManager->GetActionNames().size(); i++)
+            {
+                string name = TheManager->GetActionNames()[i];
+                
                 if(name != Shift && name != Option && name != Control && name != Alt)
                 {
                     SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+
+                    if(name != "FXParam" && currentAction->GetName() == name)
+                    {
+                        actionNameWasSelectedBySurface = true;
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                    }
                 }
+            }
+
 
             
+            
+            // GAW TBD selectlineItem
             
             
             
@@ -2403,22 +2449,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     
                     if(tokens.size() > 0)
                     {
-                        if(tokens[0] == "Zone")
-                        {
-                            if(tokens.size() > 1)
-                            {
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)tokens[1].c_str());
-                                
-                                LM_Zone newZone;
-                                newZone.name = tokens[1];
-                                zones.push_back(newZone);
-                            }
-                        }
-                        else if(tokens[0] == "ZoneEnd")
-                        {
-                            continue;
-                        }
-                        else if(tokens[0] == "IncludedZones")
+                        if(tokens[0] == "IncludedZones")
                         {
                             isInIncludedZonesSection = true;
                         }
@@ -2494,16 +2525,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             catch (exception &e)
             {
                 char buffer[250];
-                sprintf(buffer, "Trouble loadong Zone file\n");
+                sprintf(buffer, "Trouble loading Zone file\n");
                 DAW::ShowConsoleMsg(buffer);
             }
 
-            for(auto name : TheManager->GetActionNames())
-                if(name != Shift && name != Option && name != Control && name != Alt)
-                {
-                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
-                }
-            
+            /*
             if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
             {
                 actionNameWasSelectedBySurface = true;
@@ -2523,29 +2549,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
             
-            for(int i = 0; i < zones.size(); i++)
-            {
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                
-                string lineString = string(buffer);
-                
-                if (lineString == zone->GetName())
-                {
-                    zoneWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
-                    break;
-                }
-            }
+            //int currentZoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
 
-            int currentZoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
-
-            string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
+            //string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
             
-            if(testString == NoModifiers)
-                testString = "";
+            //if(testString == NoModifiers)
+                //testString = "";
             
-            testString += currentWidget->GetName();
+            //testString += currentWidget->GetName();
 
+            
             if(currentZoneIndex >= 0)
             {
                 for(int i = 0; i < zones[currentZoneIndex].zoneEntries.size(); i++)
@@ -2584,8 +2597,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
             
-            break;
+            */
+            
         }
+            break;
+
             
             
             
@@ -2775,7 +2791,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                     
                     }
-
                     break ;
                     
                 case IDC_BUTTON_DeleteZone:
@@ -2855,7 +2870,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             break;
                         }
                     }
-
                     break;
                 }
 

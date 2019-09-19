@@ -76,11 +76,13 @@ class FXActivationManager;
 class FeedbackProcessor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct ZoneLineItem
+struct ActionLineItem
 {
     string widgetName = "";
     string modifiers = "";
-    string action = "";
+    string actionName = "";
+    string param = "";
+    string alias = "";
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,17 +283,15 @@ public:
     virtual void Do(string value) {}
     virtual void Do(double value) {}
     
-    ZoneLineItem GetDescription()
+    ActionLineItem GetDescription()
     {
-        ZoneLineItem zli;
+        ActionLineItem zli;
         
-        zli.action = name_;
+        zli.actionName = name_;
         
-        if(GetParamAsString() != "")
-            zli.action += " " + GetParamAsString();
+        zli.param = GetParamAsString();
         
-        if(GetAlias() != "")
-            zli.action += " " + GetAlias();
+        zli.alias = GetAlias();
 
         if(shouldToggle_)
             zli.modifiers += "Toggle+";
@@ -354,7 +354,7 @@ private:
     Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
-    vector<string> actionLineItems;
+    vector<ActionLineItem> actionLineItems;
     
     map<string, vector <Action*>> trackTouchedActions_;
     
@@ -372,7 +372,7 @@ public:
     void SetIsTouched(bool isTouched);
     void Deactivate();
 
-    vector<string> GetActionLineItems()
+    vector<ActionLineItem> GetActionLineItems()
     {
         actionLineItems.clear();
         
@@ -382,10 +382,10 @@ public:
             
             for(auto action : actions)
             {
-                ZoneLineItem zli = action->GetDescription();
+                ActionLineItem zli = action->GetDescription();
                 
                 zli.modifiers = modifiersAsString + zli.modifiers;
-                actionLineItems.push_back(zli.modifiers + widget_->GetName() + " " + zli.action);
+                actionLineItems.push_back(zli);
             }
         }
 
@@ -395,10 +395,10 @@ public:
             
             for(auto action : actions)
             {
-                ZoneLineItem zli = action->GetDescription();
+                ActionLineItem zli = action->GetDescription();
                 
                 zli.modifiers = modifiersAsString + "Touch+" + zli.modifiers;
-                actionLineItems.push_back(zli.modifiers + widget_->GetName() + " " + zli.action);
+                actionLineItems.push_back(zli);
             }
         }
 
@@ -459,7 +459,7 @@ private:
     vector<Zone*> includedZones_;
     int zoneIndex_ = 0;
     string parentZoneName_ = "";
-    vector<string> actionLineItems;
+    vector<ActionLineItem> actionLineItems;
 
     ControlSurface* surface_ = nullptr;
     string name_ = "";
@@ -480,7 +480,7 @@ public:
     void Activate();
     void Deactivate();
     
-    vector<string> &GetActionLineItems()
+    vector<ActionLineItem> &GetActionLineItems()
     {
         actionLineItems.clear();
         
@@ -754,6 +754,7 @@ protected:
     SendsActivationManager* sendsActivationManager_ = nullptr;
 
     map<string, Zone*> zones_;
+    map<string, vector<Zone*>> zonesInZoneFile_;
     Zone* activeZone_ = nullptr;
     bool useZoneLink_ = false;
 
@@ -772,6 +773,7 @@ public:
     string GetName() { return name_; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     map<string, Zone*> &GetZones() { return zones_;}
+    map<string, vector<Zone*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
