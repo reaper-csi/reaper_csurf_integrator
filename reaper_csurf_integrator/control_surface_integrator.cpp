@@ -2407,18 +2407,22 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             vector<string> actionNames = TheManager->GetActionNames();
             
+            int negBias = 0;
+            
             for(int i = 0; i < actionNames.size(); i++)
             {
                 string name = actionNames[i];
                 
-                if(name != Shift && name != Option && name != Control && name != Alt)
+                if(name == Shift || name == Option || name == Control || name == Alt)
+                    negBias++;
+                else
                 {
                     SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
 
                     if(name != "FXParam" && currentAction->GetName() == name)
                     {
                         actionNameWasSelectedBySurface = true;
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i - negBias, 0);
                     }
                 }
             }
