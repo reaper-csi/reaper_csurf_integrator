@@ -2003,6 +2003,37 @@ static void ClearActions()
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 }
 
+static int FillZones(Zone* zone)
+{
+    // Zone Filename
+    smatch match;
+    string zoneFilename = zone->GetSourceFilePath();
+    if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
+    {
+        zoneFilename = match.str(0);
+        SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
+    }
+    
+    // Zones
+    int zoneIndex = -1;
+    
+    zonesInThisFile = currentWidget->GetSurface()->GetZonesInZoneFile()[zone->GetSourceFilePath()];
+    
+    for(int i = 0; i < zonesInThisFile.size(); i++)
+    {
+        SendDlgItemMessage(hwndLearn, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)zonesInThisFile[i]->GetName().c_str());
+        
+        if(zonesInThisFile[i]->GetName() == zone->GetName())
+        {
+            zoneWasSelectedBySurface = true;
+            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+            zoneIndex = i;
+        }
+    }
+
+    return zoneIndex;
+}
+
 static void FillSubZones(Zone* zone, int zoneIndex)
 {
     ClearSubZones();
@@ -2086,6 +2117,31 @@ static void FillSubZones(Zone* zone, int zoneIndex)
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
             
             SetCheckBoxes(lineItem);
+        }
+    }
+}
+
+static void FillActionNames()
+{
+    vector<string> actionNames = TheManager->GetActionNames();
+    
+    int negBias = 0;
+    
+    for(int i = 0; i < actionNames.size(); i++)
+    {
+        string name = actionNames[i];
+        
+        if(name == Shift || name == Option || name == Control || name == Alt)
+            negBias++;
+        else
+        {
+            SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+            
+            if(name != "FXParam" && currentAction->GetName() == name)
+            {
+                actionNameWasSelectedBySurface = true;
+                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, i - negBias, 0);
+            }
         }
     }
 }
@@ -2328,57 +2384,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             Zone* zone = currentWidgetActionManager->GetZone();
             
-            // Zone Filename
-            smatch match;
-            string zoneFilename = zone->GetSourceFilePath();
-            if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
-            {
-                zoneFilename = match.str(0);
-                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
-            }
-            
-            // Zones
-            int zoneIndex = -1;
-            
-            zonesInThisFile = currentWidget->GetSurface()->GetZonesInZoneFile()[zone->GetSourceFilePath()];
-            
-            for(int i = 0; i < zonesInThisFile.size(); i++)
-            {
-                SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)zonesInThisFile[i]->GetName().c_str());
-                
-                if(zonesInThisFile[i]->GetName() == zone->GetName())
-                {
-                    zoneWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
-                    zoneIndex = i;
-                }
-            }
+            int zoneIndex = FillZones(zone);
             
             FillSubZones(zone, zoneIndex);
 
-            // Action Names
-            vector<string> actionNames = TheManager->GetActionNames();
+            FillActionNames();
             
-            int negBias = 0;
-            
-            for(int i = 0; i < actionNames.size(); i++)
-            {
-                string name = actionNames[i];
-                
-                if(name == Shift || name == Option || name == Control || name == Alt)
-                    negBias++;
-                else
-                {
-                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
-
-                    if(name != "FXParam" && currentAction->GetName() == name)
-                    {
-                        actionNameWasSelectedBySurface = true;
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i - negBias, 0);
-                    }
-                }
-            }
-
             break;
         }
 
