@@ -2331,10 +2331,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break;
                 }
             }
-        }
             break;
+        }
 
-            
         case WM_USER+1025:
         {
             zones.clear();
@@ -2378,14 +2377,28 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
                 }
             }
+            
+            //Included Zones
+            for(auto includedZone : zone->GetIncludedZones())
+                SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
 
+            // Line Items
             vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
 
             for(int i = 0; i < actionLineItems.size(); i++)
             {
                 ActionLineItem lineItem = actionLineItems[i];
                 
-                string lineString = lineItem.modifiers + lineItem.widgetName + " " + lineItem.actionName;
+                if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
+                    hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
+                
+                if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
+                {
+                    actionNameWasSelectedBySurface = true;
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+                }
+                
+                string lineString = lineItem.allModifiers + lineItem.widgetName + " " + lineItem.actionName;
                 
                 if(lineItem.param != "")
                     lineString += " " + lineItem.param;
@@ -2395,16 +2408,29 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 
                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
 
-                if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
-                    hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
+                string currentModifiers = "";
                 
-                if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
+                if(isShift)
+                    currentModifiers += "Shift+";
+                
+                if(isOption)
+                    currentModifiers += "Option+";
+                
+                if(isControl)
+                    currentModifiers += "Control+";
+                
+                if(isAlt)
+                    currentModifiers += "Alt+";
+                
+                
+                if(currentModifiers == lineItem.modifiers && currentWidget->GetName() == lineItem.widgetName)
                 {
-                    actionNameWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+                    zoneComponentWasSelectedBySurface = true;
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
                 }
             }
             
+            // Action Names
             vector<string> actionNames = TheManager->GetActionNames();
             
             int negBias = 0;
@@ -2426,204 +2452,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                 }
             }
-
-
-            
-            
-            // GAW TBD selectlineItem
-            
-            
-            
-            bool isInIncludedZonesSection = false;
-            
-            int lineNumber = 0;
-            
-            try
-            {
-                ifstream file(zone->GetSourceFilePath());
-                
-                for (string line; getline(file, line) ; )
-                {
-                    line = regex_replace(line, regex(CRLFChars), "");
-
-                    lineNumber++;
-                    
-                    if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-                        continue;
-                    
-                    vector<string> tokens(GetTokens(line));
-                    
-                    if(tokens.size() > 0)
-                    {
-                        if(tokens[0] == "IncludedZones")
-                        {
-                            isInIncludedZonesSection = true;
-                        }
-                        else if(tokens[0] == "IncludedZonesEnd")
-                        {
-                            isInIncludedZonesSection = false;
-                        }
-                        else if(tokens[0] == "TrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator")
-                        {                         
-                            if(zones.size() > 0)
-                                zones[zones.size() - 1].navigator = tokens[0];
-                        }
-                        else if(isInIncludedZonesSection)
-                        {
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)tokens[0].c_str());
-                            if(zones.size() > 0)
-                                zones[zones.size() - 1].includedZones.push_back(tokens[0]);
-                        }
-                        else if(tokens[0] == "ParentZone")
-                        {
-                            if(tokens.size() > 1 && zones.size() > 0)
-                                zones[zones.size() - 1].parentZone = tokens[1];
-                        }
-                        else if(tokens.size() > 2 && (tokens[1] == "FXParam" || tokens[1] == "FXParamNameDisplay" || tokens[1] == "FXParamValueDisplay" || tokens[1] == "FXParamRelative"))
-                        {
-                            /*
-                            if(zones.size() > 0)
-                            {
-                                LM_ZoneEntry entry;
-                                GetEntryWidgetNameAndModifiers(tokens[0], entry);
-                                entry.actionName = tokens[1];
-                                entry.param = tokens[2];
-                                if(tokens.size() > 3)
-                                    entry.alias = tokens[3];
-                                
-                                zones[zones.size() - 1].zoneEntries.push_back(entry);
-
-                                string zoneComponentEntry = tokens[0] + " " + tokens[1] + " " + tokens[2];
-                                
-                                if(tokens.size() > 3)
-                                    zoneComponentEntry += " " + tokens[3];
-                                
-                                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneComponentEntry.c_str());
-                                
-                                if(hasLoadedRawFXFile == false && zone->GetName() == zones[zones.size() - 1].name)
-                                    hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetZoneIndex(), zone->GetName());
-                            }
-                             */
-                        }
-                        else
-                        {
-                            /*
-                            if(tokens.size() > 1 && zones.size() > 0)
-                            {
-                                if(zone->GetName() == zones[zones.size() - 1].name)
-                                    SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)line.c_str());
-                                
-                                LM_ZoneEntry entry;
-                                GetEntryWidgetNameAndModifiers(tokens[0], entry);
-                                entry.actionName = tokens[1];
-                                if(tokens.size() > 2)
-                                    entry.param = tokens[2];
-                                if(tokens.size() > 3)
-                                    entry.alias = tokens[3];
-                                
-                                zones[zones.size() - 1].zoneEntries.push_back(entry);
-                            }
-                             */
-                        }
-                    }
-                }
-            }
-            catch (exception &e)
-            {
-                char buffer[250];
-                sprintf(buffer, "Trouble loading Zone file\n");
-                DAW::ShowConsoleMsg(buffer);
-            }
-
-            /*
-            if(currentAction->GetName() == "FXParam" || currentAction->GetName() == "FXParamNameDisplay" || currentAction->GetName() == "FXParamValueDisplay" || currentAction->GetName() == "FXParamRelative")
-            {
-                actionNameWasSelectedBySurface = true;
-                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
-            }
-            else
-            {
-                for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
-                {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                    if(string(buffer) == currentAction->GetName())
-                    {
-                        actionNameWasSelectedBySurface = true;
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
-                        break;
-                    }
-                }
-            }
-            
-            //int currentZoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
-
-            //string testString = currentWidget->GetSurface()->GetPage()->GetModifiers();
-            
-            //if(testString == NoModifiers)
-                //testString = "";
-            
-            //testString += currentWidget->GetName();
-
-            
-            if(currentZoneIndex >= 0)
-            {
-                for(int i = 0; i < zones[currentZoneIndex].zoneEntries.size(); i++)
-                {
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                    string lineString = string(buffer);
-
-                    size_t found = lineString.find(testString);
-                    
-                    if (found != string::npos)
-                    {
-                        zoneComponentWasSelectedBySurface = true;
-                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
-                        LM_ZoneEntry entry = zones[currentZoneIndex].zoneEntries[i];
-                        entry.SetGlobalModifers();
-                        SetCheckBoxes();
-                        break;
-                    }
-                }
-                
-                for(auto zone : GetAvailableZones(currentZoneIndex))
-                    AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_ParentZone);
-                
-                if(zones[currentZoneIndex].parentZone != "")
-                {
-                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETCOUNT, 0, 0); i++)
-                    {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_GETLBTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                        
-                        if(string(buffer) == zones[currentZoneIndex].parentZone)
-                        {
-                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i, 0);
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            */
-            
-        }
             break;
+        }
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
         case WM_INITDIALOG:
         {
             hasEdits = false;
@@ -3256,9 +3087,9 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
-    isShift = isShift_;
+    isShift = isShift_ || GetAsyncKeyState(VK_SHIFT);
     isOption = isOption_;
-    isControl = isControl_;
+    isControl = isControl_ || GetAsyncKeyState(VK_CONTROL);
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
