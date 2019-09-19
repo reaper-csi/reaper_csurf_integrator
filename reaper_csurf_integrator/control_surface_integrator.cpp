@@ -1752,12 +1752,7 @@ static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
     SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
 }
 
-static bool widgetNameWasSelectedBySurface = false;
-static bool actionNameWasSelectedBySurface = false;
-static bool zoneComponentWasSelectedBySurface = false;
-static bool zoneWasSelectedBySurface = false;
-
-static char buffer[BUFSZ * 2];
+static char buffer[BUFSZ * 4];
 static HWND hwndLearn = nullptr;
 static bool hasEdits = false;
 static int dlgResult = 0;
@@ -1772,6 +1767,7 @@ static string newZoneFilename = "";
 static string newZoneName = "";
 static string newZoneAlias = "";
 
+// Modifiers
 static bool isShift = false;
 static bool isOption = false;
 static bool isControl = false;
@@ -1783,11 +1779,18 @@ static bool shouldIgnoreRelease = false;
 static bool isHold = false;
 static bool isInvert = false;
 
+// Focused FX
 static int trackNumber = 0;
 static int itemNumber = 0;
 static int focusedFXIndex = 0;
 static MediaTrack* focusedFXTrack = nullptr;
 static string focusedFXName = "";
+
+// Guards for Set Current Selection messages
+static bool widgetNameWasSelectedBySurface = false;
+static bool actionNameWasSelectedBySurface = false;
+static bool zoneComponentWasSelectedBySurface = false;
+static bool zoneWasSelectedBySurface = false;
 
 static void EnableButtons()
 {
@@ -1902,61 +1905,72 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
     zoneFilename += ".txt";
     
     string filePath = string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + zoneFilename;
-    
-    ifstream fileExists(filePath);
-    
-    if(fileExists)
+
+    try
     {
-        fileExists.close();
-    }
-    else
-    {
-        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        ifstream fileExists(filePath);
+        
+        if(fileExists)
         {
-            DAW::TrackFX_GetFXName(track, i, buffer, sizeof(buffer));
-            
-            if(string(buffer) == zoneName)
+            fileExists.close();
+        }
+        else
+        {
+            for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
-                ofstream rawFXFile(filePath);
+                DAW::TrackFX_GetFXName(track, i, buffer, sizeof(buffer));
                 
-                if(rawFXFile.is_open())
+                if(string(buffer) == zoneName)
                 {
-                    rawFXFile << string(zoneName) + GetLineEnding();
+                    ofstream rawFXFile(filePath);
                     
-                    for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                    if(rawFXFile.is_open())
                     {
-                        DAW::TrackFX_GetParamName(track, i, j, buffer, sizeof(buffer));
+                        rawFXFile << string(zoneName) + GetLineEnding();
                         
-                        rawFXFile << string(buffer) + GetLineEnding();
+                        for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
+                        {
+                            DAW::TrackFX_GetParamName(track, i, j, buffer, sizeof(buffer));
+                            
+                            rawFXFile << string(buffer) + GetLineEnding();
+                        }
                     }
+                    
+                    rawFXFile.close();
                 }
-                
-                rawFXFile.close();
             }
         }
+        
+        ifstream rawFXFile(filePath);
+        
+        if(!rawFXFile)
+            return false;
+        
+        int rawFileLineIndex = 0;
+        
+        for (string line; getline(rawFXFile, line) ; )
+        {
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            if(line == zoneName)
+                continue;
+            
+            string actionName = to_string(rawFileLineIndex) + " - " + line;
+            
+            SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionName.c_str());
+            rawFileLineIndex++;
+        }
+        
+        return true;
     }
-    
-    ifstream rawFXFile(filePath);
-    
-    if(!rawFXFile)
-        return false;
-    
-    int rawFileLineIndex = 0;
-    
-    for (string line; getline(rawFXFile, line) ; )
+    catch (exception &e)
     {
-        line = regex_replace(line, regex(CRLFChars), "");
-        
-        if(line == zoneName)
-            continue;
-        
-        string actionName = to_string(rawFileLineIndex) + " - " + line;
-        
-        SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)actionName.c_str());
-        rawFileLineIndex++;
+        char buffer[250];
+        sprintf(buffer, "Trouble loading Raw FX file %s", filePath.c_str());
+        DAW::ShowConsoleMsg(buffer);
     }
     
-    return true;
+    return false;
 }
 
 static void ClearWidgets()
@@ -1993,14 +2007,6 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         {
             switch(LOWORD(wParam))
             {
-                case IDC_RADIO_MCP:
-                    CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
-                    break;
-                    
-                case IDC_RADIO_TCP:
-                    CheckDlgButton(hwndDlg, IDC_RADIO_MCP, BST_UNCHECKED);
-                    break;
-                    
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
@@ -2046,7 +2052,7 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_RESETCONTENT, 0, 0);
             for(auto zone : GetAvailableZones())
             {
-                //AddComboBoxEntry(hwndDlg, 0, zone.c_str(), IDC_COMBO_IncludedZone);
+                AddComboBoxEntry(hwndDlg, 0, zone->GetName().c_str(), IDC_COMBO_IncludedZone);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_SETCURSEL, 0, 0);
             }
             
@@ -2272,18 +2278,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             // Parent Zone
             if(zoneIndex >= 0)
             {
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
+
                 for(int i = 0; i < GetAvailableZones(zoneIndex).size(); i++)
                 {
                     Zone* availableZone = GetAvailableZones(zoneIndex)[i];
                     AddComboBoxEntry(hwndDlg, 0, availableZone->GetName().c_str(), IDC_COMBO_ParentZone);
                     
-                    if(zone->GetParentZoneName() == "")
+                    if(zone->GetParentZoneName() == availableZone->GetName())
                     {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
-                    }
-                    else if(zone->GetParentZoneName() == availableZone->GetName())
-                        
                         SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i + 1, 0);
+                        break;
+                    }
                 }
             }
 
