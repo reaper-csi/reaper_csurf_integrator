@@ -1993,7 +1993,6 @@ static void ClearZones()
 {
     SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-    ClearSubZones();
 }
 
 static void ClearActions()
@@ -2006,7 +2005,19 @@ static void ClearActions()
 
 static void FillSubZones(Zone* zone, int zoneIndex)
 {
+    ClearSubZones();
+    
     bool hasLoadedRawFXFile = false;
+
+    // Navigator
+    string navigatorName = currentWidgetActionManager->GetNavigatorName();
+    
+    if(navigatorName == "")
+        navigatorName = "No Navigator";
+    
+    int index = SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
+    if(index >= 0)
+        SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
 
     // Parent Zone
     if(zoneIndex >= 0)
@@ -2314,16 +2325,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
- 
-            // Navigator
-            string navigatorName = currentWidgetActionManager->GetNavigatorName();
-            
-            if(navigatorName == "")
-                navigatorName = "No Navigator";
-            
-            int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
-            if(index >= 0)
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
             
             Zone* zone = currentWidgetActionManager->GetZone();
             
