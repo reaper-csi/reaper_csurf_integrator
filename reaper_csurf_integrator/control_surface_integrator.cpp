@@ -2379,35 +2379,37 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
 
-            
-            for(int i = 0; i < zone->GetActionLineItems().size(); i++)
+            vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
+
+            for(int i = 0; i < actionLineItems.size(); i++)
             {
-                ActionLineItem lineItem = zone->GetActionLineItems()[i];
+                ActionLineItem lineItem = actionLineItems[i];
                 
                 string lineString = lineItem.modifiers + lineItem.widgetName + " " + lineItem.actionName;
                 
                 if(lineItem.param != "")
-                    lineString += lineItem.param;
+                    lineString += " " + lineItem.param;
                 
                 if(lineItem.alias != "")
-                    lineString += lineItem.alias;
+                    lineString += " " + lineItem.alias;
                 
                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
 
                 if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
                     hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
                 
-                
-                if(hasLoadedRawFXFile && lineItem.param != "" && lineItem.param == currentAction->GetParamAsString())
+                if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
                 {
                     actionNameWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
                 }
             }
             
-            for(int i = 0; i < TheManager->GetActionNames().size(); i++)
+            vector<string> actionNames = TheManager->GetActionNames();
+            
+            for(int i = 0; i < actionNames.size(); i++)
             {
-                string name = TheManager->GetActionNames()[i];
+                string name = actionNames[i];
                 
                 if(name != Shift && name != Option && name != Control && name != Alt)
                 {
