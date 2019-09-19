@@ -1980,15 +1980,20 @@ static void ClearWidgets()
     SetDlgItemText(hwndLearn, IDC_STATIC_SurfaceName, "");
 }
 
+static void ClearSubZones()
+{
+    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
+    AddComboBoxEntry(hwndLearn, 0, "No Parent Zone", IDC_COMBO_ParentZone);
+}
+
 static void ClearZones()
 {
     SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
-    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
-    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
-    AddComboBoxEntry(hwndLearn, 0, "No Parent Zone", IDC_COMBO_ParentZone);
+    ClearSubZones();
 }
 
 static void ClearActions()
@@ -1997,6 +2002,81 @@ static void ClearActions()
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionParameter, "");
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionAlias, "");
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
+}
+
+static void FillSubZones(Zone* zone, int zoneIndex)
+{
+    bool hasLoadedRawFXFile = false;
+
+    // Parent Zone
+    if(zoneIndex >= 0)
+    {
+        SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
+        
+        for(int i = 0; i < GetAvailableZones(zoneIndex).size(); i++)
+        {
+            Zone* availableZone = GetAvailableZones(zoneIndex)[i];
+            AddComboBoxEntry(hwndLearn, 0, availableZone->GetName().c_str(), IDC_COMBO_ParentZone);
+            
+            if(zone->GetParentZoneName() == availableZone->GetName())
+            {
+                SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_SETCURSEL, i + 1, 0);
+            }
+        }
+    }
+    
+    // Included Zones
+    for(auto includedZone : zone->GetIncludedZones())
+        SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
+    
+    // Line Items
+    vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
+    
+    for(int i = 0; i < actionLineItems.size(); i++)
+    {
+        ActionLineItem lineItem = actionLineItems[i];
+        
+        if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
+            hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
+        
+        if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
+        {
+            actionNameWasSelectedBySurface = true;
+            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+        }
+        
+        string lineString = lineItem.allModifiers + lineItem.widgetName + " " + lineItem.actionName;
+        
+        if(lineItem.param != "")
+            lineString += " " + lineItem.param;
+        
+        if(lineItem.alias != "")
+            lineString += " " + lineItem.alias;
+        
+        SendDlgItemMessage(hwndLearn, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
+        
+        string currentModifiers = "";
+        
+        if(isShift)
+            currentModifiers += "Shift+";
+        
+        if(isOption)
+            currentModifiers += "Option+";
+        
+        if(isControl)
+            currentModifiers += "Control+";
+        
+        if(isAlt)
+            currentModifiers += "Alt+";
+        
+        if(currentModifiers == lineItem.modifiers && currentWidget->GetName() == lineItem.widgetName)
+        {
+            zoneComponentWasSelectedBySurface = true;
+            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
+            
+            SetCheckBoxes(lineItem);
+        }
+    }
 }
 
 static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -2231,8 +2311,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             ClearZones();
             ClearActions();
             
-            bool hasLoadedRawFXFile = false;
-            
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
@@ -2275,77 +2353,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 }
             }
             
-            // Parent Zone
-            if(zoneIndex >= 0)
-            {
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
+            FillSubZones(zone, zoneIndex);
 
-                for(int i = 0; i < GetAvailableZones(zoneIndex).size(); i++)
-                {
-                    Zone* availableZone = GetAvailableZones(zoneIndex)[i];
-                    AddComboBoxEntry(hwndDlg, 0, availableZone->GetName().c_str(), IDC_COMBO_ParentZone);
-                    
-                    if(zone->GetParentZoneName() == availableZone->GetName())
-                    {
-                        SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ParentZone), CB_SETCURSEL, i + 1, 0);
-                        break;
-                    }
-                }
-            }
-
-            // Included Zones
-            for(auto includedZone : zone->GetIncludedZones())
-                SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
-
-            // Line Items
-            vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
-
-            for(int i = 0; i < actionLineItems.size(); i++)
-            {
-                ActionLineItem lineItem = actionLineItems[i];
-                
-                if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
-                    hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
-                
-                if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
-                {
-                    actionNameWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
-                }
-                
-                string lineString = lineItem.allModifiers + lineItem.widgetName + " " + lineItem.actionName;
-                
-                if(lineItem.param != "")
-                    lineString += " " + lineItem.param;
-                
-                if(lineItem.alias != "")
-                    lineString += " " + lineItem.alias;
-                
-                SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
-
-                string currentModifiers = "";
-                
-                if(isShift)
-                    currentModifiers += "Shift+";
-                
-                if(isOption)
-                    currentModifiers += "Option+";
-                
-                if(isControl)
-                    currentModifiers += "Control+";
-                
-                if(isAlt)
-                    currentModifiers += "Alt+";
-                
-                if(currentModifiers == lineItem.modifiers && currentWidget->GetName() == lineItem.widgetName)
-                {
-                    zoneComponentWasSelectedBySurface = true;
-                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
-                    
-                    SetCheckBoxes(lineItem);
-                }
-            }
-            
             // Action Names
             vector<string> actionNames = TheManager->GetActionNames();
             
@@ -2669,9 +2678,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
-                                currentAction = nullptr;
-                                currentWidgetActionManager = nullptr;
-                                
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
 
                                 if( ! isdigit(buffer[0]))
@@ -2687,6 +2693,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
                                 }
                                 
+                                zoneComponentWasSelectedBySurface = true;
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
                             }
                             
