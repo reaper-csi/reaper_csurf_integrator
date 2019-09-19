@@ -384,6 +384,7 @@ public:
             {
                 ActionLineItem zli = action->GetDescription();
                 
+                zli.widgetName = widget_->GetName();
                 zli.modifiers = modifiersAsString + zli.modifiers;
                 actionLineItems.push_back(zli);
             }
