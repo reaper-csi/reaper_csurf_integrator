@@ -1980,6 +1980,12 @@ static void ClearWidgets()
     SetDlgItemText(hwndLearn, IDC_STATIC_SurfaceName, "");
 }
 
+static void ClearZones()
+{
+    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+}
+
 static void ClearSubZones()
 {
     SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
@@ -1989,18 +1995,12 @@ static void ClearSubZones()
     AddComboBoxEntry(hwndLearn, 0, "No Parent Zone", IDC_COMBO_ParentZone);
 }
 
-static void ClearZones()
-{
-    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
-    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
-}
-
 static void ClearActions()
 {
+    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionName, "");
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionParameter, "");
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionAlias, "");
-    SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_RESETCONTENT, 0, 0);
 }
 
 static int FillZones(Zone* zone)
@@ -2039,9 +2039,8 @@ static int FillZones(Zone* zone)
 static void FillSubZones(Zone* zone, int zoneIndex)
 {
     ClearSubZones();
+    ClearActions();
     
-    bool hasLoadedRawFXFile = false;
-
     // Navigator
     string navigatorName = currentWidgetActionManager->GetNavigatorName();
     
@@ -2072,8 +2071,11 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     // Included Zones
     for(auto includedZone : zone->GetIncludedZones())
         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
+   
+
     
-    // Line Items
+    bool hasLoadedRawFXFile = false;
+    
     vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
     
     for(int i = 0; i < actionLineItems.size(); i++)
@@ -2121,11 +2123,6 @@ static void FillSubZones(Zone* zone, int zoneIndex)
             SetCheckBoxes(lineItem);
         }
     }
-}
-
-static void FillActionNames()
-{
-    ClearActions();
     
     vector<string> actionNames = TheManager->GetActionNames();
     
@@ -2383,8 +2380,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             int zoneIndex = FillZones(zone);
             
             FillSubZones(zone, zoneIndex);
-
-            FillActionNames();
             
             break;
         }
@@ -2753,45 +2748,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 if(zoneIndex >= 0)
                                 {
-                                    //LM_ZoneEntry entry = zones[zoneIndex].zoneEntries[index];
-                                    //entry.SetGlobalModifers();
-                                    //SetCheckBoxes();
 
-                                    //SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, entry.widgetName.c_str());
-                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, entry.actionName.c_str());
-                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, entry.param.c_str());
-                                    //SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, entry.alias.c_str());
-
-                                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
-                                    {
-                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                                        //if(string(buffer) == entry.widgetName)
-                                        {
-                                            widgetNameWasSelectedBySurface = true;
-                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
-                                            break;
-                                        }
-                                    }
-                                    /*
-                                    if(entry.actionName == "FXParam" || entry.actionName == "FXParamNameDisplay" || entry.actionName == "FXParamValueDisplay" || entry.actionName == "FXParamRelative")
-                                    {
-                                        actionNameWasSelectedBySurface = true;
-                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, atoi(entry.param.c_str()), 0);
-                                    }
-                                    else
-                                    {
-                                        for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
-                                        {
-                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
-                                            if(string(buffer) == entry.actionName)
-                                            {
-                                                actionNameWasSelectedBySurface = true;
-                                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                     */
                                 }
                             }
                             
