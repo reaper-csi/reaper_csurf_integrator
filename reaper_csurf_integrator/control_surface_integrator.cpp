@@ -2184,7 +2184,7 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                             if(string(buffer) != "")
                                 SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)buffer);
                             
-                            
+                            // GAW TBD -- add included Zone to Surface
                             int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                             if (index >= 0)
                                 zones[index].includedZones.push_back(string(buffer));
@@ -2452,6 +2452,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                 }
             }
+            
+            
+            // GAW TBD Parent Zones, Navigator
+            
+            
             break;
         }
 
@@ -2515,12 +2520,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
                             
+                            // GAW TBD Make new zone and Add to Surface
+                            
+                            
+                            
+                            
                             LM_Zone newZone;
                             
                             newZone.name = newZoneName;
                             newZone.alias = newZoneAlias;
                             
                             zones.push_back(newZone);
+                            
+                            
+                            //////////
                         }
                     }
                     break ;
@@ -2538,12 +2551,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
                             
+                            // GAW TBD Make new zone and Add to Surface
+                            
+                            
+                            
+                            
                             LM_Zone newZone;
                             
                             newZone.name = newZoneName;
                             newZone.alias = newZoneAlias;
                             
                             zones.push_back(newZone);
+                            
+                            
+                            //////////
                         }
                     }
                     break ;
@@ -2555,6 +2576,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddIncludedZone), g_hwnd, dlgProcAddIncludedZone);
                         if(dlgResult == IDOK)
                         {
+                            // GAW TBD -- add included Zone to Zone
+                            
                             hasEdits = true;
                         }
                     }
@@ -2593,6 +2616,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias , buffer, sizeof(buffer));
                             entry.alias = string(buffer);
+                            
+                            // GAW TBD -- Add Widget Action Manager To Zone
                             
                             zones[zoneIndex].zoneEntries.push_back(entry);
 
@@ -2652,7 +2677,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 }
                             }
                             
+                            // GAW TBD -- Zones, Parent, Included
                             zones.erase(zones.begin() + index);
+                            
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
                         }
@@ -2673,7 +2700,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 zoneEntryToDeleteZone->RemoveWidgetActionManager(currentWidgetActionManager);
                                 
                                 hasEdits = true;
+                                
+                                // GAW TBD -- Delete Zone Widget Action Manager
                                 zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
+                                
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
                             }
                         }
@@ -2701,6 +2731,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
                                 SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
 
+                                zoneComponentWasSelectedBySurface = true;
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
                             }
 
