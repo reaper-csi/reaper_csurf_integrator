@@ -2582,26 +2582,15 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if (index >= 0)
                         {
                             hasEdits = true;
-                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
-                            string deletedZone = string(buffer);
-                            /*
-                             for(int i = 0; i < zones.size(); i++)
-                             {
-                             for(int j = 0; j < zones[i].includedZones.size(); j++)
-                             {
-                             if(zones[i].includedZones[j] == deletedZone)
-                             {
-                             zones[i].includedZones.erase(zones[i].includedZones.begin() + j);
-                             break;
-                             }
-                             }
-                             }
-                             
-                             // GAW TBD -- Zones, Parent, Included
-                             zones.erase(zones.begin() + index);
-                             */
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
-                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
+                            Zone* zoneToDelete = zonesInThisFile[index];
+                            
+                            
+                            
+                            
+                            
+ 
+                            
+                            //FillSubZones(zone, index);
                         }
                     }
                     break ;
