@@ -159,7 +159,7 @@ BEGIN
     PUSHBUTTON      "Delete",IDC_BUTTON_DeleteIncludedZone,89,381,43,14
     GROUPBOX        "Included Zones",IDC_STATIC,4,368,132,96
     EDITTEXT        IDC_EDIT_ActionAlias,348,10,96,24,ES_MULTILINE | ES_AUTOHSCROLL
-    PUSHBUTTON      "Add To Zone",IDC_BUTTON_GenerateZoneEntry,140,48,82,16
+    PUSHBUTTON      "Add To Zone",IDC_BUTTON_AddLineItem,140,48,82,16
     CONTROL         "Shift",IDC_CHECK_Shift,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,4,30,10
     CONTROL         "Control",IDC_CHECK_Control,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,17,37,10
     CONTROL         "Option",IDC_CHECK_Option,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,51,4,33,10
@@ -171,7 +171,7 @@ BEGIN
     CONTROL         "Hold",IDC_CHECK_Hold,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,30,33,10
     PUSHBUTTON      "Save",IDC_BUTTON_SaveFile,89,468,43,18
     EDITTEXT        IDC_EDIT_WidgetName,4,46,132,20,ES_MULTILINE | ES_AUTOHSCROLL
-    PUSHBUTTON      "Delete Selected Entry",IDC_BUTTON_DeleteZoneEntry,227,48,81,16
+    PUSHBUTTON      "Delete From Zone",IDC_BUTTON_DeleteLineItem,227,48,81,16
     PUSHBUTTON      "New",IDC_BUTTON_NewFile,9,468,43,18
     LTEXT           "Surface",IDC_STATIC_SurfaceName,4,72,132,8
     GROUPBOX        "Monitor",IDC_STATIC,312,395,132,65
