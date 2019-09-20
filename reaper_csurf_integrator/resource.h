@@ -61,7 +61,7 @@
 #define IDC_BUTTON_DeleteIncludedZone   1058
 #define IDC_STATIC_ZoneFilename         1060
 #define IDC_EDIT_ActionAlias            1061
-#define IDC_BUTTON_GenerateZoneEntry    1063
+#define IDC_BUTTON_AddLineItem          1063
 #define IDC_CHECK_Shift                 1064
 #define IDC_CHECK_Control               1065
 #define IDC_COMBO_IncludedZone          1065
@@ -76,7 +76,7 @@
 #define IDC_CHECK_Invert                1070
 #define IDC_CHECK_Hold                  1071
 #define IDC_BUTTON_SaveFile             1072
-#define IDC_BUTTON_DeleteZoneEntry      1073
+#define IDC_BUTTON_DeleteLineItem       1073
 #define IDC_BUTTON_NewFile              1075
 #define IDC_BUTTON_Close                1078
 #define IDC_CHECK_IgnoreRelease         1082

@@ -1794,8 +1794,8 @@ static bool zoneWasSelectedBySurface = false;
 
 static void EnableButtons()
 {
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_GenerateZoneEntry), true);
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteZoneEntry), true);
+    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddLineItem), true);
+    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteLineItem), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddZone), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteZone), true);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddIncludedZone), true);
@@ -1806,8 +1806,8 @@ static void EnableButtons()
 
 static void DisableButtons()
 {
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_GenerateZoneEntry), false);
-    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteZoneEntry), false);
+    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddLineItem), false);
+    EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteLineItem), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddZone), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_DeleteZone), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_AddIncludedZone), false);
@@ -2503,7 +2503,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                     break ;
                     
-                case IDC_BUTTON_GenerateZoneEntry:
+                case IDC_BUTTON_AddLineItem:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
@@ -2608,7 +2608,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     }
                     break ;
                     
-                case IDC_BUTTON_DeleteZoneEntry:
+                case IDC_BUTTON_DeleteLineItem:
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
