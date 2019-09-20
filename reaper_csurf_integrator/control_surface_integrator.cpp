@@ -2082,10 +2082,10 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     {
         ActionLineItem lineItem = actionLineItems[i];
         
-        if (lineItem.actionName == "FXParam" && hasLoadedRawFXFile == false)
+        if (lineItem.actionName.find("FXParam") != string::npos && hasLoadedRawFXFile == false)
             hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
         
-        if(hasLoadedRawFXFile && lineItem.actionName == "FXParam" && lineItem.param == currentAction->GetParamAsString())
+        if(hasLoadedRawFXFile && lineItem.actionName.find("FXParam") != string::npos && lineItem.param == currentAction->GetParamAsString())
         {
             actionNameWasSelectedBySurface = true;
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
@@ -2371,16 +2371,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
-            
             Zone* zone = currentWidgetActionManager->GetZone();
             
             int zoneIndex = FillZones(zone);
             
             FillSubZones(zone, zoneIndex);
             
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
+
             break;
         }
 
@@ -2748,7 +2748,37 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 if(zoneIndex >= 0)
                                 {
+                                    ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
 
+                                    for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
+                                    {
+                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                                        if(string(buffer) == actionLineItem.widgetName)
+                                        {
+                                            widgetNameWasSelectedBySurface = true;
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, i, 0);
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if(actionLineItem.actionName.find("FXParam") != string::npos)
+                                    {
+                                        actionNameWasSelectedBySurface = true;
+                                        SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, atoi(actionLineItem.param.c_str()), 0);
+                                    }
+                                    else
+                                    {
+                                        for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCOUNT, 0, 0); i++)
+                                        {
+                                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
+                                            if(string(buffer) == actionLineItem.actionName)
+                                            {
+                                                actionNameWasSelectedBySurface = true;
+                                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, i, 0);
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             
