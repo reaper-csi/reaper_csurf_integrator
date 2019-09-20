@@ -410,20 +410,16 @@ public:
                 zli.allModifiers = modifiersAsString + zli.allModifiers;
                 zli.modifiers = modifiersAsString;
                 
-                size_t found = zli.modifiers.find("Shift");
-                if (found != string::npos)
+                if (zli.modifiers.find("Shift") != string::npos)
                     zli.isShift = true;
                 
-                found = zli.modifiers.find("Option");
-                if (found != string::npos)
+                if (zli.modifiers.find("Option") != string::npos)
                     zli.isOption = true;
                 
-                found = zli.modifiers.find("Control");
-                if (found != string::npos)
+                if (zli.modifiers.find("Control") != string::npos)
                     zli.isControl = true;
                 
-                found = zli.modifiers.find("Alt");
-                if (found != string::npos)
+                if (zli.modifiers.find("Alt") != string::npos)
                     zli.isAlt = true;
 
                 actionLineItems.push_back(zli);
@@ -442,22 +438,18 @@ public:
                 zli.allModifiers = modifiersAsString + "Touch+" + zli.allModifiers;
                 zli.modifiers = modifiersAsString;
 
-                size_t found = zli.modifiers.find("Shift");
-                if (found != string::npos)
+                if (zli.modifiers.find("Shift") != string::npos)
                     zli.isShift = true;
                 
-                found = zli.modifiers.find("Option");
-                if (found != string::npos)
+                if (zli.modifiers.find("Option") != string::npos)
                     zli.isOption = true;
                 
-                found = zli.modifiers.find("Control");
-                if (found != string::npos)
+                if (zli.modifiers.find("Control") != string::npos)
                     zli.isControl = true;
                 
-                found = zli.modifiers.find("Alt");
-                if (found != string::npos)
+                if (zli.modifiers.find("Alt") != string::npos)
                     zli.isAlt = true;
-                
+
                 actionLineItems.push_back(zli);
             }
         }
