@@ -2992,9 +2992,9 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
-    isShift = isShift_ || GetAsyncKeyState(VK_SHIFT);
+    isShift = isShift_ /*|| GetAsyncKeyState(VK_SHIFT)*/;
     isOption = isOption_;
-    isControl = isControl_ || GetAsyncKeyState(VK_CONTROL);
+    isControl = isControl_ /*|| GetAsyncKeyState(VK_CONTROL)*/;
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
