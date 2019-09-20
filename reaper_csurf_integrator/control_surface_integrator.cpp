@@ -1772,7 +1772,6 @@ static bool isShift = false;
 static bool isOption = false;
 static bool isControl = false;
 static bool isAlt = false;
-
 static bool isTouch = false;
 static bool shouldToggle = false;
 static bool shouldIgnoreRelease = false;
@@ -2072,7 +2071,6 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     for(auto includedZone : zone->GetIncludedZones())
         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
    
-
     
     bool hasLoadedRawFXFile = false;
     
@@ -2587,26 +2585,51 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETTEXT, index, (LPARAM)(LPCTSTR)(buffer));
                             string deletedZone = string(buffer);
                             /*
-                            for(int i = 0; i < zones.size(); i++)
-                            {
-                                for(int j = 0; j < zones[i].includedZones.size(); j++)
-                                {
-                                    if(zones[i].includedZones[j] == deletedZone)
-                                    {
-                                        zones[i].includedZones.erase(zones[i].includedZones.begin() + j);
-                                        break;
-                                    }
-                                }
-                            }
-                            
-                            // GAW TBD -- Zones, Parent, Included
-                            zones.erase(zones.begin() + index);
-                            */
+                             for(int i = 0; i < zones.size(); i++)
+                             {
+                             for(int j = 0; j < zones[i].includedZones.size(); j++)
+                             {
+                             if(zones[i].includedZones[j] == deletedZone)
+                             {
+                             zones[i].includedZones.erase(zones[i].includedZones.begin() + j);
+                             break;
+                             }
+                             }
+                             }
+                             
+                             // GAW TBD -- Zones, Parent, Included
+                             zones.erase(zones.begin() + index);
+                             */
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
                         }
                     }
                     break ;
+                    
+                case IDC_BUTTON_DeleteIncludedZone:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        int index = SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_GETCURSEL, 0, 0);
+                        if (index >= 0)
+                        {
+                            hasEdits = true;
+                            
+                            int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
+                            
+                            if(zoneIndex >= 0)
+                            {
+                                Zone* zone = zonesInThisFile[zoneIndex];
+                                
+                                zone->RemoveZone(index);
+                                
+                                SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
+                                
+                                for(auto includedZone : zone->GetIncludedZones())
+                                    SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
+                            }
+                        }
+                    break ;
+                    }
                     
                 case IDC_BUTTON_DeleteLineItem:
                 {

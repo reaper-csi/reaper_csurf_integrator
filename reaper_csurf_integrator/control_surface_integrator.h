@@ -595,6 +595,11 @@ public:
         includedZones_.push_back(zone);
     }
     
+    void RemoveZone(int index)
+    {
+        includedZones_.erase(includedZones_.begin() + index);
+    }
+    
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget)
     {
         for(auto manager : widgetActionManagers_)
