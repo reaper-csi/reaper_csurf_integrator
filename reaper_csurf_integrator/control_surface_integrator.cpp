@@ -2750,6 +2750,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 {
                                     ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
 
+                                    SetCheckBoxes(actionLineItem);
+                                    
                                     for(int i = 0; i < (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCOUNT, 0, 0); i++)
                                     {
                                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETTEXT, i, (LPARAM)(LPCTSTR)(buffer));
