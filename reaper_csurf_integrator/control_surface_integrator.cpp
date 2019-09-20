@@ -2612,23 +2612,19 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         int index = SendDlgItemMessage(hwndDlg, IDC_LIST_IncludedZones, LB_GETCURSEL, 0, 0);
                         if (index >= 0)
                         {
-                            hasEdits = true;
-                            
                             int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
-                            
                             if(zoneIndex >= 0)
                             {
+                                hasEdits = true;
                                 Zone* zone = zonesInThisFile[zoneIndex];
-                                
                                 zone->RemoveZone(index);
                                 
                                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-                                
                                 for(auto includedZone : zone->GetIncludedZones())
                                     SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
                             }
                         }
-                    break ;
+                        break ;
                     }
                     
                 case IDC_BUTTON_DeleteLineItem:
