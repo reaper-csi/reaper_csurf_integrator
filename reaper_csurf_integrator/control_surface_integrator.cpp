@@ -2504,8 +2504,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddIncludedZone), g_hwnd, dlgProcAddIncludedZone);
                         if(dlgResult == IDOK)
                         {
-                            // GAW TBD -- add included Zone to Zone
-                            
                             hasEdits = true;
                         }
                     }
@@ -2594,7 +2592,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             hasEdits = true;
                             Zone* zoneToDelete = zonesInThisFile[index];
                             
-                            
+                            // GAW TBD -- delete from zonesInThisFile, and surface->zones
+                            // Also check all zonesInThisFile for Included zones and/or Parent zones, this one could be lurking in there
                             
                             
                             
@@ -2630,20 +2629,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 {
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        int index = SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_GETCURSEL, 0, 0);
-                        if (index >= 0)
+                        int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                        
+                        if(zoneIndex >= 0)
                         {
-                            int zoneIndex = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
-                            
-                            if(zoneIndex >= 0)
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
                             {
-                                //Zone* zoneEntryToDeleteZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
-                                //zoneEntryToDeleteZone->RemoveWidgetActionManager(currentWidgetActionManager);
-                                
                                 hasEdits = true;
-                                
-                                // GAW TBD -- Delete Zone Widget Action Manager
-                                //zones[zoneIndex].zoneEntries.erase(zones[zoneIndex].zoneEntries.begin() + index);
+                           
+                                ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
+
+                                zonesInThisFile[zoneIndex]->RemoveAction(actionLineItem);
                                 
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
                             }
@@ -3012,9 +3009,9 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
-    isShift = isShift_ /*|| GetAsyncKeyState(VK_SHIFT)*/;
+    isShift = isShift_ || GetAsyncKeyState(VK_SHIFT);
     isOption = isOption_;
-    isControl = isControl_ /*|| GetAsyncKeyState(VK_CONTROL)*/;
+    isControl = isControl_ || GetAsyncKeyState(VK_CONTROL);
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)

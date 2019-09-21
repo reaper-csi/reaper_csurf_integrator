@@ -69,6 +69,8 @@ class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
 class Zone;
+class Widget;
+class Action;
 class WidgetActionManager;
 class TrackNavigator;
 class TrackNavigationManager;
@@ -79,9 +81,12 @@ class FeedbackProcessor;
 struct ActionLineItem
 {
     string widgetName = "";
+    Widget* widget = nullptr;
     string modifiers = "";
     string allModifiers = "";
     string actionName = "";
+    Action* action = nullptr;
+    WidgetActionManager* widgetActionManager = nullptr;
     string param = "";
     string alias = "";
     bool isShift = false;
@@ -299,6 +304,8 @@ public:
         
         zli.actionName = name_;
         
+        zli.action = this;
+        
         zli.param = GetParamAsString();
         
         zli.alias = GetAlias();
@@ -376,7 +383,7 @@ private:
     Zone* zone_ = nullptr;
     TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
-    vector<ActionLineItem> actionLineItems;
+    vector<ActionLineItem> actionLineItems_;
     
     map<string, vector <Action*>> trackTouchedActions_;
     
@@ -394,67 +401,81 @@ public:
     void SetIsTouched(bool isTouched);
     void Deactivate();
 
+    void GetActionLineItems(map<string, vector <Action*>> actionMap, string touch)
+    {
+        for(auto [modifiers, actions] : actionMap)
+        {
+            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
+            
+            for(auto action : actions)
+            {
+                ActionLineItem zli = action->GetDescription();
+                
+                zli.widgetActionManager = this;
+                
+                zli.widgetName = widget_->GetName();
+                zli.widget = widget_;
+                
+                zli.allModifiers = modifiersAsString + touch + zli.allModifiers;
+                zli.modifiers = modifiersAsString;
+                
+                if (zli.modifiers.find("Shift") != string::npos)
+                    zli.isShift = true;
+                
+                if (zli.modifiers.find("Option") != string::npos)
+                    zli.isOption = true;
+                
+                if (zli.modifiers.find("Control") != string::npos)
+                    zli.isControl = true;
+                
+                if (zli.modifiers.find("Alt") != string::npos)
+                    zli.isAlt = true;
+                
+                actionLineItems_.push_back(zli);
+            }
+        }
+    }
+    
     vector<ActionLineItem> GetActionLineItems()
     {
-        actionLineItems.clear();
+        actionLineItems_.clear();
         
-        for(auto [modifiers, actions] : actions_)
-        {
-            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
-            
-            for(auto action : actions)
-            {
-                ActionLineItem zli = action->GetDescription();
-                
-                zli.widgetName = widget_->GetName();
-                zli.allModifiers = modifiersAsString + zli.allModifiers;
-                zli.modifiers = modifiersAsString;
-                
-                if (zli.modifiers.find("Shift") != string::npos)
-                    zli.isShift = true;
-                
-                if (zli.modifiers.find("Option") != string::npos)
-                    zli.isOption = true;
-                
-                if (zli.modifiers.find("Control") != string::npos)
-                    zli.isControl = true;
-                
-                if (zli.modifiers.find("Alt") != string::npos)
-                    zli.isAlt = true;
+        GetActionLineItems(actions_, "");
+        GetActionLineItems(trackTouchedActions_, "Touch+");
 
-                actionLineItems.push_back(zli);
+        return actionLineItems_;
+    }
+    
+    bool RemoveAction(ActionLineItem actionLineItem)
+    {
+        if(actionLineItem.modifiers == "")
+            actionLineItem.modifiers = NoModifiers;
+        
+        if(actionLineItem.isTouch)
+        {
+            if(trackTouchedActions_.count(actionLineItem.modifiers) > 0)
+            {
+                auto it = find(trackTouchedActions_[actionLineItem.modifiers].begin(), trackTouchedActions_[actionLineItem.modifiers].end(), actionLineItem.action);
+                
+                if ( it != trackTouchedActions_[actionLineItem.modifiers].end() )
+                trackTouchedActions_[actionLineItem.modifiers].erase(it);
             }
         }
-
-        for(auto [modifiers, actions] : trackTouchedActions_)
+        else
         {
-            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
-            
-            for(auto action : actions)
+            if(actions_.count(actionLineItem.modifiers) > 0)
             {
-                ActionLineItem zli = action->GetDescription();
+                auto it = find(actions_[actionLineItem.modifiers].begin(), actions_[actionLineItem.modifiers].end(), actionLineItem.action);
                 
-                zli.widgetName = widget_->GetName();
-                zli.allModifiers = modifiersAsString + "Touch+" + zli.allModifiers;
-                zli.modifiers = modifiersAsString;
-
-                if (zli.modifiers.find("Shift") != string::npos)
-                    zli.isShift = true;
-                
-                if (zli.modifiers.find("Option") != string::npos)
-                    zli.isOption = true;
-                
-                if (zli.modifiers.find("Control") != string::npos)
-                    zli.isControl = true;
-                
-                if (zli.modifiers.find("Alt") != string::npos)
-                    zli.isAlt = true;
-
-                actionLineItems.push_back(zli);
+                if ( it != actions_[actionLineItem.modifiers].end() )
+                    actions_[actionLineItem.modifiers].erase(it);
             }
         }
-
-        return actionLineItems;
+        
+        if(actions_.size() == 0 && trackTouchedActions_.size() == 0)
+            return true;
+        else
+            return false;
     }
     
     void DoAction(double value)
@@ -518,6 +539,26 @@ private:
     string alias_ = "";
     string sourceFilePath_ = "";
     
+    void RemoveWidgetActionManager(WidgetActionManager* widgetActionManager)
+    {
+        bool foundIt = false;
+        int locationToDelete = 0;
+        
+        for(int i = 0; i < widgetActionManagers_.size(); i++)
+            if(widgetActionManagers_[i] == widgetActionManager)
+            {
+                foundIt = true;
+                locationToDelete = i;
+                break;
+            }
+        
+        if(foundIt)
+        {
+            widgetActionManagers_[locationToDelete]->Deactivate();
+            widgetActionManagers_.erase(widgetActionManagers_.begin() + locationToDelete);
+        }
+    }
+    
 public:
     Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
     virtual ~Zone() {}
@@ -557,26 +598,6 @@ public:
         return false;
     }
     
-    void RemoveWidgetActionManager(WidgetActionManager* widgetActionManager)
-    {
-        bool foundIt = false;
-        int locationToDelete = 0;
-        
-        for(int i = 0; i < widgetActionManagers_.size(); i++)
-            if(widgetActionManagers_[i] == widgetActionManager)
-            {
-                foundIt = true;
-                locationToDelete = i;
-                break;
-            }
-        
-        if(foundIt)
-        {
-            widgetActionManagers_[locationToDelete]->Deactivate();
-            widgetActionManagers_.erase(widgetActionManagers_.begin() + locationToDelete);
-        }
-    }
-    
     bool GetHasFocusedFXTrackNavigator()
     {
         if(widgetActionManagers_.size() > 0)
@@ -588,6 +609,12 @@ public:
     virtual void AddWidgetActionManager(WidgetActionManager* manager)
     {
         widgetActionManagers_.push_back(manager);
+    }
+    
+    void RemoveAction(ActionLineItem actionLineItem)
+    {
+        if(actionLineItem.widgetActionManager->RemoveAction(actionLineItem))
+            RemoveWidgetActionManager(actionLineItem.widgetActionManager);
     }
     
     void AddZone(Zone* zone)
