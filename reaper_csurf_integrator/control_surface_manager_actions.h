@@ -351,6 +351,11 @@ class SetOption : public Action
 public:
     SetOption(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
+    void RequestUpdate() override
+    {
+        SetWidgetValue(widget_, page_->GetOption());
+    }
+
     void Do(double value) override
     {
         page_->SetOption(value);
@@ -364,6 +369,11 @@ class SetControl : public Action
 public:
     SetControl(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
+    void RequestUpdate() override
+    {
+        SetWidgetValue(widget_, page_->GetControl());
+    }
+
     void Do(double value) override
     {
         page_->SetControl(value);
@@ -376,6 +386,11 @@ class SetAlt : public Action
 {
 public:
     SetAlt(string name, WidgetActionManager* manager) : Action(name, manager) {}
+
+    void RequestUpdate() override
+    {
+        SetWidgetValue(widget_, page_->GetAlt());
+    }
 
     void Do(double value) override
     {

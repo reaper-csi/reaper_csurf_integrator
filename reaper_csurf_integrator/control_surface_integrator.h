@@ -1359,8 +1359,11 @@ private:
     bool isShift_ = false;
     int shiftPressedTime_ = 0;
     bool isOption_ = false;
+    bool optionPressedTime_ = 0;
     bool isControl_ = false;
+    bool controlPressedTime_ = 0;
     bool isAlt_ = false;
+    bool altPressedTime_ = 0;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
 
@@ -1426,13 +1429,13 @@ public:
         if(value)
         {
             isShift_ = value;
-            shiftPressedTime_ = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            shiftPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
         }
         else
         {
-            int keyReleasedTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - shiftPressedTime_ > 1000000)
+            if(keyReleasedTime - shiftPressedTime_ > 500)
             {
                 isShift_ = value;
             }
@@ -1441,17 +1444,56 @@ public:
     
     void SetOption(bool value)
     {
-        isOption_ = value;
+        if(value)
+        {
+            isOption_ = value;
+            optionPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
+        }
+        else
+        {
+            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if(keyReleasedTime - optionPressedTime_ > 500)
+            {
+                isOption_ = value;
+            }
+        }
     }
     
     void SetControl(bool value)
     {
-        isControl_ = value;
+        if(value)
+        {
+            isControl_ = value;
+            controlPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
+        }
+        else
+        {
+            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if(keyReleasedTime - controlPressedTime_ > 500)
+            {
+                isControl_ = value;
+            }
+        }
     }
     
     void SetAlt(bool value)
     {
-        isAlt_ = value;
+        if(value)
+        {
+            isAlt_ = value;
+            altPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
+        }
+        else
+        {
+            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if(keyReleasedTime - altPressedTime_ > 500)
+            {
+                isAlt_ = value;
+            }
+        }
     }
     
     string GetModifiers()
