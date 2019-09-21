@@ -1357,6 +1357,7 @@ private:
     vector<ControlSurface*> surfaces_;
     
     bool isShift_ = false;
+    int shiftPressedTime_ = 0;
     bool isOption_ = false;
     bool isControl_ = false;
     bool isAlt_ = false;
@@ -1379,7 +1380,11 @@ public:
     void InputReceived(Widget* widget, double value);
     void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
 
-    
+    bool GetShift() { return isShift_; }
+    bool GetOption() { return isOption_; }
+    bool GetControl() { return isControl_; }
+    bool GetAlt() { return isAlt_; }
+
     void HandleOSCInput()
     {
         for(auto surface : surfaces_)
@@ -1418,7 +1423,20 @@ public:
     
     void SetShift(bool value)
     {
-        isShift_ = value;
+        if(value)
+        {
+            isShift_ = value;
+            shiftPressedTime_ = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        }
+        else
+        {
+            int keyReleasedTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+            
+            if(keyReleasedTime - shiftPressedTime_ > 1000000)
+            {
+                isShift_ = value;
+            }
+        }
     }
     
     void SetOption(bool value)

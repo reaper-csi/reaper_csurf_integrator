@@ -333,6 +333,11 @@ class SetShift : public Action
 public:
     SetShift(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
+    void RequestUpdate() override
+    {
+        SetWidgetValue(widget_, page_->GetShift());
+    }
+
     void Do(double value) override
     {
         page_->SetShift(value);
