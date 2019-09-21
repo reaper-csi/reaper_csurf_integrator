@@ -52,7 +52,6 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-const string NoModifiers = "NoModifiers";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
@@ -405,8 +404,6 @@ public:
     {
         for(auto [modifiers, actions] : actionMap)
         {
-            string modifiersAsString = modifiers == NoModifiers ? "" : modifiers;
-            
             for(auto action : actions)
             {
                 ActionLineItem zli = action->GetDescription();
@@ -416,8 +413,8 @@ public:
                 zli.widgetName = widget_->GetName();
                 zli.widget = widget_;
                 
-                zli.allModifiers = modifiersAsString + touch + zli.allModifiers;
-                zli.modifiers = modifiersAsString;
+                zli.allModifiers = modifiers + touch + zli.allModifiers;
+                zli.modifiers = modifiers;
                 
                 if (zli.modifiers.find("Shift") != string::npos)
                     zli.isShift = true;
@@ -448,9 +445,6 @@ public:
     
     bool RemoveAction(ActionLineItem actionLineItem)
     {
-        if(actionLineItem.modifiers == "")
-            actionLineItem.modifiers = NoModifiers;
-        
         if(actionLineItem.isTouch)
         {
             if(trackTouchedActions_.count(actionLineItem.modifiers) > 0)
@@ -1535,9 +1529,6 @@ public:
             modifiers +=  Control + "+";
         if(isAlt_)
             modifiers += Alt + "+";
-        
-        if(modifiers == "")
-            modifiers =  NoModifiers;
         
         return modifiers;
     }
