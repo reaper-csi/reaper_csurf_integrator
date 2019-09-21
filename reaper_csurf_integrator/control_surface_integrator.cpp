@@ -2211,20 +2211,30 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETCURSEL, 0, 0);
-                        
-                        if(index >= 0)
+                        int zoneIndex = SendDlgItemMessage(hwndLearn, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
+                        if (zoneIndex >= 0)
                         {
-                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETLBTEXT, index, (LPARAM)(LPCTSTR)(buffer));
-                           
-                            if(string(buffer) != "")
-                                SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)buffer);
+                            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETTEXT, zoneIndex, (LPARAM)(LPCTSTR)(buffer));
+                            string zoneName = string(buffer);
+
+                            int includedZoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETCURSEL, 0, 0);
                             
-                            // GAW TBD -- add included Zone to Surface
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
-                            if (index >= 0)
+                            if(includedZoneIndex > 0)
                             {
-                                //zones[index].includedZones.push_back(string(buffer));
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETLBTEXT, includedZoneIndex, (LPARAM)(LPCTSTR)(buffer));
+                                string includedZoneName = string(buffer);
+
+                                if(currentSurface->GetZones().count(zoneName) > 0)
+                                {
+                                    Zone* enclosingZone = currentSurface->GetZones()[zoneName];
+                                    
+                                    if(currentSurface->GetZones().count(includedZoneName) > 0)
+                                    {
+                                        Zone* includedZone = currentSurface->GetZones()[includedZoneName];
+                                        enclosingZone->AddZone(includedZone);
+                                        SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZoneName.c_str());
+                                    }
+                                }
                             }
                         }
                         
