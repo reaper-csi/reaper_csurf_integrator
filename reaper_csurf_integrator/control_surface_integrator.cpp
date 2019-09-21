@@ -324,9 +324,6 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
-    
-    if(modifiers == "")
-        modifiers = NoModifiers;
 }
 
 static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
@@ -1024,7 +1021,7 @@ void Action::DoAction(double value)
 string WidgetActionManager::GetModifiers()
 {
     if(widget_->GetIsModifier())
-        return NoModifiers; // Modifier Widgets cannot have Modifiers
+        return ""; // Modifier Widgets cannot have Modifiers
     else
         return widget_->GetSurface()->GetPage()->GetModifiers();
 }
