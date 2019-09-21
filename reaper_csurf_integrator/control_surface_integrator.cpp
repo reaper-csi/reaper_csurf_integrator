@@ -2987,8 +2987,6 @@ void Page::InputReceived(Widget* widget, double value)
         return;
     
     currentWidget = widget;
-    currentWidgetActionManager = nullptr;
-    currentAction = nullptr;
 
     if(currentWidget != nullptr)
         SendMessage(hwndLearn, WM_USER+1024, 0, 0);
