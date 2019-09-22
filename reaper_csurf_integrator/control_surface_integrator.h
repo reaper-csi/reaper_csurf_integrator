@@ -868,6 +868,7 @@ public:
     string GetLocalZoneAlias(string ZoneName);
     int GetParentZoneIndex(Zone* childZone);
     bool AddZone(Zone* zone);
+    void RemoveZone(Zone* zone, int zoneIndexInfile);
     void GoZone(string zoneName);
    
     void ToggleMapSends()
