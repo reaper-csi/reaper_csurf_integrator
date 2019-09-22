@@ -1453,7 +1453,7 @@ void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
             
             for(int i = 0; i < zone->GetIncludedZones().size(); i++)
                 if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName())
-                    zone->GetIncludedZones().erase(zone->GetIncludedZones().begin() + i);
+                    zone->RemoveZone(i);
         }
     }
 }
