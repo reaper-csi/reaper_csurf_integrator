@@ -1438,6 +1438,26 @@ bool ControlSurface::AddZone(Zone* zone)
     }
 }
 
+void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
+{
+    zoneToDelete->Deactivate();
+    zones_.erase(zoneToDelete->GetName());
+    zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].erase(zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].begin() + zoneIndexInZoneFile);
+    
+    if(zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].size() > 0)
+    {
+        for(auto zone : zonesInZoneFile_[zoneToDelete->GetSourceFilePath()])
+        {
+            if(zone->GetParentZoneName() == zoneToDelete->GetName())
+                zone->SetParentZoneName("");
+            
+            for(int i = 0; i < zone->GetIncludedZones().size(); i++)
+                if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName())
+                    zone->GetIncludedZones().erase(zone->GetIncludedZones().begin() + i);
+        }
+    }
+}
+
 void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
@@ -2588,15 +2608,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             hasEdits = true;
                             Zone* zoneToDelete = zonesInThisFile[index];
+                            currentSurface->RemoveZone(zoneToDelete, index);
                             
-                            // GAW TBD -- delete from zonesInThisFile, and surface->zones
-                            // Also check all zonesInThisFile for Included zones and/or Parent zones, this one could be lurking in there
-                            
-                            
-                            
- 
-                            
-                            //FillSubZones(zone, index);
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
+
+                            ClearSubZones();
+
+                            if(zonesInThisFile.size() > 0)
+                            {
+                                zoneWasSelectedBySurface = true;
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, 0, 0);
+                                FillSubZones(zonesInThisFile[0], 0);
+                            }
                         }
                     }
                     break ;
