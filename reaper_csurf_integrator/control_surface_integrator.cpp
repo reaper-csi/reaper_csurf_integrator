@@ -2313,9 +2313,6 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        ClearZones();
-                        ClearActions();
-
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName , buffer, sizeof(buffer));
                         newZoneFilename = string(buffer);
                         
@@ -2455,30 +2452,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if(dlgResult == IDOK)
                         {
                             hasEdits = true;
-
                             ClearZones();
+                            ClearSubZones();
                             
                             newZoneFilename += ".zon";
+                            
+                            currentSurface->AddZone(new Zone(currentSurface, newZoneName, newZoneFilename, newZoneAlias));
+                            zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
-                            
-                            // GAW TBD Make new zone and Add to Surface
-                            
-                            
-                            
-                            
-                            //LM_Zone newZone;
-                            
-                            //newZone.name = newZoneName;
-                            //newZone.alias = newZoneAlias;
-                            
-                            //zones.push_back(newZone);
-                            
-                            
-                            //////////
                         }
                     }
                     break ;
@@ -2490,26 +2475,20 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcAddZone);
                         if(dlgResult == IDOK)
                         {
-                            hasEdits = true;
-                            
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
-                            zoneWasSelectedBySurface = true;
-                            SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
-                            
-                            // GAW TBD Make new zone and Add to Surface
-                            
-                            
-                            
-                            
-                            //LM_Zone newZone;
-                            
-                            //newZone.name = newZoneName;
-                            //newZone.alias = newZoneAlias;
-                            
-                            //zones.push_back(newZone);
-                            
-                            
-                            //////////
+                            if(zonesInThisFile.size() > 0)
+                            {
+                                hasEdits = true;
+                                ClearSubZones();
+                                
+                                string zoneFilename = zonesInThisFile[0]->GetSourceFilePath();
+                                
+                                currentSurface->AddZone(new Zone(currentSurface, newZoneName, zoneFilename, newZoneAlias));
+                                zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
+                                
+                                SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
+                                zoneWasSelectedBySurface = true;
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
+                            }
                         }
                     }
                     break ;
@@ -3027,9 +3006,9 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
-    isShift = isShift_ || GetAsyncKeyState(VK_SHIFT);
+    isShift = isShift_;
     isOption = isOption_;
-    isControl = isControl_ || GetAsyncKeyState(VK_CONTROL);
+    isControl = isControl_;
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
