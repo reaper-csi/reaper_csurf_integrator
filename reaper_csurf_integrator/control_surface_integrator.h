@@ -287,7 +287,6 @@ public:
     void SetShouldIgnoreRelease() { shouldIgnoreRelease_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
-    virtual void AddAction(Action* action) {}
     virtual void SetIndex(int index) {}
     
     virtual void DoAction(double value);
@@ -526,7 +525,7 @@ class Zone
 private:
     vector<WidgetActionManager*> widgetActionManagers_;
     vector<Zone*> includedZones_;
-    int zoneIndex_ = 0;
+    int index_ = 0;
     string parentZoneName_ = "";
     vector<ActionLineItem> actionLineItems;
 
@@ -559,7 +558,7 @@ public:
     Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
     virtual ~Zone() {}
     
-    int GetZoneIndex() { return zoneIndex_; }
+    int GetIndex() { return index_; }
     string GetParentZoneName() { return parentZoneName_; }
     void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
@@ -642,26 +641,26 @@ public:
             widgetActionManager->GetWidget()->Reset();
     }
     
-    void ActivateNoAction(int zoneIndex)
+    void ActivateNoAction(int index)
     {
-        zoneIndex_ = zoneIndex;
+        index_ = index;
         
         for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->ActivateNoAction(zoneIndex);
+            widgetActionManager->ActivateNoAction(index);
         
         for(auto zone : includedZones_)
-            zone->ActivateNoAction(zoneIndex);
+            zone->ActivateNoAction(index);
     }
     
-    void Activate(int zoneIndex)
+    void Activate(int index)
     {
-        zoneIndex_ = zoneIndex;
+        index_ = index;
         
         for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(zoneIndex);
+            widgetActionManager->Activate(index);
         
         for(auto zone : includedZones_)
-            zone->Activate(zoneIndex);
+            zone->Activate(index);
     }
 };
 
