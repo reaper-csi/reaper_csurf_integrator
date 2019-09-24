@@ -1443,11 +1443,11 @@ int ControlSurface::GetParentZoneIndex(Zone* childZone)
 {
     for(auto zone : fxActivationManager_->GetActiveZones())
         if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetZoneIndex();
+            return zone->GetIndex();
     
     for(auto zone : sendsActivationManager_->GetActiveZones())
         if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetZoneIndex();
+            return zone->GetIndex();
     
     return 0;
 }
@@ -2607,6 +2607,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.alias = string(buffer);
                             
                             zonesInThisFile[zoneIndex]->AddAction(actionLineItem);
+                            zonesInThisFile[zoneIndex]->Activate();
                             
                             string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                             
