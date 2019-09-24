@@ -712,7 +712,7 @@ void Manager::InitActionDictionary()
     actions_["NoAction"] =                          [this](string name, WidgetActionManager* manager, vector<string> params) { return new NoAction(name, manager); };
     actions_["Reaper"] =                            [this](string name, WidgetActionManager* manager, vector<string> params) { return new ReaperAction(name, manager, params); };
     actions_["FXNameDisplay"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXNameDisplay(name, manager, params); };
-    actions_["FXParam"] =                           [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParam(name, manager, params); };
+    actions_[FXParam] =                             [this](string name, WidgetActionManager* manager, vector<string> params) { return new class FXParam(name, manager, params); };
     actions_["FXParamRelative"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParamRelative(name, manager, params); };
     actions_["FXParamNameDisplay"] =                [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParamNameDisplay(name, manager, params); };
     actions_["FXParamValueDisplay"] =               [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(name, manager, params); };
@@ -1083,6 +1083,38 @@ void WidgetActionManager::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::AddAction(ActionLineItem actionLineItem)
+{
+    WidgetActionManager* widgetActionManager = nullptr;
+    
+    for(auto manager : widgetActionManagers_)
+        if(manager->GetWidget() == actionLineItem.widget)
+            widgetActionManager = manager;
+    
+    if(widgetActionManager == nullptr)
+    {
+        if(actionLineItem.navigator == "SelectedTrackNavigator")
+            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, new SelectedTrackNavigator(actionLineItem.widget->GetSurface()->GetPage()->GetTrackNavigationManager()));
+        else if(actionLineItem.navigator == "FocusedFXNavigator")
+            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, new FocusedFXNavigator(actionLineItem.widget->GetSurface()->GetPage()->GetTrackNavigationManager()));
+        else
+            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, nullptr);
+    }
+    
+    vector<string> params;
+
+    params.push_back(actionLineItem.actionName);
+    
+    params.push_back(actionLineItem.param);
+
+    if(actionLineItem.alias != "")
+        params.push_back(actionLineItem.alias);
+
+    Action* action = TheManager->GetAction(widgetActionManager, params);
+
+    widgetActionManager->AddAction(actionLineItem.modifiers, action);
+}
+
 void Zone::Activate()
 {
     if(parentZoneName_ != "")
@@ -1866,49 +1898,49 @@ static vector<Zone*> GetAvailableZones()
     return GetAvailableZones(zoneIndex);
 }
 
-static void SetCheckBoxes(ActionLineItem lineItem)
+static void SetCheckBoxes(ActionLineItem actionLineItem)
 {
-    if(lineItem.isShift)
+    if(actionLineItem.isShift)
         CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_UNCHECKED);
     
-    if(lineItem.isOption)
+    if(actionLineItem.isOption)
         CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_UNCHECKED);
     
-    if(lineItem.isControl)
+    if(actionLineItem.isControl)
         CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_UNCHECKED);
     
-    if(lineItem.isAlt)
+    if(actionLineItem.isAlt)
         CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_UNCHECKED);
     
-    if(lineItem.isToggle)
+    if(actionLineItem.isToggle)
         CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Toggle, BST_UNCHECKED);
     
-    if(lineItem.isInvert)
+    if(actionLineItem.isInvert)
         CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Invert, BST_UNCHECKED);
     
-    if(lineItem.isTouch)
+    if(actionLineItem.isTouch)
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_UNCHECKED);
     
-    if(lineItem.isPress)
+    if(actionLineItem.isPress)
         CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_UNCHECKED);
     
-    if(lineItem.isHold)
+    if(actionLineItem.isHold)
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_UNCHECKED);
@@ -2095,24 +2127,24 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     
     for(int i = 0; i < actionLineItems.size(); i++)
     {
-        ActionLineItem lineItem = actionLineItems[i];
+        ActionLineItem actionLineItem = actionLineItems[i];
         
-        if (lineItem.actionName.find("FXParam") != string::npos && hasLoadedRawFXFile == false)
+        if (actionLineItem.actionName.find(FXParam) != string::npos && hasLoadedRawFXFile == false)
             hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
         
-        if(hasLoadedRawFXFile && lineItem.actionName.find("FXParam") != string::npos && lineItem.param == currentAction->GetParamAsString())
+        if(hasLoadedRawFXFile && actionLineItem.actionName.find(FXParam) != string::npos && actionLineItem.param == currentAction->GetParamAsString())
         {
             actionNameWasSelectedBySurface = true;
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
         }
         
-        string lineString = lineItem.allModifiers + lineItem.widgetName + " " + lineItem.actionName;
+        string lineString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
         
-        if(lineItem.param != "")
-            lineString += " " + lineItem.param;
+        if(actionLineItem.param != "")
+            lineString += " " + actionLineItem.param;
         
-        if(lineItem.alias != "")
-            lineString += " " + lineItem.alias;
+        if(actionLineItem.alias != "")
+            lineString += " " + actionLineItem.alias;
         
         SendDlgItemMessage(hwndLearn, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
         
@@ -2130,12 +2162,12 @@ static void FillSubZones(Zone* zone, int zoneIndex)
         if(isAlt)
             currentModifiers += "Alt+";
         
-        if(currentModifiers == lineItem.modifiers && currentWidget->GetName() == lineItem.widgetName)
+        if(currentModifiers == actionLineItem.modifiers && currentWidget->GetName() == actionLineItem.widgetName)
         {
             zoneComponentWasSelectedBySurface = true;
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_SETCURSEL, i, 0);
             
-            SetCheckBoxes(lineItem);
+            SetCheckBoxes(actionLineItem);
         }
     }
     
@@ -2153,7 +2185,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
         {
             SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
             
-            if(name != "FXParam" && currentAction->GetName() == name)
+            if(name != FXParam && currentAction->GetName() == name)
             {
                 actionNameWasSelectedBySurface = true;
                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, i - negBias, 0);
@@ -2509,75 +2541,89 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         int zoneIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
-                        
-                        if(zoneIndex >= 0)
+                        int widgetIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
+                        int actionIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_GETCURSEL, 0, 0);
+
+                        if(zoneIndex >= 0 && widgetIndex >= 0 && actionIndex >= 0)
                         {
                             hasEdits = true;
-                            /*
-                            LM_ZoneEntry entry;
                             
-                            entry.isShift = isShift;
-                            entry.isOption = isOption;
-                            entry.isControl = isControl;
-                            entry.isAlt = isAlt;
-                            entry.shouldToggle = shouldToggle;
-                            entry.isInvert = isInvert;
-                            entry.shouldIgnoreRelease = shouldIgnoreRelease;
-                            entry.isTouch = isTouch;
-                            entry.isHold = isHold;
+                            ActionLineItem actionLineItem;
                             
+                            actionLineItem.isShift = isShift;
+                            actionLineItem.isOption = isOption;
+                            actionLineItem.isControl = isControl;
+                            actionLineItem.isAlt = isAlt;
+                            actionLineItem.isToggle = shouldToggle;
+                            actionLineItem.isInvert = isInvert;
+                            actionLineItem.isPress = shouldIgnoreRelease;
+                            actionLineItem.isTouch = isTouch;
+                            actionLineItem.isHold = isHold;
                             
-                            GetDlgItemText(hwndDlg, IDC_EDIT_WidgetName , buffer, sizeof(buffer));
-                            entry.widgetName = string(buffer);
+                            if(actionLineItem.isShift)
+                                actionLineItem.modifiers += "Shift+";
                             
+                            if(actionLineItem.isOption)
+                                actionLineItem.modifiers += "Option+";
+                            
+                            if(actionLineItem.isControl)
+                                actionLineItem.modifiers += "Control+";
+                            
+                            if(actionLineItem.isAlt)
+                                actionLineItem.modifiers += "Altt+";
+                            
+                            actionLineItem.allModifiers = actionLineItem.modifiers;
+                            
+                            if(actionLineItem.isToggle)
+                                actionLineItem.allModifiers += "Toggle+";
+                            
+                            if(actionLineItem.isInvert)
+                                actionLineItem.allModifiers += "Invert+";
+                            
+                            if(actionLineItem.isPress)
+                                actionLineItem.allModifiers += "Press+";
+                            
+                            if(actionLineItem.isHold)
+                                actionLineItem.allModifiers += "Hold+";
+
+                            
+                            actionLineItem.widget = currentSurface->GetWidgets()[widgetIndex];
+                            actionLineItem.widgetName = actionLineItem.widget->GetName();
+
                             GetDlgItemText(hwndDlg, IDC_EDIT_ActionName , buffer, sizeof(buffer));
-                            entry.actionName = string(buffer);
+                            actionLineItem.actionName = string(buffer);
                             
-                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter , buffer, sizeof(buffer));
-                            entry.param = string(buffer);
+                            if(actionLineItem.actionName == FXParam)
+                            {
+                                actionLineItem.param = to_string(actionIndex);
+                            }
+                            else
+                            {
+                                GetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter , buffer, sizeof(buffer));
+                                actionLineItem.param = string(buffer);
+                            }
                             
                             GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias , buffer, sizeof(buffer));
-                            entry.alias = string(buffer);
+                            actionLineItem.alias = string(buffer);
                             
-                            // GAW TBD -- Add Widget Action Manager To Zone
+                            zonesInThisFile[zoneIndex]->AddAction(actionLineItem);
+                            
+                            string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
+                            
+                            if(actionLineItem.param != "")
+                                lineString += " " + actionLineItem.param;
+                            
+                            if(actionLineItem.alias != "")
+                                lineString += " " + actionLineItem.alias;
+                            
+                            SetCheckBoxes(actionLineItem);
 
-                            zones[zoneIndex].zoneEntries.push_back(entry);
-
-                            string zoneEntryLine = entry.GetLineAsString();
-    
-                            Zone* entryToAddZone = currentWidget->GetSurface()->GetZones()[zones[zoneIndex].name];
-
-                            TrackNavigator* entryTrackNavigator = new SelectedTrackNavigator(currentWidget->GetSurface()->GetPage()->GetTrackNavigationManager());
-                            
-                            WidgetActionManager* manager = new WidgetActionManager(currentWidget, entryToAddZone, entryTrackNavigator);
-                            
-                            vector<string> entryParams;
-                            
-                            entryParams.push_back(entry.actionName);
-                            
-                            if(entry.param != "")
-                                entryParams.push_back(entry.param);
-                            
-                            if(entry.alias != "")
-                                entryParams.push_back(entry.alias);
-                            
-                            Action* actionToAdd = TheManager->GetAction(manager, entryParams);
-                            
-                            manager->AddAction(NoModifiers, actionToAdd);
-                            
-                            manager->Activate();
-                            
-                            entryToAddZone->AddWidgetActionManager(manager);
-                          
-                            
-                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)zoneEntryLine.c_str());
+                            SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
                             zoneComponentWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_GETCOUNT, 0, 0) - 1, 0);
                         }
-                      */
                     }
                     break ;
-                }
                     
                 case IDC_BUTTON_DeleteZone:
                     if (HIWORD(wParam) == BN_CLICKED)
@@ -2705,7 +2751,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 }
                                 else
                                 {
-                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "FXParam");
+                                    SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, FXParam.c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, to_string(index).c_str());
                                     SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, "");
                                 }
@@ -2777,7 +2823,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         }
                                     }
                                     
-                                    if(actionLineItem.actionName.find("FXParam") != string::npos)
+                                    if(actionLineItem.actionName.find(FXParam) != string::npos)
                                     {
                                         actionNameWasSelectedBySurface = true;
                                         SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ActionNames), LB_SETCURSEL, atoi(actionLineItem.param.c_str()), 0);
