@@ -571,6 +571,14 @@ public:
     void Activate();
     void Deactivate();
     
+    string GetNavigatorName()
+    {
+        if(widgetActionManagers_.size() > 0)
+            return widgetActionManagers_[0]->GetNavigatorName();
+        else
+            return "";
+    }
+
     vector<ActionLineItem> &GetActionLineItems()
     {
         actionLineItems.clear();
