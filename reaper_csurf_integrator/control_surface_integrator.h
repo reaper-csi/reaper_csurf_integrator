@@ -52,6 +52,7 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
+const string FXParam = "FXParam";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
@@ -79,6 +80,7 @@ class FeedbackProcessor;
 
 struct ActionLineItem
 {
+    string navigator = "";
     string widgetName = "";
     Widget* widget = nullptr;
     string modifiers = "";
@@ -299,41 +301,41 @@ public:
     
     ActionLineItem GetDescription()
     {
-        ActionLineItem zli;
+        ActionLineItem actionLineItem;
         
-        zli.actionName = name_;
+        actionLineItem.actionName = name_;
         
-        zli.action = this;
+        actionLineItem.action = this;
         
-        zli.param = GetParamAsString();
+        actionLineItem.param = GetParamAsString();
         
-        zli.alias = GetAlias();
+        actionLineItem.alias = GetAlias();
 
         if(shouldToggle_)
         {
-            zli.allModifiers += "Toggle+";
-            zli.isToggle = true;
+            actionLineItem.allModifiers += "Toggle+";
+            actionLineItem.isToggle = true;
         }
         
         if(isInverted_)
         {
-            zli.allModifiers += "Invert+";
-            zli.isInvert = true;
+            actionLineItem.allModifiers += "Invert+";
+            actionLineItem.isInvert = true;
         }
         
         if(shouldIgnoreRelease_)
         {
-            zli.allModifiers += "Press+";
-            zli.isPress = true;
+            actionLineItem.allModifiers += "Press+";
+            actionLineItem.isPress = true;
         }
         
         if(delayAmount_ != 0.0)
         {
-            zli.allModifiers += "Hold+";
-            zli.isHold = true;
+            actionLineItem.allModifiers += "Hold+";
+            actionLineItem.isHold = true;
         }
         
-        return zli;
+        return actionLineItem;
     }
     
     void SetWidgetValue(Widget* widget, double value)
@@ -406,29 +408,29 @@ public:
         {
             for(auto action : actions)
             {
-                ActionLineItem zli = action->GetDescription();
+                ActionLineItem actionLineItem = action->GetDescription();
                 
-                zli.widgetActionManager = this;
+                actionLineItem.widgetActionManager = this;
                 
-                zli.widgetName = widget_->GetName();
-                zli.widget = widget_;
+                actionLineItem.widgetName = widget_->GetName();
+                actionLineItem.widget = widget_;
                 
-                zli.allModifiers = modifiers + touch + zli.allModifiers;
-                zli.modifiers = modifiers;
+                actionLineItem.allModifiers = modifiers + touch + actionLineItem.allModifiers;
+                actionLineItem.modifiers = modifiers;
                 
-                if (zli.modifiers.find("Shift") != string::npos)
-                    zli.isShift = true;
+                if (actionLineItem.modifiers.find("Shift") != string::npos)
+                    actionLineItem.isShift = true;
                 
-                if (zli.modifiers.find("Option") != string::npos)
-                    zli.isOption = true;
+                if (actionLineItem.modifiers.find("Option") != string::npos)
+                    actionLineItem.isOption = true;
                 
-                if (zli.modifiers.find("Control") != string::npos)
-                    zli.isControl = true;
+                if (actionLineItem.modifiers.find("Control") != string::npos)
+                    actionLineItem.isControl = true;
                 
-                if (zli.modifiers.find("Alt") != string::npos)
-                    zli.isAlt = true;
+                if (actionLineItem.modifiers.find("Alt") != string::npos)
+                    actionLineItem.isAlt = true;
                 
-                actionLineItems_.push_back(zli);
+                actionLineItems_.push_back(actionLineItem);
             }
         }
     }
@@ -564,7 +566,7 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    
+    void AddAction(ActionLineItem actionLineItem);
     void Activate();
     void Deactivate();
     
