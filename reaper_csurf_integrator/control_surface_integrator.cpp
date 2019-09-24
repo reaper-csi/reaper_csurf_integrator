@@ -2154,15 +2154,15 @@ static void FillSubZones(Zone* zone, int zoneIndex)
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
         }
         
-        string lineString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
+        string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
         
         if(actionLineItem.param != "")
-            lineString += " " + actionLineItem.param;
+            lineItemAsString += " " + actionLineItem.param;
         
         if(actionLineItem.alias != "")
-            lineString += " " + actionLineItem.alias;
+            lineItemAsString += " " + actionLineItem.alias;
         
-        SendDlgItemMessage(hwndLearn, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineString.c_str());
+        SendDlgItemMessage(hwndLearn, IDC_LIST_ZoneComponents, LB_ADDSTRING, 0, (LPARAM)lineItemAsString.c_str());
         
         string currentModifiers = "";
         
@@ -2488,6 +2488,74 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             switch(LOWORD(wParam))
             {
+                case IDC_BUTTON_SaveFile:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        string filePath = zonesInThisFile[0]->GetSourceFilePath();
+
+                        if(zonesInThisFile.size() > 0)
+                        {
+                            try
+                            {
+                                ofstream zonFile(filePath);
+                                
+                                if(zonFile.is_open())
+                                {
+                                    for(auto zone : zonesInThisFile)
+                                    {
+                                        zonFile << "Zone " + zone->GetName();
+                                        
+                                        if (zone->GetAlias() != "")
+                                            zonFile << " " + zone->GetAlias();
+                                        
+                                        zonFile << GetLineEnding();
+                                        
+                                        if(zone->GetParentZoneName() != "")
+                                            zonFile << "ParentZone " + zone->GetParentZoneName() + GetLineEnding();
+
+                                        if(zone->GetNavigatorName() != "")
+                                            zonFile << zone->GetNavigatorName() + GetLineEnding();
+                                        
+                                        if(zone->GetIncludedZones().size() > 0)
+                                        {
+                                            zonFile << "IncludedZones" + GetLineEnding();
+
+                                            for(auto includedZone : zone->GetIncludedZones())
+                                                zonFile << includedZone->GetName() + GetLineEnding();
+                                            
+                                            zonFile << "IncludedZonesEnd" + GetLineEnding();
+                                        }
+                                        
+                                        for(auto actionLineItem : zone->GetActionLineItems())
+                                        {
+                                            string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
+                                            
+                                            if(actionLineItem.param != "")
+                                                lineItemAsString += " " + actionLineItem.param;
+                                            
+                                            if(actionLineItem.alias != "")
+                                                lineItemAsString += " " + actionLineItem.alias;
+                                            
+                                            zonFile << lineItemAsString + GetLineEnding();
+
+                                        }
+                                        
+                                        zonFile << "ZoneEnd" + GetLineEnding() + GetLineEnding();
+                                    }
+                                }
+                                
+                                zonFile.close();
+                            }
+                            catch (exception &e)
+                            {
+                                char buffer[250];
+                                sprintf(buffer, "Trouble writing %s", filePath.c_str());
+                                DAW::ShowConsoleMsg(buffer);
+                            }
+                        }
+                    }
+                    break ;
+                    
                 case IDC_BUTTON_NewFile:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
