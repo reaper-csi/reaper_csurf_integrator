@@ -414,6 +414,8 @@ public:
                 actionLineItem.widgetName = widget_->GetName();
                 actionLineItem.widget = widget_;
                 
+                actionLineItem.action = action;
+                
                 actionLineItem.allModifiers = modifiers + touch + actionLineItem.allModifiers;
                 actionLineItem.modifiers = modifiers;
                 
@@ -565,7 +567,7 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    void AddAction(ActionLineItem actionLineItem);
+    void AddAction(ActionLineItem actionLineItem, int actionIndex);
     void Activate();
     void Deactivate();
     
