@@ -1083,7 +1083,7 @@ void WidgetActionManager::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::AddAction(ActionLineItem actionLineItem)
+void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
 {
     WidgetActionManager* widgetActionManager = nullptr;
     
@@ -1112,6 +1112,8 @@ void Zone::AddAction(ActionLineItem actionLineItem)
 
     Action* action = TheManager->GetAction(widgetActionManager, params);
 
+    action->SetIndex(actionIndex);
+    
     widgetActionManager->AddAction(actionLineItem.modifiers, action);
 }
 
@@ -1834,6 +1836,9 @@ static int focusedFXIndex = 0;
 static MediaTrack* focusedFXTrack = nullptr;
 static string focusedFXName = "";
 
+// For adding new Actions to FX Zones in realtime
+static int currentFXIndex = 0;
+
 // Guards for Set Current Selection messages
 static bool widgetNameWasSelectedBySurface = false;
 static bool actionNameWasSelectedBySurface = false;
@@ -1989,6 +1994,17 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
             }
         }
         
+        for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
+        {
+            DAW::TrackFX_GetFXName(track, i, buffer, sizeof(buffer));
+            
+            if(string(buffer) == zoneName)
+            {
+                currentFXIndex = i;
+                break;
+            }
+        }
+
         ifstream rawFXFile(filePath);
         
         if(!rawFXFile)
@@ -2324,6 +2340,8 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &focusedFXIndex) == 1)
                 if(trackNumber > 0)
                 {
+                    currentFXIndex = focusedFXIndex;
+                    
                     focusedFXTrack = DAW::CSurf_TrackFromID(trackNumber, currentSurface->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
                 
                     DAW::TrackFX_GetFXName(focusedFXTrack, focusedFXIndex, buffer, sizeof(buffer));
@@ -2606,7 +2624,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias , buffer, sizeof(buffer));
                             actionLineItem.alias = string(buffer);
                             
-                            zonesInThisFile[zoneIndex]->AddAction(actionLineItem);
+                            zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
                             zonesInThisFile[zoneIndex]->Activate();
                             
                             string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
