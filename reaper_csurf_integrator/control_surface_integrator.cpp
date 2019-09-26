@@ -2435,10 +2435,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 {
                                     for(auto zone : zonesInThisFile)
                                     {
-                                        zonFile << "Zone " + zone->GetName();
+                                        zonFile << "Zone \"" + zone->GetName() + "\"";
                                         
                                         if (zone->GetAlias() != "" && zone->GetAlias() != zone->GetName())
-                                            zonFile << " " + zone->GetAlias();
+                                            zonFile << " \"" + zone->GetAlias() + "\"";
                                         
                                         zonFile << GetLineEnding();
                                         
@@ -2463,7 +2463,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                                 lineItemAsString += " " + actionLineItem.param;
                                             
                                             if(actionLineItem.alias != "")
-                                                lineItemAsString += " " + actionLineItem.alias;
+                                                lineItemAsString += " \"" + actionLineItem.alias + "\"";
                                             
                                             zonFile << lineItemAsString + GetLineEnding();
 
