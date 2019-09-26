@@ -1124,11 +1124,7 @@ void Zone::Activate(WidgetActionManager* sender)
     if(sender != nullptr)
         index = sender->GetZone()->GetIndex();
     
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(index);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(index);
+    Activate(index);
 }
 
 void Zone::Deactivate()
