@@ -529,7 +529,6 @@ private:
     vector<WidgetActionManager*> widgetActionManagers_;
     vector<Zone*> includedZones_;
     int index_ = 0;
-    string parentZoneName_ = "";
     vector<ActionLineItem> actionLineItems;
 
     ControlSurface* surface_ = nullptr;
@@ -562,8 +561,6 @@ public:
     virtual ~Zone() {}
     
     int GetIndex() { return index_; }
-    string GetParentZoneName() { return parentZoneName_; }
-    void SetParentZoneName(string parentZoneName) { parentZoneName_ = parentZoneName; }
     string GetName() { return name_ ;}
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
@@ -878,7 +875,6 @@ public:
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
-    int GetParentZoneIndex(Zone* childZone);
     bool AddZone(Zone* zone);
     void RemoveZone(Zone* zone, int zoneIndexInfile);
     void GoZone(string zoneName, WidgetActionManager* sender);

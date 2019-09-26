@@ -354,8 +354,6 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
     bool hasSelectedTrackNavigator = false;
     bool hasFocusedFXTrackNavigator = false;
     
-    string parentZone = "";
-
     for (string line; getline(zoneFile, line) ; )
     {
         line = regex_replace(line, regex(CRLFChars), "");
@@ -395,20 +393,8 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
             continue;
         }
         
-        if(tokens.size() == 2 && tokens[0] == "ParentZone")
-        {
-            parentZone = tokens[1];
-            continue;
-        }
-
         for(int i = 0; i < expandedZones.size(); i++)
-        {
-            // Pre-process for "Channel|1-8" syntax
-
-            string parentZoneLine(parentZone);
-            parentZoneLine = regex_replace(parentZoneLine, regex("\\|"), expandedZonesIds[i]);
-            expandedZones[i]->SetParentZoneName(parentZoneLine);
-            
+        {            
             // Pre-process for "Channel|1-8" syntax
             string localZoneLine(line);
             localZoneLine = regex_replace(localZoneLine, regex("\\|"), expandedZonesIds[i]);
@@ -1429,19 +1415,6 @@ string ControlSurface::GetLocalZoneAlias(string zoneName)
         return page_->GetZoneAlias(zoneName);
 }
 
-int ControlSurface::GetParentZoneIndex(Zone* childZone)
-{
-    for(auto zone : fxActivationManager_->GetActiveZones())
-        if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetIndex();
-    
-    for(auto zone : sendsActivationManager_->GetActiveZones())
-        if(childZone->GetParentZoneName() == zone->GetName())
-            return zone->GetIndex();
-    
-    return 0;
-}
-
 bool ControlSurface::AddZone(Zone* zone)
 {
     if(zones_.count(zone->GetName()) > 0)
@@ -1470,9 +1443,6 @@ void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
     {
         for(auto zone : zonesInZoneFile_[zoneToDelete->GetSourceFilePath()])
         {
-            if(zone->GetParentZoneName() == zoneToDelete->GetName())
-                zone->SetParentZoneName("");
-            
             for(int i = 0; i < zone->GetIncludedZones().size(); i++)
                 if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName())
                     zone->RemoveZone(i);
@@ -2043,8 +2013,6 @@ static void ClearSubZones()
     SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_RESETCONTENT, 0, 0);
-    AddComboBoxEntry(hwndLearn, 0, "No Parent Zone", IDC_COMBO_ParentZone);
 }
 
 static void ClearActions()
@@ -2102,28 +2070,10 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     int index = SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
     if(index >= 0)
         SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
-
-    // Parent Zone
-    if(zoneIndex >= 0)
-    {
-        SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_SETCURSEL, 0, 0);
-        
-        for(int i = 0; i < GetAvailableZones(zoneIndex).size(); i++)
-        {
-            Zone* availableZone = GetAvailableZones(zoneIndex)[i];
-            AddComboBoxEntry(hwndLearn, 0, availableZone->GetName().c_str(), IDC_COMBO_ParentZone);
-            
-            if(zone->GetParentZoneName() == availableZone->GetName())
-            {
-                SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_ParentZone), CB_SETCURSEL, i + 1, 0);
-            }
-        }
-    }
     
     // Included Zones
     for(auto includedZone : zone->GetIncludedZones())
         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
-   
     
     bool hasLoadedRawFXFile = false;
     
@@ -2492,9 +2442,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         
                                         zonFile << GetLineEnding();
                                         
-                                        if(zone->GetParentZoneName() != "")
-                                            zonFile << "ParentZone " + zone->GetParentZoneName() + GetLineEnding();
-
                                         if(zone->GetNavigatorName() != "")
                                             zonFile << zone->GetNavigatorName() + GetLineEnding();
                                         
