@@ -270,6 +270,8 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
+    virtual void RequestTrackUpdate(MediaTrack* track) {}
+    
 public:
     virtual ~Action() {}
     
@@ -289,14 +291,13 @@ public:
     
     virtual void SetIndex(int index) {}
     
-    virtual void DoAction(double value);
+    virtual void DoAction(double value, WidgetActionManager* widgetActionManager);
     
     virtual double GetCurrentValue() { return 0.0; }
     virtual void RequestUpdate() {}
-    virtual void RequestTrackUpdate(MediaTrack* track) {}
     
-    virtual void Do(string value) {}
-    virtual void Do(double value) {}
+    virtual void Do(string value, WidgetActionManager* sender) {}
+    virtual void Do(double value, WidgetActionManager* sender) {}
     
     ActionLineItem GetDescription()
     {
@@ -479,7 +480,7 @@ public:
     {
         if(actions_.count(GetModifiers()) > 0)
             for(auto action : actions_[GetModifiers()])
-                action->DoAction(value);
+                action->DoAction(value, this);
     }
     
     void Activate()
@@ -568,7 +569,7 @@ public:
     string GetSourceFilePath() { return sourceFilePath_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     void AddAction(ActionLineItem actionLineItem, int actionIndex);
-    void Activate();
+    void Activate(WidgetActionManager* sender);
     void Deactivate();
     
     string GetNavigatorName()
@@ -880,7 +881,7 @@ public:
     int GetParentZoneIndex(Zone* childZone);
     bool AddZone(Zone* zone);
     void RemoveZone(Zone* zone, int zoneIndexInfile);
-    void GoZone(string zoneName);
+    void GoZone(string zoneName, WidgetActionManager* sender);
    
     void ToggleMapSends()
     {
@@ -965,7 +966,7 @@ public:
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
-        GoZone("Home");
+        GoZone("Home", nullptr);
     }
     
     virtual ~Midi_ControlSurface() {}
@@ -1578,14 +1579,14 @@ public:
         return "";
     }
     
-    void GoZone(ControlSurface* surface, string zoneName)
+    void GoZone(ControlSurface* surface, string zoneName, WidgetActionManager* sender)
     {
         if(! surface->GetUseZoneLink())
-          surface->GoZone(zoneName);
+          surface->GoZone(zoneName, sender);
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GoZone(zoneName);
+                    surface->GoZone(zoneName, sender);
     }
 
     void ToggleMapSends(ControlSurface* surface)

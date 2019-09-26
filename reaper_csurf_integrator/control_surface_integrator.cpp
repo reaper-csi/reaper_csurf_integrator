@@ -886,7 +886,7 @@ void Widget::DoAction(double value)
         GetSurface()->GetPage()->InputReceived(this, value);
 
     if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(value);    
+        widgetActionManager_->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double value)
@@ -999,7 +999,7 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
     widget_ = widgetActionManager_->GetWidget();
 }
 
-void Action::DoAction(double value)
+void Action::DoAction(double value, WidgetActionManager* sender)
 {
     if(shouldIgnoreRelease_ && value == 0)
         return;
@@ -1007,9 +1007,9 @@ void Action::DoAction(double value)
     value = isInverted_ == false ? value : 1.0 - value;
     
     if(shouldToggle_)
-        Do( ! GetCurrentValue());
+        Do( ! GetCurrentValue(), sender);
     else
-        Do(value);
+        Do(value, sender);
     
     if( ! widget_->GetIsModifier())
         page_->ActionPerformed(GetWidgetActionManager(), this);
@@ -1117,26 +1117,18 @@ void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
     widgetActionManager->AddAction(actionLineItem.modifiers, action);
 }
 
-void Zone::Activate()
+void Zone::Activate(WidgetActionManager* sender)
 {
-    if(parentZoneName_ != "")
-    {
-        int index = surface_->GetParentZoneIndex(this);
-        
+    int index = 0;
+    
+    if(sender != nullptr)
+        index = sender->GetZone()->GetIndex();
+    
         for(auto widgetActionManager : widgetActionManagers_)
             widgetActionManager->Activate(index);
         
         for(auto zone : includedZones_)
             zone->Activate(index);
-    }
-    else
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate();
-        
-        for(auto zone : includedZones_)
-            zone->Activate();
-    }
 }
 
 void Zone::Deactivate()
@@ -1492,11 +1484,11 @@ void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
     }
 }
 
-void ControlSurface::GoZone(string zoneName)
+void ControlSurface::GoZone(string zoneName, WidgetActionManager* sender)
 {
     if(zones_.count(zoneName) > 0)
     {
-        zones_[zoneName]->Activate();
+        zones_[zoneName]->Activate(sender);
         activeZone_ = zones_[zoneName];
     }
 }
@@ -1575,7 +1567,7 @@ OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* p
     
     runServer();
     
-    GoZone("Home");
+    GoZone("Home", nullptr);
 }
 
 void OSC_ControlSurface::InitWidgets(string templateFilename)
@@ -2687,7 +2679,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.alias = string(buffer);
                             
                             zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
-                            zonesInThisFile[zoneIndex]->Activate();
+                            zonesInThisFile[zoneIndex]->Activate(nullptr);
                             
                             string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                             
