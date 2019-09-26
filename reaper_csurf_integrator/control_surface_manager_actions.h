@@ -16,7 +16,7 @@ class TogglePin  : public TrackAction
 public:
     TogglePin(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
        
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         if(MediaTrack* track = widget_->GetTrack())
             page_->GetTrackNavigationManager()->TogglePin(track);
@@ -30,7 +30,7 @@ class ToggleLearnMode  : public SurfaceAction
 public:
     ToggleLearnMode(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->ToggleLearnMode();
     }
@@ -48,7 +48,7 @@ public:
         SetWidgetValue(widget_, surface_->GetShouldMapSends());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->ToggleMapSends(surface_);
     }
@@ -66,7 +66,7 @@ public:
         SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->ToggleMapSelectedFX(surface_);
     }
@@ -84,7 +84,7 @@ public:
         SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->ToggleMapFXMenu(surface_);
     }
@@ -102,7 +102,7 @@ public:
         SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFocusedFX());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->ToggleMapFocusedTrackFX(surface_);
     }
@@ -115,7 +115,7 @@ class GoFXSlot  : public SurfaceActionWithIntParam
 public:
     GoFXSlot(string name, WidgetActionManager* manager, vector<string> params) : SurfaceActionWithIntParam(name, manager, params) {}
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         int fxIndex = param_ - 1 < 0 ? 0 : param_ - 1;
         
@@ -130,7 +130,7 @@ class MapSelectedTrackSendsToWidgets  : public SurfaceAction
 public:
     MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->MapSelectedTrackSendsToWidgets(surface_);
     }
@@ -143,7 +143,7 @@ class MapSelectedTrackFXToWidgets  : public SurfaceAction
 public:
     MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->MapSelectedTrackFXToWidgets(surface_);
     }
@@ -156,7 +156,7 @@ class MapSelectedTrackFXToMenu  : public SurfaceAction
 public:
     MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->MapSelectedTrackFXToMenu(surface_);
     }
@@ -169,7 +169,7 @@ class MapFocusedFXToWidgets  : public SurfaceAction
 public:
     MapFocusedFXToWidgets(string name, WidgetActionManager* manager) : SurfaceAction(name, manager) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->MapFocusedTrackFXToWidgets(surface_);
     }
@@ -182,7 +182,7 @@ class SelectTrackRelative : public ActionWithIntParam
 public:
     SelectTrackRelative(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         if(1 == DAW::CountSelectedTracks(nullptr))
         {
@@ -220,7 +220,7 @@ public:
         SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShowFXWindows());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         surface_->GetFXActivationManager()->SetShowFXWindows(value);
     }
@@ -238,7 +238,7 @@ public:
         SetWidgetValue(widget_, page_->GetTrackNavigationManager()->GetScrollLink());
     }
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->GetTrackNavigationManager()->ToggleScrollLink(param_);
     }
@@ -251,7 +251,7 @@ class CycleTimeDisplayModes : public Action
 public:
     CycleTimeDisplayModes(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         int *tmodeptr = &__g_projectconfig_timemode2;
         if (tmodeptr && *tmodeptr>=0)
@@ -281,7 +281,7 @@ class GoNextPage : public Action
 public:
     GoNextPage(string name, WidgetActionManager* manager) : Action(name, manager) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         TheManager->NextPage();
     }
@@ -294,7 +294,7 @@ class GoPage : public ActionWithStringParam
 public:
     GoPage(string name, WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(name, manager, params) {}
     
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         TheManager->GoPage(param_);
     }
@@ -307,9 +307,9 @@ class GoZone : public SurfaceActionWithStringParam
 public:
     GoZone(string name, WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(name, manager, params) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
-        page_->GoZone(surface_, param_);
+        page_->GoZone(surface_, param_, sender);
     }
 };
 
@@ -320,7 +320,7 @@ class TrackBank : public ActionWithIntParam
 public:
     TrackBank(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         TheManager->AdjustTrackBank(page_, param_);
     }
@@ -338,7 +338,7 @@ public:
         SetWidgetValue(widget_, page_->GetShift());
     }
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->SetShift(value);
     }
@@ -356,7 +356,7 @@ public:
         SetWidgetValue(widget_, page_->GetOption());
     }
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->SetOption(value);
     }
@@ -374,7 +374,7 @@ public:
         SetWidgetValue(widget_, page_->GetControl());
     }
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->SetControl(value);
     }
@@ -392,7 +392,7 @@ public:
         SetWidgetValue(widget_, page_->GetAlt());
     }
 
-    void Do(double value) override
+    void Do(double value, WidgetActionManager* sender) override
     {
         page_->SetAlt(value);
     }

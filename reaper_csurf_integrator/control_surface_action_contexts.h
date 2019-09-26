@@ -46,7 +46,7 @@ public:
         SetWidgetValue(widget_, DAW::GetToggleCommandState(commandId_));
     }
     
-    virtual void Do(double value) override
+    virtual void Do(double value, WidgetActionManager* sender) override
     {
         DAW::SendCommandMessage(commandId_);
     }
@@ -68,10 +68,10 @@ public:
             widget_->Reset();
     }
     
-    virtual void DoAction(double value) override
+    virtual void DoAction(double value, WidgetActionManager* sender) override
     {
         if(MediaTrack* track = widget_->GetTrack())
-            Action::DoAction(value);
+            Action::DoAction(value, sender);
     }
 };
 
@@ -95,14 +95,6 @@ public:
     virtual int GetParam() override
     {
         return sendIndex_;
-    }
-    
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = widget_->GetTrack())
-            RequestTrackUpdate(track);
-        else
-            widget_->Reset();
     }
 };
 
