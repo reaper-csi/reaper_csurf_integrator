@@ -1389,11 +1389,11 @@ private:
     bool isShift_ = false;
     int shiftPressedTime_ = 0;
     bool isOption_ = false;
-    bool optionPressedTime_ = 0;
+    int optionPressedTime_ = 0;
     bool isControl_ = false;
-    bool controlPressedTime_ = 0;
+    int controlPressedTime_ = 0;
     bool isAlt_ = false;
-    bool altPressedTime_ = 0;
+    int altPressedTime_ = 0;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
 
