@@ -1771,7 +1771,7 @@ public:
         vector<string> actionNames;
         
         for(auto [key, value] : actions_)
-            actionNames.push_back(key);
+            actionNames.push_back(regex_replace(key, regex("[\"]"), ""));
         
         return actionNames;
     }
