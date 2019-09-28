@@ -1937,13 +1937,13 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
                     
                     if(rawFXFile.is_open())
                     {
-                        rawFXFile << string(zoneName) + GetLineEnding();
+                        rawFXFile << "\"" + string(zoneName) + "\"" + GetLineEnding();
                         
                         for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                         {
                             DAW::TrackFX_GetParamName(track, i, j, buffer, sizeof(buffer));
                             
-                            rawFXFile << string(buffer) + GetLineEnding();
+                            rawFXFile << "\"" + string(buffer) + "\"" + GetLineEnding();
                         }
                     }
                     
@@ -1973,7 +1973,8 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
         for (string line; getline(rawFXFile, line) ; )
         {
             line = regex_replace(line, regex(CRLFChars), "");
-            
+            line = regex_replace(line, regex("[\"]"), "");
+
             if(line == zoneName)
                 continue;
             
@@ -2460,7 +2461,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                                             
                                             if(actionLineItem.param != "")
-                                                lineItemAsString += " " + actionLineItem.param;
+                                                lineItemAsString += " \"" + actionLineItem.param + "\"";
                                             
                                             if(actionLineItem.alias != "")
                                                 lineItemAsString += " \"" + actionLineItem.alias + "\"";
