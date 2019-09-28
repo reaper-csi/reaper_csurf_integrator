@@ -3050,6 +3050,9 @@ void Page::InputReceived(Widget* widget, double value)
     if(hwndLearn == nullptr || value == 0.0)
         return;
     
+    if(widget == currentWidget)
+        return;
+    
     currentWidget = widget;
 
     if(currentWidget != nullptr)
@@ -3062,6 +3065,9 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
         return;
 
     if(widgetActionManager == nullptr || action == nullptr)
+        return;
+
+    if(widgetActionManager == currentWidgetActionManager)
         return;
     
     currentWidget = widgetActionManager->GetWidget();
