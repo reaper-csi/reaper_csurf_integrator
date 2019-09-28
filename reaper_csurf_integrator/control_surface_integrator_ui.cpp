@@ -974,7 +974,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 for(auto page : pages)
                 {
                     line = PageToken + " ";
-                    line += page->name + " ";
+                    line += "\"" + page->name + "\" ";
                     if(page->followMCP)
                         line += "FollowMCP ";
                     else
@@ -1004,11 +1004,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     for(auto surface : page->surfaces)
                     {
                         line = surface->type + " ";
-                        line += surface->name + " ";
+                        line += "\"" + surface->name + "\" ";
                         line += to_string(surface->inPort) + " " ;
                         line += to_string(surface->outPort) + " " ;
-                        line += surface->templateFilename + " ";
-                        line += surface->zoneTemplateFolder + " " ;
+                        line += "\"" + surface->templateFilename + "\" ";
+                        line += "\"" + surface->zoneTemplateFolder + "\" ";
                         line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
                         line += surface->autoMapSends == true ? "AutoMapSends " : "NoAutoMapSends ";
                         line += surface->autoMapFX == true ? "AutoMapFX " : "NoAutoMapFX ";
