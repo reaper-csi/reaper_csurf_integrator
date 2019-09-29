@@ -752,7 +752,6 @@ void Manager::InitActionDictionary()
     actions_["Control"] =                           [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetControl(name, manager); };
     actions_["Alt"] =                               [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetAlt(name, manager); };
     actions_["TogglePin"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TogglePin(name, manager); };
-    actions_["ToggleLearnMode"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleLearnMode(name, manager); };
     actions_["ToggleMapSelectedTrackSends"] =       [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackSends(name, manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(name, manager); };
     actions_["ToggleMapSelectedTrackFX"] =          [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackFX(name, manager); };
@@ -3032,22 +3031,6 @@ void Page::OpenLearnModeWindow()
     }
 }
 
-void Page::ToggleLearnMode()
-{
-    OpenLearnModeWindow();
-    /*
-    if(hwndLearn == nullptr)
-    {
-        hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
-        DisableButtons();
-        ShowWindow(hwndLearn, true);
-    }
-    else
-    {
-     
-     */
-}
-
 void Page::InputReceived(Widget* widget, double value)
 {
     if(hwndLearn == nullptr || value == 0.0)
@@ -3059,7 +3042,11 @@ void Page::InputReceived(Widget* widget, double value)
     currentWidget = widget;
 
     if(currentWidget != nullptr)
-        SendMessage(hwndLearn, WM_USER+1024, 0, 0);
+    {
+        WDL_Mutex.Enter();
+        workQueue.push_front(WM_USER+1024);
+        WDL_Mutex.Leave();
+    }
 }
 
 void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
@@ -3083,5 +3070,27 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
-        SendMessage(hwndLearn, WM_USER+1025, 0, 0);
+    {
+        WDL_Mutex.Enter();
+        workQueue.push_front(WM_USER+1025);
+        WDL_Mutex.Leave();
+    }
 }
+
+void Page::DoWork(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+ {
+     if(! workQueue.empty())
+     {
+         WDL_Mutex.Enter();
+         list<int> localWorkQueue = workQueue;
+         workQueue.clear();
+         WDL_Mutex.Leave();
+     
+         while(! localWorkQueue.empty())
+         {
+             SendMessage(hwndLearn, localWorkQueue.back(), 0, 0);
+             localWorkQueue.pop_back();
+         }
+     }
+ }
+
