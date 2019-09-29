@@ -23,6 +23,8 @@
 #include <fstream>
 #include <regex>
 
+#include "WDL/mutex.h"
+
 #ifdef _WIN32
 #include "oscpkt.hh"
 #include "udp.hh"
@@ -1378,6 +1380,9 @@ public:
     }
 };
 
+static list<int> workQueue;
+static WDL_Mutex WDL_Mutex;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1397,10 +1402,14 @@ private:
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
 
+    static void DoWork(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    
 public:
     Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
+        
+        SetTimer(g_hwnd, 1, 100, (TIMERPROC)(Page::DoWork));
     }
     
     string GetName() { return name_; }
@@ -1409,7 +1418,6 @@ public:
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
     void OpenLearnModeWindow();
-    void ToggleLearnMode();
     void InputReceived(Widget* widget, double value);
     void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
 
