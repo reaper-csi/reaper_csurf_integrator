@@ -3034,6 +3034,8 @@ void Page::OpenLearnModeWindow()
 
 void Page::ToggleLearnMode()
 {
+    OpenLearnModeWindow();
+    /*
     if(hwndLearn == nullptr)
     {
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
@@ -3042,8 +3044,8 @@ void Page::ToggleLearnMode()
     }
     else
     {
-        SendMessage(hwndLearn, WM_CLOSE, 0, 0);
-    }
+     
+     */
 }
 
 void Page::InputReceived(Widget* widget, double value)
