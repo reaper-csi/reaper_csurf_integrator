@@ -23,8 +23,6 @@
 #include <fstream>
 #include <regex>
 
-#include "WDL/mutex.h"
-
 #ifdef _WIN32
 #include "oscpkt.hh"
 #include "udp.hh"
@@ -41,6 +39,8 @@
 #include "oscpkt.hh"
 #include "udp.hh"
 #endif
+
+#include "WDL/mutex.h"
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
