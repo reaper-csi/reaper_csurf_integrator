@@ -320,9 +320,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
@@ -484,9 +481,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
@@ -631,9 +625,6 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
