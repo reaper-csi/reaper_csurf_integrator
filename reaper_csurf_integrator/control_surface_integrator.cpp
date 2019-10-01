@@ -2179,9 +2179,6 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
@@ -2255,9 +2252,6 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
@@ -2331,9 +2325,6 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
         case WM_DESTROY:
             EndDialog(hwndDlg, 0);
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
@@ -3010,9 +3001,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             EndDialog(hwndDlg, 0);
             hwndLearn = nullptr;
             break;
-            
-        default:
-            return DefWindowProc(hwndDlg, uMsg, wParam, lParam) ;
     }
     
     return 0 ;
