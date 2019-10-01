@@ -267,6 +267,19 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             switch(LOWORD(wParam))
             {
+                case IDCHOOSECOLOUR:
+                {
+                    int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                    if (index >= 0)
+                    {
+                        int colorOut = DAW::ColorToNative(pages[index]->red, pages[index]->green, pages[index]->blue);
+                        
+                        if(DAW::GR_SelectColor(hwndDlg, &colorOut))
+                            DAW::ColorFromNative(colorOut, &pages[index]->red, &pages[index]->green, &pages[index]->blue);
+                    }
+                }
+                    break;
+
                 case IDC_RADIO_MCP:
                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
                     break;
@@ -638,19 +651,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 switch(LOWORD(wParam))
                 {
-                    case IDCHOOSECOLOUR:
-                        {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            if (index >= 0)
-                            {
-                                int colorOut = DAW::ColorToNative(pages[index]->red, pages[index]->green, pages[index]->blue);
-                                
-                                if(DAW::GR_SelectColor(hwndDlg, &colorOut))
-                                    DAW::ColorFromNative(colorOut, &pages[index]->red, &pages[index]->green, &pages[index]->blue);
-                            }
-                        }
-                        break;
-                        
                     case IDC_LIST_Pages:
                         if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
