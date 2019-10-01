@@ -1382,6 +1382,7 @@ public:
 
 static list<int> workQueue;
 static WDL_Mutex WDL_Mutex;
+static int timerId = 2; // GAW -- HandleOSC uses timer Id 1
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
@@ -1409,7 +1410,7 @@ public:
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
         
-        SetTimer(g_hwnd, 1, 100, (TIMERPROC)(Page::DoWork));
+        SetTimer(g_hwnd, timerId++, 100, (TIMERPROC)(Page::DoWork));
     }
     
     string GetName() { return name_; }
