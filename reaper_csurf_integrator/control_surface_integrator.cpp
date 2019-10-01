@@ -2030,7 +2030,7 @@ static int FillZones(Zone* zone)
     // Zone Filename
     smatch match;
     string zoneFilename = zone->GetSourceFilePath();
-    if (regex_search(zoneFilename, match, regex("[^/]+$)")) == true)
+    if (regex_search(zoneFilename, match, regex("([^/]+$)")) == true)
     {
         zoneFilename = match.str(0);
         SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
