@@ -752,6 +752,7 @@ void Manager::InitActionDictionary()
     actions_["Control"] =                           [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetControl(name, manager); };
     actions_["Alt"] =                               [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetAlt(name, manager); };
     actions_["TogglePin"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TogglePin(name, manager); };
+    actions_["ToggleLearnMode"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleLearnMode(name, manager); };
     actions_["ToggleMapSelectedTrackSends"] =       [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackSends(name, manager); };
     actions_["MapSelectedTrackSendsToWidgets"] =    [this](string name, WidgetActionManager* manager, vector<string> params) { return new MapSelectedTrackSendsToWidgets(name, manager); };
     actions_["ToggleMapSelectedTrackFX"] =          [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleMapSelectedTrackFX(name, manager); };
@@ -3049,6 +3050,20 @@ void Page::OpenLearnModeWindow()
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
         DisableButtons();
         ShowWindow(hwndLearn, true);
+    }
+}
+
+void Page::ToggleLearnMode()
+{
+    if(hwndLearn == nullptr)
+    {
+        hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
+        DisableButtons();
+        ShowWindow(hwndLearn, true);
+    }
+    else
+    {
+        SendMessage(hwndLearn, WM_CLOSE, 0, 0);
     }
 }
 
