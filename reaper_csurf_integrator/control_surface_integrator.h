@@ -1381,10 +1381,6 @@ public:
     }
 };
 
-static list<int> workQueue;
-static WDL_Mutex WDL_Mutex;
-static int timerId = 2; // GAW -- HandleOSC uses timer Id 1
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1403,15 +1399,11 @@ private:
     int altPressedTime_ = 0;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
-
-    static void DoWork(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    
+   
 public:
     Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
     {
         trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
-        
-        SetTimer(g_hwnd, timerId++, 100, (TIMERPROC)(Page::DoWork));
     }
     
     string GetName() { return name_; }

@@ -3078,11 +3078,7 @@ void Page::InputReceived(Widget* widget, double value)
     currentWidget = widget;
 
     if(currentWidget != nullptr)
-    {
-        WDL_Mutex.Enter();
-        workQueue.push_front(WM_USER+1024);
-        WDL_Mutex.Leave();
-    }
+        SendMessage(hwndLearn, WM_USER+1024, 0, 0);
 }
 
 void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
@@ -3106,27 +3102,5 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     isAlt = isAlt_;
    
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
-    {
-        WDL_Mutex.Enter();
-        workQueue.push_front(WM_USER+1025);
-        WDL_Mutex.Leave();
-    }
+        SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
-
-void Page::DoWork(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
- {
-     if(! workQueue.empty())
-     {
-         WDL_Mutex.Enter();
-         list<int> localWorkQueue = workQueue;
-         workQueue.clear();
-         WDL_Mutex.Leave();
-     
-         while(! localWorkQueue.empty())
-         {
-             SendMessage(hwndLearn, localWorkQueue.back(), 0, 0);
-             localWorkQueue.pop_back();
-         }
-     }
- }
-
