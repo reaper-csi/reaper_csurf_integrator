@@ -2746,12 +2746,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(index >= 0)
                             {
                                 currentWidget = currentSurface->GetWidgets()[index];
-                                
-                                SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
-                                SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
-
-                                zoneComponentWasSelectedBySurface = true;
-                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_ZoneComponents), LB_SETCURSEL, -1, 0);
+                                currentWidget->DoAction(currentWidget->GetLastValue());
                             }
 
                             break;
@@ -3069,7 +3064,7 @@ void Page::ToggleLearnMode()
 
 void Page::InputReceived(Widget* widget, double value)
 {
-    if(hwndLearn == nullptr || value == 0.0)
+    if(hwndLearn == nullptr)
         return;
     
     if(widget == currentWidget)
