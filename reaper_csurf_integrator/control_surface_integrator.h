@@ -40,8 +40,6 @@
 #include "udp.hh"
 #endif
 
-#include "WDL/mutex.h"
-
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
@@ -1390,13 +1388,13 @@ private:
     vector<ControlSurface*> surfaces_;
     
     bool isShift_ = false;
-    int shiftPressedTime_ = 0;
+    double shiftPressedTime_ = 0;
     bool isOption_ = false;
-    int optionPressedTime_ = 0;
+    double optionPressedTime_ = 0;
     bool isControl_ = false;
-    int controlPressedTime_ = 0;
+    double controlPressedTime_ = 0;
     bool isAlt_ = false;
-    int altPressedTime_ = 0;
+    double altPressedTime_ = 0;
 
     TrackNavigationManager* trackNavigationManager_ = nullptr;
    
@@ -1466,7 +1464,7 @@ public:
         }
         else
         {
-            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
             if(keyReleasedTime - shiftPressedTime_ > 500)
             {
@@ -1484,7 +1482,7 @@ public:
         }
         else
         {
-            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
             if(keyReleasedTime - optionPressedTime_ > 500)
             {
@@ -1502,7 +1500,7 @@ public:
         }
         else
         {
-            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
             if(keyReleasedTime - controlPressedTime_ > 500)
             {
@@ -1520,7 +1518,7 @@ public:
         }
         else
         {
-            int keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
+            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
             if(keyReleasedTime - altPressedTime_ > 500)
             {
