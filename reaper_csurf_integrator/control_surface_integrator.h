@@ -127,6 +127,7 @@ public:
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
+    double GetLastValue() {return lastValue_; }
 
     void Reset()
     {
