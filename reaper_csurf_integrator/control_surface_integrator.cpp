@@ -2006,6 +2006,7 @@ static void ClearZones()
 {
     SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), "");
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_RESETCONTENT, 0, 0);
+    SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), "");
 }
 
 static void ClearSubZones()
@@ -2049,6 +2050,8 @@ static int FillZones(Zone* zone)
         {
             zoneWasSelectedBySurface = true;
             SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_SETCURSEL, i, 0);
+            if(zonesInThisFile[i]->GetName() != zonesInThisFile[i]->GetAlias())
+                SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), zonesInThisFile[i]->GetAlias().c_str());
             zoneIndex = i;
         }
     }
@@ -2512,6 +2515,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
+                            if(newZoneName != newZoneAlias)
+                                SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), newZoneAlias.c_str());
+                            else
+                                SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), "");
                             SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), newZoneAlias.c_str());
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
@@ -2536,7 +2543,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 currentSurface->AddZone(new Zone(currentSurface, newZoneName, zoneFilename, newZoneAlias));
                                 zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
-                                SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), newZoneAlias.c_str());
+                                if(newZoneName != newZoneAlias)
+                                    SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), newZoneAlias.c_str());
+                                else
+                                    SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), "");
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                                 zoneWasSelectedBySurface = true;
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
@@ -2657,7 +2667,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             currentSurface->RemoveZone(zoneToDelete, index);
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
-
                             SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), "");
 
                             ClearSubZones();
@@ -2666,7 +2675,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             {
                                 zoneWasSelectedBySurface = true;
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, 0, 0);
-                                SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), zonesInThisFile[0]->GetAlias().c_str());
+                                if(zonesInThisFile[0]->GetName() != zonesInThisFile[0]->GetAlias())
+                                    SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), zonesInThisFile[0]->GetAlias().c_str());
                                 FillSubZones(zonesInThisFile[0], 0);
                             }
                         }
@@ -2807,7 +2817,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(index >= 0)
                             {
                                 FillSubZones(zonesInThisFile[index], index);
-                                SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), zonesInThisFile[index]->GetAlias().c_str());
+                                if(zonesInThisFile[index]->GetName() != zonesInThisFile[index]->GetAlias())
+                                    SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), zonesInThisFile[index]->GetAlias().c_str());
+                                else
+                                    SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), "");
                             }
                         }
                     }
