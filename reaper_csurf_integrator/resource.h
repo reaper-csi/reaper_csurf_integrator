@@ -51,9 +51,11 @@
 #define IDC_COMBO_Navigator             1046
 #define IDC_CHECK_AutoMapFocusedFX      1047
 #define IDC_STATIC_SurfaceName          1048
+#define IDC_STATIC_Alias                1049
 #define IDC_EDIT_WidgetName             1050
 #define IDC_EDIT_ActionName             1051
 #define IDC_EDIT_ActionParameter        1052
+#define IDC_EDIT_Alias                  1053
 #define IDC_BUTTON_AddZone              1055
 #define IDC_BUTTON_DeleteZone           1056
 #define IDC_BUTTON_AddIncludedZone      1057
