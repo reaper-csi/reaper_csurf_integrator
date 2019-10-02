@@ -1420,6 +1420,7 @@ public:
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
     void OpenLearnModeWindow();
+    void ToggleLearnMode();
     void InputReceived(Widget* widget, double value);
     void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
 
