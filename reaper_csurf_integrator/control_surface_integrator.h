@@ -565,6 +565,7 @@ public:
     int GetIndex() { return index_; }
     string GetName() { return name_ ;}
     string GetAlias() { return alias_;}
+    void SetAlias(string alias) { alias_ = alias;}
     string GetSourceFilePath() { return sourceFilePath_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     void AddAction(ActionLineItem actionLineItem, int actionIndex);

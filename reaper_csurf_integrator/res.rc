@@ -177,7 +177,9 @@ BEGIN
     CONTROL         "Show Params when FX inserted",IDC_CHECK_FXParamMon,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,317,444,115,10
     PUSHBUTTON      "Close Window",IDC_BUTTON_Close,312,468,132,18
-    CTEXT           "Zone filename",IDC_STATIC_ZoneFilename,135,473,174,8
+    CTEXT           "Zone filename",IDC_STATIC_ZoneFilename,139,473,170,8
+    EDITTEXT        IDC_EDIT_Alias,215,349,40,14,ES_MULTILINE | ES_AUTOHSCROLL
+    LTEXT           "Alias",IDC_STATIC_Alias,193,352,18,8
 END
 
 IDD_DIALOG_AddIncludedZone DIALOGEX 0, 0, 271, 49
