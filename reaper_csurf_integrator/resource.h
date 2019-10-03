@@ -50,7 +50,7 @@
 #define IDC_CHECK_AutoMapFXMenu         1046
 #define IDC_COMBO_Navigator             1046
 #define IDC_CHECK_AutoMapFocusedFX      1047
-#define IDC_STATIC_SurfaceName          1048
+#define IDC_COMBO_SurfaceName           1048
 #define IDC_STATIC_Alias                1049
 #define IDC_EDIT_WidgetName             1050
 #define IDC_EDIT_ActionName             1051
