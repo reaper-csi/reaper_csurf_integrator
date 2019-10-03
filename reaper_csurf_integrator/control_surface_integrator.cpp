@@ -2000,7 +2000,6 @@ static void ClearWidgets()
 {
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_WidgetNames), LB_RESETCONTENT, 0, 0);
     SetDlgItemText(hwndLearn, IDC_EDIT_WidgetName, "");
-    SetDlgItemText(hwndLearn, IDC_STATIC_SurfaceName, "");
 }
 
 static void ClearZones()
@@ -2346,7 +2345,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             ClearWidgets();
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
-            SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+            
+            
+            
+            //SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
+            
+            
+            
             
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
