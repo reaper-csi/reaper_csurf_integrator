@@ -2782,6 +2782,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
                                 
                                 currentWidget = nullptr;
+                                
+                                SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_SETCURSEL, 0, 0);
                             }
                         }
                     }
@@ -2804,10 +2806,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             // Get selected index.
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
-                            {
-                                currentWidget = currentSurface->GetWidgets()[index];
-                                currentWidget->DoAction(currentWidget->GetLastValue());
-                            }
+                                currentSurface->GetWidgets()[index]->DoAction(currentSurface->GetWidgets()[index]->GetLastValue());
 
                             break;
                         }
