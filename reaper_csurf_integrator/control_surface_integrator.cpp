@@ -1520,7 +1520,7 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
 {
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
     
@@ -1765,6 +1765,7 @@ static char buffer[BUFSZ * 4];
 static HWND hwndLearn = nullptr;
 static bool hasEdits = false;
 static int dlgResult = 0;
+static Page* currentPage = nullptr;
 static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
 static WidgetActionManager* currentWidgetActionManager = nullptr;
@@ -2397,6 +2398,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
+            
+            for(auto surface : currentPage->GetSurfaces())
+                AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
 
             if(TheManager->GetSurfaceInMonitor())
                 CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_CHECKED);
@@ -3045,6 +3049,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Page::OpenLearnModeWindow()
 {
+    currentPage = this;
+    
     if(hwndLearn == nullptr)
     {
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
@@ -3055,6 +3061,8 @@ void Page::OpenLearnModeWindow()
 
 void Page::ToggleLearnMode()
 {
+    currentPage = this;
+
     if(hwndLearn == nullptr)
     {
         hwndLearn = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Learn), g_hwnd, dlgProcLearn);
@@ -3069,6 +3077,8 @@ void Page::ToggleLearnMode()
 
 void Page::InputReceived(Widget* widget, double value)
 {
+    currentPage = this;
+
     if(hwndLearn == nullptr)
         return;
     
@@ -3083,6 +3093,8 @@ void Page::InputReceived(Widget* widget, double value)
 
 void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
 {
+    currentPage = this;
+
     if(hwndLearn == nullptr)
         return;
 
