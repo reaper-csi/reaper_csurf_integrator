@@ -2347,12 +2347,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             SetDlgItemText(hwndDlg, IDC_EDIT_WidgetName, currentWidget->GetName().c_str());
             
-            
-            
-            //SetDlgItemText(hwndDlg, IDC_STATIC_SurfaceName, currentWidget->GetSurface()->GetName().c_str());
-            
-            
-            
+            int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_FINDSTRING, -1, (LPARAM)currentSurface->GetSourceFileName().c_str());
+            if(index >= 0)
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_SETCURSEL, index, 0);
             
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
@@ -2401,6 +2398,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             for(auto surface : currentPage->GetSurfaces())
                 AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
+            
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_SETCURSEL, 0, 0);
 
             if(TheManager->GetSurfaceInMonitor())
                 CheckDlgButton(hwndDlg, IDC_CHECK_SurfaceInMon, BST_CHECKED);
