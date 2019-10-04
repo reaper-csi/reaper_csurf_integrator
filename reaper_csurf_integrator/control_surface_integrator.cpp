@@ -2519,6 +2519,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 }
                                 
                                 zonFile.close();
+                                hasEdits = false;
                             }
                             catch (exception &e)
                             {
