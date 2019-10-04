@@ -971,7 +971,7 @@ public:
     
     virtual ~Midi_ControlSurface() {}
     
-    virtual string GetSourceFileName() override { return templateFilename_; }
+    virtual string GetSourceFileName() override { return "/CSI/Surfaces/Midi/" + templateFilename_; }
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
@@ -1058,7 +1058,7 @@ public:
     OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
     
-    virtual string GetSourceFileName() override { return templateFilename_; }
+    virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
 
     virtual void LoadingZone(string zoneName) override;
     void SendOSCMessage(string oscAddress, double value);
