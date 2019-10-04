@@ -2029,14 +2029,36 @@ static int FillZones(Zone* zone)
 {
     ClearZones();
 
-    // Zone Filename
-    smatch match;
-    string zoneFilename = zone->GetSourceFilePath();
-    if (regex_search(zoneFilename, match, regex("([^/]+$)")) == true)
+    // Zone FileName
+    istringstream path(zone->GetSourceFilePath());
+    vector<string> pathFolders;
+    string pathfolder;
+    
+    while (getline(path, pathfolder, '/'))
+        pathFolders.push_back(pathfolder);
+
+    int CSIFolderIndex = -1;
+    
+    for(int i = 0; i < pathFolders.size(); i++)
     {
-        zoneFilename = match.str(0);
-        SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), zoneFilename.c_str());
+        if(pathFolders[i] == "CSI")
+        {
+            CSIFolderIndex = i;
+            break;
+        }
     }
+    
+    if(CSIFolderIndex >= 0)
+    {
+        string pathString = "CSI";
+        
+        for(int i = CSIFolderIndex + 1; i < pathFolders.size(); i++)
+            pathString += "/" + pathFolders[i];
+        
+        SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), pathString.c_str());
+    }
+    else
+        SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_ZoneFilename), zone->GetSourceFilePath().c_str());
     
     // Zones
     int zoneIndex = -1;
