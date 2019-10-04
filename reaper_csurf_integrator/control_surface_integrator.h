@@ -861,6 +861,7 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
+    virtual string GetSourceFileName() { return ""; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     map<string, Zone*> &GetZones() { return zones_;}
     map<string, vector<Zone*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
@@ -933,6 +934,7 @@ class Midi_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    string templateFilename_ = "";
     midi_Input* midiInput_ = nullptr;
     midi_Output* midiOutput_ = nullptr;
     map<int, Midi_CSIMessageGenerator*> CSIMessageGeneratorsByMidiMessage_;
@@ -955,7 +957,7 @@ private:
 
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool useZoneLink)
-    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), midiInput_(midiInput), midiOutput_(midiOutput)
+    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename);
         
@@ -968,6 +970,8 @@ public:
     }
     
     virtual ~Midi_ControlSurface() {}
+    
+    virtual string GetSourceFileName() override { return templateFilename_; }
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
@@ -990,6 +994,7 @@ class OSC_ControlSurface : public ControlSurface
 {
 private:
     string remoteDeviceIP_ = "";
+    string templateFilename_ = "";
     int inPort_ = 0;
     int outPort_ = 0;
     oscpkt::UdpSocket inSocket_;
@@ -1053,6 +1058,8 @@ public:
     OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
     
+    virtual string GetSourceFileName() override { return templateFilename_; }
+
     virtual void LoadingZone(string zoneName) override;
     void SendOSCMessage(string oscAddress, double value);
     void SendOSCMessage(string oscAddress, string value);
