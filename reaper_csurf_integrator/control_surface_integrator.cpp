@@ -1803,6 +1803,7 @@ static bool widgetNameWasSelectedBySurface = false;
 static bool actionNameWasSelectedBySurface = false;
 static bool zoneComponentWasSelectedBySurface = false;
 static bool zoneWasSelectedBySurface = false;
+static bool surfaceWasSelectedBySurface = false;
 
 static void EnableButtons()
 {
@@ -2101,6 +2102,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     for(auto includedZone : zone->GetIncludedZones())
         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
     
+    // Zone line Items
     bool hasLoadedRawFXFile = false;
     
     vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
@@ -2151,6 +2153,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
         }
     }
     
+    //Action Names
     vector<string> actionNames = TheManager->GetActionNames();
      
     for(int i = 0; i < actionNames.size(); i++)
@@ -2371,7 +2374,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_FINDSTRING, -1, (LPARAM)currentSurface->GetSourceFileName().c_str());
             if(index >= 0)
+            {
+                surfaceWasSelectedBySurface = true;
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_SETCURSEL, index, 0);
+            }
             
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, "");
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, "");
@@ -2421,6 +2427,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             for(auto surface : currentPage->GetSurfaces())
                 AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
             
+            surfaceWasSelectedBySurface = true;
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_SETCURSEL, 0, 0);
 
             if(TheManager->GetSurfaceInMonitor())
@@ -2759,6 +2766,39 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break ;
                 }
                     
+                case IDC_COMBO_SurfaceName:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case CBN_SELCHANGE:
+                        {
+                            if(surfaceWasSelectedBySurface)
+                            {
+                                surfaceWasSelectedBySurface = false;
+                                break;
+                            }
+                            
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                ClearWidgets();
+                                ClearZones();
+                                ClearSubZones();
+                                ClearActions();
+                                
+                                currentSurface = currentPage->GetSurfaces()[index];
+                                
+                                for(auto widget : currentSurface->GetWidgets())
+                                    SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
+                                
+                                currentWidget = nullptr;
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+
                 case IDC_LIST_WidgetNames:
                 {
                     switch (HIWORD(wParam))
