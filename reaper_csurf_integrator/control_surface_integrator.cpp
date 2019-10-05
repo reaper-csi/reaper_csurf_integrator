@@ -2463,10 +2463,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_BUTTON_SaveFile:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        string filePath = zonesInThisFile[0]->GetSourceFilePath();
-
                         if(zonesInThisFile.size() > 0)
                         {
+                            string filePath = zonesInThisFile[0]->GetSourceFilePath();
+
                             try
                             {
                                 ofstream zonFile(filePath);
