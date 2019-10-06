@@ -2534,6 +2534,29 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         focusedFXIndex = 0;
                         focusedFXTrack = nullptr;
                         focusedFXName = "";
+
+                        char filenameNeed4096[BUFSZ * 16];
+                        string title = "New Zone file";
+                        string defext = ".zon";
+                        
+                        strcpy(filenameNeed4096, (string(DAW::GetResourcePath()) + "/CSI/Zones/" + currentSurface->GetName() + "/*.*").c_str());
+                        
+                        bool result = GetUserFileNameForRead(filenameNeed4096, title.c_str(), defext.c_str());
+
+                        if(result == false)
+                            break;
+                        
+                        istringstream path(filenameNeed4096);
+                        vector<string> pathFolders;
+                        string pathfolder;
+                        
+                        while (getline(path, pathfolder, '/'))
+                            pathFolders.push_back(pathfolder);
+
+                        string filePath = "";
+                        
+                        for(int i = 0; i < pathFolders.size() - 1; i++)
+                            filePath += pathFolders[i] + "/";
                         
                         dlgResult = false;
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_NewZoneFile), g_hwnd, dlgProcNewZoneFile);
@@ -2543,7 +2566,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             ClearZones();
                             ClearSubZones();
                             
-                            newZoneFilename += ".zon";
+                            newZoneFilename = filePath + newZoneFilename + ".zon";
                             
                             currentSurface->AddZone(new Zone(currentSurface, newZoneName, newZoneFilename, newZoneAlias));
                             zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
