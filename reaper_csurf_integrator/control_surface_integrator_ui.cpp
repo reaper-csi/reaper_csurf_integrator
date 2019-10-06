@@ -434,6 +434,38 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
         {
             switch(LOWORD(wParam))
             {
+                case IDC_COMBO_SurfaceTemplate:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case CBN_SELCHANGE:
+                        {
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                char buffer[BUFSZ];
+                                
+                                GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, buffer, sizeof(buffer));
+
+                                for(int i = 0; i < sizeof(buffer); i++)
+                                {
+                                    if(buffer[i] == '.')
+                                    {
+                                        buffer[i] = 0;
+                                        break;
+                                    }
+                                }
+                                
+                                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
+                                if(index >= 0)
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
@@ -576,6 +608,38 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
         {
             switch(LOWORD(wParam))
             {
+                case IDC_COMBO_SurfaceTemplate:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case CBN_SELCHANGE:
+                        {
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                char buffer[BUFSZ];
+                                
+                                GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, buffer, sizeof(buffer));
+                                
+                                for(int i = 0; i < sizeof(buffer); i++)
+                                {
+                                    if(buffer[i] == '.')
+                                    {
+                                        buffer[i] = 0;
+                                        break;
+                                    }
+                                }
+                                
+                                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
+                                if(index >= 0)
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
