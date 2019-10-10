@@ -72,9 +72,7 @@ class Zone;
 class Widget;
 class Action;
 class WidgetActionManager;
-class TrackNavigator;
 class TrackNavigationManager;
-class FXActivationManager;
 class FeedbackProcessor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -99,6 +97,76 @@ struct ActionLineItem
     bool isTouch = false;
     bool isPress = false;
     bool isHold = false;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int channelNum_ = 0;
+    int bias_ = 0;
+    bool isChannelTouched_ = false;
+    MediaTrack* pinnedTrack_ = nullptr;
+    bool isChannelPinned_ = false;
+    
+protected:
+    TrackNavigationManager* manager_ = nullptr;
+    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
+    
+public:
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    virtual ~TrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
+    bool GetIsChannelPinned() { return isChannelPinned_; }
+    virtual bool GetIsFocusedFXNavigator() { return false; }
+    void IncBias() { bias_++; }
+    void DecBias() { bias_--; }
+    
+    virtual void Pin();
+    virtual void Unpin();
+    
+    virtual string GetName() { return "TrackNavigator"; }
+    
+    virtual MediaTrack* GetTrack();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "SelectedTrackNavigator"; }
+    
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~FocusedFXNavigator() {}
+    
+    virtual bool GetIsFocusedFXNavigator() override { return true; }
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "FocusedFXNavigator"; }
+    
+    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -383,16 +451,16 @@ class WidgetActionManager
 private:
     Widget* widget_ = nullptr;
     Zone* zone_ = nullptr;
-    TrackNavigator* trackNavigator_ = nullptr;
     map<string, vector <Action*>> actions_;
     vector<ActionLineItem> actionLineItems_;
     
     map<string, vector <Action*>> trackTouchedActions_;
     
+    TrackNavigator* GetTrackNavigator();
     string GetModifiers();
     
 public:
-    WidgetActionManager(Widget* widget, Zone* zone, TrackNavigator* trackNavigator) : widget_(widget), zone_(zone), trackNavigator_(trackNavigator) {}
+    WidgetActionManager(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
     
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
@@ -523,76 +591,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int channelNum_ = 0;
-    int bias_ = 0;
-    bool isChannelTouched_ = false;
-    MediaTrack* pinnedTrack_ = nullptr;
-    bool isChannelPinned_ = false;
-    
-protected:
-    TrackNavigationManager* manager_ = nullptr;
-    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
-    
-public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
-    virtual ~TrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    bool GetIsChannelPinned() { return isChannelPinned_; }
-    virtual bool GetIsFocusedFXNavigator() { return false; }
-    void IncBias() { bias_++; }
-    void DecBias() { bias_--; }
-    
-    virtual void Pin();
-    virtual void Unpin();
-    
-    virtual string GetName() { return "TrackNavigator"; }
-    
-    virtual MediaTrack* GetTrack();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~SelectedTrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-    
-    virtual string GetName() override { return "SelectedTrackNavigator"; }
-    
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~FocusedFXNavigator() {}
-    
-    virtual bool GetIsFocusedFXNavigator() override { return true; }
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-    
-    virtual string GetName() override { return "FocusedFXNavigator"; }
-    
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -600,6 +598,8 @@ private:
     vector<WidgetActionManager*> widgetActionManagers_;
     vector<Zone*> includedZones_;
     int index_ = 0;
+
+    TrackNavigator* trackNavigator_ = nullptr;
     vector<ActionLineItem> actionLineItems;
 
     ControlSurface* surface_ = nullptr;
@@ -636,6 +636,9 @@ public:
     string GetAlias() { return alias_;}
     void SetAlias(string alias) { alias_ = alias;}
     string GetSourceFilePath() { return sourceFilePath_; }
+    TrackNavigator* GetTrackNavigator() { return trackNavigator_; }
+    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
+
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     void AddAction(ActionLineItem actionLineItem, int actionIndex);
     void Activate(WidgetActionManager* sender);

@@ -376,7 +376,10 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
             hasTrackNavigator = true;
             
             for(int i = 0; i < expandedZones.size(); i++)
+            {
+                expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface));
                 expandedTrackNavigators.push_back(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface));
+            }
             
             continue;
         }
@@ -384,12 +387,20 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
         if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
         {
             hasSelectedTrackNavigator = true;
+            
+            for(int i = 0; i < expandedZones.size(); i++)
+                expandedZones[i]->SetTrackNavigator(new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
+            
             continue;
         }
         
         if(tokens.size() == 1 && tokens[0] == "FocusedFXNavigator")
         {
             hasFocusedFXTrackNavigator = true;
+            
+            for(int i = 0; i < expandedZones.size(); i++)
+                expandedZones[i]->SetTrackNavigator(new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager()));
+
             continue;
         }
         
@@ -445,16 +456,7 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
                     {
                         if(widgetActionManagerForWidget.count(widget) < 1)
                         {
-                            TrackNavigator* trackNavigator = nullptr;
-                            
-                            if(hasTrackNavigator)
-                                trackNavigator = expandedTrackNavigators[i];
-                            else if(hasSelectedTrackNavigator)
-                                trackNavigator = new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
-                            else if(hasFocusedFXTrackNavigator)
-                                trackNavigator = new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager());
-                            
-                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, expandedZones[i], trackNavigator);
+                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, expandedZones[i]);
 
                             expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
                         }
@@ -1004,6 +1006,11 @@ void Action::DoAction(double value, WidgetActionManager* sender)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TrackNavigator* WidgetActionManager::GetTrackNavigator()
+{
+    return zone_->GetTrackNavigator();
+}
+
 string WidgetActionManager::GetModifiers()
 {
     if(widget_->GetIsModifier())
@@ -1014,31 +1021,31 @@ string WidgetActionManager::GetModifiers()
 
 bool WidgetActionManager::GetHasFocusedFXNavigator()
 {
-    if(trackNavigator_ == nullptr)
+    if(GetTrackNavigator() == nullptr)
         return false;
     else
-        return trackNavigator_->GetIsFocusedFXNavigator();
+        return GetTrackNavigator()->GetIsFocusedFXNavigator();
 }
 
 string WidgetActionManager::GetNavigatorName()
 {
-    if(trackNavigator_ == nullptr)
+    if(GetTrackNavigator() == nullptr)
         return "";
     else
-        return trackNavigator_->GetName();
+        return GetTrackNavigator()->GetName();
 }
 
 MediaTrack* WidgetActionManager::GetTrack()
 {
-    if(trackNavigator_ == nullptr)
+    if(GetTrackNavigator() == nullptr)
         return nullptr;
     else
-        return trackNavigator_->GetTrack();
+        return GetTrackNavigator()->GetTrack();
 }
 
 void WidgetActionManager::RequestUpdate()
 {
-    if(trackTouchedActions_.size() > 0 && trackNavigator_ != nullptr && trackNavigator_->GetIsChannelTouched())
+    if(trackTouchedActions_.size() > 0 && GetTrackNavigator() != nullptr && GetTrackNavigator()->GetIsChannelTouched())
     {
         if(trackTouchedActions_.count(GetModifiers()) > 0)
             for(auto action : trackTouchedActions_[GetModifiers()])
@@ -1054,8 +1061,8 @@ void WidgetActionManager::RequestUpdate()
 
 void WidgetActionManager::SetIsTouched(bool isTouched)
 {
-    if(trackNavigator_ != nullptr)
-        trackNavigator_->SetTouchState((isTouched));
+    if(GetTrackNavigator() != nullptr)
+        GetTrackNavigator()->SetTouchState((isTouched));
 }
 
 void WidgetActionManager::Deactivate()
@@ -1078,14 +1085,7 @@ void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
             widgetActionManager = manager;
     
     if(widgetActionManager == nullptr)
-    {
-        if(actionLineItem.navigator == "SelectedTrackNavigator")
-            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, new SelectedTrackNavigator(actionLineItem.widget->GetSurface()->GetPage()->GetTrackNavigationManager()));
-        else if(actionLineItem.navigator == "FocusedFXNavigator")
-            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, new FocusedFXNavigator(actionLineItem.widget->GetSurface()->GetPage()->GetTrackNavigationManager()));
-        else
-            widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, nullptr);
-    }
+        widgetActionManager = new WidgetActionManager(actionLineItem.widget, this);
     
     AddWidgetActionManager(widgetActionManager);
     
@@ -1754,6 +1754,9 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 
 
 
+
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2089,7 +2092,12 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     ClearActions();
     
     // Navigator
-    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_Navigator), currentWidgetActionManager->GetNavigatorName().c_str());
+    string navigatorName = currentWidgetActionManager->GetNavigatorName();
+    
+    if(navigatorName == "")
+        navigatorName = "NoNavigator";
+    
+    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_Navigator), navigatorName.c_str());
     
     // Included Zones
     for(auto includedZone : zone->GetIncludedZones())
@@ -2189,7 +2197,7 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                 }
             */
             
-            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 0, "NoNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
@@ -2331,7 +2339,7 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     SetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, focusedFXName.c_str());
                 }
             
-            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 0, "NoNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
             AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
