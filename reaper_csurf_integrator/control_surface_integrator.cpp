@@ -1087,6 +1087,8 @@ void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
             widgetActionManager = new WidgetActionManager(actionLineItem.widget, this, nullptr);
     }
     
+    AddWidgetActionManager(widgetActionManager);
+    
     vector<string> params;
 
     params.push_back(actionLineItem.actionName);
@@ -2012,7 +2014,6 @@ static void ClearZones()
 
 static void ClearSubZones()
 {
-    SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ZoneComponents), LB_RESETCONTENT, 0, 0);
     SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
 }
@@ -2326,6 +2327,8 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
                         
+                        ClearActions();
+                        
                         if(focusedFXTrack && focusedFXName == newZoneName)
                             LoadRawFXFile(focusedFXTrack, focusedFXName);
 
@@ -2580,6 +2583,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_ADDSTRING, 0, (LPARAM)newZoneName.c_str());
                             zoneWasSelectedBySurface = true;
                             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
+                            
+                            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 3, 0);
                         }
                     }
                     break ;
@@ -2637,6 +2642,14 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             ActionLineItem actionLineItem;
                             
+                            int navIndex = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_GETCURSEL, 0, 0);
+                            
+                            if(navIndex >= 0)
+                            {
+                                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_GETLBTEXT, navIndex, (LPARAM)(LPCTSTR)(buffer));
+                                actionLineItem.navigator = string(buffer);
+                            }
+                            
                             actionLineItem.isShift = isShift;
                             actionLineItem.isOption = isOption;
                             actionLineItem.isControl = isControl;
@@ -2677,7 +2690,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.widget = currentSurface->GetWidgets()[widgetIndex];
                             actionLineItem.widgetName = actionLineItem.widget->GetName();
 
-                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionName , buffer, sizeof(buffer));
+                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionName, buffer, sizeof(buffer));
                             actionLineItem.actionName = string(buffer);
                             
                             if(actionLineItem.actionName == FXParam)
@@ -2690,7 +2703,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 actionLineItem.param = string(buffer);
                             }
                             
-                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias , buffer, sizeof(buffer));
+                            GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, buffer, sizeof(buffer));
                             actionLineItem.alias = string(buffer);
                             
                             zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
