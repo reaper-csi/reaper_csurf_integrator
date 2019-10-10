@@ -2089,14 +2089,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     ClearActions();
     
     // Navigator
-    string navigatorName = currentWidgetActionManager->GetNavigatorName();
-    
-    if(navigatorName == "")
-        navigatorName = "No Navigator";
-    
-    int index = SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_FINDSTRING, -1, (LPARAM)navigatorName.c_str());
-    if(index >= 0)
-        SendMessage(GetDlgItem(hwndLearn, IDC_COMBO_Navigator), CB_SETCURSEL, index, 0);
+    SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_Navigator), currentWidgetActionManager->GetNavigatorName().c_str());
     
     // Included Zones
     for(auto includedZone : zone->GetIncludedZones())
@@ -2175,6 +2168,35 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
 {
     switch (uMsg)
     {
+        case WM_INITDIALOG:
+        {
+            /*
+            if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &focusedFXIndex) == 1)
+                if(trackNumber > 0)
+                {
+                    currentFXIndex = focusedFXIndex;
+                    
+                    focusedFXTrack = DAW::CSurf_TrackFromID(trackNumber, currentSurface->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+                    
+                    DAW::TrackFX_GetFXName(focusedFXTrack, focusedFXIndex, buffer, sizeof(buffer));
+                    
+                    focusedFXName = string(buffer);
+                    
+                    string focusedFXFilename =  regex_replace(focusedFXName, regex(BadFileChars), "_");
+                    
+                    SetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName, focusedFXFilename.c_str());
+                    SetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, focusedFXName.c_str());
+                }
+            */
+            
+            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
+        }
+            break;
+            
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -2308,6 +2330,12 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                     SetDlgItemText(hwndDlg, IDC_EDIT_ZoneFileName, focusedFXFilename.c_str());
                     SetDlgItemText(hwndDlg, IDC_EDIT_ZoneName, focusedFXName.c_str());
                 }
+            
+            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
+            AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
+            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 2, 0);
         }
             break;
             
@@ -2416,12 +2444,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_INITDIALOG:
         {
             hasEdits = false;
-            
-            AddComboBoxEntry(hwndDlg, 0, "No Navigator", IDC_COMBO_Navigator);
-            AddComboBoxEntry(hwndDlg, 1, "TrackNavigator", IDC_COMBO_Navigator);
-            AddComboBoxEntry(hwndDlg, 2, "SelectedTrackNavigator", IDC_COMBO_Navigator);
-            AddComboBoxEntry(hwndDlg, 3, "FocusedFXNavigator", IDC_COMBO_Navigator);
-            SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_SETCURSEL, 0, 0);
             
             for(auto surface : currentPage->GetSurfaces())
                 AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
