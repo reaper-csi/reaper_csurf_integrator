@@ -523,6 +523,76 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int channelNum_ = 0;
+    int bias_ = 0;
+    bool isChannelTouched_ = false;
+    MediaTrack* pinnedTrack_ = nullptr;
+    bool isChannelPinned_ = false;
+    
+protected:
+    TrackNavigationManager* manager_ = nullptr;
+    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
+    
+public:
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    virtual ~TrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
+    bool GetIsChannelTouched() { return isChannelTouched_; }
+    bool GetIsChannelPinned() { return isChannelPinned_; }
+    virtual bool GetIsFocusedFXNavigator() { return false; }
+    void IncBias() { bias_++; }
+    void DecBias() { bias_--; }
+    
+    virtual void Pin();
+    virtual void Unpin();
+    
+    virtual string GetName() { return "TrackNavigator"; }
+    
+    virtual MediaTrack* GetTrack();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~SelectedTrackNavigator() {}
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "SelectedTrackNavigator"; }
+    
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXNavigator : public TrackNavigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    virtual ~FocusedFXNavigator() {}
+    
+    virtual bool GetIsFocusedFXNavigator() override { return true; }
+    
+    virtual void SetTouchState(bool isChannelTouched) override {}
+    virtual void Pin() override {}
+    virtual void Unpin() override {}
+    
+    virtual string GetName() override { return "FocusedFXNavigator"; }
+    
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1078,76 +1148,6 @@ public:
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int channelNum_ = 0;
-    int bias_ = 0;
-    bool isChannelTouched_ = false;
-    MediaTrack* pinnedTrack_ = nullptr;
-    bool isChannelPinned_ = false;
-    
-protected:
-    TrackNavigationManager* manager_ = nullptr;
-    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
-    
-public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
-    virtual ~TrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    bool GetIsChannelPinned() { return isChannelPinned_; }
-    virtual bool GetIsFocusedFXNavigator() { return false; }
-    void IncBias() { bias_++; }
-    void DecBias() { bias_--; }
-    
-    virtual void Pin();
-    virtual void Unpin();
-    
-    virtual string GetName() { return "TrackNavigator"; }
-    
-    virtual MediaTrack* GetTrack();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~SelectedTrackNavigator() {}
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-    
-    virtual string GetName() override { return "SelectedTrackNavigator"; }
-    
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXNavigator : public TrackNavigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
-    virtual ~FocusedFXNavigator() {}
-    
-    virtual bool GetIsFocusedFXNavigator() override { return true; }
-    
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
-    
-    virtual string GetName() override { return "FocusedFXNavigator"; }
-    
-    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
