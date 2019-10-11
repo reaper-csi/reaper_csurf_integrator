@@ -347,12 +347,6 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
     ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, alias);
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
-
-    bool hasTrackNavigator = false;
-    vector<TrackNavigator*> expandedTrackNavigators;
-    
-    bool hasSelectedTrackNavigator = false;
-    bool hasFocusedFXTrackNavigator = false;
     
     for (string line; getline(zoneFile, line) ; )
     {
@@ -373,21 +367,14 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
         
         if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
-            hasTrackNavigator = true;
-            
             for(int i = 0; i < expandedZones.size(); i++)
-            {
                 expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface));
-                expandedTrackNavigators.push_back(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface));
-            }
             
             continue;
         }
 
         if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
         {
-            hasSelectedTrackNavigator = true;
-            
             for(int i = 0; i < expandedZones.size(); i++)
                 expandedZones[i]->SetTrackNavigator(new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
             
@@ -396,8 +383,6 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
         
         if(tokens.size() == 1 && tokens[0] == "FocusedFXNavigator")
         {
-            hasFocusedFXTrackNavigator = true;
-            
             for(int i = 0; i < expandedZones.size(); i++)
                 expandedZones[i]->SetTrackNavigator(new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager()));
 
@@ -1775,6 +1760,7 @@ static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
 static WidgetActionManager* currentWidgetActionManager = nullptr;
 static Action* currentAction = nullptr;
+static string trackNavigatorName = "";
 
 static vector<Zone*> zonesInThisFile;
 
@@ -2218,6 +2204,17 @@ static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM 
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias, buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
                         
+                        int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_GETCURSEL, 0, 0);
+                        if(index >= 0)
+                        {
+                            if(index == 2)
+                                trackNavigatorName = "SelectedTrackNavigator";
+                            else if (index == 3)
+                                trackNavigatorName = "FocusedFXNavigator";
+                            else
+                                trackNavigatorName = "";
+                        }
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -2363,15 +2360,17 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_EDIT_ZoneAlias , buffer, sizeof(buffer));
                         newZoneAlias = string(buffer);
                         
-                        ClearActions();
+                        int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_Navigator), CB_GETCURSEL, 0, 0);
+                        if(index >= 0)
+                        {
+                            if(index == 2)
+                                trackNavigatorName = "SelectedTrackNavigator";
+                            else if (index == 3)
+                                trackNavigatorName = "FocusedFXNavigator";
+                            else
+                                trackNavigatorName = "";
+                        }
                         
-                        if(focusedFXTrack && focusedFXName == newZoneName)
-                            LoadRawFXFile(focusedFXTrack, focusedFXName);
-
-                        for(auto name : TheManager->GetActionNames())
-                            if(name != Shift && name != Option && name != Control && name != Alt)
-                                SendDlgItemMessage(hwndLearn, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
-
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -2596,12 +2595,30 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if(dlgResult == IDOK)
                         {
                             hasEdits = true;
+                            
+                            ClearActions();
                             ClearZones();
                             ClearSubZones();
                             
+                            if(focusedFXTrack && focusedFXName == newZoneName)
+                                LoadRawFXFile(focusedFXTrack, focusedFXName);
+                            
+                            for(auto name : TheManager->GetActionNames())
+                                if(name != Shift && name != Option && name != Control && name != Alt)
+                                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                            
                             newZoneFilename = filePath + newZoneFilename + ".zon";
                             
-                            currentSurface->AddZone(new Zone(currentSurface, newZoneName, newZoneFilename, newZoneAlias));
+                            Zone* newZone = new Zone(currentSurface, newZoneName, newZoneFilename, newZoneAlias);
+                            
+                            if(trackNavigatorName == "SelectedTrackNavigator")
+                                newZone->SetTrackNavigator(new SelectedTrackNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
+                            else if(trackNavigatorName == "FocusedFXNavigator")
+                                newZone->SetTrackNavigator(new FocusedFXNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
+
+                            SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_Navigator), trackNavigatorName.c_str());
+                            
+                            currentSurface->AddZone(newZone);
                             zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
@@ -2631,7 +2648,16 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 string zoneFilename = zonesInThisFile[0]->GetSourceFilePath();
                                 
-                                currentSurface->AddZone(new Zone(currentSurface, newZoneName, zoneFilename, newZoneAlias));
+                                Zone* newZone = new Zone(currentSurface, newZoneName, zoneFilename, newZoneAlias);
+                                
+                                if(trackNavigatorName == "SelectedTrackNavigator")
+                                    newZone->SetTrackNavigator(new SelectedTrackNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
+                                else if(trackNavigatorName == "FocusedFXNavigator")
+                                    newZone->SetTrackNavigator(new FocusedFXNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
+
+                                SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_Navigator), trackNavigatorName.c_str());
+
+                                currentSurface->AddZone(newZone);
                                 zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
                                 if(newZoneName != newZoneAlias)
                                     SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), newZoneAlias.c_str());
