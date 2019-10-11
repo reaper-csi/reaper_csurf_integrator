@@ -646,8 +646,8 @@ public:
     
     string GetNavigatorName()
     {
-        if(widgetActionManagers_.size() > 0)
-            return widgetActionManagers_[0]->GetNavigatorName();
+        if(trackNavigator_ != nullptr)
+            return trackNavigator_->GetName();
         else
             return "";
     }
