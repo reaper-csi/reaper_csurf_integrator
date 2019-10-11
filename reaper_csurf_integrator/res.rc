@@ -184,7 +184,7 @@ BEGIN
     PUSHBUTTON      "Save File",IDC_BUTTON_SaveFile,85,272,73,18
     PUSHBUTTON      "New File",IDC_BUTTON_NewFile,6,272,73,18
     GROUPBOX        "",IDC_STATIC,160,266,322,22
-    CTEXT           "SelectedTrackNavigator",IDC_STATIC_Navigator,206,203,96,8
+    CTEXT           "",IDC_STATIC_Navigator,206,203,96,8
 END
 
 IDD_DIALOG_AddIncludedZone DIALOGEX 0, 0, 271, 49
