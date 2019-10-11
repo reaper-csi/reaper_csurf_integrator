@@ -2761,7 +2761,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.alias = string(buffer);
                             
                             zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
-                            zonesInThisFile[zoneIndex]->Activate(nullptr);
+                            zonesInThisFile[zoneIndex]->Activate(currentFXIndex);
                             
                             string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                             
