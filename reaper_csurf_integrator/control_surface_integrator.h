@@ -1722,8 +1722,6 @@ private:
     bool surfaceInMonitor_ = false;
     bool surfaceOutMonitor_ = false;
     bool fxMonitor_ = false;
-
-    
     
     bool oscInMonitor_ = false;
     bool oscOutMonitor_ = false;
@@ -1830,10 +1828,29 @@ public:
             pages_[currentPageIndex_]->HandleOSCInput();
     }
     
+    //int repeats = 0;
+    
     void Run()
     {
+        //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
+        /*
+        repeats++;
+        
+        if(repeats > 50)
+        {
+            repeats = 0;
+            
+            int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+            
+            char msgBuffer[250];
+            
+            sprintf(msgBuffer, "%d microseconds\n", duration);
+            DAW::ShowConsoleMsg(msgBuffer);
+        }
+        */
     }
     
     void AdjustTrackBank(Page* sendingPage, int amount)
