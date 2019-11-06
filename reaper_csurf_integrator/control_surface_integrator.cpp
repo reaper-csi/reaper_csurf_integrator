@@ -938,18 +938,18 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_FeedbackProcessor::SetValue(double value)
 {
-    if(lastFloatValue_ != value)
+    if(lastDoubleValue_ != value)
     {
-        lastFloatValue_ = value;
+        lastDoubleValue_ = value;
         surface_->SendOSCMessage(oscAddress_, value);
     }
 }
 
 void OSC_FeedbackProcessor::SetValue(int param, double value)
 {
-    if(lastFloatValue_ != value)
+    if(lastDoubleValue_ != value)
     {
-        lastFloatValue_ = value;
+        lastDoubleValue_ = value;
         surface_->SendOSCMessage(oscAddress_, value);
     }
 }
