@@ -302,7 +302,7 @@ class OSC_FeedbackProcessor : public FeedbackProcessor
 protected:
     OSC_ControlSurface* surface_ = nullptr;
     string oscAddress_ = "";
-    float lastFloatValue_ = 0.0;
+    double lastFloatValue_ = 0.0;
     string lastStringValue_ = "";
     
 public:
