@@ -302,7 +302,7 @@ class OSC_FeedbackProcessor : public FeedbackProcessor
 protected:
     OSC_ControlSurface* surface_ = nullptr;
     string oscAddress_ = "";
-    double lastFloatValue_ = 0.0;
+    double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
     
 public:
@@ -316,7 +316,7 @@ public:
 
     virtual void ClearCache() override
     {
-        lastFloatValue_ = 0.0;
+        lastDoubleValue_ = 0.0;
         lastStringValue_ = "";
     }
 };
