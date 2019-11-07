@@ -464,7 +464,6 @@ public:
     
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
-    bool GetHasFocusedFXNavigator();
     string GetNavigatorName();
     MediaTrack* GetTrack();
     void RequestUpdate();
@@ -678,10 +677,10 @@ public:
     
     bool GetHasFocusedFXTrackNavigator()
     {
-        if(widgetActionManagers_.size() > 0)
-            return widgetActionManagers_[0]->GetHasFocusedFXNavigator(); // GAW -- Kinda hokey, but Zone members all get the same Navigator
-        else
+        if(trackNavigator_ == nullptr)
             return false;
+        else
+            return trackNavigator_->GetIsFocusedFXNavigator();
     }
     
     virtual void AddWidgetActionManager(WidgetActionManager* manager)
