@@ -1004,14 +1004,6 @@ string WidgetActionManager::GetModifiers()
         return widget_->GetSurface()->GetPage()->GetModifiers();
 }
 
-bool WidgetActionManager::GetHasFocusedFXNavigator()
-{
-    if(GetTrackNavigator() == nullptr)
-        return false;
-    else
-        return GetTrackNavigator()->GetIsFocusedFXNavigator();
-}
-
 string WidgetActionManager::GetNavigatorName()
 {
     if(GetTrackNavigator() == nullptr)
