@@ -561,9 +561,11 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             {
                 feedbackProcessor = new MCU_TimeDisplay_Midi_FeedbackProcessor(surface);
             }
-            else if(widgetClass == "FB_MCUVUMeter" && (tokens.size() == 2 || tokens.size() == 3))
+            else if((widgetClass == "FB_MCUVUMeter" || widgetClass == "FB_MCUXTVUMeter") && (tokens.size() == 2 || tokens.size() == 3))
             {
-                feedbackProcessor = new MCUVUMeter_Midi_FeedbackProcessor(surface, stoi(tokens[1]));
+                int displayType = widgetClass == "FB_MCUVUMeter" ? 0x14 : 0x15;
+                
+                feedbackProcessor = new MCUVUMeter_Midi_FeedbackProcessor(surface, displayType, stoi(tokens[1]));
                 
                 if(tokens.size() == 3 && feedbackProcessor != nullptr)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[2]));
