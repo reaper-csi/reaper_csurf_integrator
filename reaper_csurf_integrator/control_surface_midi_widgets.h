@@ -262,11 +262,34 @@ class MCUVUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int channel_ = 0;
-    
+    int displayType_ = 0x14;
+    int channelNumber_ = 0;
+
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
-    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int channel) : Midi_FeedbackProcessor(surface), channel_(channel) { }
+    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface), displayType_(displayType), channelNumber_(channelNumber)
+    {    
+        // Enable meter mode for signal LED only
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[BUFSZ];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x20;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channelNumber_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // signal LED only
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+
+        SendMidiMessage(&midiSysExData.evt);
+    }
     
     virtual void SetValue(double value) override
     {
@@ -274,7 +297,7 @@ public:
         int midiValue = value * 0x0f;
         if(midiValue > 0x0d)
             midiValue = 0x0d;
-        SendMidiMessage(0xd0, (channel_ << 4) | midiValue, 0);
+        SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
     }
 };
 
