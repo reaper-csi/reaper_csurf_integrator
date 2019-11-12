@@ -14,7 +14,7 @@ class ToggleLearnMode  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleLearnMode(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    ToggleLearnMode(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -27,7 +27,7 @@ class TogglePin  : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TogglePin(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TogglePin(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
        
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -41,7 +41,7 @@ class ToggleMapSelectedTrackSends  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -59,7 +59,7 @@ class ToggleMapSelectedTrackFX  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -77,7 +77,7 @@ class ToggleMapSelectedTrackFXMenu  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -95,7 +95,7 @@ class ToggleMapFocusedFX  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFocusedFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    ToggleMapFocusedFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -128,7 +128,7 @@ class MapSelectedTrackSendsToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -141,7 +141,7 @@ class MapSelectedTrackFXToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -154,7 +154,7 @@ class MapSelectedTrackFXToMenu  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -167,7 +167,7 @@ class MapFocusedFXToWidgets  : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapFocusedFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    MapFocusedFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -213,7 +213,7 @@ class SetShowFXWindows : public SurfaceAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager) {}
+    SetShowFXWindows(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
     
     void RequestUpdate() override
     {
