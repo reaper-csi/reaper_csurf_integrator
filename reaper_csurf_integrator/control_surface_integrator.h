@@ -212,6 +212,7 @@ public:
     void SetValue(double value);
     void SetValue(int mode, double value);
     void SetValue(string value);
+    void SetRGBValue(int r, int g, int b);
     void ClearCache();
 };
 
@@ -265,6 +266,7 @@ public:
     virtual void SetValue(double value) {}
     virtual void SetValue(int param, double value) {}
     virtual void SetValue(string value) {}
+    virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
 };
 
@@ -329,6 +331,13 @@ protected:
     Action(string name, WidgetActionManager* widgetActionManager);
     Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
 
+    bool supportsRGB_ = false;
+    vector<vector<int>> RGBValues_
+    {
+        { 0, 0, 0 },            // On
+        { 0, 0, 0 }             // Off
+    };
+    
     virtual void SetRGB(vector<string> params);
     
     string name_ = "";
@@ -412,12 +421,26 @@ public:
     
     void SetWidgetValue(Widget* widget, double value)
     {
-        isInverted_ == false ? widget->SetValue(value) : widget->SetValue(1.0 - value);
+        value = isInverted_ == false ? value : 1.0 - value;
+        
+        widget->SetValue(value);
+        
+        int index = value == 0 ? 0 : 1;
+        
+        if(supportsRGB_)
+            widget->SetRGBValue(RGBValues_[index][0], RGBValues_[index][1], RGBValues_[index][2]);
     }
     
     void SetWidgetValue(Widget* widget, int param, double value)
     {
-        isInverted_ == false ? widget->SetValue(param, value) : widget->SetValue(param, 1.0 - value);
+        value = isInverted_ == false ? value : 1.0 - value;
+        
+        widget->SetValue(param, value);
+
+        int index = value == 0 ? 0 : 1;
+        
+        if(supportsRGB_)
+            widget->SetRGBValue(RGBValues_[index][0], RGBValues_[index][1], RGBValues_[index][2]);
     }
     
     void SetWidgetValue(Widget* widget, string value)
