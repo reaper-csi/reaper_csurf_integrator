@@ -56,7 +56,7 @@ protected:
     }
     
 public:
-    TrackVolume(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -70,7 +70,7 @@ class MasterTrackVolume : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackVolume(string name, WidgetActionManager* manager) : Action(name, manager) {}
+    MasterTrackVolume(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
     
     void RequestUpdate() override
     {
@@ -145,7 +145,7 @@ protected:
     }
 
 public:
-    TrackNameDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ protected:
     }
     
 public:
-    TrackVolumeDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ protected:
     }
 
 public:
-    TrackSendVolume(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -203,7 +203,7 @@ protected:
     }
     
 public:
-    TrackSendPan(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendPan(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -229,7 +229,7 @@ protected:
     }
 
 public:
-    TrackSendMute(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendMute(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -253,7 +253,7 @@ protected:
     }
     
 public:
-    TrackSendInvertPolarity(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendInvertPolarity(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -280,7 +280,7 @@ protected:
     }
     
 public:
-    TrackSendPrePost(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendPrePost(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -373,7 +373,7 @@ protected:
     }
 
 public:
-    TrackSendNameDisplay(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -389,7 +389,7 @@ protected:
     }
 
 public:
-    TrackSendVolumeDisplay(string name, WidgetActionManager* manager) : TrackSendAction(name, manager) {}
+    TrackSendVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -444,7 +444,7 @@ protected:
     }
 
 public:
-    TrackPanDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackPanDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,7 +479,7 @@ protected:
     }
 
 public:
-    TrackPanWidthDisplay(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackPanWidthDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -487,7 +487,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    Rewind(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -500,7 +500,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    FastForward(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -513,7 +513,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    Play(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -535,7 +535,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    Stop(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -558,7 +558,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    Record(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
 
     void RequestUpdate() override
     {
@@ -592,7 +592,7 @@ protected:
     }
 
 public:
-    TrackFolderDive(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackFolderDive(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
     
     
     void Do(double value, WidgetActionManager* sender) override
@@ -618,7 +618,7 @@ protected:
     }
     
 public:
-    TrackSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -641,7 +641,7 @@ protected:
     }
     
 public:
-    TrackUniqueSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -659,7 +659,7 @@ class MasterTrackUniqueSelect : public Action
 {
 public:
     
-    MasterTrackUniqueSelect(string name, WidgetActionManager* manager) : Action(name, manager) {}
+    MasterTrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
 
     void RequestUpdate() override
     {
@@ -684,7 +684,7 @@ protected:
     }
     
 public:
-    TrackRangeSelect(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackRangeSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     virtual void Do(double value, WidgetActionManager* sender) override
     {
@@ -736,7 +736,7 @@ protected:
     }
     
 public:
-    TrackRecordArm(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackRecordArm(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -760,7 +760,7 @@ protected:
     }
     
 public:
-    TrackMute(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackMute(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -784,7 +784,7 @@ protected:
     }
     
 public:
-    TrackSolo(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackSolo(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -800,7 +800,7 @@ class SetTrackTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackTouch(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    SetTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -813,7 +813,7 @@ class SetMasterTrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetMasterTrackTouch(string name, WidgetActionManager* manager) : Action(name, manager) {}
+    SetMasterTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -883,7 +883,7 @@ class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TimeDisplay(string name, WidgetActionManager* manager) : Action(name, manager) { }
+    TimeDisplay(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
     
     void RequestUpdate() override
     {
@@ -896,7 +896,7 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline(string name, WidgetActionManager* manager) : Action(name, manager) {}
+    CycleTimeline(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
 
     void RequestUpdate() override
     {
@@ -935,7 +935,7 @@ protected:
     }
 
 public:
-    TrackOutputMeterAverageLR(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackOutputMeterAverageLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -954,7 +954,7 @@ protected:
     }
 
 public:
-    TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager) : TrackAction(name, manager) {}
+    TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
