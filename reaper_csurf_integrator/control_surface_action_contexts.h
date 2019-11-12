@@ -114,6 +114,11 @@ protected:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
+        
+        if(params.size() > 7)
+        {
+            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+        }
     }
     
 public:
@@ -145,6 +150,11 @@ protected:
         
         if(params.size() > 2)
             fxParamDisplayName_ = params[2];
+        
+        if(params.size() > 8)
+        {
+            SetRGB( { params.begin() + 3, params.begin() + 8 } );
+        }
     }
     
 public:
@@ -200,6 +210,11 @@ protected:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
+        
+        if(params.size() > 7)
+        {
+            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+        }
     }
     
 public:
@@ -225,6 +240,11 @@ protected:
     {
         if(params.size() > 1)
             param_ = params[1];
+        
+        if(params.size() > 7)
+        {
+            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+        }
     }
 
 public:
@@ -272,6 +292,11 @@ protected:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
+        
+        if(params.size() > 7)
+        {
+            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+        }
 
         surface_ = widget_->GetSurface();
     }
