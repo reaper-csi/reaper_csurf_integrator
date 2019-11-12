@@ -974,6 +974,20 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
     widget_ = widgetActionManager_->GetWidget();
 }
 
+Action::Action(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager)
+{
+    SetRGB(params);
+}
+
+void Action::SetRGB(vector<string> params)
+{
+    // GAW TBD -- translate the bytes to RGB on and off values;
+    if(params.size() > 5 )
+    {
+        
+    }
+}
+
 void Action::DoAction(double value, WidgetActionManager* sender)
 {
     if(shouldIgnoreRelease_ && value == 0)

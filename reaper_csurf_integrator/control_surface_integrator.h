@@ -327,6 +327,9 @@ class Action
 {
 protected:
     Action(string name, WidgetActionManager* widgetActionManager);
+    Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
+
+    virtual void SetRGB(vector<string> params);
     
     string name_ = "";
     Page* page_ = nullptr;

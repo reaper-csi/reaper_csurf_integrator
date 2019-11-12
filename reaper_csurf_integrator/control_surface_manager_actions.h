@@ -249,7 +249,7 @@ class CycleTimeDisplayModes : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeDisplayModes(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    CycleTimeDisplayModes(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -279,7 +279,7 @@ class GoNextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoNextPage(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    GoNextPage(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -331,7 +331,7 @@ class SetShift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShift(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    SetShift(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {
@@ -349,7 +349,7 @@ class SetOption : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetOption(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    SetOption(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {
@@ -367,7 +367,7 @@ class SetControl : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetControl(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    SetControl(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {
@@ -385,7 +385,7 @@ class SetAlt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetAlt(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    SetAlt(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {

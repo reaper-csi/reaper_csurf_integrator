@@ -34,6 +34,11 @@ public:
                     commandId_ = 65535; // no-op
             }
         }
+        
+        if(params.size() > 7)
+        {
+            SetRGB( { params.begin() + 2, params.begin() + 8 } );
+        }
     }
     
     virtual string GetParamAsString() override

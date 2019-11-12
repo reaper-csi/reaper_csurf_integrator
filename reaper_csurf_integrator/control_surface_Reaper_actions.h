@@ -70,7 +70,7 @@ class MasterTrackVolume : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackVolume(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    MasterTrackVolume(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
@@ -487,7 +487,7 @@ class Rewind : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Rewind(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    Rewind(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -500,7 +500,7 @@ class FastForward : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FastForward(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    FastForward(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -513,7 +513,7 @@ class Play : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Play(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    Play(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
 
     void RequestUpdate() override
     {
@@ -535,7 +535,7 @@ class Stop : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Stop(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    Stop(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
 
     void RequestUpdate() override
     {
@@ -558,7 +558,7 @@ class Record : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    Record(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    Record(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
 
     void RequestUpdate() override
     {
@@ -658,7 +658,7 @@ class MasterTrackUniqueSelect : public Action
 {
 public:
     
-    MasterTrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    MasterTrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {
@@ -812,7 +812,7 @@ class SetMasterTrackTouch : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetMasterTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    SetMasterTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -882,7 +882,7 @@ class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TimeDisplay(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    TimeDisplay(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
     
     void RequestUpdate() override
     {
@@ -895,7 +895,7 @@ class CycleTimeline : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeline(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) {}
+    CycleTimeline(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void RequestUpdate() override
     {
