@@ -513,6 +513,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
             return;
         
+        
+        
         if(tokens.size() > 0)
         {
             Midi_FeedbackProcessor* feedbackProcessor = nullptr;
@@ -538,6 +540,10 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
                 
                 if(tokens.size() == 8)
                     feedbackProcessor->SetRefreshInterval(strToDouble(tokens[7]));
+            }
+            else if(widgetClass == "FB_NovationLaunchpadMiniRGB7Bit" && tokens.size() == 4)
+            {
+                feedbackProcessor = new FB_NovationLaunchpadMiniRGB7Bit(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             }
             else if(tokens.size() == 4 || tokens.size() == 5)
             {
@@ -897,6 +903,12 @@ void  Widget::SetValue(string value)
         feebackProcessor->SetValue(value);
 }
 
+void  Widget::SetRGBValue(int r, int g, int b)
+{
+    for(auto feebackProcessor : feedbackProcessors_)
+        feebackProcessor->SetRGBValue(r, g, b);
+}
+
 void Widget::ClearCache()
 {
     for(auto feedbackProcessor : feedbackProcessors_)
@@ -976,15 +988,31 @@ Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(na
 
 Action::Action(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager)
 {
-    SetRGB(params);
+    SetRGB( { params.begin() + 1, params.end() } );
 }
 
 void Action::SetRGB(vector<string> params)
 {
-    // GAW TBD -- translate the bytes to RGB on and off values;
+    // GAW -- translate the bytes to RGB on and off values;
     if(params.size() > 5 )
     {
+        supportsRGB_ = true;
         
+        for(int i = 0; i < params.size(); i++)
+        {
+            int value = stoi(params[i]);
+            value = value < 0 ? 0 : value;
+            value = value > 255 ? 255 : value;
+            
+            if(i < 3)
+            {
+                RGBValues_[1][i] = value;
+            }
+            else if(i < 6)
+            {
+                RGBValues_[0][i - 3] = value;
+            }
+        }
     }
 }
 
