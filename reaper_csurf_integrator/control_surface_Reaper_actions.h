@@ -56,7 +56,7 @@ protected:
     }
     
 public:
-    TrackVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -145,7 +145,7 @@ protected:
     }
 
 public:
-    TrackNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ protected:
     }
     
 public:
-    TrackVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ protected:
     }
 
 public:
-    TrackSendVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendVolume(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -203,7 +203,7 @@ protected:
     }
     
 public:
-    TrackSendPan(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendPan(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -229,7 +229,7 @@ protected:
     }
 
 public:
-    TrackSendMute(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendMute(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -253,7 +253,7 @@ protected:
     }
     
 public:
-    TrackSendInvertPolarity(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendInvertPolarity(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -280,7 +280,7 @@ protected:
     }
     
 public:
-    TrackSendPrePost(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendPrePost(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -373,7 +373,7 @@ protected:
     }
 
 public:
-    TrackSendNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendNameDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -389,7 +389,7 @@ protected:
     }
 
 public:
-    TrackSendVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager) {}
+    TrackSendVolumeDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -444,7 +444,7 @@ protected:
     }
 
 public:
-    TrackPanDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackPanDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -479,7 +479,7 @@ protected:
     }
 
 public:
-    TrackPanWidthDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackPanWidthDisplay(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -592,8 +592,7 @@ protected:
     }
 
 public:
-    TrackFolderDive(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
-    
+    TrackFolderDive(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -618,7 +617,7 @@ protected:
     }
     
 public:
-    TrackSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -641,7 +640,7 @@ protected:
     }
     
 public:
-    TrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -684,7 +683,7 @@ protected:
     }
     
 public:
-    TrackRangeSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackRangeSelect(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     virtual void Do(double value, WidgetActionManager* sender) override
     {
@@ -736,7 +735,7 @@ protected:
     }
     
 public:
-    TrackRecordArm(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackRecordArm(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -760,7 +759,7 @@ protected:
     }
     
 public:
-    TrackMute(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackMute(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -784,7 +783,7 @@ protected:
     }
     
 public:
-    TrackSolo(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackSolo(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -800,7 +799,7 @@ class SetTrackTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    SetTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -935,7 +934,7 @@ protected:
     }
 
 public:
-    TrackOutputMeterAverageLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackOutputMeterAverageLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -954,7 +953,7 @@ protected:
     }
 
 public:
-    TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager) {}
+    TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
