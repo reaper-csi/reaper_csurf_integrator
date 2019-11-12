@@ -446,6 +446,9 @@ public:
     void SetWidgetValue(Widget* widget, string value)
     {
         widget->SetValue(value);
+        
+        if(supportsRGB_)
+            widget->SetRGBValue(RGBValues_[1][0], RGBValues_[1][1], RGBValues_[1][2]);
     }
     
     void Activate(WidgetActionManager* widgetActionManager)
@@ -464,7 +467,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NoAction(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager) {}
+    NoAction(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager, params) {}
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() { widget_->Reset(); }

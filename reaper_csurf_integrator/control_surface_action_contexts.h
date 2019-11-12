@@ -62,7 +62,8 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager) { }
+    TrackAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
+    TrackAction(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
 public:
     virtual void RequestUpdate() override
@@ -143,7 +144,7 @@ protected:
     string fxParamDisplayName_ = "";
     int fxIndex_ = 0;
 
-    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params)
+    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager)
     {
         if(params.size() > 1)
             fxParamIndex_ = atol(params[1].c_str());
@@ -153,7 +154,7 @@ protected:
         
         if(params.size() > 8)
         {
-            SetRGB( { params.begin() + 3, params.begin() + 8 } );
+            SetRGB( { params.begin() + 3, params.begin() + 9 } );
         }
     }
     
@@ -213,7 +214,7 @@ protected:
         
         if(params.size() > 7)
         {
-            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+            SetRGB( { params.begin() + 2, params.begin() + 8 } );
         }
     }
     
@@ -243,7 +244,7 @@ protected:
         
         if(params.size() > 7)
         {
-            SetRGB( { params.begin() + 2, params.begin() + 7 } );
+            SetRGB( { params.begin() + 2, params.begin() + 8 } );
         }
     }
 
@@ -261,7 +262,7 @@ class SurfaceAction : public Action
 protected:
     ControlSurface* surface_ = nullptr;
 
-    SurfaceAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
+    SurfaceAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
     {
         surface_ = widget_->GetSurface();
     }

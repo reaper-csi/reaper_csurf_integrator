@@ -994,7 +994,7 @@ Action::Action(string name, WidgetActionManager* widgetActionManager, vector<str
 void Action::SetRGB(vector<string> params)
 {
     // GAW -- translate the bytes to RGB on and off values;
-    if(params.size() > 5 )
+    if(params.size() == 6 )
     {
         supportsRGB_ = true;
         
