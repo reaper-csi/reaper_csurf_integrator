@@ -375,7 +375,11 @@ public:
     virtual void DoAction(double value, WidgetActionManager* widgetActionManager);
     
     virtual double GetCurrentValue() { return 0.0; }
-    virtual void RequestUpdate() {}
+    virtual void RequestUpdate()
+    {
+        if(supportsRGB_)
+            widget_->SetRGBValue(RGBValues_[0][0], RGBValues_[0][1], RGBValues_[0][2]);
+    }
     
     virtual void Do(string value, WidgetActionManager* sender) {}
     virtual void Do(double value, WidgetActionManager* sender) {}
