@@ -319,6 +319,7 @@ private:
     int displayType_ = 0x14;
     int channelNumber_ = 0;
     int lastMidiValue_ = 0;
+    bool isClipOn_ = false;
 
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
@@ -365,11 +366,23 @@ public:
         int midiValue = value * 0x0f;
         if(midiValue > 0x0d)
             midiValue = 0x0d;
-
-        if(midiValue > lastMidiValue_ || midiValue == 0x0d)
+        
+        if(midiValue >= lastMidiValue_ && midiValue != 0)
         {
             lastMidiValue_ = midiValue;
             SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
+        }
+        else if(isClipOn_)
+        {
+            lastMidiValue_ = midiValue;
+            isClipOn_ = false;
+            SendMidiMessage(0xd0, (channelNumber_ << 4) | 0x0f, 0); // clip off
+        }
+        
+        if(midiValue == 0x0d && ! isClipOn_)
+        {
+            isClipOn_ = true;
+            SendMidiMessage(0xd0, (channelNumber_ << 4) | 0x0e, 0); // clip on
         }
     }
 };
