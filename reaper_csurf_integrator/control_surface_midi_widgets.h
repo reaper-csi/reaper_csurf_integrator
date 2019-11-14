@@ -343,6 +343,19 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
 
         SendMidiMessage(&midiSysExData.evt);
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical mode
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);        
     }
     
     virtual void SetValue(double value) override
