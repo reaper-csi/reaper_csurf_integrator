@@ -318,6 +318,7 @@ class MCUVUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 private:
     int displayType_ = 0x14;
     int channelNumber_ = 0;
+    int lastMidiValue_ = 0;
 
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
@@ -339,9 +340,22 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x20;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channelNumber_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03; // signal LED and lower display VU
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x05; // signal LED and display VU
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
 
+        SendMidiMessage(&midiSysExData.evt);
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
         SendMidiMessage(&midiSysExData.evt);
     }
     
@@ -351,7 +365,12 @@ public:
         int midiValue = value * 0x0f;
         if(midiValue > 0x0d)
             midiValue = 0x0d;
-        SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
+
+        if(midiValue > lastMidiValue_ || midiValue == 0x0d)
+        {
+            lastMidiValue_ = midiValue;
+            SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
+        }
     }
 };
 
