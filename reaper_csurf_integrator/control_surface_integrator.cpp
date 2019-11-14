@@ -1533,7 +1533,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
                     {
                         outputFile << "Widget Button" + rows[rowIndex] + to_string(columnIndex)  + GetLineEnding();
                     
-                        outputFile << "Press " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
+                        outputFile << "Press " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[3] + " " + tokens[4] + " 00"  + GetLineEnding();
                         outputFile << "FB_NovationLaunchpadMiniRGB7Bit " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
                         outputFile << "WidgetEnd" + GetLineEnding() + GetLineEnding();
                         
