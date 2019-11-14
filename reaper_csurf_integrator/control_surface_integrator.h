@@ -1080,9 +1080,8 @@ public:
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
-    
-    int value = 0;
-    int direction = 1;
+
+    bool hasSetGlobalSysEx_ = false;
 
     virtual void Run() override
     {

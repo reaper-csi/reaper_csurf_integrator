@@ -332,6 +332,24 @@ public:
             char data[BUFSZ];
         } midiSysExData;
         
+        if( ! surface->hasSetGlobalSysEx_)
+        {
+            surface->hasSetGlobalSysEx_ = true;
+            
+            midiSysExData.evt.frame_offset=0;
+            midiSysExData.evt.size=0;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+
+            SendMidiMessage(&midiSysExData.evt);
+        }
+        
         midiSysExData.evt.frame_offset=0;
         midiSysExData.evt.size=0;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
@@ -344,19 +362,6 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x05; // signal LED and display VU
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
 
-        SendMidiMessage(&midiSysExData.evt);
-        
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-        
         SendMidiMessage(&midiSysExData.evt);
     }
     
