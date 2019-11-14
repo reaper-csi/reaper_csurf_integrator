@@ -1492,6 +1492,87 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
     // Add the "hardcoded" widgets
     widgets_.push_back(new Widget(this, "OnTrackSelection"));
     widgets_.push_back(new Widget(this, "OnFXFocus"));
+    
+    /*
+    string filePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + "LaunchPadRAW.txt";
+    
+    string outputFilePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename;
+
+    
+    if(name_ == "LaunchPad")
+    {
+        vector<string> rows = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
+        int rowIndex = 0;
+        int columnIndex = 1;
+        
+        
+        
+        try
+        {
+            ofstream outputFile(outputFilePath);
+
+            if(outputFile.is_open())
+            {
+
+            
+                ifstream file(filePath);
+                
+                
+                for (string line; getline(file, line) ; )
+                {
+                    line = regex_replace(line, regex(CRLFChars), "");
+                    
+                    
+                    if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                        continue;
+                    
+                    vector<string> tokens(GetTokens(line));
+                
+
+                    if(tokens.size() == 6 && tokens[5] == "7f")
+                    {
+                        outputFile << "Widget Button" + rows[rowIndex] + to_string(columnIndex)  + GetLineEnding();
+                    
+                        outputFile << "Press " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
+                        outputFile << "FB_NovationLaunchpadMiniRGB7Bit " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
+                        outputFile << "WidgetEnd" + GetLineEnding() + GetLineEnding();
+                        
+                        if(columnIndex % 9 == 0)
+                        {
+                            rowIndex++;
+                            columnIndex = 1;
+                        }
+                        else
+                            columnIndex++;
+                    }
+                }
+            }
+            
+            
+            
+            outputFile.close();
+
+            
+            
+            
+        }
+        catch (exception &e)
+        {
+            char buffer[250];
+            //sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+            DAW::ShowConsoleMsg(buffer);
+        }
+         
+
+         
+    }
+
+    */
+    
+    
+    
+    
+    
 }
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
