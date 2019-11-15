@@ -348,6 +348,8 @@ public:
             midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
 
             SendMidiMessage(&midiSysExData.evt);
+            
+            Sleep(1000);
         }
         
         midiSysExData.evt.frame_offset=0;
@@ -372,23 +374,7 @@ public:
         if(midiValue > 0x0d)
             midiValue = 0x0d;
         
-        if(midiValue >= lastMidiValue_ && midiValue != 0)
-        {
-            lastMidiValue_ = midiValue;
-            SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
-        }
-        else if(isClipOn_)
-        {
-            lastMidiValue_ = midiValue;
-            isClipOn_ = false;
-            SendMidiMessage(0xd0, (channelNumber_ << 4) | 0x0f, 0); // clip off
-        }
-        
-        if(midiValue == 0x0d && ! isClipOn_)
-        {
-            isClipOn_ = true;
-            SendMidiMessage(0xd0, (channelNumber_ << 4) | 0x0e, 0); // clip on
-        }
+        SendMidiMessage(0xd0, (channelNumber_ << 4) | midiValue, 0);
     }
 };
 
