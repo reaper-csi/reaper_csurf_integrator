@@ -348,8 +348,6 @@ public:
             midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
 
             SendMidiMessage(&midiSysExData.evt);
-            
-            Sleep(1000);
         }
         
         midiSysExData.evt.frame_offset=0;
