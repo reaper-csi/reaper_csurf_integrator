@@ -586,15 +586,15 @@ public:
     
     void Activate()
     {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
-                action->Activate(this);
+        for(auto [modifiers, actions] : actions_)
+            for(auto action: actions)
+               action->Activate(this);
     }
     
     void Activate(int index)
     {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
+        for(auto [modifiers, actions] : actions_)
+            for(auto action : actions)
             {
                 action->SetIndex(index);
                 action->Activate(this);
@@ -603,8 +603,8 @@ public:
     
     void ActivateNoAction(int index)
     {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
+        for(auto [modifiers, actions] : actions_)
+            for(auto action : actions)
             {
                 action->SetIndex(index);
                 action->ActivateNoAction();
