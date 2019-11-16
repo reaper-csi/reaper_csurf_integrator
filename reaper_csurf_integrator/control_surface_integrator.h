@@ -202,6 +202,7 @@ public:
         SetValue(0.0);
         SetValue(0, 0.0);
         SetValue("");
+        SetRGBValue(0, 0, 0);
     }
 
     MediaTrack* GetTrack();
