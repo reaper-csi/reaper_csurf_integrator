@@ -1511,7 +1511,7 @@ public:
         {
             double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - shiftPressedTime_ > 500)
+            if(keyReleasedTime - shiftPressedTime_ > 100)
             {
                 isShift_ = value;
             }
@@ -1529,7 +1529,7 @@ public:
         {
             double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - optionPressedTime_ > 500)
+            if(keyReleasedTime - optionPressedTime_ > 100)
             {
                 isOption_ = value;
             }
@@ -1547,7 +1547,7 @@ public:
         {
             double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - controlPressedTime_ > 500)
+            if(keyReleasedTime - controlPressedTime_ > 100)
             {
                 isControl_ = value;
             }
@@ -1565,7 +1565,7 @@ public:
         {
             double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - altPressedTime_ > 500)
+            if(keyReleasedTime - altPressedTime_ > 100)
             {
                 isAlt_ = value;
             }
