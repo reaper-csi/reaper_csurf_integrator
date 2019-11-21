@@ -333,11 +333,13 @@ protected:
     Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
 
     bool supportsRGB_ = false;
-    vector<vector<int>> RGBValues_
+    vector<rgb_color> RGBValues_
     {
         { 0, 0, 0 },            // On
         { 0, 0, 0 }             // Off
     };
+    
+    int currentRGBIndex_ = 0;
     
     virtual void SetRGB(vector<string> params);
     
@@ -379,7 +381,7 @@ public:
     virtual void RequestUpdate()
     {
         if(supportsRGB_)
-            widget_->SetRGBValue(RGBValues_[0][0], RGBValues_[0][1], RGBValues_[0][2]);
+            widget_->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
     
     virtual void Do(string value, WidgetActionManager* sender) {}
@@ -430,10 +432,10 @@ public:
         
         widget->SetValue(value);
         
-        int index = value == 0 ? 0 : 1;
+        currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
-            widget->SetRGBValue(RGBValues_[index][0], RGBValues_[index][1], RGBValues_[index][2]);
+            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
     }
     
     void SetWidgetValue(Widget* widget, int param, double value)
@@ -442,18 +444,15 @@ public:
         
         widget->SetValue(param, value);
 
-        int index = value == 0 ? 0 : 1;
+        currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
-            widget->SetRGBValue(RGBValues_[index][0], RGBValues_[index][1], RGBValues_[index][2]);
+            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
     }
     
     void SetWidgetValue(Widget* widget, string value)
     {
         widget->SetValue(value);
-        
-        if(supportsRGB_)
-            widget->SetRGBValue(RGBValues_[1][0], RGBValues_[1][1], RGBValues_[1][2]);
     }
     
     void Activate(WidgetActionManager* widgetActionManager)
