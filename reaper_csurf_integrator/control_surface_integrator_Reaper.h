@@ -15,6 +15,13 @@ extern HWND g_hwnd;
 
 const int BUFSZ = 512;
 
+struct rgb_color
+{
+    int r = 0;
+    int g = 0;
+    int b = 0;
+};
+
 struct MIDI_event_ex_t : MIDI_event_t
 {
     MIDI_event_ex_t() {};
