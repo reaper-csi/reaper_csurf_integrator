@@ -1004,14 +1004,23 @@ void Action::SetRGB(vector<string> params)
             value = value < 0 ? 0 : value;
             value = value > 255 ? 255 : value;
             
-            if(i < 3)
-            {
-                RGBValues_[1][i] = value;
-            }
-            else if(i < 6)
-            {
-                RGBValues_[0][i - 3] = value;
-            }
+            if(i == 0)
+                RGBValues_[1].r = value;
+            
+            else if(i == 1)
+                RGBValues_[1].g = value;
+            
+            else if(i == 2)
+                RGBValues_[1].b = value;
+            
+            else if(i == 3)
+                RGBValues_[0].r = value;
+            
+            else if(i == 4)
+                RGBValues_[0].g = value;
+            
+            else if(i == 5)
+                RGBValues_[0].b = value;
         }
     }
 }
