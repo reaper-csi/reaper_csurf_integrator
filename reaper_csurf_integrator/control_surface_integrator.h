@@ -97,6 +97,13 @@ struct ActionLineItem
     bool isTouch = false;
     bool isPress = false;
     bool isHold = false;
+    bool supportsRGB = false;
+    int onR = 0;
+    int onG = 0;
+    int onB = 0;
+    int offR = 0;
+    int offG = 0;
+    int offB = 0;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
