@@ -2530,6 +2530,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             if(currentAction)
             {
+                hasEdits = true;
+
                 HWND sliderHwnd = (HWND)lParam;
                 
                 int sliderPos = (int)SendMessage(sliderHwnd, TBM_GETPOS, 0, 0);
@@ -2593,6 +2595,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
 
+            rgb_color color = currentAction->GetCurrentRGB();
+
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETPOS, 1, color.r);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETPOS, 1, color.g);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETPOS, 1, color.b);
+
             break;
         }
 
@@ -2621,11 +2629,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 CheckDlgButton(hwndDlg, IDC_CHECK_FXParamMon, BST_UNCHECKED);
             
             SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETRANGE, 1, MAKELONG(0, 255));
-            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETPOS, 1,0);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETPOS, 1, 0);
             SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETRANGE, 1, MAKELONG(0, 255));
-            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETPOS, 1,0);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETPOS, 1, 0);
             SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETRANGE, 1, MAKELONG(0, 255));
-            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETPOS, 1,0);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETPOS, 1, 0);
 
             break;
         }
@@ -2691,6 +2699,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             
                                             if(actionLineItem.alias != "")
                                                 lineItemAsString += " \"" + actionLineItem.alias + "\"";
+                                            
+                                            //if(actionLineItem.supportsRGB)
+                                                //lineItemAsString += " " + to_string(actionLineItem.onR) + " " + to_string(actionLineItem.onG) + " " + to_string(actionLineItem.onB) + " " + to_string(actionLineItem.offR) + " " + to_string(actionLineItem.offG) + " " + to_string(actionLineItem.offB);
                                             
                                             zonFile << lineItemAsString + GetLineEnding();
 
