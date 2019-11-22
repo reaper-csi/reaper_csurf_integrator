@@ -426,6 +426,17 @@ public:
         return actionLineItem;
     }
     
+    void SetCurrentRGB(rgb_color newColor)
+    {
+        supportsRGB_ = true;
+        RGBValues_[currentRGBIndex_] = newColor;
+    }
+    
+    rgb_color GetCurrentRGB()
+    {
+        return RGBValues_[currentRGBIndex_];
+    }
+    
     void SetWidgetValue(Widget* widget, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;

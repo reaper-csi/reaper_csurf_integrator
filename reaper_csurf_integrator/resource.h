@@ -78,7 +78,10 @@
 #define IDC_BUTTON_DeleteLineItem       1073
 #define IDC_STATIC_Navigator            1074
 #define IDC_BUTTON_NewFile              1075
+#define IDC_SLIDER_Blue                 1076
+#define IDC_SLIDER_Red                  1077
 #define IDC_BUTTON_Close                1078
+#define IDC_SLIDER_Green                1079
 #define IDC_CHECK_IgnoreRelease         1082
 
 // Next default values for new objects
@@ -87,7 +90,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1075
+#define _APS_NEXT_CONTROL_VALUE         1077
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
