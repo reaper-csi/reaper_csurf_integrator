@@ -2526,6 +2526,28 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 {
     switch (uMsg)
     {
+        case WM_HSCROLL:
+        {
+            if(currentAction)
+            {
+                HWND sliderHwnd = (HWND)lParam;
+                
+                int sliderPos = (int)SendMessage(sliderHwnd, TBM_GETPOS, 0, 0);
+
+                rgb_color color = currentAction->GetCurrentRGB();
+                
+                if(sliderHwnd == GetDlgItem(hwndDlg, IDC_SLIDER_Red))
+                    color.r = sliderPos;
+                else if(sliderHwnd == GetDlgItem(hwndDlg, IDC_SLIDER_Green))
+                    color.g = sliderPos;
+                else if(sliderHwnd == GetDlgItem(hwndDlg, IDC_SLIDER_Blue))
+                    color.b = sliderPos;
+
+                currentAction->SetCurrentRGB(color);
+            }
+            break;
+        }
+            
         case WM_USER+1024:
         {
             currentSurface = currentWidget->GetSurface();
@@ -2598,6 +2620,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             else
                 CheckDlgButton(hwndDlg, IDC_CHECK_FXParamMon, BST_UNCHECKED);
             
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETRANGE, 1, MAKELONG(0, 255));
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Red), TBM_SETPOS, 1,0);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETRANGE, 1, MAKELONG(0, 255));
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Green), TBM_SETPOS, 1,0);
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETRANGE, 1, MAKELONG(0, 255));
+            SendMessage (GetDlgItem(hwndDlg, IDC_SLIDER_Blue), TBM_SETPOS, 1,0);
+
             break;
         }
             
