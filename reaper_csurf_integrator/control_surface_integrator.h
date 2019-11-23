@@ -98,12 +98,7 @@ struct ActionLineItem
     bool isPress = false;
     bool isHold = false;
     bool supportsRGB = false;
-    int onR = 0;
-    int onG = 0;
-    int onB = 0;
-    int offR = 0;
-    int offG = 0;
-    int offB = 0;
+    vector<rgb_color> colors;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -374,6 +369,8 @@ public:
     virtual string GetParamAsString() { return ""; }
     virtual int GetParam() { return 0; }
     virtual string GetAlias() { return ""; }
+    bool GetSupportsRGB() { return supportsRGB_; }
+    vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
@@ -550,6 +547,10 @@ public:
                 
                 if (actionLineItem.modifiers.find("Alt") != string::npos)
                     actionLineItem.isAlt = true;
+                
+                actionLineItem.supportsRGB = action->GetSupportsRGB();
+                
+                actionLineItem.colors = action->GetRGBValues();
                 
                 actionLineItems_.push_back(actionLineItem);
             }
