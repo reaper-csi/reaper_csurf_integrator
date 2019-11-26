@@ -370,7 +370,15 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
             
             continue;
         }
-
+        
+        if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
+        {
+            for(int i = 0; i < expandedZones.size(); i++)
+                expandedZones[i]->SetTrackNavigator(new MasterTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
+            
+            continue;
+        }
+        
         if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
         {
             for(int i = 0; i < expandedZones.size(); i++)
@@ -503,8 +511,6 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         
         if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
             return;
-        
-        
         
         if(tokens.size() > 0)
         {
@@ -690,7 +696,6 @@ void Manager::InitActionDictionary()
     actions_["FXParamValueDisplay"] =               [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(name, manager, params); };
     actions_["FXGainReductionMeter"] =              [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXGainReductionMeter(name, manager, params); };
     actions_["TrackVolume"] =                       [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackVolume(name, manager, params); };
-    actions_["MasterTrackVolume"] =                 [this](string name, WidgetActionManager* manager, vector<string> params) { return new MasterTrackVolume(name, manager, params); };
     actions_["TrackSendVolume"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendVolume(name, manager, params); };
     actions_["TrackSendPan"] =                      [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendPan(name, manager, params); };
     actions_["TrackSendMute"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendMute(name, manager, params); };
@@ -713,18 +718,15 @@ void Manager::InitActionDictionary()
     actions_["TrackFolderDive"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackFolderDive(name, manager, params); };
     actions_["TrackSelect"] =                       [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSelect(name, manager, params); };
     actions_["TrackUniqueSelect"] =                 [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackUniqueSelect(name, manager, params); };
-    actions_["MasterTrackUniqueSelect"] =           [this](string name, WidgetActionManager* manager, vector<string> params) { return new MasterTrackUniqueSelect(name, manager, params); };
     actions_["TrackRangeSelect"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackRangeSelect(name, manager, params); };
     actions_["TrackRecordArm"] =                    [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackRecordArm(name, manager, params); };
     actions_["TrackMute"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackMute(name, manager, params); };
     actions_["TrackSolo"] =                         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSolo(name, manager, params); };
     actions_["TrackTouch"] =                        [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetTrackTouch(name, manager, params); };
-    actions_["MasterTrackTouch"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetMasterTrackTouch(name, manager, params); };
     actions_["CycleTimeline"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new CycleTimeline(name, manager, params); };
     actions_["TrackOutputMeter"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeter(name, manager, params); };
     actions_["TrackOutputMeterAverageLR"] =         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterAverageLR(name, manager, params); };
     actions_["TrackOutputMeterMaxPeakLR"] =         [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackOutputMeterMaxPeakLR(name, manager, params); };
-    actions_["MasterTrackOutputMeter"] =            [this](string name, WidgetActionManager* manager, vector<string> params) { return new MasterTrackOutputMeter(name, manager, params); };
     actions_["SetShowFXWindows"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new SetShowFXWindows(name, manager, params); };
     actions_["ToggleScrollLink"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new ToggleScrollLink(name, manager, params); };
     actions_["CycleTimeDisplayModes"] =             [this](string name, WidgetActionManager* manager, vector<string> params) { return new CycleTimeDisplayModes(name, manager, params); };
@@ -1753,6 +1755,14 @@ MediaTrack* TrackNavigator::GetTrack()
         return pinnedTrack_;
     else
         return manager_->GetTrackFromChannel(channelNum_ - bias_);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MasterTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* MasterTrackNavigator::GetTrack()
+{
+    return DAW::GetMasterTrack(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
