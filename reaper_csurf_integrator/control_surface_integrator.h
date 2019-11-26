@@ -1528,76 +1528,49 @@ public:
     
     void SetShift(bool value)
     {
-        if(value)
-        {
-            isShift_ = value;
-            shiftPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
-        }
-        else
-        {
-            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if(keyReleasedTime - shiftPressedTime_ > 100)
-            {
-                isShift_ = value;
-            }
-        }
+        SetModifier(value, isShift_, shiftPressedTime_);
     }
-    
+ 
     void SetOption(bool value)
     {
-        if(value)
-        {
-            isOption_ = value;
-            optionPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
-        }
-        else
-        {
-            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if(keyReleasedTime - optionPressedTime_ > 100)
-            {
-                isOption_ = value;
-            }
-        }
+        SetModifier(value, isOption_, optionPressedTime_);
     }
     
     void SetControl(bool value)
     {
-        if(value)
-        {
-            isControl_ = value;
-            controlPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
-        }
-        else
-        {
-            double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if(keyReleasedTime - controlPressedTime_ > 100)
-            {
-                isControl_ = value;
-            }
-        }
+        SetModifier(value, isControl_, controlPressedTime_);
     }
     
     void SetAlt(bool value)
     {
+        SetModifier(value, isAlt_, altPressedTime_);
+    }
+  
+    void SetModifier(bool value, bool &modifier, double &modifierPressedTime)
+    {
         if(value)
         {
-            isAlt_ = value;
-            altPressedTime_ = DAW::GetCurrentNumberOfMilliseconds();
+            if(modifier == true)
+            {
+                modifier = false;
+            }
+            else
+            {
+                modifier = value;
+                modifierPressedTime = DAW::GetCurrentNumberOfMilliseconds();
+            }
         }
         else
         {
             double keyReleasedTime = DAW::GetCurrentNumberOfMilliseconds();
             
-            if(keyReleasedTime - altPressedTime_ > 100)
+            if(keyReleasedTime - modifierPressedTime > 100)
             {
-                isAlt_ = value;
+                modifier = value;
             }
         }
     }
-    
+
     string GetModifiers()
     {
         string modifiers = "";
