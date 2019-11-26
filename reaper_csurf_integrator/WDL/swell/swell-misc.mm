@@ -1,3 +1,23 @@
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
+
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+*/
+  
 #ifndef SWELL_PROVIDED_BY_APP
 
 //#import <Carbon/Carbon.h>
@@ -56,7 +76,7 @@ void SWELL_CFStringToCString(const void *str, char *buf, int buflen)
     [s getCString:buf maxLength:buflen encoding:NSASCIIStringEncoding];
     return;
   }
-  int len = [data length];
+  int len = (int)[data length];
   if (len > buflen-1) len=buflen-1;
   [data getBytes:buf length:len];
   buf[len]=0;
@@ -231,8 +251,8 @@ int SWELL_ReadWriteProcessIO(HANDLE hand, int w/*stdin,stdout,stderr*/, char *bu
     }
     @catch (id ex) { }
 
-    if (!d || bufsz < 1) return d ? [d length] : 0;
-    int l = [d length];
+    if (!d || bufsz < 1) return d ? (int)[d length] : 0;
+    int l = (int)[d length];
     if (l > bufsz) l = bufsz;
     [d getBytes:buf length:l];
     return l;
@@ -316,8 +336,10 @@ typedef struct TimerInfoRec
 } TimerInfoRec;
 static TimerInfoRec *m_timer_list;
 static WDL_Mutex m_timermutex;
+#ifndef SWELL_NO_POSTMESSAGE
 static pthread_t m_pmq_mainthread;
 static void SWELL_pmq_settimer(HWND h, UINT_PTR timerid, UINT rate, TIMERPROC tProc);
+#endif
 
 UINT_PTR SetTimer(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
 {
@@ -325,11 +347,13 @@ UINT_PTR SetTimer(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
   
   if (hwnd && !timerid) return 0;
   
+#ifndef SWELL_NO_POSTMESSAGE
   if (timerid != ~(UINT_PTR)0 && m_pmq_mainthread && pthread_self()!=m_pmq_mainthread)
   {   
     SWELL_pmq_settimer(hwnd,timerid,(rate==(UINT)-1)?((UINT)-2):rate,tProc);
     return timerid;
   }
+#endif
   
   
   if (hwnd && ![(id)hwnd respondsToSelector:@selector(SWELL_Timer:)])
@@ -413,11 +437,13 @@ BOOL KillTimer(HWND hwnd, UINT_PTR timerid)
   if (!hwnd && !timerid) return FALSE;
   
   WDL_MutexLock lock(&m_timermutex);
+#ifndef SWELL_NO_POSTMESSAGE
   if (timerid != ~(UINT_PTR)0 && m_pmq_mainthread && pthread_self()!=m_pmq_mainthread)
   {
     SWELL_pmq_settimer(hwnd,timerid,~(UINT)0,NULL);
     return TRUE;
   }
+#endif
   BOOL rv=FALSE;
   
   // don't allow removing all global timers
@@ -454,6 +480,7 @@ BOOL KillTimer(HWND hwnd, UINT_PTR timerid)
 }
 
 
+#ifndef SWELL_NO_POSTMESSAGE
 
 ///////// PostMessage emulation
 
@@ -661,7 +688,7 @@ BOOL SWELL_Internal_PostMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   
   return ret;
 }
-
+#endif
 
 static bool s_rightclickemulate=true;
 
@@ -756,7 +783,9 @@ int SWELL_GetOSXVersion()
   {
     if (NSAppKitVersionNumber >= 1266.0) 
     {
-      if (NSAppKitVersionNumber >= 1404.0)
+      if (NSAppKitVersionNumber >= 1670.0)  // unsure if this is correct (10.14.1 is 1671.1)
+        v = 0x10d0;
+      else if (NSAppKitVersionNumber >= 1404.0)
         v = 0x10b0;
       else
         v = 0x10a0; // 10.10+ Gestalt(gsv) return 0x109x, so we bump this to 0x10a0

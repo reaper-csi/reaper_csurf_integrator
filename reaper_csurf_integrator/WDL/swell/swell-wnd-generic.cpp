@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux)
-   Copyright (C) 2006-2008, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -39,1230 +39,50 @@
 
 #include "swell-dlggen.h"
 
-HWND__ *SWELL_topwindows;
-
-HWND DialogBoxIsActive(void);
-void DestroyPopupMenus(void);
-HWND ChildWindowFromPoint(HWND h, POINT p);
-bool IsWindowEnabled(HWND hwnd);
-
-bool swell_isOSwindowmenu(SWELL_OSWINDOW osw);
-
-extern const char *g_swell_appname;
-static HWND s_captured_window;
+bool swell_is_likely_capslock; // only used when processing dit events for a-zA-Z
 SWELL_OSWINDOW SWELL_focused_oswindow; // top level window which has focus (might not map to a HWND__!)
-static DWORD s_lastMessagePos;
+HWND swell_captured_window;
 
-static bool is_likely_capslock; // only used when processing dit events for a-zA-Z
-static bool is_virtkey_char(int c)
+#define STATEIMAGEMASKTOINDEX(x) (((x)>>16)&0xff)
+
+bool swell_is_virtkey_char(int c)
 {
   return (c >= 'a' && c <= 'z') ||
          (c >= 'A' && c <= 'Z') ||
          (c >= '0' && c <= '9');
 }
 
-#ifdef SWELL_TARGET_GDK
-static UINT_PTR g_focus_lost_timer;
-static SWELL_OSWINDOW swell_dragsrc_osw;
-static HWND swell_dragsrc_hwnd;
-#endif
-
-static void swell_set_focus_oswindow(SWELL_OSWINDOW v)
+bool swell_app_is_inactive;
+HWND__ *SWELL_topwindows;
+HWND swell_oswindow_to_hwnd(SWELL_OSWINDOW w)
 {
-#ifdef SWELL_TARGET_GDK
-  if (g_focus_lost_timer) KillTimer(NULL,g_focus_lost_timer);
-  g_focus_lost_timer=0;
-#endif
-  SWELL_focused_oswindow=v;
+  if (!w) return NULL;
+  HWND a = SWELL_topwindows;
+  while (a && a->m_oswindow != w) a=a->m_next;
+  return a;
 }
 
-static void swell_destroyOSwindow(HWND hwnd)
+void swell_on_toplevel_raise(SWELL_OSWINDOW wnd) // called by swell-generic-gdk when a window is focused
 {
-  if (hwnd && hwnd->m_oswindow)
+  HWND hwnd = swell_oswindow_to_hwnd(wnd);
+  if (hwnd && hwnd != SWELL_topwindows)
   {
-    if (SWELL_focused_oswindow == hwnd->m_oswindow) swell_set_focus_oswindow(NULL);
-#ifdef SWELL_TARGET_GDK
-    gdk_window_destroy(hwnd->m_oswindow);
-#endif
-    hwnd->m_oswindow=NULL;
-#ifdef SWELL_LICE_GDI
-    delete hwnd->m_backingstore;
-    hwnd->m_backingstore=0;
-#endif
+    // implies hwnd->m_prev
+
+    VALIDATE_HWND_LIST(SWELL_topwindows,NULL);
+
+    // remove from list
+    hwnd->m_prev->m_next = hwnd->m_next;
+    if (hwnd->m_next) hwnd->m_next->m_prev = hwnd->m_prev;
+
+    // insert at front of list
+    hwnd->m_prev = NULL;
+    hwnd->m_next = SWELL_topwindows;
+    if (SWELL_topwindows) SWELL_topwindows->m_prev = hwnd;
+    SWELL_topwindows = hwnd;
+    VALIDATE_HWND_LIST(SWELL_topwindows,NULL);
   }
 }
-static void swell_setOSwindowtext(HWND hwnd)
-{
-  if (hwnd && hwnd->m_oswindow)
-  {
-#ifdef SWELL_TARGET_GDK
-    gdk_window_set_title(hwnd->m_oswindow, (char*)hwnd->m_title.Get());
-#endif
-  }
-#ifndef SWELL_TARGET_GDK
-  if (hwnd) printf("SWELL: swt '%s'\n",hwnd->m_title.Get());
-#endif
-
-}
-
-static void swell_focusOSwindow(HWND hwnd)
-{
-  while (hwnd && !hwnd->m_oswindow) hwnd=hwnd->m_parent;
-#ifdef SWELL_TARGET_GDK
-  if (hwnd) gdk_window_raise(hwnd->m_oswindow);
-#endif
-  if (hwnd && hwnd->m_oswindow != SWELL_focused_oswindow)
-  {
-    swell_set_focus_oswindow(hwnd->m_oswindow);
-#ifdef SWELL_TARGET_GDK
-    gdk_window_focus(hwnd->m_oswindow,GDK_CURRENT_TIME);
-#endif
-  }
-}
-
-void swell_recalcMinMaxInfo(HWND hwnd)
-{
-  if (!hwnd || !hwnd->m_oswindow || !(hwnd->m_style & WS_CAPTION)) return;
-
-  MINMAXINFO mmi;
-  memset(&mmi,0,sizeof(mmi));
-  if (hwnd->m_style & WS_THICKFRAME)
-  {
-    mmi.ptMinTrackSize.x = 20;
-    mmi.ptMaxSize.x = mmi.ptMaxTrackSize.x = 16384;
-    mmi.ptMinTrackSize.y = 20;
-    mmi.ptMaxSize.y = mmi.ptMaxTrackSize.y = 16384;
-    SendMessage(hwnd,WM_GETMINMAXINFO,0,(LPARAM)&mmi);
-  }
-  else
-  {
-    RECT r=hwnd->m_position;
-    mmi.ptMinTrackSize.x = mmi.ptMaxSize.x = mmi.ptMaxTrackSize.x = r.right-r.left;
-    mmi.ptMinTrackSize.y = mmi.ptMaxSize.y = mmi.ptMaxTrackSize.y = r.bottom-r.top;
-  }
-#ifdef SWELL_TARGET_GDK
-  GdkGeometry h;
-  memset(&h,0,sizeof(h));
-  h.max_width= mmi.ptMaxSize.x;
-  h.max_height= mmi.ptMaxSize.y;
-  h.min_width= mmi.ptMinTrackSize.x;
-  h.min_height= mmi.ptMinTrackSize.y;
-  gdk_window_set_geometry_hints(hwnd->m_oswindow,&h,(GdkWindowHints) (GDK_HINT_POS | GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE));
-#endif
-}
-
-
-
-#ifdef SWELL_TARGET_GDK
-
-#ifndef SWELL_WINDOWSKEY_GDK_MASK
-#define  SWELL_WINDOWSKEY_GDK_MASK GDK_MOD4_MASK
-#endif
-
-static GdkEvent *s_cur_evt;
-static GList *s_program_icon_list;
-static int SWELL_gdk_active;
-
-static void swell_gdkEventHandler(GdkEvent *event, gpointer data);
-void SWELL_initargs(int *argc, char ***argv) 
-{
-  if (!SWELL_gdk_active) 
-  {
-   // maybe make the main app call this with real parms
-    XInitThreads();
-    SWELL_gdk_active = gdk_init_check(argc,argv) ? 1 : -1;
-    if (SWELL_gdk_active > 0)
-    {
-      char buf[1024];
-      GetModuleFileName(NULL,buf,sizeof(buf));
-      WDL_remove_filepart(buf);
-      lstrcatn(buf,"/Resources/main.png",sizeof(buf));
-      GdkPixbuf *pb = gdk_pixbuf_new_from_file(buf,NULL);
-      if (!pb)
-      {
-        strcpy(buf+strlen(buf)-3,"ico");
-        pb = gdk_pixbuf_new_from_file(buf,NULL);
-      }
-      if (pb) s_program_icon_list = g_list_append(s_program_icon_list,pb);
-
-      gdk_event_handler_set(swell_gdkEventHandler,NULL,NULL);
-    }
-  }
-}
-
-static bool swell_initwindowsys()
-{
-  if (!SWELL_gdk_active) 
-  {
-   // maybe make the main app call this with real parms
-    int argc=1;
-    char buf[32];
-    strcpy(buf,"blah");
-    char *argv[2];
-    argv[0] = buf;
-    argv[1] = buf;
-    char **pargv = argv;
-    SWELL_initargs(&argc,&pargv);
-  }
-  
-  return SWELL_gdk_active>0;
-}
-
-static bool g_want_activateapp_on_focus;
-static void focusLostTimer(HWND hwnd, UINT uMsg, UINT_PTR tm, DWORD dwt)
-{
-  KillTimer(NULL,g_focus_lost_timer);
-  g_focus_lost_timer = 0;
-  if (!SWELL_focused_oswindow) return;
-
-  GdkWindow *window = gdk_screen_get_active_window(gdk_screen_get_default());
-  if (window != SWELL_focused_oswindow) 
-  {
-    SWELL_focused_oswindow = NULL;
-
-    HWND h = SWELL_topwindows; 
-    while (h)
-    {
-      if (h->m_oswindow && h->m_israised)
-        gdk_window_set_keep_above(h->m_oswindow,FALSE);
-
-      PostMessage(h,WM_ACTIVATEAPP,0,0);
-      h=h->m_next;
-    }
-    g_want_activateapp_on_focus=true;
-    DestroyPopupMenus();
-  }
-}
-
-#ifdef SWELL_LICE_GDI
-class LICE_CairoBitmap : public LICE_IBitmap
-{
-  public:
-    LICE_CairoBitmap() 
-    {
-      m_fb = NULL; 
-      m_allocsize = m_width = m_height = m_span = 0;
-      m_surf = NULL;
-    }
-    virtual ~LICE_CairoBitmap() 
-    { 
-      if (m_surf) cairo_surface_destroy(m_surf);
-      free(m_fb);
-    }
-
-    // LICE_IBitmap interface
-    virtual LICE_pixel *getBits() 
-    { 
-      const UINT_PTR extra=LICE_MEMBITMAP_ALIGNAMT;
-      return (LICE_pixel *) (((UINT_PTR)m_fb + extra)&~extra);
-    }
-
-    virtual int getWidth() { return m_width; }
-    virtual int getHeight() { return m_height; }
-    virtual int getRowSpan() { return m_span; }
-    virtual bool resize(int w, int h)
-    {
-      if (w<0) w=0; 
-      if (h<0) h=0;
-      if (w == m_width && h == m_height) return false;
-
-      if (m_surf) cairo_surface_destroy(m_surf);
-      m_surf = NULL;
-
-      m_span = w ? cairo_format_stride_for_width(CAIRO_FORMAT_RGB24,w)/4 : 0;
-      const int sz = h * m_span * 4 + LICE_MEMBITMAP_ALIGNAMT;
-      if (!m_fb || m_allocsize < sz || sz < m_allocsize/4)
-      {
-        const int newalloc = m_allocsize<sz ? (sz*3)/2 : sz;
-        void *p = realloc(m_fb,newalloc);
-        if (!p) return false;
-
-        m_fb = (LICE_pixel *)p;
-        m_allocsize = newalloc;
-      }
-
-      m_width=w && h ? w :0;
-      m_height=w && h ? h : 0;
-      return true;
-    }
-    virtual INT_PTR Extended(int id, void* data) 
-    { 
-      if (id == 0xca140) 
-      {
-        if (data) 
-        {
-          // in case we want to release surface
-          return 0;
-        }
-
-        if (!m_surf) 
-          m_surf = cairo_image_surface_create_for_data((guchar*)getBits(), CAIRO_FORMAT_RGB24, 
-                                                       getWidth(),getHeight(), getRowSpan()*4);
-        return (INT_PTR)m_surf;
-      }
-      return 0; 
-    }
-
-private:
-  LICE_pixel *m_fb;
-  int m_width, m_height, m_span;
-  int m_allocsize;
-  cairo_surface_t *m_surf;
-};
-#endif
-
-static int swell_gdk_option(const char *name, const char *defstr, int defv)
-{
-  char buf[64];
-  GetPrivateProfileString(".swell",name,"",buf,sizeof(buf),"");
-  if (!buf[0]) WritePrivateProfileString(".swell",name,defstr,"");
-  if (buf[0] >= '0' && buf[0] <= '9') return atoi(buf);
-  return defv;
-}
-
-static void swell_manageOSwindow(HWND hwnd, bool wantfocus)
-{
-  static int gdk_options;
-  if (!gdk_options)
-  {
-    const char *wmname = gdk_x11_screen_get_window_manager_name(gdk_screen_get_default ());
-    const bool is_kwin = wmname && !stricmp(wmname,"kwin");
-
-    gdk_options = 0x40000000;
-
-    if (swell_gdk_option("gdk_owned_window_dialog","auto (default is 1)",1))
-      gdk_options|=1;
-
-    if (swell_gdk_option("gdk_raise_owned_windows",
-                         "auto (1 on kwin, 0 otherwise)",
-                         is_kwin ? 1:0))
-      gdk_options|=2;
-
-    if (swell_gdk_option("gdk_owned_windows_in_tasklist", "auto (default is 0)",0))
-      gdk_options|=4;
-
-    if (swell_gdk_option("gdk_borderless_are_override_redirect", "auto (default is 0)",0))
-      gdk_options|=8;
-
-    if (swell_gdk_option("gdk_no_set_window_class",
-                         "auto (1 on kwin, 0 otherwise)",
-                         is_kwin ? 1 : 0))
-      gdk_options|=16;
-  }
-  
-  if (!hwnd) return;
-
-  bool isVis = !!hwnd->m_oswindow;
-  bool wantVis = !hwnd->m_parent && hwnd->m_visible;
-
-  if (isVis != wantVis)
-  {
-    if (!wantVis) 
-    {
-      RECT r;
-      GetWindowRect(hwnd,&r);
-      swell_destroyOSwindow(hwnd);
-      hwnd->m_position = r;
-    }
-    else 
-    {
-      if (swell_initwindowsys())
-      {
-        HWND owner = NULL; // hwnd->m_owner;
-// parent windows dont seem to work the way we'd want, yet, in gdk...
-/*        while (owner && !owner->m_oswindow)
-        {
-          if (owner->m_parent)  owner = owner->m_parent;
-          else if (owner->m_owner) owner = owner->m_owner;
-        }
-*/
- 
-        extern const char *g_swell_appname;
-        RECT r = hwnd->m_position;
-        GdkWindowAttr attr={0,};
-        attr.title = (char *)hwnd->m_title.Get();
-        attr.event_mask = GDK_ALL_EVENTS_MASK|GDK_EXPOSURE_MASK;
-        attr.x = r.left;
-        attr.y = r.top;
-        attr.width = r.right-r.left;
-        attr.height = r.bottom-r.top;
-        attr.wclass = GDK_INPUT_OUTPUT;
-        const char *appname = (gdk_options&16) ? NULL : g_swell_appname;
-        attr.wmclass_name = (gchar*)appname;
-        attr.wmclass_class = (gchar*)appname;
-        attr.window_type = GDK_WINDOW_TOPLEVEL;
-        hwnd->m_oswindow = gdk_window_new(owner ? owner->m_oswindow : NULL,&attr,GDK_WA_X|GDK_WA_Y|(appname?GDK_WA_WMCLASS:0));
- 
-        if (hwnd->m_oswindow) 
-        {
-          gdk_window_set_user_data(hwnd->m_oswindow,hwnd);
-          const bool modal = DialogBoxIsActive() == hwnd;
-          bool override_redirect=false;
-
-          if (!(hwnd->m_style & WS_CAPTION)) 
-          {
-            if ((!hwnd->m_classname || strcmp(hwnd->m_classname,"__SWELL_MENU")) && !(gdk_options&8))
-            {
-              GdkWindowTypeHint type = GDK_WINDOW_TYPE_HINT_DIALOG;
-              if (!hwnd->m_title.GetLength())
-              {
-                if (!SWELL_topwindows) type = GDK_WINDOW_TYPE_HINT_SPLASHSCREEN;
-                else if (SWELL_topwindows==hwnd && !hwnd->m_next)
-                  type = GDK_WINDOW_TYPE_HINT_SPLASHSCREEN;
-              }
-              gdk_window_set_type_hint(hwnd->m_oswindow, type);
-              gdk_window_set_decorations(hwnd->m_oswindow,(GdkWMDecoration) 0);
-              if (hwnd->m_owner && (gdk_options&2))
-                hwnd->m_israised=true;
-            }
-            else
-            {
-              gdk_window_set_override_redirect(hwnd->m_oswindow,true);
-              override_redirect=true;
-            }
-          }
-          else 
-          {
-            GdkWindowTypeHint type_hint = GDK_WINDOW_TYPE_HINT_NORMAL;
-            GdkWMDecoration decor = (GdkWMDecoration) (GDK_DECOR_ALL | GDK_DECOR_MENU);
-
-            if (!(hwnd->m_style&WS_THICKFRAME))
-              decor = (GdkWMDecoration) (GDK_DECOR_BORDER|GDK_DECOR_TITLE|GDK_DECOR_MINIMIZE);
-
-            if (modal)
-            {
-              type_hint = GDK_WINDOW_TYPE_HINT_DIALOG;
-            }
-            else if (hwnd->m_owner)
-            {
-              if (gdk_options&2)
-                hwnd->m_israised=true;
-
-              if (gdk_options&1)
-                type_hint = GDK_WINDOW_TYPE_HINT_DIALOG; 
-            }
-
-            gdk_window_set_type_hint(hwnd->m_oswindow,type_hint);
-            gdk_window_set_decorations(hwnd->m_oswindow,decor);
-          }
-
-          if (!wantfocus) gdk_window_set_focus_on_map(hwnd->m_oswindow,false);
-
-#ifdef SWELL_LICE_GDI
-          if (!hwnd->m_backingstore) hwnd->m_backingstore = new LICE_CairoBitmap;
-#endif
-          if (hwnd->m_style & WS_CAPTION)
-          {
-            if (s_program_icon_list) 
-              gdk_window_set_icon_list(hwnd->m_oswindow,s_program_icon_list);
-          }
-          if (hwnd->m_owner && !(gdk_options&4) && !override_redirect)
-          {
-            gdk_window_set_skip_taskbar_hint(hwnd->m_oswindow,true);
-          }
-          if (hwnd->m_israised)
-            gdk_window_set_keep_above(hwnd->m_oswindow,TRUE);
-          gdk_window_register_dnd(hwnd->m_oswindow);
-
-          if (hwnd->m_oswindow_fullscreen)
-            gdk_window_fullscreen(hwnd->m_oswindow);
-          gdk_window_show(hwnd->m_oswindow);
-
-          if (!hwnd->m_oswindow_fullscreen)
-          {
-            if (hwnd->m_has_had_position) 
-              gdk_window_move_resize(hwnd->m_oswindow,r.left,r.top,r.right-r.left,r.bottom-r.top);
-            else 
-              gdk_window_resize(hwnd->m_oswindow,r.right-r.left,r.bottom-r.top);
-          }
-        }
-      }
-    }
-  }
-  if (wantVis) swell_setOSwindowtext(hwnd);
-
-//  if (wantVis && isVis && wantfocus && hwnd && hwnd->m_oswindow) gdk_window_raise(hwnd->m_oswindow);
-}
-
-void swell_OSupdateWindowToScreen(HWND hwnd, RECT *rect)
-{
-#ifdef SWELL_LICE_GDI
-  if (hwnd && hwnd->m_backingstore && hwnd->m_oswindow)
-  {
-    LICE_IBitmap *bm = hwnd->m_backingstore;
-    LICE_SubBitmap tmpbm(bm,rect->left,rect->top,rect->right-rect->left,rect->bottom-rect->top);
-
-    GdkRectangle rrr={rect->left,rect->top,rect->right-rect->left,rect->bottom-rect->top};
-    gdk_window_begin_paint_rect(hwnd->m_oswindow, &rrr);
-
-    cairo_t * crc = gdk_cairo_create (hwnd->m_oswindow);
-    cairo_surface_t *temp_surface = (cairo_surface_t*)bm->Extended(0xca140,NULL);
-    if (temp_surface) cairo_set_source_surface(crc, temp_surface, 0,0);
-    cairo_paint(crc);
-    cairo_destroy(crc);
-
-    gdk_window_end_paint(hwnd->m_oswindow);
-
-    if (temp_surface) bm->Extended(0xca140,temp_surface); // release
-
-  }
-#endif
-}
-
-#if SWELL_TARGET_GDK == 2
-  #define DEF_GKY(x) GDK_##x
-#else
-  #define DEF_GKY(x) GDK_KEY_##x
-#endif
-
-static guint swell_gdkConvertKey(guint key)
-{
-  //gdk key to VK_ conversion
-  switch(key)
-  {
-  case DEF_GKY(KP_Home):
-  case DEF_GKY(Home): return VK_HOME;
-  case DEF_GKY(KP_End):
-  case DEF_GKY(End): return VK_END;
-  case DEF_GKY(KP_Up):
-  case DEF_GKY(Up): return VK_UP;
-  case DEF_GKY(KP_Down):
-  case DEF_GKY(Down): return VK_DOWN;
-  case DEF_GKY(KP_Left):
-  case DEF_GKY(Left): return VK_LEFT;
-  case DEF_GKY(KP_Right):
-  case DEF_GKY(Right): return VK_RIGHT;
-  case DEF_GKY(KP_Page_Up):
-  case DEF_GKY(Page_Up): return VK_PRIOR;
-  case DEF_GKY(KP_Page_Down):
-  case DEF_GKY(Page_Down): return VK_NEXT;
-  case DEF_GKY(KP_Insert):
-  case DEF_GKY(Insert): return VK_INSERT;
-  case DEF_GKY(KP_Delete):
-  case DEF_GKY(Delete): return VK_DELETE;
-  case DEF_GKY(Escape): return VK_ESCAPE;
-  case DEF_GKY(BackSpace): return VK_BACK;
-  case DEF_GKY(KP_Enter):
-  case DEF_GKY(Return): return VK_RETURN;
-  case DEF_GKY(ISO_Left_Tab):
-  case DEF_GKY(Tab): return VK_TAB;
-  case DEF_GKY(F1): return VK_F1;
-  case DEF_GKY(F2): return VK_F2;
-  case DEF_GKY(F3): return VK_F3;
-  case DEF_GKY(F4): return VK_F4;
-  case DEF_GKY(F5): return VK_F5;
-  case DEF_GKY(F6): return VK_F6;
-  case DEF_GKY(F7): return VK_F7;
-  case DEF_GKY(F8): return VK_F8;
-  case DEF_GKY(F9): return VK_F9;
-  case DEF_GKY(F10): return VK_F10;
-  case DEF_GKY(F11): return VK_F11;
-  case DEF_GKY(F12): return VK_F12;
-  case DEF_GKY(KP_0): return VK_NUMPAD0;
-  case DEF_GKY(KP_1): return VK_NUMPAD1;
-  case DEF_GKY(KP_2): return VK_NUMPAD2;
-  case DEF_GKY(KP_3): return VK_NUMPAD3;
-  case DEF_GKY(KP_4): return VK_NUMPAD4;
-  case DEF_GKY(KP_5): return VK_NUMPAD5;
-  case DEF_GKY(KP_6): return VK_NUMPAD6;
-  case DEF_GKY(KP_7): return VK_NUMPAD7;
-  case DEF_GKY(KP_8): return VK_NUMPAD8;
-  case DEF_GKY(KP_9): return VK_NUMPAD9;
-  case DEF_GKY(KP_Multiply): return VK_MULTIPLY;
-  case DEF_GKY(KP_Add): return VK_ADD;
-  case DEF_GKY(KP_Separator): return VK_SEPARATOR;
-  case DEF_GKY(KP_Subtract): return VK_SUBTRACT;
-  case DEF_GKY(KP_Decimal): return VK_DECIMAL;
-  case DEF_GKY(KP_Divide): return VK_DIVIDE;
-  case DEF_GKY(Num_Lock): return VK_NUMLOCK;
-  }
-  return 0;
-}
-
-static LRESULT SendMouseMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-  if (!hwnd || !hwnd->m_wndproc) return -1;
-  if (!IsWindowEnabled(hwnd)) 
-  {
-    if (msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN ||
-        msg == WM_LBUTTONDBLCLK || msg == WM_RBUTTONDBLCLK || msg == WM_MBUTTONDBLCLK)
-    {
-      HWND h = DialogBoxIsActive();
-      if (h) SetForegroundWindow(h);
-    }
-    return -1;
-  }
-
-  LRESULT htc=0;
-  if (msg != WM_MOUSEWHEEL && !GetCapture())
-  {
-    DWORD p=GetMessagePos(); 
-
-    htc=hwnd->m_wndproc(hwnd,WM_NCHITTEST,0,p); 
-    if (hwnd->m_hashaddestroy||!hwnd->m_wndproc) 
-    {
-      return -1; // if somehow WM_NCHITTEST destroyed us, bail
-    }
-     
-    if (htc!=HTCLIENT) 
-    { 
-      if (msg==WM_MOUSEMOVE) return hwnd->m_wndproc(hwnd,WM_NCMOUSEMOVE,htc,p); 
-//      if (msg==WM_MOUSEWHEEL) return hwnd->m_wndproc(hwnd,WM_NCMOUSEWHEEL,htc,p); 
-//      if (msg==WM_MOUSEHWHEEL) return hwnd->m_wndproc(hwnd,WM_NCMOUSEHWHEEL,htc,p); 
-      if (msg==WM_LBUTTONUP) return hwnd->m_wndproc(hwnd,WM_NCLBUTTONUP,htc,p); 
-      if (msg==WM_LBUTTONDOWN) return hwnd->m_wndproc(hwnd,WM_NCLBUTTONDOWN,htc,p); 
-      if (msg==WM_LBUTTONDBLCLK) return hwnd->m_wndproc(hwnd,WM_NCLBUTTONDBLCLK,htc,p); 
-      if (msg==WM_RBUTTONUP) return hwnd->m_wndproc(hwnd,WM_NCRBUTTONUP,htc,p); 
-      if (msg==WM_RBUTTONDOWN) return hwnd->m_wndproc(hwnd,WM_NCRBUTTONDOWN,htc,p); 
-      if (msg==WM_RBUTTONDBLCLK) return hwnd->m_wndproc(hwnd,WM_NCRBUTTONDBLCLK,htc,p); 
-      if (msg==WM_MBUTTONUP) return hwnd->m_wndproc(hwnd,WM_NCMBUTTONUP,htc,p); 
-      if (msg==WM_MBUTTONDOWN) return hwnd->m_wndproc(hwnd,WM_NCMBUTTONDOWN,htc,p); 
-      if (msg==WM_MBUTTONDBLCLK) return hwnd->m_wndproc(hwnd,WM_NCMBUTTONDBLCLK,htc,p); 
-    } 
-  }
-
-
-  LRESULT ret=hwnd->m_wndproc(hwnd,msg,wParam,lParam);
-
-  if (msg==WM_LBUTTONUP || msg==WM_RBUTTONUP || msg==WM_MOUSEMOVE || msg==WM_MBUTTONUP) 
-  {
-    if (!GetCapture() && (hwnd->m_hashaddestroy || !hwnd->m_wndproc || !hwnd->m_wndproc(hwnd,WM_SETCURSOR,(WPARAM)hwnd,htc | (msg<<16))))    
-    {
-      SetCursor(SWELL_LoadCursor(IDC_ARROW));
-    }
-  }
-
-  return ret;
-}
-
-HWND GetFocusIncludeMenus();
-
-static HANDLE s_clipboard_getstate, s_clipboard_setstate;
-static GdkAtom s_clipboard_getstate_fmt, s_clipboard_setstate_fmt;
-
-static HWND s_ddrop_hwnd;
-static POINT s_ddrop_pt;
-
-static int hex_parse(char c)
-{
-  if (c >= '0' && c <= '9') return c-'0';
-  if (c >= 'A' && c <= 'F') return 10+c-'A';
-  if (c >= 'a' && c <= 'f') return 10+c-'a';
-  return -1;
-}
-
-static GdkAtom utf8atom() 
-{
-  static GdkAtom tmp;
-  if (!tmp) tmp = gdk_atom_intern_static_string("UTF8_STRING");
-  return tmp;
-}
-static GdkAtom tgtatom() 
-{
-  static GdkAtom tmp;
-  if (!tmp) tmp = gdk_atom_intern_static_string("TARGETS");
-  return tmp;
-}
-static GdkAtom urilistatom() 
-{
-  static GdkAtom tmp;
-  if (!tmp) tmp = gdk_atom_intern_static_string("text/uri-list");
-  return tmp;
-}
-
-
-static void swell_gdkEventHandler(GdkEvent *evt, gpointer data)
-{
-  GdkEvent *oldEvt = s_cur_evt;
-  s_cur_evt = evt;
-    {
-      HWND hwnd = NULL;
-      if (((GdkEventAny*)evt)->window) gdk_window_get_user_data(((GdkEventAny*)evt)->window,(gpointer*)&hwnd);
-
-      if (hwnd) // validate window (todo later have a window class that we check)
-      {
-        HWND a = SWELL_topwindows;
-        while (a && a != hwnd) a=a->m_next;
-        if (!a) hwnd=NULL;
-      }
-
-      if (evt->type == GDK_FOCUS_CHANGE)
-      {
-        GdkEventFocus *fc = (GdkEventFocus *)evt;
-        if (fc->in && hwnd) 
-        {
-          const bool last_focus = !!SWELL_focused_oswindow;
-          swell_set_focus_oswindow(fc->window);
-
-          if (!last_focus)
-          {
-            HWND h = SWELL_topwindows; 
-            while (h)
-            {
-              if (h->m_oswindow && h->m_israised)
-                gdk_window_set_keep_above(h->m_oswindow,TRUE);
-              if (g_want_activateapp_on_focus) PostMessage(h,WM_ACTIVATEAPP,1,0);
-              h=h->m_next;
-            }
-            g_want_activateapp_on_focus=false;
-          }
-        }
-        else
-        {
-          if (SWELL_focused_oswindow == fc->window ||
-              swell_isOSwindowmenu(SWELL_focused_oswindow)) 
-          {
-            DestroyPopupMenus();
-            if (!g_focus_lost_timer) g_focus_lost_timer = SetTimer(NULL,0,200,focusLostTimer);
-          }
-        }
-      }
-
-      if (evt->type == GDK_SELECTION_REQUEST)
-      {
-        GdkEventSelection *b = (GdkEventSelection *)evt;
-        //printf("got sel req %s\n",gdk_atom_name(b->target));
-        GdkAtom prop=GDK_NONE;
-
-        if (swell_dragsrc_osw && b->window == swell_dragsrc_osw)
-        {
-          if (swell_dragsrc_hwnd)
-          {
-            if (b->target == tgtatom())
-            {
-              prop = b->property;
-              GdkAtom list[] = { urilistatom() };
-#if SWELL_TARGET_GDK == 2
-              GdkWindow *pw = gdk_window_lookup(b->requestor);
-              if (!pw) pw = gdk_window_foreign_new(b->requestor);
-#else
-              GdkWindow *pw = b->requestor;
-#endif
-              if (pw)
-                gdk_property_change(pw,prop,GDK_SELECTION_TYPE_ATOM,32, GDK_PROP_MODE_REPLACE,(guchar*)list,(int) (sizeof(list)/sizeof(list[0])));
-            }
-            SendMessage(swell_dragsrc_hwnd,WM_USER+100,(WPARAM)b,(LPARAM)&prop);
-          }
-        }
-        else if (s_clipboard_setstate)
-        {
-          if (b->target == tgtatom())
-          {
-            if (s_clipboard_setstate_fmt)
-            {
-              prop = b->property;
-              GdkAtom list[] = { s_clipboard_setstate_fmt };
-#if SWELL_TARGET_GDK == 2
-              GdkWindow *pw = gdk_window_lookup(b->requestor);
-              if (!pw) pw = gdk_window_foreign_new(b->requestor);
-#else
-              GdkWindow *pw = b->requestor;
-#endif
-              if (pw)
-                gdk_property_change(pw,prop,GDK_SELECTION_TYPE_ATOM,32, GDK_PROP_MODE_REPLACE,(guchar*)list,(int) (sizeof(list)/sizeof(list[0])));
-            }
-          }
-          else 
-          {
-            if (b->target == s_clipboard_setstate_fmt || 
-                (b->target == GDK_TARGET_STRING && s_clipboard_setstate_fmt == utf8atom())
-               )
-            {
-              prop = b->property;
-              int len = GlobalSize(s_clipboard_setstate);
-              guchar *ptr = (guchar*)s_clipboard_setstate;
-
-              WDL_FastString str;
-              if (s_clipboard_setstate_fmt == utf8atom())
-              {
-                const char *rd = (const char *)s_clipboard_setstate;
-                while (*rd)
-                {
-                  if (!strncmp(rd,"\r\n",2))
-                  {
-                    str.Append("\n");
-                    rd+=2;
-                  }
-                  else
-                    str.Append(rd++,1);
-                }
-                ptr = (guchar *)str.Get();
-                len = str.GetLength();
-              }
-#if SWELL_TARGET_GDK == 2
-              GdkWindow *pw = gdk_window_lookup(b->requestor);
-              if (!pw) pw = gdk_window_foreign_new(b->requestor);
-#else
-              GdkWindow *pw = b->requestor;
-#endif
-              if (pw)
-                gdk_property_change(pw,prop,b->target,8, GDK_PROP_MODE_REPLACE,ptr,len);
-            }
-          }
-        }
-        gdk_selection_send_notify(b->requestor,b->selection,b->target,prop,GDK_CURRENT_TIME);
-      }
-      else if (hwnd) switch (evt->type)
-      {
-        case GDK_DELETE:
-          if (IsWindowEnabled(hwnd) && !SendMessage(hwnd,WM_CLOSE,0,0))
-            SendMessage(hwnd,WM_COMMAND,IDCANCEL,0);
-        break;
-        case GDK_EXPOSE: // paint! GdkEventExpose...
-          {
-            GdkEventExpose *exp = (GdkEventExpose*)evt;
-#ifdef SWELL_LICE_GDI
-            // super slow
-            RECT r,cr;
-
-            // don't use GetClientRect(),since we're getting it pre-NCCALCSIZE etc
-
-            cr.left=cr.top=0;
-            cr.right = hwnd->m_position.right - hwnd->m_position.left;
-            cr.bottom = hwnd->m_position.bottom - hwnd->m_position.top;
-
-            r.left = exp->area.x; 
-            r.top=exp->area.y; 
-            r.bottom=r.top+exp->area.height; 
-            r.right=r.left+exp->area.width;
-
-            if (!hwnd->m_backingstore) hwnd->m_backingstore = new LICE_CairoBitmap;
-            // if (!hwnd->m_backingstore) hwnd->m_backingstore = new LICE_MemBitmap;
-
-            bool forceref = hwnd->m_backingstore->resize(cr.right-cr.left,cr.bottom-cr.top);
-            if (forceref) r = cr;
-
-            LICE_SubBitmap tmpbm(hwnd->m_backingstore,r.left,r.top,r.right-r.left,r.bottom-r.top);
-
-            if (tmpbm.getWidth()>0 && tmpbm.getHeight()>0) 
-            {
-              void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int bmout_ypos, bool forceref);
-              SWELL_internalLICEpaint(hwnd, &tmpbm, r.left, r.top, forceref);
-
-              GdkRectangle rrr={r.left,r.top,r.right-r.left,r.bottom-r.top};
-              gdk_window_begin_paint_rect(exp->window, &rrr);
-
-              cairo_t *crc = gdk_cairo_create (exp->window);
-              LICE_IBitmap *bm = hwnd->m_backingstore;
-              cairo_surface_t *temp_surface = (cairo_surface_t*)bm->Extended(0xca140,NULL);
-              if (temp_surface) cairo_set_source_surface(crc, temp_surface, 0,0);
-              cairo_paint(crc);
-              cairo_destroy(crc);
-              if (temp_surface) bm->Extended(0xca140,temp_surface); // release
-
-              gdk_window_end_paint(exp->window);
-            }
-#endif
-          }
-        break;
-        case GDK_CONFIGURE: // size/move, GdkEventConfigure
-          {
-            GdkEventConfigure *cfg = (GdkEventConfigure*)evt;
-            int flag=0;
-            if (cfg->x != hwnd->m_position.left || 
-                cfg->y != hwnd->m_position.top || 
-                !hwnd->m_has_had_position)
-            {
-              flag|=1;
-              hwnd->m_has_had_position = true;
-            }
-            if (cfg->width != hwnd->m_position.right-hwnd->m_position.left || cfg->height != hwnd->m_position.bottom - hwnd->m_position.top) flag|=2;
-            hwnd->m_position.left = cfg->x;
-            hwnd->m_position.top = cfg->y;
-            hwnd->m_position.right = cfg->x + cfg->width;
-            hwnd->m_position.bottom = cfg->y + cfg->height;
-            if (flag&1) SendMessage(hwnd,WM_MOVE,0,0);
-            if (flag&2) SendMessage(hwnd,WM_SIZE,0,0);
-            if (!hwnd->m_hashaddestroy && hwnd->m_oswindow) swell_recalcMinMaxInfo(hwnd);
-          }
-        break;
-        case GDK_WINDOW_STATE: /// GdkEventWindowState for min/max
-          //printf("minmax\n");
-        break;
-        case GDK_GRAB_BROKEN:
-          {
-            //GdkEventGrabBroken *bk = (GdkEventGrabBroken*)evt;
-            if (s_captured_window)
-            {
-              SendMessage(s_captured_window,WM_CAPTURECHANGED,0,0);
-              s_captured_window=0;
-            }
-          }
-        break;
-        case GDK_KEY_PRESS:
-        case GDK_KEY_RELEASE:
-          { // todo: pass through app-specific default processing before sending to child window
-            GdkEventKey *k = (GdkEventKey *)evt;
-            //printf("key%s: %d %s\n", evt->type == GDK_KEY_PRESS ? "down" : "up", k->keyval, k->string);
-            int modifiers = 0;
-            if (k->state&GDK_CONTROL_MASK) modifiers|=FCONTROL;
-            if (k->state&GDK_MOD1_MASK) modifiers|=FALT;
-            if (k->state&SWELL_WINDOWSKEY_GDK_MASK) modifiers|=FLWIN;
-            if (k->state&GDK_SHIFT_MASK) modifiers|=FSHIFT;
- 
-            UINT msgtype = evt->type == GDK_KEY_PRESS ? WM_KEYDOWN : WM_KEYUP;
-
-            guint kv = swell_gdkConvertKey(k->keyval);
-            if (kv) 
-            {
-              modifiers |= FVIRTKEY;
-            }
-            else 
-            {
-              kv = k->keyval;
-              if (is_virtkey_char(kv))
-              {
-                if (kv >= 'a' && kv <= 'z') 
-                {
-                  kv += 'A'-'a';
-                  is_likely_capslock = (modifiers&FSHIFT)!=0;
-                }
-                else if (kv >= 'A' && kv <= 'Z') 
-                {
-                  is_likely_capslock = (modifiers&FSHIFT)==0;
-                }
-                modifiers |= FVIRTKEY;
-              }
-              else 
-              {
-                if (kv >= DEF_GKY(Shift_L))
-                {
-                  if (kv == DEF_GKY(Shift_L) || kv == DEF_GKY(Shift_R)) kv = VK_SHIFT;
-                  else if (kv == DEF_GKY(Control_L) || kv == DEF_GKY(Control_R)) kv = VK_CONTROL;
-                  else if (kv == DEF_GKY(Alt_L) || kv == DEF_GKY(Alt_R)) kv = VK_MENU;
-                  else if (kv == DEF_GKY(Super_L) || kv == DEF_GKY(Super_R)) kv = VK_LWIN;
-                  else break; // unknown modifier
-
-                  msgtype = evt->type == GDK_KEY_PRESS ? WM_SYSKEYDOWN : WM_SYSKEYUP;
-                  modifiers|=FVIRTKEY;
-                }
-                else if (kv > 255) 
-                {
-                  guint v = gdk_keyval_to_unicode(kv);
-                  if (v) kv=v;
-                }
-                else
-                {
-                  // treat as ASCII, clear shift flag (?)
-                  modifiers &= ~FSHIFT;
-                }
-              }
-            }
-
-            HWND foc = GetFocusIncludeMenus();
-            if (foc && IsChild(hwnd,foc)) hwnd=foc;
-            else if (foc && foc->m_oswindow && !(foc->m_style&WS_CAPTION)) hwnd=foc; // for menus, event sent to other window due to gdk_window_set_override_redirect()
-
-            MSG msg = { hwnd, msgtype, kv, modifiers, };
-            if (SWELLAppMain(SWELLAPP_PROCESSMESSAGE,(INT_PTR)&msg,0)<=0)
-              SendMessage(hwnd, msg.message, kv, modifiers);
-          }
-        break;
-        case GDK_MOTION_NOTIFY:
-          {
-            GdkEventMotion *m = (GdkEventMotion *)evt;
-            s_lastMessagePos = MAKELONG(((int)m->x_root&0xffff),((int)m->y_root&0xffff));
-            POINT p={(int)m->x, (int)m->y};
-            HWND hwnd2 = GetCapture();
-            if (!hwnd2) hwnd2=ChildWindowFromPoint(hwnd, p);
-            POINT p2={(int)m->x_root, (int)m->y_root};
-            ScreenToClient(hwnd2, &p2);
-            if (hwnd2) hwnd2->Retain();
-            SendMouseMessage(hwnd2, WM_MOUSEMOVE, 0, MAKELPARAM(p2.x, p2.y));
-            if (hwnd2) hwnd2->Release();
-            gdk_event_request_motions(m);
-          }
-        break;
-        case GDK_SCROLL:
-          {
-            GdkEventScroll *b = (GdkEventScroll *)evt;
-            s_lastMessagePos = MAKELONG(((int)b->x_root&0xffff),((int)b->y_root&0xffff));
-            POINT p={(int)b->x, (int)b->y};
-            HWND hwnd2 = GetCapture();
-            if (!hwnd2) hwnd2=ChildWindowFromPoint(hwnd, p);
-            POINT p2={(int)b->x_root, (int)b->y_root};
-            // p2 is screen coordinates for WM_MOUSEWHEEL
-
-            int msg=(b->direction == GDK_SCROLL_UP || b->direction == GDK_SCROLL_DOWN) ? WM_MOUSEWHEEL :
-                    (b->direction == GDK_SCROLL_LEFT || b->direction == GDK_SCROLL_RIGHT) ? WM_MOUSEHWHEEL : 0;
-            
-            if (msg) 
-            {
-              int v = (b->direction == GDK_SCROLL_UP || b->direction == GDK_SCROLL_LEFT) ? 120 : -120;
- 
-              if (hwnd2) hwnd2->Retain();
-              SendMouseMessage(hwnd2, msg, (v<<16), MAKELPARAM(p2.x, p2.y));
-              if (hwnd2) hwnd2->Release();
-            }
-          }
-        break;
-        case GDK_BUTTON_PRESS:
-        case GDK_2BUTTON_PRESS:
-        case GDK_BUTTON_RELEASE:
-          {
-            GdkEventButton *b = (GdkEventButton *)evt;
-            s_lastMessagePos = MAKELONG(((int)b->x_root&0xffff),((int)b->y_root&0xffff));
-            POINT p={(int)b->x, (int)b->y};
-            HWND hwnd2 = GetCapture();
-            if (!hwnd2) hwnd2=ChildWindowFromPoint(hwnd, p);
-            POINT p2={(int)b->x_root, (int)b->y_root};
-            ScreenToClient(hwnd2, &p2);
-
-            int msg=WM_LBUTTONDOWN;
-            if (b->button==2) msg=WM_MBUTTONDOWN;
-            else if (b->button==3) msg=WM_RBUTTONDOWN;
-            
-            if (hwnd && hwnd->m_oswindow && SWELL_focused_oswindow != hwnd->m_oswindow)
-            {
-              swell_set_focus_oswindow(hwnd->m_oswindow);
-            }
-
-            if(evt->type == GDK_BUTTON_RELEASE) msg++; // move from down to up
-            else if(evt->type == GDK_2BUTTON_PRESS) msg+=2; // move from down to up
-
-            if (hwnd2) hwnd2->Retain();
-            SendMouseMessage(hwnd2, msg, 0, MAKELPARAM(p2.x, p2.y));
-            if (hwnd2) hwnd2->Release();
-          }
-        break;
-        case GDK_SELECTION_NOTIFY:
-        {
-          GdkEventSelection *b = (GdkEventSelection *)evt;
-
-          // validate hwnd/s_ddrop_hwnd
-          if (s_ddrop_hwnd)
-          {
-            HWND a = SWELL_topwindows;
-            while (a && a != s_ddrop_hwnd) a=a->m_next;
-            if (!a) s_ddrop_hwnd=NULL;
-          }
-
-          if (hwnd == s_ddrop_hwnd && b->target == urilistatom())
-          {
-            POINT p = s_ddrop_pt;
-            HWND cw=hwnd;
-            RECT r;
-            GetWindowContentViewRect(hwnd,&r);
-            if (PtInRect(&r,p))
-            {
-              p.x -= r.left;
-              p.y -= r.top;
-              cw = ChildWindowFromPoint(hwnd,p);
-            }
-            if (!cw) cw=hwnd;
-
-            guchar *gptr=NULL;
-            GdkAtom fmt;
-            gint unitsz=0;
-            gint sz=gdk_selection_property_get(b->window,&gptr,&fmt,&unitsz);
-
-            if (sz>0 && gptr)
-            {
-              HANDLE gobj=GlobalAlloc(0,sz+sizeof(DROPFILES));
-              if (gobj)
-              {
-                DROPFILES *df=(DROPFILES*)gobj;
-                df->pFiles = sizeof(DROPFILES);
-                df->pt = s_ddrop_pt;
-                ScreenToClient(cw,&df->pt);
-                df->fNC=FALSE;
-                df->fWide=FALSE;
-                guchar *pout = (guchar *)(df+1);
-                const guchar *rd = gptr;
-                const guchar *rd_end = rd + sz;
-                for (;;)
-                {
-                  while (rd < rd_end && *rd && isspace(*rd)) rd++;
-                  if (rd >= rd_end) break;
-
-                  if (rd+7 < rd_end && !strnicmp((const char *)rd,"file://",7))
-                  {
-                    rd += 7;
-                    int c=0;
-                    while (rd < rd_end && *rd && !isspace(*rd))
-                    {
-                      int v1,v2;
-                      if (*rd == '%' && rd+2 < rd_end && (v1=hex_parse(rd[1]))>=0 && (v2=hex_parse(rd[2]))>=0)
-                      {
-                        *pout++ = (v1<<4) | v2;
-                        rd+=3;
-                      }
-                      else
-                      {
-                        *pout++ = *rd++;
-                      }
-                      c++;
-                    }
-                    if (c) *pout++=0;
-                  }
-                  else
-                  {
-                    while (rd < rd_end && *rd && !isspace(*rd)) rd++;
-                  }
-                }
-                *pout++=0;
-                *pout++=0;
-
-                SendMessage(cw,WM_DROPFILES,(WPARAM)gobj,0);
-                GlobalFree(gobj);
-              }
-            }
-
-            if (gptr) g_free(gptr);
-          }
-          s_ddrop_hwnd=NULL;
-
-
-          if (s_clipboard_getstate) { GlobalFree(s_clipboard_getstate); s_clipboard_getstate=NULL; }
-          guchar *gptr=NULL;
-          GdkAtom fmt;
-          gint unitsz=0;
-          gint sz=gdk_selection_property_get(b->window,&gptr,&fmt,&unitsz);
-          if (sz>0 && gptr && (unitsz == 8 || unitsz == 16 || unitsz == 32))
-          {
-            WDL_FastString str;
-            guchar *ptr = gptr;
-            if (fmt == GDK_TARGET_STRING || fmt == utf8atom())
-            {
-              int lastc=0;
-              while (sz-->0)
-              {
-                int c;
-                if (unitsz==32) { c = *(unsigned int *)ptr; ptr+=4; }
-                else if (unitsz==16)  { c = *(unsigned short *)ptr; ptr+=2; }
-                else c = *ptr++;
-
-                if (!c) break;
-
-                if (c == '\n' && lastc != '\r') str.Append("\r",1);
-
-                if (fmt != GDK_TARGET_STRING)
-                {
-                  char b = (char) ((unsigned char)c);
-                  str.Append(&b,1);
-                } 
-                else
-                {
-                  char b[8];
-                  WDL_MakeUTFChar(b,c,sizeof(b));
-                  str.Append(b);
-                }
-
-                lastc=c;
-              }
-              ptr = (guchar*)str.Get();
-              sz=str.GetLength()+1;
-            }
-            else if (unitsz>8) sz *= (unitsz/8);
-
-            s_clipboard_getstate = GlobalAlloc(0,sz);
-            if (s_clipboard_getstate)
-            {
-              memcpy(s_clipboard_getstate,ptr,sz);
-              s_clipboard_getstate_fmt = fmt;
-            }
-          }
-          if (gptr) g_free(gptr);
-        }
-        break;
-        case GDK_DRAG_ENTER:
-        case GDK_DRAG_MOTION:
-          {
-            GdkEventDND *e = (GdkEventDND *)evt;
-            if (e->context)
-            {
-              gdk_drag_status(e->context,GDK_ACTION_COPY,e->time);
-              //? gdk_drop_reply(e->context,TRUE,e->time);
-            }
-          }
-        break;
-        case GDK_DRAG_LEAVE:
-        case GDK_DRAG_STATUS:
-        case GDK_DROP_FINISHED:
-        break;
-        case GDK_DROP_START:
-          {
-            GdkEventDND *e = (GdkEventDND *)evt;
-            GdkDragContext *ctx = e->context;
-            if (ctx)
-            {
-              POINT p = { (int)e->x_root, (int)e->y_root };
-              s_ddrop_hwnd = hwnd;
-              s_ddrop_pt = p;
-
-              GdkAtom srca = gdk_drag_get_selection(ctx);
-              gdk_selection_convert(e->window,srca,urilistatom(),e->time);
-              gdk_drop_finish(ctx,TRUE,e->time);
-            }
-          }
-        break;
-
-        default:
-          //printf("msg: %d\n",evt->type);
-        break;
-      }
-    }
-  s_cur_evt = oldEvt;
-}
-
-void swell_runOSevents()
-{
-  if (SWELL_gdk_active>0) 
-  {
-//    static GMainLoop *loop;
-//    if (!loop) loop = g_main_loop_new(NULL,TRUE);
-#if SWELL_TARGET_GDK == 2
-    gdk_window_process_all_updates();
-#endif
-
-    GMainContext *ctx=g_main_context_default();
-    while (g_main_context_iteration(ctx,FALSE))
-    {
-      GdkEvent *evt;
-      while (gdk_events_pending() && (evt = gdk_event_get()))
-      {
-        swell_gdkEventHandler(evt,(gpointer)1);
-        gdk_event_free(evt);
-      }
-    }
-  }
-}
-void SWELL_RunEvents()
-{
-  swell_runOSevents();
-}
-
-#else
-void SWELL_initargs(int *argc, char ***argv)
-{
-}
-void swell_OSupdateWindowToScreen(HWND hwnd, RECT *rect)
-{
-}
-static void swell_manageOSwindow(HWND hwnd, bool wantfocus)
-{
-  if (!hwnd) return;
-
-  bool isVis = !!hwnd->m_oswindow;
-  bool wantVis = !hwnd->m_parent && hwnd->m_visible;
-
-  if (isVis != wantVis)
-  {
-    if (!wantVis) swell_destroyOSwindow(hwnd);
-    else 
-    {
-       // generic implementation
-      hwnd->m_oswindow = hwnd;
-      if (wantfocus) swell_focusOSwindow(hwnd);
-    }
-  }
-  if (wantVis) swell_setOSwindowtext(hwnd);
-}
-
-#define swell_initwindowsys() (0)
-#define swell_runOSevents()
-
-#endif
 
 HWND__::HWND__(HWND par, int wID, RECT *wndr, const char *label, bool visible, WNDPROC wndproc, DLGPROC dlgproc, HWND ownerWindow)
 {
@@ -1270,7 +90,7 @@ HWND__::HWND__(HWND par, int wID, RECT *wndr, const char *label, bool visible, W
   m_private_data=0;
   m_israised=false;
   m_has_had_position=false;
-  m_oswindow_needshow=false;
+  m_oswindow_private=0;
   m_oswindow_fullscreen=false;
 
      m_classname = "unknown";
@@ -1291,6 +111,7 @@ HWND__::HWND__(HWND par, int wID, RECT *wndr, const char *label, bool visible, W
      m_enabled=true;
      m_wantfocus=true;
      m_menu=NULL;
+     m_font=NULL;
      m_oswindow = NULL;
 
 #ifdef SWELL_LICE_GDI
@@ -1343,30 +164,10 @@ LONG_PTR SetWindowLong(HWND hwnd, int idx, LONG_PTR val)
   if (!hwnd) return 0;
   if (idx==GWL_STYLE)
   {
-     // todo: special case for buttons
     LONG ret = hwnd->m_style;
-    hwnd->m_style=val;
-
-#ifdef SWELL_TARGET_GDK
-    if (hwnd->m_oswindow && ((ret^val)& WS_CAPTION))
-    {
-      gdk_window_hide(hwnd->m_oswindow);
-      if (val & WS_CAPTION)
-      {
-        if (val & WS_THICKFRAME)
-          gdk_window_set_decorations(hwnd->m_oswindow,(GdkWMDecoration) (GDK_DECOR_ALL | GDK_DECOR_MENU));
-        else
-          gdk_window_set_decorations(hwnd->m_oswindow,(GdkWMDecoration) (GDK_DECOR_BORDER|GDK_DECOR_TITLE|GDK_DECOR_MINIMIZE));
-      }
-      else
-      {
-        gdk_window_set_decorations(hwnd->m_oswindow,(GdkWMDecoration) 0);
-      }
-      hwnd->m_oswindow_needshow=true;
-    }
-#endif
-
-    return ret;
+    hwnd->m_style=val & ~WS_VISIBLE;
+    swell_oswindow_update_style(hwnd,ret);
+    return ret & ~WS_VISIBLE;
   }
   if (idx==GWL_EXSTYLE)
   {
@@ -1414,8 +215,10 @@ LONG_PTR GetWindowLong(HWND hwnd, int idx)
   if (!hwnd) return 0;
   if (idx==GWL_STYLE)
   {
-     // todo: special case for buttons
-    return hwnd->m_style;
+    LONG_PTR ret = hwnd->m_style;
+    if (hwnd->m_visible) ret|=WS_VISIBLE;
+    else ret &= ~WS_VISIBLE;
+    return ret;
   }
   if (idx==GWL_EXSTYLE)
   {
@@ -1447,10 +250,27 @@ LONG_PTR GetWindowLong(HWND hwnd, int idx)
 }
 
 
+static bool __isWindow(HWND hc, HWND hFind)
+{
+  while (hc)
+  {
+    if (hc == hFind || (hc->m_children && __isWindow(hc->m_children,hFind))) return true;
+    hc = hc->m_next;
+  }
+  return false;
+}
+
 bool IsWindow(HWND hwnd)
 {
-  // todo: verify window is valid (somehow)
-  return !!hwnd;
+  if (!hwnd) return false;
+  HWND h = SWELL_topwindows;
+  while (h)
+  {
+    if (hwnd == h || (h->m_children && __isWindow(h->m_children,hwnd))) return true;
+    h=h->m_next;
+  }
+
+  return false;
 }
 
 bool IsWindowVisible(HWND hwnd)
@@ -1463,6 +283,8 @@ bool IsWindowVisible(HWND hwnd)
   }
   return false;
 }
+
+bool IsModalDialogBox(HWND hwnd);
 
 LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -1480,6 +302,8 @@ LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   else if (hwnd->m_hashaddestroy == 2) return 0;
   else if (msg==WM_CAPTURECHANGED && hwnd->m_hashaddestroy) return 0;
     
+  hwnd->Retain();
+
   LRESULT ret = wp ? wp(hwnd,msg,wParam,lParam) : 0;
  
   if (msg == WM_DESTROY)
@@ -1495,30 +319,26 @@ LRESULT SendMessage(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       tmp=tmp->m_next;
       SendMessage(old,WM_DESTROY,0,0);
     }
-    tmp=hwnd->m_owned_list;
-    while (tmp)
     {
-      HWND old = tmp;
-      tmp=tmp->m_owned_next;
-      SendMessage(old,WM_DESTROY,0,0);
+      tmp=hwnd->m_owned_list;
+      while (tmp)
+      {
+        HWND old = tmp;
+        tmp=tmp->m_owned_next;
+        if (!IsModalDialogBox(old)) SendMessage(old,WM_DESTROY,0,0);
+      }
     }
     if (SWELL_focused_oswindow && SWELL_focused_oswindow == hwnd->m_oswindow)
     {
       HWND h = hwnd->m_owner;
       while (h && !h->m_oswindow) h = h->m_parent ? h->m_parent : h->m_owner;
-      if (h && h->m_oswindow) 
-      {
-        swell_focusOSwindow(h);
-      }
-      else 
-      {
-        swell_set_focus_oswindow(NULL);
-      }
+      swell_oswindow_focus(h && h->m_oswindow ? h : NULL);
     }
     hwnd->m_wndproc=NULL;
     hwnd->m_hashaddestroy=2;
     KillTimer(hwnd,-1);
   }
+  hwnd->Release();
   return ret;
 }
 
@@ -1532,8 +352,13 @@ static void swell_removeWindowFromParentOrTop(HWND__ *hwnd, bool removeFromOwner
     if (par->m_focused_child == hwnd) par->m_focused_child=NULL;
     if (par->m_children == hwnd) par->m_children = hwnd->m_next;
   }
-  if (hwnd == SWELL_topwindows) SWELL_topwindows = hwnd->m_next;
+  if (hwnd == SWELL_topwindows) 
+  { 
+    SWELL_topwindows = hwnd->m_next;
+    VALIDATE_HWND_LIST(SWELL_topwindows,NULL);
+  }
   hwnd->m_next = hwnd->m_prev = hwnd->m_parent = NULL;
+  if (par) VALIDATE_HWND_LIST(par->m_children,par);
 
   if (removeFromOwner)
   {
@@ -1546,7 +371,7 @@ static void swell_removeWindowFromParentOrTop(HWND__ *hwnd, bool removeFromOwner
   if (par && !par->m_hashaddestroy) InvalidateRect(par,NULL,FALSE);
 }
 
-static void RecurseDestroyWindow(HWND hwnd)
+void RecurseDestroyWindow(HWND hwnd)
 {
   HWND tmp=hwnd->m_children;
   hwnd->m_children=NULL;
@@ -1570,12 +395,13 @@ static void RecurseDestroyWindow(HWND hwnd)
     if (tmp) tmp->m_owned_prev = NULL;
 
     old->m_owned_prev = old->m_owned_next = NULL;
-    RecurseDestroyWindow(old);
+    old->m_owner = NULL;
+    if (old->m_hashaddestroy) RecurseDestroyWindow(old);
   }
 
-  if (s_captured_window == hwnd) s_captured_window=NULL;
+  if (swell_captured_window == hwnd) swell_captured_window=NULL;
 
-  swell_destroyOSwindow(hwnd);
+  swell_oswindow_destroy(hwnd);
 
   if (hwnd->m_menu) DestroyMenu(hwnd->m_menu);
   hwnd->m_menu=0;
@@ -1624,9 +450,7 @@ void EnableWindow(HWND hwnd, int enable)
   if (!!hwnd->m_enabled == !!enable) return;
 
   hwnd->m_enabled=!!enable;
-#ifdef SWELL_TARGET_GDK
-  if (hwnd->m_oswindow) gdk_window_set_accept_focus(hwnd->m_oswindow,!!enable);
-#endif
+  swell_oswindow_update_enable(hwnd);
 
   if (!enable)
   {
@@ -1646,17 +470,28 @@ void SetForegroundWindow(HWND hwnd)
     hwnd->m_parent->m_focused_child = hwnd;
     hwnd = hwnd->m_parent;
   }
-  swell_focusOSwindow(hwnd);
+  if (hwnd) swell_oswindow_focus(hwnd);
+}
+
+void SetFocusInternal(HWND hwnd)
+{
+  hwnd->m_focused_child=NULL; // make sure this window has focus, not a child
+  SetForegroundWindow(hwnd);
 }
 
 void SetFocus(HWND hwnd)
 {
   if (!hwnd) return;
+  HWND oldfoc = GetFocus();
+  SetFocusInternal(hwnd);
 
-  hwnd->m_focused_child=NULL; // make sure this window has focus, not a child
-  SetForegroundWindow(hwnd);
+  if (hwnd->m_classname && oldfoc != hwnd)
+  {
+    if (!strcmp(hwnd->m_classname,"Edit") ||
+        !strcmp(hwnd->m_classname,"combobox"))
+      SendMessage(hwnd,EM_SETSEL,0,-1);
+  }
 }
-
 
 
 int IsChild(HWND hwndParent, HWND hwndChild)
@@ -1669,20 +504,9 @@ int IsChild(HWND hwndParent, HWND hwndChild)
 }
 
 
-HWND GetForegroundWindowIncludeMenus()
-{
-  if (!SWELL_focused_oswindow) return 0;
-  HWND a = SWELL_topwindows;
-  while (a && a->m_oswindow != SWELL_focused_oswindow) a=a->m_next;
-  return a;
-}
-
 HWND GetFocusIncludeMenus()
 {
-  if (!SWELL_focused_oswindow) return 0;
-  HWND h = SWELL_topwindows;
-  while (h && h->m_oswindow != SWELL_focused_oswindow) h=h->m_next;
-
+  HWND h = swell_app_is_inactive ? NULL : swell_oswindow_to_hwnd(SWELL_focused_oswindow);
   while (h) 
   {
     HWND fc = h->m_focused_child;
@@ -1697,10 +521,7 @@ HWND GetFocusIncludeMenus()
 
 HWND GetForegroundWindow()
 {
-  HWND h =GetForegroundWindowIncludeMenus();
-  HWND ho;
-  while (h && (ho=(HWND)GetProp(h,"SWELL_MenuOwner"))) h=ho; 
-  return h;
+  return GetFocus();
 }
 
 HWND GetFocus()
@@ -1711,98 +532,35 @@ HWND GetFocus()
   return h;
 }
 
-
-void SWELL_GetViewPort(RECT *r, const RECT *sourcerect, bool wantWork)
-{
-#ifdef SWELL_TARGET_GDK
-  if (swell_initwindowsys())
-  {
-    GdkScreen *defscr = gdk_screen_get_default();
-    if (!defscr) { r->left=r->top=0; r->right=r->bottom=1024; return; }
-    gint idx = sourcerect ? gdk_screen_get_monitor_at_point(defscr,
-           (sourcerect->left+sourcerect->right)/2,
-           (sourcerect->top+sourcerect->bottom)/2) : 0;
-    GdkRectangle rc={0,0,1024,1024};
-    gdk_screen_get_monitor_geometry(defscr,idx,&rc);
-    r->left=rc.x; r->top = rc.y;
-    r->right=rc.x+rc.width;
-    r->bottom=rc.y+rc.height;
-    return;
-  }
-#endif
-  r->left=r->top=0;
-  r->right=1024;
-  r->bottom=768;
-}
-
-
-void ScreenToClient(HWND hwnd, POINT *p)
+void ScreenToClient(HWND hwnd, POINT *pt)
 {
   if (!hwnd) return;
   
-  int x=p->x,y=p->y;
-
   HWND tmp=hwnd;
   while (tmp)
   {
     NCCALCSIZE_PARAMS p = {{ tmp->m_position, }, };
     if (tmp->m_wndproc) tmp->m_wndproc(tmp,WM_NCCALCSIZE,0,(LPARAM)&p);
 
-    x -= p.rgrc[0].left;
-    y -= p.rgrc[0].top;
+    pt->x -= p.rgrc[0].left;
+    pt->y -= p.rgrc[0].top;
     tmp = tmp->m_parent;
   }
-
-  p->x=x;
-  p->y=y;
 }
 
-void ClientToScreen(HWND hwnd, POINT *p)
+void ClientToScreen(HWND hwnd, POINT *pt)
 {
   if (!hwnd) return;
   
-  int x=p->x,y=p->y;
-
   HWND tmp=hwnd;
   while (tmp)
   {
     NCCALCSIZE_PARAMS p={{tmp->m_position, }, };
     if (tmp->m_wndproc) tmp->m_wndproc(tmp,WM_NCCALCSIZE,0,(LPARAM)&p);
-    x += p.rgrc[0].left;
-    y += p.rgrc[0].top;
+    pt->x += p.rgrc[0].left;
+    pt->y += p.rgrc[0].top;
     tmp = tmp->m_parent;
   }
-
-  p->x=x;
-  p->y=y;
-}
-
-bool GetWindowRect(HWND hwnd, RECT *r)
-{
-  if (!hwnd) return false;
-  if (hwnd->m_oswindow)
-  {
-#ifdef SWELL_TARGET_GDK
-    gint x=hwnd->m_position.left,y=hwnd->m_position.top;
-
-    // need to get the origin of the frame for consistency with SetWindowPos()
-    gdk_window_get_root_origin(hwnd->m_oswindow,&x,&y);
-
-    r->left=x;
-    r->top=y;
-    r->right=x + hwnd->m_position.right - hwnd->m_position.left;
-    r->bottom = y + hwnd->m_position.bottom - hwnd->m_position.top;
-#else
-    *r = hwnd->m_position;
-#endif
-    return true;
-  }
-
-  r->left=r->top=0; 
-  ClientToScreen(hwnd,(LPPOINT)r);
-  r->right = r->left + hwnd->m_position.right - hwnd->m_position.left;
-  r->bottom = r->top + hwnd->m_position.bottom - hwnd->m_position.top;
-  return true;
 }
 
 void GetWindowContentViewRect(HWND hwnd, RECT *r)
@@ -1896,50 +654,39 @@ void SetWindowPos(HWND hwnd, HWND zorder, int x, int y, int cx, int cy, int flag
   {
     if (hwnd->m_oswindow && (reposflag&2))
     {
-#ifdef SWELL_TARGET_GDK
-      // make sure window is resizable (hints will be re-set on upcoming CONFIGURE event)
-      gdk_window_set_geometry_hints(hwnd->m_oswindow,NULL,(GdkWindowHints) 0); 
-#endif
+      swell_oswindow_begin_resize(hwnd->m_oswindow);
     }
 
     if (reposflag&3) 
     {
-      const bool sizeChanged = (reposflag&2) && (
-           cx != hwnd->m_position.right-hwnd->m_position.left ||
-           cy != hwnd->m_position.bottom-hwnd->m_position.top
-         );
       hwnd->m_position = f;
-      if (sizeChanged) SendMessage(hwnd,WM_SIZE,0,0);
     }
 
     if (hwnd->m_oswindow && !hwnd->m_oswindow_fullscreen)
     {
-#ifdef SWELL_TARGET_GDK
-      if ((reposflag&3)==3) gdk_window_move_resize(hwnd->m_oswindow,f.left,f.top,f.right-f.left,f.bottom-f.top);
-      else if (reposflag&2) gdk_window_resize(hwnd->m_oswindow,f.right-f.left,f.bottom-f.top);
-      else if (reposflag&1) gdk_window_move(hwnd->m_oswindow,f.left,f.top);
-#endif
+      swell_oswindow_resize(hwnd->m_oswindow,reposflag,f);
+      if (reposflag&2) SendMessage(hwnd,WM_SIZE,0,0);
     }
     else
     {
+      if (reposflag&2) SendMessage(hwnd,WM_SIZE,0,0);
       InvalidateRect(hwnd->m_parent ? hwnd->m_parent : hwnd,NULL,FALSE);
     }
   }
-  if (hwnd->m_oswindow && hwnd->m_oswindow_needshow && !hwnd->m_oswindow_fullscreen)
-  {
-#ifdef SWELL_TARGET_GDK
-    gdk_window_show(hwnd->m_oswindow);
-    if (hwnd->m_style & WS_CAPTION) gdk_window_unmaximize(hwnd->m_oswindow); // fixes Kwin
-    gdk_window_move_resize(hwnd->m_oswindow,f.left,f.top,f.right-f.left,f.bottom-f.top); // fixes xfce
-#endif
-    hwnd->m_oswindow_needshow=false;
-  }
+  swell_oswindow_postresize(hwnd,f);
 }
 
 
 BOOL EnumWindows(BOOL (*proc)(HWND, LPARAM), LPARAM lp)
 {
-    return FALSE;
+  HWND h = SWELL_topwindows;
+  if (!proc) return FALSE;
+  while (h)
+  {
+    if (!proc(h,lp)) return FALSE;
+    h = h->m_next;
+  }
+  return TRUE;
 }
 
 HWND GetWindow(HWND hwnd, int what)
@@ -1986,16 +733,19 @@ HWND SetParent(HWND hwnd, HWND newPar)
     }
     hwnd->m_parent = newPar;
     hwnd->m_style |= WS_CHILD;
+
+    if (newPar) VALIDATE_HWND_LIST(newPar->m_children,newPar);
   }
   else // add to top level windows
   {
     hwnd->m_next=SWELL_topwindows;
     if (hwnd->m_next) hwnd->m_next->m_prev = hwnd;
     SWELL_topwindows = hwnd;
+    VALIDATE_HWND_LIST(SWELL_topwindows,NULL);
     hwnd->m_style &= ~WS_CHILD;
   }
 
-  swell_manageOSwindow(hwnd,false);
+  swell_oswindow_manage(hwnd,false);
   return oldPar;
 }
 
@@ -2020,7 +770,7 @@ static pthread_t m_pmq_mainthread;
 void SWELL_RunMessageLoop()
 {
   SWELL_MessageQueue_Flush();
-  swell_runOSevents();
+  SWELL_RunEvents();
 
   DWORD now = GetTickCount();
   WDL_MutexLock lock(&m_timermutex);
@@ -2147,7 +897,7 @@ BOOL SetDlgItemText(HWND hwnd, int idx, const char *text)
   if (strcmp(hwnd->m_title.Get(), text))
   {
     hwnd->m_title.Set(text);
-    swell_setOSwindowtext(hwnd);
+    swell_oswindow_update_text(hwnd);
   } 
   SendMessage(hwnd,WM_SETTEXT,0,(LPARAM)text);
   return true;
@@ -2209,6 +959,7 @@ void ShowWindow(HWND hwnd, int cmd)
  
   if (cmd==SW_SHOW||cmd==SW_SHOWNA) 
   {
+    if (hwnd->m_visible) cmd = SW_SHOWNA; // do not take focus if already visible
     hwnd->m_visible=true;
   }
   else if (cmd==SW_HIDE) 
@@ -2221,7 +972,7 @@ void ShowWindow(HWND hwnd, int cmd)
     }
   }
 
-  swell_manageOSwindow(hwnd,cmd==SW_SHOW);
+  swell_oswindow_manage(hwnd,cmd==SW_SHOW);
   if (cmd == SW_SHOW) 
   {
     SetForegroundWindow(hwnd);
@@ -2487,7 +1238,7 @@ static void paintDialogBackground(HWND hwnd, const RECT *r, HDC hdc)
 
 static bool fast_has_focus(HWND hwnd)
 {
-  if (!hwnd || !SWELL_focused_oswindow) return false;
+  if (!hwnd || !SWELL_focused_oswindow || swell_app_is_inactive) return false;
   HWND par;
   while ((par=hwnd->m_parent)!=NULL && par->m_focused_child==hwnd)
   {
@@ -2506,7 +1257,7 @@ static bool draw_focus_indicator(HWND hwnd, HDC hdc, const RECT *drawr)
   if (drawr) r=*drawr;
   else GetClientRect(hwnd,&r);
 
-  HBRUSH br = CreateSolidBrushAlpha(g_swell_ctheme.focus_hilight,0.75f);
+  HBRUSH br = CreateSolidBrushAlpha(g_swell_ctheme.focus_hilight,.75f);
   tr=r; tr.right = tr.left+sz; FillRect(hdc,&tr,br);
   tr=r; tr.left = tr.right-sz; FillRect(hdc,&tr,br);
   tr=r; tr.left+=sz; tr.right-=sz; 
@@ -2533,12 +1284,12 @@ static LRESULT WINAPI buttonWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 {
   switch (msg)
   {
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       delete (buttonWindowState *)hwnd->m_private_data;
       hwnd->m_private_data=0;
     break;
     case WM_LBUTTONDOWN:
-      SetFocus(hwnd);
+      SetFocusInternal(hwnd);
       SetCapture(hwnd);
       SendMessage(hwnd,WM_USER+100,0,0); // invalidate
     return 0;
@@ -2546,6 +1297,11 @@ static LRESULT WINAPI buttonWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return 0;
     case WM_KEYDOWN:
       if (wParam == VK_SPACE) goto fakeButtonClick;
+      if (wParam == VK_RETURN)
+      {
+        if (!(hwnd->m_style & 0xf))
+          goto fakeButtonClick;
+      }
     break;
     case WM_LBUTTONUP:
       if (GetCapture()==hwnd)
@@ -2556,6 +1312,7 @@ fakeButtonClick:
         RECT r;
         GetClientRect(hwnd,&r);
         POINT p={GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+        hwnd->Retain();
         if ((msg==WM_KEYDOWN||PtInRect(&r,p)) && hwnd->m_id && hwnd->m_parent) 
         {
           int sf = (hwnd->m_style & 0xf);
@@ -2609,6 +1366,7 @@ fakeButtonClick:
           SendMessage(hwnd->m_parent,WM_COMMAND,MAKEWPARAM(hwnd->m_id,BN_CLICKED),(LPARAM)hwnd);
         }
         if (msg == WM_KEYDOWN) InvalidateRect(hwnd,NULL,FALSE);
+        hwnd->Release();
       }
     return 0;
     case WM_PAINT:
@@ -2619,14 +1377,18 @@ fakeButtonClick:
           buttonWindowState *s = (buttonWindowState*)hwnd->m_private_data;
           RECT r; 
           GetClientRect(hwnd,&r); 
-          paintDialogBackground(hwnd,&r,ps.hdc);
 
           bool pressed = GetCapture()==hwnd;
 
-          SetTextColor(ps.hdc,
-            hwnd->m_enabled ? g_swell_ctheme.button_text :
-              g_swell_ctheme.button_text_disabled);
           SetBkMode(ps.hdc,TRANSPARENT);
+
+          if (hwnd->m_enabled) 
+            SetTextColor(ps.hdc, g_swell_ctheme.button_text);
+
+          paintDialogBackground(hwnd,&r,ps.hdc);
+
+          if (!hwnd->m_enabled) 
+            SetTextColor(ps.hdc, g_swell_ctheme.button_text_disabled);
 
           int f=DT_VCENTER;
           int sf = (hwnd->m_style & 0xf);
@@ -2640,10 +1402,37 @@ fakeButtonClick:
             EndPaint(hwnd,&ps);
             return 0;
           }
-          if (sf == BS_AUTO3STATE || sf == BS_AUTOCHECKBOX || sf == BS_AUTORADIOBUTTON)
+
+          const bool ischk = sf == BS_AUTO3STATE || sf == BS_AUTOCHECKBOX || sf == BS_AUTORADIOBUTTON;
+          if (!ischk)
           {
-            const int chksz = SWELL_UI_SCALE(12);
-            RECT tr={r.left,(r.top+r.bottom)/2-chksz/2,r.left+chksz};
+            Draw3DBox(ps.hdc,&r,g_swell_ctheme.button_bg,
+              g_swell_ctheme.button_hilight,
+              g_swell_ctheme.button_shadow,pressed);
+
+            if (hwnd->m_style & BS_LEFT)
+              r.left+=2;
+            else
+              f|=DT_CENTER;
+            if (pressed) 
+            {
+              const int pad = SWELL_UI_SCALE(2);
+              r.left+=pad;
+              r.top+=pad;
+              if (s->bitmap) { r.right+=pad; r.bottom+=pad; }
+            }
+          }
+
+          if (draw_focus_indicator(hwnd,ps.hdc,NULL))
+          {
+            KillTimer(hwnd,1);
+            SetTimer(hwnd,1,100,NULL);
+          }
+
+          if (ischk)
+          {
+            const int chksz = SWELL_UI_SCALE(12), chki = SWELL_UI_SCALE(2);
+            RECT tr={r.left+chki,(r.top+r.bottom)/2-chksz/2,r.left+chki+chksz};
             tr.bottom = tr.top+chksz;
 
             HPEN pen=CreatePen(PS_SOLID,0,g_swell_ctheme.checkbox_fg);
@@ -2699,25 +1488,10 @@ fakeButtonClick:
             }
             SelectObject(ps.hdc,oldPen);
             DeleteObject(pen);
-            r.left += chksz + SWELL_UI_SCALE(4);
+            r.left += chksz + SWELL_UI_SCALE(5);
             SetTextColor(ps.hdc,
               hwnd->m_enabled ? g_swell_ctheme.checkbox_text :
                 g_swell_ctheme.checkbox_text_disabled);
-          }
-          else
-          {
-            Draw3DBox(ps.hdc,&r,g_swell_ctheme.button_bg,
-              g_swell_ctheme.button_hilight,
-              g_swell_ctheme.button_shadow,pressed);
-
-            f|=DT_CENTER;
-            if (pressed) 
-            {
-              const int pad = SWELL_UI_SCALE(2);
-              r.left+=pad;
-              r.top+=pad;
-              if (s->bitmap) { r.right+=pad; r.bottom+=pad; }
-            }
           }
 
           if (s->bitmap)
@@ -2739,12 +1513,6 @@ fakeButtonClick:
             if (buf[0]) DrawText(ps.hdc,buf,-1,&r,f);
           }
 
-          if (draw_focus_indicator(hwnd,ps.hdc,NULL))
-          {
-            KillTimer(hwnd,1);
-            SetTimer(hwnd,1,100,NULL);
-          }
-
           EndPaint(hwnd,&ps);
         }
       }
@@ -2763,7 +1531,7 @@ fakeButtonClick:
       if (hwnd)
       {
         buttonWindowState *s = (buttonWindowState*)hwnd->m_private_data;
-        return (s->state&3)==2 ? 1 : (s->state&3); 
+        return (s->state&3); 
       }
     return 0;
     case BM_GETIMAGE:
@@ -2801,14 +1569,7 @@ fakeButtonClick:
     case WM_USER+100:
     case WM_CAPTURECHANGED:
     case WM_SETTEXT:
-      {
-        int sf = (hwnd->m_style & 0xf);
-        if (sf == BS_AUTO3STATE || sf == BS_AUTOCHECKBOX || sf == BS_AUTORADIOBUTTON)
-        {
-          InvalidateRect(hwnd,NULL,TRUE);
-        }
-        else InvalidateRect(hwnd,NULL,FALSE);
-      }
+      InvalidateRect(hwnd,NULL,FALSE);
     break;
   }
   return DefWindowProc(hwnd,msg,wParam,lParam);
@@ -2898,6 +1659,28 @@ static LRESULT WINAPI groupWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     case WM_SETTEXT:
       InvalidateRect(hwnd,NULL,TRUE);
     break;
+    case WM_LBUTTONDBLCLK:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_MBUTTONDBLCLK:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_RBUTTONDBLCLK:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MOUSEMOVE:
+      if (GET_Y_LPARAM(lParam) >= SWELL_UI_SCALE(20))
+      {
+        HWND par = GetParent(hwnd);
+        if (par)
+        {
+          POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+          ClientToScreen(hwnd,&pt);
+          ScreenToClient(par,&pt);
+          return SendMessage(par,msg,wParam,MAKELPARAM(pt.x,pt.y));
+        }
+      }
+    break;
   }
   return DefWindowProc(hwnd,msg,wParam,lParam);
 }
@@ -2914,15 +1697,15 @@ static void calcScroll(int wh, int totalw, int scroll_x, int *thumbsz, int *thum
   *thumbsz = sz;
 }
 
-static void drawHorizontalScrollbar(HDC hdc, RECT cr, int totalw, int scroll_x)
+static void drawHorizontalScrollbar(HDC hdc, RECT cr, int vieww, int totalw, int scroll_x)
 {
-  if (totalw <= cr.right-cr.left) return;
+  if (totalw <= vieww) return;
 
   int thumbsz, thumbpos;
-  calcScroll(cr.right-cr.left,totalw,scroll_x,&thumbsz, &thumbpos);
+  calcScroll(vieww,totalw,scroll_x,&thumbsz, &thumbpos);
 
-  HBRUSH br =  CreateSolidBrushAlpha(g_swell_ctheme.scrollbar_fg,0.5f);
-  HBRUSH br2 =  CreateSolidBrushAlpha(g_swell_ctheme.scrollbar_bg,0.5f);
+  HBRUSH br =  CreateSolidBrush(g_swell_ctheme.scrollbar_fg);
+  HBRUSH br2 =  CreateSolidBrush(g_swell_ctheme.scrollbar_bg);
   RECT fr = { cr.left, cr.bottom - g_swell_ctheme.scrollbar_width, cr.left + thumbpos, cr.bottom };
   if (fr.right>fr.left) FillRect(hdc,&fr,br2);
 
@@ -2945,8 +1728,8 @@ static void drawVerticalScrollbar(HDC hdc, RECT cr, int totalh, int scroll_y)
   int thumbsz, thumbpos;
   calcScroll(cr.bottom-cr.top,totalh,scroll_y,&thumbsz, &thumbpos);
 
-  HBRUSH br =  CreateSolidBrushAlpha(g_swell_ctheme.scrollbar_fg,0.5f);
-  HBRUSH br2 =  CreateSolidBrushAlpha(g_swell_ctheme.scrollbar_bg,0.5f);
+  HBRUSH br =  CreateSolidBrush(g_swell_ctheme.scrollbar_fg);
+  HBRUSH br2 =  CreateSolidBrush(g_swell_ctheme.scrollbar_bg);
   RECT fr = { cr.right - g_swell_ctheme.scrollbar_width, cr.top, cr.right,cr.top+thumbpos};
   if (fr.bottom>fr.top) FillRect(hdc,&fr,br2);
 
@@ -2971,7 +1754,7 @@ static void drawVerticalScrollbar(HDC hdc, RECT cr, int totalh, int scroll_y)
 static int editMeasureLineLength(HDC hdc, const char *str, int str_len)
 {
   RECT tmp = {0,};
-  DrawText(hdc,str,str_len,&tmp,DT_NOPREFIX|DT_SINGLELINE|DT_CALCRECT);
+  DrawText(hdc,str,str_len,&tmp,DT_NOPREFIX|DT_SINGLELINE|DT_CALCRECT|DT_RIGHT);
   return tmp.right;
 }
 
@@ -2987,12 +1770,14 @@ int swell_getLineLength(const char *buf, int *post_skip, int wrap_maxwid, HDC hd
     wrap_maxwid -= g_swell_ctheme.scrollbar_width;
     
     // step through a word at a time and find the most that can fit
-    int x=0,best_len=0;
+    int x=0,best_len=0,sumw=0;
     for (;;)
     {
       while (x < lb && buf[x] > 0 && isspace(buf[x])) x++;
       while (x < lb && (buf[x]<0 || !isspace(buf[x]))) x++;
-      if (editMeasureLineLength(hdc,buf,x) > wrap_maxwid) break;
+      const int thisw = editMeasureLineLength(hdc,buf+best_len,x-best_len);
+      if (thisw+sumw > wrap_maxwid) break;
+      sumw+=thisw;
       best_len=x;
       if (x >= lb) break;
     }
@@ -3012,7 +1797,50 @@ int swell_getLineLength(const char *buf, int *post_skip, int wrap_maxwid, HDC hd
   return lb;
 }
 
-static bool editGetCharPos(HDC hdc, const char *str, int singleline_len, int charpos, int line_h, POINT *pt, int word_wrap)
+#define EDIT_ALLOW_MULTILINE_CACHE(wwrap,hwnd,tlen) \
+            ((wwrap)>0 && ((hwnd)->m_style & (ES_READONLY|ES_MULTILINE)) == (ES_READONLY|ES_MULTILINE) && (tlen)>10000)
+
+struct __SWELL_editControlState
+{
+  __SWELL_editControlState()  : cache_linelen_bytes(8192)
+  { 
+    cursor_timer=0;  
+    cursor_state=0; 
+    sel1=sel2=-1; 
+    cursor_pos=0;
+    scroll_x=scroll_y=0;
+    max_height=0;
+    max_width=0;
+    cache_linelen_strlen = cache_linelen_w = 0;
+  }
+  ~__SWELL_editControlState()  {}
+
+  int cursor_pos, sel1,sel2; // in character pos (*not* bytepos)
+  int cursor_state;
+  int cursor_timer;
+  int scroll_x, scroll_y;
+  int max_height; // only used in multiline
+  int max_width; 
+
+  // used for caching line lengths for multiline word-wrapping edit controls
+  int cache_linelen_w, cache_linelen_strlen;
+  WDL_TypedBuf<int> cache_linelen_bytes;
+
+  bool deleteSelection(WDL_FastString *fs);
+  int getSelection(WDL_FastString *fs, const char **ptrOut) const;
+  void moveCursor(int cp); // extends selection if shift is held, otherwise clears
+  void onMouseDown(int &capmode_state, int last_cursor);
+  void onMouseDrag(int &capmode_state, int p);
+
+  void autoScrollToOffset(HWND hwnd, int charpos, bool is_multiline, bool word_wrap);
+};
+
+
+
+
+
+static bool editGetCharPos(HDC hdc, const char *str, int singleline_len, int charpos, int line_h, POINT *pt, int word_wrap,
+    __SWELL_editControlState *es, HWND hwnd)
 {
   int bytepos = WDL_utf8_charpos_to_bytepos(str,charpos);
   int ypos = 0;
@@ -3023,9 +1851,31 @@ static bool editGetCharPos(HDC hdc, const char *str, int singleline_len, int cha
     pt->x=editMeasureLineLength(hdc,str,bytepos);
     return true;
   }
+
+
+  int *use_cache = NULL, use_cache_len = 0;
+  int title_len = 0;
+  const bool allow_cache = hwnd && es && EDIT_ALLOW_MULTILINE_CACHE(word_wrap,hwnd,title_len = (int)strlen(str));
+  if (allow_cache && 
+      es->cache_linelen_w == word_wrap && 
+      es->cache_linelen_strlen == title_len)
+  {
+    use_cache = es->cache_linelen_bytes.Get();
+    use_cache_len = es->cache_linelen_bytes.GetSize();
+  } 
+
   while (*str)
   {
-    int pskip = 0, lb = swell_getLineLength(str,&pskip,word_wrap,hdc);
+    int pskip = 0, lb;
+    if (!use_cache || use_cache_len < 1)
+    {
+      lb = swell_getLineLength(str,&pskip,word_wrap,hdc);
+    }
+    else
+    {
+      lb = *use_cache++;
+      if (WDL_NOT_NORMALLY(lb < 1)) break;
+    }
     if (bytepos < lb+pskip)
     { 
       pt->x=editMeasureLineLength(hdc,str,bytepos);
@@ -3034,12 +1884,13 @@ static bool editGetCharPos(HDC hdc, const char *str, int singleline_len, int cha
     }
     str += lb+pskip;
     bytepos -= lb+pskip;
-    ypos += line_h;
+    if (*str || (pskip>0 && str[-1] == '\n')) ypos += line_h;
   }
   pt->x=0;
   pt->y=ypos;
   return true;
 }
+
 
 static int editHitTestLine(HDC hdc, const char *str, int str_len, int xpos, int ypos)
 {
@@ -3050,19 +1901,20 @@ static int editHitTestLine(HDC hdc, const char *str, int str_len, int xpos, int 
   if (xpos < 1) return 0;
 
   // could bsearch, but meh
-  int lc=0, x = wdl_utf8_parsechar(str,NULL);
+  int x = 0;
   while (x < str_len)
   {
     memset(&mr,0,sizeof(mr));
-    DrawText(hdc,str,x,&mr,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+    const int clen = wdl_utf8_parsechar(str+x,NULL); 
+    DrawText(hdc,str,x+clen,&mr,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT|DT_RIGHT/*swell-only flag*/);
     if (xpos < mr.right) break;
-    lc=x;
-    x += wdl_utf8_parsechar(str+x,NULL);
+    x += clen;
   }
-  return lc;
+  return x;
 }
 
-static int editHitTest(HDC hdc, const char *str, int singleline_len, int xpos, int ypos, int word_wrap)
+static int editHitTest(HDC hdc, const char *str, int singleline_len, int xpos, int ypos, int word_wrap, 
+    __SWELL_editControlState *es, HWND hwnd)
 {
   if (singleline_len >= 0) return editHitTestLine(hdc,str,singleline_len,xpos,1);
 
@@ -3070,9 +1922,32 @@ static int editHitTest(HDC hdc, const char *str, int singleline_len, int xpos, i
   int bytepos = 0;
   RECT tmp={0};
   const int line_h = DrawText(hdc," ",1,&tmp,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+
+  int *use_cache = NULL, use_cache_len = 0;
+  int title_len = 0;
+  const bool allow_cache = hwnd && es && EDIT_ALLOW_MULTILINE_CACHE(word_wrap,hwnd,title_len = (int)strlen(str));
+  if (allow_cache && 
+      es->cache_linelen_w == word_wrap && 
+      es->cache_linelen_strlen == title_len)
+  {
+    use_cache = es->cache_linelen_bytes.Get();
+    use_cache_len = es->cache_linelen_bytes.GetSize();
+  } 
+
   for (;;)
   {
-    int pskip=0, lb = swell_getLineLength(buf,&pskip,word_wrap,hdc);
+    int pskip=0;
+    int lb;
+    
+    if (!use_cache || use_cache_len < 1)
+    {
+      lb = swell_getLineLength(buf,&pskip,word_wrap,hdc);
+    }
+    else
+    {
+      lb = *use_cache++;
+      if (WDL_NOT_NORMALLY(lb < 1)) return bytepos;
+    }
 
     if (ypos < line_h) return bytepos + editHitTestLine(hdc,buf,lb, xpos,ypos);
     ypos -= line_h;
@@ -3085,29 +1960,8 @@ static int editHitTest(HDC hdc, const char *str, int singleline_len, int xpos, i
 }
 
 
-struct __SWELL_editControlState
+bool __SWELL_editControlState::deleteSelection(WDL_FastString *fs)
 {
-  __SWELL_editControlState() 
-  { 
-    cursor_timer=0;  
-    cursor_state=0; 
-    sel1=sel2=-1; 
-    cursor_pos=0;
-    scroll_x=scroll_y=0;
-    max_height=0;
-    max_width=0;
-  }
-  ~__SWELL_editControlState()  {}
-
-  int cursor_pos, sel1,sel2; // in character pos (*not* bytepos)
-  int cursor_state;
-  int cursor_timer;
-  int scroll_x, scroll_y;
-  int max_height; // only used in multiline
-  int max_width; 
-
-  bool deleteSelection(WDL_FastString *fs)
-  {
     if (sel1>=0 && sel2 > sel1)
     {
       int pos1 = WDL_utf8_charpos_to_bytepos(fs->Get(),sel1);
@@ -3124,9 +1978,10 @@ struct __SWELL_editControlState
       return true;
     }
     return false;
-  }
-  int getSelection(WDL_FastString *fs, const char **ptrOut) const
-  {
+}
+
+int __SWELL_editControlState::getSelection(WDL_FastString *fs, const char **ptrOut) const
+{
     if (sel1>=0 && sel2>sel1)
     {
       int pos1 = WDL_utf8_charpos_to_bytepos(fs->Get(),sel1);
@@ -3135,10 +1990,9 @@ struct __SWELL_editControlState
       return pos2-pos1;
     }
     return 0;
-  }
-
-  void moveCursor(int cp) // extends selection if shift is held, otherwise clears
-  {
+}
+void __SWELL_editControlState::moveCursor(int cp) // extends selection if shift is held, otherwise clears
+{
     if (GetAsyncKeyState(VK_SHIFT)&0x8000)
     {
       if (sel1>=0 && sel2>sel1 && (cursor_pos==sel1 || cursor_pos==sel2))
@@ -3163,10 +2017,10 @@ struct __SWELL_editControlState
       sel1=sel2=-1;
     }
     cursor_pos = cp;
-  }
+}
 
-  void onMouseDown(int &capmode_state, int last_cursor)
-  {
+void __SWELL_editControlState::onMouseDown(int &capmode_state, int last_cursor)
+{
     capmode_state = 4;
 
     if (GetAsyncKeyState(VK_SHIFT)&0x8000)
@@ -3184,10 +2038,10 @@ struct __SWELL_editControlState
     {
       sel1=sel2=cursor_pos;
     }
-  }
+}
 
-  void onMouseDrag(int &capmode_state, int p)
-  {
+void __SWELL_editControlState::onMouseDrag(int &capmode_state, int p)
+{
     if (sel1 == sel2)
     {
       if (p < sel1)
@@ -3221,10 +2075,10 @@ struct __SWELL_editControlState
         capmode_state=3;
       }
     }
-  }
+}
 
-  void autoScrollToOffset(HWND hwnd, int charpos, bool is_multiline, bool word_wrap)
-  {
+void __SWELL_editControlState::autoScrollToOffset(HWND hwnd, int charpos, bool is_multiline, bool word_wrap)
+{
     if (!hwnd) return;
     HDC hdc = GetDC(hwnd);
     if (!hdc) return;
@@ -3232,14 +2086,22 @@ struct __SWELL_editControlState
     const int line_h = DrawText(hdc," ",1,&tmp,DT_CALCRECT|DT_SINGLELINE|DT_NOPREFIX);
 
     GetClientRect(hwnd,&tmp);
+    if (is_multiline) 
+    {
+      tmp.right -= g_swell_ctheme.scrollbar_width;
+      if (!word_wrap) tmp.bottom -= g_swell_ctheme.scrollbar_width;
+    }
+
+    int wwrap = word_wrap?tmp.right:0;
     POINT pt={0,};
     if (editGetCharPos(hdc, hwnd->m_title.Get(), 
          is_multiline? -1:hwnd->m_title.GetLength(), charpos, line_h, &pt,
-         word_wrap?tmp.right:0))
+         wwrap, is_multiline?this:NULL,hwnd))
     {
       if (!word_wrap)
       {
-        if (pt.x > scroll_x+tmp.right*5/6) scroll_x = pt.x - tmp.right*5/6;
+        const int padsz = wdl_max(tmp.right - line_h,line_h);
+        if (pt.x > scroll_x+padsz) scroll_x = pt.x - padsz;
         if (pt.x < scroll_x) scroll_x=pt.x;
       }
       if (is_multiline)
@@ -3251,11 +2113,40 @@ struct __SWELL_editControlState
       if (scroll_x < 0) scroll_x=0;
     }
     ReleaseDC(hwnd,hdc);
+}
+
+static bool is_word_char(char c)
+{
+  return c<0/*all utf-8 chars are word chars*/ || isalnum(c) || c == '_';
+}
+
+static int scanWord(const char *buf, int bytepos, int dir)
+{
+  if (dir < 0 && !bytepos) return 0;
+  if (dir > 0 && !buf[bytepos]) return bytepos;
+
+  if (!buf[bytepos] && bytepos > 0) bytepos--;
+
+  const unsigned char *bytebuf = (const unsigned char*) buf;
+  if (dir < 0)
+  {
+    const bool cc = is_word_char(buf[--bytepos]);
+    while (bytepos > 0 && is_word_char(buf[bytepos-1]) == cc) bytepos--;
+    while (bytepos > 0 && bytebuf[bytepos] >= 0x80 && bytebuf[bytepos] < 0xC0) bytepos--; // skip any UTF-8 continuation bytes
+  }
+  else
+  {
+    const bool cc = is_word_char(buf[bytepos]);
+    while (buf[bytepos+1] && is_word_char(buf[bytepos+1]) == cc) bytepos++;
+    bytepos++;
+    while (bytebuf[bytepos] >= 0x80 && bytebuf[bytepos] < 0xC0) bytepos++; // skip any UTF-8 continuation bytes
   }
 
-};
+  return bytepos;
+}
 
-static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool isMultiLine, __SWELL_editControlState *es)
+static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
+    bool wantReturn, bool isMultiLine, __SWELL_editControlState *es, bool isEditCtl)
 {
   if (lParam & (FCONTROL|FALT|FLWIN))
   {
@@ -3267,20 +2158,22 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
         int slen = es->getSelection(&hwnd->m_title,&s);
         if (slen > 0 && s)
         {
-          OpenClipboard(hwnd);
-          HANDLE h = GlobalAlloc(0,slen+1);
-          if (h)
+          if (!isEditCtl || !(hwnd->m_style & ES_PASSWORD))
           {
-            memcpy((char*)h,s,slen);
-            ((char*)h)[slen] = 0;
-            SetClipboardData(CF_TEXT,h);
-          }
-          CloseClipboard();
-
-          if (h && wParam == 'X' && !(hwnd->m_style & ES_READONLY))
-          {
-            es->deleteSelection(&hwnd->m_title);
-            return 7;
+            OpenClipboard(hwnd);
+            HANDLE h = GlobalAlloc(0,slen+1);
+            if (h)
+            {
+              memcpy((char*)h,s,slen);
+              ((char*)h)[slen] = 0;
+              SetClipboardData(CF_TEXT,h);
+            }
+            CloseClipboard();
+            if (h && wParam == 'X' && (!isEditCtl || !(hwnd->m_style & ES_READONLY)))
+            {
+              es->deleteSelection(&hwnd->m_title);
+              return 7;
+            }
           }
         }
       }
@@ -3297,6 +2190,12 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
             es->deleteSelection(&hwnd->m_title);
             int bytepos = WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->cursor_pos);
             hwnd->m_title.Insert(s,bytepos);
+            if (!(hwnd->m_style&ES_MULTILINE))
+            {
+              char *p = (char *)hwnd->m_title.Get() + bytepos;
+              char *ep = p + strlen(s);
+              while (*p && p < ep) { if (*p == '\r' || *p == '\n') *p=' '; p++; }
+            }
             es->cursor_pos += WDL_utf8_get_charlen(s);
             GlobalUnlock(h);
           }
@@ -3311,39 +2210,45 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
         return 2;
       }
     }
-    return 0;
+    if (lParam & (FALT | FLWIN)) return 0;
   }
-  if ((lParam & FVIRTKEY) && wParam == VK_TAB) return 0; // pass through to window
-
-  const bool is_numpad = wParam >= VK_NUMPAD0 && wParam <= VK_DIVIDE;
-  if (wParam >= 32 && (!(lParam & FVIRTKEY) || is_virtkey_char((int)wParam) || is_numpad))
+  else
   {
-    if (lParam & FVIRTKEY)
+    if ((lParam & FVIRTKEY) && wParam == VK_TAB) return 0; // pass through to window
+
+    const bool is_numpad = wParam >= VK_NUMPAD0 && wParam <= VK_DIVIDE;
+    if (wParam >= 32 && (!(lParam & FVIRTKEY) || swell_is_virtkey_char((int)wParam) || is_numpad))
     {
-      if (wParam >= 'A' && wParam <= 'Z')
+      if (lParam & FVIRTKEY)
       {
-        if ((lParam&FSHIFT) ^ (is_likely_capslock?0:FSHIFT)) wParam += 'a' - 'A';
+        if (wParam >= 'A' && wParam <= 'Z')
+        {
+          if ((lParam&FSHIFT) ^ (swell_is_likely_capslock?0:FSHIFT)) wParam += 'a' - 'A';
+        }
+        else if (is_numpad)
+        {
+          if (wParam <= VK_NUMPAD9) wParam += '0' - VK_NUMPAD0;
+          else wParam += '*' - VK_MULTIPLY;
+        }
       }
-      else if (is_numpad)
-      {
-        if (wParam <= VK_NUMPAD9) wParam += '0' - VK_NUMPAD0;
-        else wParam += '*' - VK_MULTIPLY;
-      }
+
+      if (hwnd->m_style & ES_READONLY) return 1;
+
+      char b[8];
+      WDL_MakeUTFChar(b,wParam,sizeof(b));
+      es->deleteSelection(&hwnd->m_title);
+      int bytepos = WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->cursor_pos);
+      hwnd->m_title.Insert(b,bytepos);
+      es->cursor_pos++;
+      return 7;
     }
-
-    if (hwnd->m_style & ES_READONLY) return 1;
-
-    char b[8];
-    WDL_MakeUTFChar(b,wParam,sizeof(b));
-    es->deleteSelection(&hwnd->m_title);
-    int bytepos = WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->cursor_pos);
-    hwnd->m_title.Insert(b,bytepos);
-    es->cursor_pos++;
-    return 7;
   }
 
   if (es && (lParam & FVIRTKEY)) switch (wParam)
   {
+    case VK_NEXT:
+    case VK_PRIOR:
+      if (!isMultiLine) break;
     case VK_UP:
     case VK_DOWN:
       if (isMultiLine)
@@ -3355,12 +2260,23 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
           const int line_h = DrawText(hdc," ",1,&tmp,DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
           POINT pt;
           GetClientRect(hwnd,&tmp);
-          const int wwrap = (hwnd->m_style & ES_AUTOHSCROLL) ? 0 : tmp.right;
-          if (editGetCharPos(hdc, hwnd->m_title.Get(), -1, es->cursor_pos, line_h, &pt, wwrap))
+          const int wwrap = (hwnd->m_style & ES_AUTOHSCROLL) ? 0 : tmp.right - g_swell_ctheme.scrollbar_width;
+          if (editGetCharPos(hdc, hwnd->m_title.Get(), -1, es->cursor_pos, line_h, &pt, wwrap, isEditCtl ? es : NULL, hwnd))
           {
             if (wParam == VK_UP) pt.y -= line_h/2;
+            else if (wParam == VK_NEXT) 
+            {
+              int ey = es->scroll_y + tmp.bottom - (wwrap?0:g_swell_ctheme.scrollbar_width) - line_h;
+              if (pt.y < ey-line_h) pt.y = ey;
+              else pt.y = ey + tmp.bottom - line_h - (wwrap?0:g_swell_ctheme.scrollbar_width);
+            }
+            else if (wParam == VK_PRIOR) 
+            {
+              if (pt.y > es->scroll_y) pt.y = es->scroll_y;
+              else pt.y = es->scroll_y - (tmp.bottom-line_h/2 - g_swell_ctheme.scrollbar_width);
+            }
             else pt.y += line_h + line_h/2;
-            int nextpos = editHitTest(hdc, hwnd->m_title.Get(), -1,pt.x,pt.y,wwrap);
+            int nextpos = editHitTest(hdc, hwnd->m_title.Get(), -1,pt.x,pt.y,wwrap,es,hwnd);
             es->moveCursor(WDL_utf8_bytepos_to_charpos(hwnd->m_title.Get(),nextpos));
           }
           ReleaseDC(hwnd,hdc);
@@ -3380,7 +2296,7 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
           hdc = GetDC(hwnd);
           RECT r;
           GetClientRect(hwnd,&r);
-          if (hdc) wwrap = r.right;
+          if (hdc) wwrap = r.right - g_swell_ctheme.scrollbar_width;
         }
         const int cbytepos = WDL_utf8_charpos_to_bytepos(buf,es->cursor_pos);
         for (;;) 
@@ -3397,45 +2313,47 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
         if (hdc) ReleaseDC(hwnd,hdc);
       }
 
-      if (wParam == VK_UP || wParam == VK_HOME)
-      {
-        if (es->cursor_pos > 0) { es->moveCursor(0); return 3; }
-      }
-      else
-      { 
-        int l = WDL_utf8_get_charlen(hwnd->m_title.Get());
-        if (es->cursor_pos != l) { es->moveCursor(l); return 3; }
-      }
-    return 1;
+      if (wParam == VK_UP || wParam == VK_HOME) es->moveCursor(0); 
+      else es->moveCursor(WDL_utf8_get_charlen(hwnd->m_title.Get()));
+    return 3;
     case VK_LEFT:
-      if (es->cursor_pos > 0) 
-      { 
-        int cp = es->cursor_pos-1;
-
-        const char *buf=hwnd->m_title.Get();
-        const int p = WDL_utf8_charpos_to_bytepos(buf,cp);
-        if (cp > 0 && p > 0 && buf[p] == '\n' && buf[p-1] == '\r') cp--;
-
-        es->moveCursor(cp);
-
-        return 3; 
-      }
-    return 1;
-    case VK_RIGHT:
-      if (es->cursor_pos < WDL_utf8_get_charlen(hwnd->m_title.Get())) 
       { 
         int cp = es->cursor_pos;
-        const char *buf=hwnd->m_title.Get();
-        const int p = WDL_utf8_charpos_to_bytepos(buf,cp);
-
-        if (buf[p] == '\r' && buf[p+1] == '\n') cp+=2;
-        else cp++;
-
+        if (cp > 0) 
+        {
+          const char *buf=hwnd->m_title.Get();
+          if (lParam & FCONTROL)
+          {
+            cp = WDL_utf8_bytepos_to_charpos(buf,
+                scanWord(buf,WDL_utf8_charpos_to_bytepos(buf,cp),-1));
+          }
+          else
+          {
+            const int p = WDL_utf8_charpos_to_bytepos(buf,--cp);
+            if (cp > 0 && p > 0 && buf[p] == '\n' && buf[p-1] == '\r') cp--;
+          }
+        }
         es->moveCursor(cp);
-
-        return 3; 
       }
-    return 1;
+    return 3; 
+    case VK_RIGHT:
+      { 
+        int cp = es->cursor_pos;
+        if (cp < WDL_utf8_get_charlen(hwnd->m_title.Get())) 
+        {
+          const char *buf=hwnd->m_title.Get();
+          const int p = WDL_utf8_charpos_to_bytepos(buf,cp);
+
+          if (lParam & FCONTROL)
+            cp = WDL_utf8_bytepos_to_charpos(buf,scanWord(buf,p,1));
+          else if (buf[p] == '\r' && buf[p+1] == '\n') 
+            cp+=2;
+          else
+            cp++;
+        }
+        es->moveCursor(cp);
+      }
+    return 3;
     case VK_DELETE:
       if (hwnd->m_style & ES_READONLY) return 1;
       if (hwnd->m_title.GetLength())
@@ -3462,14 +2380,18 @@ static LRESULT OnEditKeyDown(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, 
           es->cursor_pos--;
           const char *buf = hwnd->m_title.Get();
           int bytepos = WDL_utf8_charpos_to_bytepos(buf,es->cursor_pos);
-          if (bytepos > 0 && buf[bytepos] == '\n' && buf[bytepos-1] == '\r') hwnd->m_title.DeleteSub(bytepos-1, 2);
+          if (bytepos > 0 && buf[bytepos] == '\n' && buf[bytepos-1] == '\r') 
+          {
+            hwnd->m_title.DeleteSub(bytepos-1, 2);
+            es->cursor_pos--;
+          }
           else hwnd->m_title.DeleteSub(bytepos, wdl_utf8_parsechar(hwnd->m_title.Get()+bytepos,NULL));
           return 7; 
         }
       }
     return 1;
     case VK_RETURN:
-      if (isMultiLine)
+      if (wantReturn)
       {
         if (hwnd->m_style & ES_READONLY) return 1;
         if (es->deleteSelection(&hwnd->m_title)) return 7;
@@ -3534,22 +2456,35 @@ static int editControlPaintLine(HDC hdc, const char *str, int str_len, int curso
   return rv;
 }
 
+static void passwordify(WDL_FastString **s)
+{
+  const int l = WDL_utf8_get_charlen((*s)->Get());
+  if (l>0)
+  {
+    static WDL_FastString tmp;
+    tmp.SetLen(l,false,'*');
+    *s = &tmp;
+  }
+}
+
 static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   __SWELL_editControlState *es = (__SWELL_editControlState*)hwnd->m_private_data;
   static int s_capmode_state /* 1=vscroll, 2=hscroll, 3=move sel1, 4=move sel2*/, s_capmode_data1;
   switch (msg)
   {
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       delete es;
       hwnd->m_private_data=0;
-    return 0;
+    break;
     case WM_CONTEXTMENU:
       {
         HMENU menu=CreatePopupMenu();
         MENUITEMINFO mi={sizeof(mi),MIIM_ID|MIIM_TYPE,MFT_STRING, 0,
               (UINT) 100, NULL,NULL,NULL,0,(char*)"Copy"};
-        InsertMenuItem(menu,0,TRUE,&mi);
+
+        if (!(hwnd->m_style & ES_PASSWORD))
+          InsertMenuItem(menu,0,TRUE,&mi);
         mi.wID++;
         mi.dwTypeData = (char*)"Paste";
         InsertMenuItem(menu,0,TRUE,&mi);
@@ -3561,8 +2496,12 @@ static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 
         const int a = TrackPopupMenu(menu,TPM_NONOTIFY|TPM_RETURNCMD|TPM_LEFTALIGN,p.x,p.y,0,hwnd,0);
         DestroyMenu(menu);
-        if (a==100) OnEditKeyDown(hwnd,WM_KEYDOWN,'C',FVIRTKEY|FCONTROL,0,es);
-        else if (a==101) OnEditKeyDown(hwnd,WM_KEYDOWN,'V',FVIRTKEY|FCONTROL,0,es);
+        if (a==100) OnEditKeyDown(hwnd,WM_KEYDOWN,'C',FVIRTKEY|FCONTROL,false,false,es,true);
+        else if (a==101) 
+        {
+          OnEditKeyDown(hwnd,WM_KEYDOWN,'V',FVIRTKEY|FCONTROL,false,false,es,true);
+          SendMessage(GetParent(hwnd),WM_COMMAND,(EN_CHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+        }
         else if (a==102) SendMessage(hwnd,EM_SETSEL,0,-1);
 
         if (a) InvalidateRect(hwnd,NULL,FALSE);
@@ -3576,12 +2515,16 @@ static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
       // todo: if selection active and not focused, do not mouse hit test
       if (msg == WM_LBUTTONDOWN) 
       {
+        WDL_FastString *title = &hwnd->m_title;
+        if (hwnd->m_style & ES_PASSWORD) passwordify(&title);
         const bool multiline = (hwnd->m_style & ES_MULTILINE) != 0;
         RECT r;
         GetClientRect(hwnd,&r);
         if (multiline)
         {
           RECT br = r;
+          br.right -= g_swell_ctheme.scrollbar_width;
+
           if (es->max_width > br.right && (hwnd->m_style & ES_AUTOHSCROLL))
           {
             if (GET_Y_LPARAM(lParam) >= br.bottom - g_swell_ctheme.scrollbar_width)
@@ -3602,13 +2545,12 @@ static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
             }
             br.bottom -= g_swell_ctheme.scrollbar_width;
           }
-          if (GET_X_LPARAM(lParam)>=br.right - g_swell_ctheme.scrollbar_width &&
-              es->max_height > br.bottom)
+          if (GET_X_LPARAM(lParam)>=br.right && es->max_height > br.bottom)
           {
             int yp = GET_Y_LPARAM(lParam), ypos = yp;
 
             int thumbsz, thumbpos;
-            calcScroll(br.bottom, es->max_height,es->scroll_y,&thumbsz,&thumbpos);
+            calcScroll(br.bottom, es->max_height, es->scroll_y,&thumbsz,&thumbpos);
 
             if (ypos < thumbpos) yp = thumbpos;
             else if (ypos > thumbpos+thumbsz) yp = thumbpos + thumbsz;
@@ -3626,13 +2568,14 @@ static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         int yo = multiline ? 2 : 0;
         HDC hdc=GetDC(hwnd);
         const int last_cursor = es->cursor_pos;
-        const int wwrap = (hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE ? r.right : 0;
-        es->cursor_pos = WDL_utf8_bytepos_to_charpos(hwnd->m_title.Get(),
-            editHitTest(hdc,hwnd->m_title.Get(),
-                        multiline?-1:hwnd->m_title.GetLength(),
+        const int wwrap = (hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE ? 
+          r.right - g_swell_ctheme.scrollbar_width : 0;
+        es->cursor_pos = WDL_utf8_bytepos_to_charpos(title->Get(),
+            editHitTest(hdc,title->Get(),
+                        multiline?-1:title->GetLength(),
                          GET_X_LPARAM(lParam)-xo + es->scroll_x,
                          GET_Y_LPARAM(lParam)-yo + es->scroll_y, 
-                         wwrap)
+                         wwrap,es,hwnd)
               );
 
         if (msg == WM_LBUTTONDOWN) 
@@ -3641,15 +2584,55 @@ static LRESULT WINAPI editWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         ReleaseDC(hwnd,hdc);
 
       }
-      SetFocus(hwnd);
+      SetFocusInternal(hwnd);
       if (msg == WM_LBUTTONDOWN) SetCapture(hwnd);
 
       InvalidateRect(hwnd,NULL,FALSE);
     return 0;
+    case WM_MOUSEWHEEL:
+      if (es && (hwnd->m_style & ES_MULTILINE))
+      {
+        if ((GetAsyncKeyState(VK_CONTROL)&0x8000) || (GetAsyncKeyState(VK_MENU)&0x8000)) break; // pass modified mousewheel to parent
+
+        RECT r;
+        GetClientRect(hwnd,&r);
+        r.right -= g_swell_ctheme.scrollbar_width;
+        if (es->max_width > r.right && (hwnd->m_style & ES_AUTOHSCROLL))
+        {
+          r.bottom -= g_swell_ctheme.scrollbar_width;
+        }
+        const int viewsz = r.bottom;
+        const int totalsz=es->max_height + g_swell_ctheme.scrollbar_width;
+
+        const int amt = ((short)HIWORD(wParam))/-2;
+
+        const int oldscroll = es->scroll_y;
+        es->scroll_y += amt;
+        if (es->scroll_y + viewsz > totalsz) es->scroll_y = totalsz-viewsz;
+        if (es->scroll_y < 0) es->scroll_y=0;
+        if (es->scroll_y != oldscroll)
+        {
+          InvalidateRect(hwnd,NULL,FALSE);
+        }
+
+        return 1;
+      }
+    break;
     case WM_MOUSEMOVE:
 forceMouseMove:
       if (es && GetCapture()==hwnd)
       {
+        RECT r;
+        GetClientRect(hwnd,&r);
+        const bool multiline = (hwnd->m_style & ES_MULTILINE) != 0;
+        if (multiline)
+        {
+          r.right -= g_swell_ctheme.scrollbar_width;
+          if (es->max_width > r.right && (hwnd->m_style & ES_AUTOHSCROLL))
+          {
+            r.bottom -= g_swell_ctheme.scrollbar_width;
+          }
+        }
         if (s_capmode_state == 1)
         {
           int yv = s_capmode_data1;
@@ -3657,11 +2640,8 @@ forceMouseMove:
 
           if (amt)
           {
-            RECT r;
-            GetClientRect(hwnd,&r);
-
             const int viewsz = r.bottom;
-            const int totalsz=es->max_height;
+            const int totalsz=es->max_height + g_swell_ctheme.scrollbar_width;
             amt = (int)floor(amt * (double)totalsz / (double)viewsz + 0.5);
               
             const int oldscroll = es->scroll_y;
@@ -3682,11 +2662,8 @@ forceMouseMove:
 
           if (amt)
           {
-            RECT r;
-            GetClientRect(hwnd,&r);
-
             const int viewsz = r.right;
-            const int totalsz=es->max_width;
+            const int totalsz=es->max_width + g_swell_ctheme.scrollbar_width;
             amt = (int)floor(amt * (double)totalsz / (double)viewsz + 0.5);
               
             const int oldscroll = es->scroll_x;
@@ -3702,22 +2679,21 @@ forceMouseMove:
         }
         else if (s_capmode_state == 3 || s_capmode_state == 4)
         {
-          const bool multiline = (hwnd->m_style & ES_MULTILINE) != 0;
           int wwrap=0;
           if ((hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE)
           {
-            RECT r;
-            GetClientRect(hwnd,&r);
-            wwrap = r.right;
+            wwrap = r.right; // already has scrollbar size removed
           }
           int xo=2;
           int yo = multiline ? 2 : 0;
           HDC hdc=GetDC(hwnd);
-          int p = WDL_utf8_bytepos_to_charpos(hwnd->m_title.Get(),
-            editHitTest(hdc,hwnd->m_title.Get(),
-                        multiline?-1:hwnd->m_title.GetLength(),
+          WDL_FastString *title = &hwnd->m_title;
+          if (hwnd->m_style & ES_PASSWORD) passwordify(&title);
+          int p = WDL_utf8_bytepos_to_charpos(title->Get(),
+            editHitTest(hdc,title->Get(),
+                        multiline?-1:title->GetLength(),
                          GET_X_LPARAM(lParam)-xo + es->scroll_x,
-                         GET_Y_LPARAM(lParam)-yo + es->scroll_y, wwrap)
+                         GET_Y_LPARAM(lParam)-yo + es->scroll_y, wwrap,es,hwnd)
               );
           ReleaseDC(hwnd,hdc);
 
@@ -3742,14 +2718,36 @@ forceMouseMove:
         if (GetFocusIncludeMenus()!=hwnd || es->cursor_state<2) InvalidateRect(hwnd,NULL,FALSE);
       }
     return 0;
+    case WM_LBUTTONDBLCLK:
+      if (es)
+      {
+        // technically this should select the word rather than all
+        es->sel1 = 0;
+        es->cursor_pos = es->sel2 = WDL_utf8_get_charlen(hwnd->m_title.Get());
+        InvalidateRect(hwnd,NULL,FALSE);
+      }
+    return 0;
     case WM_KEYDOWN:
       {
-        int f = OnEditKeyDown(hwnd,msg,wParam,lParam, !!(hwnd->m_style&ES_WANTRETURN),es);
+        const int osel1 = es && es->sel1 >= 0 && es->sel2 > es->sel1 ? es->sel1 : -1;
+
+        int f = OnEditKeyDown(hwnd,msg,wParam,lParam, 
+            (hwnd->m_style&ES_WANTRETURN) && (hwnd->m_style&ES_MULTILINE),
+            !!(hwnd->m_style&ES_MULTILINE),
+            es,true);
         if (f)
         {
-          if (f&4) SendMessage(GetParent(hwnd),WM_COMMAND,(EN_CHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+          if (f&4) 
+          {
+            es->cache_linelen_w=0;
+            SendMessage(GetParent(hwnd),WM_COMMAND,(EN_CHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+          }
           if (f&2) 
           {
+            if ((hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_AUTOHSCROLL &&
+                osel1 >= 0 && es->cursor_pos > osel1 && es->sel1 < 0)
+              es->autoScrollToOffset(hwnd,osel1,false,false);
+
             es->autoScrollToOffset(hwnd,es->cursor_pos,
                (hwnd->m_style & ES_MULTILINE) != 0,
                (hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE
@@ -3784,6 +2782,8 @@ forceMouseMove:
           RECT r; 
           GetClientRect(hwnd,&r); 
           RECT orig_r = r;
+          WDL_FastString *title = &hwnd->m_title;
+          if (hwnd->m_style & ES_PASSWORD) passwordify(&title);
 
           Draw3DBox(ps.hdc,&r,
             hwnd->m_enabled ? 
@@ -3802,29 +2802,73 @@ forceMouseMove:
           SetBkMode(ps.hdc,TRANSPARENT);
           r.left+=2 - es->scroll_x; r.right-=2;
 
-          const int cursor_pos = (focused && es->cursor_state) ?  WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->cursor_pos) : -1;
-          const int sel1 = es->sel1>=0 && focused ? WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->sel1) : -1;
-          const int sel2 = es->sel2>=0 && focused ? WDL_utf8_charpos_to_bytepos(hwnd->m_title.Get(),es->sel2) : -1;
+          const bool do_cursor = es->cursor_state!=0;
+          const int cursor_pos = focused ?  WDL_utf8_charpos_to_bytepos(title->Get(),es->cursor_pos) : -1;
+          const int sel1 = es->sel1>=0 && focused ? WDL_utf8_charpos_to_bytepos(title->Get(),es->sel1) : -1;
+          const int sel2 = es->sel2>=0 && focused ? WDL_utf8_charpos_to_bytepos(title->Get(),es->sel2) : -1;
 
           const bool multiline = (hwnd->m_style & ES_MULTILINE) != 0;
+
           if (multiline)
           {
             r.top+=2 - es->scroll_y;
-            const char *buf = hwnd->m_title.Get();
+            const char *buf = title->Get(), *buf_end = buf + title->GetLength();
             int bytepos = 0;
             RECT tmp={0,};
             const int line_h = DrawText(ps.hdc," ",1,&tmp,DT_CALCRECT|DT_SINGLELINE|DT_NOPREFIX);
-            const int wwrap = (hwnd->m_style & ES_AUTOHSCROLL) ? 0 : orig_r.right;
+            const int wwrap = (hwnd->m_style & ES_AUTOHSCROLL) ? 0 : orig_r.right - g_swell_ctheme.scrollbar_width;
+
+            int *use_cache = NULL, use_cache_len = 0;
+            const bool allow_cache = EDIT_ALLOW_MULTILINE_CACHE(wwrap,hwnd,title->GetLength());
+            if (allow_cache && 
+                es->cache_linelen_w == wwrap && 
+                es->cache_linelen_strlen == title->GetLength())
+            {
+              use_cache = es->cache_linelen_bytes.Get();
+              use_cache_len = es->cache_linelen_bytes.GetSize();
+            }
+            else
+            {
+              es->cache_linelen_w=allow_cache?wwrap:0;
+              es->cache_linelen_strlen=allow_cache?title->GetLength():0;
+              es->cache_linelen_bytes.Resize(0,false);
+            }
+
             for (;;)
             {
-              int pskip=0, lb = swell_getLineLength(buf,&pskip,wwrap,ps.hdc);
+              int pskip=0, lb;
+
+              const bool vis = r.top >= -line_h && r.top < orig_r.bottom;
+              
+              if (vis || !use_cache || use_cache_len < 1)
+              {
+                lb = swell_getLineLength(buf,&pskip,wwrap,ps.hdc);
+                if (!use_cache && allow_cache)
+                {
+                  int s = lb+pskip;
+                  es->cache_linelen_bytes.Add(&s,1);
+                }
+              }
+              else
+              {
+                lb = *use_cache;
+                if (WDL_NOT_NORMALLY(lb < 1)) break; 
+              }
+
+              if (use_cache)
+              {
+                use_cache++;
+                use_cache_len--;
+              }
 
               if (!*buf && cursor_pos != bytepos) break;
 
-              if (r.top >= -line_h && r.top < orig_r.bottom)
+              if (WDL_NOT_NORMALLY(buf+lb+pskip > buf_end)) break;
+
+              if (vis)
               {
                 int wid = editControlPaintLine(ps.hdc,buf,lb,
-                   (cursor_pos >= bytepos && cursor_pos <= bytepos + lb) ? cursor_pos - bytepos : -1, 
+                   (do_cursor && cursor_pos >= bytepos && cursor_pos <= bytepos + lb) ? cursor_pos - bytepos : -1, 
                    sel1 >= 0 ? (sel1 - bytepos) : -1,
                    sel2 >= 0 ? (sel2 - bytepos) : -1, 
                    &r, DT_TOP);
@@ -3842,7 +2886,9 @@ forceMouseMove:
             es->max_height = r.top;
             if (es->max_width > r.right && (hwnd->m_style & ES_AUTOHSCROLL))
             {
-              drawHorizontalScrollbar(ps.hdc,orig_r,es->max_width,es->scroll_x);
+              drawHorizontalScrollbar(ps.hdc,orig_r,
+                  orig_r.right-orig_r.left - g_swell_ctheme.scrollbar_width,
+                  es->max_width,es->scroll_x);
               orig_r.bottom -= g_swell_ctheme.scrollbar_width;
               r.bottom -= g_swell_ctheme.scrollbar_width;
             }
@@ -3853,7 +2899,7 @@ forceMouseMove:
           }
           else
           {
-            es->max_width = editControlPaintLine(ps.hdc, hwnd->m_title.Get(), hwnd->m_title.GetLength(), cursor_pos, sel1, sel2, &r, DT_VCENTER);
+            es->max_width = editControlPaintLine(ps.hdc, title->Get(), title->GetLength(), cursor_pos, sel1, sel2, &r, DT_VCENTER);
           }
 
           EndPaint(hwnd,&ps);
@@ -3865,6 +2911,10 @@ forceMouseMove:
       {
         es->cursor_pos = WDL_utf8_get_charlen(hwnd->m_title.Get());
         es->sel1=es->sel2=-1;
+        es->cache_linelen_w=es->cache_linelen_strlen=0;
+        if ((hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL))==ES_AUTOHSCROLL &&
+            GetFocus() != hwnd)
+          es->autoScrollToOffset(hwnd,0,false,false);
       }
       InvalidateRect(hwnd,NULL,FALSE);
       if (hwnd->m_id && hwnd->m_parent)
@@ -3877,6 +2927,28 @@ forceMouseMove:
         es->sel2 = (int)lParam;
         if (!es->sel1 && es->sel2 == -1) es->sel2 = WDL_utf8_get_charlen(hwnd->m_title.Get());
         InvalidateRect(hwnd,NULL,FALSE);
+        if (es->sel2>=0)
+          es->autoScrollToOffset(hwnd,es->sel2,
+               (hwnd->m_style & ES_MULTILINE) != 0,
+               (hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE);
+
+      }
+    return 0;
+    case EM_SCROLL:
+      if (es)
+      {
+        if (wParam == SB_TOP)
+        {
+          es->scroll_x=es->scroll_y=0;
+          InvalidateRect(hwnd,NULL,FALSE);
+        } 
+        else if (wParam == SB_BOTTOM)
+        {
+          es->autoScrollToOffset(hwnd,hwnd->m_title.GetLength(),
+               (hwnd->m_style & ES_MULTILINE) != 0,
+               (hwnd->m_style & (ES_MULTILINE|ES_AUTOHSCROLL)) == ES_MULTILINE);
+          InvalidateRect(hwnd,NULL,FALSE);
+        }
       }
     return 0;
   }
@@ -3899,7 +2971,7 @@ static LRESULT WINAPI progressWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
       if (hwnd->m_private_data) ((int *)hwnd->m_private_data)[1] = (int) lParam;
       InvalidateRect(hwnd,NULL,FALSE);
     break;
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       free((int *)hwnd->m_private_data);
       hwnd->m_private_data=0;
     break;
@@ -3968,7 +3040,7 @@ static LRESULT WINAPI trackbarWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
     case TBM_SETTIC:
       if (hwnd->m_private_data) ((int *)hwnd->m_private_data)[2] = (int) lParam;
     break;
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       free((int *)hwnd->m_private_data);
       hwnd->m_private_data=0;
     break;
@@ -3988,7 +3060,7 @@ static LRESULT WINAPI trackbarWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
       }
     return 1;
     case WM_LBUTTONDOWN:
-      SetFocus(hwnd);
+      SetFocusInternal(hwnd);
       SetCapture(hwnd);
 
       if (hwnd->m_private_data)
@@ -4129,14 +3201,13 @@ static LRESULT WINAPI labelWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
           RECT r; 
           GetClientRect(hwnd,&r); 
 
-          SetBkColor(ps.hdc,g_swell_ctheme._3dface);
-          HBRUSH hbrush = (HBRUSH) SendMessage(GetParent(hwnd),WM_CTLCOLORSTATIC,(WPARAM)ps.hdc,(LPARAM)hwnd);
-          if (hbrush == (HBRUSH)(INT_PTR)1) hbrush = NULL;
           SetTextColor(ps.hdc,
              hwnd->m_enabled ? g_swell_ctheme.label_text : 
                g_swell_ctheme.label_text_disabled);
-          SetBkMode(ps.hdc,hbrush ? TRANSPARENT : OPAQUE);
-          if (hbrush) FillRect(ps.hdc,&r,hbrush);
+          SetBkMode(ps.hdc,TRANSPARENT);
+
+          paintDialogBackground(hwnd,&r,ps.hdc);
+
           const char *buf = hwnd->m_title.Get();
           if (buf && buf[0]) 
           {
@@ -4151,23 +3222,24 @@ static LRESULT WINAPI labelWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                 {
                   int post=0, lb=swell_getLineLength(buf+loffs, &post, r.right, ps.hdc);
                   if (lb>0)
-                  {
                     DrawText(ps.hdc,buf+loffs,lb,&r,DT_TOP|DT_SINGLELINE|DT_LEFT);
-                    r.top += line_h;
-                  }
+                  r.top += line_h;
                   loffs+=lb+post;
                 } 
                 buf = NULL;
               }
             }
-            if (buf) DrawText(ps.hdc,buf,-1,&r,((hwnd->m_style & SS_CENTER) ? DT_CENTER:0)|DT_VCENTER);
+            if (buf) DrawText(ps.hdc,buf,-1,&r,
+                ((hwnd->m_style & SS_CENTER) ? DT_CENTER : 
+                 (hwnd->m_style & SS_RIGHT) ? DT_RIGHT : 0)|
+                DT_VCENTER);
           }
           EndPaint(hwnd,&ps);
         }
       }
     return 0;
     case WM_SETTEXT:
-       InvalidateRect(hwnd,NULL,TRUE);
+       InvalidateRect(hwnd,NULL,FALSE);
     break;
     case WM_LBUTTONDOWN:
     case WM_LBUTTONDBLCLK:
@@ -4223,6 +3295,7 @@ static LRESULT WINAPI comboWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             // find position of insert for wParam
             bool m;
             int idx = s->items.LowerBound(r,&m,__SWELL_ComboBoxInternalState_rec::cmp);
+            if (s->selidx >= idx) s->selidx++;
             s->items.Insert(idx,r);
             return idx;
           }
@@ -4324,11 +3397,9 @@ static LRESULT WINAPI comboWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
   switch (msg)
   {
-    case WM_DESTROY:
-      {
-       hwnd->m_private_data=0;
-       delete s;
-      }
+    case WM_NCDESTROY:
+      hwnd->m_private_data=0;
+      delete s;
     break;
     case WM_TIMER:
       if (wParam == 100)
@@ -4364,14 +3435,14 @@ static LRESULT WINAPI comboWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
               editHitTest(hdc,hwnd->m_title.Get(),
                           hwnd->m_title.GetLength(),
                           GET_X_LPARAM(lParam)-xo + s->editstate.scroll_x,
-                          GET_Y_LPARAM(lParam),0)
+                          GET_Y_LPARAM(lParam),0,NULL,NULL)
             );
            
           s->editstate.onMouseDown(s_capmode_state,last_cursor);
 
           ReleaseDC(hwnd,hdc);
 
-          SetFocus(hwnd);
+          SetFocusInternal(hwnd);
         }
         SetCapture(hwnd);
       }
@@ -4389,7 +3460,7 @@ static LRESULT WINAPI comboWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             editHitTest(hdc,hwnd->m_title.Get(),
                         multiline?-1:hwnd->m_title.GetLength(),
                          GET_X_LPARAM(lParam)-xo + s->editstate.scroll_x,
-                         GET_Y_LPARAM(lParam),0)
+                         GET_Y_LPARAM(lParam),0,NULL,NULL)
               );
           ReleaseDC(hwnd,hdc);
 
@@ -4435,9 +3506,19 @@ popupMenu:
       }
       s_capmode_state=0;
     return 0;
+    case WM_LBUTTONDBLCLK:
+      if (s)
+      {
+        // technically this should select the word rather than all
+        s->editstate.sel1 = 0;
+        s->editstate.cursor_pos = s->editstate.sel2 = WDL_utf8_get_charlen(hwnd->m_title.Get());
+        InvalidateRect(hwnd,NULL,FALSE);
+      }
+    return 0;
     case WM_KEYDOWN:
       if ((lParam&FVIRTKEY) && wParam == VK_DOWN) { s_capmode_state=5; goto popupMenu; }
-      if ((hwnd->m_style & CBS_DROPDOWNLIST) != CBS_DROPDOWNLIST && OnEditKeyDown(hwnd,msg,wParam,lParam,false,&s->editstate))
+      if ((hwnd->m_style & CBS_DROPDOWNLIST) != CBS_DROPDOWNLIST && 
+          OnEditKeyDown(hwnd,msg,wParam,lParam,false,false,&s->editstate,false))
       {
         if (s) s->selidx=-1; // lookup from text?
         SendMessage(GetParent(hwnd),WM_COMMAND,(CBN_EDITCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
@@ -4559,6 +3640,8 @@ popupMenu:
         s->editstate.sel2 = (int)lParam;
         if (!s->editstate.sel1 && s->editstate.sel2 == -1)
           s->editstate.sel2 = WDL_utf8_get_charlen(hwnd->m_title.Get());
+        if (s->editstate.sel2>=0)
+          s->editstate.autoScrollToOffset(hwnd,s->editstate.sel2, false, false);
         InvalidateRect(hwnd,NULL,FALSE);
       }
     return 0;
@@ -4574,7 +3657,7 @@ HWND SWELL_MakeButton(int def, const char *label, int idx, int x, int y, int w, 
   if (a < 65536) label = "ICONTEMP";
   
   RECT tr=MakeCoords(x,y,w,h,true);
-  HWND hwnd = swell_makeButton(m_make_owner,idx,&tr,label,!(flags&SWELL_NOT_WS_VISIBLE),0);
+  HWND hwnd = swell_makeButton(m_make_owner,idx,&tr,label,!(flags&SWELL_NOT_WS_VISIBLE),(def ? BS_DEFPUSHBUTTON : 0) | (flags&BS_LEFT));
 
   if (m_doautoright) UpdateAutoCoords(tr);
   if (def) { }
@@ -4587,6 +3670,8 @@ HWND SWELL_MakeLabel( int align, const char *label, int idx, int x, int y, int w
   RECT tr=MakeCoords(x,y,w,h,true);
   HWND hwnd = new HWND__(m_make_owner,idx,&tr,label, !(flags&SWELL_NOT_WS_VISIBLE),labelWindowProc);
   hwnd->m_classname = "static";
+  if (align > 0) flags |= SS_RIGHT;
+  else if (align == 0) flags |= SS_CENTER;
   hwnd->m_style = (flags & ~SWELL_NOT_WS_VISIBLE)|WS_CHILD;
   hwnd->m_wantfocus = false;
   hwnd->m_wndproc(hwnd,WM_CREATE,0,0);
@@ -4685,6 +3770,8 @@ struct listViewState
   {
     RECT r;
     GetClientRect(h,&r);
+    r.right -= g_swell_ctheme.scrollbar_width;
+
     const int mx = getTotalWidth() - r.right;
     if (m_scroll_x > mx) m_scroll_x = mx;
     if (m_scroll_x < 0) m_scroll_x = 0;
@@ -4804,6 +3891,47 @@ struct listViewState
   int m_status_imagelist_type;
 };
 
+// returns non-NULL if a searching string occurred
+static const char *stateStringOnKey(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  if (lParam & (FCONTROL|FALT|FLWIN)) return NULL;
+  if (uMsg != WM_KEYDOWN) return NULL;
+  static WDL_FastString str;
+  static DWORD last_t;
+  DWORD now = GetTickCount();
+  if (now > last_t + 500 || now < last_t - 500) str.Set("");
+  last_t = now;
+
+  const bool is_numpad = wParam >= VK_NUMPAD0 && wParam <= VK_DIVIDE;
+  if ((lParam & FVIRTKEY) && wParam == VK_BACK)
+  {
+    str.SetLen(WDL_utf8_charpos_to_bytepos(str.Get(),WDL_utf8_get_charlen(str.Get())-1));
+  }
+  else if (wParam >= 32 && (!(lParam & FVIRTKEY) || swell_is_virtkey_char((int)wParam) || is_numpad))
+  {
+    if (lParam & FVIRTKEY)
+    {
+      if (wParam >= 'A' && wParam <= 'Z')
+      {
+        if ((lParam&FSHIFT) ^ (swell_is_likely_capslock?0:FSHIFT)) wParam += 'a' - 'A';
+      }
+      else if (is_numpad)
+      {
+        if (wParam <= VK_NUMPAD9) wParam += '0' - VK_NUMPAD0;
+        else wParam += '*' - VK_MULTIPLY;
+      }
+    }
+
+    char b[8];
+    WDL_MakeUTFChar(b,wParam,sizeof(b));
+    str.Append(b);
+    return str.Get();
+  }
+
+  return NULL;
+}
+
+
 static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   enum { col_resize_sz = 3 };
@@ -4812,6 +3940,8 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
   switch (msg)
   {
     case WM_MOUSEWHEEL:
+      if ((GetAsyncKeyState(VK_CONTROL)&0x8000) || (GetAsyncKeyState(VK_MENU)&0x8000)) break; // pass modified mousewheel to parent
+
       {
         const int amt = ((short)HIWORD(wParam))/40;
         if (amt && lvs)
@@ -4838,7 +3968,18 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     case WM_RBUTTONDOWN:
       if (lvs && lvs->m_last_row_height>0 && !lvs->m_is_listbox)
       {
-        NMLISTVIEW nm={{hwnd,hwnd->m_id,NM_RCLICK},0,0,0,};
+        LVHITTESTINFO inf = { { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) }, };
+        const int row = ListView_SubItemHitTest(hwnd, &inf);
+        const int n = ListView_GetItemCount(hwnd);
+        if (row>=0 && row<n && !ListView_GetItemState(hwnd,row,LVIS_SELECTED))
+        {
+          for (int x=0;x<n;x++)
+          {
+            ListView_SetItemState(hwnd,x,(x==row)?(LVIS_SELECTED|LVIS_FOCUSED):0,LVIS_SELECTED|LVIS_FOCUSED);
+          }
+        }
+
+        NMLISTVIEW nm={{hwnd,hwnd->m_id,NM_RCLICK},row,inf.iSubItem,0,0,0, {inf.pt.x,inf.pt.y}};
         SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
       }
     return 1;
@@ -4870,7 +4011,7 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     break;
     case WM_LBUTTONDBLCLK:
     case WM_LBUTTONDOWN:
-      SetFocus(hwnd);
+      SetFocusInternal(hwnd);
       if (msg == WM_LBUTTONDOWN) SetCapture(hwnd);
       else ReleaseCapture();
 
@@ -4885,6 +4026,9 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         const int n=lvs->GetNumItems();
         const int row_height = lvs->m_last_row_height;
         const int totalw = lvs->getTotalWidth();
+
+        if (hdr_size + n * row_height > r.bottom - g_swell_ctheme.scrollbar_width)
+          r.right -= g_swell_ctheme.scrollbar_width;
 
         if (GET_Y_LPARAM(lParam) >= 0 && GET_Y_LPARAM(lParam) < hdr_size)
         {
@@ -4939,7 +4083,7 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         if (totalw > r.right) r.bottom -= g_swell_ctheme.scrollbar_width;
         if (n * row_height > r.bottom - hdr_size_nomargin && 
-            GET_X_LPARAM(lParam) >= r.right - g_swell_ctheme.scrollbar_width)
+            GET_X_LPARAM(lParam) >= r.right)
         {
           int yp = GET_Y_LPARAM(lParam);
 
@@ -4961,11 +4105,11 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         int subitem = 0;
 
         {
-          const int n=lvs->m_cols.GetSize();
+          const int ncol=lvs->m_cols.GetSize();
           const bool has_image = lvs->hasStatusImage();
           int xpos=0, xpt = GET_X_LPARAM(lParam) + lvs->m_scroll_x;
           if (has_image) xpos += lvs->m_last_row_height;
-          for (int x=0;x<n;x++)
+          for (int x=0;x<ncol;x++)
           {
             const int xwid = lvs->m_cols.Get()[x].xwid;
             if (xpt >= xpos && xpt < xpos+xwid) { subitem = x; break; }
@@ -4984,6 +4128,8 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           {
             //if (oldsel != lvs->m_selitem) 
             SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_SELCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+            if (msg == WM_LBUTTONDBLCLK)
+              SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_DBLCLK<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
           }
           else
           {
@@ -4994,8 +4140,11 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               lvs->m_capmode_data2 = subitem;
             }
 
-            NMLISTVIEW nm={{hwnd,hwnd->m_id,msg == WM_LBUTTONDBLCLK ? NM_DBLCLK : NM_CLICK},hit,subitem,0,};
-            SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+            if(hit < n)
+            {
+              NMLISTVIEW nm={{hwnd,hwnd->m_id,msg == WM_LBUTTONDBLCLK ? NM_DBLCLK : NM_CLICK},hit,subitem,0,0,0, {s_clickpt.x, s_clickpt.y }};
+              SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+            }
             if (oldsel != lvs->m_selitem) 
             {
               NMLISTVIEW nm={{hwnd,hwnd->m_id,LVN_ITEMCHANGED},lvs->m_selitem,1,LVIS_SELECTED,};
@@ -5007,43 +4156,54 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         else 
         {
           bool changed = false;
-          const bool ctrl = (GetAsyncKeyState(VK_CONTROL)&0x8000)!=0;
-          if (!ctrl) 
+          if (hit >= n)
           {
-            if (!lvs->get_sel(hit))
-              changed |= lvs->clear_sel();
-          }
-          if ((GetAsyncKeyState(VK_SHIFT)&0x8000) && lvs->m_selitem >= 0)
-          {
-            int a=lvs->m_selitem;
-            int b = hit;
-            if (a>b) { b=a; a=hit; }
-            while (a<=b) changed |= lvs->set_sel(a++,true);
+            changed |= lvs->clear_sel();
+            lvs->m_selitem = -1;
           }
           else
           {
-            lvs->m_selitem = hit;
-            changed |= lvs->set_sel(hit,!ctrl || !lvs->get_sel(hit));
-          }
-
-          if (hit >=0 && hit < n) 
-          {
-            if (lvs->m_is_listbox)
+            const bool ctrl = (GetAsyncKeyState(VK_CONTROL)&0x8000)!=0;
+            if (!ctrl) 
             {
-              if (changed) SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_SELCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+              if (!lvs->get_sel(hit))
+                changed |= lvs->clear_sel();
+            }
+            if ((GetAsyncKeyState(VK_SHIFT)&0x8000) && lvs->m_selitem >= 0)
+            {
+              int a=lvs->m_selitem;
+              int b = hit;
+              if (a>b) { b=a; a=hit; }
+              while (a<=b) changed |= lvs->set_sel(a++,true);
             }
             else
+            {
+              lvs->m_selitem = hit;
+              changed |= lvs->set_sel(hit,!ctrl || !lvs->get_sel(hit));
+            }
+          }
+
+          if (lvs->m_is_listbox)
+          {
+            if (changed) SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_SELCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+            if (msg == WM_LBUTTONDBLCLK)
+              SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_DBLCLK<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+          }
+          else 
+          {
+            if (hit >=0 && hit < n)
             {
               lvs->m_capmode_state = 2;
               lvs->m_capmode_data1 = hit;
               lvs->m_capmode_data2 = subitem;
               NMLISTVIEW nm={{hwnd,hwnd->m_id,msg == WM_LBUTTONDBLCLK ? NM_DBLCLK : NM_CLICK},hit,subitem,LVIS_SELECTED,};
               SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
-              if (changed)
-              {
-                NMLISTVIEW nm={{hwnd,hwnd->m_id,LVN_ITEMCHANGED},hit,0,LVIS_SELECTED,};
-                SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
-              }
+            }
+            if (changed)
+            {
+              NMLISTVIEW nm={{hwnd,hwnd->m_id,LVN_ITEMCHANGED},hit,0,LVIS_SELECTED,};
+              if (nm.iItem < 0 || nm.iItem >= n) nm.iItem=0;
+              SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
             }
           }
 
@@ -5055,6 +4215,9 @@ static LRESULT listViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       if (GetCapture()==hwnd && lvs)
       {
 forceMouseMove:
+        RECT r;
+        GetClientRect(hwnd,&r);
+        r.right -= g_swell_ctheme.scrollbar_width;
         switch (lvs->m_capmode_state)
         {
           case 3:
@@ -5064,8 +4227,6 @@ forceMouseMove:
               if (lvs->hasStatusImage()) xp -= lvs->m_last_row_height;
 
               SWELL_ListView_Col *col = lvs->m_cols.Get();
-              RECT r;
-              GetClientRect(hwnd,&r);
               if (x < lvs->m_cols.GetSize())
               {
                 for (int i = 0; i < x; i ++) xp -= col[i].xwid;
@@ -5075,11 +4236,10 @@ forceMouseMove:
                   col[x].xwid = xp;
                   if (lvs->m_scroll_x > 0 && GET_X_LPARAM(lParam) < 0)
                     lvs->m_scroll_x--;
-                  else if (GET_X_LPARAM(lParam) > r.right)
+                  else if (GET_X_LPARAM(lParam) > r.right+12)
                     lvs->m_scroll_x+=16; // additional check might not be necessary?
 
                   InvalidateRect(hwnd,NULL,FALSE);
-                  // todo: auto-scroll
                 }
               }
             }
@@ -5103,9 +4263,6 @@ forceMouseMove:
 
               if (amt)
               {
-                RECT r;
-                GetClientRect(hwnd,&r);
-
                 const int totalw = lvs->getTotalWidth();
                 if (totalw > r.right) r.bottom -= lvs->m_last_row_height;
 
@@ -5132,9 +4289,6 @@ forceMouseMove:
 
               if (amt)
               {
-                RECT r;
-                GetClientRect(hwnd,&r);
-
                 const int viewsz = r.right;
                 const double totalsz=(double)lvs->getTotalWidth();
                 amt = (int)floor(amt * totalsz / (double)viewsz + 0.5);
@@ -5160,35 +4314,142 @@ forceMouseMove:
       }
     return 1;
     case WM_KEYDOWN:
+      if (lvs)
+      {
+        const char *s = stateStringOnKey(msg,wParam,lParam);
+        if (s)
+        {
+          int col = 0;
+          if (!lvs->m_is_listbox)
+          {
+            for (int x=0;x<lvs->m_cols.GetSize();x++)
+            {
+              if (lvs->m_cols.Get()[x].sortindicator)
+              {
+                col = x;
+                break;
+              }
+            }
+          }
+
+          const int n = lvs->GetNumItems();
+          int selitem = lvs->m_selitem;
+          if (selitem < 0 || selitem >= n) selitem=0;
+          for (int x=0;x<n;x++)
+          {
+            int offs = (selitem + x) % n;
+            if (offs < 0) offs+=n;
+
+            const char *v=NULL;
+            char buf[1024];
+            if (!lvs->IsOwnerData())
+            {
+              SWELL_ListView_Row *row = lvs->m_data.Get(offs);
+              if (row) v = row->m_vals.Get(col);
+            }
+            else
+            {
+              buf[0]=0;
+              NMLVDISPINFO nm={{hwnd,hwnd->m_id,LVN_GETDISPINFO},{LVIF_TEXT, offs,col, 0,0, buf, sizeof(buf), -1 }};
+              SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+              v = buf;
+            }
+
+            if (v && !strnicmp(v,s,strlen(s))) 
+            {
+              if (!lvs->m_is_multisel)
+              {
+                const int oldsel = lvs->m_selitem;
+                lvs->m_selitem = offs;
+
+                if (lvs->m_is_listbox)
+                {
+                  SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_SELCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+                }
+                else
+                {
+                  if (oldsel != lvs->m_selitem) 
+                  {
+                    NMLISTVIEW nm={{hwnd,hwnd->m_id,LVN_ITEMCHANGED},lvs->m_selitem,1,LVIS_SELECTED,};
+                    SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+                  }
+                }
+              }
+              else 
+              {
+                bool changed = lvs->clear_sel() | lvs->set_sel(offs,true);
+                lvs->m_selitem = offs;
+
+                if (lvs->m_is_listbox)
+                {
+                  if (changed) SendMessage(GetParent(hwnd),WM_COMMAND,(LBN_SELCHANGE<<16) | (hwnd->m_id&0xffff),(LPARAM)hwnd);
+                }
+                else 
+                {
+                  if (changed)
+                  {
+                    NMLISTVIEW nm={{hwnd,hwnd->m_id,LVN_ITEMCHANGED},offs,0,LVIS_SELECTED,};
+                    if (nm.iItem < 0 || nm.iItem >= n) nm.iItem=0;
+                    SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+                  }
+                }
+              }
+
+              ListView_EnsureVisible(hwnd,offs,FALSE);
+              InvalidateRect(hwnd,NULL,FALSE);
+              break;
+            }
+          }
+        }
+      }
       if (lvs && (lParam & FVIRTKEY)) 
       {
         int flag=0;
         int ni;
         const int oldsel = lvs->m_selitem;
+
         switch (wParam)
         {
+          case VK_NEXT:
+          case VK_PRIOR:
           case VK_UP:
           case VK_DOWN:
-            ni = lvs->m_selitem + (wParam == VK_UP ? -1 : 1);
-            if (ni < 0 && wParam == VK_DOWN) ni=0;
-            if (ni >= 0 && ni < lvs->GetNumItems())
             {
-              if (lvs->m_is_multisel) 
+              RECT r;
+              GetClientRect(hwnd,&r);
+              const int page = lvs->m_last_row_height ? 
+                (r.bottom - g_swell_ctheme.scrollbar_width)/lvs->m_last_row_height : 4;
+              const int cnt = lvs->GetNumItems();
+
+              ni = lvs->m_selitem + (wParam == VK_UP ? -1 :
+                                     wParam == VK_PRIOR ? 2-wdl_max(page,3) :
+                                     wParam == VK_NEXT ? wdl_max(page,3)-2 : 
+                                     1);
+
+              if (ni<0) ni=0;
+              if (ni>cnt-1) ni=cnt-1;
+              const bool shift = (GetAsyncKeyState(VK_SHIFT)&0x8000)!=0;
+              
+              if (ni>=0 && (ni!=lvs->m_selitem || !shift))
               {
-                if (!(GetAsyncKeyState(VK_SHIFT)&0x8000)) 
+                if (lvs->m_is_multisel) 
                 {
-                  lvs->clear_sel();
-                  lvs->set_sel(ni,true);
+                  if (!shift)
+                  {
+                    lvs->clear_sel();
+                    lvs->set_sel(ni,true);
+                  }
+                  else
+                  {
+                    if (lvs->get_sel(ni)) lvs->set_sel(lvs->m_selitem,false);
+                    else lvs->set_sel(ni,true);
+                  }
                 }
-                else
-                {
-                  if (lvs->get_sel(ni)) lvs->set_sel(lvs->m_selitem,false);
-                  else lvs->set_sel(ni,true);
-                }
+                lvs->m_selitem=ni;
+                flag|=3;
               }
-              lvs->m_selitem=ni;
-              flag|=3;
             }
+            flag|=4;
           break;
           case VK_HOME:
           case VK_END:
@@ -5219,7 +4480,7 @@ forceMouseMove:
               lvs->m_selitem=ni;
               flag|=3;
             }
- 
+            flag|=4;
           break;
         }
         if (flag)
@@ -5251,12 +4512,12 @@ forceMouseMove:
         {
           RECT cr; 
           GetClientRect(hwnd,&cr); 
-          HBRUSH br = CreateSolidBrush(lvs->m_color_bg);
-          FillRect(ps.hdc,&cr,br);
-          DeleteObject(br);
+          HBRUSH bgbr = CreateSolidBrush(lvs->m_color_bg);
+          FillRect(ps.hdc,&cr,bgbr);
+          DeleteObject(bgbr);
           const bool focused = GetFocus() == hwnd;
           const int bgsel = lvs->m_color_extras[focused ? 0 : 2 ];
-          br=CreateSolidBrush(bgsel == -1 ? lvs->m_color_bg_sel : bgsel);
+          bgbr=CreateSolidBrush(bgsel == -1 ? lvs->m_color_bg_sel : bgsel);
           if (lvs) 
           {
             TEXTMETRIC tm; 
@@ -5266,7 +4527,7 @@ forceMouseMove:
             lvs->sanitizeScroll(hwnd);
 
             const bool owner_data = lvs->IsOwnerData();
-            const int n = owner_data ? lvs->m_owner_data_size : lvs->m_data.GetSize();
+            const int nrows = owner_data ? lvs->m_owner_data_size : lvs->m_data.GetSize();
             const int hdr_size = lvs->GetColumnHeaderHeight(hwnd);
             const int hdr_size_nomargin = hdr_size>0 ? hdr_size-LISTVIEW_HDR_YMARGIN : 0;
             int ypos = hdr_size - lvs->m_scroll_y;
@@ -5276,13 +4537,15 @@ forceMouseMove:
             const int nc = wdl_max(ncols,1);
             SWELL_ListView_Col *cols = lvs->m_cols.Get();
 
-            int x;
             const bool has_image = lvs->hasAnyImage();
             const bool has_status_image = lvs->hasStatusImage();
             const int xo = lvs->m_scroll_x;
 
             const int totalw = lvs->getTotalWidth();
-            if (totalw > cr.right)
+
+            const bool vscroll_area = hdr_size + nrows * row_height > cr.bottom - g_swell_ctheme.scrollbar_width;
+            const bool hscroll = totalw > cr.right - (vscroll_area ? g_swell_ctheme.scrollbar_width : 0);
+            if (hscroll)
               cr.bottom -= g_swell_ctheme.scrollbar_width;
 
             HPEN gridpen = NULL;
@@ -5293,7 +4556,7 @@ forceMouseMove:
               oldpen = SelectObject(ps.hdc,gridpen);
             }
 
-            for (x = 0; x < n && ypos < cr.bottom; x ++)
+            for (int rowidx = 0; rowidx < nrows && ypos < cr.bottom; rowidx ++)
             {
               const char *str = NULL;
               char buf[4096];
@@ -5307,10 +4570,10 @@ forceMouseMove:
                   continue;
                 }
 
-                sel = lvs->get_sel(x);
+                sel = lvs->get_sel(rowidx);
                 if (sel)
                 {
-                  FillRect(ps.hdc,&tr,br);
+                  FillRect(ps.hdc,&tr,bgbr);
                 }
               }
 
@@ -5321,14 +4584,14 @@ forceMouseMove:
               }
               else SetTextColor(ps.hdc, lvs->m_color_text);
 
-              SWELL_ListView_Row *row = lvs->m_data.Get(x);
-              int col,xpos=-xo;
-              for (col = 0; col < nc && xpos < cr.right; col ++)
+              SWELL_ListView_Row *row = lvs->m_data.Get(rowidx);
+              int xpos=-xo;
+              for (int col = 0; col < nc && xpos < cr.right; col ++)
               {
                 int image_idx = 0;
                 if (owner_data)
                 {
-                  NMLVDISPINFO nm={{hwnd,hwnd->m_id,LVN_GETDISPINFO},{LVIF_TEXT, x,col, 0,0, buf, sizeof(buf), -1 }};
+                  NMLVDISPINFO nm={{hwnd,hwnd->m_id,LVN_GETDISPINFO},{LVIF_TEXT, rowidx,col, 0,0, buf, sizeof(buf), -1 }};
                   if (!col && has_image)
                   {
                     if (lvs->m_status_imagelist_type == LVSIL_STATE) nm.item.mask |= LVIF_STATE;
@@ -5340,7 +4603,7 @@ forceMouseMove:
                   str=buf;
                   if (!col && has_image)
                   {
-                    if (lvs->m_status_imagelist_type == LVSIL_STATE) image_idx=(nm.item.state>>16)&0xff;
+                    if (lvs->m_status_imagelist_type == LVSIL_STATE) image_idx=STATEIMAGEMASKTOINDEX(nm.item.state);
                     else if (lvs->m_status_imagelist_type == LVSIL_SMALL) image_idx = nm.item.iImage + 1;
                   }
                 }
@@ -5358,10 +4621,10 @@ forceMouseMove:
                     HICON icon = lvs->m_status_imagelist->Get(image_idx-1);      
                     if (icon)
                     {
-                      if (!has_status_image)
-                        ar.right = ar.left + wdl_min(row_height,cols[col].xwid);
-                      else 
+                      if (has_status_image || col >= ncols)
                         ar.right = ar.left + row_height;
+                      else
+                        ar.right = ar.left + wdl_min(row_height,cols[col].xwid);
                       DrawImageInRect(ps.hdc,icon,&ar);
                     }
                   }
@@ -5377,22 +4640,34 @@ forceMouseMove:
                 {
                   if (hwnd->m_parent)
                   {
-                    DRAWITEMSTRUCT dis = { ODT_LISTBOX, hwnd->m_id, (UINT)x, 0, (UINT)(sel?ODS_SELECTED:0),hwnd,ps.hdc,ar,(DWORD_PTR)hwnd->m_userdata };
+                    DRAWITEMSTRUCT dis = { ODT_LISTBOX, hwnd->m_id, (UINT)rowidx, 0, 
+                      (UINT)(sel?ODS_SELECTED:0),hwnd,ps.hdc,ar,row?(DWORD_PTR)row->m_param:0 };
                     dis.rcItem.left++;
+                    if (cr.bottom-cr.top < nrows*row_height)
+                      dis.rcItem.right -= g_swell_ctheme.scrollbar_width;
                     SendMessage(hwnd->m_parent,WM_DRAWITEM,(WPARAM)hwnd->m_id,(LPARAM)&dis);
                   }
                 }
-                else if (str) 
+                else
                 {
                   if (ncols > 0)
                   {
-                    ar.right = ar.left + cols[col].xwid - 3;
+                    ar.right = xpos + cols[col].xwid - SWELL_UI_SCALE(3);
                     xpos += cols[col].xwid;
                   }
+                  else ar.right = cr.right;
+
                   if (ar.right > ar.left)
-                    DrawText(ps.hdc,str,-1,&ar,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
+                  {
+                    const int adj = (ar.right-ar.left)/16;
+                    const int maxadj = SWELL_UI_SCALE(4);
+                    ar.left += wdl_min(adj,maxadj);
+
+                    if(str)
+                      DrawText(ps.hdc,str,-1,&ar,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
+                  }
                 }
-              }        
+              }
               ypos += row_height;
               if (gridpen)  
               {
@@ -5409,10 +4684,10 @@ forceMouseMove:
                 MoveToEx(ps.hdc,0,ypos-1,NULL);
                 LineTo(ps.hdc,cr.right,ypos-1);
               }
-              int x,xpos=(has_status_image ? row_height : 0) - xo;
-              for (x=0; x < ncols; x ++)
+              int xpos=(has_status_image ? row_height : 0) - xo;
+              for (int col=0; col < ncols; col ++)
               {
-                xpos += cols[x].xwid;
+                xpos += cols[col].xwid;
                 if (xpos > cr.right) break;
                 MoveToEx(ps.hdc,xpos-1,hdr_size_nomargin,NULL);
                 LineTo(ps.hdc,xpos-1,cr.bottom);
@@ -5421,7 +4696,8 @@ forceMouseMove:
             if (hdr_size_nomargin>0)
             {
               HBRUSH br = CreateSolidBrush(g_swell_ctheme.listview_hdr_bg);
-              int x,xpos=(has_status_image ? row_height : 0) - xo, ypos=0;
+              int xpos=(has_status_image ? row_height : 0) - xo;
+              ypos=0;
               SetTextColor(ps.hdc,g_swell_ctheme.listview_hdr_text);
 
               if (xpos>0) 
@@ -5429,10 +4705,10 @@ forceMouseMove:
                 RECT tr={0,ypos,xpos,ypos+hdr_size_nomargin };
                 FillRect(ps.hdc,&tr,br);
               }
-              for (x=0; x < ncols; x ++)
+              for (int col=0; col < ncols; col ++)
               {
                 RECT tr={xpos,ypos,0,ypos + hdr_size_nomargin };
-                xpos += cols[x].xwid;
+                xpos += cols[col].xwid;
                 tr.right = xpos;
                
                 if (tr.right > tr.left) 
@@ -5442,7 +4718,7 @@ forceMouseMove:
                       g_swell_ctheme.listview_hdr_hilight,
                       g_swell_ctheme.listview_hdr_shadow);
 
-                  if (cols[x].sortindicator != 0)
+                  if (cols[col].sortindicator != 0)
                   {
                     const int tsz = (tr.bottom-tr.top)/4;
                     if (tr.right > tr.left + 2*tsz)
@@ -5450,7 +4726,7 @@ forceMouseMove:
                       const int x1 = tr.left + 2;
                       int y2 = (tr.bottom+tr.top)/2 - tsz/2 - tsz/4;
                       int y1 = y2 + tsz;
-                      if (cols[x].sortindicator < 0)
+                      if (cols[col].sortindicator >= 0)
                       {
                         int tmp=y1; 
                         y1=y2;
@@ -5469,10 +4745,10 @@ forceMouseMove:
                     }
                   }
 
-                  if (cols[x].name) 
+                  if (cols[col].name) 
                   {
                     tr.left += wdl_min((tr.right-tr.left)/4,4);
-                    DrawText(ps.hdc,cols[x].name,-1,&tr,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
+                    DrawText(ps.hdc,cols[col].name,-1,&tr,DT_LEFT|DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX);
                   }
                 }
                 if (xpos >= cr.right) break;
@@ -5491,24 +4767,26 @@ forceMouseMove:
             }
 
             cr.top += hdr_size_nomargin;
-            drawVerticalScrollbar(ps.hdc,cr,n*row_height,lvs->m_scroll_y);
+            drawVerticalScrollbar(ps.hdc,cr,nrows*row_height,lvs->m_scroll_y);
 
-            if (totalw > cr.right)
+            if (hscroll)
             {
               cr.bottom += g_swell_ctheme.scrollbar_width;
-              drawHorizontalScrollbar(ps.hdc,cr,totalw,lvs->m_scroll_x);
+              drawHorizontalScrollbar(ps.hdc,cr,
+                  cr.right-cr.left - (vscroll_area ? g_swell_ctheme.scrollbar_width : 0),
+                  totalw,lvs->m_scroll_x);
             }
           }
-          DeleteObject(br);
+          DeleteObject(bgbr);
 
           EndPaint(hwnd,&ps);
         }
       }
     return 0;
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       hwnd->m_private_data = 0;
       delete lvs;
-    return 0;
+    break;
     case LB_ADDSTRING:
       if (lvs && !lvs->IsOwnerData())
       {
@@ -5591,12 +4869,15 @@ forceMouseMove:
               SWELL_ListView_Row *row=lvs->m_data.Get(x);
               if (row) row->m_tmp = (row->m_tmp&~1) | (wParam?1:0);
             }
+            InvalidateRect(hwnd,NULL,FALSE);
           }
           else
           {
             SWELL_ListView_Row *row=lvs->m_data.Get((int)lParam);
             if (!row) return LB_ERR;
+            const int otmp = row->m_tmp;
             row->m_tmp = (row->m_tmp&~1) | (wParam?1:0);
+            if (row->m_tmp != otmp) InvalidateRect(hwnd,NULL,FALSE);
             return 0;
           }
         }
@@ -5691,10 +4972,11 @@ struct treeViewState
     return true;
   }
 
-  int navigateSel(int key) // returns 2 force invalidate, 1 if ate key 
+  int navigateSel(int key, int pagesize) // returns 2 force invalidate, 1 if ate key 
   {
     HTREEITEM par=NULL;
-    int idx=0;
+    int idx=0,tmp=1;
+
     switch (key)
     {
       case VK_LEFT:
@@ -5730,45 +5012,55 @@ struct treeViewState
           if (par) m_sel=par;
         }
       return 1;
+      case VK_PRIOR:
+        tmp = wdl_max(pagesize,2) - 1;
       case VK_UP:
-        if (m_sel && findItem(m_sel,&par,&idx))
+        while (tmp-- > 0)
         {
-          if (idx>0)
+          if (m_sel && findItem(m_sel,&par,&idx))
           {
-            par = (par?par:&m_root)->m_children.Get(idx-1);
-            while (par && (par->m_state & TVIS_EXPANDED) && 
-                   par->m_haschildren && par->m_children.GetSize())
-              par = par->m_children.Get(par->m_children.GetSize()-1);
+            if (idx>0)
+            {
+              par = (par?par:&m_root)->m_children.Get(idx-1);
+              while (par && (par->m_state & TVIS_EXPANDED) && 
+                     par->m_haschildren && par->m_children.GetSize())
+                par = par->m_children.Get(par->m_children.GetSize()-1);
+            }
+            if (par) m_sel=par;
           }
-          if (par) m_sel=par;
         }
       return 1;
+      case VK_NEXT:
+        tmp = wdl_max(pagesize,2) - 1;
       case VK_DOWN:
-        if (m_sel && findItem(m_sel,&par,&idx))
+        while (tmp-- > 0)
         {
-          if (m_sel->m_haschildren && 
-              m_sel->m_children.GetSize() &&
-              (m_sel->m_state & TVIS_EXPANDED))
+          if (m_sel && findItem(m_sel,&par,&idx))
           {
-            par = m_sel->m_children.Get(0);
-            if (par) m_sel=par;
-            return 1;
-          }
+            if (m_sel->m_haschildren && 
+                m_sel->m_children.GetSize() &&
+                (m_sel->m_state & TVIS_EXPANDED))
+            {
+              par = m_sel->m_children.Get(0);
+              if (par) m_sel=par;
+              continue;
+            }
 
 next_item_in_parent:
-          if (par)
-          {
-            if (idx+1 < par->m_children.GetSize()) 
+            if (par)
             {
-              par = par->m_children.Get(idx+1);
+              if (idx+1 < par->m_children.GetSize()) 
+              {
+                par = par->m_children.Get(idx+1);
+                if (par) m_sel=par;
+              }
+              else if (findItem(par,&par,&idx)) goto next_item_in_parent;
+            }
+            else
+            {
+              par = m_root.m_children.Get(idx+1);
               if (par) m_sel=par;
             }
-            else if (findItem(par,&par,&idx)) goto next_item_in_parent;
-          }
-          else
-          {
-            par = m_root.m_children.Get(idx+1);
-            if (par) m_sel=par;
           }
         }
       return 1;
@@ -5928,6 +5220,8 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
   switch (msg)
   {
     case WM_MOUSEWHEEL:
+      if ((GetAsyncKeyState(VK_CONTROL)&0x8000) || (GetAsyncKeyState(VK_MENU)&0x8000)) break; // pass modified mousewheel to parent
+
       {
         const int amt = ((short)HIWORD(wParam))/40;
         if (amt && tvs)
@@ -5945,7 +5239,9 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       if (tvs && (lParam & FVIRTKEY)) 
       {
         HTREEITEM oldSel = tvs->m_sel;
-        int flag = tvs->navigateSel((int)wParam); 
+        RECT r;
+        GetClientRect(hwnd,&r);
+        int flag = tvs->navigateSel((int)wParam,tvs->m_last_row_height ? r.bottom / tvs->m_last_row_height : 4); 
         if (oldSel != tvs->m_sel)
         {
           if (tvs->m_sel) tvs->ensureItemVisible(hwnd,tvs->m_sel);
@@ -5959,7 +5255,7 @@ static LRESULT treeViewWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       }
     break;
     case WM_LBUTTONDOWN:
-      SetFocus(hwnd);
+      SetFocusInternal(hwnd);
       SetCapture(hwnd);
       if (tvs)
       {
@@ -6051,6 +5347,13 @@ forceMouseMove:
         ReleaseCapture();
       }
     return 1;
+    case WM_RBUTTONDOWN:
+      if (tvs && tvs->m_last_row_height>0)
+      {
+        NMLISTVIEW nm={{hwnd,hwnd->m_id,NM_RCLICK},0,0,0,};
+        SendMessage(GetParent(hwnd),WM_NOTIFY,hwnd->m_id,(LPARAM)&nm);
+      }
+    return 1;
     case WM_PAINT:
       { 
         PAINTSTRUCT ps;
@@ -6058,9 +5361,11 @@ forceMouseMove:
         {
           RECT r; 
           GetClientRect(hwnd,&r); 
-          HBRUSH br = CreateSolidBrush(g_swell_ctheme.treeview_bg);
-          FillRect(ps.hdc,&r,br);
-          DeleteObject(br);
+          {
+            HBRUSH br = CreateSolidBrush(g_swell_ctheme.treeview_bg);
+            FillRect(ps.hdc,&r,br);
+            DeleteObject(br);
+          }
           if (tvs)
           {
             RECT cr=r;
@@ -6097,10 +5402,10 @@ forceMouseMove:
         }
       }
     return 0;
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       hwnd->m_private_data = 0;
       delete tvs;
-    return 0;
+    break;
   }
   return DefWindowProc(hwnd,msg,wParam,lParam);
 }
@@ -6122,10 +5427,10 @@ static LRESULT tabControlWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
   tabControlState *s = (tabControlState *)hwnd->m_private_data;
   switch (msg)
   {
-    case WM_DESTROY:
+    case WM_NCDESTROY:
       hwnd->m_private_data = 0;
       delete s;
-    return 0;  
+    break;
     case WM_TIMER:
       if (wParam==1)
       {
@@ -6168,7 +5473,7 @@ static LRESULT tabControlWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     case WM_LBUTTONDOWN:
       if (GET_Y_LPARAM(lParam) < TABCONTROL_HEIGHT)
       {
-        SetFocus(hwnd);
+        SetFocusInternal(hwnd);
         int xp=GET_X_LPARAM(lParam),tab;
         HDC dc = GetDC(hwnd);
         int tabchg = -1;
@@ -6455,6 +5760,10 @@ HWND SWELL_MakeControl(const char *cname, int idx, const char *classname, int st
     hwnd->m_wndproc(hwnd,WM_CREATE,0,0);
     return hwnd;
   }
+  else if (!stricmp(classname,"COMBOBOX"))
+  {
+    return SWELL_MakeCombo(idx, x, y, w, h, style);
+  }
   return 0;
 }
 
@@ -6616,7 +5925,7 @@ int ListView_InsertItem(HWND h, const LVITEM *item)
   row->m_vals.Add((item->mask&LVIF_TEXT) && item->pszText ? strdup(item->pszText) : NULL);
   row->m_param = (item->mask&LVIF_PARAM) ? item->lParam : 0;
   row->m_tmp = ((item->mask & LVIF_STATE) && (item->state & LVIS_SELECTED)) ? 1:0;
-  if ((item->mask&LVIF_STATE) && (item->stateMask & (0xff<<16))) row->m_imageidx=(item->state>>16)&0xff;
+  if ((item->mask&LVIF_STATE) && (item->stateMask & LVIS_STATEIMAGEMASK)) row->m_imageidx=STATEIMAGEMASKTOINDEX(item->state);
   lvs->m_data.Insert(idx,row); 
   InvalidateRect(h,NULL,FALSE);
   return idx;
@@ -6625,7 +5934,10 @@ int ListView_InsertItem(HWND h, const LVITEM *item)
 void ListView_SetItemText(HWND h, int ipos, int cpos, const char *txt)
 {
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
-  if (!lvs || lvs->IsOwnerData() || cpos < 0 || cpos >= 32) return;
+  if (!lvs || lvs->IsOwnerData() || cpos < 0) return;
+  const int ncol = wdl_max(lvs->m_cols.GetSize(),1);
+  if (cpos >= ncol) return;
+
   SWELL_ListView_Row *row=lvs->m_data.Get(ipos);
   if (!row) return;
   while (row->m_vals.GetSize()<=cpos) row->m_vals.Add(NULL);
@@ -6639,14 +5951,7 @@ int ListView_GetNextItem(HWND h, int istart, int flags)
   listViewState *lvs = h ? (listViewState *)h->m_private_data : NULL;
   if (!lvs) return -1;
   const int n = lvs->GetNumItems();
-  int x;
-  if (istart < 0) istart=-1;
-  for (x=istart+1; x < n; x ++) 
-  {
-    if (flags&LVNI_SELECTED) if (lvs->get_sel(x)) return x;
-    if (flags&LVNI_FOCUSED) if (lvs->m_selitem==x) return x;
-  }
-  for (x=0;x<istart; x++) 
+  for (int x = wdl_max(0,istart+1); x < n; x ++)
   {
     if (flags&LVNI_SELECTED) if (lvs->get_sel(x)) return x;
     if (flags&LVNI_FOCUSED) if (lvs->m_selitem==x) return x;
@@ -6664,11 +5969,16 @@ bool ListView_SetItem(HWND h, LVITEM *item)
   {
     SWELL_ListView_Row *row=lvs->m_data.Get(item->iItem);
     if (!row) return false;
-    while (row->m_vals.GetSize()<=item->iSubItem) row->m_vals.Add(NULL);
-    if (item->mask&LVIF_TEXT) 
+
+    const int ncol = wdl_max(lvs->m_cols.GetSize(),1);
+    if (item->iSubItem >= 0 && item->iSubItem < ncol)
     {
-      free(row->m_vals.Get(item->iSubItem));
-      row->m_vals.Set(item->iSubItem,item->pszText?strdup(item->pszText):NULL);
+      while (row->m_vals.GetSize()<=item->iSubItem) row->m_vals.Add(NULL);
+      if (item->mask&LVIF_TEXT) 
+      {
+        free(row->m_vals.Get(item->iSubItem));
+        row->m_vals.Set(item->iSubItem,item->pszText?strdup(item->pszText):NULL);
+      }
     }
     if (item->mask & LVIF_PARAM) 
     {
@@ -6715,8 +6025,15 @@ bool ListView_GetItem(HWND h, LVITEM *item)
 
   if (item->mask & LVIF_STATE) 
   {
-    item->state = lvs->get_sel(item->iItem) ? LVIS_SELECTED : 0;
-    if (lvs->m_selitem == item->iItem) item->state |= LVIS_FOCUSED;
+    item->state = 0;
+    if ((item->stateMask & LVIS_SELECTED) && lvs->get_sel(item->iItem)) item->state |= LVIS_SELECTED;
+    if ((item->stateMask & LVIS_FOCUSED) && lvs->m_selitem == item->iItem) item->state |= LVIS_FOCUSED;
+    if (item->stateMask & 0xff0000)
+    {
+      SWELL_ListView_Row *row = lvs->m_data.Get(item->iItem);
+      if (row)
+        item->state |= INDEXTOSTATEIMAGEMASK(row->m_imageidx);
+    }
   }
 
   return true;
@@ -6728,6 +6045,12 @@ int ListView_GetItemState(HWND h, int ipos, UINT mask)
   int ret  = 0;
   if (mask & LVIS_SELECTED) ret |= (lvs->get_sel(ipos) ? LVIS_SELECTED : 0 );
   if ((mask & LVIS_FOCUSED) && lvs->m_selitem == ipos) ret |= LVIS_FOCUSED;
+  if ((mask & LVIS_STATEIMAGEMASK) && lvs->m_status_imagelist_type == LVSIL_STATE) 
+  {
+    SWELL_ListView_Row *row = lvs->m_data.Get(ipos);
+    if (row)
+      ret |= INDEXTOSTATEIMAGEMASK(row->m_imageidx);
+  }
   return ret;
 }
 
@@ -6763,13 +6086,13 @@ bool ListView_SetItemState(HWND h, int ipos, UINT state, UINT statemask)
       }
     }
   }
-  if ((statemask & (0xff<<16)) && lvs->m_status_imagelist_type == LVSIL_STATE) 
+  if ((statemask & LVIS_STATEIMAGEMASK) && lvs->m_status_imagelist_type == LVSIL_STATE) 
   {
     SWELL_ListView_Row *row = lvs->m_data.Get(ipos);
     if (row)
     {
       const int idx= row->m_imageidx;
-      row->m_imageidx=(state>>16)&0xff;
+      row->m_imageidx=STATEIMAGEMASKTOINDEX(state);
       if (!changed && idx != row->m_imageidx) ListView_RedrawItems(h,ipos,ipos);
     }
   }
@@ -6878,7 +6201,7 @@ int ListView_HitTest(HWND h, LVHITTESTINFO *pinf)
     const int ypos = y - lvs->GetColumnHeaderHeight(h);
     const int hit = ypos >= 0 ? ((ypos + lvs->m_scroll_y) / lvs->m_last_row_height) : -1;
     if (hit < 0) pinf->flags |= LVHT_ABOVE;
-    pinf->iItem=hit;
+    pinf->iItem=hit < 0 || hit >= lvs->GetNumItems() ? -1 : hit;
     if (pinf->iItem >= 0)
     {
       if (lvs->m_status_imagelist && x < lvs->m_last_row_height)
@@ -6969,7 +6292,8 @@ bool ListView_GetSubItemRect(HWND h, int item, int subitem, int code, RECT *r)
     const int n=lvs->m_cols.GetSize();
     for (x = 0; x < n; x ++)
     {
-      const int xwid = lvs->m_cols.Get()[x].xwid;
+      int xwid = lvs->m_cols.Get()[x].xwid;
+      if (!x && lvs->hasStatusImage()) xwid += lvs->m_last_row_height;
       if (x == subitem)
       {
         r->left=xpos;
@@ -6980,6 +6304,8 @@ bool ListView_GetSubItemRect(HWND h, int item, int subitem, int code, RECT *r)
     }
   }
 
+  if (r->top < -64-lvs->m_last_row_height) r->top = -64 - lvs->m_last_row_height;
+  if (r->top > cr.bottom+64) r->top = cr.bottom+64;
 
   r->bottom = r->top + lvs->m_last_row_height;
 
@@ -7084,6 +6410,31 @@ HWND ChildWindowFromPoint(HWND h, POINT p)
   return h;
 }
 
+static HWND recurseOwnedWindowHitTest(HWND h, POINT p, int maxdepth)
+{
+  RECT r;
+  GetWindowContentViewRect(h,&r);
+  if (!PtInRect(&r,p)) return NULL;
+
+  // check any owned windows first, as they are always above our window
+  if (h->m_owned_list && maxdepth > 0)
+  {
+    HWND owned = h->m_owned_list;
+    while (owned)
+    {
+      if (owned->m_visible)
+      {
+        HWND hit = recurseOwnedWindowHitTest(owned,p,maxdepth-1);
+        if (hit) return hit;
+      }
+      owned = owned->m_owned_next;
+    }
+  }
+  p.x -= r.left;
+  p.y -= r.top;
+  return ChildWindowFromPoint(h,p);
+}
+
 HWND WindowFromPoint(POINT p)
 {
   HWND h = SWELL_topwindows;
@@ -7091,29 +6442,12 @@ HWND WindowFromPoint(POINT p)
   {
     if (h->m_visible)
     {
-      RECT r;
-      GetWindowContentViewRect(h,&r);
-      if (PtInRect(&r,p))
-      {
-        p.x -= r.left;
-        p.y -= r.top;
-        return ChildWindowFromPoint(h,p);
-      }
+      HWND hit = recurseOwnedWindowHitTest(h,p,20);
+      if (hit) return hit;
     }
     h = h->m_next;
   }
   return NULL;
-}
-
-void UpdateWindow(HWND hwnd)
-{
-  if (hwnd)
-  {
-#if SWELL_TARGET_GDK == 2
-    while (hwnd && !hwnd->m_oswindow) hwnd=hwnd->m_parent;
-    if (hwnd && hwnd->m_oswindow) gdk_window_process_updates(hwnd->m_oswindow,true);
-#endif
-  }
 }
 
 BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
@@ -7159,6 +6493,19 @@ BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
   {
     hwnd->m_invalidated=true;
     HWND t=hwnd->m_parent;
+    if (t && (t->m_style & WS_CLIPSIBLINGS))
+    {
+      // child window, invalidate any later children that intersect us (redraw them on top of us)
+      HWND nw = hwnd->m_next;
+      while (nw)
+      {
+        RECT tmp;
+        if (nw->m_visible && !nw->m_invalidated && WinIntersectRect(&tmp,&hwnd->m_position,&nw->m_position))
+          nw->m_invalidated=true;
+        nw=nw->m_next;
+      }
+    }
+
     while (t)
     { 
       if (eraseBk)
@@ -7170,15 +6517,7 @@ BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
       t=t->m_parent; 
     }
   }
-#ifdef SWELL_TARGET_GDK
-  GdkRectangle gdkr;
-  gdkr.x = rect.left;
-  gdkr.y = rect.top;
-  gdkr.width = rect.right-rect.left;
-  gdkr.height = rect.bottom-rect.top;
-
-  gdk_window_invalidate_rect(h->m_oswindow,hwnd!=h || r ? &gdkr : NULL,true);
-#endif
+  swell_oswindow_invalidate(h, (hwnd!=h || r) ? &rect : NULL);
 #endif
   return TRUE;
 }
@@ -7186,35 +6525,26 @@ BOOL InvalidateRect(HWND hwnd, const RECT *r, int eraseBk)
 
 HWND GetCapture()
 {
-  return s_captured_window;
+  return swell_captured_window;
 }
 
 HWND SetCapture(HWND hwnd)
 {
-  HWND oc = s_captured_window;
+  HWND oc = swell_captured_window;
   if (oc != hwnd)
   {
-    s_captured_window=hwnd;
+    swell_captured_window=hwnd;
     if (oc) SendMessage(oc,WM_CAPTURECHANGED,0,(LPARAM)hwnd);
-#ifdef SWELL_TARGET_GDK
-// this doesnt seem to be necessary
-//    if (gdk_pointer_is_grabbed()) gdk_pointer_ungrab(GDK_CURRENT_TIME);
-//    while (hwnd && !hwnd->m_oswindow) hwnd=hwnd->m_parent;
-//    if (hwnd) gdk_pointer_grab(hwnd->m_oswindow,TRUE,GDK_ALL_EVENTS_MASK,hwnd->m_oswindow,NULL,GDK_CURRENT_TIME);
-#endif
   } 
   return oc;
 }
 
 void ReleaseCapture()
 {
-  if (s_captured_window) 
+  if (swell_captured_window) 
   {
-    SendMessage(s_captured_window,WM_CAPTURECHANGED,0,0);
-    s_captured_window=0;
-#ifdef SWELL_TARGET_GDK
-//    if (gdk_pointer_is_grabbed()) gdk_pointer_ungrab(GDK_CURRENT_TIME);
-#endif
+    SendMessage(swell_captured_window,WM_CAPTURECHANGED,0,0);
+    swell_captured_window=0;
   }
 }
 
@@ -7291,31 +6621,53 @@ LRESULT SwellDialogDefaultWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
    
     if (r) return r; 
 
-    if (uMsg == WM_KEYDOWN && !hwnd->m_parent)
+    if (uMsg == WM_KEYDOWN)
     {
-      if (wParam == VK_ESCAPE)
+      if (!hwnd->m_parent)
       {
-        if (IsWindowEnabled(hwnd) && !SendMessage(hwnd,WM_CLOSE,0,0))
-          SendMessage(hwnd,WM_COMMAND,IDCANCEL,0);
-        return 0;
+        if (wParam == VK_ESCAPE)
+        {
+          if (IsWindowEnabled(hwnd) && !SendMessage(hwnd,WM_CLOSE,0,0))
+            SendMessage(hwnd,WM_COMMAND,IDCANCEL,0);
+          return 0;
+        }
+        else if (wParam == VK_RETURN)
+        {
+          HWND c = GetWindow(hwnd,GW_CHILD);
+          while (c)
+          {
+            if (c->m_id && (c->m_style&BS_DEFPUSHBUTTON) && 
+                c->m_classname && !strcmp(c->m_classname,"Button"))
+            {
+              SendMessage(hwnd,WM_COMMAND,c->m_id,0);
+              return 0;
+            }
+            c = GetWindow(c,GW_HWNDNEXT);
+          }
+          c = GetDlgItem(hwnd,IDOK);
+          if (c) SendMessage(hwnd,WM_COMMAND,IDOK,0);
+          return 0;
+        }
       }
-      else if (wParam == VK_RETURN)
-      {
-        SendMessage(hwnd,WM_COMMAND,IDOK/*todo: get default*/,0);
-        return 0;
-      }
-    }
-    if (uMsg == WM_KEYDOWN && wParam == VK_TAB && (lParam&~FSHIFT) == FVIRTKEY)
-    {
-      HWND ch = getNextFocusWindow(hwnd,(lParam & FSHIFT) != 0,hwnd->m_focused_child);
-      if (ch)
-      {
-        SetFocus(ch);
-        if (ch->m_classname && !strcmp(ch->m_classname,"Edit"))
-          SendMessage(ch,EM_SETSEL,0,-1);
+      int navdir = 0;
 
-        InvalidateRect(ch,NULL,FALSE);
-        return 0;
+      if (wParam == VK_TAB && (lParam&~FSHIFT) == FVIRTKEY) navdir = (lParam & FSHIFT) ? -1 : 1;
+      else if (lParam == FVIRTKEY)
+      {
+        if (wParam == VK_LEFT || wParam == VK_UP) navdir = -1;
+        else if (wParam == VK_RIGHT || wParam == VK_DOWN) navdir = 1;
+      }
+
+      if (navdir)
+      {
+        HWND ch = getNextFocusWindow(hwnd,navdir<0,hwnd->m_focused_child);
+        if (ch)
+        {
+          SetFocus(ch);
+
+          InvalidateRect(ch,NULL,FALSE);
+          return 0;
+        }
       }
     }
   }
@@ -7391,6 +6743,13 @@ static int menuBarHitTest(HWND hwnd, int mousex, int mousey, RECT *rOut, int for
 
 static RECT g_menubar_lastrect;
 static HWND g_menubar_active;
+static POINT g_menubar_startpt;
+static bool g_menubar_active_drag;
+
+HWND swell_window_wants_all_input()
+{
+  return g_menubar_active_drag ? g_menubar_active : NULL;
+}
 
 int menuBarNavigate(int dir) // -1 if no menu bar active, 0 if did nothing, 1 if navigated
 {
@@ -7428,11 +6787,13 @@ static void runMenuBar(HWND hwnd, HMENU__ *menu, int x, const RECT *use_r)
   mbr.bottom = 0;
   mbr.top = -g_swell_ctheme.menubar_height;
   menu->sel_vis = x;
+  GetCursorPos(&g_menubar_startpt);
   g_menubar_active = hwnd;
+  g_menubar_active_drag=true;
   for (;;)
   {
     InvalidateRect(hwnd,&mbr,FALSE);
-    if (TrackPopupMenu(inf->hSubMenu,0,r.left,r.bottom,0,hwnd,NULL) || menu->sel_vis == x) break;
+    if (TrackPopupMenu(inf->hSubMenu,0,r.left,r.bottom,0xbeef,hwnd,NULL) || menu->sel_vis == x) break;
 
     x = menu->sel_vis;
     inf = menu->items.Get(x);
@@ -7457,6 +6818,8 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_NCMOUSEMOVE:
       if (g_menubar_active == hwnd && hwnd->m_menu)
       {
+        swell_delegate_menu_message(hwnd,lParam,WM_MOUSEMOVE,true);
+
         HMENU__ *menu = (HMENU__*)hwnd->m_menu;
         RECT r;
         const int x = menuBarHitTest(hwnd,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&r,-1);
@@ -7496,9 +6859,11 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           r.bottom -= r.top; r.top=0;
           if (r.bottom>g_swell_ctheme.menubar_height) r.bottom=g_swell_ctheme.menubar_height;
 
-          HBRUSH br=CreateSolidBrush(g_swell_ctheme.menubar_bg);
-          FillRect(dc,&r,br);
-          DeleteObject(br);
+          {
+            HBRUSH br=CreateSolidBrush(g_swell_ctheme.menubar_bg);
+            FillRect(dc,&r,br);
+            DeleteObject(br);
+          }
 
           HGDIOBJ oldfont = SelectObject(dc,menubar_font);
           SetBkMode(dc,TRANSPARENT);
@@ -7538,7 +6903,7 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                  dis ? g_swell_ctheme.menubar_text_disabled :
                    g_swell_ctheme.menubar_text);
 
-              DrawText(dc,inf->dwTypeData,-1,&cr,DT_BOTTOM|DT_LEFT);
+              DrawText(dc,inf->dwTypeData,-1,&cr,DT_VCENTER|DT_LEFT);
               xpos=cr.right+g_swell_ctheme.menubar_spacing_width;
             }
           }
@@ -7566,6 +6931,21 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_NCLBUTTONUP:
       if (!hwnd->m_parent && hwnd->m_menu)
       {
+        if (msg == WM_NCLBUTTONUP && g_menubar_active_drag) 
+        {
+          g_menubar_active_drag=false;
+          if (swell_delegate_menu_message(hwnd,lParam,WM_LBUTTONUP,true)) return 0;
+
+          POINT pt;
+          GetCursorPos(&pt);
+          pt.x -= g_menubar_startpt.x;
+          pt.y -= g_menubar_startpt.y;
+          if (pt.x*pt.x+ pt.y*pt.y > 4*4) 
+          {
+            DestroyPopupMenus();
+            return 0;
+          }
+        }
         RECT r;
         const int x = menuBarHitTest(hwnd,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&r,-1);
         if (x>=0)
@@ -7655,10 +7035,15 @@ LRESULT DefWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_SETCURSOR:
         return hwnd->m_parent ? SendMessage(hwnd->m_parent,msg,wParam,lParam) : 0;
 
+    case WM_SETFONT:
+      hwnd->m_font = (HFONT)wParam;
+    return 0;
+
     case WM_GETFONT:
+        if (hwnd->m_font) return (LRESULT) hwnd->m_font;
 #ifdef SWELL_FREETYPE
         {
-          HFONT SWELL_GetDefaultFont();
+          HFONT SWELL_GetDefaultFont(void);
           return (LRESULT)SWELL_GetDefaultFont();
         }
 #endif
@@ -7750,160 +7135,6 @@ UINT DragQueryFile(HDROP hDrop, UINT wf, char *buf, UINT bufsz)
   GlobalUnlock(hDrop);
   return rv;
 }
-
-
-static WDL_IntKeyedArray<HANDLE> m_clip_recs(GlobalFree);
-static WDL_PtrList<char> m_clip_curfmts;
-static HWND s_clip_hwnd;
-
-bool OpenClipboard(HWND hwndDlg) 
-{ 
-#ifdef SWELL_TARGET_GDK
-  s_clip_hwnd=hwndDlg; 
-  if (s_clipboard_getstate)
-  {
-    GlobalFree(s_clipboard_getstate);
-    s_clipboard_getstate = NULL;
-  }
-  s_clipboard_getstate_fmt = NULL;
-#endif
-
-  return true; 
-}
-
-#ifdef SWELL_TARGET_GDK
-static HANDLE req_clipboard(GdkAtom type)
-{
-  if (s_clipboard_getstate_fmt == type) return s_clipboard_getstate;
-
-  HWND h = s_clip_hwnd;
-  while (h && !h->m_oswindow) h = h->m_parent;
-
-  if (h && SWELL_gdk_active > 0)
-  {
-    if (s_clipboard_getstate)
-    {
-      GlobalFree(s_clipboard_getstate);
-      s_clipboard_getstate=NULL;
-    }
-    gdk_selection_convert(h->m_oswindow,GDK_SELECTION_CLIPBOARD,type,GDK_CURRENT_TIME);
- 
-    GMainContext *ctx=g_main_context_default();
-    DWORD startt = GetTickCount();
-    for (;;)
-    {
-      while (!s_clipboard_getstate && g_main_context_iteration(ctx,FALSE))
-      {
-        GdkEvent *evt;
-        while (!s_clipboard_getstate && gdk_events_pending() && (evt = gdk_event_get()))
-        {
-          if (evt->type == GDK_SELECTION_NOTIFY || evt->type == GDK_SELECTION_REQUEST)
-            swell_gdkEventHandler(evt,(gpointer)1);
-          gdk_event_free(evt);
-        }
-      }
-
-      if (s_clipboard_getstate) 
-      {
-        if (s_clipboard_getstate_fmt == type) return s_clipboard_getstate;
-        return NULL;
-      }
-
-      DWORD now = GetTickCount();
-      if (now < startt-1000 || now > startt+500) break;
-      Sleep(10);
-    }
-  }
-  return NULL;
-}
-#endif
-
-void CloseClipboard() 
-{ 
-  s_clip_hwnd=NULL; 
-}
-
-UINT EnumClipboardFormats(UINT lastfmt)
-{
-#ifdef SWELL_TARGET_GDK
-  if (!lastfmt)
-  {
-    // checking this causes issues (reentrancy, I suppose?)
-    //if (req_clipboard(utf8atom()))
-    return CF_TEXT;
-  }
-  if (lastfmt == CF_TEXT) lastfmt = 0;
-#endif
-
-  int x=0;
-  for (;;)
-  {
-    int fmt=0;
-    if (!m_clip_recs.Enumerate(x++,&fmt)) return 0;
-    if (lastfmt == 0) return fmt;
-
-    if ((UINT)fmt == lastfmt) return m_clip_recs.Enumerate(x++,&fmt) ? fmt : 0;
-  }
-}
-
-HANDLE GetClipboardData(UINT type)
-{
-#ifdef SWELL_TARGET_GDK
-  if (type == CF_TEXT)
-  {
-    return req_clipboard(utf8atom());
-  }
-#endif
-  return m_clip_recs.Get(type);
-}
-
-
-void EmptyClipboard()
-{
-  m_clip_recs.DeleteAll();
-}
-
-void SetClipboardData(UINT type, HANDLE h)
-{
-#ifdef SWELL_TARGET_GDK
-  if (type == CF_TEXT)
-  {
-    if (s_clipboard_setstate) { GlobalFree(s_clipboard_setstate); s_clipboard_setstate=NULL; }
-    s_clipboard_setstate_fmt=NULL;
-    static GdkWindow *w;
-    if (!w)
-    {
-      GdkWindowAttr attr={0,};
-      attr.title = (char *)"swell clipboard";
-      attr.event_mask = GDK_ALL_EVENTS_MASK;
-      attr.wclass = GDK_INPUT_ONLY;
-      attr.window_type = GDK_WINDOW_TOPLEVEL;
-      w = gdk_window_new(NULL,&attr,0);
-    }
-    if (w)
-    {
-      s_clipboard_setstate_fmt = utf8atom();
-      s_clipboard_setstate = h;
-      gdk_selection_owner_set(w,GDK_SELECTION_CLIPBOARD,GDK_CURRENT_TIME,TRUE);
-    }
-    return;
-  }
-#endif
-  if (h) m_clip_recs.Insert(type,h);
-  else m_clip_recs.Delete(type);
-}
-
-UINT RegisterClipboardFormat(const char *desc)
-{
-  if (!desc || !*desc) return 0;
-  int x;
-  const int n = m_clip_curfmts.GetSize();
-  for(x=0;x<n;x++) 
-    if (!strcmp(m_clip_curfmts.Get(x),desc)) return x + 1;
-  m_clip_curfmts.Add(strdup(desc));
-  return n+1;
-}
-
 
 
 ///////// PostMessage emulation
@@ -8098,10 +7329,10 @@ int GetSystemMetrics(int p)
          SWELL_GetViewPort(&r, NULL, false);
          return p==SM_CXSCREEN ? r.right-r.left : r.bottom-r.top; 
       }
-    case SM_CXHSCROLL: return 16;
-    case SM_CYHSCROLL: return 16;
-    case SM_CXVSCROLL: return 16;
-    case SM_CYVSCROLL: return 16;
+    case SM_CXHSCROLL:
+    case SM_CYHSCROLL:
+    case SM_CXVSCROLL:
+    case SM_CYVSCROLL: return g_swell_ctheme.smscrollbar_width;
   }
   return 0;
 }
@@ -8127,27 +7358,20 @@ BOOL ScrollWindow(HWND hwnd, int xamt, int yamt, const RECT *lpRect, const RECT 
 
 HWND FindWindowEx(HWND par, HWND lastw, const char *classname, const char *title)
 {
-  if (!par&&!lastw) return NULL; // need to implement this modes
-  HWND h=lastw?GetWindow(lastw,GW_HWNDNEXT):GetWindow(par,GW_CHILD);
+  HWND h=lastw?GetWindow(lastw,GW_HWNDNEXT):par?GetWindow(par,GW_CHILD):SWELL_topwindows;
   while (h)
   {
     bool isOk=true;
-    if (title)
+    if (title && strcmp(title,h->m_title.Get())) isOk=false;
+    else if (classname)
     {
-      char buf[512];
-      buf[0]=0;
-      GetWindowText(h,buf,sizeof(buf));
-      if (strcmp(title,buf)) isOk=false;
-    }
-    if (classname)
-    {
-      // todo: other classname translations
+      if (!h->m_classname || strcmp(classname,h->m_classname)) isOk=false;
     }
     
     if (isOk) return h;
     h=GetWindow(h,GW_HWNDNEXT);
   }
-  return h;
+  return NULL;
 }
 
 
@@ -8242,6 +7466,7 @@ void TreeView_SelectItem(HWND hwnd, HTREEITEM item)
   {
     __rent++;
     NMTREEVIEW nm={{(HWND)hwnd,(UINT_PTR)hwnd->m_id,TVN_SELCHANGED},};
+    nm.itemNew.hItem = item;
     SendMessage(GetParent(hwnd),WM_NOTIFY,nm.hdr.idFrom,(LPARAM)&nm);
     __rent--;
   }
@@ -8307,9 +7532,15 @@ BOOL TreeView_SetItem(HWND hwnd, LPTVITEM pitem)
 
 HTREEITEM TreeView_HitTest(HWND hwnd, TVHITTESTINFO *hti)
 {
-  if (!hwnd || !hti) return NULL;
-  
-  return NULL; // todo implement
+  treeViewState *tvs = hwnd ? (treeViewState *)hwnd->m_private_data : NULL;
+  if (!tvs || !hti || !tvs->m_last_row_height) return NULL;
+
+  RECT r;
+  GetClientRect(hwnd,&r);
+  if (!PtInRect(&r,hti->pt)) return NULL;
+
+  int y = hti->pt.y + tvs->m_scroll_y + tvs->m_last_row_height;
+  return tvs->hitTestItem(&tvs->m_root,&y,NULL);
 }
 
 HTREEITEM TreeView_GetRoot(HWND hwnd)
@@ -8392,6 +7623,7 @@ int ListView_GetTopIndex(HWND h)
 }
 BOOL ListView_GetColumnOrderArray(HWND h, int cnt, int* arr)
 {
+  if (arr) for (int x=0;x<cnt;x++) arr[x]=x; // todo
   return FALSE;
 }
 BOOL ListView_SetColumnOrderArray(HWND h, int cnt, int* arr)
@@ -8486,7 +7718,7 @@ BOOL ShellExecute(HWND hwndDlg, const char *action,  const char *content1, const
 
   if (!content1 || !*content1) return FALSE;
 
-  if (!strnicmp(content1,"http://",7))
+  if (!strnicmp(content1,"http://",7) || !strnicmp(content1,"https://",8))
   {
     argv[0] = xdg;
     argv[1] = content1;
@@ -8514,8 +7746,16 @@ BOOL ShellExecute(HWND hwndDlg, const char *action,  const char *content1, const
   }
   else
   {
-    argv[0] = xdg;
-    argv[1] = content1; // default to xdg-open for whatever else
+    if (content2 && *content2)
+    {
+      argv[0] = content1;
+      argv[1] = content2;
+    }
+    else
+    {
+      argv[0] = xdg;
+      argv[1] = content1; // default to xdg-open for whatever else
+    }
   }
 
   if (fork() == 0) 
@@ -8525,11 +7765,39 @@ BOOL ShellExecute(HWND hwndDlg, const char *action,  const char *content1, const
     exit(0); // if execv fails for some reason
   }
   free(tmp);
-  return FALSE;
+  return TRUE;
 }
 
 
 
+static LRESULT WINAPI focusRectWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  switch (uMsg)
+  {
+    case WM_PAINT:
+      {
+        PAINTSTRUCT ps;
+        if (BeginPaint(hwnd,&ps))
+        {
+          RECT r;
+          GetClientRect(hwnd,&r);
+          HBRUSH br = CreateSolidBrushAlpha(g_swell_ctheme.focusrect,0.5f);
+          HPEN pen = CreatePen(0,PS_SOLID,g_swell_ctheme.focusrect);
+          HGDIOBJ oldbr = SelectObject(ps.hdc,br);
+          HGDIOBJ oldpen = SelectObject(ps.hdc,pen);
+          Rectangle(ps.hdc,0,0,r.right,r.bottom);
+          SelectObject(ps.hdc,oldbr);
+          SelectObject(ps.hdc,oldpen);
+          DeleteObject(br);
+          DeleteObject(pen);
+          EndPaint(hwnd,&ps);
+        }
+      }
+    return 0;
+
+  }
+  return DefWindowProc(hwnd,uMsg,wParam,lParam);
+}
 
 // r=NULL to "free" handle
 // otherwise r is in hwndPar coordinates
@@ -8537,68 +7805,48 @@ void SWELL_DrawFocusRect(HWND hwndPar, RECT *rct, void **handle)
 {
   if (!handle) return;
 
-  if (!rct)
+  HWND h = (HWND) *handle;
+  if (h && (!rct || h->m_parent != hwndPar))
   {
-    if (*handle)
-    {
-      InvalidateRect(hwndPar,NULL,FALSE);
-      *handle = NULL;
-    }
+    DestroyWindow(h);
+    h->Release();
+    *handle = NULL;
+    h = NULL;
   }
-  else
+
+  if (rct)
   {
-    if (*handle) 
+    if (!h)
     {
-      InvalidateRect(hwndPar,NULL,FALSE);
-      UpdateWindow(hwndPar);
+      h = new HWND__(hwndPar,0,rct,"",false,focusRectWndProc);
+      h->m_style = WS_CHILD; // using this for top-level will also keep it out of the window list
+      h->Retain();
+      *handle = h;
+      ShowWindow(h,SW_SHOWNA);
     }
-    *handle = (void *)(INT_PTR)1;
-
-    HDC hdc = GetDC(hwndPar);
-    if (hdc)
-    {
-      HPEN pen=CreatePen(PS_SOLID,0,g_swell_ctheme.focusrect);
-      HGDIOBJ oldpen = SelectObject(hdc,pen);
-
-      MoveToEx(hdc,rct->left,rct->top,NULL);
-      LineTo(hdc,rct->right,rct->top);
-      LineTo(hdc,rct->right,rct->bottom);
-      LineTo(hdc,rct->left,rct->bottom);
-      LineTo(hdc,rct->left,rct->top);
-
-      SelectObject(hdc,oldpen);
-      ReleaseDC(hwndPar,hdc);
-    }
+    SetWindowPos(h,HWND_TOP,rct->left,rct->top,rct->right-rct->left,rct->bottom-rct->top,SWP_NOACTIVATE);
+    InvalidateRect(h,NULL,FALSE);
   }
+
+  if (hwndPar)
+  {
+    InvalidateRect(hwndPar,NULL,FALSE);
+    UpdateWindow(hwndPar);
+  } 
 }
 
 void SWELL_BroadcastMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-
   HWND h = SWELL_topwindows;
   while (h) 
   { 
     SendMessage(h,uMsg,wParam,lParam);
+    if (uMsg == WM_DISPLAYCHANGE)
+      InvalidateRect(h,NULL,FALSE);
     h = h->m_next;
   }
 }
 
-int SWELL_SetWindowLevel(HWND hwnd, int newlevel)
-{
-  int rv=0;
-  if (hwnd)
-  {
-    rv = hwnd->m_israised ? 1 : 0;
-    hwnd->m_israised = newlevel>0;
-#ifdef SWELL_TARGET_GDK
-    if (hwnd->m_oswindow)
-    {
-      gdk_window_set_keep_above(hwnd->m_oswindow,newlevel>0);
-    }
-#endif
-  }
-  return rv;
-}
 void SetOpaque(HWND h, bool opaque)
 {
 }
@@ -8608,61 +7856,6 @@ void SetAllowNoMiddleManRendering(HWND h, bool allow)
 int SWELL_GetDefaultButtonID(HWND hwndDlg, bool onlyIfEnabled)
 {
   return 0;
-}
-
-void GetCursorPos(POINT *pt)
-{
-  pt->x=0;
-  pt->y=0;
-#ifdef SWELL_TARGET_GDK
-  if (SWELL_gdk_active>0)
-  {
-//#if SWELL_TARGET_GDK == 3
-//    GdkDevice *dev=NULL;
-//    if (s_cur_evt) dev = gdk_event_get_device(s_cur_evt);
-//    if (!dev) dev = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default()));
-//    if (dev) gdk_device_get_position(dev,NULL,&pt->x,&pt->y);
-//#else
-    gdk_display_get_pointer(gdk_display_get_default(),NULL,&pt->x,&pt->y,NULL);
-//#endif
-  }
-#endif
-}
-
-WORD GetAsyncKeyState(int key)
-{
-#ifdef SWELL_TARGET_GDK
-  if (SWELL_gdk_active>0)
-  {
-    GdkModifierType mod=(GdkModifierType)0;
-    HWND h = GetFocus();
-    while (h && !h->m_oswindow) h = h->m_parent;
-//#if SWELL_TARGET_GDK == 3
-//    GdkDevice *dev=NULL;
-//    if (s_cur_evt) dev = gdk_event_get_device(s_cur_evt);
-//    if (!dev) dev = gdk_device_manager_get_client_pointer(gdk_display_get_device_manager(gdk_display_get_default()));
-//    if (dev) gdk_window_get_device_position(h?  h->m_oswindow : gdk_get_default_root_window(),dev, NULL, NULL,&mod);
-//#else
-    gdk_window_get_pointer(h?  h->m_oswindow : gdk_get_default_root_window(),NULL,NULL,&mod);
-//#endif
- 
-    if (key == VK_LBUTTON) return (mod&GDK_BUTTON1_MASK)?0x8000:0;
-    if (key == VK_MBUTTON) return (mod&GDK_BUTTON2_MASK)?0x8000:0;
-    if (key == VK_RBUTTON) return (mod&GDK_BUTTON3_MASK)?0x8000:0;
-
-    if (key == VK_CONTROL) return (mod&GDK_CONTROL_MASK)?0x8000:0;
-    if (key == VK_MENU) return (mod&GDK_MOD1_MASK)?0x8000:0;
-    if (key == VK_SHIFT) return (mod&GDK_SHIFT_MASK)?0x8000:0;
-    if (key == VK_LWIN) return (mod&SWELL_WINDOWSKEY_GDK_MASK)?0x8000:0;
-  }
-#endif
-  return 0;
-}
-
-
-DWORD GetMessagePos()
-{  
-  return s_lastMessagePos;
 }
 
 void SWELL_HideApp()
@@ -8726,195 +7919,6 @@ void SWELL_GenerateDialogFromList(const void *_list, int listsz)
   }
 }
 
-#ifdef SWELL_TARGET_GDK
-struct bridgeState {
-  GdkWindow *w, *delw;
-  bool lastvis;
-  RECT lastrect;
-};
-static LRESULT xbridgeProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  switch (uMsg)
-  {
-    case WM_DESTROY:
-      if (hwnd && hwnd->m_private_data)
-      {
-        bridgeState *bs = (bridgeState*)hwnd->m_private_data;
-        hwnd->m_private_data = 0;
-        if (bs->w) gdk_window_destroy(bs->w);
-        if (bs->delw) gdk_window_destroy(bs->delw);
-        delete bs;
-      }
-    break;
-    case WM_TIMER:
-      if (wParam != 1) break;
-    case WM_MOVE:
-    case WM_SIZE:
-      if (hwnd && hwnd->m_private_data)
-      {
-        bridgeState *bs = (bridgeState*)hwnd->m_private_data;
-        if (bs->w)
-        {
-          HWND h = hwnd->m_parent;
-          RECT tr = hwnd->m_position;
-          while (h)
-          {
-            RECT cr = h->m_position;
-            if (h->m_oswindow)
-            {
-              cr.right -= cr.left;
-              cr.bottom -= cr.top;
-              cr.left=cr.top=0;
-            }
-
-            if (h->m_wndproc)
-            {
-              NCCALCSIZE_PARAMS p = {{ cr }};
-              h->m_wndproc(h,WM_NCCALCSIZE,0,(LPARAM)&p);
-              cr = p.rgrc[0];
-            }
-            tr.left += cr.left;
-            tr.top += cr.top;
-            tr.right += cr.left;
-            tr.bottom += cr.top;
-
-            if (tr.left < cr.left) tr.left=cr.left;
-            if (tr.top < cr.top) tr.top = cr.top;
-            if (tr.right > cr.right) tr.right = cr.right;
-            if (tr.bottom > cr.bottom) tr.bottom = cr.bottom;
-
-            if (h->m_oswindow) break;
-            h=h->m_parent;
-          }
-
-          // todo: need to periodically check to see if the plug-in has resized its window
-          bool vis = IsWindowVisible(hwnd);
-          if (vis)
-          {
-#if SWELL_TARGET_GDK == 2
-            gint w=0,h=0,d=0;
-            gdk_window_get_geometry(bs->w,NULL,NULL,&w,&h,&d);
-#else
-            gint w=0,h=0;
-            gdk_window_get_geometry(bs->w,NULL,NULL,&w,&h);
-#endif
-            if (w > bs->lastrect.right-bs->lastrect.left) 
-            {
-              bs->lastrect.right = bs->lastrect.left + w;
-              tr.right++; // workaround "bug" in GDK -- if bs->w was resized via Xlib, GDK won't resize it unless it thinks the size changed
-            }
-            if (h > bs->lastrect.bottom-bs->lastrect.top) 
-            {
-              bs->lastrect.bottom = bs->lastrect.top + h;
-              tr.bottom++; // workaround "bug" in GDK -- if bs->w was resized via Xlib, GDK won't resize it unless it thinks the size changed
-            }
-          }
-
-          if (h && (bs->delw || (vis != bs->lastvis) || (vis&&memcmp(&tr,&bs->lastrect,sizeof(RECT))))) 
-          {
-            if (bs->lastvis && !vis)
-            {
-              gdk_window_hide(bs->w);
-              bs->lastvis = false;
-            }
-
-            if (bs->delw)
-            {
-              gdk_window_reparent(bs->w,h->m_oswindow,tr.left,tr.top);
-              gdk_window_resize(bs->w, tr.right-tr.left,tr.bottom-tr.top);
-              bs->lastrect=tr;
-
-              if (bs->delw)
-              {
-                gdk_window_destroy(bs->delw);
-                bs->delw=NULL;
-              }
-            }
-            else if (memcmp(&tr,&bs->lastrect,sizeof(RECT)))
-            {
-              bs->lastrect = tr;
-              gdk_window_move_resize(bs->w,tr.left,tr.top, tr.right-tr.left, tr.bottom-tr.top);
-            }
-            if (vis && !bs->lastvis)
-            {
-              gdk_window_show(bs->w);
-              gdk_window_raise(bs->w);
-              bs->lastvis = true;
-            }
-          }
-        }
-      }
-    break;
-  }
-  return DefWindowProc(hwnd,uMsg,wParam,lParam);
-}
-#endif
-
-HWND SWELL_CreateXBridgeWindow(HWND viewpar, void **wref, RECT *r)
-{
-  HWND hwnd = NULL;
-  *wref = NULL;
-
-#ifdef SWELL_TARGET_GDK
-
-  GdkWindow *ospar = NULL;
-  HWND hpar = viewpar;
-  while (hpar)
-  {
-    ospar = hpar->m_oswindow;
-    if (ospar) break;
-    hpar = hpar->m_parent;
-  }
-
-  bridgeState *bs = new bridgeState;
-  bs->delw = NULL;
-  bs->lastvis = false;
-  memset(&bs->lastrect,0,sizeof(bs->lastrect));
-
-  GdkWindowAttr attr;
-  if (!ospar)
-  {
-    memset(&attr,0,sizeof(attr));
-    attr.event_mask = GDK_ALL_EVENTS_MASK|GDK_EXPOSURE_MASK;
-    attr.x = r->left;
-    attr.y = r->top;
-    attr.width = r->right-r->left;
-    attr.height = r->bottom-r->top;
-    attr.wclass = GDK_INPUT_OUTPUT;
-    attr.title = (char*)"Temporary window";
-    attr.window_type = GDK_WINDOW_TOPLEVEL;
-    ospar = bs->delw = gdk_window_new(ospar,&attr,GDK_WA_X|GDK_WA_Y);
-  }
-
-  memset(&attr,0,sizeof(attr));
-  attr.event_mask = GDK_ALL_EVENTS_MASK|GDK_EXPOSURE_MASK;
-  attr.x = r->left;
-  attr.y = r->top;
-  attr.width = r->right-r->left;
-  attr.height = r->bottom-r->top;
-  attr.wclass = GDK_INPUT_OUTPUT;
-  attr.title = (char*)"Plug-in Window";
-  attr.event_mask = GDK_ALL_EVENTS_MASK|GDK_EXPOSURE_MASK;
-  attr.window_type = GDK_WINDOW_CHILD;
-
-  bs->w = gdk_window_new(ospar,&attr,GDK_WA_X|GDK_WA_Y);
-
-  hwnd = new HWND__(viewpar,0,r,NULL, true, xbridgeProc);
-  hwnd->m_private_data = (INT_PTR) bs;
-  if (bs->w)
-  {
-#if SWELL_TARGET_GDK == 2
-    *wref = (void *) GDK_WINDOW_XID(bs->w);
-#else
-    *wref = (void *) gdk_x11_window_get_xid(bs->w);
-#endif
-    SetTimer(hwnd,1,100,NULL);
-    if (!bs->delw) SendMessage(hwnd,WM_SIZE,0,0);
-  }
-#endif
-  return hwnd;
-}
-
 int swell_fullscreenWindow(HWND hwnd, BOOL fs)
 {
   if (hwnd)
@@ -8925,204 +7929,38 @@ int swell_fullscreenWindow(HWND hwnd, BOOL fs)
   return 0;
 }
 
-
-#ifdef SWELL_TARGET_GDK
-
-struct dropSourceInfo {
-  dropSourceInfo() 
-  { 
-    srclist=NULL; srccount=0; srcfn=NULL; callback=NULL; 
-    state=0;
-    dragctx=NULL;
-  }
-  ~dropSourceInfo() 
-  { 
-    free(srcfn); 
-    if (dragctx)
-    {
-#if SWELL_TARGET_GDK!=2
-      gdk_drag_drop_done(dragctx,state!=0);
-#endif
-      g_object_unref(dragctx);
-    }
-  }
-
-  const char **srclist;
-  int srccount;
-  // or
-  void (*callback)(const char *);
-  char *srcfn;
-  
-  int state;
-
-  GdkDragContext *dragctx;
-};
-
-static void encode_uri(WDL_FastString *s, const char *rd)
+void SWELL_SetClassName(HWND hwnd, const char *p)
 {
-  while (*rd)
-  {
-    // unsure if UTF-8 chars should be urlencoded or allowed?
-    if (*rd < 0 || (!isalnum(*rd) && *rd != '-' && *rd != '_' && *rd != '.' && *rd != '/'))
-    {
-      char buf[8];
-      snprintf(buf,sizeof(buf),"%%%02x",(int)(unsigned char)*rd);
-      s->Append(buf);
-    }
-    else s->Append(rd,1);
-
-    rd++;
-  }
+  if (hwnd)
+    hwnd->m_classname=p;
 }
 
-
-static LRESULT WINAPI dropSourceWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+int GetClassName(HWND hwnd, char *buf, int bufsz)
 {
-  dropSourceInfo *inf = (dropSourceInfo*)hwnd->m_private_data;
-  switch (msg)
+  if (!hwnd || !hwnd->m_classname || !buf || bufsz<1) return 0;
+  lstrcpyn_safe(buf,hwnd->m_classname,bufsz);
+  return (int)strlen(buf);
+}
+
+#ifdef _DEBUG
+void VALIDATE_HWND_LIST(HWND listHead, HWND par)
+{
+  if (!listHead) return;
+  WDL_ASSERT(!listHead->m_prev);
+  WDL_ASSERT(listHead->m_parent == par);
+  WDL_ASSERT(listHead->m_next != listHead);
+  HWND last = listHead;
+  HWND list = listHead->m_next;
+  while (list)
   {
-    case WM_CREATE:
-      if (!swell_dragsrc_osw)
-      {
-        GdkWindowAttr attr={0,};
-        attr.title = (char *)"swell drag source";
-        attr.event_mask = GDK_ALL_EVENTS_MASK;
-        attr.wclass = GDK_INPUT_ONLY;
-        attr.window_type = GDK_WINDOW_TOPLEVEL;
-        swell_dragsrc_osw = gdk_window_new(NULL,&attr,0);
-      }
-      if (swell_dragsrc_osw)
-      {
-        inf->dragctx = gdk_drag_begin(swell_dragsrc_osw, g_list_append(NULL,urilistatom()));
-      }
-      SetCapture(hwnd);
-    break;
-    case WM_MOUSEMOVE:
-      if (inf->dragctx)
-      {
-        POINT p;
-        GetCursorPos(&p);
-        GdkWindow *w = NULL;
-        GdkDragProtocol proto;
-        gdk_drag_find_window_for_screen(inf->dragctx,NULL,gdk_screen_get_default(),p.x,p.y,&w,&proto);
-        // todo: need to update gdk_drag_context_get_drag_window()
-        // (or just SetCursor() a drag and drop cursor)
-        if (w) 
-        {
-          gdk_drag_motion(inf->dragctx,w,proto,p.x,p.y,GDK_ACTION_COPY,GDK_ACTION_COPY,GDK_CURRENT_TIME);
-        }
-      }
-    break;
-    case WM_LBUTTONUP:
-      if (inf->dragctx && !inf->state)
-      {
-        inf->state=1;
-        gdk_selection_owner_set(swell_dragsrc_osw,gdk_drag_get_selection(inf->dragctx),GDK_CURRENT_TIME,TRUE);
-        gdk_drag_drop(inf->dragctx,GDK_CURRENT_TIME);
-        SetTimer(hwnd,1,500,NULL); // a successful drop will also trigger a releasecapture() earlier
-        return 0;
-      }
-      ReleaseCapture();
-    break;
-    case WM_USER+100:
-    if (wParam && lParam) 
-    {
-      GdkAtom *aOut = (GdkAtom *)lParam;
-      GdkEventSelection *evt = (GdkEventSelection*)wParam;
-
-      if (evt->target == urilistatom())
-      {
-        WDL_FastString s;
-        if (inf->srclist && inf->srccount)
-        {
-          for (int x=0;x<inf->srccount;x++)
-          {
-            if (x) s.Append("\n");
-            s.Append("file://");
-            encode_uri(&s,inf->srclist[x]);
-          }
-        }
-        else if (inf->callback && inf->srcfn && inf->state)
-        {
-          inf->callback(inf->srcfn);
-          s.Append("file://");
-          encode_uri(&s,inf->srcfn);
-        }
-
-        if (s.GetLength())
-        {
-          *aOut = evt->property;
-#if SWELL_TARGET_GDK == 2
-          GdkWindow *pw = gdk_window_lookup(evt->requestor);
-          if (!pw) pw = gdk_window_foreign_new(evt->requestor);
-#else
-          GdkWindow *pw = evt->requestor;
-#endif
-          if (pw)
-            gdk_property_change(pw,*aOut,evt->target,8, GDK_PROP_MODE_REPLACE,(guchar*)s.Get(),s.GetLength());
-        }
-      }
-       
-      if (inf->state) ReleaseCapture();
-    }
-    break;
-    case WM_TIMER:
-      ReleaseCapture();
-    break;
-
+    WDL_ASSERT(list->m_prev == last);
+    WDL_ASSERT(list->m_parent == par);
+    last = list;
+    list = list->m_next;
   }
-  return DefWindowProc(hwnd,msg,wParam,lParam);
 }
 #endif
 
-
-
-void SWELL_InitiateDragDrop(HWND hwnd, RECT* srcrect, const char* srcfn, void (*callback)(const char* dropfn))
-{
-#ifdef SWELL_TARGET_GDK
-  dropSourceInfo info;
-  info.srcfn = strdup(srcfn);
-  info.callback = callback;
-  RECT r={0,};
-  HWND__ *h = new HWND__(NULL,0,&r,NULL,false,NULL,dropSourceWndProc, NULL);
-  swell_dragsrc_hwnd=h;
-  h->m_private_data = (INT_PTR) &info;
-  dropSourceWndProc(h,WM_CREATE,0,0);
-  while (GetCapture()==h)
-  {
-    swell_runOSevents();
-    Sleep(10);
-  }
-  
-  swell_dragsrc_hwnd=NULL;
-  DestroyWindow(h);
-#endif
-}
-
-// owner owns srclist, make copies here etc
-void SWELL_InitiateDragDropOfFileList(HWND hwnd, RECT *srcrect, const char **srclist, int srccount, HICON icon)
-{
-#ifdef SWELL_TARGET_GDK
-  dropSourceInfo info;
-  info.srclist = srclist;
-  info.srccount = srccount;
-  RECT r={0,};
-  HWND__ *h = new HWND__(NULL,0,&r,NULL,false,NULL,dropSourceWndProc, NULL);
-  swell_dragsrc_hwnd=h;
-  h->m_private_data = (INT_PTR) &info;
-  dropSourceWndProc(h,WM_CREATE,0,0);
-  while (GetCapture()==h)
-  {
-    swell_runOSevents();
-    Sleep(10);
-  }
-  
-  swell_dragsrc_hwnd=NULL;
-  DestroyWindow(h);
-#endif
-}
-
-void SWELL_FinishDragDrop() { }
 
 
 #endif

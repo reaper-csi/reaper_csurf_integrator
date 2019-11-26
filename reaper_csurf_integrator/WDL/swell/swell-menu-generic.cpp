@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux)
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -231,6 +231,7 @@ BOOL SetMenuItemInfo(HMENU hMenu, int pos, BOOL byPos, MENUITEMINFO *mi)
   if (mi->fMask & MIIM_STATE) item->fState = mi->fState;
   if (mi->fMask & MIIM_ID) item->wID = mi->wID;
   if (mi->fMask & MIIM_DATA) item->dwItemData = mi->dwItemData;
+  if ((mi->fMask & MIIM_BITMAP) && mi->cbSize >= sizeof(*mi)) item->hbmpItem = mi->hbmpItem;
   
   return true;
 }
@@ -255,6 +256,7 @@ BOOL GetMenuItemInfo(HMENU hMenu, int pos, BOOL byPos, MENUITEMINFO *mi)
   if (mi->fMask & MIIM_STATE) mi->fState = item->fState;
   if (mi->fMask & MIIM_ID) mi->wID = item->wID;
   if (mi->fMask & MIIM_SUBMENU) mi->hSubMenu = item->hSubMenu;
+  if ((mi->fMask & MIIM_BITMAP) && mi->cbSize >= sizeof(*mi)) mi->hbmpItem = item->hbmpItem;
   
   return 1;
   
@@ -318,6 +320,7 @@ void InsertMenuItem(HMENU hMenu, int pos, BOOL byPos, MENUITEMINFO *mi)
   if (mi->fMask & MIIM_STATE) inf->fState = mi->fState;
   if (mi->fMask & MIIM_DATA) inf->dwItemData = mi->dwItemData;
   if (mi->fMask & MIIM_ID) inf->wID = mi->wID;
+  if ((mi->fMask & MIIM_BITMAP) && mi->cbSize >= sizeof(*mi)) inf->hbmpItem = mi->hbmpItem;
 
   hMenu->items.Insert(pos,inf);
 }
@@ -335,6 +338,39 @@ static int m_trackingFlags,m_trackingRet;
 static HWND m_trackingPar;
 static WDL_PtrList<HWND__> m_trackingMenus; // each HWND as userdata = HMENU
 
+int swell_delegate_menu_message(HWND src, LPARAM lParam, int msg, bool screencoords)
+{
+  static bool _reent;
+  if (_reent) return 0;
+
+  _reent = true;
+
+  POINT sp = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+  if (!screencoords) ClientToScreen(src,&sp);
+
+  for (int x = m_trackingMenus.GetSize()-1; x>=0; x--)
+  {
+    HWND sw = m_trackingMenus.Get(x);
+    if (!sw) continue;
+
+    if (sw == src) break; // stop searching (don't delegate to parent)
+
+    RECT r;
+    GetWindowRect(sw,&r);
+    if (PtInRect(&r,sp))
+    {
+      POINT p = sp;
+      ScreenToClient(sw,&p);
+      SendMessage(sw,msg,0,MAKELPARAM(p.x,p.y));
+      _reent = false;
+      return 1;
+    }
+  }
+
+  _reent = false;
+  return 0;
+}
+
 bool swell_isOSwindowmenu(SWELL_OSWINDOW osw)
 {
   int x = m_trackingMenus.GetSize();
@@ -351,18 +387,20 @@ HWND GetFocusIncludeMenus(void);
 
 static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  static int lcol, rcol, mcol, top_margin, separator_ht, text_ht_pad, bitmap_ht_pad, scroll_margin;
+  static int lcol, rcol, mcol, top_margin, separator_ht, text_ht_pad, bitmap_ht_pad, scroll_margin, item_bm_pad;
   if (!lcol)
   {
     lcol=SWELL_UI_SCALE(24); rcol=SWELL_UI_SCALE(12); mcol=SWELL_UI_SCALE(10);
     top_margin=SWELL_UI_SCALE(4); separator_ht=SWELL_UI_SCALE(8); 
     text_ht_pad=SWELL_UI_SCALE(4); bitmap_ht_pad=SWELL_UI_SCALE(4);
     scroll_margin=SWELL_UI_SCALE(10);
+    item_bm_pad = SWELL_UI_SCALE(4);
   }
   switch (uMsg)
   {
     case WM_CREATE:
       hwnd->m_classname = "__SWELL_MENU";
+      hwnd->m_style = WS_CHILD;
       m_trackingMenus.Add(hwnd);
       SetWindowLongPtr(hwnd,GWLP_USERDATA,lParam);
 
@@ -377,6 +415,10 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         for (x=0; x < menu->items.GetSize(); x++)
         {
           MENUITEMINFO *inf = menu->items.Get(x);
+          BITMAP bm2={0,};
+          if (inf->hbmpItem)
+            GetObject(inf->hbmpItem,sizeof(bm2),&bm2);
+
           if (inf->fType == MFT_STRING)
           {
             RECT r={0,};
@@ -384,6 +426,9 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             if (!str || !*str) str="XXXXX";
             const char *pt2 = strstr(str,"\t");
             DrawText(hdc,str,pt2 ? (int)(pt2-str) : -1,&r,DT_CALCRECT|DT_SINGLELINE);
+            if (r.bottom < bm2.bmHeight) r.bottom = bm2.bmHeight;
+            if (bm2.bmWidth) r.right += bm2.bmWidth + item_bm_pad;
+
             if (r.right > wid) wid=r.right;
             ht += r.bottom + text_ht_pad;
 
@@ -398,22 +443,24 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
           {
             BITMAP bm={16,16};
             if (inf->dwTypeData) GetObject((HBITMAP)inf->dwTypeData,sizeof(bm),&bm);
+            if (bm.bmHeight < bm2.bmHeight) bm.bmHeight = bm2.bmHeight;
+            if (bm2.bmWidth) bm.bmWidth += bm2.bmWidth + item_bm_pad;
             if (bm.bmWidth > wid) wid = bm.bmWidth;
 
             ht += bm.bmHeight + bitmap_ht_pad;
           }
           else
           {
-            // treat as separator
+            // treat as separator, ignore bm2
             ht += separator_ht;
           }
         }
         wid+=lcol+rcol + (wid2?wid2+mcol:0);
         ReleaseDC(hwnd,hdc);
 
-        RECT tr={m_trackingPt.x,m_trackingPt.y,
-                 m_trackingPt.x+wid+SWELL_UI_SCALE(4),m_trackingPt.y+ht+top_margin * 2}, vp;
-        SWELL_GetViewPort(&vp,&tr,true);
+        const RECT ref={m_trackingPt.x, m_trackingPt.y, m_trackingPt.x, m_trackingPt.y };
+        RECT vp, tr={m_trackingPt.x,m_trackingPt.y, m_trackingPt.x+wid+SWELL_UI_SCALE(4),m_trackingPt.y+ht+top_margin * 2};
+        SWELL_GetViewPort(&vp,&ref,true);
         vp.bottom -= 8;
  
         if (g_trackpopup_yroot.bottom > g_trackpopup_yroot.top &&
@@ -451,7 +498,6 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         hwnd->m_extra[1] = 0; // &1=allow scroll flag (set from paint), &2=force scroll down (if sel_vis is offscreen positive)
       }
 
-      SetWindowLong(hwnd,GWL_STYLE,GetWindowLong(hwnd,GWL_STYLE)&~WS_CAPTION);
       ShowWindow(hwnd,SW_SHOW);
       SetFocus(hwnd);
       SetTimer(hwnd,1,100,NULL);
@@ -472,7 +518,7 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
           HPEN pen2=CreatePen(PS_SOLID,0,g_swell_ctheme.menu_hilight);
           HGDIOBJ oldbr = SelectObject(ps.hdc,br);
           HGDIOBJ oldpen = SelectObject(ps.hdc,pen2);
-          Rectangle(ps.hdc,cr.left,cr.top,cr.right-1,cr.bottom-1);
+          Rectangle(ps.hdc,cr.left,cr.top,cr.right,cr.bottom);
           SetBkMode(ps.hdc,TRANSPARENT);
           HMENU__ *menu = (HMENU__*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
           int x;
@@ -495,7 +541,9 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             MENUITEMINFO *inf = menu->items.Get(x);
             RECT r={lcol,ypos,cr.right, };
             bool dis = !!(inf->fState & MF_GRAYED);
-            BITMAP bm={16,16};
+            BITMAP bm={16,16}, bm2={0,};
+            if (inf->hbmpItem)
+              GetObject(inf->hbmpItem,sizeof(bm2),&bm2);
 
             if (inf->fType == MFT_STRING)
             {
@@ -504,14 +552,14 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
               RECT mr={0,};
               DrawText(ps.hdc,str,-1,&mr,DT_CALCRECT|DT_SINGLELINE);
 
-              ypos += mr.bottom + text_ht_pad;
+              ypos += wdl_max(mr.bottom,bm2.bmHeight) + text_ht_pad;
               r.bottom = ypos;
             }
             else if (inf->fType == MFT_BITMAP)
             {
               if (inf->dwTypeData) GetObject((HBITMAP)inf->dwTypeData,sizeof(bm),&bm);
 
-              ypos += bm.bmHeight + bitmap_ht_pad;
+              ypos += wdl_max(bm.bmHeight,bm2.bmHeight) + bitmap_ht_pad;
               r.bottom = ypos;
 
             }
@@ -524,10 +572,10 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 
             if (x == menu->sel_vis && !dis)
             {
-              HBRUSH br=CreateSolidBrush(g_swell_ctheme.menu_bg_sel);
+              HBRUSH brs=CreateSolidBrush(g_swell_ctheme.menu_bg_sel);
               RECT r2=r;
-              FillRect(ps.hdc,&r2,br);
-              DeleteObject(br);
+              FillRect(ps.hdc,&r2,brs);
+              DeleteObject(brs);
               SetTextColor(ps.hdc,g_swell_ctheme.menu_text_sel);
             }
             else 
@@ -535,6 +583,15 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
               SetTextColor(ps.hdc,
                  dis ? g_swell_ctheme.menu_text_disabled : 
                  g_swell_ctheme.menu_text);
+            }
+
+            if (bm2.bmWidth)
+            {
+              RECT tr = r;
+              tr.right = tr.left + bm2.bmWidth;
+              DrawImageInRect(ps.hdc,inf->hbmpItem,&tr);
+
+              r.left += bm2.bmWidth + item_bm_pad;
             }
 
             if (inf->fType == MFT_STRING)
@@ -593,11 +650,29 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             }
             if (inf->fState&MF_CHECKED)
             {
-               SetTextColor(ps.hdc,
-                 dis ? g_swell_ctheme.menu_text_disabled : 
-                 g_swell_ctheme.menu_text);
-               RECT r2=r; r2.left = 0; r2.right=lcol;
-               DrawText(ps.hdc,"X",-1,&r2,DT_VCENTER|DT_CENTER|DT_SINGLELINE);
+              const int col = dis ? g_swell_ctheme.menu_text_disabled : g_swell_ctheme.menu_text;
+              HPEN tpen = CreatePen(PS_SOLID,0, col);
+              HBRUSH tbr = CreateSolidBrush(col);
+              HGDIOBJ oldBrush = SelectObject(ps.hdc,tbr);
+              HGDIOBJ oldPen = SelectObject(ps.hdc,tpen);
+              const int sz = (wdl_min(lcol, r.bottom-r.top) - SWELL_UI_SCALE(6));
+              const int xo = SWELL_UI_SCALE(4), yo = (r.bottom+r.top)/2 - sz/2;
+              static const unsigned char coords[12] = { 128, 30, 108, 11, 48, 72, 48, 112, 0, 65, 20, 46, };
+              for (int pass=0;pass<2;pass++)
+              {
+                POINT pts[4];
+                for (int i=0;i<4; i ++)
+                {
+                  pts[i].x = xo + ((int)coords[i*2+pass*4] * sz + 63) / 128;
+                  pts[i].y = yo + ((int)coords[i*2+pass*4+1] * sz + 63) / 128;
+                }
+                Polygon(ps.hdc,pts,4);
+              }
+
+              SelectObject(ps.hdc,oldPen);
+              SelectObject(ps.hdc,oldBrush);
+              DeleteObject(tpen);
+              DeleteObject(tbr);
             }
             if ((r.top+ypos)/2 > cr.bottom)
             {
@@ -726,14 +801,23 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
       {
         HMENU__ *menu = (HMENU__*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
         int l = menu->sel_vis;
-        for (int i= wParam == VK_UP ? 0 : 9; i>=0 && l>0; i--) while (l > 0)
+        for (int i= wParam == VK_UP ? 0 : 9; i>=0; i--) 
         {
-          MENUITEMINFO *inf = menu->items.Get(--l);
-          if (!inf) break; 
-          if (!(inf->fState & MF_GRAYED) && inf->fType != MFT_SEPARATOR) 
+          int mc = menu->items.GetSize();
+          while (mc--)
           {
-            menu->sel_vis=l;
-            break;
+            if (l<1)
+            {
+              if (wParam != VK_UP) break;
+              l = menu->items.GetSize();
+            }
+            MENUITEMINFO *inf = menu->items.Get(--l);
+            if (!inf) break; 
+            if (!(inf->fState & MF_GRAYED) && inf->fType != MFT_SEPARATOR) 
+            {
+              menu->sel_vis=l;
+              break;
+            }
           }
         }
         if (menu->sel_vis < hwnd->m_extra[0])
@@ -745,14 +829,24 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
         HMENU__ *menu = (HMENU__*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
         int l = menu->sel_vis;
         const int n =menu->items.GetSize()-1;
-        for (int i = wParam == VK_DOWN ? 0 : 9; i>=0 && l<n; i--) while (l < n)
+        for (int i = wParam == VK_DOWN ? 0 : 9; i>=0; i--) 
         {
-          MENUITEMINFO *inf = menu->items.Get(++l);
-          if (!inf) break; 
-          if (!(inf->fState & MF_GRAYED) && inf->fType != MFT_SEPARATOR) 
+          int mc = n+1;
+          while (mc--)
           {
-            menu->sel_vis=l;
-            break;
+            if (l>=n)
+            {
+              if (wParam != VK_DOWN) break;
+              l=-1;
+              hwnd->m_extra[0]=0;
+            }
+            MENUITEMINFO *inf = menu->items.Get(++l);
+            if (!inf) break; 
+            if (!(inf->fState & MF_GRAYED) && inf->fType != MFT_SEPARATOR) 
+            {
+              menu->sel_vis=l;
+              break;
+            }
           }
         }
         InvalidateRect(hwnd,NULL,FALSE);
@@ -873,6 +967,10 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
           if (wParam == 1 && which == x) { item_ypos = ht; break; }
           MENUITEMINFO *inf = menu->items.Get(x);
           int lastht = ht;
+          BITMAP bm2={0,};
+          if (inf->hbmpItem)
+            GetObject(inf->hbmpItem,sizeof(bm2),&bm2);
+
           if (inf->fType == MFT_STRING)
           {
             RECT r={0,};
@@ -880,13 +978,13 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
             if (!str || !*str) str="XXXXX";
             const char *pt2 = strstr(str,"\t");
             DrawText(hdc,str,pt2 ? (int)(pt2-str) : -1,&r,DT_CALCRECT|DT_SINGLELINE);
-            ht += r.bottom + text_ht_pad;
+            ht += wdl_max(r.bottom,bm2.bmHeight) + text_ht_pad;
           }
           else if (inf->fType == MFT_BITMAP)
           {
             BITMAP bm={16,16};
             if (inf->dwTypeData) GetObject((HBITMAP)inf->dwTypeData,sizeof(bm),&bm);
-            ht += bm.bmHeight + bitmap_ht_pad;
+            ht += wdl_max(bm.bmHeight,bm2.bmHeight) + bitmap_ht_pad;
           }
           else
           {
@@ -960,6 +1058,9 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     return 0;
     case WM_MOUSEMOVE:
       {
+        if (swell_delegate_menu_message(hwnd, lParam,uMsg, false))
+          return 0;
+
         RECT r;
         GetClientRect(hwnd,&r);
         HMENU__ *menu = (HMENU__*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
@@ -976,6 +1077,9 @@ static LRESULT WINAPI submenuWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_LBUTTONUP:
     case WM_RBUTTONUP:
       {
+        if (swell_delegate_menu_message(hwnd, lParam, uMsg, false))
+          return 0;
+
         RECT r;
         GetClientRect(hwnd,&r);
         if (GET_X_LPARAM(lParam)>=r.left && GET_X_LPARAM(lParam)<r.right)
@@ -994,6 +1098,9 @@ void DestroyPopupMenus()
 {
   if (m_trackingMenus.GetSize()) DestroyWindow(m_trackingMenus.Get(0));
 }
+
+SWELL_OSWINDOW swell_ignore_focus_oswindow;
+DWORD swell_ignore_focus_oswindow_until;
 
 int TrackPopupMenu(HMENU hMenu, int flags, int xpos, int ypos, int resvd, HWND hwnd, const RECT *r)
 {
@@ -1015,7 +1122,13 @@ int TrackPopupMenu(HMENU hMenu, int flags, int xpos, int ypos, int resvd, HWND h
 //  HWND oldFoc = GetFocus();
  // bool oldFoc_child = oldFoc && (IsChild(hwnd,oldFoc) || oldFoc == hwnd || oldFoc==GetParent(hwnd));
 
-  if (hwnd) hwnd->Retain();
+  if (hwnd) 
+  {
+    hwnd->Retain();
+    swell_ignore_focus_oswindow = hwnd->m_oswindow;
+    swell_ignore_focus_oswindow_until = GetTickCount()+500;
+  }
+
 
   hMenu->sel_vis=-1;
   HWND hh=new HWND__(NULL,0,NULL,"menu",false,submenuWndProc,NULL, hwnd);
@@ -1042,14 +1155,17 @@ int TrackPopupMenu(HMENU hMenu, int flags, int xpos, int ypos, int resvd, HWND h
 
 //  if (oldFoc_child) SetFocus(oldFoc);
 
-  if (!(flags&TPM_NONOTIFY) && m_trackingRet>0) 
+  if (!(flags&TPM_RETURNCMD) && m_trackingRet>0) 
     SendMessage(hwnd,WM_COMMAND,m_trackingRet,0);
   
   if (hwnd) hwnd->Release();
 
+  swell_ignore_focus_oswindow = NULL;
   hMenu->Release();
 
-  return m_trackingRet>0?m_trackingRet:0;
+  if (flags & TPM_RETURNCMD) return m_trackingRet>0?m_trackingRet:0;
+
+  return resvd!=0xbeef || m_trackingRet>0;
 }
 
 

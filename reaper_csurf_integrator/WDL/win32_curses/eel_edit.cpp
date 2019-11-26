@@ -48,25 +48,17 @@ int EEL_Editor::namedTokenHighlight(const char *tokStart, int len, int state)
   if (len == 17 && !strnicmp(tokStart,"__denormal_likely",17)) return SYNTAX_FUNC;
   if (len == 19 && !strnicmp(tokStart,"__denormal_unlikely",19)) return SYNTAX_FUNC;
 
+  char buf[512];
+  lstrcpyn_safe(buf,tokStart,wdl_min(sizeof(buf),len+1));
   if (m_added_funclist)
   {
-    char buf[512];
-    lstrcpyn_safe(buf,tokStart,wdl_min(sizeof(buf),len+1));
     char **r=m_added_funclist->GetPtr(buf);
     if (r) return *r ? SYNTAX_FUNC : SYNTAX_REGVAR;
   }
 
   NSEEL_VMCTX vm = peek_want_VM_funcs() ? peek_get_VM() : NULL;
-  int x; 
-  for(x=0;;x++)
-  {
-    functionType *f = nseel_getFunctionFromTableEx((compileContext*)vm,x);
-    if (!f) break;
-    if (f && !strnicmp(tokStart,f->name,len) && (int)strlen(f->name) == len)
-    {
-      return SYNTAX_FUNC;
-    }
-  }
+  if (nseel_getFunctionByName((compileContext*)vm,buf,NULL)) return SYNTAX_FUNC;
+
   return A_NORMAL;
 }
 
@@ -92,7 +84,7 @@ int EEL_Editor::parse_format_specifier(const char *fmt_in, int *var_offs, int *v
     else if (c == '{')
     {
       if (*var_offs!=0) return 0; // already specified
-      *var_offs = fmt-fmt_in;
+      *var_offs = (int)(fmt-fmt_in);
       if (*fmt == '.' || (*fmt >= '0' && *fmt <= '9')) return 0; // symbol name can't start with 0-9 or .
 
       while (*fmt != '}')
@@ -109,7 +101,7 @@ int EEL_Editor::parse_format_specifier(const char *fmt_in, int *var_offs, int *v
           return 0; // bad character in variable name
         }
       }
-      *var_len = (fmt-fmt_in) - *var_offs;
+      *var_len = (int)((fmt-fmt_in) - *var_offs);
       fmt++;
     }
     else
@@ -144,7 +136,7 @@ void EEL_Editor::draw_string(int *skipcnt, const char *str, int amt, int *attr, 
 
       if (str_scan > str) 
       {
-        const int sz=wdl_min(str_scan-str,amt);
+        const int sz=wdl_min((int)(str_scan-str),amt);
         draw_string_urlchk(skipcnt,str,sz,attr,newAttr);
         str += sz;
         amt -= sz;
@@ -209,7 +201,7 @@ void EEL_Editor::draw_string_urlchk(int *skipcnt, const char *str, int amt, int 
       
       if (str_scan > str)
       {
-        const int sz=wdl_min(str_scan-str,amt);
+        const int sz=wdl_min((int)(str_scan-str),amt);
         draw_string_internal(skipcnt,str,sz,attr,newAttr);
         str += sz;
         amt -= sz;
@@ -229,31 +221,23 @@ void EEL_Editor::draw_string_urlchk(int *skipcnt, const char *str, int amt, int 
   
 void EEL_Editor::draw_string_internal(int *skipcnt, const char *str, int amt, int *attr, int newAttr)
 {
+  // *skipcnt is in characters, amt is in bytes
+  while (*skipcnt > 0 && amt > 0)
+  {
+    const int clen = wdl_utf8_parsechar(str,NULL);
+    str += clen;
+    amt -= clen;
+    *skipcnt -= 1;
+  }
+
   if (amt>0)
   {
-    const int sk = *skipcnt;
-    if (amt < sk) 
-    { 
-      *skipcnt=sk - amt; 
-    } 
-    else
+    if (*attr != newAttr) 
     {
-      if (sk>0) 
-      {
-        str += sk; 
-        amt -= sk; 
-        *skipcnt=0; 
-      }
-      if (amt>0)
-      {
-        if (*attr != newAttr) 
-        {
-          attrset(newAttr);
-          *attr = newAttr;
-        }
-        addnstr(str,amt);
-      }
+      attrset(newAttr);
+      *attr = newAttr;
     }
+    addnstr(str,amt);
   }
 }
 
@@ -356,7 +340,7 @@ int EEL_Editor::do_draw_line(const char *p, int *c_comment_state, int last_attr)
     if (last_comment_state>0) // if in a multi-line string or comment
     {
       // draw empty space between lp and p as a string. in this case, tok/toklen includes our string, so we quickly finish after
-      draw_string(&skipcnt,lp,p-lp,&last_attr, last_comment_state==1 ? SYNTAX_COMMENT:SYNTAX_STRING, last_comment_state);
+      draw_string(&skipcnt,lp,(int)(p-lp),&last_attr, last_comment_state==1 ? SYNTAX_COMMENT:SYNTAX_STRING, last_comment_state);
       last_comment_state=0;
       lp = p;
       continue;
@@ -365,7 +349,7 @@ int EEL_Editor::do_draw_line(const char *p, int *c_comment_state, int last_attr)
 
     // draw empty space between lp and tok/endptr as normal
     const char *adv_to = tok ? tok : endptr;
-    if (adv_to > lp) draw_string(&skipcnt,lp,adv_to-lp,&last_attr, A_NORMAL);
+    if (adv_to > lp) draw_string(&skipcnt,lp,(int)(adv_to-lp),&last_attr, A_NORMAL);
 
     if (adv_to >= endptr) break;
 
@@ -709,7 +693,7 @@ static void eel_sh_generate_token_list(const WDL_PtrList<WDL_FastString> *lines,
       {
         const int sz=toklist->GetSize();
         // update last token to include this data
-        if (sz) toklist->Get()[sz-1].add_linecnt((tok ? p:endp) - start_p);
+        if (sz) toklist->Get()[sz-1].add_linecnt((int) ((tok ? p:endp) - start_p));
       }
       else
       {
@@ -728,7 +712,7 @@ static void eel_sh_generate_token_list(const WDL_PtrList<WDL_FastString> *lines,
           case '"':
           case '/': // comment
             {
-              eel_sh_token t(l,tok-start_p,toklen,tok[0]);
+              eel_sh_token t(l,(int)(tok-start_p),toklen,tok[0]);
               toklist->Add(t);
             }
           break;
@@ -749,6 +733,49 @@ static bool eel_sh_get_matching_pos_for_pos(WDL_PtrList<WDL_FastString> *text, i
 
   if (!is_after && hit_tok && (hit_tok->get_c() == '"' || hit_tok->get_c() == '\'' || hit_tok->is_comment()))
   {
+    eel_sh_token tok = *hit_tok; // save a copy, toklist might get destroyed recursively here
+    hit_tok = &tok;
+
+    //if (tok.get_c() == '"')
+    {
+      // the user could be editing code in code, tokenize it and see if we can make sense of it
+      WDL_FastString start, end;
+      WDL_PtrList<WDL_FastString> tmplist;
+      WDL_FastString *s = text->Get(tok.line);
+      if (s && s->GetLength() > tok.col+1)
+      {
+        int maxl = tok.get_linecnt()>0 ? 0 : tok.end_col - tok.col - 2;
+        start.Set(s->Get() + tok.col+1, maxl);
+      }
+      tmplist.Add(&start);
+      const int linecnt = tok.get_linecnt();
+      if (linecnt>0)
+      {
+        for (int a=1; a < linecnt; a ++)
+        {
+          s = text->Get(tok.line + a);
+          if (s) tmplist.Add(s);
+        }
+        s = text->Get(tok.line + linecnt);
+        if (s)
+        {
+          if (tok.end_col>1) end.Set(s->Get(), tok.end_col-1);
+          tmplist.Add(&end);
+        }
+      }
+
+      int lx = curx, ly = cury - tok.line;
+      if (cury == tok.line) lx -= (tok.col+1);
+
+      // this will destroy the token 
+      if (eel_sh_get_matching_pos_for_pos(&tmplist, lx, ly, newx, newy, errmsg, editor))
+      {
+        *newy += tok.line;
+        if (cury == tok.line) *newx += tok.col + 1;
+        return true;
+      }
+    }
+
     // if within a string or comment, move to start, unless already at start, move to end
     if (cury == hit_tok->line && curx == hit_tok->col)
     {
@@ -943,16 +970,12 @@ int EEL_Editor::peek_get_function_info(const char *name, char *sstr, size_t sstr
   {
     peek_lock();
     NSEEL_VMCTX vm = peek_want_VM_funcs() ? peek_get_VM() : NULL;
-    for (int x=0;;x++)
+    functionType *f = nseel_getFunctionByName((compileContext*)vm,name,NULL);
+    if (f)
     {
-      functionType *f = nseel_getFunctionFromTableEx((compileContext*)vm,x);
-      if (!f) break;
-      if (f && !stricmp(name,f->name))
-      {
-        snprintf(sstr,sstr_sz,"'%s' is a function that requires %d parameters", f->name,f->nParams&0xff);
-        peek_unlock();
-        return 1;
-      }
+      snprintf(sstr,sstr_sz,"'%s' is a function that requires %d parameters", f->name,f->nParams&0xff);
+      peek_unlock();
+      return 1;
     }
     peek_unlock();
   }
@@ -1073,12 +1096,12 @@ void EEL_Editor::doWatchInfo(int c)
           {
             const char *str=s->Get();
             int sx,ex;
-            if (x == miny) sx=max(minx,0);
+            if (x == miny) sx=wdl_max(minx,0);
             else sx=0;
             int tmp=s->GetLength();
             if (sx > tmp) sx=tmp;
       
-            if (x == maxy) ex=min(maxx,tmp);
+            if (x == maxy) ex=wdl_min(maxx,tmp);
             else ex=tmp;
       
             if (code.GetLength()) code.Append("\r\n");
@@ -1197,7 +1220,7 @@ void EEL_Editor::doWatchInfo(int c)
       {
         WDL_FastString n;
         lp++;
-        n.Set(lp,rp-lp);
+        n.Set(lp,(int)(rp-lp));
         int idx;
         if ((idx=peek_get_named_string_value(n.Get(),buf,sizeof(buf)))>=0) snprintf(sstr,sizeof(sstr),"#%s(%d)=%s",n.Get(),idx,buf);
         else snprintf(sstr,sizeof(sstr),"#%s not found",n.Get());
@@ -1205,7 +1228,7 @@ void EEL_Editor::doWatchInfo(int c)
       else if (*lp > 0 && (isalpha(*lp) || *lp == '_') && rp > lp)
       {
         WDL_FastString n;
-        n.Set(lp,rp-lp);
+        n.Set(lp,(int)(rp-lp));
 
         if (c==KEY_F1)
         {
@@ -1264,11 +1287,16 @@ int EEL_Editor::onChar(int c)
     doWatchInfo(c);
   return 0;
   case 'S'-'A'+1:
+   {
+     WDL_DestroyCheck chk(&destroy_check);
      if(updateFile())
      {
-       draw_message("Error writing file, changes not saved!");
+       if (chk.isOK())
+         draw_message("Error writing file, changes not saved!");
      }
-     setCursor();
+     if (chk.isOK())
+       setCursor();
+   }
   return 0;
 
   case 'R'-'A'+1:
@@ -1351,6 +1379,7 @@ void EEL_Editor::onRightClick(HWND hwnd)
             while ((*q >= '0' && *q <= '9') || 
                    (*q >= 'a' && *q <= 'z') || 
                    (*q >= 'A' && *q <= 'Z') || 
+                   *q == ':' || // lua
                    *q == '_' || *q == '.') q++;
 
             while (*q == ' ') q++;
@@ -1360,7 +1389,7 @@ void EEL_Editor::onRightClick(HWND hwnd)
               if (*q) q++;
 
               char buf[128];
-              lstrcpyn(buf, p, min(q-p+1, sizeof(buf)));
+              lstrcpyn(buf, p, wdl_min(q-p+1, sizeof(buf)));
               if (strlen(buf) > sizeof(buf)-2) lstrcpyn(buf+sizeof(buf)-5, "...", 4);
               flist.AddUnsorted(buf, i);
             }
@@ -1418,7 +1447,7 @@ LRESULT EEL_Editor::onMouseMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
         {
           if (!strncmp(fs->Get(),"import",6) && isspace(fs->Get()[6]))
           {
-            onChar('I'-'A'+1); // open imported file
+            onChar('R'-'A'+1); // open imported file
             return 1;
           }
         }

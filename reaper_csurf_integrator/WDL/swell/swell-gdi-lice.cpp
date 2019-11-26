@@ -1,6 +1,5 @@
-
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux)
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -41,10 +40,14 @@
 #include FT_FREETYPE_H
 #include FT_GLYPH_H
 
-static bool s_freetype_failed;
-static FT_Library s_freetype; // todo: TLS for multithread support?
-
+#ifdef SWELL_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+#else
 #include "../dirscan.h"
+#endif
+
+static bool s_freetype_failed;
+static FT_Library s_freetype; // todo: TLS for multithread support? -- none of the text drawing is thread safe!
 
 static int utf8char(const char *ptr, unsigned short *charOut) // returns char length
 {
@@ -87,6 +90,78 @@ static int utf8char(const char *ptr, unsigned short *charOut) // returns char le
   return 1;  
 }
 
+extern const char *swell_last_font_filename;
+
+#ifndef SWELL_FREETYPE_CACHE_SIZE
+#define SWELL_FREETYPE_CACHE_SIZE 80
+#endif
+
+class fontConfigCacheEnt
+{
+  public:
+    fontConfigCacheEnt(const char *name, int flags, int w, int h, FT_Face face, const char *fndesc)
+    {
+      m_name = strdup(name);
+      m_flags = flags;
+      m_face = face;
+      m_w=w;
+      m_h=h;
+      m_fndesc = strdup(fndesc);
+      FT_Reference_Face(m_face);
+    }
+    ~fontConfigCacheEnt() 
+    { 
+      free(m_name); 
+      free(m_fndesc);
+      FT_Done_Face(m_face); 
+    }
+
+    char *m_name;
+    char *m_fndesc;
+    int m_flags, m_w, m_h;
+    FT_Face m_face;
+};
+
+
+#ifdef SWELL_FONTCONFIG
+
+static FcConfig *s_fontconfig;
+const char *swell_enumFontFiles(int x)
+{
+  if (!s_fontconfig) return NULL;
+
+  static FcPattern *pat;
+  static FcObjectSet *prop;
+  static FcFontSet *fonts;
+  if (x<0)
+  {
+    if (fonts) FcFontSetDestroy(fonts);
+    if (prop) FcObjectSetDestroy(prop);
+    if (pat) FcPatternDestroy(pat);
+    pat=NULL;
+    prop=NULL;
+    fonts=NULL;
+    return NULL;
+  }
+  if (!pat)
+  {
+    pat = FcPatternCreate();
+    prop = FcObjectSetBuild(FC_FAMILY, NULL);
+    fonts = FcFontList(s_fontconfig,pat,prop);
+  }
+  if (fonts && x < fonts->nfont)
+  {
+    FcPattern *f = fonts->fonts[x];
+    FcChar8 *fn = NULL;
+    if (FcPatternGetString(f,FC_FAMILY,0,&fn) == FcResultMatch && fn && *fn) 
+    return (const char *)fn;
+  }
+  
+  return NULL;
+}
+
+#else
+
 static WDL_PtrList<char> s_freetype_fontlist;
 static WDL_PtrList<char> s_freetype_regfonts;
 
@@ -96,6 +171,7 @@ const char *swell_enumFontFiles(int x)
   if (x < n1) return s_freetype_regfonts.Get(x);
   return s_freetype_fontlist.Get(x-n1);
 }
+
 
 static const char *stristr(const char *a, const char *b)
 {
@@ -155,9 +231,7 @@ struct fontScoreMatched {
 
 };
 
-const char *swell_last_font_filename;
-
-static FT_Face MatchFont(const char *lfFaceName, int weight, int italic)
+static FT_Face MatchFont(const char *lfFaceName, int weight, int italic, int exact, char *matchFnOut, size_t matchFnOutSize)
 {
   const int fn_len = strlen(lfFaceName), ntab=2;
   WDL_PtrList<char> *tab[ntab]= { &s_freetype_regfonts, &s_freetype_fontlist };
@@ -189,10 +263,29 @@ static FT_Face MatchFont(const char *lfFaceName, int weight, int italic)
             !strnicmp(residual,"Light",5) ||
             !strnicmp(residual,"Oblique",7))
           dash = residual;
+        else if (ext > residual && ext <= residual+2)
+        {
+          char c1 = residual[0],c2=residual[1];
+          if (c1>0) c1=toupper(c1);
+          if (c2>0) c2=toupper(c2);
+          if ((c1 == 'B' || c1 == 'I' || c1 == 'L') &&
+              (c2 == 'B' || c2 == 'I' || c2 == 'L' || c2 == '.'))
+            dash=residual;
+        }
       }
 
       s.fn = fn;
       s.score1 = (int)((dash?dash:ext)-residual); // characters between font and either "-" or "."
+
+      if (exact > 0)
+      {
+        if (s.score1) continue;
+      }
+      else if (exact < 0 && !s.score1) 
+      {
+        continue;
+      }
+
       s.score2 = 0;
 
       if (dash) { if (*dash == '-') dash++; }
@@ -206,8 +299,21 @@ static FT_Face MatchFont(const char *lfFaceName, int weight, int italic)
 
       if (stristr(residual,"Regular")) s.score2 -= 7; // ignore "Regular"
       if (italic && stristr(residual,"Italic")) s.score2 -= 6+7;
+      else if (italic && stristr(residual,"Oblique")) s.score2 -= 7+3; // if Italic isnt available, use Oblique
       if (weight >= FW_BOLD && stristr(residual,"Bold")) s.score2 -= 4+7;
       else if (weight <= FW_LIGHT && stristr(residual,"Light")) s.score2 -= 5+7;
+
+      if (ext > residual && ext <= residual+2)
+      {
+        char c1 = residual[0],c2=residual[1];
+        if (c1>0) c1=toupper(c1);
+        if (c2>0) c2=toupper(c2);
+
+        if (weight >= FW_BOLD && (c1 == 'B' || c2 == 'B')) s.score2 -= 2;
+        else if (weight <= FW_LIGHT && (c1 == 'L' || c2 == 'L')) s.score2 -= 2;
+        if (italic && (c1 == 'I' || c2 == 'I')) s.score2 -= 2;
+      }
+
       s.score2 = s.score2*ntab + x; 
 
       matchlist.Add(s);
@@ -219,22 +325,27 @@ static FT_Face MatchFont(const char *lfFaceName, int weight, int italic)
   for (x=0; x < matchlist.GetSize(); x ++)
   {
     const fontScoreMatched *s = matchlist.Get()+x;
-    swell_last_font_filename = s->fn;
  
     FT_Face face=NULL;
     //printf("trying '%s' for '%s' score %d,%d w %d i %d\n",s->fn,lfFaceName,s->score1,s->score2,weight,italic);
     FT_New_Face(s_freetype,s->fn,0,&face);
-    if (face) return face;
+    if (face) 
+    {
+      lstrcpyn_safe(matchFnOut,s->fn,matchFnOutSize);
+      return face;
+    }
   }
   return NULL;
 }
+#endif // !SWELL_FONTCONFIG
 
-#endif
+#endif // SWELL_FREETYPE
 
 HDC SWELL_CreateMemContext(HDC hdc, int w, int h)
 {
   LICE_MemBitmap * bm = new LICE_MemBitmap(w,h);
   if (!bm) return 0;
+  LICE_Clear(bm,LICE_RGBA(0,0,0,0));
 
   HDC__ *ctx=SWELL_GDP_CTX_NEW();
   ctx->surface = bm;
@@ -323,27 +434,101 @@ HGDIOBJ GetStockObject(int wh)
   return 0;
 }
 
-#define FONTSCALE 0.9
 HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation, int lfWeight, char lfItalic, 
   char lfUnderline, char lfStrikeOut, char lfCharSet, char lfOutPrecision, char lfClipPrecision, 
          char lfQuality, char lfPitchAndFamily, const char *lfFaceName)
 {
   HGDIOBJ__ *font=NULL;
 #ifdef SWELL_FREETYPE
-  FT_Face face=NULL;
   if (!s_freetype_failed && !s_freetype) 
   {
     s_freetype_failed = !!FT_Init_FreeType(&s_freetype);
     if (s_freetype)
     {
+#ifdef SWELL_FONTCONFIG
+      if (!s_fontconfig) s_fontconfig = FcInitLoadConfigAndFonts();
+#else
       ScanFontDirectory("/usr/share/fonts");
 
       qsort(s_freetype_fontlist.GetList(),s_freetype_fontlist.GetSize(),sizeof(const char *),(int (*)(const void *,const void*))sortByFilePart);
+#endif
     }
   }
-  if (s_freetype)
+  if (lfWidth<0) lfWidth=-lfWidth;
+  if (lfHeight<0) lfHeight=-lfHeight;
+
+  static WDL_PtrList<fontConfigCacheEnt> cache;
+  const int cache_flag = wdl_max(lfWeight,0) | (lfItalic ? (1<<30) : 0);
+  FT_Face face=NULL;
+  for (int x=0;x<cache.GetSize();x++)
   {
-    if (!face && lfFaceName && *lfFaceName) face = MatchFont(lfFaceName,lfWeight,lfItalic);
+    fontConfigCacheEnt *ent = cache.Get(x);
+    if (ent->m_flags==cache_flag && 
+        ent->m_w == lfWidth && 
+        ent->m_h == lfHeight && 
+        !strcmp(ent->m_name,lfFaceName?lfFaceName:""))
+    {
+      face = ent->m_face;
+      swell_last_font_filename = ent->m_fndesc;
+      FT_Reference_Face(face);
+      if (x < cache.GetSize()-1) 
+      {
+        cache.Delete(x);
+        cache.Add(ent); // make this cache entry most recent
+      }
+      break;
+    }
+  }
+
+  if (!face && s_freetype)
+  {
+    int face_idx=0;
+    char face_fn[1024];
+    face_fn[0]=0;
+#ifdef SWELL_FONTCONFIG
+    if (!face && s_fontconfig)
+    {
+      FcPattern *pat = FcPatternCreate();
+      if (pat)
+      {
+        if (lfFaceName && *lfFaceName) FcPatternAddString(pat,FC_FAMILY,(FcChar8*)lfFaceName);
+        if (lfWeight > 0)
+        {
+          int wt;
+          if (lfWeight >= FW_HEAVY) wt=FC_WEIGHT_HEAVY;
+          else if (lfWeight >= FW_EXTRABOLD) wt=FC_WEIGHT_EXTRABOLD;
+          else if (lfWeight >= FW_BOLD) wt=FC_WEIGHT_BOLD;
+          else if (lfWeight >= FW_SEMIBOLD) wt=FC_WEIGHT_SEMIBOLD;
+          else if (lfWeight >= FW_MEDIUM) wt=FC_WEIGHT_MEDIUM;
+          else if (lfWeight >= FW_NORMAL) wt=FC_WEIGHT_NORMAL;
+          else if (lfWeight >= FW_LIGHT) wt=FC_WEIGHT_LIGHT;
+          else if (lfWeight >= FW_EXTRALIGHT) wt=FC_WEIGHT_EXTRALIGHT;
+          else wt=FC_WEIGHT_THIN;
+          FcPatternAddInteger(pat,FC_WEIGHT,wt);
+        }
+        if (lfItalic)
+          FcPatternAddInteger(pat,FC_SLANT,FC_SLANT_ITALIC);
+        FcConfigSubstitute(s_fontconfig,pat,FcMatchPattern);
+        FcDefaultSubstitute(pat);
+        FcResult result;
+        FcPattern *hit = FcFontMatch(s_fontconfig,pat,&result);
+        if (hit)
+        {
+          FcChar8 *fn = NULL;
+          if (FcPatternGetString(hit,FC_FILE,0,&fn) == FcResultMatch && fn && *fn) 
+          {
+            if (FcPatternGetInteger(hit,FC_INDEX,0,&face_idx) != FcResultMatch) face_idx=0;
+            FT_New_Face(s_freetype,(const char *)fn,face_idx,&face);
+            if (face) lstrcpyn_safe(face_fn,(const char *)fn,sizeof(face_fn));
+          }
+          FcPatternDestroy(hit);
+        }
+        FcPatternDestroy(pat);
+      }
+    }
+#else
+
+    if (!face && lfFaceName && *lfFaceName) face = MatchFont(lfFaceName,lfWeight,lfItalic,0, face_fn, sizeof(face_fn));
 
     if (!face)
     {
@@ -355,7 +540,10 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
       if (!fallbacklist[wl])
       {
         static const char *ent[2] = { "ft_font_fallback", "ft_font_fallback_fixedwidth" };
-        static const char *def[2] = { "// Cantarell FreeSans DejaVuSans", "// FreeMono DejaVuSansMono" };
+        static const char *def[2] = { 
+          "// LiberationSans Cantarell FreeSans DejaVuSans NotoSans Oxygen Arial Verdana", 
+          "// LiberationMono FreeMono DejaVuSansMono NotoMono OxygenMono Courier" 
+        };
         char tmp[1024];
         GetPrivateProfileString(".swell",ent[wl],"",tmp,sizeof(tmp),"");
         if (!tmp[0])
@@ -378,12 +566,27 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
           *b++=0;
         }
       }
-      const char *l = fallbacklist[wl];
-      while (*l && !face)
+      for (int exact=0;exact<2 && !face;exact++)
       {
-        face = MatchFont(l,lfWeight,lfItalic);
-        l += strlen(l)+1;
+        const char *l = fallbacklist[wl];
+        while (*l && !face)
+        {
+          face = MatchFont(l,lfWeight,lfItalic,exact?-1:1, face_fn, sizeof(face_fn));
+          l += strlen(l)+1;
+        }
       }
+    }
+#endif
+
+    if (face)
+    {
+      if (face_idx) snprintf_append(face_fn,sizeof(face_fn)," <%d>",face_idx);
+      fontConfigCacheEnt *ce = new fontConfigCacheEnt(lfFaceName?lfFaceName:"",cache_flag,lfWidth,lfHeight,face, face_fn);
+      cache.Add(ce);
+      if (cache.GetSize()>SWELL_FREETYPE_CACHE_SIZE) cache.Delete(0,true);
+      swell_last_font_filename = ce->m_fndesc;
+
+      FT_Set_Char_Size(face,lfWidth*64, lfHeight*64,0,0); // 72dpi
     }
   }
   
@@ -393,11 +596,6 @@ HFONT CreateFont(int lfHeight, int lfWidth, int lfEscapement, int lfOrientation,
     font->type=TYPE_FONT;
     font->typedata = face;
     font->alpha = 1.0f;
-    ////unsure here
-    if (lfWidth<0) lfWidth=-lfWidth;
-    if (lfHeight<0) lfHeight=-lfHeight;
-    FT_Set_Char_Size(face,lfWidth*64, lfHeight*64,0,0); // 72dpi
-//    FT_Set_Pixel_Sizes(face,0,lfHeight);
   }
 #else
   font->type=TYPE_FONT;
@@ -416,7 +614,18 @@ HFONT CreateFontIndirect(LOGFONT *lf)
 
 int GetTextFace(HDC ctx, int nCount, LPTSTR lpFaceName)
 {
-  if (lpFaceName) lpFaceName[0]=0;
+  if (lpFaceName && nCount>0) lpFaceName[0]=0;
+#ifdef SWELL_FREETYPE
+  HDC__ *ct=(HDC__*)ctx;
+  if (!HDC_VALID(ct) || nCount<1 || !lpFaceName || !ct->curfont) return 0;
+
+  const FT_FaceRec *p = (const FT_FaceRec *)ct->curfont->typedata;
+  if (p)
+  {
+    lstrcpyn_safe(lpFaceName, p->family_name, nCount);
+    return 1;
+  }
+#endif
   return 0;
 }
 
@@ -557,7 +766,7 @@ void RoundRect(HDC ctx, int x, int y, int x2, int y2, int xrnd, int yrnd)
 void Ellipse(HDC ctx, int l, int t, int r, int b)
 {
   HDC__ *c=(HDC__ *)ctx;
-  if (!HDC_VALID(c)) return;
+  if (!HDC_VALID(c) || !c->surface) return;
   
   swell_DirtyContext(ctx,l,t,r,b);
   
@@ -583,7 +792,7 @@ void Ellipse(HDC ctx, int l, int t, int r, int b)
 void Rectangle(HDC ctx, int l, int t, int r, int b)
 {
   HDC__ *c=(HDC__ *)ctx;
-  if (!HDC_VALID(c)) return;
+  if (!HDC_VALID(c) || !c->surface) return;
   
   //CGRect rect=CGRectMake(l,t,r-l,b-t);
 
@@ -600,14 +809,15 @@ void Rectangle(HDC ctx, int l, int t, int r, int b)
   }
   if (HGDIOBJ_VALID(c->curpen,TYPE_PEN) && c->curpen->wid >= 0)
   {
-    LICE_DrawRect(c->surface,l,t,r-l,b-t,c->curpen->color,c->curpen->alpha,LICE_BLIT_MODE_COPY);
+    if (r>l+1 && b>t+1)
+      LICE_DrawRect(c->surface,l,t,r-l-1,b-t-1,c->curpen->color,c->curpen->alpha,LICE_BLIT_MODE_COPY);
   }
 }
 
 void Polygon(HDC ctx, POINT *pts, int npts)
 {
   HDC__ *c=(HDC__ *)ctx;
-  if (!HDC_VALID(c)) return;
+  if (!HDC_VALID(c) || !c->surface) return;
   const bool fill=HGDIOBJ_VALID(c->curbrush,TYPE_BRUSH)&&c->curbrush->wid>=0;
   const bool outline = HGDIOBJ_VALID(c->curpen,TYPE_PEN)&&c->curpen->wid>=0;
   if ((!fill && !outline) || npts<2 || !pts) return;
@@ -706,7 +916,8 @@ void SWELL_LineTo(HDC ctx, int x, int y)
   int dx=c->surface_offs.x;
   int dy=c->surface_offs.y;
   int lx = (int)c->lastpos_x, ly = (int) c->lastpos_y;
-  LICE_Line(c->surface,x+dx,y+dy,lx+dx,ly+dy,c->curpen->color,c->curpen->alpha,LICE_BLIT_MODE_COPY,false);
+  if (c->surface) 
+    LICE_Line(c->surface,x+dx,y+dy,lx+dx,ly+dy,c->curpen->color,c->curpen->alpha,LICE_BLIT_MODE_COPY,false);
   
   c->lastpos_x=fx;
   c->lastpos_y=fy;
@@ -751,7 +962,7 @@ void *SWELL_GetCtxGC(HDC ctx)
 void SWELL_SetPixel(HDC ctx, int x, int y, int c)
 {
   HDC__ *ct=(HDC__ *)ctx;
-  if (!HDC_VALID(ct)) return;
+  if (!HDC_VALID(ct) || !ct->surface) return;
   LICE_PutPixel(ct->surface,x+ct->surface_offs.x, y+ct->surface_offs.y, LICE_RGBA_FROMNATIVE(c,255),1.0f,LICE_BLIT_MODE_COPY);
   swell_DirtyContext(ct,x,y,x+1,y+1);
 }
@@ -787,10 +998,12 @@ BOOL GetTextMetrics(HDC ctx, TEXTMETRIC *tm)
   {
     FT_Face face=(FT_Face) font->typedata;
     tm->tmAscent = face->size->metrics.ascender/64;
-    tm->tmDescent = face->size->metrics.descender/64;
-    tm->tmHeight = face->size->metrics.height/64 + 1;
+    tm->tmDescent = -face->size->metrics.descender/64;
+    tm->tmHeight = (face->size->metrics.ascender - face->size->metrics.descender)/64;
     tm->tmAveCharWidth = face->size->metrics.height / 112;
-    tm->tmInternalLeading=0;
+
+    tm->tmInternalLeading = (face->size->metrics.ascender + face->size->metrics.descender - face->size->metrics.height)/64;
+    if (tm->tmInternalLeading<0) tm->tmInternalLeading=0;
   }
 #endif
   
@@ -808,7 +1021,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
 
   HGDIOBJ__  *font  = NULL;
 #ifdef SWELL_FREETYPE
-  int ascent=0;
+  int ascent=0, descent=0;
   font  = HDC_VALID(ct) && HGDIOBJ_VALID(ct->curfont,TYPE_FONT) ? ct->curfont : SWELL_GetDefaultFont();
   FT_Face face = NULL;
   if (font && font->typedata) 
@@ -816,6 +1029,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
     face=(FT_Face)font->typedata;
     lineh = face->size->metrics.height/64;
     ascent = face->size->metrics.ascender/64;
+    descent = face->size->metrics.descender/64;
     charw = face->size->metrics.height / 112;
   }
 #endif
@@ -825,7 +1039,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
     if (!font && (align&DT_SINGLELINE))
     {
       r->right = r->left + ( buflen < 0 ? strlen(buf) : buflen ) * charw;
-      int h = r->right ? lineh:0;
+      int h = r->right ? (ascent-descent) :0;
       r->bottom = r->top+h;
       return h;
     }
@@ -864,19 +1078,23 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
           {
             // measure character
             FT_GlyphSlot g = face->glyph;
-            int rext = xpos + (g->metrics.width + g->metrics.horiBearingX)/64;
-            if (rext<=xpos) rext=xpos + g->metrics.horiAdvance/64;
-            if (r->left+rext > r->right) r->right = r->left+rext;
-            xpos += g->metrics.horiAdvance/64;
+            int rext = xpos;
+            if ((align&(DT_BOTTOM|DT_VCENTER|DT_CENTER|DT_RIGHT))!=DT_RIGHT)
+              rext += (g->metrics.width + g->metrics.horiBearingX)/64;
 
-            int bext = r->top + ypos + lineh; // ascent + (g->metrics.height - g->metrics.horiBearingY)/64;
+            xpos += g->metrics.horiAdvance/64;
+            if (rext<xpos) rext=xpos;
+            if (r->left+rext > r->right) r->right = r->left+rext;
+
+            int bext = r->top + ypos + ascent - descent;
             if (bext > r->bottom) r->bottom = bext;
             continue;
           }
 #endif
         }
         xpos += c=='\t' ? charw*5 : charw;
-        if (r->top + ypos + lineh > r->bottom) r->bottom = r->top+ypos+lineh;
+        int bext = r->top + ypos + ascent - descent;
+        if (bext > r->bottom) r->bottom = bext;
         if (r->left+xpos>r->right) r->right=r->left+xpos;
       }
     }
@@ -885,6 +1103,12 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
   if (!HDC_VALID(ct)) return 0;
 
   RECT use_r = *r;
+  if ((align & DT_VCENTER) && use_r.top > use_r.bottom)
+  {
+    use_r.top = r->bottom;
+    use_r.bottom = r->top;
+  }
+
   use_r.left += ct->surface_offs.x;
   use_r.right += ct->surface_offs.x;
   use_r.top += ct->surface_offs.y;
@@ -961,9 +1185,16 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
         {
           FT_GlyphSlot g = face->glyph;
           const int ha = g->metrics.horiAdvance/64;
-          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,ha,lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
+          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,ha,(align & DT_SINGLELINE) ? (ascent-descent) : lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
   
-          LICE_DrawGlyphEx(surface,xpos+g->bitmap_left,ypos+ascent-g->bitmap_top,fgcol,(LICE_pixel_chan *)g->bitmap.buffer,g->bitmap.width,g->bitmap.pitch,g->bitmap.rows,1.0f,LICE_BLIT_MODE_COPY);
+          if (g->bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
+          {
+            LICE_DrawMonoGlyph(surface,xpos+g->bitmap_left,ypos+ascent-g->bitmap_top,fgcol,(const unsigned char*)g->bitmap.buffer,g->bitmap.width,g->bitmap.pitch,g->bitmap.rows,1.0f,LICE_BLIT_MODE_COPY);
+          }
+          else  // FT_PIXEL_MODE_GRAY (hopefully!)
+          {
+            LICE_DrawGlyphEx(surface,xpos+g->bitmap_left,ypos+ascent-g->bitmap_top,fgcol,(LICE_pixel_chan *)g->bitmap.buffer,g->bitmap.width,g->bitmap.pitch,g->bitmap.rows,1.0f,LICE_BLIT_MODE_COPY);
+          }
           if (doUl) 
           {
             int xw = g->metrics.width/64;
@@ -976,7 +1207,7 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
           if (rext<=xpos) rext=xpos + ha;
           if (rext > max_xpos) max_xpos=rext;
           xpos += ha;
-          const int bext = ypos + lineh;
+          const int bext = ypos + ascent-descent;
           if (max_ypos < bext) max_ypos=bext;
           needr=false;
         }
@@ -987,19 +1218,19 @@ int DrawText(HDC ctx, const char *buf, int buflen, RECT *r, int align)
       {
         if (c=='\t') 
         {
-          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,charw*5,lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
+          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,charw*5,(align & DT_SINGLELINE) ? (ascent-descent) : lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
           xpos+=charw*5;
          
-          const int bext = ypos+lineh;
+          const int bext = ypos+ascent-descent;
           if (max_ypos < bext) max_ypos=bext;
         }
         else 
         {
-          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,charw,lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
+          if (bgmode==OPAQUE) LICE_FillRect(surface,xpos,ypos,charw,(align & DT_SINGLELINE) ? (ascent-descent) : lineh,bgcol,1.0f,LICE_BLIT_MODE_COPY);
           LICE_DrawChar(surface,xpos,ypos,c,fgcol,1.0f,LICE_BLIT_MODE_COPY);
-          if (doUl) LICE_Line(surface,xpos,ypos+lineh+1,xpos+charw,ypos+lineh+1,fgcol,1.0f,LICE_BLIT_MODE_COPY,false);
+          if (doUl) LICE_Line(surface,xpos,ypos+(ascent-descent)+1,xpos+charw,ypos+(ascent-descent)+1,fgcol,1.0f,LICE_BLIT_MODE_COPY,false);
   
-          const int bext=ypos+lineh+(doUl ? 2:1);
+          const int bext=ypos+ascent-descent+(doUl ? 2:1);
           if (max_ypos < bext) max_ypos=bext;
           xpos+=charw;
         }
@@ -1094,8 +1325,6 @@ HICON LoadNamedImage(const char *name, bool alphaFromMask)
       }
       else delete wr;
     }
-else
-printf("failed: %d %d %d %d %d\n",w,h,bpc,chan,alpha);
     g_object_unref(pb);
     return ret;
   }
@@ -1123,13 +1352,21 @@ void DrawImageInRect(HDC hdcOut, HICON in, const RECT *r)
 BOOL GetObject(HICON icon, int bmsz, void *_bm)
 {
   memset(_bm,0,bmsz);
-  if (bmsz != sizeof(BITMAP)) return false;
+  if (bmsz < 2*(int)sizeof(LONG)) return false;
   BITMAP *bm=(BITMAP *)_bm;
   HGDIOBJ__ *i = (HGDIOBJ__ *)icon;
   if (!HGDIOBJ_VALID(i,TYPE_BITMAP) || !i->typedata) return false;
 
   bm->bmWidth = ((LICE_IBitmap *)i->typedata)->getWidth();
   bm->bmHeight = ((LICE_IBitmap *)i->typedata)->getHeight();
+
+  if (bmsz >= (int)sizeof(BITMAP))
+  {
+    bm->bmWidthBytes = ((LICE_IBitmap *)i->typedata)->getRowSpan()*4;
+    bm->bmPlanes = 1;
+    bm->bmBitsPixel = 32;
+    bm->bmBits = ((LICE_IBitmap *)i->typedata)->getBits();
+  }
 
   return true;
 }
@@ -1165,7 +1402,7 @@ void BitBlt(HDC hdcOut, int x, int y, int w, int h, HDC hdcIn, int xin, int yin,
   LICE_Blit(out->surface,in->surface,
             x+out->surface_offs.x,y+out->surface_offs.y,
             xin+in->surface_offs.x,yin+in->surface_offs.y,w,h,
-            1.0f,LICE_BLIT_MODE_COPY);
+            1.0f,LICE_BLIT_MODE_COPY | (mode == (int)SRCCOPY_USEALPHACHAN ? LICE_BLIT_USE_ALPHA : 0));
   swell_DirtyContext(out,x,y,x+w,y+h);
 }
 
@@ -1192,7 +1429,7 @@ void StretchBlt(HDC hdcOut, int x, int y, int w, int h, HDC hdcIn, int xin, int 
   LICE_ScaledBlit(out->surface,in->surface,
             x+out->surface_offs.x,y+out->surface_offs.y,w,h,
             xin+in->surface_offs.x,yin+in->surface_offs.y,srcw,srch,
-            1.0f,LICE_BLIT_MODE_COPY);
+            1.0f,LICE_BLIT_MODE_COPY | (mode == (int)SRCCOPY_USEALPHACHAN ? LICE_BLIT_USE_ALPHA : 0));
   swell_DirtyContext(out,x,y,x+w,y+h);
 }
 
@@ -1251,14 +1488,16 @@ struct swell_gdpLocalContext
 
 HDC SWELL_internalGetWindowDC(HWND h, bool calcsize_on_first)
 {
-  if (!h || !IsWindowVisible(h)) return NULL;
+  if (!h) return NULL;
 
   int xoffs=0,yoffs=0;
   int wndw = h->m_position.right-h->m_position.left;
   int wndh = h->m_position.bottom-h->m_position.top;
 
+  bool vis=true;
   HWND starth = h;
-  while (h)
+  int ltrim=0, ttrim=0, rtrim=0, btrim=0;
+  for (;;)
   {
     if ((calcsize_on_first || h!=starth)  && h->m_wndproc)
     {
@@ -1278,23 +1517,41 @@ HDC SWELL_internalGetWindowDC(HWND h, bool calcsize_on_first)
       yoffs += r.top-r2.top;
       xoffs += r.left-r2.left;
     } 
-    if (h->m_backingstore) break; // found our target window
+    if (!h->m_visible) vis = false;
+
+    if (h->m_backingstore || !h->m_parent) break; // found our target window
 
     xoffs += h->m_position.left;
     yoffs += h->m_position.top;
+
+    ltrim = wdl_max(ltrim, -xoffs);
+    ttrim = wdl_max(ttrim, -yoffs);
+    rtrim = wdl_max(rtrim, xoffs+wndw - h->m_position.right);
+    btrim = wdl_max(btrim, yoffs+wndh - h->m_position.bottom);
+
     h = h->m_parent;
   }
-  if (!h) return NULL;
 
   swell_gdpLocalContext *p = (swell_gdpLocalContext*)SWELL_GDP_CTX_NEW();
-  // todo: GDI defaults?
-  p->ctx.surface=new LICE_SubBitmap(h->m_backingstore,xoffs,yoffs,wndw,wndh);
+
+  p->clipr.left=p->clipr.right=xoffs + ltrim;
+  p->clipr.top=p->clipr.bottom=yoffs + ttrim;
+
+  if (h->m_backingstore && vis)
+  {
+    p->ctx.surface=new LICE_SubBitmap(h->m_backingstore,
+        xoffs+ltrim,yoffs+ttrim,
+        wndw-ltrim-rtrim,wndh-ttrim-btrim);
+    p->clipr.right += p->ctx.surface->getWidth();
+    p->clipr.bottom += p->ctx.surface->getHeight();
+  }
   if (xoffs<0) p->ctx.surface_offs.x = xoffs;
   if (yoffs<0) p->ctx.surface_offs.y = yoffs;
-  p->clipr.left=xoffs;
-  p->clipr.top=yoffs;
-  p->clipr.right=xoffs + p->ctx.surface->getWidth();
-  p->clipr.bottom=yoffs + p->ctx.surface->getHeight();
+  p->ctx.surface_offs.x -= ltrim;
+  p->ctx.surface_offs.y -= ttrim;
+
+  p->ctx.curfont = starth->m_font;
+  // todo: other GDI defaults?
 
   return (HDC)p;
 }
@@ -1319,7 +1576,6 @@ void ReleaseDC(HWND h, HDC hdc)
     // handle blitting?
     HWND par = h;
     while (par && !par->m_backingstore) par=par->m_parent;
-    void swell_OSupdateWindowToScreen(HWND hwnd, RECT *rect);
     if (par) 
     {
       if (p->ctx.dirty_rect_valid)
@@ -1336,7 +1592,7 @@ void ReleaseDC(HWND h, HDC hdc)
         if (dr.bottom < r.bottom) r.bottom=dr.bottom;
 #endif
 
-        if (r.top<r.bottom && r.left<r.right) swell_OSupdateWindowToScreen(par,&r);
+        if (r.top<r.bottom && r.left<r.right) swell_oswindow_updatetoscreen(par,&r);
       }
     }
   }
@@ -1371,7 +1627,8 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
 
   if (forceref || hwnd->m_child_invalidated)
   {
-    swell_gdpLocalContext ctx={0,}; // todo set up gdi context defaults?
+    swell_gdpLocalContext ctx;
+    memset(&ctx,0,sizeof(ctx));
     ctx.ctx.surface = bmout;
     ctx.ctx.surface_offs.x = -bmout_xpos;
     ctx.ctx.surface_offs.y = -bmout_ypos;
@@ -1386,35 +1643,45 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
     LICE_SubBitmap tmpsub(NULL,0,0,0,0);
     if (hwnd->m_wndproc) // this happens after m_paintctx is set -- that way GetWindowDC()/GetDC()/ReleaseDC() know to not actually update the screen
     {
-      RECT r;
-      GetWindowContentViewRect(hwnd,&r);
-      r.right-=r.left; r.bottom-=r.top; r.left=r.top=0;
-      NCCALCSIZE_PARAMS p={{r,},};
+      RECT r2;
+      GetWindowContentViewRect(hwnd,&r2);
+      WinOffsetRect(&r2,-r2.left,-r2.top);
+
+      NCCALCSIZE_PARAMS p;
+      memset(&p,0,sizeof(p));
+      p.rgrc[0]=r2;
       hwnd->m_wndproc(hwnd,WM_NCCALCSIZE,FALSE,(LPARAM)&p);
-      RECT r2=r;
-      r = p.rgrc[0];
+      RECT r = p.rgrc[0];
       if (forceref) hwnd->m_wndproc(hwnd,WM_NCPAINT,(WPARAM)1,0);
 
-      if (r.left!=r2.left) {} // todo: adjust drawing offsets, clip rects, accordingly
-      if (r.top!=r2.top) {} // todo: adjust drawing offsets, clip rects, accordingly
-      int dx = r.left-r2.left,dy=r.top-r2.top;
-      // dx,dy is offset from the window's root of 
+      // dx,dy is offset from the window's nonclient root
+      const int dx = r.left-r2.left,dy=r.top-r2.top;
+
+      WinOffsetRect(&ctx.clipr,-dx,-dy);
+      ctx.ctx.surface_offs.x += dx;
+      ctx.ctx.surface_offs.y += dy;
       bmout_xpos -= dx;
       bmout_ypos -= dy;
 
-      if (dx||dy)
+      // make sure we can't overwrite the nonclient area
+      const int xo = wdl_max(-bmout_xpos,0), yo = wdl_max(-bmout_ypos,0);
+      if (xo || yo)
       {
         tmpsub.m_parent = ctx.ctx.surface;
-        tmpsub.m_x = dx;
-        tmpsub.m_y = dy;
-        tmpsub.m_w = ctx.ctx.surface->getWidth()-dx;
-        tmpsub.m_h = ctx.ctx.surface->getHeight()-dy;
+        tmpsub.m_x = xo;
+        tmpsub.m_y = yo;
+        tmpsub.m_w = ctx.ctx.surface->getWidth()-xo;
+        tmpsub.m_h = ctx.ctx.surface->getHeight()-yo;
         if (tmpsub.m_w<0) tmpsub.m_w=0;
         if (tmpsub.m_h<0) tmpsub.m_h=0;
         ctx.ctx.surface = &tmpsub;
+        ctx.ctx.surface_offs.x -= xo;
+        ctx.ctx.surface_offs.y -= yo;
       }
 
-      // adjust clip rects for right/bottom extents
+      // constrain clip rect to right/bottom extents
+      if (ctx.clipr.left < 0) ctx.clipr.left=0;
+      if (ctx.clipr.top < 0) ctx.clipr.top=0;
       int newr = r.right-r.left;
       if (ctx.clipr.right > newr) ctx.clipr.right=newr;
       int newb = r.bottom-r.top;
@@ -1426,6 +1693,7 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
     {
       if (hwnd->m_wndproc && ctx.clipr.right > ctx.clipr.left && ctx.clipr.bottom > ctx.clipr.top) 
       {
+        ctx.ctx.curfont = hwnd->m_font;
         hwnd->m_wndproc(hwnd,WM_PAINT,(WPARAM)&ctx,0);
       }
 
@@ -1440,12 +1708,12 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
   if (forceref || hwnd->m_child_invalidated)
   {
     HWND h = hwnd->m_children;
-    while (h && h->m_next) h=h->m_next;
-    while (h)  // go through list backwards (first in list = top of Z order)
+    while (h) 
     {
       if (h->m_visible && (forceref || h->m_invalidated||h->m_child_invalidated))
       {
-        int width = h->m_position.right - h->m_position.left, height = h->m_position.bottom - h->m_position.top; // max width possible for this window
+        int width = h->m_position.right - h->m_position.left, 
+            height = h->m_position.bottom - h->m_position.top; // max width possible for this window
         int xp = h->m_position.left - bmout_xpos, yp = h->m_position.top - bmout_ypos;
 
         if (okToClearChild && !forceref)
@@ -1466,7 +1734,7 @@ void SWELL_internalLICEpaint(HWND hwnd, LICE_IBitmap *bmout, int bmout_xpos, int
         if (subbm.getWidth()>0 && subbm.getHeight()>0)
           SWELL_internalLICEpaint(h,&subbm,-xp,-yp,forceref);
       }
-      h = h->m_prev;
+      h = h->m_next;
     }
   }
   if (okToClearChild) hwnd->m_child_invalidated=false;
@@ -1613,8 +1881,13 @@ int AddFontResourceEx(LPCTSTR str, DWORD fl, void *pdv)
 {
   if (str && *str)
   {
+#ifdef SWELL_FONTCONFIG
+    if (!s_fontconfig) s_fontconfig = FcInitLoadConfigAndFonts();
+    return s_fontconfig && FcConfigAppFontAddFile(s_fontconfig,(const FcChar8 *)str) != FcFalse;
+#else
     if (s_freetype_regfonts.FindSorted(str,sortByFilePart)>=0) return 0;
     s_freetype_regfonts.InsertSorted(strdup(str), sortByFilePart);
+#endif
     return 1;
   } 
   return 0;

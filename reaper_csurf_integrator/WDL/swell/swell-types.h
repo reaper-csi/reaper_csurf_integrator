@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for L****)
-   Copyright (C) 2006-2010, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -109,7 +109,7 @@ typedef uintptr_t UINT_PTR, *PUINT_PTR, ULONG_PTR, *PULONG_PTR, DWORD_PTR, *PDWO
 #define MAX_PATH 1024
 
 
-#if !defined(max) && !defined(WDL_NO_DEFINE_MINMAX)
+#if !defined(max) && !defined(WDL_NO_DEFINE_MINMAX) && !defined(NOMINMAX)
 #define max(x,y) ((x)<(y)?(y):(x))
 #define min(x,y) ((x)<(y)?(x):(y))
 #endif
@@ -362,6 +362,10 @@ typedef struct tagDRAWITEMSTRUCT {
 typedef struct tagBITMAP {
   LONG bmWidth;
   LONG bmHeight;
+  LONG bmWidthBytes;
+  WORD bmPlanes;
+  WORD bmBitsPixel;
+  LPVOID bmBits;
 } BITMAP, *PBITMAP, *LPBITMAP;
 #define ODT_MENU        1
 #define ODT_LISTBOX     2
@@ -478,9 +482,10 @@ typedef struct
   DWORD_PTR dwItemData;
   char *dwTypeData;
   int cch;
+  HBITMAP hbmpItem;
 } MENUITEMINFO;
 
-#define SetMenuDefaultItem(a,b,c) (0)
+#define SetMenuDefaultItem(a,b,c) do { if ((a)||(b)||(c)) { } } while(0)
 
 typedef struct {
   POINT ptReserved, ptMaxSize, ptMaxPosition, ptMinTrackSize, ptMaxTrackSize;
@@ -661,20 +666,21 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define DWL_DLGPROC         (-8)
 
 #define SWELL_NOT_WS_VISIBLE ((int)0x80000000)
+// oops these don't match real windows
 #define WS_CHILDWINDOW (WS_CHILD)
-#define WS_CHILD      0x40000000L
-#define WS_DISABLED   0x08000000L
-#define WS_CAPTION    0x00C00000L
-#define WS_VSCROLL    0x00200000L
-#define WS_HSCROLL    0x00100000L
-#define WS_SYSMENU    0x00080000L
-#define WS_THICKFRAME 0x00040000L
-#define WS_GROUP      0x00020000L
-#define WS_TABSTOP    0x00010000L
+#define WS_CHILD        0x40000000L
+#define WS_DISABLED     0x08000000L
+#define WS_CLIPSIBLINGS 0x04000000L
+#define WS_VISIBLE      0x02000000L // only used by GetWindowLong(GWL_STYLE) -- not settable
+#define WS_CAPTION      0x00C00000L
+#define WS_VSCROLL      0x00200000L
+#define WS_HSCROLL      0x00100000L
+#define WS_SYSMENU      0x00080000L
+#define WS_THICKFRAME   0x00040000L
+#define WS_GROUP        0x00020000L
+#define WS_TABSTOP      0x00010000L
 
 #define WS_BORDER 0 // ignored for now
-#define WS_VISIBLE 0
-
 
 #define WM_CTLCOLORMSGBOX 0x0132
 #define WM_CTLCOLOREDIT 0x0133
@@ -866,6 +872,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define MIIM_TYPE 4
 #define MIIM_SUBMENU 8
 #define MIIM_DATA 16
+#define MIIM_BITMAP 0x80
 
 #define MF_ENABLED 0
 #define MF_GRAYED 1
@@ -900,6 +907,7 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_MOVE                         0x0003
 #define WM_SIZE                         0x0005
 #define WM_ACTIVATE                     0x0006
+#define WM_SETREDRAW                    0x000B // implemented on macOS NSTableViews, maybe elsewhere?
 #define WM_SETTEXT			0x000C // not implemented on OSX, used internally on Linux
 #define WM_PAINT                        0x000F
 #define WM_CLOSE                        0x0010
@@ -913,8 +921,8 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_SETFONT                      0x0030
 #define WM_GETFONT                      0x0031
 #define WM_GETOBJECT 			0x003D // implemented differently than win32 -- see virtwnd/virtwnd-nsaccessibility.mm
+#define WM_COPYDATA                     0x004A
 #define WM_NOTIFY                       0x004E
-
 #define WM_CONTEXTMENU                  0x007B
 #define WM_STYLECHANGED                 0x007D
 #define WM_DISPLAYCHANGE                0x007E
@@ -968,7 +976,6 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define WM_CAPTURECHANGED               0x0215
 #define WM_DROPFILES                    0x0233
 #define WM_USER                         0x0400
-
 
 #define HTCAPTION 2
 #define HTBOTTOMRIGHT 17
@@ -1180,10 +1187,10 @@ __attribute__ ((visibility ("default"))) BOOL WINAPI DllMain(HINSTANCE hInstDLL,
 #define VK_NUMLOCK        0x90
 #define VK_SCROLL         0x91
 
-#define MK_LBUTTON        0x01
+// these should probably not be used (wParam is not set in WM_LBUTTONDOWN/WM_MOUSEMOVE etc)
+#define MK_LBUTTON        0x01 
 #define MK_RBUTTON        0x02
 #define MK_MBUTTON        0x10
-
 
 #define IDC_SIZENESW MAKEINTRESOURCE(32643)
 #define IDC_SIZENWSE MAKEINTRESOURCE(32642)
@@ -1362,6 +1369,13 @@ typedef struct _ICONINFO
   HBITMAP hbmMask;
   HBITMAP hbmColor;
 } ICONINFO, *PICONINFO;
+
+typedef struct _COPYDATASTRUCT
+{
+  ULONG_PTR dwData;
+  DWORD     cbData;
+  PVOID     lpData;
+} COPYDATASTRUCT, *PCOPYDATASTRUCT;
 
 
 #endif //_WDL_SWELL_H_TYPES_DEFINED_

@@ -1,6 +1,5 @@
-
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux)
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -19,7 +18,7 @@
     3. This notice may not be removed or altered from any source distribution.
   
 
-    This file provides basic win32 GDI-->lice? translation. 
+    This file provides basic win32 GDI--> null translation. 
 
 */
 
@@ -30,6 +29,7 @@
 #include "../wdlcstring.h"
 
 const char *g_swell_deffont_face = "Arial";
+const char *swell_last_font_filename;
 
 swell_colortheme g_swell_ctheme = {
 #define __def_theme_ent(x,c) (c),
@@ -690,21 +690,14 @@ return 0;
 }
 #else
 
-// load color theme
-class swellColorThemeLoader
+void swell_load_color_theme(const char *fn)
 {
-public:
-  swellColorThemeLoader() 
+  FILE *fp = fopen(fn,"r");
+  if (fp)
   {
-    char buf[1024];
-    GetModuleFileName(NULL,buf,sizeof(buf));
-    WDL_remove_filepart(buf);
-    lstrcatn(buf,"/libSwell.colortheme",sizeof(buf));
-    FILE *fp = fopen(buf,"r");
-    if (!fp) return;
-
     swell_colortheme load;
     memset(&load,-1,sizeof(load));
+    char buf[1024];
 
     for (;;)
     {
@@ -723,7 +716,8 @@ public:
         {
           char *b = strdup(np);
           g_swell_deffont_face = b;
-          while (*b>0 && !isspace(*b)) b++;
+          while (*b && *b != ';' && *b != '#') b++;
+          while (b>g_swell_deffont_face && b[-1] > 0 && isspace(b[-1])) b--;
           *b=0;
         }
         continue;
@@ -761,6 +755,20 @@ SWELL_GENERIC_THEMEDEFS(__def_theme_ent,__def_theme_ent_fb)
 #undef __def_theme_ent_fb
 
     fclose(fp);
+  }
+}
+
+// load color theme
+class swellColorThemeLoader
+{
+public:
+  swellColorThemeLoader() 
+  {
+    char buf[1024];
+    GetModuleFileName(NULL,buf,sizeof(buf));
+    WDL_remove_filepart(buf);
+    lstrcatn(buf,"/libSwell.colortheme",sizeof(buf));
+    swell_load_color_theme(buf);
   }
 };
 swellColorThemeLoader g_swell_themeloader;

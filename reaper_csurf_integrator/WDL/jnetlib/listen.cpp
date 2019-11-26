@@ -21,17 +21,17 @@ JNL_Listen::JNL_Listen(short port, unsigned int which_interface)
   else
   {
     struct sockaddr_in sin;
+    SET_SOCK_DEFAULTS(m_socket);
     SET_SOCK_BLOCK(m_socket,0);
-#ifndef _WIN32
     int bflag = 1;
-    setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, &bflag, sizeof(bflag));
-#endif
+    setsockopt(m_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&bflag, sizeof(bflag));
     memset((char *) &sin, 0,sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_port = htons( (short) port );
     sin.sin_addr.s_addr = which_interface?which_interface:INADDR_ANY;
     if (::bind(m_socket,(struct sockaddr *)&sin,sizeof(sin))) 
     {
+      shutdown(m_socket, SHUT_RDWR);
       closesocket(m_socket);
       m_socket=INVALID_SOCKET;
     }
@@ -39,6 +39,7 @@ JNL_Listen::JNL_Listen(short port, unsigned int which_interface)
     {  
       if (::listen(m_socket,8)==-1) 
       {
+        shutdown(m_socket, SHUT_RDWR);
         closesocket(m_socket);
         m_socket=INVALID_SOCKET;
       }
@@ -50,6 +51,7 @@ JNL_Listen::~JNL_Listen()
 {
   if (m_socket!=INVALID_SOCKET)
   {
+    shutdown(m_socket, SHUT_RDWR);
     closesocket(m_socket);
   }
 }
