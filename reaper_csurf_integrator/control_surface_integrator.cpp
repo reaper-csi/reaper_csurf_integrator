@@ -285,7 +285,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, bool &shouldIgnoreRelease, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -314,8 +314,6 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
                 shouldToggle = true;
-            else if(modifier_tokens[i] == "Press")
-                shouldIgnoreRelease = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
         }
@@ -411,11 +409,10 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
                 bool isTrackTouch = false;
                 bool isInverted = false;
                 bool shouldToggle = false;
-                bool shouldIgnoreRelease = false;
                 bool isDelayed = false;
                 double delayAmount = 0.0;
                 
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, shouldIgnoreRelease, delayAmount);
+                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
                 
                 if(delayAmount > 0.0)
                     isDelayed = true;
@@ -457,14 +454,8 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
                             action->SetIsInverted();
                         
                         if(shouldToggle)
-                        {
                             action->SetShouldToggle();
-                            action->SetShouldIgnoreRelease();
-                        }
                         
-                        if(shouldIgnoreRelease)
-                            action->SetShouldIgnoreRelease();
-
                         if(isDelayed)
                             action->SetDelayAmount(delayAmount * 1000.0);
 
@@ -1027,9 +1018,6 @@ void Action::SetRGB(vector<string> params)
 
 void Action::DoAction(double value, WidgetActionManager* sender)
 {
-    if(shouldIgnoreRelease_ && value == 0)
-        return;
-    
     value = isInverted_ == false ? value : 1.0 - value;
     
     if(shouldToggle_)
@@ -1595,11 +1583,14 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     
     // At this point we don't know how much of the message comprises the key, so try all three
     if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
-        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]]->ProcessMidiMessage(evt);
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
+            generator->ProcessMidiMessage(evt);
     else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100]->ProcessMidiMessage(evt);
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
+            generator->ProcessMidiMessage(evt);
     else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
-        CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000]->ProcessMidiMessage(evt);
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000])
+            generator->ProcessMidiMessage(evt);
 }
 
 void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
@@ -1902,7 +1893,6 @@ static bool isControl = false;
 static bool isAlt = false;
 static bool isTouch = false;
 static bool shouldToggle = false;
-static bool shouldIgnoreRelease = false;
 static bool isHold = false;
 static bool isInvert = false;
 
@@ -2016,11 +2006,6 @@ static void SetCheckBoxes(ActionLineItem actionLineItem)
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_CHECKED);
     else
         CheckDlgButton(hwndLearn, IDC_CHECK_Touch, BST_UNCHECKED);
-    
-    if(actionLineItem.isPress)
-        CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_CHECKED);
-    else
-        CheckDlgButton(hwndLearn, IDC_CHECK_IgnoreRelease, BST_UNCHECKED);
     
     if(actionLineItem.isHold)
         CheckDlgButton(hwndLearn, IDC_CHECK_Hold, BST_CHECKED);
@@ -2878,7 +2863,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.isAlt = isAlt;
                             actionLineItem.isToggle = shouldToggle;
                             actionLineItem.isInvert = isInvert;
-                            actionLineItem.isPress = shouldIgnoreRelease;
                             actionLineItem.isTouch = isTouch;
                             actionLineItem.isHold = isHold;
                             
@@ -2902,13 +2886,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(actionLineItem.isInvert)
                                 actionLineItem.allModifiers += "Invert+";
                             
-                            if(actionLineItem.isPress)
-                                actionLineItem.allModifiers += "Press+";
-                            
                             if(actionLineItem.isHold)
                                 actionLineItem.allModifiers += "Hold+";
 
-                            
                             actionLineItem.widget = currentSurface->GetWidgets()[widgetIndex];
                             actionLineItem.widgetName = actionLineItem.widget->GetName();
 
@@ -3270,16 +3250,6 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         isTouch = true;
                     else
                         isTouch = false;
-                    
-                    break;
-                }
-                    
-                case IDC_CHECK_IgnoreRelease:
-                {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_IgnoreRelease))
-                        shouldIgnoreRelease = true;
-                    else
-                        shouldIgnoreRelease = false;
                     
                     break;
                 }
