@@ -95,7 +95,6 @@ struct ActionLineItem
     bool isToggle = false;
     bool isInvert = false;
     bool isTouch = false;
-    bool isPress = false;
     bool isHold = false;
     bool supportsRGB = false;
     vector<rgb_color> colors;
@@ -352,7 +351,6 @@ protected:
     WidgetActionManager* widgetActionManager_ = nullptr;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
-    bool shouldIgnoreRelease_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
@@ -374,7 +372,6 @@ public:
     
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
-    void SetShouldIgnoreRelease() { shouldIgnoreRelease_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void SetIndex(int index) {}
@@ -414,13 +411,7 @@ public:
             actionLineItem.allModifiers += "Invert+";
             actionLineItem.isInvert = true;
         }
-        
-        if(shouldIgnoreRelease_)
-        {
-            actionLineItem.allModifiers += "Press+";
-            actionLineItem.isPress = true;
-        }
-        
+           
         if(delayAmount_ != 0.0)
         {
             actionLineItem.allModifiers += "Hold+";
@@ -1061,7 +1052,7 @@ private:
     string templateFilename_ = "";
     midi_Input* midiInput_ = nullptr;
     midi_Output* midiOutput_ = nullptr;
-    map<int, Midi_CSIMessageGenerator*> CSIMessageGeneratorsByMidiMessage_;
+    map<int, vector<Midi_CSIMessageGenerator*>> CSIMessageGeneratorsByMidiMessage_;
     
     void InitWidgets(string templateFilename);
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
@@ -1110,7 +1101,7 @@ public:
     
     void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
     {
-        CSIMessageGeneratorsByMidiMessage_[message] = messageGenerator;
+        CSIMessageGeneratorsByMidiMessage_[message].push_back(messageGenerator);
     }
 };
 
