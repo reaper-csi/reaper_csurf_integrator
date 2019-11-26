@@ -13,7 +13,7 @@
 #include "../libpng/png.h"
 
 #ifdef __APPLE__
-#include <Carbon/Carbon.h> // for loading images from embedded resource 
+#include <CoreFoundation/CoreFoundation.h> // for loading images from embedded resource 
 #endif
 
 
@@ -107,37 +107,36 @@ LICE_IBitmap *LICE_LoadPNG(const char *filename, LICE_IBitmap *bmp)
   }
 
   unsigned char **row_pointers=(unsigned char **)malloc(height*sizeof(unsigned char *));;
-  LICE_pixel *bmpptr = bmp->getBits();
-  int dbmpptr=bmp->getRowSpan();
+  LICE_pixel *srcptr = bmp->getBits();
+  int dsrcptr=bmp->getRowSpan();
   if (bmp->isFlipped())
   {
-    bmpptr += dbmpptr*(bmp->getHeight()-1);
-    dbmpptr=-dbmpptr;
+    srcptr += dsrcptr*(bmp->getHeight()-1);
+    dsrcptr=-dsrcptr;
   }
   unsigned int i;
   for(i=0;i<height;i++)
   {
-    row_pointers[i]=(unsigned char *)bmpptr;
-    bmpptr+=dbmpptr;
+    row_pointers[i]=(unsigned char *)srcptr;
+    srcptr+=dsrcptr;
   }
   png_read_image(png_ptr, row_pointers);
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
   fclose(fp);
 
-  //put shit in correct order
   #if !(LICE_PIXEL_A == 0 && LICE_PIXEL_R == 1 && LICE_PIXEL_G == 2 && LICE_PIXEL_B == 3)
   for(i=0;i<height;i++)
   {
-    unsigned char *bmpptr = row_pointers[i];
+    unsigned char *bp = row_pointers[i];
     int j=width;
     while (j-->0)
     {
-      unsigned char a = bmpptr[0];
-      unsigned char r = bmpptr[1];
-      unsigned char g = bmpptr[2];
-      unsigned char b = bmpptr[3];
-      ((LICE_pixel*)bmpptr)[0] = LICE_RGBA(r,g,b,a);
-      bmpptr+=4;
+      unsigned char a = bp[0];
+      unsigned char r = bp[1];
+      unsigned char g = bp[2];
+      unsigned char b = bp[3];
+      ((LICE_pixel*)bp)[0] = LICE_RGBA(r,g,b,a);
+      bp+=4;
     }
   }
   #endif
@@ -185,11 +184,20 @@ LICE_IBitmap *LICE_LoadPNGFromNamedResource(const char *name, LICE_IBitmap *bmp)
   if (!buf[0]) return 0;
   strcat(buf,"/Contents/Resources/");
 #else  
-  char tmp[64];
-  sprintf(tmp,"/proc/%d/exe",getpid());
-  int sz = readlink(tmp, buf, sizeof(buf)-512);  
-  if (sz<0) sz=0;
-  else if (sz >= sizeof(buf)-512) sz = sizeof(buf)-512-1;
+  int sz = readlink("/proc/self/exe", buf, sizeof(buf)-512);  
+  if (sz < 1)
+  {
+    static char tmp;
+    // this will likely not work if the program was launched with a relative path 
+    // and the cwd has changed, but give it a try anyway
+    Dl_info inf={0,};
+    if (dladdr(&tmp,&inf) && inf.dli_fname) 
+      sz = (int) strlen(inf.dli_fname);
+    else
+      sz = 0;
+  }
+
+  if ((unsigned int)sz >= sizeof(buf)-512) sz = sizeof(buf)-512-1;
   buf[sz]=0;
   char *p = buf;
   while (*p) p++;
@@ -279,13 +287,13 @@ LICE_IBitmap *LICE_LoadPNGFromMemory(const void *data_in, int buflen, LICE_IBitm
   }
 
   unsigned char **row_pointers=(unsigned char **)malloc(height*sizeof(unsigned char *));;
-  LICE_pixel *bmpptr = bmp->getBits();
-  int dbmpptr=bmp->getRowSpan();
+  LICE_pixel *srcptr = bmp->getBits();
+  int dsrcptr=bmp->getRowSpan();
   unsigned int i;
   for(i=0;i<height;i++)
   {
-    row_pointers[i]=(unsigned char *)bmpptr;
-    bmpptr+=dbmpptr;
+    row_pointers[i]=(unsigned char *)srcptr;
+    srcptr+=dsrcptr;
   }
   png_read_image(png_ptr, row_pointers);
   png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
@@ -294,26 +302,26 @@ LICE_IBitmap *LICE_LoadPNGFromMemory(const void *data_in, int buflen, LICE_IBitm
   #if !(LICE_PIXEL_A == 0 && LICE_PIXEL_R == 1 && LICE_PIXEL_G == 2 && LICE_PIXEL_B == 3)
   for(i=0;i<height;i++)
   {
-    unsigned char *bmpptr = row_pointers[i];
+    unsigned char *bp = row_pointers[i];
     int j=width;
     while (j-->0)
     {
-      unsigned char a = bmpptr[0];
-      unsigned char r = bmpptr[1];
-      unsigned char g = bmpptr[2];
-      unsigned char b = bmpptr[3];
-      ((LICE_pixel*)bmpptr)[0] = LICE_RGBA(r,g,b,a);
-      bmpptr+=4;
+      unsigned char a = bp[0];
+      unsigned char r = bp[1];
+      unsigned char g = bp[2];
+      unsigned char b = bp[3];
+      ((LICE_pixel*)bp)[0] = LICE_RGBA(r,g,b,a);
+      bp+=4;
     }
   }
   #endif
   free(row_pointers);
   return bmp;  
 }
-LICE_IBitmap *LICE_LoadPNGFromResource(HINSTANCE hInst, int resid, LICE_IBitmap *bmp)
+LICE_IBitmap *LICE_LoadPNGFromResource(HINSTANCE hInst, const char *resid, LICE_IBitmap *bmp)
 {
 #ifdef _WIN32
-  HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(resid), "PNG");
+  HRSRC hResource = FindResource(hInst, resid, "PNG");
   if(!hResource) return NULL;
 
   DWORD imageSize = SizeofResource(hInst, hResource);

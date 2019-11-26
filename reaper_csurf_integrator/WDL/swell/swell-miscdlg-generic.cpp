@@ -1,5 +1,5 @@
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Losers (who use OS X))
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -33,12 +33,82 @@
 
 #include "../wdlcstring.h"
 #include "../assocarray.h"
+#include "../ptrlist.h"
 #include <dirent.h>
 #include <time.h>
 
 #include "../lineparse.h"
 #define WDL_HASSTRINGS_EXPORT static
 #include "../has_strings.h"
+
+
+#ifndef SWELL_BROWSE_RECENT_SIZE
+#define SWELL_BROWSE_RECENT_SIZE 12
+#endif
+static WDL_PtrList<char> s_browse_rcu, s_browse_rcu_tmp;
+static int recent_size() { return s_browse_rcu.GetSize() + s_browse_rcu_tmp.GetSize(); }
+
+static void recent_addtocb(HWND hwnd)
+{
+  int x;
+  for (x=0;x<s_browse_rcu_tmp.GetSize();x++) 
+    SendMessage(hwnd,CB_ADDSTRING,0,(LPARAM)s_browse_rcu_tmp.Get(x));
+  for (x=0;x<s_browse_rcu.GetSize();x++) 
+    SendMessage(hwnd,CB_ADDSTRING,0,(LPARAM)s_browse_rcu.Get(x));
+}
+static void recent_write(const char *path)
+{
+  if (!path || !path[0]) return;
+  int x;
+  for (x=0;x<s_browse_rcu.GetSize() && strcmp(s_browse_rcu.Get(x),path); x++);
+  if (x<s_browse_rcu.GetSize())
+  {
+    if (!x) return; // already at top of flist
+
+    char *ps = s_browse_rcu.Get(x);
+    s_browse_rcu.Delete(x,false);
+    s_browse_rcu.Insert(0,ps);
+  }
+  else
+  {
+    if (s_browse_rcu.GetSize()>=SWELL_BROWSE_RECENT_SIZE)
+      s_browse_rcu.Delete(SWELL_BROWSE_RECENT_SIZE,true,free);
+    s_browse_rcu.Insert(0,strdup(path));
+  }
+
+  for (x=0;x<=s_browse_rcu.GetSize();x++)
+  {
+    char tmp[64];
+    snprintf(tmp,sizeof(tmp),"path%d",x);
+    WritePrivateProfileString(".swell_recent_path",tmp, s_browse_rcu.Get(x),"");
+  }
+}
+static void recent_read()
+{
+  s_browse_rcu_tmp.Empty(true,free);
+  if (s_browse_rcu.GetSize()) return;
+  int x;
+  for (x=0;x<SWELL_BROWSE_RECENT_SIZE;x++)
+  {
+    char tmp[64], path[2048];
+    snprintf(tmp,sizeof(tmp),"path%d",x);
+    GetPrivateProfileString(".swell_recent_path",tmp, "", path,sizeof(path),"");
+    if (!path[0]) break;
+    s_browse_rcu.Add(strdup(path));
+  }
+}
+static void recent_add_tmp(const char *path)
+{
+  if (!path || !*path) return;
+
+  int x;
+  for (x=0;x<s_browse_rcu_tmp.GetSize();x++) 
+    if (!strcmp(s_browse_rcu_tmp.Get(x),path)) return;
+  for (x=0;x<s_browse_rcu.GetSize();x++) 
+    if (!strcmp(s_browse_rcu.Get(x),path)) return;
+
+  s_browse_rcu_tmp.Add(strdup(path));
+}
 
 static const char *BFSF_Templ_dlgid;
 static DLGPROC BFSF_Templ_dlgproc;
@@ -59,7 +129,7 @@ public:
   BrowseFile_State(const char *_cap, const char *_idir, const char *_ifile, const char *_el, modeEnum _mode, char *_fnout, int _fnout_sz) :
     caption(_cap), initialdir(_idir), initialfile(_ifile), extlist(_el), mode(_mode), 
     sortcol(0), sortrev(0),
-    fnout(_fnout), fnout_sz(_fnout_sz), viewlist_store(16384), viewlist(4096)
+    fnout(_fnout), fnout_sz(_fnout_sz), viewlist_store(16384), viewlist(4096), show_hidden(false)
   {
   }
   ~BrowseFile_State()
@@ -139,6 +209,9 @@ public:
   }
   WDL_TypedBuf<rec> viewlist_store;
   WDL_PtrList<rec> viewlist;
+
+  bool show_hidden;
+
   void viewlist_sort(const char *filter)
   {
     if (filter)
@@ -177,7 +250,7 @@ public:
   }
   static int sortFunc_sz(const void *_a, const void *_b)
   {
-    const rec *a = (const rec *)_a, *b = (const rec *)_b;
+    const rec *a = *(const rec * const *)_a, *b = *(const rec * const *)_b;
     int d = a->type - b->type;
     if (d) return s_sortrev ? -d : d;
     if (a->size != b->size) return s_sortrev ? (a->size>b->size?-1:1) : (a->size>b->size?1:-1);
@@ -194,10 +267,18 @@ public:
     struct dirent *ent;
     while (NULL != (ent = readdir(dir)))
     {
-      if (ent->d_name[0] == '.') continue;
+      if (ent->d_name[0] == '.') 
+      {
+        if (ent->d_name[1] == 0 || ent->d_name[1] == '.' || !show_hidden) continue;
+      }
       bool is_dir = (ent->d_type == DT_DIR);
-
-      if (ent->d_type == DT_LNK)
+      if (ent->d_type == DT_UNKNOWN)
+      {
+        snprintf(tmp,sizeof(tmp),"%s/%s",path,ent->d_name);
+        DIR *d = opendir(tmp);
+        if (d) { is_dir = true; closedir(d); }
+      }
+      else if (ent->d_type == DT_LNK)
       {
         snprintf(tmp,sizeof(tmp),"%s/%s",path,ent->d_name);
         char *rp = realpath(tmp,NULL);
@@ -258,9 +339,27 @@ public:
 
 char BrowseFile_State::s_sortrev;
 
+static void preprocess_user_path(char *buf, int bufsz)
+{
+  if (buf[0] == '~')
+  {
+    char *tmp = strdup(buf+1);
+    if (buf[1] == '/' || !buf[1])
+    {
+      char *p = getenv("HOME");
+      if (p && *p) snprintf(buf,bufsz,"%s%s",p,tmp);
+    }
+    else
+    {
+      snprintf(buf,bufsz,"/home/%s",tmp); // if someone wants to write code to lookup homedirs, please, go right ahead!
+    }
+    free(tmp);
+  }
+}
+
 static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  enum { IDC_EDIT=0x100, IDC_LABEL, IDC_CHILD, IDC_DIR, IDC_LIST, IDC_EXT, IDC_PARENTBUTTON, IDC_FILTER };
+  enum { IDC_EDIT=0x100, IDC_LABEL, IDC_CHILD, IDC_DIR, IDC_LIST, IDC_EXT, IDC_PARENTBUTTON, IDC_FILTER, ID_SHOW_HIDDEN };
   enum { WM_UPD=WM_USER+100 };
   const int maxPathLen = 2048;
   const char *multiple_files = "(multiple files)";
@@ -276,6 +375,19 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
 
         SetWindowLongPtr(hwnd,GWLP_USERDATA,lParam);
         BrowseFile_State *parms = (BrowseFile_State *)lParam;
+
+        char tmp[1024];
+        recent_read();
+
+        recent_add_tmp(parms->initialdir);
+
+        if (parms->initialfile)
+        {
+          lstrcpyn_safe(tmp,parms->initialfile,sizeof(tmp));
+          WDL_remove_filepart(tmp);
+          recent_add_tmp(tmp);
+        }
+
         if (parms->caption) SetWindowText(hwnd,parms->caption);
 
         SWELL_MakeSetCurParms(1,1,0,0,hwnd,false,false);
@@ -292,15 +404,16 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         SWELL_MakeEditField(IDC_FILTER, 0,0,0,0,  0);
 
         const char *ent = parms->mode == BrowseFile_State::OPENDIR ? "dir_browser" : "file_browser";
-        char tmp[128];
         GetPrivateProfileString(".swell",ent,"", tmp,sizeof(tmp),"");
-        int x=0,y=0,w=0,h=0, c1=0,c2=0,c3=0;
+        int x=0,y=0,w=0,h=0, c1=0,c2=0,c3=0,extraflag=0;
         int flag = SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER;
         if (tmp[0] && 
-            sscanf(tmp,"%d %d %d %d %d %d %d",&x,&y,&w,&h,&c1,&c2,&c3) >= 4) 
+            sscanf(tmp,"%d %d %d %d %d %d %d %d",&x,&y,&w,&h,&c1,&c2,&c3,&extraflag) >= 4) 
           flag &= ~SWP_NOMOVE;
         if (w < 100) w=SWELL_UI_SCALE(600);
         if (h < 100) h=SWELL_UI_SCALE(400);
+        if (extraflag&1)
+          parms->show_hidden=true;
 
         if (c1 + c2 + c3 < w/2)
         {
@@ -361,22 +474,36 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         {
           char buf[maxPathLen];
           const char *filepart = "";
-          if (parms->initialfile && *parms->initialfile && *parms->initialfile != '.') 
+          if (parms->initialfile && *parms->initialfile && strcmp(parms->initialfile,"."))
           { 
             lstrcpyn_safe(buf,parms->initialfile,sizeof(buf));
             char *p = (char *)WDL_get_filepart(buf);
-            if (p > buf) { p[-1]=0; filepart = p; }
+            if (p > buf) 
+            { 
+              p[-1]=0; 
+              filepart = p; 
+            }
+            else
+            {
+              filepart = parms->initialfile;
+              goto get_dir;
+            }
           }
-          else if (parms->initialdir && *parms->initialdir) 
+          else 
           {
-            lstrcpyn_safe(buf,parms->initialdir,sizeof(buf));
+get_dir:
+            if (parms->initialdir && *parms->initialdir && strcmp(parms->initialdir,".")) 
+            {
+              lstrcpyn_safe(buf,parms->initialdir,sizeof(buf));
+            }
+            else getcwd(buf,sizeof(buf));
           }
-          else getcwd(buf,sizeof(buf));
 
           SetWindowText(edit,filepart);
           SendMessage(hwnd, WM_UPD, IDC_DIR, (LPARAM)buf);
         }
 
+        if (list) SetWindowPos(list,HWND_BOTTOM,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
         SetWindowPos(hwnd,NULL,x,y, w,h, flag);
         SendMessage(hwnd,WM_UPD,1,0);
         SendMessage(edit,EM_SETSEL,0,(LPARAM)-1);
@@ -395,7 +522,9 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
           const int c2 = ListView_GetColumnWidth(list,1);
           const int c3 = ListView_GetColumnWidth(list,2);
           char tmp[128];
-          snprintf(tmp,sizeof(tmp),"%d %d %d %d %d %d %d",r.left,r.top,r.right-r.left,r.bottom-r.top,c1,c2,c3);
+          int extraflag=0;
+          if (parms->show_hidden) extraflag|=1;
+          snprintf(tmp,sizeof(tmp),"%d %d %d %d %d %d %d %d",r.left,r.top,r.right-r.left,r.bottom-r.top,c1,c2,c3,extraflag);
           const char *ent = parms->mode == BrowseFile_State::OPENDIR ? "dir_browser" : "file_browser";
           WritePrivateProfileString(".swell",ent, tmp, "");
         }
@@ -418,6 +547,7 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
               WDL_remove_trailing_dirchars(path);
             }
             SendMessage(combo,CB_ADDSTRING,0,(LPARAM)"/");
+            recent_addtocb(combo);
             SendMessage(combo,CB_SETCURSEL,0,0);
           } 
         break;
@@ -436,6 +566,7 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
             if (a>=0) filt = (const char *)SendDlgItemMessage(hwnd,IDC_EXT,CB_GETITEMDATA,a,0);
 
             GetDlgItemText(hwnd,IDC_DIR,buf,sizeof(buf));
+            preprocess_user_path(buf,sizeof(buf));
 
             if (buf[0]) parms->scan_path(buf, filt, parms->mode == BrowseFile_State::OPENDIR);
             else parms->viewlist_clear();
@@ -542,7 +673,8 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         case IDC_PARENTBUTTON:
           {
             int a = (int) SendDlgItemMessage(hwnd,IDC_DIR,CB_GETCURSEL,0,0);
-            if (a>=0) 
+            int cbcnt = (int) SendDlgItemMessage(hwnd,IDC_DIR,CB_GETCOUNT,0,0);
+            if (a>=0 && a < cbcnt - recent_size())
             {
               SendDlgItemMessage(hwnd,IDC_DIR,CB_SETCURSEL,a+1,0);
             }
@@ -550,8 +682,12 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
             {
               char buf[maxPathLen];
               GetDlgItemText(hwnd,IDC_DIR,buf,sizeof(buf));
+              preprocess_user_path(buf,sizeof(buf));
               WDL_remove_filepart(buf);
-              SetDlgItemText(hwnd,IDC_DIR,buf);
+              if (a>=0)
+                SendMessage(hwnd,WM_UPD,IDC_DIR,(LPARAM)buf);
+              else
+                SetDlgItemText(hwnd,IDC_DIR,buf);
             }
             SendMessage(hwnd,WM_UPD,1,0);
           }
@@ -559,6 +695,15 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         case IDC_DIR:
           if (HIWORD(wParam) == CBN_SELCHANGE)
           {
+            int a = (int) SendDlgItemMessage(hwnd,IDC_DIR,CB_GETCURSEL,0,0);
+            int cbcnt = (int) SendDlgItemMessage(hwnd,IDC_DIR,CB_GETCOUNT,0,0);
+            if (a>=cbcnt - recent_size())
+            {
+              char buf[maxPathLen];
+              GetDlgItemText(hwnd,IDC_DIR,buf,sizeof(buf));
+              preprocess_user_path(buf,sizeof(buf));
+              SendMessage(hwnd,WM_UPD,IDC_DIR,(LPARAM)buf);
+            }
             SendMessage(hwnd,WM_UPD,1,0);
           }
         return 0;
@@ -567,18 +712,21 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
           {
             char buf[maxPathLen], msg[2048];
             GetDlgItemText(hwnd,IDC_DIR,buf,sizeof(buf));
+            preprocess_user_path(buf,sizeof(buf));
+
             if (GetFocus() == GetDlgItem(hwnd,IDC_DIR))
             {
               DIR *dir = opendir(buf);
               if (!dir)
               {
-                snprintf(msg,sizeof(msg),"Path does not exist:\r\n\r\n%s",buf);
-                MessageBox(hwnd,msg,"Path not found",MB_OK);
+                //snprintf(msg,sizeof(msg),"Path does not exist:\r\n\r\n%s",buf);
+                //MessageBox(hwnd,msg,"Path not found",MB_OK);
                 return 0;
               }
               closedir(dir);
 
               SendMessage(hwnd,WM_UPD,1,0);
+              SendMessage(hwnd, WM_UPD, IDC_DIR, (LPARAM)buf);
               HWND e = GetDlgItem(hwnd,IDC_EDIT);
               SendMessage(e,EM_SETSEL,0,(LPARAM)-1);
               SetFocus(e);
@@ -593,11 +741,13 @@ static LRESULT WINAPI swellFileSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
               if (buf[buflen-1]!='/') { buf[buflen++] = '/'; buf[buflen]=0; }
             }
             GetDlgItemText(hwnd,IDC_EDIT,msg,sizeof(msg));
+            preprocess_user_path(msg,sizeof(msg));
 
             BrowseFile_State *parms = (BrowseFile_State *)GetWindowLongPtr(hwnd,GWLP_USERDATA);
             int cnt;
             if (parms->mode == BrowseFile_State::OPENMULTI && (cnt=ListView_GetSelectedCount(GetDlgItem(hwnd,IDC_LIST)))>1 && (!*msg || !strcmp(msg,multiple_files)))
             {
+              recent_write(buf);
               HWND list = GetDlgItem(hwnd,IDC_LIST);
               WDL_TypedBuf<char> fs;
               fs.Set(buf,strlen(buf)+1);
@@ -647,7 +797,7 @@ treatAsDir:
                    DIR *dir = opendir(buf);
                    if (!dir) 
                    {
-                     snprintf(msg,sizeof(msg),"Error opening directory:\r\n\r\n%s\r\n\r\nCreate?",buf);
+                     snprintf(msg,sizeof(msg),"Error opening directory:\r\n\r\n%.1000s\r\n\r\nCreate?",buf);
                      if (MessageBox(hwnd,msg,"Create directory?",MB_OKCANCEL)==IDCANCEL) return 0;
                      CreateDirectory(buf,NULL);
                      dir=opendir(buf);
@@ -684,7 +834,7 @@ treatAsDir:
                    if (buf[strlen(buf)-1] == '/') goto treatAsDir;
                    if (!stat64(buf,&st))
                    {
-                     snprintf(msg,sizeof(msg),"File exists:\r\n\r\n%s\r\n\r\nOverwrite?",buf);
+                     snprintf(msg,sizeof(msg),"File exists:\r\n\r\n%.1000s\r\n\r\nOverwrite?",buf);
                      if (MessageBox(hwnd,msg,"Overwrite file?",MB_OKCANCEL)==IDCANCEL) return 0;
                    }
                  }
@@ -705,8 +855,8 @@ treatAsDir:
                    }
                    if (stat64(buf,&st))
                    {
-                     snprintf(msg,sizeof(msg),"File does not exist:\r\n\r\n%s",buf);
-                     MessageBox(hwnd,msg,"File not found",MB_OK);
+                     //snprintf(msg,sizeof(msg),"File does not exist:\r\n\r\n%s",buf);
+                     //MessageBox(hwnd,msg,"File not found",MB_OK);
                      return 0;
                    }
                  }
@@ -722,8 +872,18 @@ treatAsDir:
               parms->fnout = (char*)calloc(l+2,1);
               memcpy(parms->fnout,buf,l);
             }
+            if (parms->mode != BrowseFile_State::OPENDIR)
+              WDL_remove_filepart(buf);
+            recent_write(buf);
           }
           EndDialog(hwnd,1);
+        return 0;
+        case ID_SHOW_HIDDEN:
+          {
+            BrowseFile_State *parms = (BrowseFile_State *)GetWindowLongPtr(hwnd,GWLP_USERDATA);
+            parms->show_hidden = !parms->show_hidden;
+            SendMessage(hwnd,WM_UPD,1,0);
+          }
         return 0;
       }
     break;
@@ -816,7 +976,35 @@ treatAsDir:
         SendMessage(hwnd,WM_UPD,1,0);
         return 1;
       }
+      else if (lParam == (FVIRTKEY|FCONTROL) && wParam == 'H')
+      {
+        SendMessage(hwnd,WM_COMMAND,ID_SHOW_HIDDEN,0);
+        return 1;
+      }
+      else if (lParam == FVIRTKEY && wParam == VK_BACK && 
+               GetFocus() == GetDlgItem(hwnd,IDC_LIST))
+      {
+        SendMessage(hwnd,WM_COMMAND,IDC_PARENTBUTTON,0);
+        return 1;
+      }
+      else if (lParam == FVIRTKEY && wParam == VK_RETURN && 
+               GetFocus() == GetDlgItem(hwnd,IDC_LIST))
+      {
+        SendMessage(hwnd,WM_COMMAND,IDOK,0);
+        return 1;
+      }
     return 0;
+    case WM_CONTEXTMENU:
+      {
+        BrowseFile_State *parms = (BrowseFile_State *)GetWindowLongPtr(hwnd,GWLP_USERDATA);
+        HMENU menu = CreatePopupMenu();
+        SWELL_InsertMenu(menu,0,MF_BYPOSITION|(parms->show_hidden ? MF_CHECKED:MF_UNCHECKED), ID_SHOW_HIDDEN, "Show files/directories beginning with .");
+        POINT p;
+        GetCursorPos(&p);
+        TrackPopupMenu(menu,0,p.x,p.y,0,hwnd,NULL);
+        DestroyMenu(menu);
+      }
+    return 1;
   }
   return 0;
 }
@@ -896,6 +1084,13 @@ static LRESULT WINAPI swellMessageBoxProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         labsize.top += sc10;
         labsize.bottom += sc10 + sc8;
 
+        RECT vp;
+        SWELL_GetViewPort(&vp,NULL,true);
+        vp.bottom -= vp.top;
+        if (labsize.bottom > vp.bottom*7/8)
+          labsize.bottom = vp.bottom*7/8;
+
+
         int x;
         int button_height=0, button_total_w=0;;
         const int bspace = SWELL_UI_SCALE(button_spacing);
@@ -913,7 +1108,7 @@ static LRESULT WINAPI swellMessageBoxProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
         int xpos = labsize.right/2 - button_total_w/2;
         for (x = 0; x < nbuttons; x ++)
         {
-          SWELL_MakeButton(0,buttons[x],button_ids[x],xpos,labsize.bottom,button_sizes[x],button_height,0);
+          SWELL_MakeButton(!x,buttons[x],button_ids[x],xpos,labsize.bottom,button_sizes[x],button_height,0);
           xpos += button_sizes[x] + bspace;
         }
 
@@ -958,12 +1153,14 @@ static LRESULT WINAPI swellMessageBoxProc(HWND hwnd, UINT uMsg, WPARAM wParam, L
       }
     break;
     case WM_COMMAND:
-      if (LOWORD(wParam) && HIWORD(wParam) == BN_CLICKED ) EndDialog(hwnd,LOWORD(wParam));
+      if (LOWORD(wParam) && HIWORD(wParam) == BN_CLICKED) 
+      {
+        EndDialog(hwnd,LOWORD(wParam));
+      }
     break;
     case WM_CLOSE:
       if (GetDlgItem(hwnd,IDCANCEL)) EndDialog(hwnd,IDCANCEL);
       else if (GetDlgItem(hwnd,IDNO)) EndDialog(hwnd,IDNO);
-      else if (GetDlgItem(hwnd,IDYES)) EndDialog(hwnd,IDYES);
       else EndDialog(hwnd,IDOK);
     break;
   }
@@ -1023,12 +1220,78 @@ struct ChooseColor_State {
   int ncustom;
   int *custom;
 
-  int h,s,v;
+  double h,s,v;
 
   LICE_IBitmap *bm;
 };
 
-// we need to make a more accurate LICE_HSV2RGB pair, this one is lossy, doh
+static double h6s2i(double h)
+{
+  h -= ((int)(h*1.0/6.0))*6.0;
+  if (h < 3)
+  {
+    if (h < 1.0) return 1.0 - h;
+    return 0.0;
+  }
+  if (h < 4.0) return h - 3.0;
+  return 1.0;
+};
+
+static void _HSV2RGB(double h, double s, double v, double *r, double *g, double *b)
+{
+  h *= 1.0 / 60.0; 
+  s *= v * 1.0 / 255.0;
+  *r = v-h6s2i(h+2)*s;
+  *g = v-h6s2i(h)*s;
+  *b = v-h6s2i(h+4)*s;
+}
+static int _HSV2RGBV(double h, double s, double v)
+{
+  double r,g,b;
+  _HSV2RGB(h,s,v,&r,&g,&b);
+  int ir = (int) (r+0.5);
+  int ig = (int) (g+0.5);
+  int ib = (int) (b+0.5);
+  if (ir<0) ir=0; else if (ir>255) ir=255;
+  if (ig<0) ig=0; else if (ig>255) ig=255;
+  if (ib<0) ib=0; else if (ib>255) ib=255;
+  return RGB(ir,ig,ib);
+}
+
+
+static void _RGB2HSV(double r, double g, double b, double *h, double *s, double *v)
+{
+  const double maxrgb=wdl_max(wdl_max(r,g),b);
+  const double df = maxrgb - wdl_min(wdl_min(r,g),b);
+  double d=r-g, degoffs = 240.0;
+
+  if (g > r)
+  {
+    if (g > b)
+    {
+      degoffs=120;
+      d=b-r;
+    }
+  }
+  else if (r > b)
+  {
+    degoffs=0.0;
+    d=g-b;
+  }
+  
+  *v = maxrgb;
+  if (df)
+  {
+    degoffs += (d*60)/df;
+    if (degoffs<0.0) degoffs+=360.0;
+    else if (degoffs >= 360.0) degoffs-=360.0;
+    *h = degoffs;
+    *s = (df*256)/(maxrgb+1);
+  }
+  else
+    *h = *s = 0;
+}
+
 static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   static int s_reent,s_vmode;
@@ -1064,6 +1327,7 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
         SWELL_MakeButton(0, "OK", IDOK,0,0,0,0, 0);
         SWELL_MakeButton(0, "Cancel", IDCANCEL,0,0,0,0, 0);
+        SWELL_MakeLabel(0, "(right click a custom color to save)", 0x500, 0,0,0,0, 0); 
 
         static const char * const lbl[] = { "R","G","B","H","S","V"};
         for (int x=0;x<6;x++)
@@ -1113,14 +1377,12 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
                 {
                   if (uMsg == WM_LBUTTONDOWN)
                   {
-                    LICE_RGB2HSV(GetRValue(cs->custom[col]),GetGValue(cs->custom[col]),GetBValue(cs->custom[col]),&cs->h,&cs->s,&cs->v);
+                    _RGB2HSV(GetRValue(cs->custom[col]),GetGValue(cs->custom[col]),GetBValue(cs->custom[col]),&cs->h,&cs->s,&cs->v);
                     SendMessage(hwnd,WM_USER+100,0,3);
                   }
                   else
                   {
-                    int r,g,b;
-                    LICE_HSV2RGB(cs->h,cs->s,cs->v,&r,&g,&b);
-                    cs->custom[col] = RGB(r,g,b);
+                    cs->custom[col] = _HSV2RGBV(cs->h,cs->s,cs->v);
                     InvalidateRect(hwnd,NULL,FALSE);
                   }
                 }
@@ -1152,9 +1414,9 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
         }
         else
         {
-          int hue = (GET_X_LPARAM(lParam) - border)*384 / (xt-border - vsize);
+          int hue = (GET_X_LPARAM(lParam) - border)*360 / (xt-border - vsize);
           if (hue<0) hue=0;
-          else if (hue>383) hue=383;
+          else if (hue>359) hue=359;
           if (cs->h != hue || cs->s != var)
           {
             cs->h=hue;
@@ -1198,9 +1460,7 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
           }
 
           {
-            int rr,g,b;
-            LICE_HSV2RGB(cs->h,cs->s,cs->v,&rr,&g,&b);
-            HBRUSH br = CreateSolidBrush(RGB(rr,g,b));
+            HBRUSH br = CreateSolidBrush(_HSV2RGBV(cs->h,cs->s,cs->v));
             RECT tr={r.right - border - psize, border, r.right-border, border+psize};
             FillRect(ps.hdc,&tr,br);
             DeleteObject(br);
@@ -1226,12 +1486,12 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
               *wr++ = LICE_HSV2Pix((int)(xx+0.5),sat,var,255);
               xx+=dx;
             }
-            LICE_pixel p = LICE_HSV2Pix(cs->h,cs->s,sat ^ (y==vary ? 128 : 0),255);
+            LICE_pixel p = LICE_HSV2Pix(cs->h * 384.0/360.0,cs->s,sat ^ (y==vary ? 128 : 0),255);
             for (;x < xt-border;x++) *wr++ = p;
           }
-          LICE_pixel p = LICE_HSV2Pix(cs->h,cs->s,(128+cs->v)&255,255);
-          const int saty = ysz - 1 - (ysz * cs->s)/256;
-          const int huex = (x1*cs->h)/384;
+          LICE_pixel p = LICE_HSV2Pix((int)(cs->h+0.5),(int)(cs->s+0.5),((int)(128.5+cs->v))&255,255);
+          const int saty = ysz - 1 - (int) (ysz * cs->s + 0.5)/256;
+          const int huex = (x1*cs->h)/360;
           LICE_Line(cs->bm,huex,saty-4,huex,saty+4,p,.75f,LICE_BLIT_MODE_COPY,false);
           LICE_Line(cs->bm,huex-4,saty,huex+4,saty,p,.75f,LICE_BLIT_MODE_COPY,false);
 
@@ -1254,13 +1514,13 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
         ChooseColor_State *cs = (ChooseColor_State*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
         if (cs)
         {
-          int t[6];
+          double t[6];
           t[3] = cs->h;
           t[4] = cs->s;
           t[5] = cs->v;
-          LICE_HSV2RGB(t[3],t[4],t[5],t,t+1,t+2);
+          _HSV2RGB(t[3],t[4],t[5],t,t+1,t+2);
           s_reent++;
-          for (int x=0;x<6;x++) if (lParam & ((x<3)?1:2)) SetDlgItemInt(hwnd,0x200+x,x==3 ? t[x]*360/384 : t[x],FALSE);
+          for (int x=0;x<6;x++) if (lParam & ((x<3)?1:2)) SetDlgItemInt(hwnd,0x200+x,(int) (t[x]+0.5),FALSE);
           s_reent--;
           InvalidateRect(hwnd,NULL,FALSE);
         }
@@ -1284,6 +1544,7 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
         r.right -= border*2 + butw;
         SetWindowPos(GetDlgItem(hwnd,IDOK), NULL, r.right, r.bottom, butw, buth, SWP_NOZORDER|SWP_NOACTIVATE);
 
+        SetWindowPos(GetDlgItem(hwnd,0x500), NULL, border, r.bottom, r.right-border*2, buth, SWP_NOZORDER|SWP_NOACTIVATE);
       }
     break;
     case WM_COMMAND:
@@ -1306,29 +1567,27 @@ static LRESULT WINAPI swellColorSelectProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             const bool ishsv = LOWORD(wParam) >= 0x203;
             int offs = ishsv ? 0x203 : 0x200;
             BOOL t = FALSE;
-            int h = GetDlgItemInt(hwnd,offs++,&t,FALSE);
+            double h = GetDlgItemInt(hwnd,offs++,&t,FALSE);
             if (!t) break;
-            int s = GetDlgItemInt(hwnd,offs++,&t,FALSE);
+            double s = GetDlgItemInt(hwnd,offs++,&t,FALSE);
             if (!t) break;
-            int v = GetDlgItemInt(hwnd,offs++,&t,FALSE);
+            double v = GetDlgItemInt(hwnd,offs++,&t,FALSE);
             if (!t) break;
+            if (s<0) s=0; else if (s>255) s=255;
+            if (v<0) v=0; else if (v>255) v=255;
+            if (h<0) h=0;
 
-            ChooseColor_State *cs = (ChooseColor_State*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
             if (!ishsv) 
             {
-              if (h<0) h=0; else if (h>255) h=255;
-              if (s<0) s=0; else if (s>255) s=255;
-              if (v<0) v=0; else if (v>255) v=255;
-              LICE_RGB2HSV(h,s,v,&h,&s,&v);
+              if (h>255) h=255;
+              _RGB2HSV(h,s,v,&h,&s,&v);
             }
             else
             {
-              h = h * 384 / 360;
-              if (h<0) h=0; else if (h>384) h=384;
-              if (s<0) s=0; else if (s>255) s=255;
-              if (v<0) v=0; else if (v>255) v=255;
+              if (h>360) h=360;
             }
 
+            ChooseColor_State *cs = (ChooseColor_State*)GetWindowLongPtr(hwnd,GWLP_USERDATA);
             if (cs)
             {
               cs->h = h;
@@ -1351,14 +1610,12 @@ bool SWELL_ChooseColor(HWND h, int *val, int ncustom, int *custom)
 #ifdef SWELL_LICE_GDI
   ChooseColor_State state = { ncustom, custom };
   int c = val ? *val : 0;
-  LICE_RGB2HSV(GetRValue(c),GetGValue(c),GetBValue(c),&state.h,&state.s,&state.v);
+  _RGB2HSV(GetRValue(c),GetGValue(c),GetBValue(c),&state.h,&state.s,&state.v);
   bool rv = DialogBoxParam(NULL,NULL,h,swellColorSelectProc,(LPARAM)&state)!=0;
   delete state.bm;
   if (rv && val) 
   {
-    int r,g,b;
-    LICE_HSV2RGB(state.h,state.s,state.v,&r,&g,&b);
-    *val = RGB(r,g,b);
+    *val = _HSV2RGBV(state.h,state.s,state.v);
   }
   return rv;
 #else
@@ -1385,6 +1642,7 @@ struct FontChooser_State
 };
 
 extern const char *swell_last_font_filename;
+
 const char *swell_enumFontFiles(int x);
 int swell_getLineLength(const char *buf, int *post_skip, int wrap_maxwid, HDC hdc);
 
@@ -1423,17 +1681,18 @@ static LRESULT WINAPI swellFontChooserProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
         SetWindowPos(hwnd,NULL,0,0, 550,380, SWP_NOZORDER|SWP_NOMOVE);
 
         WDL_StringKeyedArray<char> list;
-        const char *p;
+        const char *fontfile;
         int x;
-        for (x=0; (p=swell_enumFontFiles(x)); x ++)
+        for (x=0; (fontfile=swell_enumFontFiles(x)); x ++)
         {
           char buf[512];
-          lstrcpyn_safe(buf,WDL_get_filepart(p),sizeof(buf));
+          lstrcpyn_safe(buf,WDL_get_filepart(fontfile),sizeof(buf));
           char *tmp = buf;
           while (*tmp && *tmp != '-' && *tmp != '.') tmp++;
           *tmp=0;
           if (*buf) list.AddUnsorted(buf,true);
         }
+        swell_enumFontFiles(-1); // clear cache
         list.Resort();
         FontChooser_State *cs = (FontChooser_State*)lParam;
         bool italics = cs->font.lfItalic!=0;
@@ -1453,11 +1712,21 @@ static LRESULT WINAPI swellFontChooserProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
             {
               // if this is an extension of the last one, skip
               const char *trail = p+ll;
-              while (*trail)
+              if (strlen(trail)<=2)
+              {
+                for (int y=0;y<2;y++)
+                {
+                  char c = *trail;
+                  if (c>0) c=toupper(c);
+                  if (c == 'B' || c == 'I' || c == 'L') trail++;
+                }
+              }
+              else while (*trail)
               {
                 if (!strnicmp(trail,"Bold",4)) trail+=4;
                 else if (!strnicmp(trail,"Light",5)) trail+=5;
                 else if (!strnicmp(trail,"Italic",6)) trail+=6;
+                else if (!strnicmp(trail,"Oblique",7)) trail+=7;
                 else break;
               }
               if (!*trail) continue;
@@ -1490,7 +1759,19 @@ static LRESULT WINAPI swellFontChooserProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 
           HGDIOBJ oldFont = SelectObject(di->hDC,font);
           DrawText(di->hDC,buf,-1,&di->rcItem,DT_VCENTER|DT_LEFT|DT_NOPREFIX);
+          wchar_t tmp[] = {'a','A','z','Z'};
+          unsigned short ind[4];
+          GetGlyphIndicesW(di->hDC,tmp,4,ind,0);
           SelectObject(di->hDC,oldFont);
+
+          int x;
+          for (x=0;x<4 && ind[x]==0xffff;x++);
+          if (x==4)
+          {
+            RECT r = di->rcItem;
+            r.right-=4;
+            DrawText(di->hDC,buf,-1,&r,DT_VCENTER|DT_RIGHT|DT_NOPREFIX);
+          }
           DeleteObject(font);
 
         }
@@ -1515,22 +1796,26 @@ static LRESULT WINAPI swellFontChooserProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
           r.top = r.bottom - ph;
 
           HFONT f = CreateFontIndirect(&cs->font);
+
           HBRUSH br = CreateSolidBrush(RGB(255,255,255));
           FillRect(ps.hdc,&r,br);
           DeleteObject(br);
           SetTextColor(ps.hdc,RGB(0,0,0));
           SetBkMode(ps.hdc,TRANSPARENT);
+          r.right-=4;
+          r.left+=4;
           if (swell_last_font_filename)
           {
-            RECT r2=r;
-            r2.right-=4;
-            r.bottom -= DrawText(ps.hdc,swell_last_font_filename,-1,&r2,DT_BOTTOM|DT_NOPREFIX|DT_SINGLELINE|DT_RIGHT);
+            r.bottom -= DrawText(ps.hdc,swell_last_font_filename,-1,&r,DT_BOTTOM|DT_NOPREFIX|DT_SINGLELINE|DT_RIGHT);
           }
 
           HGDIOBJ oldFont = SelectObject(ps.hdc,f);
 
+          extern const char *g_swell_fontpangram;
+          const char *str = g_swell_fontpangram;
+          //
           // thanks, http://dailypangram.tumblr.com/ :)
-          const char *str = "Strangely, aerobic exercise doesn’t quite work with improvised free jazz.";
+          if (!str) str = "Strangely, aerobic exercise doesn’t quite work with improvised free jazz.";
 
           while (*str)
           {

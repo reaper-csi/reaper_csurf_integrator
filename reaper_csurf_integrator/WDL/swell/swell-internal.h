@@ -1,3 +1,23 @@
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
+
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+*/
+  
 #ifndef _SWELL_INTERNAL_H_
 #define _SWELL_INTERNAL_H_
 
@@ -279,6 +299,28 @@ typedef struct WindowPropRec
   char m_allow_nomiddleman;
   id m_lastTopLevelOwner; // save a copy of the owner, if any
   id m_access_cacheptrs[6];
+  const char *m_classname;
+
+#ifndef SWELL_NO_METAL
+  char m_use_metal; // 1=normal mode, 2=full pipeline (GetDC() etc support). -1 is for non-metal async layered mode. -2 for non-metal non-async layered
+
+  // metal state (if used)
+  char m_metal_dc_dirty;  // used to track state during paint or getdc/releasedc. set to 1 if dirty, 2 if GetDC() but no write yet
+  char m_metal_gravity; // &1=resizing left, &2=resizing top
+  bool m_metal_retina; // last-retina-state, triggered to true by StretchBlt() with a 2:1 ratio
+
+  bool m_metal_in_needref_list;
+  RECT m_metal_in_needref_rect; 
+  NSRect m_metal_lastframe;
+
+  id m_metal_texture; // id<MTLTexture> -- owned if in full pipeline mode, otherwise reference to m_metal_drawable
+  id m_metal_pipelineState; // id<MTLRenderPipelineState> -- only used in full pipeline mode
+  id m_metal_commandQueue; // id<MTLCommandQueue> -- only used in full pipeline mode
+  id m_metal_drawable; // id<CAMetalDrawable> -- only used in normal mode
+  id m_metal_device; // id<MTLDevice> -- set to last-used-device
+  DWORD m_metal_device_lastchkt;
+#endif
+
 }
 - (id)initChild:(SWELL_DialogResourceIndex *)resstate Parent:(NSView *)parent dlgProc:(DLGPROC)dlgproc Param:(LPARAM)par;
 - (LRESULT)onSwellMessage:(UINT)msg p1:(WPARAM)wParam p2:(LPARAM)lParam;
@@ -310,7 +352,9 @@ typedef struct WindowPropRec
 -(int)swellEnumProps:(PROPENUMPROCEX)proc lp:(LPARAM)lParam;
 -(void *)swellGetProp:(const char *)name wantRemove:(BOOL)rem;
 -(int)swellSetProp:(const char *)name value:(void *)val ;
-
+-(NSOpenGLContext *)swellGetGLContext;
+- (void) setEnabledSwellNoFocus;
+-(const char *)getSwellClass;
 
 // NSAccessibility
 
@@ -339,8 +383,10 @@ typedef struct WindowPropRec
 - (id)accessibilityFocusedUIElement;
 
 
-
-
+#ifndef SWELL_NO_METAL
+-(BOOL) swellWantsMetal;
+-(void) swellDrawMetal:(const RECT *)forRect;
+#endif
 @end
 
 @interface SWELL_ModelessWindow : NSWindow
@@ -386,6 +432,13 @@ typedef struct WindowPropRec
 -(int)swellGetModalRetVal;
 -(bool)swellHasModalRetVal;
 @end
+
+#ifndef SWELL_NO_METAL
+void swell_removeMetalDirty(SWELL_hwndChild *slf);
+void swell_updateAllMetalDirty(void);
+void swell_addMetalDirty(SWELL_hwndChild *slf, const RECT *r, bool isReleaseDC=false);
+HDC SWELL_CreateMetalDC(SWELL_hwndChild *);
+#endif
 
 
 @interface SWELL_hwndCarbonHost : SWELL_hwndChild
@@ -451,14 +504,12 @@ typedef struct WindowPropRec
   // 10.4 SDK
   #define SWELL_NO_CORETEXT
   #define SWELL_ATSUI_TEXT_SUPPORT
-#else
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
-#ifndef __LP64__
-#define SWELL_ATSUI_TEXT_SUPPORT
-#endif
-#endif
-
+#elif !defined(__LP64__)
+  #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_5
+    #ifndef MAC_OS_X_VERSION_10_9 // not sure when ATSUI was dropped completely, definitely gone in 10.13!
+      #define SWELL_ATSUI_TEXT_SUPPORT
+    #endif
+  #endif
 #endif
 
 struct HGDIOBJ__
@@ -470,6 +521,7 @@ struct HGDIOBJ__
   // used by pen/brush
   CGColorRef color;
   int wid;
+  int color_int;
   NSImage *bitmapptr;  
   
   NSMutableDictionary *__old_fontdict; // unused, for ABI compat
@@ -489,6 +541,9 @@ struct HGDIOBJ__
 struct HDC__ {
   CGContextRef ctx; 
   void *ownedData; // always use via SWELL_GetContextFrameBuffer() (which performs necessary alignment)
+#ifndef SWELL_NO_METAL
+  void *metal_ctx; // SWELL_hwndChild
+#endif
   HGDIOBJ__ *curpen;
   HGDIOBJ__ *curbrush;
   HGDIOBJ__ *curfont;
@@ -559,7 +614,29 @@ struct HDC__ {
 #endif
 
 
+#define NSPOINT_TO_INTS(pt) (int)floor((pt).x+0.5), (int)floor((pt).y+0.5)
+
+#ifdef __OBJC__
+static void NSPOINT_TO_POINT(POINT *p, const NSPoint &pt)
+{
+  p->x = (int)floor(pt.x+0.5);
+  p->y = (int)floor((pt).y+0.5);
+}
+static void NSRECT_TO_RECT(RECT *r, const NSRect &tr)
+{
+  r->left=(int)floor(tr.origin.x+0.5);
+  r->right=(int)floor(tr.origin.x+tr.size.width+0.5);
+  r->top=(int)floor(tr.origin.y+0.5);
+  r->bottom=(int)floor(tr.origin.y+tr.size.height+0.5);
+}
+#endif
+
 #elif defined(SWELL_TARGET_GDK)
+
+
+#ifdef SWELL_SUPPORT_GTK
+#include <gtk/gtk.h>
+#endif
 
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
@@ -588,7 +665,6 @@ struct HTREEITEM__
   WDL_PtrList<HTREEITEM__> m_children; // only used in tree mode
   LPARAM m_param;
 };
-
 
 
 #ifndef SWELL_TARGET_OSX 
@@ -642,14 +718,15 @@ struct HWND__
   bool m_enabled;
   bool m_wantfocus;
 
-  int m_refcnt; 
-
   bool m_israised;
   bool m_has_had_position;
-  bool m_oswindow_needshow;
   bool m_oswindow_fullscreen;
 
+  int m_refcnt; 
+  int m_oswindow_private; // private state for generic-gtk or whatever
+
   HMENU m_menu;
+  HFONT m_font;
 
   WDL_StringKeyedArray<void *> m_props;
 
@@ -723,6 +800,50 @@ struct HDC__ {
   bool _infreelist;
 };
 
+HWND DialogBoxIsActive(void);
+void DestroyPopupMenus(void);
+HWND ChildWindowFromPoint(HWND h, POINT p);
+HWND GetFocusIncludeMenus();
+
+void SWELL_RunEvents();
+
+bool swell_isOSwindowmenu(SWELL_OSWINDOW osw);
+
+bool swell_is_virtkey_char(int c);
+
+void swell_on_toplevel_raise(SWELL_OSWINDOW wnd); // called by swell-generic-gdk when a window is focused
+
+HWND swell_oswindow_to_hwnd(SWELL_OSWINDOW w);
+void swell_oswindow_focus(HWND hwnd);
+void swell_oswindow_update_style(HWND hwnd, LONG oldstyle);
+void swell_oswindow_update_enable(HWND hwnd);
+void swell_oswindow_update_text(HWND hwnd);
+void swell_oswindow_begin_resize(SWELL_OSWINDOW wnd);
+void swell_oswindow_resize(SWELL_OSWINDOW wnd, int reposflag, RECT f);
+void swell_oswindow_postresize(HWND hwnd, RECT f);
+void swell_oswindow_invalidate(HWND hwnd, const RECT *r);
+void swell_oswindow_destroy(HWND hwnd);
+void swell_oswindow_manage(HWND hwnd, bool wantfocus);
+void swell_oswindow_updatetoscreen(HWND hwnd, RECT *rect);
+HWND swell_window_wants_all_input(); // window with an active drag of menubar will have this set, to route all mouse events to nonclient area of window
+int swell_delegate_menu_message(HWND src, LPARAM lParam, int msg, bool screencoords); // menubar/menus delegate to submenus during drag.
+
+void swell_dlg_destroyspare();
+
+extern bool swell_is_likely_capslock; // only used when processing dit events for a-zA-Z
+extern const char *g_swell_appname;
+extern SWELL_OSWINDOW SWELL_focused_oswindow; // top level window which has focus (might not map to a HWND__!)
+extern HWND swell_captured_window;
+extern HWND SWELL_topwindows; // front of list = most recently active
+extern bool swell_app_is_inactive;
+
+#ifdef _DEBUG
+void VALIDATE_HWND_LIST(HWND list, HWND par);
+#else
+#define VALIDATE_HWND_LIST(list, par) do { } while (0)
+#endif
+
+
 #endif // !OSX
 
 HDC SWELL_CreateGfxContext(void *);
@@ -741,8 +862,10 @@ typedef struct
 #endif
   int refcnt;
 
+#ifndef SWELL_EXTRA_MINIMAL
   int (*SWELL_dllMain)(HINSTANCE, DWORD,LPVOID); //last parm=SWELLAPI_GetFunc
   BOOL (*dllMain)(HINSTANCE, DWORD, LPVOID);
+#endif
   void *lastSymbolRequested;
 } SWELL_HINSTANCE;
 
@@ -756,6 +879,7 @@ enum
   INTERNAL_OBJECT_EXTERNALSOCKET, // socket not owned by us
   INTERNAL_OBJECT_SOCKETEVENT,
   INTERNAL_OBJECT_NSTASK, 
+  INTERNAL_OBJECT_PID,
   INTERNAL_OBJECT_END
 };
 
@@ -810,6 +934,12 @@ typedef struct
   void *task; 
 } SWELL_InternalObjectHeader_NSTask;
 
+typedef struct
+{
+  SWELL_InternalObjectHeader hdr;
+  int pid;
+  int done, result;
+} SWELL_InternalObjectHeader_PID;
 
 bool IsRightClickEmulateEnabled();
 
@@ -923,6 +1053,7 @@ static void __listview_mergesort_internal(void *base, size_t nmemb, size_t size,
   f(menubar_spacing_width, 8) \
   f(menubar_margin_width, 6) \
   f(scrollbar_width, 14) \
+  f(smscrollbar_width, 16) \
   f(scrollbar_min_thumb_height, 4) \
   f(combo_height, 20) \
 
@@ -944,8 +1075,8 @@ static void __listview_mergesort_internal(void *base, size_t nmemb, size_t size,
   f(checkbox_inter, RGB(192,192,192)) \
   f(checkbox_bg, RGB(255,255,255)) \
   f(scrollbar,RGB(32,32,32)) \
-  f(scrollbar_fg, RGB(64,64,64)) \
-  f(scrollbar_bg, RGB(192,192,192)) \
+  f(scrollbar_fg, RGB(160,160,160)) \
+  f(scrollbar_bg, RGB(224,224,224)) \
   f(edit_cursor,RGB(0,128,255)) \
   f(edit_bg,RGB(255,255,255)) \
   f(edit_bg_disabled,RGB(224,224,224)) \
@@ -1008,7 +1139,7 @@ static void __listview_mergesort_internal(void *base, size_t nmemb, size_t size,
   f(group_text,RGB(0,0,0)) \
   fd(group_shadow, RGB(96,96,96), _3dshadow) \
   fd(group_hilight, RGB(224,224,224), _3dhilight) \
-  f(focus_hilight, RGB(192,192,255)) \
+  f(focus_hilight, RGB(140,190,233)) \
 
   
 
@@ -1021,6 +1152,7 @@ SWELL_GENERIC_THEMEDEFS(__def_theme_ent,__def_theme_ent_fb)
 };
 
 #define SWELL_UI_SCALE(x) (((x)*g_swell_ui_scale)/256)
+void swell_scaling_init(bool no_auto_hidpi);
 extern int g_swell_ui_scale;
 extern swell_colortheme g_swell_ctheme;
 extern const char *g_swell_deffont_face;

@@ -54,6 +54,7 @@ public:
   virtual int Available()=0;
   virtual float *Get()=0;
   virtual void Skip(int amt)=0;
+  virtual int GenerateLappingSamples()=0;
 };
 
 class VorbisEncoderInterface
@@ -74,12 +75,12 @@ public:
 
 #include "../WDL/queue.h"
 
+
 class VorbisDecoder : public VorbisDecoderInterface
 {
   public:
     VorbisDecoder()
     {
-      m_samples_used=0;
     	packets=0;
 	    memset(&oy,0,sizeof(oy));
 	    memset(&os,0,sizeof(os));
@@ -153,18 +154,12 @@ class VorbisDecoder : public VorbisDecoderInterface
 					  {
 						  int n,c;
 
-              int newsize=(m_samples_used+(samples+4096)*vi.channels)*sizeof(float);
 
-              if (m_samples.GetSize() < newsize) m_samples.Resize(newsize+32768);
+              float *bufmem = m_buf.Add(NULL,samples*vi.channels);
 
-              float *bufmem = (float *)m_samples.Get();
-
-						  for(n=0;n<samples;n++)
+						  if (bufmem) for(n=0;n<samples;n++)
 						  {
-							  for(c=0;c<vi.channels;c++)
-							  {
-								  bufmem[m_samples_used++]=pcm[c][n];
-							  }							
+							  for(c=0;c<vi.channels;c++) *bufmem++=pcm[c][n];
 						  }
 						  vorbis_synthesis_read(&vd,samples);
 					  }
@@ -178,26 +173,30 @@ class VorbisDecoder : public VorbisDecoderInterface
 			  }
 		  }
     }
-    int Available()
-    {
-      return m_samples_used;
-    }
-    float *Get()
-    {
-      return (float *)m_samples.Get();
-    }
+    int Available() { return m_buf.Available(); }
+    float *Get() { return m_buf.Get(); }
+
     void Skip(int amt)
     {
-      float *sptr=(float *)m_samples.Get();
-      m_samples_used-=amt;
-      if (m_samples_used>0)
-        memcpy(sptr,sptr+amt,m_samples_used*sizeof(float));
-      else m_samples_used=0;
+      m_buf.Advance(amt);
+      m_buf.Compact();
+    }
+    int GenerateLappingSamples()
+    {
+      float ** pcm;
+      int samples = vorbis_synthesis_lapout(&vd,&pcm);
+      if (samples <= 0) return 0;
+      float *bufmem = m_buf.Add(NULL,samples*vi.channels);
+      if (bufmem) for(int n=0;n<samples;n++)
+      {
+        for (int c=0;c<vi.channels;c++) *bufmem++=pcm[c][n];
+      }
+      return samples;
     }
 
     void Reset()
     {
-      m_samples_used=0;
+      m_buf.Clear();
 
 			vorbis_block_clear(&vb);
 			vorbis_dsp_clear(&vd);
@@ -210,11 +209,10 @@ class VorbisDecoder : public VorbisDecoderInterface
 
   private:
 
-    WDL_HeapBuf m_samples; // we let the size get as big as it needs to, so we don't worry about tons of mallocs/etc
+    WDL_TypedQueue<float> m_buf;
 
     int m_err;
     int packets;
-    int m_samples_used;
 
     ogg_sync_state   oy; /* sync and verify incoming physical bitstream */
     ogg_stream_state os; /* take physical pages, weld into a logical

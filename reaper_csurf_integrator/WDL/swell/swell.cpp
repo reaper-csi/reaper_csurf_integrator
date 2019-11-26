@@ -1,6 +1,5 @@
-
-/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Losers (who use OS X))
-   Copyright (C) 2006-2007, Cockos, Inc.
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -32,10 +31,10 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/fcntl.h>
+#include <sys/resource.h>
 
 
 #include "swell-internal.h"
-
 
 #ifdef SWELL_TARGET_OSX
 #include <Carbon/Carbon.h>
@@ -44,6 +43,8 @@
 #ifdef __APPLE__
 #include <sched.h>
 #include <sys/errno.h>
+#else
+#include <sys/wait.h>
 #endif
 
 #ifdef __linux__
@@ -56,6 +57,7 @@
 #include "../wdlatomic.h"
 #include "../mutex.h"
 #include "../assocarray.h"
+#include "../wdlcstring.h"
 
 void Sleep(int ms)
 {
@@ -64,17 +66,25 @@ void Sleep(int ms)
 
 DWORD GetTickCount()
 {
+#ifdef __APPLE__
+  // could switch to mach_getabsolutetime() maybe
   struct timeval tm={0,};
   gettimeofday(&tm,NULL);
-  return tm.tv_sec*1000 + tm.tv_usec/1000;
+  return (DWORD) (tm.tv_sec*1000 + tm.tv_usec/1000);
+#else
+  struct timespec ts={0,};
+  clock_gettime(CLOCK_MONOTONIC,&ts);
+  return (DWORD) (ts.tv_sec*1000 + ts.tv_nsec/1000000);
+#endif
 }
 
 
 static void intToFileTime(time_t t, FILETIME *out)
 {
+  // see WDL_DirScan::GetCurrentLastWriteTime and similar
   unsigned long long a=(unsigned long long)t; // seconds since january 1st, 1970
-  a+=(60*60*24*(365*4+1)/4)*(long long)(1970-1601); // this is approximate
-  a*=1000*10000; // seconds to 1/10th microseconds (100 nanoseconds)
+  a += 11644473600ull; // 1601-1970
+  a *= 10000000; // seconds to 1/10th microseconds (100 nanoseconds)
   out->dwLowDateTime=a & 0xffffffff;
   out->dwHighDateTime=a>>32;
 }
@@ -128,6 +138,20 @@ unsigned int  _controlfp(unsigned int flag, unsigned int mask)
 #endif
 }
 
+#ifndef SWELL_TARGET_OSX
+static WDL_PtrList<void> s_zombie_handles;
+void swell_cleanupZombies()
+{
+  int x = s_zombie_handles.GetSize();
+  while (--x>=0)
+  {
+    HANDLE h = s_zombie_handles.Get(x);
+    if (WaitForSingleObject(h,0) != WAIT_TIMEOUT)
+      s_zombie_handles.Delete(x,free);
+  }
+}
+
+#endif
 
 BOOL CloseHandle(HANDLE hand)
 {
@@ -174,6 +198,15 @@ BOOL CloseHandle(HANDLE hand)
           SWELL_InternalObjectHeader_NSTask *nst = (SWELL_InternalObjectHeader_NSTask*)hdr;
           extern void SWELL_ReleaseNSTask(void *);
           if (nst->task) SWELL_ReleaseNSTask(nst->task);
+        }
+      break;
+#else
+      case INTERNAL_OBJECT_PID:
+        swell_cleanupZombies();
+        if (WaitForSingleObject(hand,0)==WAIT_TIMEOUT)
+        {
+          s_zombie_handles.Add(hand);
+          return TRUE;
         }
       break;
 #endif
@@ -261,6 +294,43 @@ DWORD WaitForSingleObject(HANDLE hand, DWORD msTO)
         if (nst->task) return SWELL_WaitForNSTask(nst->task,msTO);
       }
     break;
+#else
+    case INTERNAL_OBJECT_PID:
+      {
+        SWELL_InternalObjectHeader_PID *pb = (SWELL_InternalObjectHeader_PID*)hdr;
+        if (pb->pid) 
+        {
+          if (pb->done) return WAIT_OBJECT_0;
+
+          int wstatus=0;
+          if (msTO == INFINITE || msTO == 0)
+          {
+            pid_t v = waitpid(pb->pid,&wstatus,msTO == INFINITE ? 0 : WNOHANG);
+            if (v == 0) return WAIT_TIMEOUT;
+            if (v < 0) return WAIT_FAILED;
+          }
+          else
+          {
+            DWORD until = GetTickCount() + msTO;
+            for (;;)
+            {
+              pid_t v = waitpid(pb->pid,&wstatus,WNOHANG);
+              if (v > 0) break;
+
+              if (v < 0) return WAIT_FAILED;
+              if (GetTickCount() > until) return WAIT_TIMEOUT;
+              Sleep(1);
+            }
+          }
+          if (!pb->done)
+          {
+            pb->done=1;
+            pb->result = WEXITSTATUS(wstatus);
+          }
+          return WAIT_OBJECT_0;
+        }
+      }
+    break;
 #endif
     case INTERNAL_OBJECT_THREAD:
       {
@@ -337,11 +407,10 @@ again:
               break;
             }
 #else
-            struct timeval tm={0,};
-            gettimeofday(&tm,NULL);
             struct timespec ts;
-            ts.tv_sec = msTO/1000 + tm.tv_sec;
-            ts.tv_nsec = (tm.tv_usec + (msTO%1000)*1000) * 1000;
+            clock_gettime(CLOCK_MONOTONIC,&ts);
+            ts.tv_sec += msTO/1000;
+            ts.tv_nsec += (msTO%1000)*1000000;
             if (ts.tv_nsec>=1000000000) 
             {
               int n = ts.tv_nsec/1000000000;
@@ -400,8 +469,23 @@ HANDLE CreateEvent(void *SA, BOOL manualReset, BOOL initialSig, const char *igno
   buf->isSignal = !!initialSig;
   buf->isManualReset = !!manualReset;
   
-  pthread_mutex_init(&buf->mutex,NULL);
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+#ifdef __linux__
+  pthread_mutexattr_setprotocol(&attr,PTHREAD_PRIO_INHERIT);
+#endif
+  pthread_mutex_init(&buf->mutex,&attr);
+  pthread_mutexattr_destroy(&attr);
+
+#ifndef __APPLE__
+  pthread_condattr_t cattr;
+  pthread_condattr_init(&cattr);
+  pthread_condattr_setclock(&cattr,CLOCK_MONOTONIC);
+  pthread_cond_init(&buf->cond,&cattr);
+  pthread_condattr_destroy(&cattr);
+#else
   pthread_cond_init(&buf->cond,NULL);
+#endif
   
   return (HANDLE)buf;
 }
@@ -469,6 +553,8 @@ BOOL SetThreadPriority(HANDLE hand, int prio)
       {
         lb--;
         if (prio < THREAD_PRIORITY_ABOVE_NORMAL) lb--;
+
+        if (lb > 40) lb = 40; // if not HIGHEST or higher, do not permit RT priority of more than 40
       }
     }
     param.sched_priority = lb < 1 ? 1 : lb;
@@ -551,67 +637,6 @@ BOOL ResetEvent(HANDLE hand)
   return FALSE;
 }
 
-HANDLE CreateFile( const char * lpFileName,
-                  DWORD dwDesiredAccess,
-                  DWORD dwShareMode,
-                  void *lpSecurityAttributes,
-                  DWORD dwCreationDisposition,
-                  DWORD dwFlagsAndAttributes,
-                  HANDLE hTemplateFile)
-{
-  return 0;// INVALID_HANDLE_VALUE;
-}
-
-DWORD SetFilePointer(HANDLE hFile, DWORD low, DWORD *high)
-{ 
-  SWELL_InternalObjectHeader_File *file=(SWELL_InternalObjectHeader_File*)hFile;
-  if (!file || file->hdr.type != INTERNAL_OBJECT_FILE || !file->fp || (high && *high) || fseek(file->fp,low,SEEK_SET)==-1) { if (high) *high=0xffffffff; return 0xffffffff; }
-  return ftell(file->fp);
-}
-
-DWORD GetFilePointer(HANDLE hFile, DWORD *high)
-{
-  int pos;
-  SWELL_InternalObjectHeader_File *file=(SWELL_InternalObjectHeader_File*)hFile;
-  if (!file || file->hdr.type != INTERNAL_OBJECT_FILE || !file->fp || (pos=ftell(file->fp))==-1) { if (high) *high=0xffffffff; return 0xffffffff; }
-  if (high) *high=0;
-  return (DWORD)pos;
-}
-
-DWORD GetFileSize(HANDLE hFile, DWORD *high)
-{
-  SWELL_InternalObjectHeader_File *file=(SWELL_InternalObjectHeader_File*)hFile;
-  if (!file || file->hdr.type != INTERNAL_OBJECT_FILE || !file->fp) { if (high) *high=0xffffffff; return 0xffffffff; }
-  
-  int a=ftell(file->fp);
-  fseek(file->fp,0,SEEK_END);
-  int ret=ftell(file->fp);
-  fseek(file->fp,a,SEEK_SET);
-  
-  if (high) *high=ret==-1 ? 0xffffffff: 0;
-  return (DWORD)ret;
-}
-
-
-
-BOOL WriteFile(HANDLE hFile,void *buf, DWORD len, DWORD *lenOut, void *ovl)
-{
-  SWELL_InternalObjectHeader_File *file=(SWELL_InternalObjectHeader_File*)hFile;
-  if (!file || file->hdr.type != INTERNAL_OBJECT_FILE || !file->fp || !buf || !len) return FALSE;
-  int lo=fwrite(buf,1,len,file->fp);
-  if (lenOut) *lenOut = lo;
-  return !!lo;
-}
-
-BOOL ReadFile(HANDLE hFile,void *buf, DWORD len, DWORD *lenOut, void *ovl)
-{
-  SWELL_InternalObjectHeader_File *file=(SWELL_InternalObjectHeader_File*)hFile;
-  if (!file || file->hdr.type != INTERNAL_OBJECT_FILE || !file->fp || !buf || !len) return FALSE;
-  int lo=fread(buf,1,len,file->fp);
-  if (lenOut) *lenOut = lo;
-  return !!lo;
-}
-
 BOOL WinOffsetRect(LPRECT lprc, int dx, int dy)
 {
   if(!lprc) return 0;
@@ -652,10 +677,21 @@ int WinIntersectRect(RECT *out, const RECT *in1, const RECT *in2)
 }
 void WinUnionRect(RECT *out, const RECT *in1, const RECT *in2)
 {
-  out->left = wdl_min(in1->left,in2->left);
-  out->top = wdl_min(in1->top,in2->top);
-  out->right=wdl_max(in1->right,in2->right);
-  out->bottom=wdl_max(in1->bottom,in2->bottom);
+  if (in1->left == in1->right && in1->top == in1->bottom) 
+  {
+    *out = *in2;
+  }
+  else if (in2->left == in2->right && in2->top == in2->bottom) 
+  {
+    *out = *in1;
+  }
+  else
+  {
+    out->left = wdl_min(in1->left,in2->left);
+    out->top = wdl_min(in1->top,in2->top);
+    out->right=wdl_max(in1->right,in2->right);
+    out->bottom=wdl_max(in1->bottom,in2->bottom);
+  }
 }
 
 
@@ -738,6 +774,14 @@ HINSTANCE LoadLibrary(const char *fn)
 {
   return LoadLibraryGlobals(fn,false);
 }
+
+#ifndef SWELL_TARGET_OSX
+extern "C" {
+  void *SWELLAPI_GetFunc(const char *name);
+};
+#endif
+      
+
 HINSTANCE LoadLibraryGlobals(const char *fn, bool symbolsAsGlobals)
 {
   if (!fn || !*fn) return NULL;
@@ -771,7 +815,18 @@ HINSTANCE LoadLibraryGlobals(const char *fn, bool symbolsAsGlobals)
 #endif
   {
     inst=dlopen(fn,RTLD_NOW|(symbolsAsGlobals?RTLD_GLOBAL:RTLD_LOCAL));
-    if (!inst) return 0;
+    if (!inst) 
+    {
+#ifndef SWELL_TARGET_OSX
+      struct stat ss;
+      if (fn[0] == '/' && !stat(fn,&ss) && !(ss.st_mode&S_IFDIR))
+      {
+        const char *err = dlerror();
+        printf("swell: dlopen() failed: %s\n",err ? err : fn);
+      }
+#endif
+      return 0;
+    }
   }
 
   WDL_MutexLock lock(&s_libraryMutex);
@@ -787,14 +842,19 @@ HINSTANCE LoadLibraryGlobals(const char *fn, bool symbolsAsGlobals)
     rec->refcnt = 1;
     s_loadedLibs.Insert(bundleinst ? bundleinst : inst,rec);
   
+#ifndef SWELL_EXTRA_MINIMAL
     int (*SWELL_dllMain)(HINSTANCE, DWORD, LPVOID) = 0;
     BOOL (*dllMain)(HINSTANCE, DWORD, LPVOID) = 0;
     *(void **)&SWELL_dllMain = GetProcAddress(rec,"SWELL_dllMain");
     if (SWELL_dllMain)
     {
-      void *SWELLAPI_GetFunc(const char *name);
-      
-      if (!SWELL_dllMain(rec,DLL_PROCESS_ATTACH,(void*)NULL)) // todo: eventually pass SWELLAPI_GetFunc, maybe?
+      if (!SWELL_dllMain(rec,DLL_PROCESS_ATTACH,
+#ifdef SWELL_TARGET_OSX
+            NULL
+#else
+            (void*)SWELLAPI_GetFunc
+#endif
+            ))
       {
         FreeLibrary(rec);
         return 0;
@@ -812,6 +872,7 @@ HINSTANCE LoadLibraryGlobals(const char *fn, bool symbolsAsGlobals)
     }
     rec->SWELL_dllMain = SWELL_dllMain;
     rec->dllMain = dllMain;
+#endif
   }
   else rec->refcnt++;
 
@@ -857,11 +918,13 @@ BOOL FreeLibrary(HINSTANCE hInst)
     s_loadedLibs.Delete(rec->instptr); 
 #endif
     
+#ifndef SWELL_EXTRA_MINIMAL
     if (rec->SWELL_dllMain) 
     {
       rec->SWELL_dllMain(rec,DLL_PROCESS_DETACH,NULL);
       if (rec->dllMain) rec->dllMain(rec,DLL_PROCESS_DETACH,NULL);
     }
+#endif
   }
 
 #ifdef SWELL_TARGET_OSX
@@ -918,16 +981,24 @@ DWORD GetModuleFileName(HINSTANCE hInst, char *fn, DWORD nSize)
         CFRelease(url);
       }
     }
-    return strlen(fn);
+    return (DWORD)strlen(fn);
   }
 #elif defined(__linux__)
   if (!instptr) // get exe file name
   {
-    char tmp[64];
-    sprintf(tmp,"/proc/%d/exe",getpid());
-    int sz=readlink(tmp,fn,nSize);
-    if (sz<0)sz=0;
-    else if ((DWORD)sz>=nSize)sz=nSize-1;
+    int sz=readlink("/proc/self/exe",fn,nSize);
+    if (sz<1)
+    {
+       static char tmp;
+       // this will likely not work if the program was launched with a relative path 
+       // and the cwd has changed, but give it a try anyway
+       Dl_info inf={0,};
+       if (dladdr(&tmp,&inf) && inf.dli_fname)
+         sz = (int) strlen(inf.dli_fname);
+       else
+         sz=0;
+    }
+    if ((DWORD)sz>=nSize)sz=nSize-1;
     fn[sz]=0;
     return sz;
   }
@@ -940,7 +1011,7 @@ DWORD GetModuleFileName(HINSTANCE hInst, char *fn, DWORD nSize)
     if (inf.dli_fname)
     {
       lstrcpyn(fn,inf.dli_fname,nSize);
-      return strlen(fn);
+      return (DWORD)strlen(fn);
     }
   }
   return 0;
@@ -996,6 +1067,7 @@ void GetTempPath(int bufsz, char *buf)
 
 const char *g_swell_appname;
 char *g_swell_defini;
+const char *g_swell_fontpangram;
 
 void *SWELL_ExtendedAPI(const char *key, void *v)
 {
@@ -1005,17 +1077,51 @@ void *SWELL_ExtendedAPI(const char *key, void *v)
     free(g_swell_defini);
     g_swell_defini = v ? strdup((const char *)v) : NULL;
 
+    #ifndef SWELL_TARGET_OSX
+    char buf[1024];
+    GetPrivateProfileString(".swell","max_open_files","",buf,sizeof(buf),"");
+    if (!buf[0])
+      WritePrivateProfileString(".swell","max_open_files","auto // (default is min of default or 16384)","");
+
+    struct rlimit rl = {0,};
+    getrlimit(RLIMIT_NOFILE,&rl); 
+
+    const int orig_n = atoi(buf);
+    rlim_t n = orig_n > 0 ? (rlim_t) orig_n : 16384;
+    if (n > rl.rlim_max) n = rl.rlim_max;
+    if (orig_n > 0 ? (n != rl.rlim_cur) : (n > rl.rlim_cur))
+    {
+      rl.rlim_cur = n;
+      setrlimit(RLIMIT_NOFILE,&rl); 
+      #ifdef _DEBUG
+        getrlimit(RLIMIT_NOFILE,&rl); 
+        printf("applied rlimit %d/%d\n",(int)rl.rlim_cur,(int)rl.rlim_max);
+      #endif
+    }
+    #endif
+
     #ifdef SWELL_TARGET_GDK
-      char buf[128];
+      if (g_swell_defini)
+      {
+        void swell_load_color_theme(const char *fn);
+        lstrcpyn_safe(buf,g_swell_defini,sizeof(buf));
+        WDL_remove_filepart(buf);
+        if (buf[0])
+        {
+          lstrcatn(buf,"/libSwell.colortheme",sizeof(buf));
+          swell_load_color_theme(buf);
+          WDL_remove_fileext(buf);
+          lstrcatn(buf,"-user.colortheme",sizeof(buf));
+          swell_load_color_theme(buf);
+        }
+      }
+
       GetPrivateProfileString(".swell","ui_scale","",buf,sizeof(buf),"");
       if (buf[0])
       {
         double sc = atof(buf);
         if (sc > 0.01 && sc < 10.0 && sc != 1.0)
         {
-          #define __scale(x,c) g_swell_ctheme.x = (int) (g_swell_ctheme.x * sc + 0.5);
-            SWELL_GENERIC_THEMESIZEDEFS(__scale,__scale)
-          #undef __scale
           g_swell_ui_scale = (int) (256 * sc + 0.5);
         }
       }
@@ -1023,13 +1129,52 @@ void *SWELL_ExtendedAPI(const char *key, void *v)
       {
         WritePrivateProfileString(".swell","ui_scale","1.0 // scales the sizes in libSwell.colortheme","");
       }
+
+      bool no_auto_hidpi=false;
+      GetPrivateProfileString(".swell","ui_scale_auto","",buf,sizeof(buf),"");
+      if (buf[0])
+      {
+        const char *p = buf;
+        while (*p == ' ') p++;
+        if (*p == '0' && atoi(p) == 0)
+          no_auto_hidpi=true;
+      }
+      else
+      {
+        WritePrivateProfileString(".swell","ui_scale_auto","1 // set to 0 to disable system DPI detection (only used when ui_scale=1)","");
+      }
+     
+      swell_scaling_init(no_auto_hidpi);
+
+      if (g_swell_ui_scale != 256)
+      {
+        const double sc = g_swell_ui_scale * (1.0 / 256.0);
+        if (sc>0) g_swell_ctheme.default_font_size--;
+        #define __scale(x,c) g_swell_ctheme.x = (int) (g_swell_ctheme.x * sc + 0.5);
+          SWELL_GENERIC_THEMESIZEDEFS(__scale,__scale)
+        #undef __scale
+        if (sc>0) g_swell_ctheme.default_font_size++;
+      }
     #endif
   }
+  else if (!strcmp(key,"FONTPANGRAM"))
+  {
+    g_swell_fontpangram = (const char *)v;
+  }
 #ifndef SWELL_TARGET_OSX
+#ifndef SWELL_EXTRA_MINIMAL
   else if (!strcmp(key,"FULLSCREEN") || !strcmp(key,"-FULLSCREEN"))
   {
     int swell_fullscreenWindow(HWND, BOOL);
     return (void*)(INT_PTR)swell_fullscreenWindow((HWND)v, key[0] != '-');
+  }
+#endif
+#endif
+#ifdef SWELL_TARGET_GDK
+  else if (!strcmp(key,"activate_app"))
+  {
+    void swell_gdk_reactivate_app(void);
+    swell_gdk_reactivate_app();
   }
 #endif
   return NULL;
