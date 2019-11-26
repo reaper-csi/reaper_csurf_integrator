@@ -1,3 +1,23 @@
+/* Cockos SWELL (Simple/Small Win32 Emulation Layer for Linux/OSX)
+   Copyright (C) 2006 and later, Cockos, Inc.
+
+    This software is provided 'as-is', without any express or implied
+    warranty.  In no event will the authors be held liable for any damages
+    arising from the use of this software.
+
+    Permission is granted to anyone to use this software for any purpose,
+    including commercial applications, and to alter it and redistribute it
+    freely, subject to the following restrictions:
+
+    1. The origin of this software must not be misrepresented; you must not
+       claim that you wrote the original software. If you use this software
+       in a product, an acknowledgment in the product documentation would be
+       appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be
+       misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+*/
+  
 #ifdef SWELL_PROVIDED_BY_APP
 
 #import <Cocoa/Cocoa.h>
@@ -35,10 +55,11 @@ public:
   SwellAPPInitializer()
   {
     void *(*SWELLAPI_GetFunc)(const char *name)=NULL;
+    void *(*send_msg)(id, SEL) = (void *(*)(id, SEL))objc_msgSend;
     
     id del = [NSApp delegate];
     if (del && [del respondsToSelector:@selector(swellGetAPPAPIFunc)])
-      *(void **)&SWELLAPI_GetFunc = (__bridge void *)objc_msgSend(del,@selector(swellGetAPPAPIFunc));
+      *(void **)&SWELLAPI_GetFunc = send_msg(del,@selector(swellGetAPPAPIFunc));
       
     if (SWELLAPI_GetFunc && SWELLAPI_GetFunc(NULL)!=(void*)0x100) SWELLAPI_GetFunc=0;
       

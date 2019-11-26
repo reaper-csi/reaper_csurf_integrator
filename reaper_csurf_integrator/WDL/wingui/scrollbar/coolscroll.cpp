@@ -266,8 +266,8 @@ static wdlscrollbar_themestate *GetThemeForScrollWnd(const SCROLLWND *sw)
 //
 
 static RECT rcThumbBounds;		//area that the scroll thumb can travel in
-static int  nThumbSize;			//(pixels)
-static int  nThumbPos;			//(pixels)
+static int  g_nThumbSize;			//(pixels)
+static int  g_nThumbPos;			//(pixels)
 static int  nThumbMouseOffset;	//(pixels)
 static int  nLastPos = -1;		//(scrollbar units)
 static int  nThumbPos0;			//(pixels) initial thumb position
@@ -339,16 +339,26 @@ static BOOL IsScrollbarActive(SCROLLBAR *sb)
 }
 
 #ifdef __APPLE__
+static void ReleaseDCFlush(HWND hwnd, HDC hdc)
+{
+  ReleaseDC(hwnd,hdc);
+  SWELL_FlushWindow(hwnd);
+}
+#define ReleaseDC(hwnd,hdc) ReleaseDCFlush(hwnd,hdc)
+#endif
+
+#ifndef _WIN32
 static void GET_WINDOW_RECT(HWND hwnd, RECT *r)
 {
   GetWindowContentViewRect(hwnd,r);
+#ifdef __APPLE__
   if (r->top>r->bottom) 
   { 
     int tmp = r->top;
     r->top = r->bottom;
     r->bottom = tmp;
   }
-
+#endif
 }
 #else
 #define GET_WINDOW_RECT(hwnd, r) GetWindowRect(hwnd,r)
@@ -1470,7 +1480,13 @@ static LRESULT NCDrawHScrollbar(SCROLLBAR *sb, HWND hwnd, HDC hdc, const RECT *r
 
       if(theme->bmp && *theme->bmp)
       {
-        drawSkinThumb(hdc, thumb, sw->uHitTestPortion == HTSCROLL_THUMB, 0, sb->nBarType == SB_VERT, rect, sb,sw,theme);
+        int is_tracking = sw->fThumbTracking &&
+                          sw->uCurrentScrollbar == sb->nBarType &&
+                          GetCapture()==hwnd;
+
+        drawSkinThumb(hdc, thumb, 
+            !is_tracking && sw->uHitTestPortion == HTSCROLL_THUMB, is_tracking, 
+            sb->nBarType == SB_VERT, rect, sb,sw,theme);
       }
       else
       {
@@ -2224,7 +2240,7 @@ static LRESULT NCLButtonDown(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lPa
     {
 
 		  RotateRect0(sb, &rect);
-		  CalcThumbSize(sb, &rect, &nThumbSize, &nThumbPos);
+		  CalcThumbSize(sb, &rect, &g_nThumbSize, &g_nThumbPos);
 		  RotateRect0(sb, &rect);
 		  
 		  //remember the bounding rectangle of the scrollbar work area
@@ -2234,12 +2250,12 @@ static LRESULT NCLButtonDown(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lPa
 		  sb->scrollInfo.nTrackPos = sb->scrollInfo.nPos;
 		  
 		  if(wParam == HTVSCROLL) 
-			  nThumbMouseOffset = pt.y - nThumbPos;
+			  nThumbMouseOffset = pt.y - g_nThumbPos;
 		  else
-			  nThumbMouseOffset = pt.x - nThumbPos;
+			  nThumbMouseOffset = pt.x - g_nThumbPos;
 
 		  nLastPos = sb->scrollInfo.nPos;
-		  nThumbPos0 = nThumbPos;
+		  nThumbPos0 = g_nThumbPos;
 	  
 #if 0
 		  //if(sb->fFlatScrollbar)
@@ -2308,12 +2324,11 @@ static LRESULT NCLButtonDown(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lPa
   case HTSCROLL_LRESIZER:
   case HTSCROLL_RRESIZER:
 		if(wParam == HTVSCROLL) 
-			nThumbMouseOffset = pt.y - nThumbPos;
+			nThumbMouseOffset = pt.y - g_nThumbPos;
 		else
 			nThumbMouseOffset = pt.x;
     if(wParam == HTHSCROLL)
     {
-      RECT rect;
       int nThumbSize, nThumbPos;
       GetHScrollRect(sw, hwnd, &rect,NULL);
       CalcThumbSize(sb, &rect, &nThumbSize, &nThumbPos);
@@ -2321,7 +2336,6 @@ static LRESULT NCLButtonDown(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lPa
     }
     else
     {
-      RECT rect;
       int nThumbSize, nThumbPos;
       GetVScrollRect(sw, hwnd, &rect,NULL);
       RotateRect0(sb, &rect);
@@ -2369,6 +2383,9 @@ static LRESULT NCLButtonDown(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lPa
 	}
 		
 	SetCapture(hwnd);
+#ifndef _WIN32
+        sw->uLastHitTestPortion = sw->uHitTestPortion     = HTSCROLL_NONE;
+#endif
 	return 0;
 }
 
@@ -2485,7 +2502,7 @@ static LRESULT ThumbTrackHorz(SCROLLBAR *sbar, HWND hwnd, int x, int y, const wd
 	COLORREF crCheck1 = GetSBForeColor(hwnd);
 	COLORREF crCheck2 = GetSBBackColor(hwnd);
 	HDC hdc;
-	int thumbpos = nThumbPos;
+	int thumbpos = g_nThumbPos;
 	int pos;
 	int siMaxMin = 0;
   SCROLLWND *sw = GetScrollWndFromHwnd(hwnd);
@@ -2525,7 +2542,7 @@ static LRESULT ThumbTrackHorz(SCROLLBAR *sbar, HWND hwnd, int x, int y, const wd
 	//keep the thumb within the scrollbar limits
 	thumbpos = pt.x - nThumbMouseOffset;
 	if(thumbpos < rc.left) thumbpos = rc.left;
-	if(thumbpos > rc.right - nThumbSize) thumbpos = rc.right - nThumbSize;
+	if(thumbpos > rc.right - g_nThumbSize) thumbpos = rc.right - g_nThumbSize;
 
 	GET_WINDOW_RECT(hwnd, &winrect);
 
@@ -2547,7 +2564,7 @@ static LRESULT ThumbTrackHorz(SCROLLBAR *sbar, HWND hwnd, int x, int y, const wd
 	RotateRect0(sbar, &rc2);
 
 	//draw the margin after the thumb 
-	SetRect(&rc2, thumbpos+nThumbSize, rc.top, rc.right, rc.bottom);
+	SetRect(&rc2, thumbpos+g_nThumbSize, rc.top, rc.right, rc.bottom);
 	
 	RotateRect0(sbar, &rc2);
 	
@@ -2556,7 +2573,7 @@ static LRESULT ThumbTrackHorz(SCROLLBAR *sbar, HWND hwnd, int x, int y, const wd
 	RotateRect0(sbar, &rc2);
 	
 	//finally draw the thumb itelf. This is how it looks on win2000, anyway
-	SetRect(&rc2, thumbpos, rc.top, thumbpos+nThumbSize, rc.bottom);
+	SetRect(&rc2, thumbpos, rc.top, thumbpos+g_nThumbSize, rc.bottom);
 	
 	RotateRect0(sbar, &rc2);
 
@@ -2633,7 +2650,7 @@ static LRESULT ThumbTrackHorz(SCROLLBAR *sbar, HWND hwnd, int x, int y, const wd
 
 	if(siMaxMin > 0)
   {
-		pos = MulDiv(thumbpos-rc.left, siMaxMin-si->nPage + 1, rc.right-rc.left-nThumbSize);
+		pos = MulDiv(thumbpos-rc.left, siMaxMin-si->nPage + 1, rc.right-rc.left-g_nThumbSize);
     /*this +1 should probably not be here, todo someday remove, allows thumb tracking messages to exceed expected bounds*/
   }
 	else
@@ -2770,7 +2787,6 @@ static LRESULT MouseMove(SCROLLWND *sw, HWND hwnd, WPARAM wParam, LPARAM lParam)
     case HTSCROLL_LRESIZER:
     case HTSCROLL_RRESIZER:
       {
-        RECT rect;
         int nThumbSize, nThumbPos;
         int offs = pt.x - nThumbMouseOffset;
         if(sw->uCurrentScrollbar == SB_VERT) offs = pt.y - nThumbMouseOffset;
@@ -3006,6 +3022,8 @@ static LRESULT CoolSB_Timer(SCROLLWND *swnd, HWND hwnd, WPARAM wTimerId, LPARAM 
 		//if the mouse moves outside the current scrollbar,
 		//then kill the timer..
 		GetCursorPos(&pt);
+    POINT pt_orig = pt;
+    OSX_REMAP_SCREENY(hwnd,&pt.y);
 
     RECT mor = swnd->MouseOverRect;
     BOOL hasZoomButtons = swnd->MouseOverRect_hasZoomButtons;
@@ -3021,7 +3039,7 @@ static LRESULT CoolSB_Timer(SCROLLWND *swnd, HWND hwnd, WPARAM wTimerId, LPARAM 
         mor.right += extrasz;
     }
 
-		if(!PtInRect(&mor, pt)||WindowFromPoint(pt)!=hwnd)
+		if(!PtInRect(&mor, pt)||WindowFromPoint(pt_orig)!=hwnd)
 		{
 			KillTimer(hwnd, swnd->uMouseOverId);
 			swnd->uMouseOverId = 0;
@@ -3208,6 +3226,13 @@ static LRESULT CALLBACK CoolSBWndProc(HWND hwnd, UINT message, WPARAM wParam, LP
   case WM_SYSCOMMAND: // fix for MIDI editor when fully zoomed out on XPsp2
 
   return CallWindowProcStyleMod(swnd,hwnd,message,wParam,lParam);
+
+  case /*WM_MOUSEHWHEEL:*/ 0x20E:
+   {
+     const LRESULT rv = CallWindowProc(swnd->oldproc,hwnd,message,wParam,lParam);
+     return rv  ? rv : 1; // always return nonzero from WM_MOUSEHWHEEL for Logitech drivers (which will otherwise convert it to a scroll)
+   }
+
 #endif
 	default:
 #if 0

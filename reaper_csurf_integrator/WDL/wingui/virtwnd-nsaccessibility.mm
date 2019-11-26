@@ -2,6 +2,7 @@
 
 #include "virtwnd-controls.h"
 
+#include <AppKit/AppKit.h>
 
 @class VWndNSAccessibility;
 static VWndNSAccessibility *GetVWndNSAccessible(WDL_VWnd *vwnd);
@@ -58,7 +59,7 @@ public:
      [(par=p) retain]; 
      (vwnd=vw)->SetAccessibilityBridge(this);
   }
-  ~VWndBridgeNS() 
+  virtual ~VWndBridgeNS()
   { 
 //    if (vwnd) printf("Destroying self before Released, wtf!\n");
   }
@@ -474,13 +475,12 @@ public:
 // parameterized attribute methods
 - (NSArray *)accessibilityParameterizedAttributeNames
 {
-  {
-    const char *type = m_br->vwnd ?  m_br->vwnd->GetType() : NULL;
-    if (!type) type="";
-    //NSLog(@"accessibilityParameterizedAttributeNames: %@ %s %p\n",@"",type,m_br->vwnd);
-  }  
-  return [NSArray arrayWithObjects:nil count:0];
-  return nil;
+ // {
+//    const char *type = m_br->vwnd ?  m_br->vwnd->GetType() : NULL;
+//    if (!type) type="";
+//    NSLog(@"accessibilityParameterizedAttributeNames: %@ %s %p\n",@"",type,m_br->vwnd);
+//  }  
+  return [NSArray array];
 }
 - (id)accessibilityAttributeValue:(NSString *)attribute forParameter:(id)parameter
 {

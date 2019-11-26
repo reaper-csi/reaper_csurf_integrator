@@ -39,7 +39,7 @@ class VWndBridge : public WDL_VWnd_IAccessibleBridge
 {
 public:
   VWndBridge() { }
-  ~VWndBridge() { }
+  virtual ~VWndBridge() { }
   virtual void Release() {  vwnd=0; }
 
   virtual void OnFocused()
@@ -104,7 +104,7 @@ public:
     m_refCnt = 1;
     allocated_cnt++;
   }
-  ~CVWndAccessible() 
+  virtual ~CVWndAccessible() 
   { 
     allocated_cnt--;
     //char buf[512];
@@ -216,7 +216,7 @@ public:
 
     *ppdispParent = NULL;
 
-    if (__CreateStdAccessibleObject)
+    if (__CreateStdAccessibleObject && m_br.vwnd)
     {
       HWND realparent = m_br.vwnd->GetRealParent();
       if (realparent)
