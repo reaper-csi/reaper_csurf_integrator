@@ -149,6 +149,8 @@ public:
     
     static bool TrackFX_SetParam(MediaTrack* track, int fx, int param, double val) { return ::TrackFX_SetParam(track, fx, param, val); }
 
+    static bool GetTrackName(MediaTrack* track, char* buf, int buf_sz) { return ::GetTrackName(track, buf, buf_sz); }
+    
     static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname) { return ::GetMediaTrackInfo_Value(track, parmname); }
 
     static double GetTrackSendInfo_Value(MediaTrack* tr, int category, int sendidx, const char* parmname) { return ::GetTrackSendInfo_Value(tr, category, sendidx, parmname); }

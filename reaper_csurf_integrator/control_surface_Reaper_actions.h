@@ -66,26 +66,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackVolume : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    MasterTrackVolume(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
-    
-    void RequestUpdate() override
-    {
-        double vol, pan = 0.0;
-        DAW::GetTrackUIVolPan(DAW::GetMasterTrack(0), &vol, &pan);
-        SetWidgetValue(widget_, volToNormalized(vol));
-    }
-    
-    void Do(double value, WidgetActionManager* sender) override
-    {
-        DAW::CSurf_SetSurfaceVolume(DAW::GetMasterTrack(0), DAW::CSurf_OnVolumeChange(DAW::GetMasterTrack(0), normalizedToVol(value), false), NULL);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPan : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -134,14 +114,11 @@ class TrackNameDisplay : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        string trackName = "";
+        char buf[BUFSZ];
         
-        if(DAW::GetMediaTrackInfo_Value(track , "IP_TRACKNUMBER") == -1)
-            trackName = "Master";
-        else
-            trackName =  (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
+        DAW::GetTrackName(track, buf, sizeof(buf));
         
-        SetWidgetValue(widget_, trackName);
+        SetWidgetValue(widget_, string(buf));
     }
 
 public:
@@ -653,26 +630,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackUniqueSelect : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    
-    MasterTrackUniqueSelect(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
-
-    void RequestUpdate() override
-    {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(DAW::GetMasterTrack(0), "I_SELECTED"));
-    }
-    
-    void Do( double value, WidgetActionManager* sender) override
-    {
-        DAW::SetOnlyTrackSelected(DAW::GetMasterTrack(0));
-        widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(GetMasterTrack(0));
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackRangeSelect : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -804,20 +761,6 @@ public:
     void Do(double value, WidgetActionManager* sender) override
     {
         widget_->SetIsTouched(value == 0 ? false : true);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetMasterTrackTouch : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    SetMasterTrackTouch(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
-
-    void Do(double value, WidgetActionManager* sender) override
-    {
-        // GAW TBD -- if anyone ever asks for it :)
-        //page->SetTouchState(DAW::GetMasterTrack(0), value == 0 ? false : true);
     }
 };
 
@@ -954,19 +897,6 @@ protected:
 
 public:
     TrackOutputMeterMaxPeakLR(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackOutputMeter : public ActionWithIntParam
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    MasterTrackOutputMeter(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
-    
-    void RequestUpdate() override
-    {
-        SetWidgetValue(widget_, param_, volToNormalized(DAW::Track_GetPeakInfo(DAW::GetMasterTrack(0), param_))); // param 0=left, 1=right, etc.
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
