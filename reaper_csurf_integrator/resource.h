@@ -82,7 +82,6 @@
 #define IDC_SLIDER_Red                  1077
 #define IDC_BUTTON_Close                1078
 #define IDC_SLIDER_Green                1079
-#define IDC_CHECK_IgnoreRelease         1082
 
 // Next default values for new objects
 // 
