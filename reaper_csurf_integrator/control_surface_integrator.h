@@ -1548,17 +1548,10 @@ public:
   
     void SetModifier(bool value, bool &modifier, double &modifierPressedTime)
     {
-        if(value)
+        if(value && modifier == false)
         {
-            if(modifier == true)
-            {
-                modifier = false;
-            }
-            else
-            {
-                modifier = value;
-                modifierPressedTime = DAW::GetCurrentNumberOfMilliseconds();
-            }
+            modifier = value;
+            modifierPressedTime = DAW::GetCurrentNumberOfMilliseconds();
         }
         else
         {
