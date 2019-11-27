@@ -89,7 +89,7 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        widget_->DoRelativeAction(value / 2.0);
+        widget_->DoRelativeAction(value / 8.0);
     }
 };
 
