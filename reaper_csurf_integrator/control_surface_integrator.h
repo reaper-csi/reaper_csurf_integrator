@@ -34,6 +34,7 @@
 #include <memory>
 #include "direntWin.h"
 #include <functional>
+#include "commctrl.h"
 #else
 #include <dirent.h>
 #include "oscpkt.hh"
