@@ -146,7 +146,7 @@ public:
     virtual void Pin() override {}
     virtual void Unpin() override {}
     
-    virtual string GetName() override { return "SelectedTrackNavigator"; }
+    virtual string GetName() override { return "MasterTrackNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
 };
