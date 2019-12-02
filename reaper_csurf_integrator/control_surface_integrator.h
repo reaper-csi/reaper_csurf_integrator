@@ -45,7 +45,7 @@ extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 enum class TimerProcs
 {
-    OSCQueue,
+    OSCQueue = 1,
 };
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";

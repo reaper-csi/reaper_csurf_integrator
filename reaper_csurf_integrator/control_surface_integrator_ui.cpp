@@ -36,7 +36,7 @@ CSurfIntegrator::~CSurfIntegrator()
     if(TheManager)
         TheManager->ResetAllWidgets();
     
-    // GAW TBD --  currently this get called before g_hwnd goes away -- is that guaranteed ?
+    // GAW TBD --  currently this gets called before g_hwnd goes away -- is that guaranteed ?
     if(g_hwnd)
         KillTimer(g_hwnd, (int)TimerProcs::OSCQueue);
 }
