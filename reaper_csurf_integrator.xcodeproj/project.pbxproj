@@ -175,6 +175,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -332,6 +333,7 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
 				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "/Users/geoffwaddington/Library/Application Support/REAPER/UserPlugins";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = /;
@@ -357,6 +359,7 @@
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = NO;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = NO;
 				DEPLOYMENT_LOCATION = YES;
+				DSTROOT = "/Users/geoffwaddington/Library/Application Support/REAPER/UserPlugins";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = /;

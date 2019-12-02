@@ -43,6 +43,11 @@
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
+enum class TimerProcs
+{
+    OSCQueue,
+};
+
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
 const string FollowMCPToken = "FollowMCP";
