@@ -27,13 +27,18 @@ extern string GetLineEnding();
 CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager(this);
-    SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
+    if(g_hwnd)
+        SetTimer(g_hwnd, (int)TimerProcs::OSCQueue, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
 {
     if(TheManager)
         TheManager->ResetAllWidgets();
+    
+    // GAW TBD --  currently this get called before g_hwnd goes away -- is that guaranteed ?
+    if(g_hwnd)
+        KillTimer(g_hwnd, (int)TimerProcs::OSCQueue);
 }
 
 void CSurfIntegrator::HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
