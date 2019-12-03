@@ -104,8 +104,6 @@ public:
     static DWORD GetPrivateProfileString(const char *appname, const char *keyname, const char *def, char *ret, int retsize, const char *fn) { return ::GetPrivateProfileString(appname, keyname, def, ret, retsize, fn); }
 
     static const char* GetResourcePath() { return ::GetResourcePath(); }
-        
-    static   ReaProject* EnumProjects(int idx, char* projfn, int projfn_sz) { return ::EnumProjects(idx, projfn, projfn_sz); }
     
     static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }
 
@@ -127,13 +125,9 @@ public:
 
     static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
 
-    static HWND TrackFX_GetFloatingWindow(MediaTrack* track, int index) { return ::TrackFX_GetFloatingWindow(track, index); }
-
     static void TrackFX_Show(MediaTrack* track, int index, int showFlag) { ::TrackFX_Show(track, index, showFlag); }
 
     static int TrackFX_GetCount(MediaTrack* track) { return ::TrackFX_GetCount(track); }
-    
-    static GUID* TrackFX_GetFXGUID(MediaTrack* track, int fx) { return ::TrackFX_GetFXGUID(track, fx);  }
     
     static bool TrackFX_GetFXName(MediaTrack* track, int fx, char* buf, int buf_sz) { return ::TrackFX_GetFXName(track, fx, buf, buf_sz); }
     
@@ -221,17 +215,7 @@ public:
     
     static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
 
-    static void guidToString(const GUID* g, char* destNeed64) { return ::guidToString(g, destNeed64); }
-   
-    static  void PreventUIRefresh(int prevent_count) { ::PreventUIRefresh(prevent_count); }
-    
-    static MediaTrack* GetTrack(int trackidx) { return ::GetTrack(0, trackidx); };
-    
-    static const char* GetTrackInfo(MediaTrack* track, int* flags) { return ::GetTrackInfo((INT_PTR)track, flags);  };
-
     static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
-    
-    static int CSurf_TrackToID(MediaTrack* track, bool mcpView) { return ::CSurf_TrackToID(track, mcpView); }
     
     static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
     
@@ -240,8 +224,6 @@ public:
     static bool IsTrackVisible(MediaTrack* track, bool mixer) { return ::IsTrackVisible(track, mixer); }
 
     static MediaTrack* SetMixerScroll(MediaTrack* leftmosttrack) { return ::SetMixerScroll(leftmosttrack); }
-    
-    static int GetTrackColor(MediaTrack* track) { return ::GetTrackColor(track); }
     
     // Runs the system color chooser dialog.  Returns 0 if the user cancels the dialog.
     static int GR_SelectColor(HWND hwnd, int* colorOut) { return ::GR_SelectColor(hwnd, colorOut); }
