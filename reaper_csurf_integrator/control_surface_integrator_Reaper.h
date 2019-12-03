@@ -124,6 +124,37 @@ public:
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
 
     static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
+    
+    static void CSurf_OnArrow(int whichdir, bool wantzoom) { ::CSurf_OnArrow(whichdir, wantzoom); }
+    
+    static void CSurf_OnRew(int seekplay) { ::CSurf_OnRew(seekplay); }
+    
+    static void CSurf_OnFwd(int seekplay) { ::CSurf_OnFwd(seekplay); }
+    
+    static void CSurf_OnStop() { ::CSurf_OnStop(); }
+    
+    static void CSurf_OnPlay() { ::CSurf_OnPlay(); }
+    
+    static void CSurf_OnRecord() { ::CSurf_OnRecord(); }
+    
+    static int GetPlayState() { return ::GetPlayState(); }
+    
+    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
+    
+    static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
+    
+    static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
+    
+    static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
+    
+    static int CountSelectedTracks(ReaProject* proj) { return ::CountSelectedTracks2(proj, true); }
+    
+    // Runs the system color chooser dialog.  Returns 0 if the user cancels the dialog.
+    static int GR_SelectColor(HWND hwnd, int* colorOut) { return ::GR_SelectColor(hwnd, colorOut); }
+    
+    static void ColorFromNative(int col, int* rOut, int* gOut, int* bOut) { ::ColorFromNative(col, rOut, gOut, bOut); }
+    
+    static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
 
     static void TrackFX_Show(MediaTrack* track, int index, int showFlag)
     {
@@ -171,102 +202,267 @@ public:
             return 0;
     }
     
-    static bool TrackFX_GetParamName(MediaTrack* track, int fx, int param, char* buf, int buf_sz) { return ::TrackFX_GetParamName(track, fx, param, buf, buf_sz); }
+    static bool TrackFX_GetParamName(MediaTrack* track, int fx, int param, char* buf, int buf_sz)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::TrackFX_GetParamName(track, fx, param, buf, buf_sz);
+        else
+        {
+            if(buf_sz > 0)
+                buf[0] = 0;
+            return false;
+        }
+    }
     
-    static bool TrackFX_GetFormattedParamValue(MediaTrack* track, int fx, int param, char* buf, int buf_sz) { return ::TrackFX_GetFormattedParamValue(track, fx, param, buf, buf_sz); }
+    static bool TrackFX_GetFormattedParamValue(MediaTrack* track, int fx, int param, char* buf, int buf_sz)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::TrackFX_GetFormattedParamValue(track, fx, param, buf, buf_sz);
+        else
+        {
+            if(buf_sz > 0)
+                buf[0] = 0;
+            return false;
+        }
+    }
     
-    static double TrackFX_GetParam(MediaTrack* track, int fx, int param, double* minvalOut, double* maxvalOut) { return ::TrackFX_GetParam(track, fx, param, minvalOut, maxvalOut); }
+    static double TrackFX_GetParam(MediaTrack* track, int fx, int param, double* minvalOut, double* maxvalOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::TrackFX_GetParam(track, fx, param, minvalOut, maxvalOut);
+        else
+            return 0.0;
+    }
     
-    static bool TrackFX_SetParam(MediaTrack* track, int fx, int param, double val) { return ::TrackFX_SetParam(track, fx, param, val); }
+    static bool TrackFX_SetParam(MediaTrack* track, int fx, int param, double val)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::TrackFX_SetParam(track, fx, param, val);
+        else
+            return false;
+    }
 
-    static bool GetTrackName(MediaTrack* track, char* buf, int buf_sz) { return ::GetTrackName(track, buf, buf_sz); }
+    static bool GetTrackName(MediaTrack* track, char* buf, int buf_sz)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackName(track, buf, buf_sz);
+        else
+        {
+            if(buf_sz > 0)
+                buf[0] = 0;
+            return false;
+        }
+    }
     
-    static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname) { return ::GetMediaTrackInfo_Value(track, parmname); }
+    static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetMediaTrackInfo_Value(track, parmname);
+        else
+            return 0.0;
+    }
 
-    static double GetTrackSendInfo_Value(MediaTrack* track, int category, int send_index, const char* parmname) { return ::GetTrackSendInfo_Value(track, category, send_index, parmname); }
+    static double GetTrackSendInfo_Value(MediaTrack* track, int category, int send_index, const char* parmname)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackSendInfo_Value(track, category, send_index, parmname);
+        else
+            return 0.0;
+    }
 
-    static void* GetSetTrackSendInfo(MediaTrack* track, int category, int send_index, const char* parmname, void* setNewValue) { return ::GetSetTrackSendInfo(track, category, send_index, parmname, setNewValue); }
+    static void* GetSetTrackSendInfo(MediaTrack* track, int category, int send_index, const char* parmname, void* setNewValue)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetSetTrackSendInfo(track, category, send_index, parmname, setNewValue);
+        else
+            return nullptr;
+    }
     
-    static void* GetSetMediaTrackInfo(MediaTrack* track, const char* parmname, void* setNewValue) { return ::GetSetMediaTrackInfo(track, parmname, setNewValue); }
+    static void* GetSetMediaTrackInfo(MediaTrack* track, const char* parmname, void* setNewValue)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetSetMediaTrackInfo(track, parmname, setNewValue);
+        else
+            return nullptr;
+    }
 
-    static double CSurf_OnVolumeChange(MediaTrack* track, double volume, bool relative) { return ::CSurf_OnVolumeChange(track, volume, relative); }
+    static double CSurf_OnVolumeChange(MediaTrack* track, double volume, bool relative)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnVolumeChange(track, volume, relative);
+        else
+            return 0.0;
+    }
     
-    static double CSurf_OnPanChange(MediaTrack* track, double pan, bool relative) { return ::CSurf_OnPanChange(track, pan, relative); }
+    static double CSurf_OnPanChange(MediaTrack* track, double pan, bool relative)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnPanChange(track, pan, relative);
+        else
+            return 0.0;
+    }
 
-    static bool CSurf_OnMuteChange(MediaTrack* track, int mute) { return ::CSurf_OnMuteChange(track, mute); }
+    static bool CSurf_OnMuteChange(MediaTrack* track, int mute)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnMuteChange(track, mute);
+        else
+            return false;
+    }
 
-    static bool GetTrackUIMute(MediaTrack* track, bool* muteOut) { return ::GetTrackUIMute(track, muteOut); }
+    static bool GetTrackUIMute(MediaTrack* track, bool* muteOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackUIMute(track, muteOut);
+        else
+            return false;
+    }
     
-    static bool GetTrackUIVolPan(MediaTrack* track, double* volumeOut, double* panOut) { return ::GetTrackUIVolPan(track, volumeOut, panOut); }
+    static bool GetTrackUIVolPan(MediaTrack* track, double* volumeOut, double* panOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackUIVolPan(track, volumeOut, panOut);
+        else
+            return false;
+    }
     
-    static void CSurf_SetSurfaceVolume(MediaTrack* track, double volume, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceVolume(track, volume, ignoresurf); }
+    static void CSurf_SetSurfaceVolume(MediaTrack* track, double volume, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfaceVolume(track, volume, ignoresurf);
+    }
     
-    static double CSurf_OnSendVolumeChange(MediaTrack* track, int sendIndex, double volume, bool relative) { return ::CSurf_OnSendVolumeChange(track, sendIndex, volume, relative); }
+    static double CSurf_OnSendVolumeChange(MediaTrack* track, int sendIndex, double volume, bool relative)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnSendVolumeChange(track, sendIndex, volume, relative);
+        else
+            return 0.0;
+    }
 
-    static double CSurf_OnSendPanChange(MediaTrack* track, int send_index, double pan, bool relative) { return ::CSurf_OnSendPanChange(track, send_index, pan, relative); }
+    static double CSurf_OnSendPanChange(MediaTrack* track, int send_index, double pan, bool relative)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnSendPanChange(track, send_index, pan, relative);
+        else
+            return 0.0;
+    }
     
-    static int GetTrackNumSends(MediaTrack* track, int category) { return ::GetTrackNumSends(track, category); }
+    static int GetTrackNumSends(MediaTrack* track, int category)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackNumSends(track, category);
+        else
+            return 0;
+    }
     
-    static bool GetTrackSendUIMute(MediaTrack* track, int send_index, bool* muteOut) { return ::GetTrackSendUIMute(track, send_index, muteOut); }
+    static bool GetTrackSendUIMute(MediaTrack* track, int send_index, bool* muteOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackSendUIMute(track, send_index, muteOut);
+        else
+            return false;
+    }
 
-    static bool GetTrackSendUIVolPan(MediaTrack* track, int send_index, double* volumeOut, double* panOut) { return ::GetTrackSendUIVolPan(track, send_index, volumeOut, panOut); }
+    static bool GetTrackSendUIVolPan(MediaTrack* track, int send_index, double* volumeOut, double* panOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackSendUIVolPan(track, send_index, volumeOut, panOut);
+        else
+            return false;
+    }
 
-    static double Track_GetPeakInfo(MediaTrack* track, int channel) { return ::Track_GetPeakInfo(track, channel); }
+    static double Track_GetPeakInfo(MediaTrack* track, int channel)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::Track_GetPeakInfo(track, channel);
+        else
+            return 0.0;
+    }
 
-    static void CSurf_SetSurfacePan(MediaTrack* track, double pan, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfacePan(track, pan, ignoresurf); }
+    static void CSurf_SetSurfacePan(MediaTrack* track, double pan, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfacePan(track, pan, ignoresurf);
+    }
 
-    static void CSurf_SetSurfaceMute(MediaTrack* track, bool mute, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceMute(track, mute, ignoresurf); }
+    static void CSurf_SetSurfaceMute(MediaTrack* track, bool mute, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfaceMute(track, mute, ignoresurf);
+    }
 
-    static double CSurf_OnWidthChange(MediaTrack* track, double width, bool relative) { return ::CSurf_OnWidthChange(track, width, relative); }
+    static double CSurf_OnWidthChange(MediaTrack* track, double width, bool relative)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnWidthChange(track, width, relative);
+        else
+            return 0.0;
+    }
     
-    static bool CSurf_OnSelectedChange(MediaTrack* track, int selected) { return ::CSurf_OnSelectedChange(track, selected); }
+    static bool CSurf_OnSelectedChange(MediaTrack* track, int selected)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnSelectedChange(track, selected);
+        else
+            return false;
+    }
 
-    static void CSurf_SetSurfaceSelected(MediaTrack* track, bool selected, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceSelected(track, selected, ignoresurf); }
+    static void CSurf_SetSurfaceSelected(MediaTrack* track, bool selected, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfaceSelected(track, selected, ignoresurf);
+    }
     
-    static void SetOnlyTrackSelected(MediaTrack* track) { ::SetOnlyTrackSelected(track); }
-
-    static int CountSelectedTracks(ReaProject* proj) { return ::CountSelectedTracks2(proj, true); }
+    static void SetOnlyTrackSelected(MediaTrack* track)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::SetOnlyTrackSelected(track);
+    }
     
-    static bool CSurf_OnRecArmChange(MediaTrack* track, int recarm) { return ::CSurf_OnRecArmChange(track, recarm); }
+    static bool CSurf_OnRecArmChange(MediaTrack* track, int recarm)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnRecArmChange(track, recarm);
+        else
+            return false;
+    }
 
-    static void CSurf_SetSurfaceRecArm(MediaTrack* track, bool recarm, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceRecArm(track, recarm, ignoresurf); }
+    static void CSurf_SetSurfaceRecArm(MediaTrack* track, bool recarm, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfaceRecArm(track, recarm, ignoresurf);
+    }
 
-    static bool CSurf_OnSoloChange(MediaTrack* track, int solo) { return ::CSurf_OnSoloChange(track, solo); }
+    static bool CSurf_OnSoloChange(MediaTrack* track, int solo)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_OnSoloChange(track, solo);
+        else
+            return false;
+    }
 
-    static void CSurf_SetSurfaceSolo(MediaTrack* track, bool solo, IReaperControlSurface* ignoresurf) { ::CSurf_SetSurfaceSolo(track, solo, ignoresurf); }
+    static void CSurf_SetSurfaceSolo(MediaTrack* track, bool solo, IReaperControlSurface* ignoresurf)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            ::CSurf_SetSurfaceSolo(track, solo, ignoresurf);
+    }
     
-    static void CSurf_OnArrow(int whichdir, bool wantzoom) { ::CSurf_OnArrow(whichdir, wantzoom); }
-
-    static void CSurf_OnRew(int seekplay) { ::CSurf_OnRew(seekplay); }
-
-    static void CSurf_OnFwd(int seekplay) { ::CSurf_OnFwd(seekplay); }
+    static bool IsTrackVisible(MediaTrack* track, bool mixer)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::IsTrackVisible(track, mixer);
+        else
+            return false;
+    }
     
-    static void CSurf_OnStop() { ::CSurf_OnStop(); }
-
-    static void CSurf_OnPlay() { ::CSurf_OnPlay(); }
-    
-    static void CSurf_OnRecord() { ::CSurf_OnRecord(); }
-
-    static int GetPlayState() { return ::GetPlayState(); }
-    
-    static int GetSetRepeatEx(ReaProject* proj, int val) { return ::GetSetRepeatEx(proj, val); }
-
-    static MediaTrack* GetMasterTrack(ReaProject* proj) { return ::GetMasterTrack(proj); };
-    
-    static int CSurf_NumTracks(bool mcpView) { return ::CSurf_NumTracks(mcpView); };
-    
-    static MediaTrack* CSurf_TrackFromID(int idx, bool mcpView) { return ::CSurf_TrackFromID(idx, mcpView); }
-
-    static bool IsTrackVisible(MediaTrack* track, bool mixer) { return ::IsTrackVisible(track, mixer); }
-
-    static MediaTrack* SetMixerScroll(MediaTrack* leftmosttrack) { return ::SetMixerScroll(leftmosttrack); }
-    
-    // Runs the system color chooser dialog.  Returns 0 if the user cancels the dialog.
-    static int GR_SelectColor(HWND hwnd, int* colorOut) { return ::GR_SelectColor(hwnd, colorOut); }
-
-    static void ColorFromNative(int col, int* rOut, int* gOut, int* bOut) { ::ColorFromNative(col, rOut, gOut, bOut); }
-
-    static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
+    static MediaTrack* SetMixerScroll(MediaTrack* leftmosttrack)
+    {
+        if(ValidatePtr(leftmosttrack, "MediaTrack*"))
+            return ::SetMixerScroll(leftmosttrack);
+        else
+            return nullptr;
+    }
 };
 
 #endif /* control_surface_integrator_Reaper_h */
