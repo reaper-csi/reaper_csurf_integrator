@@ -43,16 +43,12 @@
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
-enum class TimerProcs
-{
-    OSCQueue = 1,
-};
-
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string OSCSurfaceToken = "OSCSurface";
+const string EuConSurfaceToken = "EuConSurface";
 const string PageToken = "Page";
 const string Shift = "Shift";
 const string Option = "Option";
@@ -1031,7 +1027,7 @@ public:
     
     virtual void Run()
     {
-        RequestUpdate(); // if you add any more code here RequestUpdate() should always be last so that state changes are complete
+        RequestUpdate(); // This is always last so that state changes caused by preceding code are complete before it is called
     }
     
     void ResetAllWidgets()
@@ -1118,7 +1114,7 @@ public:
     virtual void Run() override
     {
         HandleMidiInput();
-        ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
+        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
@@ -1147,8 +1143,30 @@ private:
     
     void runServer()
     {
+        /*
+         int enable = 1;
+         
+         if( ! inSocket_.connectTo(remoteDeviceIP_, inPort_))
+         {
+         //cerr << "Error connecting " << remoteDeviceIP_ << ": " << inSocket_.errorMessage() << "\n";
+         return;
+         }
+         
+         if (setsockopt(inSocket_.handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+         {
+         //cerr << "Error setting socket options " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
+         return;
+         }
+         
+         if (setsockopt(inSocket_.handle, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
+         {
+         //cerr << "Error setting socket options " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
+         return;
+         }
+         */
+        
         inSocket_.bindTo(inPort_);
-
+        
         if (!inSocket_.isOk())
         {
             //cerr << "Error opening port " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
@@ -1160,16 +1178,28 @@ private:
             //cerr << "Error connecting " << remoteDeviceIP_ << ": " << outSocket_.errorMessage() << "\n";
             return;
         }
-        
+        /*
+         if (setsockopt(outSocket_.handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+         {
+         //cerr << "Error setting socket options " << PORT_NUM << ": " << outSocket_.errorMessage() << "\n";
+         return;
+         }
+         
+         if (setsockopt(outSocket_.handle, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
+         {
+         //cerr << "Error setting socket options " << PORT_NUM << ": " << outSocket_.errorMessage() << "\n";
+         return;
+         }
+         */
         outSocket_.bindTo(outPort_);
-       
+        
         if ( ! outSocket_.isOk())
         {
             //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
             return;
         }
     }
-   
+    
     void HandleOSCInput() override
     {
         if(inSocket_.isOk())
@@ -1198,7 +1228,7 @@ public:
     virtual ~OSC_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
-
+    
     virtual void LoadingZone(string zoneName) override;
     void SendOSCMessage(string oscAddress, double value);
     void SendOSCMessage(string oscAddress, string value);
@@ -1210,7 +1240,41 @@ public:
     
     virtual void Run() override
     {
-        ControlSurface::Run(); // this should always be last so that state changes caused by handling input are complete
+        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
+    }
+    
+    void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
+    {
+        CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuCon_ControlSurface : public ControlSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string templateFilename_ = "";
+    int numChannels_ = 0;
+
+    map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
+
+public:
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink)
+    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels){}
+    virtual ~EuCon_ControlSurface() {}
+    
+    void SendEuConMessage(string oscAddress, double value);
+    void SendEuConMessage(string oscAddress, string value);
+    
+    virtual void ResetAll() override
+    {
+        LoadingZone("Home");
+    }
+    
+    virtual void Run() override
+    {
+        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
