@@ -28,7 +28,7 @@ CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager(this);
     if(g_hwnd)
-        SetTimer(g_hwnd, (int)TimerProcs::OSCQueue, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
+        SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
@@ -38,7 +38,7 @@ CSurfIntegrator::~CSurfIntegrator()
     
     // GAW TBD --  currently this gets called before g_hwnd goes away -- is that guaranteed ?
     if(g_hwnd)
-        KillTimer(g_hwnd, (int)TimerProcs::OSCQueue);
+        KillTimer(g_hwnd, 1);
 }
 
 void CSurfIntegrator::HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)

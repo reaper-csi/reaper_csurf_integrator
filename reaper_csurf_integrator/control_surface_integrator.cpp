@@ -789,7 +789,7 @@ void Manager::Init()
                     else
                         currentPage->GetTrackNavigationManager()->SetScrollLink(false);
                 }
-                else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
+                else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
                 {
                     if(tokens.size() != 11 && tokens.size() != 12)
                         continue;
@@ -805,6 +805,8 @@ void Manager::Init()
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), tokens[6] == "UseZoneLink" ? true : false);
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 10)
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), tokens[6] == "UseZoneLink" ? true : false);
 
                         currentPage->AddSurface(surface);
                         
@@ -1637,7 +1639,7 @@ OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* p
     // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
     InitZones(zoneFolder);
     
-    runServer();
+    //runServer();
     
     GoZone("Home", nullptr);
 }
@@ -1721,6 +1723,18 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
         DAW::ShowConsoleMsg(buffer);
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC_ControlSurface
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
+{
+}
+
+void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
+{
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
