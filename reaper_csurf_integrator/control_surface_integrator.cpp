@@ -804,13 +804,16 @@ void Manager::Init()
                         ControlSurface* surface = nullptr;
                         
                         if(tokens[0] == MidiSurfaceToken)
-                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), tokens[6] == "UseZoneLink" ? true : false);
+                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[11]);
                         else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()), tokens[6] == "UseZoneLink" ? true : false);
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
 
                         currentPage->AddSurface(surface);
+                        
+                        if(tokens[6] == "UseZoneLink")
+                            surface->SetUseZoneLink(true);
                         
                         if(tokens[7] == "AutoMapSends")
                             surface->SetShouldMapSends(true);
@@ -1384,7 +1387,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), useZoneLink_(useZoneLink)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name)
 {
     fxActivationManager_ = new FXActivationManager(this);
     sendsActivationManager_ = new SendsActivationManager(this);
@@ -1546,8 +1549,8 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
+OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP)
+: ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
 {
     // GAW TBD -- hardwired for now
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
@@ -1664,11 +1667,9 @@ void HandleEuConMessageWithString(string oscAddress, string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel, bool useZoneLink)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel)
+: ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
 {
-    InitWidgets(templateFilename);
-
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
