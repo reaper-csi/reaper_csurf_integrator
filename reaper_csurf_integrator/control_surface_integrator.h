@@ -1260,8 +1260,7 @@ private:
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink)
-    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels){}
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink);
     virtual ~EuCon_ControlSurface() {}
     
     void SendEuConMessage(string oscAddress, double value);
