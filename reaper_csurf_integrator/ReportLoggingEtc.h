@@ -19,15 +19,38 @@ public:
     static void InitializationFailure(std::string logEntry)
     {
         // if someConfig->LogInitializationFailureToConsole == true
-        ShowConsoleMsg(logEntry.c_str());
+        ShowConsoleMsg(("INIT: " + logEntry).c_str());
         
         // if someConfig->LogInitializationFailureToDisk == true
-        // LogInitializationFailureToDisk(logEntry);
-
+        // LogInitializationFailureToDisk("INIT: " + logEntry));
+        
         // ... etc.
     }
     
     
+    /*
+     
+    static void SomeOtherFailure(std::string logEntry)
+    {
+        // if someConfig->LogSomeOtherFailureToConsole == true
+        ShowConsoleMsg("SOMEOTHER: " + logEntry).c_str());
+        
+        // if someConfig->LogSomeOtherFailureToDisk == true
+        // LogSomeOtherFailureToDisk("SOMEOTHER: " + logEntry));
+        
+        // ... etc.
+    }
+    
+     
+     
+     ... etc.
+     
+     
+     
+     
+     */
+     
+
     
     
 };
