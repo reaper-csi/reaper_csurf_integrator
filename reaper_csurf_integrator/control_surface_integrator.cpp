@@ -1751,13 +1751,13 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels)
 {
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
-        DAW::ShowConsoleMsg("EuConRequestsInitialization failed to register");
+        LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWthDouble", (void *)HandleEuConMessageWthDouble))
-        DAW::ShowConsoleMsg("HandleEuConMessageWthDouble failed to register");
+        LOG::InitializationFailure("HandleEuConMessageWthDouble failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)HandleEuConMessageWithString))
-        DAW::ShowConsoleMsg("HandleEuConMessageWithString failed to register");
+        LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
     
     InitializeEuCon();
 }
