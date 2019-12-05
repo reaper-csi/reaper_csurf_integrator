@@ -9,6 +9,8 @@
 #ifndef ReportLoggingEtc_h
 #define ReportLoggingEtc_h
 
+#include <string>
+
 #include "reaper_plugin_functions.h"
 
 /////////////////////////////////////////////////
@@ -19,7 +21,7 @@ public:
     static void InitializationFailure(std::string logEntry)
     {
         // if someConfig->LogInitializationFailureToConsole == true
-        ShowConsoleMsg(("INIT: " + logEntry).c_str());
+        ShowConsoleMsg(("INIT_FAIL: " + logEntry).c_str());
         
         // if someConfig->LogInitializationFailureToDisk == true
         // LogInitializationFailureToDisk("INIT: " + logEntry));
@@ -33,10 +35,10 @@ public:
     static void SomeOtherFailure(std::string logEntry)
     {
         // if someConfig->LogSomeOtherFailureToConsole == true
-        ShowConsoleMsg("SOMEOTHER: " + logEntry).c_str());
+        ShowConsoleMsg("SOMEOTHER_FAIL: " + logEntry).c_str());
         
         // if someConfig->LogSomeOtherFailureToDisk == true
-        // LogSomeOtherFailureToDisk("SOMEOTHER: " + logEntry));
+        // LogSomeOtherFailureToDisk("SOMEOTHER_FAIL: " + logEntry));
         
         // ... etc.
     }
