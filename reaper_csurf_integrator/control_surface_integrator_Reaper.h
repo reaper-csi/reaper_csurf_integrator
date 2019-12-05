@@ -8,6 +8,7 @@
 #define control_surface_integrator_Reaper_h
 
 #include "reaper_plugin_functions.h"
+#include "ReportLoggingEtc.h"
 
 using namespace std;
 

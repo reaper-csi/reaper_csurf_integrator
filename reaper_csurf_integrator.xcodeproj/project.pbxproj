@@ -47,6 +47,7 @@
 		03719C611F8FC43E009C8F2E /* control_surface_integrator_Reaper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = control_surface_integrator_Reaper.h; sourceTree = "<group>"; };
 		037FB6761EB8C96C0012F4C1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		0393E6B11F7501F100BC2E2E /* handy_functions.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = handy_functions.h; sourceTree = "<group>"; };
+		03AE6F382399128800BA6EDF /* ReportLoggingEtc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ReportLoggingEtc.h; sourceTree = "<group>"; };
 		03C7D8BA1EB78AF500DBBD98 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -104,6 +105,7 @@
 				0310E4CA1EB5403C00040D1A /* reaper_plugin.h */,
 				0393E6B11F7501F100BC2E2E /* handy_functions.h */,
 				0310E4CB1EB5403C00040D1A /* resource.h */,
+				03AE6F382399128800BA6EDF /* ReportLoggingEtc.h */,
 				0310E4CC1EB5403C00040D1A /* WDL */,
 			);
 			path = reaper_csurf_integrator;
