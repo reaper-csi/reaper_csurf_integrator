@@ -967,7 +967,7 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, bool useZoneLink);
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name);
     CSurfIntegrator* CSurfIntegrator_ = nullptr;
     Page* page_ = nullptr;
     const string name_ = "";
@@ -1007,6 +1007,7 @@ public:
     map<string, vector<Zone*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
+    void SetUseZoneLink(bool useZoneLink) { useZoneLink_ = useZoneLink; }
     bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
     void SetShouldMapSends(bool shouldMapSends) { sendsActivationManager_->SetShouldMapSends(shouldMapSends); }
     int GetNumSendSlots() { return sendsActivationManager_->GetNumSendSlots(); }
@@ -1101,8 +1102,8 @@ protected:
     virtual void InitWidgets(string templateFilename) override;
 
 public:
-    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool useZoneLink)
-    : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput)
+    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename);
         
@@ -1236,7 +1237,7 @@ private:
     }
     
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP);
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP);
     virtual ~OSC_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
@@ -1275,7 +1276,7 @@ private:
     void InitWidgets(string templateFilename);
 
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel, bool useZoneLink);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
     virtual ~EuCon_ControlSurface() {}
     
     virtual void InitializeEuCon() override;
