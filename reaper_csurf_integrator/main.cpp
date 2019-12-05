@@ -33,6 +33,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
     if (reaper_plugin_info)
     {
         g_hwnd = reaper_plugin_info->hwnd_main;
+        g_reaper_plugin_info = reaper_plugin_info;
 
         // load Reaper API functions
         if (REAPERAPI_LoadAPI(reaper_plugin_info->GetFunc) > 0)
