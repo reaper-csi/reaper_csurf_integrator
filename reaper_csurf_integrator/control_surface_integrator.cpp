@@ -1764,32 +1764,41 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 
 void EuCon_ControlSurface::InitializeEuCon()
 {
-    void (*InitializeEuConWithChannelCount)(int);
-    
-    InitializeEuConWithChannelCount = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelCount");
-    
-    if(InitializeEuConWithChannelCount)
-        InitializeEuConWithChannelCount(numChannels_);
+    if(g_reaper_plugin_info)
+    {
+        void (*InitializeEuConWithChannelCount)(int);
+        
+        InitializeEuConWithChannelCount = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelCount");
+        
+        if(InitializeEuConWithChannelCount)
+            InitializeEuConWithChannelCount(numChannels_);
+    }
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
 {
-    void (*HandleReaperMessageWthDouble)(string, double);
-    
-    HandleReaperMessageWthDouble = (void (*)(string, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
-    
-    if(HandleReaperMessageWthDouble)
-        HandleReaperMessageWthDouble(oscAddress, value);
+    if(g_reaper_plugin_info)
+    {
+        void (*HandleReaperMessageWthDouble)(string, double);
+        
+        HandleReaperMessageWthDouble = (void (*)(string, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+        
+        if(HandleReaperMessageWthDouble)
+            HandleReaperMessageWthDouble(oscAddress, value);
+    }
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
 {
-    void (*HandleReaperMessageWthString)(string, string);
-    
-    HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
-    
-    if(HandleReaperMessageWthString)
-        HandleReaperMessageWthString(oscAddress, value);
+    if(g_reaper_plugin_info)
+    {
+        void (*HandleReaperMessageWthString)(string, string);
+        
+        HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
+        
+        if(HandleReaperMessageWthString)
+            HandleReaperMessageWthString(oscAddress, value);
+    }
 }
 
 void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
