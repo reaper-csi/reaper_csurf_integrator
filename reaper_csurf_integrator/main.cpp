@@ -12,11 +12,8 @@ extern bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int r
 
 REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs, if any
 HWND g_hwnd;
+reaper_plugin_info_t *g_reaper_plugin_info;
 
-void SomeFunc()
-{
-    ShowMessageBox("You Called SomeFunc", "Function Call", 0);
-}
 
 extern "C"
 {
@@ -45,10 +42,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
         
-        
         plugin_register("hookcommand2", (void *)onAction);
-        plugin_register("API_SomeFunc", (void *)SomeFunc);
-
       
         // plugin registered
         return 1;
