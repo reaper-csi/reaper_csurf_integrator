@@ -1007,6 +1007,9 @@ public:
     virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleOSCInput() {}
+    virtual void InitializeEuCon() {}
+    virtual void HandleEuConMessage(string oscAddress, double value) {}
+    virtual void HandleEuConMessage(string oscAddress, string value) {}
 
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -1263,9 +1266,12 @@ public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink);
     virtual ~EuCon_ControlSurface() {}
     
-    void SendEuConMessage(string oscAddress, double value);
-    void SendEuConMessage(string oscAddress, string value);
-    
+    virtual void InitializeEuCon() override;
+    virtual void SendEuConMessage(string oscAddress, double value);
+    virtual void SendEuConMessage(string oscAddress, string value);
+    virtual void HandleEuConMessage(string oscAddress, double value) override;
+    virtual void HandleEuConMessage(string oscAddress, string value) override;
+
     virtual void ResetAll() override
     {
         LoadingZone("Home");
@@ -1563,6 +1569,24 @@ public:
     {
         for(auto surface : surfaces_)
             surface->HandleOSCInput();
+    }
+    
+    void InitializeEuCon()
+    {
+        for(auto surface : surfaces_)
+            surface->InitializeEuCon();
+    }
+    
+    void HandleEuConMessage(string oscAddress, double value)
+    {
+        for(auto surface : surfaces_)
+            surface->HandleEuConMessage(oscAddress, value);
+    }
+    
+    void HandleEuConMessage(string oscAddress, string value)
+    {
+        for(auto surface : surfaces_)
+            surface->HandleEuConMessage(oscAddress, value);
     }
     
     void Run()
@@ -1921,6 +1945,24 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->HandleOSCInput();
+    }
+    
+    void InitializeEuCon()
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->InitializeEuCon();
+    }
+    
+    void HandleEuConMessage(string oscAddress, double value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
+    }
+    
+    void HandleEuConMessage(string oscAddress, string value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
     }
     
     //int repeats = 0;

@@ -1726,19 +1726,22 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     }
 }
 
-void RequestEuConInitialize()
+void EuConRequestsInitialization()
 {
-    ShowMessageBox("You Called RequestEuConInitialize", "Function Call", 0);
+    if(TheManager)
+        TheManager->InitializeEuCon();
 }
 
 void HandleEuConMessageWthDouble(string oscAddress, double value)
 {
-    ShowMessageBox("You Called HandleEuConMessageWthDouble", "Function Call", 0);
+    if(TheManager)
+        TheManager->HandleEuConMessage(oscAddress, value);
 }
 
 void HandleEuConMessageWithString(string oscAddress, string value)
 {
-    ShowMessageBox("You Called HandleEuConMessageWithString", "Function Call", 0);
+    if(TheManager)
+        TheManager->HandleEuConMessage(oscAddress, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1747,14 +1750,26 @@ void HandleEuConMessageWithString(string oscAddress, string value)
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink)
 : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels)
 {
-    if( ! plugin_register("API_RequestEuConInitialize", (void *)RequestEuConInitialize))
-        DAW::ShowConsoleMsg("RequestEuConInitialize failed to register");
+    if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
+        DAW::ShowConsoleMsg("EuConRequestsInitialization failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWthDouble", (void *)HandleEuConMessageWthDouble))
         DAW::ShowConsoleMsg("HandleEuConMessageWthDouble failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)HandleEuConMessageWithString))
         DAW::ShowConsoleMsg("HandleEuConMessageWithString failed to register");
+    
+    InitializeEuCon();
+}
+
+void EuCon_ControlSurface::InitializeEuCon()
+{
+    void (*InitializeEuConWithChannelCount)(int);
+    
+    InitializeEuConWithChannelCount = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelCount");
+    
+    if(InitializeEuConWithChannelCount)
+        InitializeEuConWithChannelCount(numChannels_);
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
@@ -1771,10 +1786,20 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
 {
     void (*HandleReaperMessageWthString)(string, string);
     
-    HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+    HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
     
     if(HandleReaperMessageWthString)
         HandleReaperMessageWthString(oscAddress, value);
+}
+
+void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
+{
+    // GAW TBD
+}
+
+void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
+{
+    // GAW TBD
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
