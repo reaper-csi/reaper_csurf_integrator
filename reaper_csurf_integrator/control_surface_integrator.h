@@ -989,6 +989,13 @@ protected:
             widget->RequestUpdate();
     }
     
+    virtual void InitWidgets(string templateFilename)
+    {
+        // Add the "hardcoded" widgets
+        widgets_.push_back(new Widget(this, "OnTrackSelection"));
+        widgets_.push_back(new Widget(this, "OnFXFocus"));
+    }
+
 public:
     virtual ~ControlSurface() {};
     
@@ -1017,7 +1024,7 @@ public:
     bool AddZone(Zone* zone);
     void RemoveZone(Zone* zone, int zoneIndexInfile);
     void GoZone(string zoneName, WidgetActionManager* sender);
-   
+    
     void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends();
@@ -1075,7 +1082,6 @@ private:
     midi_Output* midiOutput_ = nullptr;
     map<int, vector<Midi_CSIMessageGenerator*>> CSIMessageGeneratorsByMidiMessage_;
     
-    void InitWidgets(string templateFilename);
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
 
     void HandleMidiInput()
@@ -1090,6 +1096,9 @@ private:
                 ProcessMidiMessage((MIDI_event_ex_t*)evt);
         }
     }
+    
+protected:
+    virtual void InitWidgets(string templateFilename) override;
 
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput, bool useZoneLink)
@@ -1141,7 +1150,7 @@ private:
     oscpkt::PacketWriter packetWriter_;
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
-    void InitWidgets(string templateFilename);
+    virtual void InitWidgets(string templateFilename) override;
     void ProcessOSCMessage(string message, double value);
     
     void runServer()
@@ -1258,12 +1267,15 @@ class EuCon_ControlSurface : public ControlSurface
 {
 private:
     string templateFilename_ = "";
-    int numChannels_ = 0;
+    int lowChannel_ = 0;
+    int highChannel_ = 0;
 
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
+    void InitWidgets(string templateFilename);
+
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel, bool useZoneLink);
     virtual ~EuCon_ControlSurface() {}
     
     virtual void InitializeEuCon() override;
@@ -1271,7 +1283,7 @@ public:
     virtual void SendEuConMessage(string oscAddress, string value);
     virtual void HandleEuConMessage(string oscAddress, double value) override;
     virtual void HandleEuConMessage(string oscAddress, string value) override;
-
+    
     virtual void ResetAll() override
     {
         LoadingZone("Home");

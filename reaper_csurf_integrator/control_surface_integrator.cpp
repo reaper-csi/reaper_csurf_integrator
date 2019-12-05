@@ -807,8 +807,8 @@ void Manager::Init()
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), tokens[6] == "UseZoneLink" ? true : false);
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[6] == "UseZoneLink" ? true : false, tokens[11]);
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 10)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), tokens[6] == "UseZoneLink" ? true : false);
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()), tokens[6] == "UseZoneLink" ? true : false);
 
                         currentPage->AddSurface(surface);
                         
@@ -1492,90 +1492,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     
-    // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget(this, "OnTrackSelection"));
-    widgets_.push_back(new Widget(this, "OnFXFocus"));
-    
-    /*
-    string filePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + "LaunchPadRAW.txt";
-    
-    string outputFilePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename;
-
-    
-    if(name_ == "LaunchPad")
-    {
-        vector<string> rows = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
-        int rowIndex = 0;
-        int columnIndex = 1;
-        
-        
-        
-        try
-        {
-            ofstream outputFile(outputFilePath);
-
-            if(outputFile.is_open())
-            {
-
-            
-                ifstream file(filePath);
-                
-                
-                for (string line; getline(file, line) ; )
-                {
-                    line = regex_replace(line, regex(CRLFChars), "");
-                    
-                    
-                    if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-                        continue;
-                    
-                    vector<string> tokens(GetTokens(line));
-                
-
-                    if(tokens.size() == 6 && tokens[5] == "7f")
-                    {
-                        outputFile << "Widget Button" + rows[rowIndex] + to_string(columnIndex)  + GetLineEnding();
-                    
-                        outputFile << "Press " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[3] + " " + tokens[4] + " 00"  + GetLineEnding();
-                        outputFile << "FB_NovationLaunchpadMiniRGB7Bit " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
-                        outputFile << "WidgetEnd" + GetLineEnding() + GetLineEnding();
-                        
-                        if(columnIndex % 9 == 0)
-                        {
-                            rowIndex++;
-                            columnIndex = 1;
-                        }
-                        else
-                            columnIndex++;
-                    }
-                }
-            }
-            
-            
-            
-            outputFile.close();
-
-            
-            
-            
-        }
-        catch (exception &e)
-        {
-            char buffer[250];
-            //sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
-            DAW::ShowConsoleMsg(buffer);
-        }
-         
-
-         
-    }
-
-    */
-    
-    
-    
-    
-    
+    ControlSurface::InitWidgets(templateFilename);
 }
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
@@ -1632,6 +1549,7 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, bool useZoneLink, string remoteDeviceIP)
 : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
 {
+    // GAW TBD -- hardwired for now
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
     
     InitWidgets(templateFilename);
@@ -1649,10 +1567,7 @@ OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* p
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
-    
-    // Add the "hardcoded" widgets
-    widgets_.push_back(new Widget(this, "OnTrackSelection"));
-    widgets_.push_back(new Widget(this, "OnFXFocus"));
+    ControlSurface::InitWidgets(templateFilename);
 }
 
 void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
@@ -1726,6 +1641,8 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     }
 }
 
+// GAW -- we are outside the object hierarchy -- TheManager may be NULL
+
 void EuConRequestsInitialization()
 {
     if(TheManager)
@@ -1747,9 +1664,11 @@ void HandleEuConMessageWithString(string oscAddress, string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink)
-: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel, bool useZoneLink)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
 {
+    InitWidgets(templateFilename);
+    
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
@@ -1762,6 +1681,12 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     InitializeEuCon();
 }
 
+void EuCon_ControlSurface::InitWidgets(string templateFilename)
+{
+    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/EuCon/" + templateFilename, this, widgets_);
+    ControlSurface::InitWidgets(templateFilename);
+}
+
 void EuCon_ControlSurface::InitializeEuCon()
 {
     if(g_reaper_plugin_info)
@@ -1771,7 +1696,7 @@ void EuCon_ControlSurface::InitializeEuCon()
         InitializeEuConWithChannelRange = (void (*)(int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelRange");
         
         if(InitializeEuConWithChannelRange)
-            InitializeEuConWithChannelRange(1, numChannels_);
+            InitializeEuConWithChannelRange(lowChannel_, highChannel_);
     }
 }
 
@@ -3493,3 +3418,82 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
         SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
+
+
+
+
+/*
+ string filePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + "LaunchPadRAW.txt";
+ 
+ string outputFilePath = string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename;
+ 
+ 
+ if(name_ == "LaunchPad")
+ {
+ vector<string> rows = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
+ int rowIndex = 0;
+ int columnIndex = 1;
+ 
+ 
+ 
+ try
+ {
+ ofstream outputFile(outputFilePath);
+ 
+ if(outputFile.is_open())
+ {
+ 
+ 
+ ifstream file(filePath);
+ 
+ 
+ for (string line; getline(file, line) ; )
+ {
+ line = regex_replace(line, regex(CRLFChars), "");
+ 
+ 
+ if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+ continue;
+ 
+ vector<string> tokens(GetTokens(line));
+ 
+ 
+ if(tokens.size() == 6 && tokens[5] == "7f")
+ {
+ outputFile << "Widget Button" + rows[rowIndex] + to_string(columnIndex)  + GetLineEnding();
+ 
+ outputFile << "Press " + tokens[3] + " " + tokens[4] + " " + tokens[5] + " " + tokens[3] + " " + tokens[4] + " 00"  + GetLineEnding();
+ outputFile << "FB_NovationLaunchpadMiniRGB7Bit " + tokens[3] + " " + tokens[4] + " " + tokens[5] + GetLineEnding();
+ outputFile << "WidgetEnd" + GetLineEnding() + GetLineEnding();
+ 
+ if(columnIndex % 9 == 0)
+ {
+ rowIndex++;
+ columnIndex = 1;
+ }
+ else
+ columnIndex++;
+ }
+ }
+ }
+ 
+ 
+ 
+ outputFile.close();
+ 
+ 
+ 
+ 
+ }
+ catch (exception &e)
+ {
+ char buffer[250];
+ //sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+ DAW::ShowConsoleMsg(buffer);
+ }
+ 
+ 
+ 
+ }
+ 
+ */
