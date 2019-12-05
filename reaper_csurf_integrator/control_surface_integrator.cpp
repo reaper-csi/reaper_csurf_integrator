@@ -1649,7 +1649,7 @@ void EuConRequestsInitialization()
         TheManager->InitializeEuCon();
 }
 
-void HandleEuConMessageWthDouble(string oscAddress, double value)
+void HandleEuConMessageWithDouble(string oscAddress, double value)
 {
     if(TheManager)
         TheManager->HandleEuConMessage(oscAddress, value);
@@ -1668,12 +1668,12 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 : ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
 {
     InitWidgets(templateFilename);
-    
+
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
-    if( ! plugin_register("API_HandleEuConMessageWthDouble", (void *)HandleEuConMessageWthDouble))
-        LOG::InitializationFailure("HandleEuConMessageWthDouble failed to register");
+    if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)HandleEuConMessageWithDouble))
+        LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)HandleEuConMessageWithString))
         LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
@@ -1683,6 +1683,8 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 
 void EuCon_ControlSurface::InitWidgets(string templateFilename)
 {
+    // GAW TBD we should synthesize this from the combo of channel range and EuCon capabilities
+    // That way we don't expose any EuCon-ness to the outside world -- keeps Avid happy
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/EuCon/" + templateFilename, this, widgets_);
     ControlSurface::InitWidgets(templateFilename);
 }
