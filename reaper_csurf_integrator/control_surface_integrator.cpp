@@ -11,6 +11,8 @@
 #include "control_surface_manager_actions.h"
 #include "control_surface_integrator_ui.h"
 
+extern reaper_plugin_info_t *g_reaper_plugin_info;
+
 string GetLineEnding()
 {
 #ifdef WIN32
@@ -1724,17 +1726,56 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     }
 }
 
+void RequestEuConInitialize()
+{
+    ShowMessageBox("You Called RequestEuConInitialize", "Function Call", 0);
+}
+
+void HandleEuConMessageWthDouble(string oscAddress, double value)
+{
+    ShowMessageBox("You Called HandleEuConMessageWthDouble", "Function Call", 0);
+}
+
+void HandleEuConMessageWithString(string oscAddress, string value)
+{
+    ShowMessageBox("You Called HandleEuConMessageWithString", "Function Call", 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// OSC_ControlSurface
+// EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, bool useZoneLink)
+: ControlSurface(CSurfIntegrator, page, name, useZoneLink), templateFilename_(templateFilename), numChannels_(numChannels)
+{
+    if( ! plugin_register("API_RequestEuConInitialize", (void *)RequestEuConInitialize))
+        DAW::ShowConsoleMsg("RequestEuConInitialize failed to register");
+    
+    if( ! plugin_register("API_HandleEuConMessageWthDouble", (void *)HandleEuConMessageWthDouble))
+        DAW::ShowConsoleMsg("HandleEuConMessageWthDouble failed to register");
+    
+    if( ! plugin_register("API_HandleEuConMessageWithString", (void *)HandleEuConMessageWithString))
+        DAW::ShowConsoleMsg("HandleEuConMessageWithString failed to register");
+}
+
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
 {
+    void (*HandleReaperMessageWthDouble)(string, double);
+    
+    HandleReaperMessageWthDouble = (void (*)(string, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+    
+    if(HandleReaperMessageWthDouble)
+        HandleReaperMessageWthDouble(oscAddress, value);
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
 {
+    void (*HandleReaperMessageWthString)(string, string);
+    
+    HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+    
+    if(HandleReaperMessageWthString)
+        HandleReaperMessageWthString(oscAddress, value);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator

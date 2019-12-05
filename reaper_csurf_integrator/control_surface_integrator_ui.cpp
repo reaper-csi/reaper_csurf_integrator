@@ -8,6 +8,7 @@
 #include "control_surface_integrator_ui.h"
 
 Manager* TheManager = nullptr;
+extern string GetLineEnding();
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
 
@@ -18,8 +19,6 @@ bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode,
     
     return false;
 }
-
-extern string GetLineEnding();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
