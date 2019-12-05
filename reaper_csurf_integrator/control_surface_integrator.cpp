@@ -1766,12 +1766,12 @@ void EuCon_ControlSurface::InitializeEuCon()
 {
     if(g_reaper_plugin_info)
     {
-        void (*InitializeEuConWithChannelCount)(int);
+        void (*InitializeEuConWithChannelRange)(int firstChannel, int lastChannel);
         
-        InitializeEuConWithChannelCount = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelCount");
+        InitializeEuConWithChannelRange = (void (*)(int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelRange");
         
-        if(InitializeEuConWithChannelCount)
-            InitializeEuConWithChannelCount(numChannels_);
+        if(InitializeEuConWithChannelRange)
+            InitializeEuConWithChannelRange(1, numChannels_);
     }
 }
 
