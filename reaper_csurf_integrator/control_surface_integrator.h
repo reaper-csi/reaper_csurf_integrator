@@ -1058,6 +1058,7 @@ public:
     virtual void HandleOSCInput() {}
     virtual void InitializeEuCon() {}
     virtual void InitializeEuConWidget(char *name, char *control, char *FB_Processor) {}
+    virtual void EuConInitializationComplete() {}
     virtual void HandleEuConMessage(char *oscAddress, double value) {}
     virtual void HandleEuConMessage(char *oscAddress, char *value) {}
 
@@ -1311,6 +1312,7 @@ private:
     string templateFilename_ = "";
     int lowChannel_ = 0;
     int highChannel_ = 0;
+    string zoneFolder_ = "";
 
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
@@ -1321,6 +1323,7 @@ public:
     virtual ~EuCon_ControlSurface() {}
     
     virtual void InitializeEuCon() override;
+    virtual void EuConInitializationComplete() override;
     virtual void SendEuConMessage(char *oscAddress, double value);
     virtual void SendEuConMessage(char *oscAddress, char *value);
     virtual void HandleEuConMessage(char *oscAddress, double value) override;
@@ -1635,6 +1638,12 @@ public:
     {
         for(auto surface : surfaces_)
             surface->InitializeEuConWidget(name, control, FB_Processor);
+    }
+    
+    void EuConInitializationComplete()
+    {
+        for(auto surface : surfaces_)
+            surface->EuConInitializationComplete();
     }
     
     void HandleEuConMessage(char *oscAddress, double value)
@@ -2017,6 +2026,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
+    }
+    
+    void EuConInitializationComplete()
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->EuConInitializationComplete();
     }
     
     void HandleEuConMessage(char *oscAddress, double value)
