@@ -1726,6 +1726,8 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)::HandleEuConMessageWithString))
         LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
     
+    ControlSurface::InitWidgets();
+    
     InitializeEuCon();
 }
 
@@ -1748,9 +1750,6 @@ void EuCon_ControlSurface::InitializeEuConWidget(char *name, char *control, char
     widgets_.push_back(widget);
     new EuCon_CSIMessageGenerator(this, widget, control);
     widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, FB_Processor));
-
-
-    ControlSurface::InitWidgets();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(char* oscAddress, double value)
