@@ -70,6 +70,7 @@ class Page;
 class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
+class EuCon_ControlSurface;
 class Zone;
 class Widget;
 class Action;
@@ -272,6 +273,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuCon_CSIMessageGenerator : public CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    EuCon_CSIMessageGenerator(EuCon_ControlSurface* surface, Widget* widget, string message);
+    virtual ~EuCon_CSIMessageGenerator() {}
+    
+    virtual void ProcessOSCMessage(string message, double value)
+    {
+        widget_->DoAction(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -335,7 +350,33 @@ public:
     virtual void SetValue(double value) override;
     virtual void SetValue(int param, double value) override;
     virtual void SetValue(string value) override;
+    
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0.0;
+        lastStringValue_ = "";
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuCon_FeedbackProcessor : public FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    EuCon_ControlSurface* surface_ = nullptr;
+    string oscAddress_ = "";
+    double lastDoubleValue_ = 0.0;
+    string lastStringValue_ = "";
+    
+public:
+    
+    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, string oscAddress) : surface_(surface), oscAddress_(oscAddress) {}
+    ~EuCon_FeedbackProcessor() {}
+    
+    virtual void SetValue(double value) override;
+    virtual void SetValue(int param, double value) override;
+    virtual void SetValue(string value) override;
+    
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;
@@ -989,7 +1030,7 @@ protected:
             widget->RequestUpdate();
     }
     
-    virtual void InitWidgets(string templateFilename)
+    virtual void InitWidgets()
     {
         // Add the "hardcoded" widgets
         widgets_.push_back(new Widget(this, "OnTrackSelection"));
@@ -1016,6 +1057,7 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleOSCInput() {}
     virtual void InitializeEuCon() {}
+    virtual void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions) {}
     virtual void HandleEuConMessage(string oscAddress, double value) {}
     virtual void HandleEuConMessage(string oscAddress, string value) {}
 
@@ -1098,8 +1140,7 @@ private:
         }
     }
     
-protected:
-    virtual void InitWidgets(string templateFilename) override;
+    void InitWidgets(string templateFilename);
 
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput)
@@ -1151,7 +1192,7 @@ private:
     oscpkt::PacketWriter packetWriter_;
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
-    virtual void InitWidgets(string templateFilename) override;
+    void InitWidgets(string templateFilename);
     void ProcessOSCMessage(string message, double value);
     
     void runServer()
@@ -1271,9 +1312,9 @@ private:
     int lowChannel_ = 0;
     int highChannel_ = 0;
 
-    map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
+    map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
-    void InitWidgets(string templateFilename);
+    virtual void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>>) override;
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
@@ -1295,7 +1336,7 @@ public:
         ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
     }
     
-    void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
+    void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
     }
@@ -1588,6 +1629,12 @@ public:
     {
         for(auto surface : surfaces_)
             surface->InitializeEuCon();
+    }
+    
+    void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+    {
+        for(auto surface : surfaces_)
+            surface->InitializeEuConWidgets(widgetDescriptions);
     }
     
     void HandleEuConMessage(string oscAddress, double value)
@@ -1964,6 +2011,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->InitializeEuCon();
+    }
+    
+    void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->InitializeEuConWidgets(widgetDescriptions);
     }
     
     void HandleEuConMessage(string oscAddress, double value)
