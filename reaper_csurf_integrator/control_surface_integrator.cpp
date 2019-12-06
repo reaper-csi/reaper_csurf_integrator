@@ -993,7 +993,7 @@ void EuCon_FeedbackProcessor::SetValue(double value)
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        surface_->SendEuConMessage((char *)oscAddress_.c_str(), value);
     }
 }
 
@@ -1002,7 +1002,7 @@ void EuCon_FeedbackProcessor::SetValue(int param, double value)
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        surface_->SendEuConMessage((char *)oscAddress_.c_str(), value);
     }
 }
 
@@ -1011,7 +1011,7 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     if(lastStringValue_ != value)
     {
         lastStringValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        surface_->SendEuConMessage((char *)oscAddress_.c_str(), (char *)value.c_str());
     }
 }
 
@@ -1695,13 +1695,13 @@ void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
         TheManager->InitializeEuConWidget(name, control, FB_Processor);
 }
 
-void HandleEuConMessageWithDouble(string oscAddress, double value)
+void HandleEuConMessageWithDouble(char *oscAddress, double value)
 {
     if(TheManager)
         TheManager->HandleEuConMessage(oscAddress, value);
 }
 
-void HandleEuConMessageWithString(string oscAddress, string value)
+void HandleEuConMessageWithString(char *oscAddress, char *value)
 {
     if(TheManager)
         TheManager->HandleEuConMessage(oscAddress, value);
@@ -1753,38 +1753,38 @@ void EuCon_ControlSurface::InitializeEuConWidget(char *name, char *control, char
     ControlSurface::InitWidgets();
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
+void EuCon_ControlSurface::SendEuConMessage(char* oscAddress, double value)
 {
     if(g_reaper_plugin_info)
     {
-        void (*HandleReaperMessageWthDouble)(string, double);
+        void (*HandleReaperMessageWthDouble)(char *, double);
         
-        HandleReaperMessageWthDouble = (void (*)(string, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+        HandleReaperMessageWthDouble = (void (*)(char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
         
         if(HandleReaperMessageWthDouble)
             HandleReaperMessageWthDouble(oscAddress, value);
     }
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
+void EuCon_ControlSurface::SendEuConMessage(char *oscAddress, char *value)
 {
     if(g_reaper_plugin_info)
     {
-        void (*HandleReaperMessageWthString)(string, string);
+        void (*HandleReaperMessageWthString)(char *, char *);
         
-        HandleReaperMessageWthString = (void (*)(string, string))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
+        HandleReaperMessageWthString = (void (*)(char *, char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
         
         if(HandleReaperMessageWthString)
             HandleReaperMessageWthString(oscAddress, value);
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
+void EuCon_ControlSurface::HandleEuConMessage(char *oscAddress, double value)
 {
     // GAW TBD
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
+void EuCon_ControlSurface::HandleEuConMessage(char *oscAddress, char *value)
 {
     // GAW TBD
 }
