@@ -923,6 +923,14 @@ OSC_CSIMessageGenerator::OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Wi
     surface->AddCSIMessageGenerator(message, this);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// EuCon_CSIMessageGenerator : public CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+EuCon_CSIMessageGenerator::EuCon_CSIMessageGenerator(EuCon_ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(widget)
+{
+    surface->AddCSIMessageGenerator(message, this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -974,6 +982,36 @@ void OSC_FeedbackProcessor::SetValue(string value)
     {
         lastStringValue_ = value;
         surface_->SendOSCMessage(oscAddress_, value);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// EuCon_FeedbackProcessor
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EuCon_FeedbackProcessor::SetValue(double value)
+{
+    if(lastDoubleValue_ != value)
+    {
+        lastDoubleValue_ = value;
+        surface_->SendEuConMessage(oscAddress_, value);
+    }
+}
+
+void EuCon_FeedbackProcessor::SetValue(int param, double value)
+{
+    if(lastDoubleValue_ != value)
+    {
+        lastDoubleValue_ = value;
+        surface_->SendEuConMessage(oscAddress_, value);
+    }
+}
+
+void EuCon_FeedbackProcessor::SetValue(string value)
+{
+    if(lastStringValue_ != value)
+    {
+        lastStringValue_ = value;
+        surface_->SendEuConMessage(oscAddress_, value);
     }
 }
 
@@ -1494,8 +1532,7 @@ void ControlSurface::GoZone(string zoneName, WidgetActionManager* sender)
 void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
-    
-    ControlSurface::InitWidgets(templateFilename);
+    ControlSurface::InitWidgets();
 }
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
@@ -1570,7 +1607,7 @@ OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* p
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
-    ControlSurface::InitWidgets(templateFilename);
+    ControlSurface::InitWidgets();
 }
 
 void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
@@ -1652,6 +1689,12 @@ void EuConRequestsInitialization()
         TheManager->InitializeEuCon();
 }
 
+void InitializeWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+{
+    if(TheManager)
+        TheManager->InitializeEuConWidgets(widgetDescriptions);
+}
+
 void HandleEuConMessageWithDouble(string oscAddress, double value)
 {
     if(TheManager)
@@ -1673,6 +1716,9 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
+    if( ! plugin_register("API_InitializeWidgets", (void *)InitializeWidgets))
+        LOG::InitializationFailure("InitializeWidgets failed to register");
+    
     if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)HandleEuConMessageWithDouble))
         LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
     
@@ -1680,14 +1726,6 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
         LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
     
     InitializeEuCon();
-}
-
-void EuCon_ControlSurface::InitWidgets(string templateFilename)
-{
-    // GAW TBD we should synthesize this from the combo of channel range and EuCon capabilities
-    // That way we don't expose any EuCon-ness to the outside world -- keeps Avid happy
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/EuCon/" + templateFilename, this, widgets_);
-    ControlSurface::InitWidgets(templateFilename);
 }
 
 void EuCon_ControlSurface::InitializeEuCon()
@@ -1701,6 +1739,23 @@ void EuCon_ControlSurface::InitializeEuCon()
         if(InitializeEuConWithChannelRange)
             InitializeEuConWithChannelRange(lowChannel_, highChannel_);
     }
+}
+
+void EuCon_ControlSurface::InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+{
+     for(auto [widgetName, description] : widgetDescriptions)
+     {
+         Widget* widget = new Widget(this, widgetName);
+         
+         widgets_.push_back(widget);
+         
+         new EuCon_CSIMessageGenerator(this, widget, description.first);
+         
+         for(auto fb_processor : description.second)
+             widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, fb_processor));
+    }
+    
+    ControlSurface::InitWidgets();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
