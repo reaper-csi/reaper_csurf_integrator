@@ -1695,6 +1695,12 @@ void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
         TheManager->InitializeEuConWidget(name, control, FB_Processor);
 }
 
+void EuConInitializationComplete()
+{
+    if(TheManager)
+        TheManager->EuConInitializationComplete();
+}
+
 void HandleEuConMessageWithDouble(char *oscAddress, double value)
 {
     if(TheManager)
@@ -1707,26 +1713,28 @@ void HandleEuConMessageWithString(char *oscAddress, char *value)
         TheManager->HandleEuConMessage(oscAddress, value);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel)
 : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
 {
+    zoneFolder_ = zoneFolder;
+    
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
     
     if( ! plugin_register("API_InitializeEuConWidget", (void *)::InitializeEuConWidget))
         LOG::InitializationFailure("InitializeEuConWidget failed to register");
     
+    if( ! plugin_register("API_EuConInitializationComplete", (void *)::EuConInitializationComplete))
+        LOG::InitializationFailure("EuConInitializationComplete failed to register");
+    
     if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)::HandleEuConMessageWithDouble))
         LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
     
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)::HandleEuConMessageWithString))
         LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
-    
-    ControlSurface::InitWidgets();
     
     InitializeEuCon();
 }
@@ -1746,10 +1754,24 @@ void EuCon_ControlSurface::InitializeEuCon()
 
 void EuCon_ControlSurface::InitializeEuConWidget(char *name, char *control, char *FB_Processor)
 {
-    Widget* widget = new Widget(this, name);
-    widgets_.push_back(widget);
-    new EuCon_CSIMessageGenerator(this, widget, control);
-    widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, FB_Processor));
+    if(name)
+    {
+        Widget* widget = new Widget(this, name);
+        if(widget)
+        {
+            widgets_.push_back(widget);
+            if(control)
+                new EuCon_CSIMessageGenerator(this, widget, control);
+            if(FB_Processor)
+                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, FB_Processor));
+        }
+    }
+}
+
+void EuCon_ControlSurface::EuConInitializationComplete()
+{
+    ControlSurface::InitWidgets();
+    InitZones(zoneFolder_);
 }
 
 void EuCon_ControlSurface::SendEuConMessage(char* oscAddress, double value)
