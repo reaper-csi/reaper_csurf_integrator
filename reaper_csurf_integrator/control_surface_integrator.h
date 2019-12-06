@@ -64,6 +64,13 @@ extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 class Manager;
 extern Manager* TheManager;
 
+struct widgetInfo
+{
+    string name;
+    string Control;
+    string FB_Processor;
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfIntegrator;
 class Page;
@@ -1057,7 +1064,7 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleOSCInput() {}
     virtual void InitializeEuCon() {}
-    virtual void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions) {}
+    virtual void InitializeEuConWidget(char *name, char *control, char *FB_Processor) {}
     virtual void HandleEuConMessage(string oscAddress, double value) {}
     virtual void HandleEuConMessage(string oscAddress, string value) {}
 
@@ -1314,7 +1321,7 @@ private:
 
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
-    virtual void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>>) override;
+    virtual void InitializeEuConWidget(char *name, char *control, char *FB_Processor) override;
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
@@ -1631,10 +1638,10 @@ public:
             surface->InitializeEuCon();
     }
     
-    void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+    void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
     {
         for(auto surface : surfaces_)
-            surface->InitializeEuConWidgets(widgetDescriptions);
+            surface->InitializeEuConWidget(name, control, FB_Processor);
     }
     
     void HandleEuConMessage(string oscAddress, double value)
@@ -2013,10 +2020,10 @@ public:
             pages_[currentPageIndex_]->InitializeEuCon();
     }
     
-    void InitializeEuConWidgets(vector<pair<string, pair<string, vector<string>>>> widgetDescriptions)
+    void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuConWidgets(widgetDescriptions);
+            pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
     }
     
     void HandleEuConMessage(string oscAddress, double value)
