@@ -1701,13 +1701,13 @@ void EuConInitializationComplete()
         TheManager->EuConInitializationComplete();
 }
 
-void HandleEuConMessageWithDouble(char *oscAddress, double value)
+void HandleEuConMessageWithDouble(const char *oscAddress, double value)
 {
     if(TheManager)
         TheManager->HandleEuConMessage(oscAddress, value);
 }
 
-void HandleEuConMessageWithString(char *oscAddress, char *value)
+void HandleEuConMessageWithString(const char *oscAddress, const char *value)
 {
     if(TheManager)
         TheManager->HandleEuConMessage(oscAddress, value);
@@ -1752,7 +1752,7 @@ void EuCon_ControlSurface::InitializeEuCon()
     }
 }
 
-void EuCon_ControlSurface::InitializeEuConWidget(char *name, char *control, char *FB_Processor)
+void EuCon_ControlSurface::InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor)
 {
     if(name)
     {
@@ -1774,38 +1774,39 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     InitZones(zoneFolder_);
 }
 
-void EuCon_ControlSurface::SendEuConMessage(char* oscAddress, double value)
+void EuCon_ControlSurface::SendEuConMessage(const char* oscAddress, double value)
 {
     if(g_reaper_plugin_info)
     {
-        void (*HandleReaperMessageWthDouble)(char *, double);
+        void (*HandleReaperMessageWthDouble)(const char *, double);
         
-        HandleReaperMessageWthDouble = (void (*)(char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
+        HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
         
         if(HandleReaperMessageWthDouble)
             HandleReaperMessageWthDouble(oscAddress, value);
     }
 }
 
-void EuCon_ControlSurface::SendEuConMessage(char *oscAddress, char *value)
+void EuCon_ControlSurface::SendEuConMessage(const char *oscAddress, const char *value)
 {
     if(g_reaper_plugin_info)
     {
-        void (*HandleReaperMessageWthString)(char *, char *);
+        void (*HandleReaperMessageWthString)(const char *, const char *);
         
-        HandleReaperMessageWthString = (void (*)(char *, char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
+        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
         
         if(HandleReaperMessageWthString)
             HandleReaperMessageWthString(oscAddress, value);
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(char *oscAddress, double value)
+void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, double value)
 {
     // GAW TBD
+    int blah = 0;
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(char *oscAddress, char *value)
+void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, const char *value)
 {
     // GAW TBD
 }
