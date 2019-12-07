@@ -1057,10 +1057,10 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleOSCInput() {}
     virtual void InitializeEuCon() {}
-    virtual void InitializeEuConWidget(char *name, char *control, char *FB_Processor) {}
+    virtual void InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor) {}
     virtual void EuConInitializationComplete() {}
-    virtual void HandleEuConMessage(char *oscAddress, double value) {}
-    virtual void HandleEuConMessage(char *oscAddress, char *value) {}
+    virtual void HandleEuConMessage(const char *oscAddress, double value) {}
+    virtual void HandleEuConMessage(const char *oscAddress, const char *value) {}
 
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -1316,7 +1316,7 @@ private:
 
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
-    virtual void InitializeEuConWidget(char *name, char *control, char *FB_Processor) override;
+    virtual void InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor) override;
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
@@ -1324,10 +1324,10 @@ public:
     
     virtual void InitializeEuCon() override;
     virtual void EuConInitializationComplete() override;
-    virtual void SendEuConMessage(char *oscAddress, double value);
-    virtual void SendEuConMessage(char *oscAddress, char *value);
-    virtual void HandleEuConMessage(char *oscAddress, double value) override;
-    virtual void HandleEuConMessage(char *oscAddress, char *value) override;
+    virtual void SendEuConMessage(const char *oscAddress, double value);
+    virtual void SendEuConMessage(const char *oscAddress, const char *value);
+    virtual void HandleEuConMessage(const char *oscAddress, double value) override;
+    virtual void HandleEuConMessage(const char *oscAddress, const char *value) override;
     
     virtual void ResetAll() override
     {
@@ -1646,13 +1646,13 @@ public:
             surface->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(char *oscAddress, double value)
+    void HandleEuConMessage(const char *oscAddress, double value)
     {
         for(auto surface : surfaces_)
             surface->HandleEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(char *oscAddress, char *value)
+    void HandleEuConMessage(const char *oscAddress, const char *value)
     {
         for(auto surface : surfaces_)
             surface->HandleEuConMessage(oscAddress, value);
@@ -2034,13 +2034,13 @@ public:
             pages_[currentPageIndex_]->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(char *oscAddress, double value)
+    void HandleEuConMessage(const char *oscAddress, double value)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(char *oscAddress, char *value)
+    void HandleEuConMessage(const char *oscAddress, const char *value)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
