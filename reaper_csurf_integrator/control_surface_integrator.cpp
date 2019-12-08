@@ -232,6 +232,7 @@ static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string fil
 {
     for (string line; getline(zoneFile, line) ; )
     {
+        line = regex_replace(line, regex(TabChars), " ");
         line = regex_replace(line, regex(CRLFChars), "");
 
         lineNumber++;
@@ -350,6 +351,7 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
     
     for (string line; getline(zoneFile, line) ; )
     {
+        line = regex_replace(line, regex(TabChars), " ");
         line = regex_replace(line, regex(CRLFChars), "");
 
         lineNumber++;
@@ -502,6 +504,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
+        line = regex_replace(line, regex(TabChars), " ");
         line = regex_replace(line, regex(CRLFChars), "");
 
         lineNumber++;
@@ -617,6 +620,7 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
+        line = regex_replace(line, regex(TabChars), " ");
         line = regex_replace(line, regex(CRLFChars), "");
 
         lineNumber++;
@@ -653,6 +657,7 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
         
         for (string line; getline(file, line) ; )
         {
+            line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
 
             lineNumber++;
@@ -772,6 +777,7 @@ void Manager::Init()
         
         for (string line; getline(iniFile, line) ; )
         {
+            line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
             
             vector<string> tokens(GetTokens(line));
@@ -1772,6 +1778,7 @@ void EuCon_ControlSurface::EuConInitializationComplete()
 {
     ControlSurface::InitWidgets();
     InitZones(zoneFolder_);
+    GoZone("Home", nullptr);
 }
 
 void EuCon_ControlSurface::SendEuConMessage(const char* oscAddress, double value)
@@ -1802,8 +1809,15 @@ void EuCon_ControlSurface::SendEuConMessage(const char *oscAddress, const char *
 
 void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, double value)
 {
-    // GAW TBD
-    int blah = 0;
+    if(CSIMessageGeneratorsByOSCMessage_.count(oscAddress) > 0)
+        CSIMessageGeneratorsByOSCMessage_[oscAddress]->ProcessOSCMessage(oscAddress, value);
+    
+    if(TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), oscAddress, value);
+        DAW::ShowConsoleMsg(buffer);
+    }
 }
 
 void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, const char *value)
@@ -2175,6 +2189,7 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
         
         for (string line; getline(rawFXFile, line) ; )
         {
+            line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
             line = regex_replace(line, regex("[\"]"), "");
 
