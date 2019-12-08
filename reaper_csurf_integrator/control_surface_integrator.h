@@ -1069,6 +1069,7 @@ public:
     bool AddZone(Zone* zone);
     void RemoveZone(Zone* zone, int zoneIndexInfile);
     void GoZone(string zoneName, WidgetActionManager* sender);
+    void GoHome() { GoZone("Home", nullptr); }
     
     void ToggleMapSends()
     {
@@ -1155,7 +1156,7 @@ public:
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
         
-        GoZone("Home", nullptr);
+        GoHome();
     }
     
     virtual ~Midi_ControlSurface() {}

@@ -1609,7 +1609,7 @@ OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* p
     
     //runServer();
     
-    GoZone("Home", nullptr);
+    GoHome();
 }
 
 void OSC_ControlSurface::InitWidgets(string templateFilename)
@@ -1780,7 +1780,7 @@ void EuCon_ControlSurface::EuConInitializationComplete()
 {
     ControlSurface::InitWidgets();
     InitZones(zoneFolder_);
-    GoZone("Home", nullptr);
+    GoHome();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(const char* oscAddress, double value)
