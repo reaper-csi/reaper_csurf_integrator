@@ -58,6 +58,7 @@ const string FXParam = "FXParam";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
+const string TabChars = "[\t]";
 
 extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 
