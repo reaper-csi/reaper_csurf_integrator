@@ -66,6 +66,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackVolumeDB : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double vol, pan = 0.0;
+        DAW::GetTrackUIVolPan(track, &vol, &pan);
+        SetWidgetValue(widget_, VAL2DB(vol));
+    }
+    
+public:
+    TrackVolumeDB(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
+    
+    void Do(double value, WidgetActionManager* sender) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPan : public TrackActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -161,6 +183,32 @@ public:
         if(MediaTrack* track = widget_->GetTrack())
         {
             double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, normalizedToVol(value), false);
+            
+            DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_VOL", &volume);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendVolumeDB : public TrackSendAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double vol, pan = 0.0;
+        DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
+        SetWidgetValue(widget_, VAL2DB(vol));
+    }
+    
+public:
+    TrackSendVolumeDB(string name, WidgetActionManager* manager, vector<string> params) : TrackSendAction(name, manager, params) {}
+    
+    void Do(double value, WidgetActionManager* sender) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+        {
+            double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, DB2VAL(value), false);
             
             DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "D_VOL", &volume);
         }

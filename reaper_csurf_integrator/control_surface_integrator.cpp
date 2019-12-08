@@ -703,7 +703,9 @@ void Manager::InitActionDictionary()
     actions_["FXParamValueDisplay"] =               [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXParamValueDisplay(name, manager, params); };
     actions_["FXGainReductionMeter"] =              [this](string name, WidgetActionManager* manager, vector<string> params) { return new FXGainReductionMeter(name, manager, params); };
     actions_["TrackVolume"] =                       [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackVolume(name, manager, params); };
+    actions_["TrackVolumeDB"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackVolumeDB(name, manager, params); };
     actions_["TrackSendVolume"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendVolume(name, manager, params); };
+    actions_["TrackSendVolumeDB"] =                 [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendVolumeDB(name, manager, params); };
     actions_["TrackSendPan"] =                      [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendPan(name, manager, params); };
     actions_["TrackSendMute"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendMute(name, manager, params); };
     actions_["TrackSendInvertPolarity"] =           [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendInvertPolarity(name, manager, params); };
