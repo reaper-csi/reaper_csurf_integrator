@@ -1058,10 +1058,10 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleOSCInput() {}
     virtual void InitializeEuCon() {}
-    virtual void InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor) {}
+    virtual void InitializeEuConWidget(string name, string control, string FB_Processor) {}
     virtual void EuConInitializationComplete() {}
-    virtual void HandleEuConMessage(const char *oscAddress, double value) {}
-    virtual void HandleEuConMessage(const char *oscAddress, const char *value) {}
+    virtual void HandleEuConMessage(string oscAddress, double value) {}
+    virtual void HandleEuConMessage(string oscAddress, string value) {}
 
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -1318,7 +1318,7 @@ private:
 
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
-    virtual void InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor) override;
+    virtual void InitializeEuConWidget(string name, string control, string FB_Processor) override;
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
@@ -1326,10 +1326,10 @@ public:
     
     virtual void InitializeEuCon() override;
     virtual void EuConInitializationComplete() override;
-    virtual void SendEuConMessage(const char *oscAddress, double value);
-    virtual void SendEuConMessage(const char *oscAddress, const char *value);
-    virtual void HandleEuConMessage(const char *oscAddress, double value) override;
-    virtual void HandleEuConMessage(const char *oscAddress, const char *value) override;
+    virtual void SendEuConMessage(string oscAddress, double value);
+    virtual void SendEuConMessage(string oscAddress, string value);
+    virtual void HandleEuConMessage(string oscAddress, double value) override;
+    virtual void HandleEuConMessage(string oscAddress, string value) override;
     
     virtual void ResetAll() override
     {
@@ -1636,7 +1636,7 @@ public:
             surface->InitializeEuCon();
     }
     
-    void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
+    void InitializeEuConWidget(string name, string control, string FB_Processor)
     {
         for(auto surface : surfaces_)
             surface->InitializeEuConWidget(name, control, FB_Processor);
@@ -1648,13 +1648,13 @@ public:
             surface->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(const char *oscAddress, double value)
+    void HandleEuConMessage(string oscAddress, double value)
     {
         for(auto surface : surfaces_)
             surface->HandleEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(const char *oscAddress, const char *value)
+    void HandleEuConMessage(string oscAddress, string value)
     {
         for(auto surface : surfaces_)
             surface->HandleEuConMessage(oscAddress, value);
@@ -2024,7 +2024,7 @@ public:
             pages_[currentPageIndex_]->InitializeEuCon();
     }
     
-    void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
+    void InitializeEuConWidget(string name, string control, string FB_Processor)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
@@ -2036,13 +2036,13 @@ public:
             pages_[currentPageIndex_]->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(const char *oscAddress, double value)
+    void HandleEuConMessage(string oscAddress, double value)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(const char *oscAddress, const char *value)
+    void HandleEuConMessage(string oscAddress, string value)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
