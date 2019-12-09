@@ -1010,7 +1010,7 @@ void EuCon_FeedbackProcessor::SetValue(int param, double value)
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage((char *)oscAddress_.c_str(), value);
+        surface_->SendEuConMessage(oscAddress_, value);
     }
 }
 
@@ -1019,7 +1019,7 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     if(lastStringValue_ != value)
     {
         lastStringValue_ = value;
-        surface_->SendEuConMessage((char *)oscAddress_.c_str(), (char *)value.c_str());
+        surface_->SendEuConMessage(oscAddress_, value);
     }
 }
 
@@ -1689,8 +1689,6 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     }
 }
 
-// GAW -- we are outside the object hierarchy -- TheManager may be NULL
-
 void EuConRequestsInitialization()
 {
     if(TheManager)
@@ -1700,7 +1698,7 @@ void EuConRequestsInitialization()
 void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
 {
     if(TheManager)
-        TheManager->InitializeEuConWidget(name, control, FB_Processor);
+        TheManager->InitializeEuConWidget(string(name), string(control), string(FB_Processor));
 }
 
 void EuConInitializationComplete()
@@ -1712,13 +1710,13 @@ void EuConInitializationComplete()
 void HandleEuConMessageWithDouble(const char *oscAddress, double value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(oscAddress, value);
+        TheManager->HandleEuConMessage(string(oscAddress), value);
 }
 
 void HandleEuConMessageWithString(const char *oscAddress, const char *value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(oscAddress, value);
+        TheManager->HandleEuConMessage(string(oscAddress), string(value));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1760,17 +1758,17 @@ void EuCon_ControlSurface::InitializeEuCon()
     }
 }
 
-void EuCon_ControlSurface::InitializeEuConWidget(const char *name, const char *control, const char *FB_Processor)
+void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, string FB_Processor)
 {
-    if(name)
+    if(name != "")
     {
         Widget* widget = new Widget(this, string(name));
         if(widget)
         {
             widgets_.push_back(widget);
-            if(control)
+            if(control != "")
                 new EuCon_CSIMessageGenerator(this, widget, string(control));
-            if(FB_Processor)
+            if(FB_Processor != "")
                 widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, string(FB_Processor)));
         }
     }
@@ -1783,7 +1781,7 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     GoHome();
 }
 
-void EuCon_ControlSurface::SendEuConMessage(const char* oscAddress, double value)
+void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
 {
     if(g_reaper_plugin_info)
     {
@@ -1792,11 +1790,11 @@ void EuCon_ControlSurface::SendEuConMessage(const char* oscAddress, double value
         HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
         
         if(HandleReaperMessageWthDouble)
-            HandleReaperMessageWthDouble(oscAddress, value);
+            HandleReaperMessageWthDouble(oscAddress.c_str(), value);
     }
 }
 
-void EuCon_ControlSurface::SendEuConMessage(const char *oscAddress, const char *value)
+void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
 {
     if(g_reaper_plugin_info)
     {
@@ -1805,11 +1803,11 @@ void EuCon_ControlSurface::SendEuConMessage(const char *oscAddress, const char *
         HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
         
         if(HandleReaperMessageWthString)
-            HandleReaperMessageWthString(oscAddress, value);
+            HandleReaperMessageWthString(oscAddress.c_str(), value.c_str());
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, double value)
+void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
 {
     if(CSIMessageGeneratorsByOSCMessage_.count(oscAddress) > 0)
         CSIMessageGeneratorsByOSCMessage_[oscAddress]->ProcessOSCMessage(oscAddress, value);
@@ -1817,12 +1815,12 @@ void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, double val
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), oscAddress, value);
+        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(const char *oscAddress, const char *value)
+void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
 {
     // GAW TBD
 }
