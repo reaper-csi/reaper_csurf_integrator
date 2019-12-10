@@ -1800,7 +1800,7 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
     {
         void (*HandleReaperMessageWthString)(const char *, const char *);
         
-        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthString");
+        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
         
         if(HandleReaperMessageWthString)
             HandleReaperMessageWthString(oscAddress.c_str(), value.c_str());
