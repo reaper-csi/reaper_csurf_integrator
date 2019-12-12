@@ -1792,6 +1792,13 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
         if(HandleReaperMessageWthDouble)
             HandleReaperMessageWthDouble(oscAddress.c_str(), value);
     }
+    
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
@@ -1804,6 +1811,13 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
         
         if(HandleReaperMessageWthString)
             HandleReaperMessageWthString(oscAddress.c_str(), value.c_str());
+    }
+
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        char buffer[250];
+        sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
+        DAW::ShowConsoleMsg(buffer);
     }
 }
 
