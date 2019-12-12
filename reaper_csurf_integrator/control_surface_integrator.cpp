@@ -1725,6 +1725,11 @@ void HandleEuConMessageWithString(const char *oscAddress, const char *value)
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel)
 : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
 {
+    sendsActivationManager_->SetShouldMapSends(true);
+    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
+    fxActivationManager_->SetShouldMapSelectedTrackFXMenus(true);
+    fxActivationManager_->SetShouldMapFocusedFX(true);
+    
     zoneFolder_ = zoneFolder;
     
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
