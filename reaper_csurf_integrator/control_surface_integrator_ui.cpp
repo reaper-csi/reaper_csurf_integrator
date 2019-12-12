@@ -562,7 +562,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
-
+                
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
@@ -643,13 +643,13 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     break;
                 }
-
+                    
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
-
+                        
                         char buf[BUFSZ];
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, buf, sizeof(buf));
@@ -665,7 +665,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             useZoneLink = true;
                         else
                             useZoneLink = false;
-
+                        
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
                             autoMapSends = true;
                         else
@@ -685,7 +685,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             autoMapFocusedFX = true;
                         else
                             autoMapFocusedFX = false;
-
+                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -698,6 +698,189 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             }
         }
             break ;
+            
+        case WM_CLOSE:
+            DestroyWindow(hwndDlg) ;
+            break ;
+            
+        case WM_DESTROY:
+            EndDialog(hwndDlg, 0);
+            break;
+    }
+    
+    return 0 ;
+}
+
+static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+        /*
+        case WM_INITDIALOG:
+        {
+            string resourcePath(DAW::GetResourcePath());
+            
+            int i = 0;
+            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/OSC/"))
+            {
+                int length = filename.length();
+                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'o' && filename[length - 2] == 's' &&filename[length - 1] == 't')
+                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
+            }
+            
+            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/Zones/"))
+                if(foldername[0] != '.')
+                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ZoneTemplates);
+            
+            if(editMode)
+            {
+                editMode = false;
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
+                
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
+                
+                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+                
+                if(useZoneLink)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
+                
+                if(autoMapSends)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
+                
+                if(autoMapFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
+                
+                if(autoMapFXMenu)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
+                
+                if(autoMapFocusedFX)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
+            }
+            else
+            {
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, "");
+                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, "");
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
+                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
+            }
+        }
+            break;
+         
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_COMBO_SurfaceTemplate:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case CBN_SELCHANGE:
+                        {
+                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
+                            if(index >= 0)
+                            {
+                                char buffer[BUFSZ];
+                                
+                                GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, buffer, sizeof(buffer));
+                                
+                                for(int i = 0; i < sizeof(buffer); i++)
+                                {
+                                    if(buffer[i] == '.')
+                                    {
+                                        buffer[i] = 0;
+                                        break;
+                                    }
+                                }
+                                
+                                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
+                                if(index >= 0)
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+                    
+                case IDOK:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
+                        
+                        char buf[BUFSZ];
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, buf, sizeof(buf));
+                        inPort = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, buf, sizeof(buf));
+                        outPort = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
+                        GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
+                            useZoneLink = true;
+                        else
+                            useZoneLink = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
+                            autoMapSends = true;
+                        else
+                            autoMapSends = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
+                            autoMapFX = true;
+                        else
+                            autoMapFX = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
+                            autoMapFXMenu = true;
+                        else
+                            autoMapFXMenu = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
+                            autoMapFocusedFX = true;
+                        else
+                            autoMapFocusedFX = false;
+                        
+                        dlgResult = IDOK;
+                        EndDialog(hwndDlg, 0);
+                    }
+                    break ;
+                    
+                case IDCANCEL:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                        EndDialog(hwndDlg, 0);
+                    break ;
+            }
+        }
+            break ;
+           */
+            
+            
+            
+            
+            
             
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
@@ -820,6 +1003,41 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->surfaces.size() - 1, 0);
+                                }
+                            }
+                        }
+                        break ;
+                        
+                    case IDC_BUTTON_AddEuConSurface:
+                        if (HIWORD(wParam) == BN_CLICKED)
+                        {
+                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+                            if (index >= 0)
+                            {
+                                dlgResult = false;
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface2), hwndDlg, dlgProcOSCSurface);
+                                if(dlgResult == IDOK)
+                                {
+                                    /*
+                                    SurfaceLine* surface = new SurfaceLine();
+                                    surface->type = OSCSurfaceToken;
+                                    surface->name = name;
+                                    surface->remoteDeviceIP = remoteDeviceIP;
+                                    surface->inPort = inPort;
+                                    surface->outPort = outPort;
+                                    surface->templateFilename = templateFilename;
+                                    surface->zoneTemplateFolder = zoneTemplateFolder;
+                                    surface->useZoneLink = useZoneLink;
+                                    surface->autoMapSends = autoMapSends;
+                                    surface->autoMapFX = autoMapFX;
+                                    surface->autoMapFXMenu = autoMapFXMenu;
+                                    surface->autoMapFocusedFX = autoMapFocusedFX;
+                                    
+                                    pages[pageIndex]->surfaces.push_back(surface);
+                                    
+                                    AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
+                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->surfaces.size() - 1, 0);
+                                     */
                                 }
                             }
                         }

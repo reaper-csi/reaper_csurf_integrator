@@ -11,6 +11,7 @@
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_MidiSurface          268
 #define IDD_DIALOG_MidiSurface1         269
+#define IDD_DIALOG_MidiSurface2         270
 #define IDC_CHECK_SurfaceInMon          1000
 #define IDC_CHECK_SurfaceOutMon         1001
 #define IDC_CHECK_FXParamMon            1002
@@ -33,6 +34,8 @@
 #define IDC_RADIO_MCP                   1036
 #define IDC_BUTTON_AddOSCSurface        1036
 #define IDC_RADIO_TCP                   1037
+#define IDC_BUTTON_AddEuCon             1037
+#define IDC_BUTTON_AddEuConSurface      1037
 #define IDC_CHECK_ZoneLink              1038
 #define IDC_EDIT_OSCSurfaceName         1039
 #define IDC_CHECK_ScrollLink            1040
@@ -80,8 +83,17 @@
 #define IDC_BUTTON_NewFile              1075
 #define IDC_SLIDER_Blue                 1076
 #define IDC_SLIDER_Red                  1077
+#define IDC_EDIT_FirstChannel           1077
 #define IDC_BUTTON_Close                1078
+#define IDC_EDIT_NumSends               1078
 #define IDC_SLIDER_Green                1079
+#define IDC_EDIT_NumFX                  1079
+#define IDC_CHECK_PanWidth              1080
+#define IDC_CHECK_PanLPanR              1081
+#define IDC_EDIT_NumInputs              1082
+#define IDC_EDIT_NumOutputs             1083
+#define IDC_EDIT_EuConSurfaceName       1084
+#define IDC_EDIT_LastChannel            1085
 
 // Next default values for new objects
 // 
@@ -89,7 +101,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1077
+#define _APS_NEXT_CONTROL_VALUE         1086
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
