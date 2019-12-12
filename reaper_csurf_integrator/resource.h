@@ -95,6 +95,7 @@
 #define IDC_EDIT_EuConSurfaceName       1084
 #define IDC_EDIT_LastChannel            1085
 
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
