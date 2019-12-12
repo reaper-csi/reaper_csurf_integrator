@@ -1031,7 +1031,7 @@ protected:
             widget->RequestUpdate();
     }
     
-    virtual void InitWidgets()
+    virtual void InitHardwiredWidgets()
     {
         // Add the "hardcoded" widgets
         widgets_.push_back(new Widget(this, "OnTrackSelection"));
@@ -1200,28 +1200,6 @@ private:
     
     void runServer()
     {
-        /*
-         int enable = 1;
-         
-         if( ! inSocket_.connectTo(remoteDeviceIP_, inPort_))
-         {
-         //cerr << "Error connecting " << remoteDeviceIP_ << ": " << inSocket_.errorMessage() << "\n";
-         return;
-         }
-         
-         if (setsockopt(inSocket_.handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-         {
-         //cerr << "Error setting socket options " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
-         return;
-         }
-         
-         if (setsockopt(inSocket_.handle, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
-         {
-         //cerr << "Error setting socket options " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
-         return;
-         }
-         */
-        
         inSocket_.bindTo(inPort_);
         
         if (!inSocket_.isOk())
@@ -1235,19 +1213,7 @@ private:
             //cerr << "Error connecting " << remoteDeviceIP_ << ": " << outSocket_.errorMessage() << "\n";
             return;
         }
-        /*
-         if (setsockopt(outSocket_.handle, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
-         {
-         //cerr << "Error setting socket options " << PORT_NUM << ": " << outSocket_.errorMessage() << "\n";
-         return;
-         }
-         
-         if (setsockopt(outSocket_.handle, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0)
-         {
-         //cerr << "Error setting socket options " << PORT_NUM << ": " << outSocket_.errorMessage() << "\n";
-         return;
-         }
-         */
+
         outSocket_.bindTo(outPort_);
         
         if ( ! outSocket_.isOk())
