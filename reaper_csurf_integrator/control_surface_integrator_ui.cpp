@@ -42,12 +42,14 @@ CSurfIntegrator::~CSurfIntegrator()
 
 void CSurfIntegrator::HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
 {
-    TheManager->HandleOSCInput();
+    if(TheManager)
+        TheManager->HandleOSCInput();
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
 {
-    TheManager->OnTrackSelection(trackid);
+    if(TheManager)
+        TheManager->OnTrackSelection(trackid);
 }
 
 int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
@@ -91,7 +93,8 @@ bool CSurfIntegrator::GetTouchState(MediaTrack *track, int touchedControl)
 
 void CSurfIntegrator::Run()
 {
-    TheManager->Run();
+    if(TheManager)
+        TheManager->Run();
 }
 
 void CSurfIntegrator::SetTrackListChange()
