@@ -269,7 +269,8 @@ public:
     
     virtual void ProcessOSCMessage(string message, double value)
     {
-        widget_->DoAction(value);
+        if(value != 0)
+            widget_->DoAction(value);
     }
 };
 
