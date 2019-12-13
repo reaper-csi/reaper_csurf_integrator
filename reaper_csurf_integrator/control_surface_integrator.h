@@ -1009,7 +1009,12 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name);
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name)
+    {
+        fxActivationManager_ = new FXActivationManager(this);
+        sendsActivationManager_ = new SendsActivationManager(this);
+    }
+
     CSurfIntegrator* CSurfIntegrator_ = nullptr;
     Page* page_ = nullptr;
     const string name_ = "";
@@ -1247,7 +1252,21 @@ private:
     }
     
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP);
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP)
+    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
+    {
+        InitWidgets(templateFilename);
+        
+        ResetAllWidgets();
+        
+        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
+        InitZones(zoneFolder);
+        
+        runServer();
+        
+        GoHome();
+    }
+    
     virtual ~OSC_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
@@ -1277,17 +1296,22 @@ class EuCon_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string templateFilename_ = "";
+    string zoneFolder_ = "";
     int lowChannel_ = 0;
     int highChannel_ = 0;
-    string zoneFolder_ = "";
-
+    int numSends_ = 0;
+    int numFX_ = 0;
+    int numInputs_ = 0;
+    int numOutputs_ = 0;
+    int options_ = 0;
+    
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
 
     virtual void InitializeEuConWidget(string name, string control, string FB_Processor) override;
 
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder,
+                                               int lowChannel, int highChannel, int numSends, int numFX, int numInputs, int numOutputs, int options);
     virtual ~EuCon_ControlSurface() {}
     
     virtual void InitializeEuCon() override;

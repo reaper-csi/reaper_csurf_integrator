@@ -816,24 +816,40 @@ void Manager::Init()
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[11]);
                         else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()));
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4],
+                                                               atoi(tokens[2].c_str()), // firstChannel
+                                                               atoi(tokens[3].c_str()), // last Channel
+                                                               atoi(tokens[6].c_str()), // numSends
+                                                               atoi(tokens[7].c_str()), // numFX
+                                                               atoi(tokens[8].c_str()), // NumInputs
+                                                               atoi(tokens[9].c_str()), // numOutputs
+                                                               atoi(tokens[10].c_str()) // options
+                                                               );
 
                         currentPage->AddSurface(surface);
                         
-                        if(tokens[6] == "UseZoneLink")
-                            surface->SetUseZoneLink(true);
-                        
-                        if(tokens[7] == "AutoMapSends")
-                            surface->SetShouldMapSends(true);
-                        
-                        if(tokens[8] == "AutoMapFX")
-                            surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
-                        
-                        if(tokens[9] == "AutoMapFXMenu")
-                            surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
-                        
-                        if(tokens[10] == "AutoMapFocusedFX")
-                            surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
+                        if(tokens[0] == EuConSurfaceToken)
+                        {
+                            if(tokens[5] == "UseZoneLink")
+                                surface->SetUseZoneLink(true);
+                        }
+                        else
+                        {
+                            if(tokens[6] == "UseZoneLink")
+                                surface->SetUseZoneLink(true);
+                            
+                            if(tokens[7] == "AutoMapSends")
+                                surface->SetShouldMapSends(true);
+                            
+                            if(tokens[8] == "AutoMapFX")
+                                surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
+                            
+                            if(tokens[9] == "AutoMapFXMenu")
+                                surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
+                            
+                            if(tokens[10] == "AutoMapFocusedFX")
+                                surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
+                        }
                     }
                 }
             }
@@ -1433,12 +1449,6 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name)
-{
-    fxActivationManager_ = new FXActivationManager(this);
-    sendsActivationManager_ = new SendsActivationManager(this);
-}
-
 void ControlSurface::InitZones(string zoneFolder)
 {
     includedZoneMembers.clear();
@@ -1594,24 +1604,6 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_ControlSurface::OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP)
-: ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
-{
-    // GAW TBD -- hardwired for now
-    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
-    
-    InitWidgets(templateFilename);
-    
-    ResetAllWidgets();
-    
-    // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-    InitZones(zoneFolder);
-    
-    //runServer();
-    
-    GoHome();
-}
-
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
@@ -1722,9 +1714,10 @@ void HandleEuConMessageWithString(const char *oscAddress, const char *value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int lowChannel, int highChannel)
-: ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), lowChannel_(lowChannel), highChannel_(highChannel)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int lowChannel, int highChannel, int numSends, int numFX, int numInputs, int numOutputs, int options)
+: ControlSurface(CSurfIntegrator, page, name), lowChannel_(lowChannel), highChannel_(highChannel), numSends_(numSends), numFX_(numFX), numInputs_(numInputs), numOutputs_(numOutputs), options_(options)
 {
+    // EuCon takes care of managing navigation, so we just blast everything always
     sendsActivationManager_->SetShouldMapSends(true);
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
     fxActivationManager_->SetShouldMapSelectedTrackFXMenus(true);
@@ -1754,12 +1747,12 @@ void EuCon_ControlSurface::InitializeEuCon()
 {
     if(g_reaper_plugin_info)
     {
-        void (*InitializeEuConWithChannelRange)(int firstChannel, int lastChannel);
+        void (*InitializeEuConWithParameters)(int firstChannel, int lastChannel, int numSends, int numFX, int numInputs, int numOutputs, int options);
         
-        InitializeEuConWithChannelRange = (void (*)(int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithChannelRange");
-        
-        if(InitializeEuConWithChannelRange)
-            InitializeEuConWithChannelRange(lowChannel_, highChannel_);
+        InitializeEuConWithParameters = (void (*)(int, int, int, int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
+
+        if(InitializeEuConWithParameters)
+            InitializeEuConWithParameters(lowChannel_, highChannel_, numSends_, numFX_, numInputs_, numOutputs_, options_);
     }
 }
 
