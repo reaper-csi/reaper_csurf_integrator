@@ -2049,7 +2049,7 @@ public:
         /*
         repeats++;
         
-        if(repeats > 50)
+        if(repeats > 15)
         {
             repeats = 0;
             
@@ -2147,7 +2147,7 @@ public:
     }
 };
 
-// GetAsyncKeyState(VK_SHIFT)
+// GetAsyncKeyState(VK_SHIFT) // get the state of the Shift key00
 
 /*
  int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
