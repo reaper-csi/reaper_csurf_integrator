@@ -222,7 +222,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        surface_->GetFXActivationManager()->SetShowFXWindows(value);
+        surface_->GetFXActivationManager()->ToggleShowFXWindows();
     }
 };
 
