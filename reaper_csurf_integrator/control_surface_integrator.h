@@ -269,8 +269,7 @@ public:
     
     virtual void ProcessOSCMessage(string message, double value)
     {
-        if(value != 0)
-            widget_->DoAction(value);
+        widget_->DoAction(value);
     }
 };
 
@@ -982,7 +981,7 @@ public:
         return activeFXZones;
     }
 
-    void SetShowFXWindows(bool value)
+    void ToggleShowFXWindows()
     {
         showFXWindows_ = ! showFXWindows_;
         

@@ -1017,7 +1017,7 @@ void EuCon_FeedbackProcessor::SetValue(double value)
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage((char *)oscAddress_.c_str(), value);
+        surface_->SendEuConMessage(oscAddress_, value);
     }
 }
 
