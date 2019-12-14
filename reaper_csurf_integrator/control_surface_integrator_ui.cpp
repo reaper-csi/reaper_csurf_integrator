@@ -61,13 +61,15 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_RESET)
     {
-       TheManager->Init();
+       if(TheManager)
+           TheManager->Init();
     }
     
     if(call == CSURF_EXT_SETFXCHANGE)
     {
         // parm1=(MediaTrack*)track, whenever FX are added, deleted, or change order
-        TheManager->TrackFXListChanged((MediaTrack*)parm1);
+        if(TheManager)
+            TheManager->TrackFXListChanged((MediaTrack*)parm1);
     }
     
     if(call == CSURF_EXT_SETFOCUSEDFX)
@@ -179,7 +181,6 @@ struct SurfaceLine
 {
     string type = "";
     string name = "";
-    string remoteDeviceIP = "";
     int inPort = 0;
     int outPort = 0;
     string templateFilename = "";
@@ -189,6 +190,18 @@ struct SurfaceLine
     bool autoMapFX = false;
     bool autoMapFXMenu = false;
     bool autoMapFocusedFX = false;
+    
+    // for OSC
+    string remoteDeviceIP = "";
+
+    // for EuCon
+    int firstChannel = 0;
+    int lastChannel = 0;
+    int numSends = 0;
+    int numFX = 0;
+    int numInputs = 0;
+    int numOutputs = 0;
+    int options = 0;
 };
 
 struct PageLine
@@ -718,25 +731,16 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 {
     switch (uMsg)
     {
-        /*
         case WM_INITDIALOG:
         {
             string resourcePath(DAW::GetResourcePath());
-            
-            int i = 0;
-            for(auto filename : FileSystem::GetDirectoryFilenames(resourcePath + "/CSI/Surfaces/OSC/"))
-            {
-                int length = filename.length();
-                if(length > 4 && filename[0] != '.' && filename[length - 4] == '.' && filename[length - 3] == 'o' && filename[length - 2] == 's' &&filename[length - 1] == 't')
-                    AddComboEntry(hwndDlg, i++, (char*)filename.c_str(), IDC_COMBO_SurfaceTemplate);
-            }
-            
             for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/Zones/"))
                 if(foldername[0] != '.')
                     AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ZoneTemplates);
             
             if(editMode)
             {
+                /*
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
@@ -775,19 +779,25 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                     CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
+                 */
             }
             else
             {
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, "");
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, "");
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, "");
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, "");
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
+                SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, "EuCon");
+                SetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, "1");
+                SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, "8");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "8");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "16");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumInputs, "8");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumOutputs, "8");
+                
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)"EuCon");
+                if(index >= 0)
+                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
             }
         }
             break;
-         
+        
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
@@ -798,6 +808,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                     {
                         case CBN_SELCHANGE:
                         {
+                            /*
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
@@ -818,6 +829,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                                 if(index >= 0)
                                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
                             }
+                             */
                         }
                     }
                     
@@ -827,6 +839,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        /*
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
                         
@@ -865,7 +878,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                             autoMapFocusedFX = true;
                         else
                             autoMapFocusedFX = false;
-                        
+                        */
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -878,13 +891,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             }
         }
             break ;
-           */
-            
-            
-            
-            
-            
-            
+
         case WM_CLOSE:
             DestroyWindow(hwndDlg) ;
             break ;
@@ -1018,7 +1025,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if (index >= 0)
                             {
                                 dlgResult = false;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface2), hwndDlg, dlgProcOSCSurface);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface2), hwndDlg, dlgProcEuConSurface);
                                 if(dlgResult == IDOK)
                                 {
                                     /*
