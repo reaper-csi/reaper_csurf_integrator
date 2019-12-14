@@ -684,7 +684,7 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
     catch (exception &e)
     {
         char buffer[250];
-        sprintf(buffer, "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -858,7 +858,7 @@ void Manager::Init()
     catch (exception &e)
     {
         char buffer[250];
-        sprintf(buffer, "Trouble in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1474,7 +1474,7 @@ void ControlSurface::InitZones(string zoneFolder)
     catch (exception &e)
     {
         char buffer[250];
-        sprintf(buffer, "Trouble parsing Zone folders\n");
+        snprintf(buffer, sizeof(buffer), "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1508,7 +1508,7 @@ bool ControlSurface::AddZone(Zone* zone)
     if(zones_.count(zone->GetName()) > 0)
     {
         char buffer[5000];
-        sprintf(buffer, "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+        snprintf(buffer, sizeof(buffer), "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
                 zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
         DAW::ShowConsoleMsg(buffer);
         return false;
@@ -1561,7 +1561,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+        snprintf(buffer, sizeof(buffer), "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
         DAW::ShowConsoleMsg(buffer);
     }
     
@@ -1585,7 +1585,7 @@ void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s SysEx \n", name_.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s SysEx \n", name_.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1598,7 +1598,7 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1621,7 +1621,7 @@ void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1643,7 +1643,7 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1661,7 +1661,7 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1679,7 +1679,7 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1797,7 +1797,7 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1817,7 +1817,7 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -1830,7 +1830,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        sprintf(buffer, "IN -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -2222,7 +2222,7 @@ static bool LoadRawFXFile(MediaTrack* track, string zoneName)
     catch (exception &e)
     {
         char buffer[250];
-        sprintf(buffer, "Trouble loading Raw FX file %s", filePath.c_str());
+        snprintf(buffer, sizeof(buffer), "Trouble loading Raw FX file %s", filePath.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
     
@@ -2833,7 +2833,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             catch (exception &e)
                             {
                                 char buffer[250];
-                                sprintf(buffer, "Trouble writing %s", filePath.c_str());
+                                snprintf(buffer, sizeof(buffer), "Trouble writing %s", filePath.c_str());
                                 DAW::ShowConsoleMsg(buffer);
                             }
                         }
