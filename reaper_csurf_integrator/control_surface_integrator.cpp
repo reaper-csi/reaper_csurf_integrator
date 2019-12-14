@@ -3129,6 +3129,42 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     break ;
                 }
                     
+                case IDC_BUTTON_GenerateWidgetList:
+                    if (HIWORD(wParam) == BN_CLICKED && currentSurface != nullptr)
+                    {
+                        char buffer[1024];
+                        snprintf(buffer, sizeof(buffer), "Surface Name: %s", (currentSurface->GetName() + GetLineEnding() + GetLineEnding()).c_str());
+                        DAW::ShowConsoleMsg(buffer);
+                        
+                        for(auto widget : currentSurface->GetWidgets())
+                        {
+                            snprintf(buffer, sizeof(buffer), "%s", (widget->GetName() + GetLineEnding()).c_str());
+                            DAW::ShowConsoleMsg(buffer);
+                        }
+                        
+                        snprintf(buffer, sizeof(buffer), "%s", (GetLineEnding() + GetLineEnding() + GetLineEnding() + GetLineEnding()).c_str());
+                        DAW::ShowConsoleMsg(buffer);
+                    }
+                    break ;
+                    
+                case IDC_BUTTON_GenerateActionList:
+                    if (HIWORD(wParam) == BN_CLICKED)
+                    {
+                        char buffer[1024];
+                        snprintf(buffer, sizeof(buffer), "CSI Actions %s",  (GetLineEnding() + GetLineEnding()).c_str() );
+                        DAW::ShowConsoleMsg(buffer);
+                        
+                        for(auto name : TheManager->GetActionNames())
+                        {
+                            snprintf(buffer, sizeof(buffer), "%s", (name + GetLineEnding()).c_str());
+                            DAW::ShowConsoleMsg(buffer);
+                        }
+                        
+                        snprintf(buffer, sizeof(buffer), "%s", (GetLineEnding() + GetLineEnding() + GetLineEnding() + GetLineEnding()).c_str());
+                        DAW::ShowConsoleMsg(buffer);
+                    }
+                    break ;
+                    
                 case IDC_COMBO_SurfaceName:
                 {
                     switch (HIWORD(wParam))
