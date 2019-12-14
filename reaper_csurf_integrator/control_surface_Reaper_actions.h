@@ -155,7 +155,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         char trackVolume[128];
-        sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+        snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
         SetWidgetValue(widget_, string(trackVolume));
     }
     
@@ -415,7 +415,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         char trackVolume[128];
-        sprintf(trackVolume, "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "D_VOL")));
+        snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "D_VOL")));
         SetWidgetValue(widget_, string(trackVolume));
     }
 

@@ -503,7 +503,7 @@ public:
             
             if (toptr) pp+=*toptr;
             char buf[64];
-            sprintf(buf,"%d %02d",(int)pp, ((int)(pp*100.0))%100);
+            snprintf(buf, sizeof(buf),"%d %02d",(int)pp, ((int)(pp*100.0))%100);
             if (strlen(buf)>sizeof(bla)) memcpy(bla,buf+strlen(buf)-sizeof(bla),sizeof(bla));
             else
                 memcpy(bla+sizeof(bla)-strlen(buf),buf,strlen(buf));

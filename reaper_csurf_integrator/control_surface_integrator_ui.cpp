@@ -115,7 +115,7 @@ const char *CSurfIntegrator::GetDescString()
 
 const char *CSurfIntegrator::GetConfigString() // string of configuration data
 {
-    sprintf(configtmp,"0 0");
+    snprintf(configtmp, sizeof(configtmp),"0 0");
     return configtmp;
 }
 
