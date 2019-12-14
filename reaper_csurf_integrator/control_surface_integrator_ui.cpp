@@ -230,6 +230,14 @@ static int outPort = 0;
 static char remoteDeviceIP[BUFSZ];
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
+// for EuCon
+int firstChannel = 0;
+int lastChannel = 0;
+int numSends = 0;
+int numFX = 0;
+int numInputs = 0;
+int numOutputs = 0;
+int options = 0;
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -740,18 +748,16 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             
             if(editMode)
             {
-                /*
                 editMode = false;
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
-                
-                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
-                
-                index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
+                SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, to_string(firstChannel).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, to_string(lastChannel).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumInputs, to_string(numInputs).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumOutputs, to_string(numOutputs).c_str());
+
+                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
                 
@@ -759,27 +765,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_UNCHECKED);
-                
-                if(autoMapSends)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
-                
-                if(autoMapFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
-                
-                if(autoMapFXMenu)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
-                
-                if(autoMapFocusedFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
-                 */
             }
             else
             {
@@ -802,83 +787,33 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         {
             switch(LOWORD(wParam))
             {
-                case IDC_COMBO_SurfaceTemplate:
-                {
-                    switch (HIWORD(wParam))
-                    {
-                        case CBN_SELCHANGE:
-                        {
-                            /*
-                            int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
-                            if(index >= 0)
-                            {
-                                char buffer[BUFSZ];
-                                
-                                GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, buffer, sizeof(buffer));
-                                
-                                for(int i = 0; i < sizeof(buffer); i++)
-                                {
-                                    if(buffer[i] == '.')
-                                    {
-                                        buffer[i] = 0;
-                                        break;
-                                    }
-                                }
-                                
-                                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)buffer);
-                                if(index >= 0)
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-                            }
-                             */
-                        }
-                    }
-                    
-                    break;
-                }
-                    
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
-                        /*
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
-                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
-                        
+
                         char buf[BUFSZ];
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, buf, sizeof(buf));
-                        inPort = atoi(buf);
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        firstChannel = atoi(buf);
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, buf, sizeof(buf));
-                        outPort = atoi(buf);
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        lastChannel = atoi(buf);
                         
-                        GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        numSends = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        numFX = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        numInputs = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
+                        numOutputs = atoi(buf);
+                        
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
-                            useZoneLink = true;
-                        else
-                            useZoneLink = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
-                            autoMapSends = true;
-                        else
-                            autoMapSends = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
-                            autoMapFX = true;
-                        else
-                            autoMapFX = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
-                            autoMapFXMenu = true;
-                        else
-                            autoMapFXMenu = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
-                            autoMapFocusedFX = true;
-                        else
-                            autoMapFocusedFX = false;
-                        */
+
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
