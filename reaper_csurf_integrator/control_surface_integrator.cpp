@@ -1091,8 +1091,11 @@ void Action::DoAction(double value, WidgetActionManager* sender)
 {
     value = isInverted_ == false ? value : 1.0 - value;
     
-    if(shouldToggle_ && value != 0.0)
-        Do( ! GetCurrentValue(), sender);
+    if(shouldToggle_)
+    {
+        if(value != 0.0)
+            Do( ! GetCurrentValue(), sender);
+    }
     else
         Do(value, sender);
     
