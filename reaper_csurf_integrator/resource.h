@@ -34,7 +34,6 @@
 #define IDC_RADIO_MCP                   1036
 #define IDC_BUTTON_AddOSCSurface        1036
 #define IDC_RADIO_TCP                   1037
-#define IDC_BUTTON_AddEuCon             1037
 #define IDC_BUTTON_AddEuConSurface      1037
 #define IDC_CHECK_ZoneLink              1038
 #define IDC_EDIT_OSCSurfaceName         1039
@@ -58,10 +57,12 @@
 #define IDC_EDIT_ActionName             1051
 #define IDC_EDIT_ActionParameter        1052
 #define IDC_EDIT_Alias                  1053
+#define IDC_BUTTON_GenerateWidgetList   1054
 #define IDC_BUTTON_AddZone              1055
 #define IDC_BUTTON_DeleteZone           1056
 #define IDC_BUTTON_AddIncludedZone      1057
 #define IDC_BUTTON_DeleteIncludedZone   1058
+#define IDC_BUTTON_GenerateActionList   1059
 #define IDC_STATIC_ZoneFilename         1060
 #define IDC_EDIT_ActionAlias            1061
 #define IDC_BUTTON_AddLineItem          1063
