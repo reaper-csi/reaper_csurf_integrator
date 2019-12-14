@@ -1314,6 +1314,8 @@ public:
                                                int lowChannel, int highChannel, int numSends, int numFX, int numInputs, int numOutputs, int options);
     virtual ~EuCon_ControlSurface() {}
     
+    virtual string GetSourceFileName() override { return "EuCon"; }
+    
     virtual void InitializeEuCon() override;
     virtual void EuConInitializationComplete() override;
     virtual void SendEuConMessage(string oscAddress, double value);
