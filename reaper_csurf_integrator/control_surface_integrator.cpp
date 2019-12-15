@@ -1763,14 +1763,14 @@ void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, st
 {
     if(name != "")
     {
-        Widget* widget = new Widget(this, string(name));
+        Widget* widget = new Widget(this, name);
         if(widget)
         {
             widgets_.push_back(widget);
             if(control != "")
-                new EuCon_CSIMessageGenerator(this, widget, string(control));
+                new EuCon_CSIMessageGenerator(this, widget, control);
             if(FB_Processor != "")
-                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, string(FB_Processor)));
+                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, FB_Processor));
         }
     }
 }
