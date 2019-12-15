@@ -116,7 +116,7 @@ private:
     bool isChannelPinned_ = false;
     
 protected:
-    TrackNavigationManager* manager_ = nullptr;
+    TrackNavigationManager* const manager_;
     TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
     
 public:
@@ -195,7 +195,7 @@ class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* surface_ = nullptr;
+    ControlSurface* const surface_;
     string name_ = "";
 
     WidgetActionManager* widgetActionManager_ = nullptr;
@@ -243,7 +243,7 @@ class CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Widget* widget_ = nullptr;
+    Widget* const widget_;
     CSIMessageGenerator(Widget* widget) : widget_(widget) {}
 };
 
@@ -311,7 +311,7 @@ class Midi_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Midi_ControlSurface* surface_ = nullptr;
+    Midi_ControlSurface* const surface_ = nullptr;
     
     MIDI_event_ex_t* lastMessageSent_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiFeedbackMessage1_ = new MIDI_event_ex_t(0, 0, 0);
@@ -338,7 +338,7 @@ class OSC_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    OSC_ControlSurface* surface_ = nullptr;
+    OSC_ControlSurface* const surface_ = nullptr;
     string oscAddress_ = "";
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
@@ -364,7 +364,7 @@ class EuCon_FeedbackProcessor : public FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    EuCon_ControlSurface* surface_ = nullptr;
+    EuCon_ControlSurface* const surface_ = nullptr;
     string oscAddress_ = "";
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
@@ -408,7 +408,7 @@ protected:
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
     
-    WidgetActionManager* widgetActionManager_ = nullptr;
+    WidgetActionManager* const widgetActionManager_;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     double delayAmount_ = 0.0;
@@ -548,8 +548,8 @@ class WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Widget* widget_ = nullptr;
-    Zone* zone_ = nullptr;
+    Widget* const widget_;
+    Zone* const zone_;
     map<string, vector <Action*>> actions_;
     vector<ActionLineItem> actionLineItems_;
     
@@ -704,7 +704,7 @@ private:
     TrackNavigator* trackNavigator_ = nullptr;
     vector<ActionLineItem> actionLineItems;
 
-    ControlSurface* surface_ = nullptr;
+    ControlSurface* const surface_;
     string name_ = "";
     string alias_ = "";
     string sourceFilePath_ = "";
@@ -854,7 +854,7 @@ class SendsActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* surface_ = nullptr;
+    ControlSurface* const surface_ = nullptr;
     int numSendSlots_ = 0;
     bool shouldMapSends_ = false;
     vector<Zone*> activeSendZones_;
@@ -886,7 +886,7 @@ struct FXWindow
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string fxName = "";
-    MediaTrack* track = nullptr;;
+    MediaTrack* const track = nullptr;;
     int fxIndex = 0;
     
     FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
@@ -897,7 +897,7 @@ class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* surface_ = nullptr;
+    ControlSurface* const surface_ = nullptr;
     int numFXlots_ = 0;
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
@@ -1009,19 +1009,16 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name)
-    {
-        fxActivationManager_ = new FXActivationManager(this);
-        sendsActivationManager_ = new SendsActivationManager(this);
-    }
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name),
+    fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this))  { }
 
-    CSurfIntegrator* CSurfIntegrator_ = nullptr;
-    Page* page_ = nullptr;
+    CSurfIntegrator* const CSurfIntegrator_ ;
+    Page* const page_;
     const string name_ = "";
     vector<Widget*> widgets_;
 
-    FXActivationManager* fxActivationManager_ = nullptr;
-    SendsActivationManager* sendsActivationManager_ = nullptr;
+    FXActivationManager* const fxActivationManager_;
+    SendsActivationManager* const sendsActivationManager_ = nullptr;
 
     map<string, Zone*> zones_;
     map<string, vector<Zone*>> zonesInZoneFile_;
@@ -1344,7 +1341,7 @@ class TrackNavigationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Page* page_ = nullptr;
+    Page* const page_ = nullptr;
     bool followMCP_ = true;
     bool synchPages_ = false;
     bool scrollLink_ = false;
@@ -1593,13 +1590,10 @@ private:
     bool isAlt_ = false;
     double altPressedTime_ = 0;
 
-    TrackNavigationManager* trackNavigationManager_ = nullptr;
+    TrackNavigationManager* const trackNavigationManager_ = nullptr;
    
 public:
-    Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name)
-    {
-        trackNavigationManager_ = new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue);
-    }
+    Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue)) { }
     
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
@@ -1894,7 +1888,7 @@ class Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfIntegrator* CSurfIntegrator_ = nullptr;
+    CSurfIntegrator* const CSurfIntegrator_;
     map<string, function<Action*(string name, WidgetActionManager* manager, vector<string>)>> actions_;
     vector <Page*> pages_;
     
