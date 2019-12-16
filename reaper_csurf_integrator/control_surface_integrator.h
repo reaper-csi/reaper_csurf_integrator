@@ -1033,9 +1033,9 @@ protected:
             widget->RequestUpdate();
     }
     
-    virtual void InitHardwiredWidgets()
+    void InitHardwiredWidgets()
     {
-        // Add the "hardcoded" widgets
+        // Add the "hardwired" widgets
         widgets_.push_back(new Widget(this, "OnTrackSelection"));
         widgets_.push_back(new Widget(this, "OnFXFocus"));
     }
