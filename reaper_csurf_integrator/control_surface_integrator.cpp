@@ -1702,16 +1702,16 @@ void EuConInitializationComplete()
         TheManager->EuConInitializationComplete();
 }
 
-void HandleEuConMessageWithDouble(const char *oscAddress, double value)
+void HandleEuConMessageWithDouble(const char *address, double value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(string(oscAddress), value);
+        TheManager->HandleEuConMessage(string(address), value);
 }
 
-void HandleEuConMessageWithString(const char *oscAddress, const char *value)
+void HandleEuConMessageWithString(const char *address, const char *value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(string(oscAddress), string(value));
+        TheManager->HandleEuConMessage(string(address), string(value));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1782,7 +1782,7 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     GoHome();
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
+void EuCon_ControlSurface::SendEuConMessage(string address, double value)
 {
     if(g_reaper_plugin_info)
     {
@@ -1791,18 +1791,18 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, double value)
         HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
         
         if(HandleReaperMessageWthDouble)
-            HandleReaperMessageWthDouble(oscAddress.c_str(), value);
+            HandleReaperMessageWthDouble(address.c_str(), value);
     }
     
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), address.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
+void EuCon_ControlSurface::SendEuConMessage(string address, string value)
 {
     if(g_reaper_plugin_info)
     {
@@ -1811,26 +1811,26 @@ void EuCon_ControlSurface::SendEuConMessage(string oscAddress, string value)
         HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
         
         if(HandleReaperMessageWthString)
-            HandleReaperMessageWthString(oscAddress.c_str(), value.c_str());
+            HandleReaperMessageWthString(address.c_str(), value.c_str());
     }
 
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), address.c_str(), value.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, double value)
+void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
 {
-    if(CSIMessageGeneratorsByOSCMessage_.count(oscAddress) > 0)
-        CSIMessageGeneratorsByOSCMessage_[oscAddress]->ProcessOSCMessage(oscAddress, value);
+    if(CSIMessageGeneratorsByOSCMessage_.count(address) > 0)
+        CSIMessageGeneratorsByOSCMessage_[address]->ProcessOSCMessage(address, value);
     
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), address.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
