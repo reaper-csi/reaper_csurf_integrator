@@ -524,6 +524,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             string widgetClass = tokens[0];
             
             // Control Signal Generators
+            if(widgetClass == "AnyPress" && (tokens.size() == 4 || tokens.size() == 7))
+                new AnyPress_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             if(widgetClass == "Press" && tokens.size() == 4)
                 new PressRelease_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             else if(widgetClass == "Press" && tokens.size() == 7)

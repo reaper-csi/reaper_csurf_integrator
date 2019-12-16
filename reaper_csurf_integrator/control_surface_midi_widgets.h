@@ -38,6 +38,27 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class AnyPress_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    MIDI_event_ex_t* press_;
+    MIDI_event_ex_t* release_;
+    
+public:
+    virtual ~AnyPress_Midi_CSIMessageGenerator() {}
+    AnyPress_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* press) : Midi_CSIMessageGenerator(widget), press_(press)
+    {
+        surface->AddCSIMessageGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100, this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        widget_->DoAction(1); // Doesn't matter what value was sent, just do it
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Fader14Bit_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
