@@ -1553,7 +1553,7 @@ void ControlSurface::GoZone(string zoneName, WidgetActionManager* sender)
 void Midi_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
-    ControlSurface::InitHardwiredWidgets();
+    InitHardwiredWidgets();
 }
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
@@ -1610,7 +1610,7 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
-    ControlSurface::InitHardwiredWidgets();
+    InitHardwiredWidgets();
 }
 
 void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
@@ -1777,7 +1777,7 @@ void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, st
 
 void EuCon_ControlSurface::EuConInitializationComplete()
 {
-    ControlSurface::InitHardwiredWidgets();
+    InitHardwiredWidgets();
     InitZones(zoneFolder_);
     GoHome();
 }
