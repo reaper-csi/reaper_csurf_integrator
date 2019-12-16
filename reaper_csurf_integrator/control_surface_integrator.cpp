@@ -711,7 +711,9 @@ void Manager::InitActionDictionary()
     actions_["TrackSendInvertPolarity"] =           [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendInvertPolarity(name, manager, params); };
     actions_["TrackSendPrePost"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendPrePost(name, manager, params); };
     actions_["TrackPan"] =                          [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackPan(name, manager, params); };
+    actions_["TrackPanPercent"] =                   [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackPanPercent(name, manager, params); };
     actions_["TrackPanWidth"] =                     [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackPanWidth(name, manager, params); };
+    actions_["TrackPanWidthPercent"] =              [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackPanWidthPercent(name, manager, params); };
     actions_["TrackNameDisplay"] =                  [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackNameDisplay(name, manager, params); };
     actions_["TrackVolumeDisplay"] =                [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackVolumeDisplay(name, manager, params); };
     actions_["TrackSendNameDisplay"] =              [this](string name, WidgetActionManager* manager, vector<string> params) { return new TrackSendNameDisplay(name, manager, params); };
@@ -1017,16 +1019,18 @@ void EuCon_FeedbackProcessor::SetValue(double value)
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        surface_->SendEuConMessage(address_, value);
     }
 }
 
 void EuCon_FeedbackProcessor::SetValue(int param, double value)
 {
+    // GAW TBD -- if needed must implement on EuCon side
+    
     if(lastDoubleValue_ != value)
     {
         lastDoubleValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        //surface_->SendEuConMessage(address_, param, value);
     }
 }
 
@@ -1035,7 +1039,7 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     if(lastStringValue_ != value)
     {
         lastStringValue_ = value;
-        surface_->SendEuConMessage(oscAddress_, value);
+        surface_->SendEuConMessage(address_, value);
     }
 }
 

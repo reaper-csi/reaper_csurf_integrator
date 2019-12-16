@@ -365,13 +365,13 @@ class EuCon_FeedbackProcessor : public FeedbackProcessor
 {
 protected:
     EuCon_ControlSurface* const surface_ = nullptr;
-    string oscAddress_ = "";
+    string address_ = "";
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
     
 public:
     
-    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, string oscAddress) : surface_(surface), oscAddress_(oscAddress) {}
+    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, string address) : surface_(surface), address_(address) {}
     ~EuCon_FeedbackProcessor() {}
     
     virtual void SetValue(double value) override;

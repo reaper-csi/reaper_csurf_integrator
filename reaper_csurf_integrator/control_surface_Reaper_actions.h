@@ -98,7 +98,7 @@ protected:
         DAW::GetTrackUIVolPan(track, &vol, &pan);
         SetWidgetValue(widget_, param_, panToNormalized(pan));
     }
-   
+    
 public:
     TrackPan(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
     
@@ -106,6 +106,28 @@ public:
     {
         if(MediaTrack* track = widget_->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanPercent : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        double vol, pan = 0.0;
+        DAW::GetTrackUIVolPan(track, &vol, &pan);
+        SetWidgetValue(widget_, pan * 100.0);
+    }
+    
+public:
+    TrackPanPercent(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
+    
+    void Do(double value, WidgetActionManager* sender) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
     }
 };
 
@@ -118,14 +140,34 @@ protected:
     {
         SetWidgetValue(widget_, param_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
-
+    
 public:
     TrackPanWidth(string name, WidgetActionManager* manager, vector<string> params) : TrackActionWithIntParam(name, manager, params) {}
-
+    
     void Do(double value, WidgetActionManager* sender) override
     {
         if(MediaTrack* track = widget_->GetTrack())
             DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanWidthPercent : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
+    }
+    
+public:
+    TrackPanWidthPercent(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
+    
+    void Do(double value, WidgetActionManager* sender) override
+    {
+        if(MediaTrack* track = widget_->GetTrack())
+            DAW::CSurf_OnWidthChange(track, value / 100.0, false);
     }
 };
 
