@@ -891,6 +891,13 @@ void Widget::RequestUpdate()
 
 void Widget::DoAction(double value)
 {
+    if( TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s\n", GetSurface()->GetName().c_str(), GetName().c_str());
+        DAW::ShowConsoleMsg(buffer);
+    }
+
     if( ! GetIsModifier())
         GetSurface()->GetPage()->InputReceived(this, value);
 
@@ -1564,23 +1571,36 @@ void Midi_ControlSurface::InitWidgets(string templateFilename)
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
 {
-    if(TheManager->GetSurfaceInMonitor())
+    bool isMapped = false;
+    
+    // At this point we don't know how much of the message comprises the key, so try all three
+    if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+    {
+        isMapped = true;
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
+            generator->ProcessMidiMessage(evt);
+    }
+    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+    {
+        isMapped = true;
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
+            generator->ProcessMidiMessage(evt);
+    }
+    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+    {
+        isMapped = true;
+        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000])
+            generator->ProcessMidiMessage(evt);
+        
+    }
+    
+    if( ! isMapped && TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
         DAW::ShowConsoleMsg(buffer);
+        
     }
-    
-    // At this point we don't know how much of the message comprises the key, so try all three
-    if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
-            generator->ProcessMidiMessage(evt);
-    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
-            generator->ProcessMidiMessage(evt);
-    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000])
-            generator->ProcessMidiMessage(evt);
 }
 
 void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
