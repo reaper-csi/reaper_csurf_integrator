@@ -894,7 +894,7 @@ void Widget::DoAction(double value)
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s\n", GetSurface()->GetName().c_str(), GetName().c_str());
+        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 
