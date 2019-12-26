@@ -199,8 +199,6 @@ struct SurfaceLine
     int lastChannel = 0;
     int numSends = 0;
     int numFX = 0;
-    int numInputs = 0;
-    int numOutputs = 0;
     int options = 0;
 };
 
@@ -235,8 +233,6 @@ int firstChannel = 0;
 int lastChannel = 0;
 int numSends = 0;
 int numFX = 0;
-int numInputs = 0;
-int numOutputs = 0;
 int options = 0;
 
 static bool followMCP = true;
@@ -754,8 +750,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, to_string(lastChannel).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumInputs, to_string(numInputs).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumOutputs, to_string(numOutputs).c_str());
 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
@@ -783,8 +777,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, "8");
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "8");
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "16");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumInputs, "8");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumOutputs, "8");
                 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)"EuCon");
                 if(index >= 0)
@@ -815,12 +807,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
                         numFX = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumInputs, buf, sizeof(buf));
-                        numInputs = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumOutputs, buf, sizeof(buf));
-                        numOutputs = atoi(buf);
                         
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
                             useZoneLink = true;
@@ -994,8 +980,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->lastChannel = lastChannel;
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
-                                    surface->numInputs = numInputs;
-                                    surface->numOutputs = numOutputs;
                                     surface->options = options;
                                     surface->useZoneLink = useZoneLink;
 
@@ -1061,8 +1045,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 lastChannel = pages[pageIndex]->surfaces[index]->lastChannel;
                                 numSends = pages[pageIndex]->surfaces[index]->numSends;
                                 numFX = pages[pageIndex]->surfaces[index]->numFX;
-                                numInputs = pages[pageIndex]->surfaces[index]->numInputs;
-                                numOutputs = pages[pageIndex]->surfaces[index]->numOutputs;
                                 options = pages[pageIndex]->surfaces[index]->options;
 
                                 
@@ -1095,8 +1077,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->lastChannel = lastChannel;
                                     pages[pageIndex]->surfaces[index]->numSends = numSends;
                                     pages[pageIndex]->surfaces[index]->numFX = numFX;
-                                    pages[pageIndex]->surfaces[index]->numInputs = numInputs;
-                                    pages[pageIndex]->surfaces[index]->numOutputs = numOutputs;
                                     pages[pageIndex]->surfaces[index]->options = options;
                                 }
                             }
@@ -1197,14 +1177,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     }
                     else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
                     {
-                        if(tokens.size() != 11 && tokens.size() != 12)
-                            continue;
-                        
                         SurfaceLine* surface = new SurfaceLine();
                         surface->type = tokens[0];
                         surface->name = tokens[1];
                         
-                        if(surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken)
+                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 11 || tokens.size() == 12))
                         {
                             surface->inPort = atoi(tokens[2].c_str());
                             surface->outPort = atoi(tokens[3].c_str());
@@ -1216,10 +1193,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             surface->autoMapFXMenu = tokens[9] == "AutoMapFXMenu" ? true : false;
                             surface->autoMapFocusedFX = tokens[10] == "AutoMapFocusedFX" ? true : false;
 
-                            if(tokens[0] == OSCSurfaceToken && tokens.size() > 11)
+                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
                                 surface->remoteDeviceIP = tokens[11];
                         }
-                        else if(surface->type == EuConSurfaceToken)
+                        else if(surface->type == EuConSurfaceToken && tokens.size() == 9 )
                         {
                             surface->firstChannel = atoi(tokens[2].c_str());
                             surface->lastChannel = atoi(tokens[3].c_str());
@@ -1227,9 +1204,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             surface->useZoneLink = tokens[5] == "UseZoneLink" ? true : false;
                             surface->numSends = atoi(tokens[6].c_str());
                             surface->numFX = atoi(tokens[7].c_str());
-                            surface->numInputs = atoi(tokens[8].c_str());
-                            surface->numOutputs = atoi(tokens[9].c_str());
-                            surface->options = atoi(tokens[10].c_str());
+                            surface->options = atoi(tokens[8].c_str());
                         }
                         
                         if(pages.size() > 0)
@@ -1240,7 +1215,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL, 0, 0);
             SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, 0, 0);
-
         }
         break;
         
@@ -1310,8 +1284,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
                             line += to_string(surface->numSends) + " " ;
                             line += to_string(surface->numFX) + " " ;
-                            line += to_string(surface->numInputs) + " " ;
-                            line += to_string(surface->numOutputs) + " " ;
                             line += to_string(surface->options) + " " ;
                         }
 

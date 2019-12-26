@@ -1298,8 +1298,6 @@ private:
     int highChannel_ = 0;
     int numSends_ = 0;
     int numFX_ = 0;
-    int numInputs_ = 0;
-    int numOutputs_ = 0;
     int options_ = 0;
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
@@ -1308,7 +1306,7 @@ private:
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder,
-                                               int lowChannel, int highChannel, int numSends, int numFX, int numInputs, int numOutputs, int options);
+                                               int lowChannel, int highChannel, int numSends, int numFX, int options);
     virtual ~EuCon_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "EuCon"; }

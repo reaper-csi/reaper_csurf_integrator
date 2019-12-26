@@ -91,8 +91,6 @@
 #define IDC_EDIT_NumFX                  1079
 #define IDC_CHECK_PanWidth              1080
 #define IDC_CHECK_PanLPanR              1081
-#define IDC_EDIT_NumInputs              1082
-#define IDC_EDIT_NumOutputs             1083
 #define IDC_EDIT_EuConSurfaceName       1084
 #define IDC_EDIT_LastChannel            1085
 
