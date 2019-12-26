@@ -822,7 +822,7 @@ void Manager::Init()
                                                                atoi(tokens[3].c_str()), // last Channel
                                                                atoi(tokens[6].c_str()), // numSends
                                                                atoi(tokens[7].c_str()), // numFX
-                                                               atoi(tokens[8].c_str()) // options
+                                                               atoi(tokens[8].c_str())  // options
                                                                );
 
                         currentPage->AddSurface(surface);

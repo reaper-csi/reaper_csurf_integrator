@@ -162,9 +162,9 @@ public:
     SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
     virtual ~SelectedTrackNavigator() {}
     
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
+    //virtual void SetTouchState(bool isChannelTouched) override {}
+    //virtual void Pin() override {}
+    //virtual void Unpin() override {}
     
     virtual string GetName() override { return "SelectedTrackNavigator"; }
     
@@ -181,9 +181,9 @@ public:
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
     
-    virtual void SetTouchState(bool isChannelTouched) override {}
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
+    //virtual void SetTouchState(bool isChannelTouched) override {}
+    //virtual void Pin() override {}
+    //virtual void Unpin() override {}
     
     virtual string GetName() override { return "FocusedFXNavigator"; }
     
