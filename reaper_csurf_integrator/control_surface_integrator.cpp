@@ -536,7 +536,9 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
                 new Fader7Bit_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             else if(widgetClass == "Encoder" && tokens.size() == 4)
                 new Encoder_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
-            
+            else if(widgetClass == "EncoderPlain" && tokens.size() == 4)
+                new EncoderPlain_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+
             // Feedback Processors
             else if(widgetClass == "FB_TwoState" && (tokens.size() == 7 || tokens.size() == 8))
             {
