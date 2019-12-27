@@ -262,7 +262,7 @@ static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string fil
 
 static map<string, TrackNavigator*> trackNavigators;
 
-static TrackNavigator* TrackNavigatorForChannel(int channelNum, string channelName, ControlSurface* surface)
+static TrackNavigator* TrackNavigatorForChannel(string channelName, ControlSurface* surface)
 {
     if(trackNavigators.count(channelName) < 1)
         trackNavigators[channelName] = surface->GetPage()->GetTrackNavigationManager()->AddTrackNavigator();
@@ -370,7 +370,7 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
         if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
             for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(i, surface->GetName() + to_string(i), surface));
+                expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface));
             
             continue;
         }
@@ -395,7 +395,15 @@ static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> pass
         {
             for(int i = 0; i < expandedZones.size(); i++)
                 expandedZones[i]->SetTrackNavigator(new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager()));
-
+            
+            continue;
+        }
+        
+        if(tokens.size() == 1 && tokens[0] == "ParentNavigator")
+        {
+            for(int i = 0; i < expandedZones.size(); i++)
+                expandedZones[i]->SetTrackNavigator(new ParentNavigator(surface->GetPage()->GetTrackNavigationManager()));
+            
             continue;
         }
         
