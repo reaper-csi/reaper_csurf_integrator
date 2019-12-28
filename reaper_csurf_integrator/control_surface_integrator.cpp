@@ -104,131 +104,6 @@ static vector<string> GetTokens(string line)
     return tokens;
 }
 
-static map<string, vector<vector<string>>> zoneTemplates;
-static vector<vector<vector<string>>> zoneDefinitions;
-
-static void ExpandZone(vector<string> tokens, string filePath, vector<Zone*> &expandedZones, vector<string> &expandedZonesIds, ControlSurface* surface, string alias)
-{
-    istringstream expandedZone(tokens[1]);
-    vector<string> expandedZoneTokens;
-    string expandedZoneToken;
-    
-    while (getline(expandedZone, expandedZoneToken, '|'))
-        expandedZoneTokens.push_back(expandedZoneToken);
-    
-    if(expandedZoneTokens.size() > 1)
-    {
-        //////////////////////////////////////////////////////////////////////////////////////////////
-        /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
-        //////////////////////////////////////////////////////////////////////////////////////////////
-
-        string zoneBaseName = "";
-        int rangeBegin = 0;
-        int rangeEnd = 1;
-        
-        zoneBaseName = expandedZoneTokens[0];
-        
-        istringstream range(expandedZoneTokens[1]);
-        vector<string> rangeTokens;
-        string rangeToken;
-        
-        while (getline(range, rangeToken, '-'))
-            rangeTokens.push_back(rangeToken);
-        
-        if(rangeTokens.size() > 1)
-        {
-            rangeBegin = stoi(rangeTokens[0]);
-            rangeEnd = stoi(rangeTokens[1]);
-            
-            if(zoneBaseName == "Send")
-                surface->SetNumSendSlots(rangeEnd - rangeBegin + 1);
-            
-            if(zoneBaseName == "FXMenu")
-                surface->GetFXActivationManager()->SetNumFXSlots(rangeEnd - rangeBegin + 1);
-            
-            for(int i = rangeBegin; i <= rangeEnd; i++)
-                expandedZonesIds.push_back(to_string(i));
-            
-            for(int i = 0; i <= rangeEnd - rangeBegin; i++)
-            {
-                Zone* zone = new Zone(surface, zoneBaseName + expandedZonesIds[i], filePath, alias + expandedZonesIds[i]);
-                if(surface->AddZone(zone))
-                    expandedZones.push_back(zone);
-            }
-        }
-    }
-    else
-    {
-        //////////////////////////////////////////////////////////////////////////////////////////////
-        /// Just regular syntax of type "Channel1"
-        //////////////////////////////////////////////////////////////////////////////////////////////
-
-        Zone* zone = new Zone(surface, tokens[1], filePath, alias);
-        if(surface->AddZone(zone))
-        {
-            if((tokens[1].compare(0, 4, "Send")) == 0)
-                surface->SetNumSendSlots(surface->GetNumSendSlots() + 1);
-            if((tokens[1].compare(0, 6, "FXMenu")) == 0)
-                surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
-            expandedZones.push_back(zone);
-            expandedZonesIds.push_back("");
-        }
-    }
-}
-
-static void ExpandIncludedZone(vector<string> tokens, vector<string> &expandedZones)
-{
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    /// Expand syntax of type "Channel|1-8" into 8 Zones named Channel1, Channel2, ... Channel8
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    
-    vector<string> expandedZonesIds;
-    
-    istringstream expandedZone(tokens[0]);
-    vector<string> expandedZoneTokens;
-    string expandedZoneToken;
-    
-    while (getline(expandedZone, expandedZoneToken, '|'))
-        expandedZoneTokens.push_back(expandedZoneToken);
-    
-    if(expandedZoneTokens.size() > 1)
-    {
-        string zoneBaseName = "";
-        int rangeBegin = 0;
-        int rangeEnd = 1;
-        
-        zoneBaseName = expandedZoneTokens[0];
-        
-        istringstream range(expandedZoneTokens[1]);
-        vector<string> rangeTokens;
-        string rangeToken;
-        
-        while (getline(range, rangeToken, '-'))
-            rangeTokens.push_back(rangeToken);
-        
-        if(rangeTokens.size() > 1)
-        {
-            rangeBegin = stoi(rangeTokens[0]);
-            rangeEnd = stoi(rangeTokens[1]);
-            
-            for(int i = rangeBegin; i <= rangeEnd; i++)
-                expandedZonesIds.push_back(to_string(i));
-            
-            for(int i = 0; i <= rangeEnd - rangeBegin; i++)
-            {
-                expandedZones.push_back(zoneBaseName + expandedZonesIds[i]);
-            }
-        }
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    /// Just regular syntax of type "Channel1"
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    else
-    {
-        expandedZones.push_back(tokens[0]);
-    }
-}
-
 static void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
@@ -452,6 +327,65 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     }
 }
 
+static map<string, vector<vector<string>>> zoneTemplates;
+static vector<vector<vector<string>>> zoneDefinitions;
+
+static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+{
+    zoneTemplates.clear();
+    zoneDefinitions.clear();
+    int lineNumber = 0;
+    string zoneName = "";
+    
+    try
+    {
+        ifstream file(filePath);
+        
+        bool isTemplate = false;
+        
+        for (string line; getline(file, line) ; )
+        {
+            line = regex_replace(line, regex(TabChars), " ");
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            lineNumber++;
+            
+            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                continue;
+            
+            vector<string> tokens(GetTokens(line));
+            
+            if(tokens.size() > 0 && tokens[0] == "Zone")
+            {
+                zoneName = tokens[1];
+                
+                if(tokens[1].size() > 1 && tokens[1].back() == '|')
+                    isTemplate = true;
+                
+                if( ! isTemplate)
+                    zoneDefinitions.push_back(vector<vector<string>>());
+            }
+            
+            if(isTemplate)
+                zoneTemplates[zoneName].push_back(tokens);
+            else
+                zoneDefinitions.back().push_back(tokens);
+            
+            if(tokens[0] == "ZoneEnd")
+                isTemplate = false;
+        }
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    for(auto zoneLines : zoneDefinitions)
+        BuildZone(zoneLines, filePath, surface, widgets, nullptr); // Start with the outermost Zone -- parentZone == nullptr
+}
+
 static int strToHex(string valueStr)
 {
     return strtol(valueStr.c_str(), nullptr, 16);
@@ -654,62 +588,6 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
     }
-}
-
-static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
-{
-    zoneTemplates.clear();
-    zoneDefinitions.clear();
-    int lineNumber = 0;
-    string zoneName = "";
-    
-    try
-    {
-        ifstream file(filePath);
-        
-        bool isTemplate = false;
-        
-        for (string line; getline(file, line) ; )
-        {
-            line = regex_replace(line, regex(TabChars), " ");
-            line = regex_replace(line, regex(CRLFChars), "");
-            
-            lineNumber++;
-            
-            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
-                continue;
-            
-            vector<string> tokens(GetTokens(line));
-        
-            if(tokens.size() > 0 && tokens[0] == "Zone")
-            {
-                zoneName = tokens[1];
-                
-                if(tokens[1].size() > 1 && tokens[1].back() == '|')
-                    isTemplate = true;
-                
-                if( ! isTemplate)
-                    zoneDefinitions.push_back(vector<vector<string>>());
-           }
-            
-            if(isTemplate)
-                zoneTemplates[zoneName].push_back(tokens);
-            else
-                zoneDefinitions.back().push_back(tokens);
-            
-            if(tokens[0] == "ZoneEnd")
-                isTemplate = false;
-        }
-    }
-    catch (exception &e)
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    for(auto zoneLines : zoneDefinitions)
-        BuildZone(zoneLines, filePath, surface, widgets, nullptr); // Start with the outermost Zone -- parentZone == nullptr
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1502,8 +1380,74 @@ void ControlSurface::InitZones(string zoneFolder)
 void ControlSurface::BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
 {
     for(auto includedZoneName : includedZoneNames)
-        if(zoneTemplates.count(includedZoneName) > 0)
-            BuildZone(zoneTemplates[includedZoneName], filePath, surface, widgets, parentZone);
+    {
+        if(includedZoneName.back() == '|')
+        {
+            if(zoneTemplates.count(includedZoneName) > 0)
+            {
+                vector<vector<string>> zoneLines;
+                
+                for(auto line : zoneTemplates[includedZoneName])
+                {
+                    zoneLines.push_back(vector<string>());
+                    
+                    for(auto token : line)
+                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), ""));
+                }
+                
+                BuildZone(zoneLines, filePath, surface, widgets, parentZone);
+            }
+        }
+        else
+        {
+            istringstream expandedZone(includedZoneName);
+            vector<string> expandedZoneTokens;
+            string expandedZoneToken;
+            
+            while (getline(expandedZone, expandedZoneToken, '|'))
+                expandedZoneTokens.push_back(expandedZoneToken);
+            
+            if(expandedZoneTokens.size() > 1)
+            {
+                string zoneBaseName = "";
+                int rangeBegin = 0;
+                int rangeEnd = 1;
+                
+                zoneBaseName = expandedZoneTokens[0];
+                
+                if(zoneTemplates.count(zoneBaseName + "|") > 0)
+                {
+                    istringstream range(expandedZoneTokens[1]);
+                    vector<string> rangeTokens;
+                    string rangeToken;
+                    
+                    while (getline(range, rangeToken, '-'))
+                        rangeTokens.push_back(rangeToken);
+                    
+                    if(rangeTokens.size() > 1)
+                    {
+                        rangeBegin = stoi(rangeTokens[0]);
+                        rangeEnd = stoi(rangeTokens[1]);
+                        
+                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+                        {
+                            vector<vector<string>> zoneLines;
+
+                            for(auto line : zoneTemplates[zoneBaseName + "|"])
+                            {
+                                zoneLines.push_back(vector<string>());
+                                
+                                for(auto token : line)
+                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                            }
+                            
+                            BuildZone(zoneLines, filePath, surface, widgets, parentZone);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget* widget)
