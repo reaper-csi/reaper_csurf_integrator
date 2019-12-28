@@ -228,15 +228,13 @@ static void ExpandIncludedZone(vector<string> tokens, vector<string> &expandedZo
     }
 }
 
-static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string filePath, Zone* zone)
+static void ProcessIncludedZones(ifstream &zoneFile, string filePath, Zone* zone)
 {
     for (string line; getline(zoneFile, line) ; )
     {
         line = regex_replace(line, regex(TabChars), " ");
         line = regex_replace(line, regex(CRLFChars), "");
 
-        lineNumber++;
-        
         if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
             continue;
         
@@ -247,6 +245,9 @@ static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string fil
             if(tokens[0] == "IncludedZonesEnd")    // finito baybay - IncludedZone processing complete
                 return;
             
+            // GAW TBD -- get real zone here -- no forward ref.
+            
+            
             vector<string> expandedZones;
             
             ExpandIncludedZone(tokens, expandedZones);
@@ -256,6 +257,11 @@ static void ProcessIncludedZones(int &lineNumber, ifstream &zoneFile, string fil
                 if(zone->GetName() != expandedZones[i]) // prevent recursive defintion
                     includedZoneMembers[expandedZones[i]].push_back(zone);
             }
+            
+            
+            
+            
+            
         }
     }
 }
@@ -327,169 +333,240 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
-static void ProcessZone(int &lineNumber, ifstream &zoneFile, vector<string> passedTokens, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static map<string, vector<vector<string>>> zoneTemplates;
+static vector<vector<vector<string>>> zoneDefinitions;
+
+
+static void ProcessZone(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
+    
+    
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
-    
-    if(passedTokens.size() < 2)
-        return;
-    
-    string alias = "";
-    
-    if(passedTokens.size() > 2)
-        alias = passedTokens[2];
-    else
-        alias = passedTokens[1];
 
     
-    vector<Zone*> expandedZones;
-    vector<string> expandedZonesIds;
     
-    ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, alias);
+    vector<string> includedZones;
+    bool isInIncludedZonesSection = false;
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
-    
-    for (string line; getline(zoneFile, line) ; )
+    string alias = "";
+    /*
+    for(auto tokens : zoneDefinitions)
     {
-        line = regex_replace(line, regex(TabChars), " ");
-        line = regex_replace(line, regex(CRLFChars), "");
-
-        lineNumber++;
-        
-        if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+        if(tokens.size() > 0 && tokens[0] == "Zone")
+        {
+            if(tokens.size() < 2)
+                return;
+            
+            if(tokens.size() > 2)
+                alias = tokens[2];
+            else
+                alias = tokens[1];
+            
             continue;
-        
-        vector<string> tokens(GetTokens(line));
-        
+        }
+
+    
         if(tokens.size() > 0)
         {
             if(tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
                 return;
-        }
-        
-        if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
-        {
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface));
             
-            continue;
-        }
-        
-        if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
-        {
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(new MasterTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
-            
-            continue;
-        }
-        
-        if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
-        {
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
-            
-            continue;
-        }
-        
-        if(tokens.size() == 1 && tokens[0] == "FocusedFXNavigator")
-        {
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager()));
-            
-            continue;
-        }
-        
-        if(tokens.size() == 1 && tokens[0] == "ParentNavigator")
-        {
-            for(int i = 0; i < expandedZones.size(); i++)
-                expandedZones[i]->SetTrackNavigator(new ParentNavigator(surface->GetPage()->GetTrackNavigationManager()));
-            
-            continue;
-        }
-        
-        for(int i = 0; i < expandedZones.size(); i++)
-        {            
-            // Pre-process for "Channel|1-8" syntax
-            string localZoneLine(line);
-            localZoneLine = regex_replace(localZoneLine, regex("\\|"), expandedZonesIds[i]);
-            
-            vector<string> tokens(GetTokens(localZoneLine));
-            
-            if(tokens.size() > 0)
+            if(tokens[0] == "IncludedZones")
             {
-                if(tokens[0] == "IncludedZones")
+                isInIncludedZonesSection = true;
+                continue;
+            }
+            
+            if(tokens[0] == "IncludedZonesEnd")
+            {
+                isInIncludedZonesSection = false;
+                
+                // GAW TBD -- process included Zones here
+                
+                continue;
+            }
+            
+            if(tokens.size() == 1 && isInIncludedZonesSection)
+            {
+                includedZones.push_back(tokens[0]);
+            }
+        }
+
+    
+
+ 
+    
+    // GAW TBD -- this will change dramatically
+    vector<Zone*> expandedZones;
+    vector<string> expandedZonesIds;
+    
+    
+    // GAW TBD -- needs a redesign
+    //ExpandZone(passedTokens, filePath, expandedZones, expandedZonesIds, surface, alias);
+    
+    
+
+    
+    
+    
+    
+    
+    
+    //for (vector<string>::iterator it = zoneDefintions->begin(); it != zoneDefintions->end(); ++it)
+    //{
+        //vector<string> *pTokens = it;
+        
+    //}
+    
+    
+    //for (string line; getline(zoneFile, line) ; )
+    //{
+        
+        // Move this to preprocessor
+        
+        //line = regex_replace(line, regex(TabChars), " ");
+        //line = regex_replace(line, regex(CRLFChars), "");
+
+        //if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            //continue;
+        
+        //vector<string> tokens(GetTokens(line));
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+        
+    
+    if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
+    {
+        for(int i = 0; i < expandedZones.size(); i++)
+            expandedZones[i]->SetTrackNavigator(TrackNavigatorForChannel(surface->GetName() + to_string(i), surface));
+        
+        continue;
+    }
+    
+    if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
+    {
+        for(int i = 0; i < expandedZones.size(); i++)
+            expandedZones[i]->SetTrackNavigator(new MasterTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
+        
+        continue;
+    }
+    
+    if(tokens.size() == 1 && tokens[0] == "SelectedTrackNavigator")
+    {
+        for(int i = 0; i < expandedZones.size(); i++)
+            expandedZones[i]->SetTrackNavigator(new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager()));
+        
+        continue;
+    }
+    
+    if(tokens.size() == 1 && tokens[0] == "FocusedFXNavigator")
+    {
+        for(int i = 0; i < expandedZones.size(); i++)
+            expandedZones[i]->SetTrackNavigator(new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager()));
+        
+        continue;
+    }
+    
+    if(tokens.size() == 1 && tokens[0] == "ParentNavigator")
+    {
+        for(int i = 0; i < expandedZones.size(); i++)
+            expandedZones[i]->SetTrackNavigator(new ParentNavigator(surface->GetPage()->GetTrackNavigationManager()));
+        
+        continue;
+    }
+    
+    
+    for(int i = 0; i < expandedZones.size(); i++)
+    {
+        // Pre-process for "Channel|1-8" syntax
+        string localZoneLine("line");
+        localZoneLine = regex_replace(localZoneLine, regex("\\|"), expandedZonesIds[i]);
+        
+        vector<string> tokens(GetTokens(localZoneLine));
+        
+        
+        
+        
+        
+        
+            // GAW -- the first token is the Widget name, possibly decorated with modifiers
+            string widgetName = "";
+            string modifiers = "";
+            bool isTrackTouch = false;
+            bool isInverted = false;
+            bool shouldToggle = false;
+            bool isDelayed = false;
+            double delayAmount = 0.0;
+        
+            GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
+        
+            if(delayAmount > 0.0)
+                isDelayed = true;
+        
+            Widget* widget = nullptr;
+        
+            for(auto * aWidget : widgets)
+            {
+                if(aWidget->GetName() == widgetName)
                 {
-                    ProcessIncludedZones(lineNumber, zoneFile, filePath, expandedZones[i]);
-                    continue;
+                    widget = aWidget;
+                    break;
                 }
-                
-                // GAW -- the first token is the Widget name, possibly decorated with modifiers
-                string widgetName = "";
-                string modifiers = "";
-                bool isTrackTouch = false;
-                bool isInverted = false;
-                bool shouldToggle = false;
-                bool isDelayed = false;
-                double delayAmount = 0.0;
-                
-                GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
-                
-                if(delayAmount > 0.0)
-                    isDelayed = true;
-                
-                Widget* widget = nullptr;
-                
-                for(auto * aWidget : widgets)
+            }
+        
+            vector<string> params;
+            for(int j = 1; j < tokens.size(); j++)
+                params.push_back(tokens[j]);
+        
+            if(params.size() > 0 && widget != nullptr)
+            {
+                if(TheManager->IsActionAvailable(params[0]))
                 {
-                    if(aWidget->GetName() == widgetName)
+                    if(widgetActionManagerForWidget.count(widget) < 1)
                     {
-                        widget = aWidget;
-                        break;
+                        widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, expandedZones[i]);
+
+                        expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
                     }
-                }
-                
-                vector<string> params;
-                for(int j = 1; j < tokens.size(); j++)
-                    params.push_back(tokens[j]);
-                
-                if(params.size() > 0 && widget != nullptr)
-                {
-                    if(TheManager->IsActionAvailable(params[0]))
-                    {
-                        if(widgetActionManagerForWidget.count(widget) < 1)
-                        {
-                            widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, expandedZones[i]);
+                    
+                    Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
 
-                            expandedZones[i]->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
-                        }
-                        
-                        Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
-
-                        if(isTrackTouch)
-                            widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
-                        else
-                            widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
-                        
-                        if(isInverted)
-                            action->SetIsInverted();
-                        
-                        if(shouldToggle)
-                            action->SetShouldToggle();
-                        
-                        if(isDelayed)
-                            action->SetDelayAmount(delayAmount * 1000.0);
-
-                        if(params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
-                            widget->SetIsModifier();
-                    }
+                    if(isTrackTouch)
+                        widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
                     else
-                    {
-                        // log error, etc.
-                    }
+                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
+                    
+                    if(isInverted)
+                        action->SetIsInverted();
+                    
+                    if(shouldToggle)
+                        action->SetShouldToggle();
+                    
+                    if(isDelayed)
+                        action->SetDelayAmount(delayAmount * 1000.0);
+
+                    if(params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
+                        widget->SetIsModifier();
+                }
+                else
+                {
+                    // log error, etc.
                 }
             }
         }
     }
+     */
 }
 
 static int strToHex(string valueStr)
@@ -671,7 +748,7 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
         {
             line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
-
+            
             lineNumber++;
             
             if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
@@ -679,17 +756,12 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
             
             vector<string> tokens(GetTokens(line));
             
-            if(tokens.size() > 0)
+            if(tokens.size() > 0 && tokens[0] == "Widget")
             {
-                if(tokens[0] == "Zone")
-                    ProcessZone(lineNumber, file, tokens, filePath, surface, widgets);
-                else if(tokens[0] == "Widget")
-                {
-                    if(filePath[filePath.length() - 3] == 'm')
-                        ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
-                    if(filePath[filePath.length() - 3] == 'o')
-                        ProcessOSCWidget(lineNumber, file, tokens, (OSC_ControlSurface*)surface, widgets);
-                }
+                if(filePath[filePath.length() - 3] == 'm')
+                    ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
+                if(filePath[filePath.length() - 3] == 'o')
+                    ProcessOSCWidget(lineNumber, file, tokens, (OSC_ControlSurface*)surface, widgets);
             }
         }
     }
@@ -699,6 +771,61 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
     }
+}
+
+static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+{
+    zoneTemplates.clear();
+    zoneDefinitions.clear();
+    int lineNumber = 0;
+    string zoneName = "";
+    
+    try
+    {
+        ifstream file(filePath);
+        
+        bool isTemplate = false;
+        
+        for (string line; getline(file, line) ; )
+        {
+            line = regex_replace(line, regex(TabChars), " ");
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            lineNumber++;
+            
+            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+                continue;
+            
+            vector<string> tokens(GetTokens(line));
+        
+            if(tokens.size() > 0 && tokens[0] == "Zone")
+            {
+                zoneName = tokens[1];
+                
+                if(tokens[1].size() > 1 && tokens[1].back() == '|')
+                    isTemplate = true;
+                
+                if( ! isTemplate)
+                    zoneDefinitions.push_back(vector<vector<string>>());
+           }
+            
+            if(isTemplate)
+                zoneTemplates[zoneName].push_back(tokens);
+            else
+                zoneDefinitions.back().push_back(tokens);
+            
+            if(tokens[0] == "ZoneEnd")
+                isTemplate = false;
+        }
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    ProcessZone(filePath, surface, widgets);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1481,13 +1608,20 @@ void ControlSurface::InitZones(string zoneFolder)
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
         for(auto zoneFilename : zoneFilesToProcess)
-            ProcessFile(zoneFilename, this, widgets_);
+            ProcessZoneFile(zoneFilename, this, widgets_);
         
+        
+        // GAW TBD -- this is history
         // now add appropriate included zones to zones
         for(auto [includedZoneName, includedZones] : includedZoneMembers)
             if(zones_.count(includedZoneName) > 0)
                 for(auto includedZone : includedZones)
                     includedZone->AddZone(zones_[includedZoneName]);
+        
+        
+        
+        
+        
     }
     catch (exception &e)
     {
