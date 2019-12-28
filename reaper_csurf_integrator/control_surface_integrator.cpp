@@ -337,7 +337,7 @@ static map<string, vector<vector<string>>> zoneTemplates;
 static vector<vector<vector<string>>> zoneDefinitions;
 
 
-static void ProcessZone(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
     
     
@@ -350,8 +350,8 @@ static void ProcessZone(string filePath, ControlSurface* surface, vector<Widget*
     
     map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
     string alias = "";
-    /*
-    for(auto tokens : zoneDefinitions)
+
+    for(auto tokens : zoneLines)
     {
         if(tokens.size() > 0 && tokens[0] == "Zone")
         {
@@ -566,7 +566,6 @@ static void ProcessZone(string filePath, ControlSurface* surface, vector<Widget*
             }
         }
     }
-     */
 }
 
 static int strToHex(string valueStr)
@@ -825,7 +824,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
         DAW::ShowConsoleMsg(buffer);
     }
     
-    ProcessZone(filePath, surface, widgets);
+    for(auto zoneLines : zoneDefinitions)
+        ProcessZone(zoneLines, filePath, surface, widgets);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
