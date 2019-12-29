@@ -127,7 +127,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        double value = 1.0 / 512.0;
+        double value = 1.0 / 64.0;
         
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
