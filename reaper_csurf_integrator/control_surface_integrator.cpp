@@ -1453,12 +1453,25 @@ void ControlSurface::BuildIncludedZones(vector<string> &includedZoneNames, strin
                         {
                             vector<vector<string>> zoneLines;
 
+                            bool isInIncludedZonesSection = false;
+
                             for(auto line : zoneTemplates[zoneBaseName + "|"])
                             {
                                 zoneLines.push_back(vector<string>());
                                 
                                 for(auto token : line)
-                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                                {
+                                    if(token == "IncludedZones")
+                                        isInIncludedZonesSection = true;
+                                    
+                                    if(token == "IncludedZonesEnd")
+                                        isInIncludedZonesSection = false;
+
+                                    if(isInIncludedZonesSection)
+                                        zoneLines.back().push_back(token);
+                                    else
+                                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                                }
                             }
                             
                             BuildZone(zoneLines, filePath, surface, widgets, parentZone);
