@@ -248,6 +248,47 @@ static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
 
+static void ModifyEuConZoneFile(int firstChannel, int lastChannel, int numSends, int numFX)
+{
+    string channelStr = to_string(firstChannel) + "-" + to_string(lastChannel);
+    string sendStr = "1-" + to_string(numSends);
+    
+    vector<string> inputLines;
+    vector<string> outputLines;
+
+    ifstream euconInputZoneFile(string(DAW::GetResourcePath()) + "/CSI/Zones/EuCon/EuCon.zon");
+
+    for (string line; getline(euconInputZoneFile, line) ; )
+        inputLines.push_back(line);
+    
+    for(auto inputLine : inputLines)
+    {
+        size_t zonePos = inputLine.find("Zone");
+        size_t channelPos = inputLine.find("Channel|");
+        size_t sendPos = inputLine.find("Send|");
+
+        string outputLine;
+        
+        if(channelPos != string::npos && zonePos == string::npos)
+            outputLine = inputLine.substr(0, channelPos + strlen("Channel|")) + channelStr;
+        else if(sendPos != string::npos && zonePos == string::npos)
+            outputLine = inputLine.substr(0, sendPos + strlen("Send|")) + sendStr;
+        else
+            outputLine = inputLine;
+
+        outputLines.push_back(outputLine);
+    }
+    
+    euconInputZoneFile.close();
+    
+    ofstream euconOutputZoneFile(string(DAW::GetResourcePath()) + "/CSI/Zones/EuCon/EuCon.zon");
+    
+    for(auto outputLine : outputLines)
+        euconOutputZoneFile << outputLine + "\n";
+    
+    euconOutputZoneFile.close();
+}
+
 static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -1285,6 +1326,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += to_string(surface->numSends) + " " ;
                             line += to_string(surface->numFX) + " " ;
                             line += to_string(surface->options) + " " ;
+                            
+                            ModifyEuConZoneFile(surface->firstChannel, surface->lastChannel, surface->numSends, surface->numFX);
                         }
 
                         line += GetLineEnding();
