@@ -392,8 +392,69 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
         DAW::ShowConsoleMsg(buffer);
     }
     
-    for(auto zoneLines : zoneDefinitions)
-        BuildZone(zoneLines, filePath, surface, widgets, nullptr); // Start with the outermost Zone -- parentZone == nullptr
+    for(auto inputZoneLines : zoneDefinitions)
+    {
+        if(inputZoneLines.size() > 0 && inputZoneLines[0].size() > 1 && inputZoneLines[0][0] == "Zone")
+        {
+            string zoneName = inputZoneLines[0][1];
+            
+            size_t pos = zoneName.find("|");
+            
+            if(pos == string::npos)
+                BuildZone(inputZoneLines, filePath, surface, widgets, nullptr); // Start with the outermost Zone -- parentZone == nullptr
+            else
+            {
+                istringstream expandedZone(zoneName);
+                vector<string> expandedZoneTokens;
+                string expandedZoneToken;
+                
+                while (getline(expandedZone, expandedZoneToken, '|'))
+                    expandedZoneTokens.push_back(expandedZoneToken);
+                
+                if(expandedZoneTokens.size() > 1)
+                {
+                    string zoneBaseName = "";
+                    int rangeBegin = 0;
+                    int rangeEnd = 1;
+                    
+                    zoneBaseName = expandedZoneTokens[0];
+                    
+                    istringstream range(expandedZoneTokens[1]);
+                    vector<string> rangeTokens;
+                    string rangeToken;
+                    
+                    while (getline(range, rangeToken, '-'))
+                        rangeTokens.push_back(rangeToken);
+                    
+                    if(rangeTokens.size() > 1)
+                    {
+                        rangeBegin = stoi(rangeTokens[0]);
+                        rangeEnd = stoi(rangeTokens[1]);
+                        
+                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+                        {
+                            vector<vector<string>> outputZoneLines;
+                            
+                            for(auto line : inputZoneLines)
+                            {
+                                outputZoneLines.push_back(vector<string>());
+                                
+                                for(auto token : line)
+                                {
+                                    if(line.size() > 1 && line[0] == "Zone" && token.find("|") != string::npos)
+                                        outputZoneLines.back().push_back(zoneBaseName + to_string(i + 1));
+                                    else
+                                        outputZoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                                }
+                            }
+                            
+                            BuildZone(outputZoneLines, filePath, surface, widgets, nullptr);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 static int strToHex(string valueStr)
