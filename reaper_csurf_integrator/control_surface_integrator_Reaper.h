@@ -8,6 +8,7 @@
 #define control_surface_integrator_Reaper_h
 
 #include "reaper_plugin_functions.h"
+#include "WDL/mutex.h"
 #include "ReportLoggingEtc.h"
 
 using namespace std;
@@ -99,6 +100,8 @@ public:
             return timeGetTime();
     #endif
     }
+    
+    static void MarkProjectDirty(ReaProject* proj) { ::MarkProjectDirty(proj); }
     
     static const char* get_ini_file() { return ::get_ini_file(); }
 

@@ -1762,6 +1762,51 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+// For EuCon
+/////////////////////////////////////////////////////////////////////////////
+class MarshalledFunctionCall
+/////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    EuCon_ControlSurface* surface_ = nullptr;
+    MarshalledFunctionCall(EuCon_ControlSurface * surface) : surface_(surface) {}
+    
+public:
+    virtual void Execute() {}
+    virtual ~MarshalledFunctionCall() {}
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class Marshalled_Double : public MarshalledFunctionCall
+/////////////////////////////////////////////////////////////////////////////
+{
+private:
+    std::string address_ = "";
+    double value_ = 0;
+public:
+    Marshalled_Double(EuCon_ControlSurface* surface, std::string address, double value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
+    virtual ~Marshalled_Double() {}
+    
+    virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class Marshalled_String : public MarshalledFunctionCall
+/////////////////////////////////////////////////////////////////////////////
+{
+private:
+    std::string address_ = "";
+    std::string  value_ = "";
+    
+public:
+    Marshalled_String(EuCon_ControlSurface* surface, std::string address, string value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
+    virtual ~Marshalled_String() {}
+    
+    virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
+};
+
 void EuConRequestsInitialization()
 {
     if(TheManager)
@@ -1783,13 +1828,13 @@ void EuConInitializationComplete()
 void HandleEuConMessageWithDouble(const char *address, double value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(string(address), value);
+        TheManager->ReceiveEuConMessage(string(address), value);
 }
 
 void HandleEuConMessageWithString(const char *address, const char *value)
 {
     if(TheManager)
-        TheManager->HandleEuConMessage(string(address), string(value));
+        TheManager->ReceiveEuConMessage(string(address), string(value));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1900,11 +1945,48 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
     }
 }
 
+void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
+{
+    mutex_.Enter();
+    workQueue_.push_front(new Marshalled_Double(this, address, value));
+    mutex_.Leave();
+}
+
+void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
+{
+    mutex_.Enter();
+    workQueue_.push_front(new Marshalled_String(this, address, value));
+    mutex_.Leave();
+}
+
+void EuCon_ControlSurface::HandleExternalInput()
+{
+    if(! workQueue_.empty())
+    {
+        mutex_.Enter();
+        list<MarshalledFunctionCall*> localWorkQueue = workQueue_;
+        workQueue_.clear();
+        mutex_.Leave();
+        
+        while(! localWorkQueue.empty())
+        {
+            MarshalledFunctionCall *pCall = localWorkQueue.back();
+            localWorkQueue.pop_back();
+            pCall->Execute();
+            delete pCall;
+        }
+    }
+}
+
 void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
 {
-    if(CSIMessageGeneratorsByOSCMessage_.count(address) > 0)
-        CSIMessageGeneratorsByOSCMessage_[address]->ProcessOSCMessage(address, value);
-    
+    if(address == "PostMessage" && g_hwnd != nullptr)
+        PostMessage(g_hwnd, WM_COMMAND, (int)value, 0);
+    else if(address == "LayoutChanged")
+        DAW::MarkProjectDirty(nullptr);
+    else if(CSIMessageGeneratorsByMessage_.count(address) > 0)
+        CSIMessageGeneratorsByMessage_[address]->ProcessMessage(address, value);
+        
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
