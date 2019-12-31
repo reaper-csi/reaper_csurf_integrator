@@ -281,7 +281,7 @@ public:
     EuCon_CSIMessageGenerator(EuCon_ControlSurface* surface, Widget* widget, string message);
     virtual ~EuCon_CSIMessageGenerator() {}
     
-    virtual void ProcessOSCMessage(string message, double value)
+    virtual void ProcessMessage(string message, double value)
     {
         widget_->DoAction(value);
     }
@@ -1058,12 +1058,12 @@ public:
     void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
-    virtual void HandleOSCInput() {}
+    virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
     virtual void InitializeEuConWidget(string name, string control, string FB_Processor) {}
     virtual void EuConInitializationComplete() {}
-    virtual void HandleEuConMessage(string oscAddress, double value) {}
-    virtual void HandleEuConMessage(string oscAddress, string value) {}
+    virtual void ReceiveEuConMessage(string oscAddress, double value) {}
+    virtual void ReceiveEuConMessage(string oscAddress, string value) {}
 
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
@@ -1226,7 +1226,7 @@ private:
         }
     }
     
-    void HandleOSCInput() override
+    virtual void HandleExternalInput() override
     {
         if(inSocket_.isOk())
         {
@@ -1280,7 +1280,7 @@ public:
     
     virtual void Run() override
     {
-        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
+        ControlSurface::Run();  // This must always be called last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
@@ -1289,6 +1289,7 @@ public:
     }
 };
 
+class MarshalledFunctionCall;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class EuCon_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1301,7 +1302,10 @@ private:
     int numFX_ = 0;
     int options_ = 0;
     
-    map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
+    map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
+
+    WDL_Mutex mutex_;
+    list<MarshalledFunctionCall*> workQueue_;
 
     virtual void InitializeEuConWidget(string name, string control, string FB_Processor) override;
 
@@ -1316,22 +1320,26 @@ public:
     virtual void EuConInitializationComplete() override;
     virtual void SendEuConMessage(string oscAddress, double value);
     virtual void SendEuConMessage(string oscAddress, string value);
-    virtual void HandleEuConMessage(string oscAddress, double value) override;
-    virtual void HandleEuConMessage(string oscAddress, string value) override;
-    
+    virtual void ReceiveEuConMessage(string oscAddress, double value) override;
+    virtual void ReceiveEuConMessage(string oscAddress, string value) override;
+    virtual void HandleExternalInput() override;
+    void HandleEuConMessage(string oscAddress, double value);
+    void HandleEuConMessage(string oscAddress, string value);
+
     virtual void ResetAll() override
     {
         LoadingZone("Home");
     }
     
+    
     virtual void Run() override
     {
-        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
+        ControlSurface::Run();  // This must always be called last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
     {
-        CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
+        CSIMessageGeneratorsByMessage_[message] = messageGenerator;
     }
 };
 
@@ -1609,10 +1617,10 @@ public:
     bool GetControl() { return isControl_; }
     bool GetAlt() { return isAlt_; }
 
-    void HandleOSCInput()
+    void HandleExternalInput()
     {
         for(auto surface : surfaces_)
-            surface->HandleOSCInput();
+            surface->HandleExternalInput();
     }
     
     void InitializeEuCon()
@@ -1633,16 +1641,16 @@ public:
             surface->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(string oscAddress, double value)
+    void ReceiveEuConMessage(string oscAddress, double value)
     {
         for(auto surface : surfaces_)
-            surface->HandleEuConMessage(oscAddress, value);
+            surface->ReceiveEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(string oscAddress, string value)
+    void ReceiveEuConMessage(string oscAddress, string value)
     {
         for(auto surface : surfaces_)
-            surface->HandleEuConMessage(oscAddress, value);
+            surface->ReceiveEuConMessage(oscAddress, value);
     }
     
     void Run()
@@ -1997,10 +2005,10 @@ public:
             pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
     
-    void HandleOSCInput()
+    void HandleExternalInput()
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->HandleOSCInput();
+            pages_[currentPageIndex_]->HandleExternalInput();
     }
     
     void InitializeEuCon()
@@ -2021,16 +2029,16 @@ public:
             pages_[currentPageIndex_]->EuConInitializationComplete();
     }
     
-    void HandleEuConMessage(string oscAddress, double value)
+    void ReceiveEuConMessage(string oscAddress, double value)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
+            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
     }
     
-    void HandleEuConMessage(string oscAddress, string value)
+    void ReceiveEuConMessage(string oscAddress, string value)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->HandleEuConMessage(oscAddress, value);
+            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
     }
     
     //int repeats = 0;
