@@ -27,7 +27,7 @@ CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager(this);
     if(g_hwnd)
-        SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleOSCInput));
+        SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleExternalInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
@@ -40,10 +40,10 @@ CSurfIntegrator::~CSurfIntegrator()
         KillTimer(g_hwnd, 1);
 }
 
-void CSurfIntegrator::HandleOSCInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
+void CSurfIntegrator::HandleExternalInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
 {
     if(TheManager)
-        TheManager->HandleOSCInput();
+        TheManager->HandleExternalInput();
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
