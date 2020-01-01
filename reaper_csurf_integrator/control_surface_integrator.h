@@ -1414,7 +1414,7 @@ public:
     
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
-    TrackNavigator* AddTrackNavigator();
+    TrackNavigator* GetTrackNavigatorforChannel(int channelNum);
     void OnTrackSelection();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
