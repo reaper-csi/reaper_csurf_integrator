@@ -171,7 +171,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
-static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
 {
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
 
@@ -244,7 +244,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     
         if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
-            zone->SetTrackNavigator(surface->GetPage()->GetTrackNavigationManager()->AddTrackNavigator());
+            zone->SetTrackNavigator(surface->GetPage()->GetTrackNavigationManager()->GetTrackNavigatorforChannel(channelNum));
             continue;
         }
         else if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
@@ -401,7 +401,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
             size_t pos = zoneName.find("|");
             
             if(pos == string::npos)
-                BuildZone(inputZoneLines, filePath, surface, widgets, nullptr); // Start with the outermost Zone -- parentZone == nullptr
+                BuildZone(inputZoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zone -- parentZone == nullptr, track ptr == nullptr
             else
             {
                 istringstream expandedZone(zoneName);
@@ -447,8 +447,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
                                         outputZoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
                                 }
                             }
-                            
-                            BuildZone(outputZoneLines, filePath, surface, widgets, nullptr);
+                            BuildZone(outputZoneLines, filePath, surface, widgets, nullptr, i);
                         }
                     }
                 }
@@ -1476,7 +1475,7 @@ void ControlSurface::BuildIncludedZones(vector<string> &includedZoneNames, strin
                         zoneLines.back().push_back(regex_replace(token, regex("[|]"), ""));
                 }
                 
-                BuildZone(zoneLines, filePath, surface, widgets, parentZone);
+                BuildZone(zoneLines, filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
             }
         }
         else // This expands constructs like Channel|1-8 into multiple Zones
@@ -1535,7 +1534,7 @@ void ControlSurface::BuildIncludedZones(vector<string> &includedZoneNames, strin
                                 }
                             }
                             
-                            BuildZone(zoneLines, filePath, surface, widgets, parentZone);
+                            BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
                         }
                     }
                 }
@@ -2074,10 +2073,13 @@ MediaTrack* FocusedFXNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-TrackNavigator* TrackNavigationManager::AddTrackNavigator()
+TrackNavigator* TrackNavigationManager::GetTrackNavigatorforChannel(int channelNum)
 {
-    int channelNum = trackNavigators_.size();
-    trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
+    if(channelNum < 0) //No negative channels
+        return nullptr;
+    
+    while(trackNavigators_.size() <= channelNum)
+          trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
     return trackNavigators_[channelNum];
 }
 
