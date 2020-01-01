@@ -171,6 +171,19 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
+static map<int, TrackNavigator*> trackNavigators;
+
+static TrackNavigator* GetTrackNavigatorForChannel(ControlSurface* surface, int channelNum)
+{
+    if(channelNum < 0)
+        return nullptr;
+    
+    if(trackNavigators.count(channelNum) < 1)
+        trackNavigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddTrackNavigator();
+    
+    return trackNavigators[channelNum];
+}
+
 static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
 {
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
@@ -244,7 +257,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     
         if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
-            zone->SetTrackNavigator(surface->GetPage()->GetTrackNavigationManager()->GetTrackNavigatorforChannel(channelNum));
+            zone->SetTrackNavigator(GetTrackNavigatorForChannel(surface, channelNum));
             continue;
         }
         else if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
@@ -360,7 +373,10 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
             
             lineNumber++;
             
-            if(line == "" || line[0] == '\r' || line[0] == '/') // ignore comment lines and blank lines
+            // Trim leading and trailing spaces
+            line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
+            
+            if(line == "" || line[0] == '/') // ignore blank lines and comment lines
                 continue;
             
             vector<string> tokens(GetTokens(line));
@@ -1444,6 +1460,8 @@ void ControlSurface::InitZones(string zoneFolder)
         vector<string> zoneFilesToProcess;
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
+        trackNavigators.clear();
+        
         for(auto zoneFilename : zoneFilesToProcess)
             ProcessZoneFile(zoneFilename, this, widgets_);
     }
@@ -2073,13 +2091,10 @@ MediaTrack* FocusedFXNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-TrackNavigator* TrackNavigationManager::GetTrackNavigatorforChannel(int channelNum)
+TrackNavigator* TrackNavigationManager::AddTrackNavigator()
 {
-    if(channelNum < 0) //No negative channels
-        return nullptr;
-    
-    while(trackNavigators_.size() <= channelNum)
-          trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
+    int channelNum = trackNavigators_.size();
+    trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
     return trackNavigators_[channelNum];
 }
 
