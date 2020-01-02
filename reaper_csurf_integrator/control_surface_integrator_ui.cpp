@@ -26,24 +26,12 @@ bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode,
 CSurfIntegrator::CSurfIntegrator()
 {
     TheManager = new Manager(this);
-    if(g_hwnd)
-        SetTimer(g_hwnd, 1, 15, (TIMERPROC)(CSurfIntegrator::HandleExternalInput));
 }
 
 CSurfIntegrator::~CSurfIntegrator()
 {
     if(TheManager)
         TheManager->ResetAllWidgets();
-    
-    // GAW TBD --  currently this gets called before g_hwnd goes away -- is that guaranteed ?
-    if(g_hwnd)
-        KillTimer(g_hwnd, 1);
-}
-
-void CSurfIntegrator::HandleExternalInput(HWND hwnd, UINT_PTR timerid, UINT rate, TIMERPROC tProc)
-{
-    if(TheManager)
-        TheManager->HandleExternalInput();
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
