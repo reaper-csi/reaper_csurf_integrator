@@ -1127,20 +1127,7 @@ private:
     map<int, vector<Midi_CSIMessageGenerator*>> CSIMessageGeneratorsByMidiMessage_;
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
-
-    void HandleMidiInput()
-    {
-        if(midiInput_)
-        {
-            DAW::SwapBufsPrecise(midiInput_);
-            MIDI_eventlist* list = midiInput_->GetReadBuf();
-            int bpos = 0;
-            MIDI_event_t* evt;
-            while ((evt = list->EnumItems(&bpos)))
-                ProcessMidiMessage((MIDI_event_ex_t*)evt);
-        }
-    }
-    
+   
     void InitWidgets(string templateFilename);
 
 public:
@@ -1168,7 +1155,15 @@ public:
 
     virtual void HandleExternalInput() override
     {
-        HandleMidiInput();
+        if(midiInput_)
+        {
+            DAW::SwapBufsPrecise(midiInput_);
+            MIDI_eventlist* list = midiInput_->GetReadBuf();
+            int bpos = 0;
+            MIDI_event_t* evt;
+            while ((evt = list->EnumItems(&bpos)))
+                ProcessMidiMessage((MIDI_event_ex_t*)evt);
+        }
     }
     
     void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
@@ -1220,29 +1215,6 @@ private:
         }
     }
     
-    virtual void HandleExternalInput() override
-    {
-        if(inSocket_.isOk())
-        {
-            while (inSocket_.receiveNextPacket(0))  // timeout, in ms
-            {
-                packetReader_.init(inSocket_.packetData(), inSocket_.packetSize());
-                oscpkt::Message *message;
-                
-                while (packetReader_.isOk() && (message = packetReader_.popMessage()) != 0)
-                {
-                    float value = 0;
-                    
-                    if(message->arg().isFloat())
-                    {
-                        message->arg().popFloat(value);
-                        ProcessOSCMessage(message->addressPattern(), value);
-                    }
-                }
-            }
-        }
-    }
-    
 public:
     OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP)
     : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
@@ -1272,6 +1244,29 @@ public:
         LoadingZone("Home");
     }
     
+    virtual void HandleExternalInput() override
+    {
+        if(inSocket_.isOk())
+        {
+            while (inSocket_.receiveNextPacket(0))  // timeout, in ms
+            {
+                packetReader_.init(inSocket_.packetData(), inSocket_.packetSize());
+                oscpkt::Message *message;
+                
+                while (packetReader_.isOk() && (message = packetReader_.popMessage()) != 0)
+                {
+                    float value = 0;
+                    
+                    if(message->arg().isFloat())
+                    {
+                        message->arg().popFloat(value);
+                        ProcessOSCMessage(message->addressPattern(), value);
+                    }
+                }
+            }
+        }
+    }
+
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
