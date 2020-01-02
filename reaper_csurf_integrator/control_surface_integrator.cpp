@@ -1920,6 +1920,8 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
     GoHome();
+    for(auto widget : widgets_)
+        widget->Reset();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string address, double value)
