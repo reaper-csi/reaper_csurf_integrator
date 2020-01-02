@@ -1027,12 +1027,6 @@ protected:
 
     void InitZones(string zoneFolder);
     
-    void RequestUpdate()
-    {
-        for(auto widget : widgets_)
-            widget->RequestUpdate();
-    }
-    
     void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1084,11 +1078,12 @@ public:
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
     
-    virtual void Run()
+    void RequestUpdate()
     {
-        RequestUpdate(); // This is always last so that state changes caused by preceding code are complete before it is called
+        for(auto widget : widgets_)
+            widget->RequestUpdate();
     }
-    
+
     void ResetAllWidgets()
     {
         for(auto widget : widgets_)
@@ -1171,10 +1166,9 @@ public:
 
     bool hasSetGlobalSysEx_ = false;
 
-    virtual void Run() override
+    virtual void HandleExternalInput() override
     {
         HandleMidiInput();
-        ControlSurface::Run();  // This is always last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
@@ -1278,11 +1272,6 @@ public:
         LoadingZone("Home");
     }
     
-    virtual void Run() override
-    {
-        ControlSurface::Run();  // This must always be called last so that state changes caused by preceding code are complete before it is called
-    }
-    
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
@@ -1329,12 +1318,6 @@ public:
     virtual void ResetAll() override
     {
         LoadingZone("Home");
-    }
-    
-    
-    virtual void Run() override
-    {
-        ControlSurface::Run();  // This must always be called last so that state changes caused by preceding code are complete before it is called
     }
     
     void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
@@ -1439,7 +1422,7 @@ public:
     
     int cycles = 0;
 
-    void Run()
+    void RebuildTrackList()
     {
         //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
         
@@ -1616,13 +1599,7 @@ public:
     bool GetOption() { return isOption_; }
     bool GetControl() { return isControl_; }
     bool GetAlt() { return isAlt_; }
-
-    void HandleExternalInput()
-    {
-        for(auto surface : surfaces_)
-            surface->HandleExternalInput();
-    }
-    
+   
     void InitializeEuCon()
     {
         for(auto surface : surfaces_)
@@ -1655,10 +1632,13 @@ public:
     
     void Run()
     {
-        trackNavigationManager_->Run();
+        trackNavigationManager_->RebuildTrackList();
         
         for(auto surface : surfaces_)
-            surface->Run();
+            surface->HandleExternalInput();
+        
+        for(auto surface : surfaces_)
+            surface->RequestUpdate();
     }
     
     void ResetAll()
@@ -2004,13 +1984,7 @@ public:
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
-    
-    void HandleExternalInput()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->HandleExternalInput();
-    }
-    
+       
     void InitializeEuCon()
     {
         if(pages_.size() > 0)
