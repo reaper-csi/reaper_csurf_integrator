@@ -114,17 +114,6 @@ static IReaperControlSurface *createFunc(const char *type_string, const char *co
     return new CSurfIntegrator();
 }
 
-void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
-{
-    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
-    SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
-}
-
-void AddListEntry(HWND hwndDlg, string buf, int comboId)
-{
-    SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FileSystem
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -275,6 +264,17 @@ static void ModifyEuConZoneFile(int firstChannel, int lastChannel, int numSends,
         euconOutputZoneFile << outputLine + "\n";
     
     euconOutputZoneFile.close();
+}
+
+void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
+{
+    int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)buf);
+    SendDlgItemMessage(hwndDlg,comboId,CB_SETITEMDATA,a,x);
+}
+
+void AddListEntry(HWND hwndDlg, string buf, int comboId)
+{
+    SendDlgItemMessage(hwndDlg, comboId, LB_ADDSTRING, 0, (LPARAM)buf.c_str());
 }
 
 static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

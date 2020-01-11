@@ -381,24 +381,28 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
             
             vector<string> tokens(GetTokens(line));
             
-            if(tokens.size() > 0 && tokens[0] == "Zone")
+            if(tokens.size() > 0)
             {
-                zoneName = tokens[1];
                 
-                if(tokens[1].size() > 1 && tokens[1].back() == '|')
-                    isTemplate = true;
-                
-                if( ! isTemplate)
-                    zoneDefinitions.push_back(vector<vector<string>>());
-            }
-            
-            if(isTemplate)
-                zoneTemplates[zoneName].push_back(tokens);
-            else
-                zoneDefinitions.back().push_back(tokens);
-            
-            if(tokens[0] == "ZoneEnd")
-                isTemplate = false;
+                if(tokens[0] == "Zone")
+                {
+                    zoneName = tokens[1];
+                    
+                    if(tokens[1].size() > 1 && tokens[1].back() == '|')
+                        isTemplate = true;
+                    
+                    if( ! isTemplate)
+                        zoneDefinitions.push_back(vector<vector<string>>());
+                }
+             
+                if(isTemplate)
+                    zoneTemplates[zoneName].push_back(tokens);
+                else
+                    zoneDefinitions.back().push_back(tokens);
+             
+                if(tokens[0] == "ZoneEnd")
+                    isTemplate = false;
+             }
         }
     }
     catch (exception &e)
