@@ -1170,7 +1170,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     if(tokens[0] == PageToken)
                     {
-                        if(tokens.size() != 9)
+                        if(tokens.size() != 11)
                             continue;
  
                         PageLine* page = new PageLine();
@@ -1196,9 +1196,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else
                             page->trackColouring = false;
                         
-                        page->red = atoi(tokens[6].c_str());
-                        page->green = atoi(tokens[7].c_str());
-                        page->blue = atoi(tokens[8].c_str());
+                        page->red = atoi(tokens[7].c_str());
+                        page->green = atoi(tokens[8].c_str());
+                        page->blue = atoi(tokens[9].c_str());
                         
                         pages.push_back(page);
                         
@@ -1279,9 +1279,13 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     else
                         line += "NoTrackColoring ";
                     
+                    line += "{ ";
+                    
                     line += to_string(page->red) + " ";
                     line += to_string(page->green) + " ";
-                    line += to_string(page->blue) + GetLineEnding();
+                    line += to_string(page->blue);
+
+                    line += " }" + GetLineEnding();
 
                     iniFile << line;
 

@@ -376,14 +376,13 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
             // Trim leading and trailing spaces
             line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
             
-            if(line == "" || line[0] == '/') // ignore blank lines and comment lines
+            if(line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
                 continue;
             
             vector<string> tokens(GetTokens(line));
             
             if(tokens.size() > 0)
             {
-                
                 if(tokens[0] == "Zone")
                 {
                     zoneName = tokens[1];
@@ -541,7 +540,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             }
             else if(widgetClass == "FB_NovationLaunchpadMiniRGB7Bit" && tokens.size() == 4)
             {
-                feedbackProcessor = new FB_NovationLaunchpadMiniRGB7Bit(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+                feedbackProcessor = new NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             }
             else if(tokens.size() == 4 || tokens.size() == 5)
             {
@@ -781,10 +780,19 @@ void Manager::Init()
             {
                 if(tokens[0] == PageToken)
                 {
-                    if(tokens.size() != 9)
+                    if(tokens.size() != 11)
                         continue;
                     
-                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[5] == "UseTrackColoring" ? true : false, atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()));
+                    rgb_color pageColour;
+                    
+                    if(tokens[6] == "{" and tokens[10] == "}")
+                    {
+                        pageColour.r = atoi(tokens[7].c_str());
+                        pageColour.g = atoi(tokens[8].c_str());
+                        pageColour.b = atoi(tokens[9].c_str());
+                    }
+
+                    currentPage = new Page(tokens[1], pageColour, tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false);
                     pages_.push_back(currentPage);
                     
                     if(tokens[4] == "UseScrollLink")

@@ -159,7 +159,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FB_NovationLaunchpadMiniRGB7Bit : public Midi_FeedbackProcessor
+class NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -168,8 +168,8 @@ private:
     int lastB = 0;
 
 public:
-    virtual ~FB_NovationLaunchpadMiniRGB7Bit() {}
-    FB_NovationLaunchpadMiniRGB7Bit(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    virtual ~NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor() {}
+    NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
     
     virtual void SetValue(double value) override  {}
     virtual void SetValue(int param, double value) override {}
