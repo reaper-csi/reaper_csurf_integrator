@@ -1331,11 +1331,6 @@ private:
     bool synchPages_ = false;
     bool scrollLink_ = false;
     int targetScrollLinkChannel_ = 0;
-    bool colourTracks_ = false;
-    int trackColourRedValue_ = 0;
-    int trackColourGreenValue_ = 0;
-    int trackColourBlueValue_ = 0;
-    map<string, int> trackColours_;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
@@ -1344,7 +1339,7 @@ private:
     vector<TrackNavigator*> trackNavigators_;
     
 public:
-    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : page_(page), followMCP_(followMCP), synchPages_(synchPages), colourTracks_(colourTracks), trackColourRedValue_(red), trackColourGreenValue_(green), trackColourBlueValue_(blue) {}
+    TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages) {}
     
     void PinTrackToChannel(MediaTrack* track, int channelNum)
     {
@@ -1564,6 +1559,7 @@ class Page
 {
 private:
     string name_ = "";
+    rgb_color colour_;
     vector<ControlSurface*> surfaces_;
     
     bool isShift_ = false;
@@ -1578,7 +1574,7 @@ private:
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
    
 public:
-    Page(string name, bool followMCP, bool synchPages, bool colourTracks, int red, int green, int blue) : name_(name), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages, colourTracks, red, green, blue)) { }
+    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)) { }
     
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
