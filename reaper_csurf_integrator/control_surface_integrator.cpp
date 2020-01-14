@@ -323,23 +323,26 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 }
                 
                 Action* action = TheManager->GetAction(widgetActionManagerForWidget[widget], params);
+                
+                if(action != nullptr)
+                {
+                    if(isTrackTouch)
+                        widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
+                    else
+                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
+                    
+                    if(isInverted)
+                        action->SetIsInverted();
+                    
+                    if(shouldToggle)
+                        action->SetShouldToggle();
+                    
+                    if(isDelayed)
+                        action->SetDelayAmount(delayAmount * 1000.0);
 
-                if(isTrackTouch)
-                    widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
-                else
-                    widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
-                
-                if(isInverted)
-                    action->SetIsInverted();
-                
-                if(shouldToggle)
-                    action->SetShouldToggle();
-                
-                if(isDelayed)
-                    action->SetDelayAmount(delayAmount * 1000.0);
-
-                if(params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
-                    widget->SetIsModifier();
+                    if(params[0] == Shift || params[0] == Option || params[0] == Control || params[0] == Alt)
+                        widget->SetIsModifier();
+                }
             }
             else
             {
@@ -1055,49 +1058,18 @@ void EuCon_FeedbackProcessor::SetValue(string value)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(name), widgetActionManager_(widgetActionManager)
+//Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(name), widgetActionManager_(widgetActionManager)
+//{
+//    page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
+//    widget_ = widgetActionManager_->GetWidget();
+//}
+
+Action::Action(string name, WidgetActionManager* widgetActionManager, vector<string> params): name_(name), widgetActionManager_(widgetActionManager)
 {
     page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
     widget_ = widgetActionManager_->GetWidget();
-}
-
-Action::Action(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager)
-{
-    SetRGB( { params.begin() + 1, params.end() } );
-}
-
-void Action::SetRGB(vector<string> params)
-{
-    // GAW -- translate the bytes to RGB on and off values;
-    if(params.size() == 6 )
-    {
-        supportsRGB_ = true;
-        
-        for(int i = 0; i < params.size(); i++)
-        {
-            int value = stoi(params[i]);
-            value = value < 0 ? 0 : value;
-            value = value > 255 ? 255 : value;
-            
-            if(i == 0)
-                RGBValues_[1].r = value;
-            
-            else if(i == 1)
-                RGBValues_[1].g = value;
-            
-            else if(i == 2)
-                RGBValues_[1].b = value;
-            
-            else if(i == 3)
-                RGBValues_[0].r = value;
-            
-            else if(i == 4)
-                RGBValues_[0].g = value;
-            
-            else if(i == 5)
-                RGBValues_[0].b = value;
-        }
-    }
+    
+    SetRGB(params);
 }
 
 void Action::DoAction(double value, WidgetActionManager* sender)
@@ -1205,9 +1177,12 @@ void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
 
     Action* action = TheManager->GetAction(widgetActionManager, params);
 
-    action->SetIndex(actionIndex);
-    
-    widgetActionManager->AddAction(actionLineItem.modifiers, action);
+    if(action != nullptr)
+    {
+        action->SetIndex(actionIndex);
+        
+        widgetActionManager->AddAction(actionLineItem.modifiers, action);
+    }
 }
 
 void Zone::Activate(WidgetActionManager* sender)

@@ -18,7 +18,7 @@ private:
     string commandStr_ = "";
     
 public:
-    ReaperAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
+    ReaperAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
     {
         if(params.size() > 1)
         {
@@ -33,11 +33,6 @@ public:
                 if(commandId_ == 0) // can't find it
                     commandId_ = 65535; // no-op
             }
-        }
-        
-        if(params.size() > 7)
-        {
-            SetRGB( { params.begin() + 2, params.begin() + 8 } );
         }
     }
     
@@ -63,7 +58,6 @@ class TrackAction : public Action
 {
 protected:
     TrackAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
-    TrackAction(string name, WidgetActionManager* manager) : Action(name, manager) { }
 
 public:
     virtual void RequestUpdate() override
@@ -115,11 +109,6 @@ protected:
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
-        
-        if(params.size() > 7)
-        {
-            SetRGB( { params.begin() + 2, params.begin() + 7 } );
-        }
     }
     
 public:
@@ -144,18 +133,13 @@ protected:
     string fxParamDisplayName_ = "";
     int fxIndex_ = 0;
 
-    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager)
+    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params)
     {
         if(params.size() > 1)
             fxParamIndex_ = atol(params[1].c_str());
         
         if(params.size() > 2)
             fxParamDisplayName_ = params[2];
-        
-        if(params.size() > 8)
-        {
-            SetRGB( { params.begin() + 3, params.begin() + 9 } );
-        }
     }
     
 public:
@@ -207,15 +191,10 @@ class ActionWithIntParam : public Action
 protected:
     int param_ = 0;
 
-    ActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
+    ActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
-        
-        if(params.size() > 7)
-        {
-            SetRGB( { params.begin() + 2, params.begin() + 8 } );
-        }
     }
     
 public:
@@ -237,15 +216,10 @@ class ActionWithStringParam : public Action
 protected:
     string param_ = "";
 
-    ActionWithStringParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager)
+    ActionWithStringParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
     {
         if(params.size() > 1)
             param_ = params[1];
-        
-        if(params.size() > 7)
-        {
-            SetRGB( { params.begin() + 2, params.begin() + 8 } );
-        }
     }
 
 public:
@@ -291,15 +265,10 @@ protected:
     
     SurfaceActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params)
     {
+        surface_ = widget_->GetSurface();
+
         if(params.size() > 1)
             param_= atol(params[1].c_str());
-        
-        if(params.size() > 7)
-        {
-            SetRGB( { params.begin() + 2, params.begin() + 7 } );
-        }
-
-        surface_ = widget_->GetSurface();
     }
     
 public:
