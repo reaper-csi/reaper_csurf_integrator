@@ -389,21 +389,56 @@ public:
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    Action(string name, WidgetActionManager* widgetActionManager);
-    Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
-
+private:
     bool supportsRGB_ = false;
-    vector<rgb_color> RGBValues_
-    {
-        { 0, 0, 0 },            // On
-        { 0, 0, 0 }             // Off
-    };
+    vector<rgb_color> RGBValues_;
     
     int currentRGBIndex_ = 0;
+
+    void SetRGB(vector<string> params)
+    {
+        vector<int> rawValues;
+        
+        auto openCurlyBrace = find(params.begin(), params.end(), "{");
+        auto closeCurlyBrace = find(params.begin(), params.end(), "}");
+
+        if(openCurlyBrace != params.end() && closeCurlyBrace != params.end())
+        {
+            for(auto it = openCurlyBrace + 1; it != closeCurlyBrace; ++it)
+            {
+                string strVal = *(it);
+                
+                if(regex_match(strVal, std::regex("[0-9]+")))
+                {
+                    int value = stoi(strVal);
+                    value = value < 0 ? 0 : value;
+                    value = value > 255 ? 255 : value;
+
+                    rawValues.push_back(value);
+                }
+            }
+        }
+        
+        if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
+        {
+            supportsRGB_ = true;
+
+            for(int i = 0; i < rawValues.size(); i += 3)
+            {
+                rgb_color color;
+                
+                color.r = rawValues[i];
+                color.g = rawValues[i + 1];
+                color.b = rawValues[i + 2];
+                
+                RGBValues_.push_back(color);
+            }
+        }
+    }
     
-    virtual void SetRGB(vector<string> params);
-    
+protected:
+    Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
+
     string name_ = "";
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
@@ -1950,7 +1985,7 @@ public:
     
     Action* GetAction(WidgetActionManager* manager, vector<string> params)
     {
-        if(actions_.count(params[0]) > 0)
+        if(manager != nullptr && actions_.count(params[0]) > 0)
             return actions_[params[0]](params[0], manager, params);
         else
             return nullptr;
