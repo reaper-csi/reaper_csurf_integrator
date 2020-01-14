@@ -1070,6 +1070,7 @@ Action::Action(string name, WidgetActionManager* widgetActionManager, vector<str
     widget_ = widgetActionManager_->GetWidget();
     
     SetRGB(params);
+    SetSteppedValues(params);
 }
 
 void Action::DoAction(double value, WidgetActionManager* sender)
