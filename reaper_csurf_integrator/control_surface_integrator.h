@@ -408,7 +408,7 @@ private:
             {
                 string strVal = *(it);
                 
-                if(regex_match(strVal, std::regex("[0-9]+")))
+                if(regex_match(strVal, regex("[0-9]+")))
                 {
                     int value = stoi(strVal);
                     value = value < 0 ? 0 : value;
@@ -436,12 +436,31 @@ private:
         }
     }
     
+    void SetSteppedValues(vector<string> params)
+    {
+        auto openSquareBrace = find(params.begin(), params.end(), "[");
+        auto closeCurlyBrace = find(params.begin(), params.end(), "]");
+        
+        if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
+        {
+            for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
+            {
+                string strVal = *(it);
+                
+                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
+                    steppedValues_.push_back(stod(strVal)); // GAW TBD -- need a better conversion routine -- .6 becomes 0.599999999998, etc. -- uggh
+            }
+        }
+    }
+    
 protected:
     Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
 
     string name_ = "";
     Page* page_ = nullptr;
     Widget* widget_ = nullptr;
+    
+    vector<double> steppedValues_;
     
     WidgetActionManager* const widgetActionManager_;
     bool isInverted_ = false;
