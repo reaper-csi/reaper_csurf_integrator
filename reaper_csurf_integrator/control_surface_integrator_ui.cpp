@@ -247,9 +247,9 @@ static void ModifyEuConZoneFile(int firstChannel, int lastChannel, int numSends,
         string outputLine;
         
         if(channelPos != string::npos && zonePos == string::npos)
-            outputLine = inputLine.substr(0, channelPos + strlen("Channel|")) + channelStr;
+            outputLine = inputLine.substr(0, channelPos + strlen("Channel|")) + channelStr + "\"";
         else if(sendPos != string::npos && zonePos == string::npos)
-            outputLine = inputLine.substr(0, sendPos + strlen("Send|")) + sendStr;
+            outputLine = inputLine.substr(0, sendPos + strlen("Send|")) + sendStr + "\"";
         else
             outputLine = inputLine;
 
