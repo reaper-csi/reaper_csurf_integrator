@@ -448,7 +448,7 @@ private:
                 string strVal = *(it);
                 
                 if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
-                    steppedValues_.push_back(stod(strVal)); // GAW TBD -- need a better conversion routine -- .6 becomes 0.599999999998, etc. -- uggh
+                    steppedValues_.push_back(stod(strVal));
             }
         }
     }
@@ -543,7 +543,11 @@ public:
     
     rgb_color GetCurrentRGB()
     {
-        return RGBValues_[currentRGBIndex_];
+        rgb_color blankColor;
+        
+        if(RGBValues_.size() > 0 && currentRGBIndex_ < RGBValues_.size())
+            return RGBValues_[currentRGBIndex_];
+        else return blankColor;
     }
     
     void SetWidgetValue(Widget* widget, double value)
