@@ -12,13 +12,18 @@ extern string GetLineEnding();
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
 
-bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode, HWND hwnd)
+extern int g_registered_command;
+
+bool hookCommandProc(int command, int flag)
 {
-    if(command == 65535 && TheManager != nullptr)
+    if (g_registered_command && command == g_registered_command && TheManager != nullptr)
+    {
         TheManager->OpenLearnModeWindow();
-    
+        return true;
+    }
     return false;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // CSurfIntegrator
