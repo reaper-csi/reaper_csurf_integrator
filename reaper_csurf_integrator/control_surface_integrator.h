@@ -1120,7 +1120,6 @@ public:
     WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
-    void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
     bool AddZone(Zone* zone);
     void RemoveZone(Zone* zone, int zoneIndexInfile);
     void GoZone(string zoneName, WidgetActionManager* sender);
