@@ -184,6 +184,11 @@ static TrackNavigator* GetTrackNavigatorForChannel(ControlSurface* surface, int 
     return trackNavigators[channelNum];
 }
 
+static void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
+
+static map<string, vector<vector<string>>> zoneTemplates;
+static vector<vector<vector<string>>> zoneDefinitions;
+
 static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
 {
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
@@ -244,7 +249,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             {
                 isInIncludedZonesSection = false;
                 
-                surface->BuildIncludedZones(includedZones, filePath, surface, widgets, zone);
+                BuildIncludedZones(includedZones, filePath, surface, widgets, zone);
                 
                 continue;
             }
@@ -353,8 +358,91 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     }
 }
 
-static map<string, vector<vector<string>>> zoneTemplates;
-static vector<vector<vector<string>>> zoneDefinitions;
+static void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+{
+    for(auto includedZoneName : includedZoneNames)
+    {
+        if(includedZoneName.back() == '|')
+        {
+            if(zoneTemplates.count(includedZoneName) > 0)
+            {
+                vector<vector<string>> zoneLines;
+                
+                for(auto line : zoneTemplates[includedZoneName])
+                {
+                    zoneLines.push_back(vector<string>());
+                    
+                    for(auto token : line)
+                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), ""));
+                }
+                
+                BuildZone(zoneLines, filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
+            }
+        }
+        else // This expands constructs like Channel|1-8 into multiple Zones
+        {
+            istringstream expandedZone(includedZoneName);
+            vector<string> expandedZoneTokens;
+            string expandedZoneToken;
+            
+            while (getline(expandedZone, expandedZoneToken, '|'))
+                expandedZoneTokens.push_back(expandedZoneToken);
+            
+            if(expandedZoneTokens.size() > 1)
+            {
+                string zoneBaseName = "";
+                int rangeBegin = 0;
+                int rangeEnd = 1;
+                
+                zoneBaseName = expandedZoneTokens[0];
+                
+                if(zoneTemplates.count(zoneBaseName + "|") > 0)
+                {
+                    istringstream range(expandedZoneTokens[1]);
+                    vector<string> rangeTokens;
+                    string rangeToken;
+                    
+                    while (getline(range, rangeToken, '-'))
+                        rangeTokens.push_back(rangeToken);
+                    
+                    if(rangeTokens.size() > 1)
+                    {
+                        rangeBegin = stoi(rangeTokens[0]);
+                        rangeEnd = stoi(rangeTokens[1]);
+                        
+                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+                        {
+                            vector<vector<string>> zoneLines;
+                            
+                            bool isInIncludedZonesSection = false;
+                            
+                            for(auto line : zoneTemplates[zoneBaseName + "|"])
+                            {
+                                zoneLines.push_back(vector<string>());
+                                
+                                for(auto token : line)
+                                {
+                                    if(token == "IncludedZones")
+                                        isInIncludedZonesSection = true;
+                                    
+                                    if(token == "IncludedZonesEnd")
+                                        isInIncludedZonesSection = false;
+                                    
+                                    if(isInIncludedZonesSection)
+                                        zoneLines.back().push_back(token);
+                                    else
+                                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                                }
+                            }
+                            
+                            BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
@@ -1458,94 +1546,6 @@ void ControlSurface::InitZones(string zoneFolder)
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
-    }
-}
-
-void ControlSurface::BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
-{
-    // GAW -- kind of ugly having this in a class, couldn't think of a easier way around forward referencing issues with stand alone C functions
-    
-    for(auto includedZoneName : includedZoneNames)
-    {
-        if(includedZoneName.back() == '|')
-        {
-            if(zoneTemplates.count(includedZoneName) > 0)
-            {
-                vector<vector<string>> zoneLines;
-                
-                for(auto line : zoneTemplates[includedZoneName])
-                {
-                    zoneLines.push_back(vector<string>());
-                    
-                    for(auto token : line)
-                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), ""));
-                }
-                
-                BuildZone(zoneLines, filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
-            }
-        }
-        else // This expands constructs like Channel|1-8 into multiple Zones
-        {
-            istringstream expandedZone(includedZoneName);
-            vector<string> expandedZoneTokens;
-            string expandedZoneToken;
-            
-            while (getline(expandedZone, expandedZoneToken, '|'))
-                expandedZoneTokens.push_back(expandedZoneToken);
-            
-            if(expandedZoneTokens.size() > 1)
-            {
-                string zoneBaseName = "";
-                int rangeBegin = 0;
-                int rangeEnd = 1;
-                
-                zoneBaseName = expandedZoneTokens[0];
-                
-                if(zoneTemplates.count(zoneBaseName + "|") > 0)
-                {
-                    istringstream range(expandedZoneTokens[1]);
-                    vector<string> rangeTokens;
-                    string rangeToken;
-                    
-                    while (getline(range, rangeToken, '-'))
-                        rangeTokens.push_back(rangeToken);
-                    
-                    if(rangeTokens.size() > 1)
-                    {
-                        rangeBegin = stoi(rangeTokens[0]);
-                        rangeEnd = stoi(rangeTokens[1]);
-                        
-                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
-                        {
-                            vector<vector<string>> zoneLines;
-
-                            bool isInIncludedZonesSection = false;
-
-                            for(auto line : zoneTemplates[zoneBaseName + "|"])
-                            {
-                                zoneLines.push_back(vector<string>());
-                                
-                                for(auto token : line)
-                                {
-                                    if(token == "IncludedZones")
-                                        isInIncludedZonesSection = true;
-                                    
-                                    if(token == "IncludedZonesEnd")
-                                        isInIncludedZonesSection = false;
-
-                                    if(isInIncludedZonesSection)
-                                        zoneLines.back().push_back(token);
-                                    else
-                                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                                }
-                            }
-                            
-                            BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 
