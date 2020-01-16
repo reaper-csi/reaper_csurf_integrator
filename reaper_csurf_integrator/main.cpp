@@ -4,16 +4,23 @@
 #include "reaper_plugin_functions.h"
 #include "resource.h"
 
+gaccel_register_t acreg=
+{
+    {FCONTROL|FALT|FVIRTKEY, '1', 0},
+    "CSI Learn Mode"
+};
+
+int g_registered_command = 0;
+
+extern bool hookCommandProc(int command, int flag);
+
 extern  void ShutdownMidiIO();
 
 extern reaper_csurf_reg_t csurf_integrator_reg;
-extern bool onAction(KbdSectionInfo *sec, int command, int val, int valhw, int relmode, HWND hwnd);
-
 
 REAPER_PLUGIN_HINSTANCE g_hInst; // used for dialogs, if any
 HWND g_hwnd;
 reaper_plugin_info_t *g_reaper_plugin_info;
-
 
 extern "C"
 {
@@ -43,7 +50,14 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
         
-        plugin_register("hookcommand2", (void *)onAction);
+        acreg.accel.cmd = g_registered_command = reaper_plugin_info->Register("command_id", (void*)"CSILearnMode");
+        
+        if (!g_registered_command)
+            return 0; // failed getting a command id, fail!
+        
+        reaper_plugin_info->Register("gaccel", &acreg);
+        reaper_plugin_info->Register("hookcommand", (void*)hookCommandProc);
+        
       
         // plugin registered
         return 1;
