@@ -10,17 +10,17 @@
 #include "control_surface_integrator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleLearnMode  : public SurfaceAction
+class ToggleLearnMode  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleLearnMode(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    ToggleLearnMode(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
         
-        page_->ToggleLearnMode();
+        GetPage()->ToggleLearnMode();
     }
 };
 
@@ -35,97 +35,97 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
-            page_->GetTrackNavigationManager()->TogglePin(track);
+        if(MediaTrack* track = GetWidget()->GetTrack())
+            GetPage()->GetTrackNavigationManager()->TogglePin(track);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackSends  : public SurfaceAction
+class ToggleMapSelectedTrackSends  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetShouldMapSends());
+        SetWidgetValue(GetWidget(), GetSurface()->GetShouldMapSends());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->ToggleMapSends(surface_);
+        GetPage()->ToggleMapSends(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackFX  : public SurfaceAction
+class ToggleMapSelectedTrackFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
+        SetWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->ToggleMapSelectedFX(surface_);
+        GetPage()->ToggleMapSelectedFX(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackFXMenu  : public SurfaceAction
+class ToggleMapSelectedTrackFXMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
+        SetWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->ToggleMapFXMenu(surface_);
+        GetPage()->ToggleMapFXMenu(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapFocusedFX  : public SurfaceAction
+class ToggleMapFocusedFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFocusedFX(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    ToggleMapFocusedFX(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShouldMapFocusedFX());
+        SetWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->ToggleMapFocusedTrackFX(surface_);
+        GetPage()->ToggleMapFocusedTrackFX(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoFXSlot  : public SurfaceActionWithIntParam
+class GoFXSlot  : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoFXSlot(string name, WidgetActionManager* manager, vector<string> params) : SurfaceActionWithIntParam(name, manager, params) {}
+    GoFXSlot(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -133,67 +133,67 @@ public:
 
         int fxIndex = param_ - 1 < 0 ? 0 : param_ - 1;
         
-        page_->MapSelectedTrackFXSlotToWidgets(surface_, fxIndex);
+        GetPage()->MapSelectedTrackFXSlotToWidgets(GetSurface(), fxIndex);
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackSendsToWidgets  : public SurfaceAction
+class MapSelectedTrackSendsToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->MapSelectedTrackSendsToWidgets(surface_);
+        GetPage()->MapSelectedTrackSendsToWidgets(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackFXToWidgets  : public SurfaceAction
+class MapSelectedTrackFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->MapSelectedTrackFXToWidgets(surface_);
+        GetPage()->MapSelectedTrackFXToWidgets(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackFXToMenu  : public SurfaceAction
+class MapSelectedTrackFXToMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->MapSelectedTrackFXToMenu(surface_);
+        GetPage()->MapSelectedTrackFXToMenu(GetSurface());
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapFocusedFXToWidgets  : public SurfaceAction
+class MapFocusedFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapFocusedFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    MapFocusedFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->MapFocusedTrackFXToWidgets(surface_);
+        GetPage()->MapFocusedTrackFXToWidgets(GetSurface());
     }
 };
 
@@ -212,8 +212,8 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 0; i < page_->GetTrackNavigationManager()->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(page_->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
+            for(int i = 0; i < GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetPage()->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
                     break;
@@ -224,31 +224,31 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > page_->GetTrackNavigationManager()->GetNumTracks() - 1)
-                trackIndex = page_->GetTrackNavigationManager()->GetNumTracks() - 1;
+            if(trackIndex > GetPage()->GetTrackNavigationManager()->GetNumTracks() - 1)
+                trackIndex = GetPage()->GetTrackNavigationManager()->GetNumTracks() - 1;
             
-            DAW::SetOnlyTrackSelected(page_->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
+            DAW::SetOnlyTrackSelected(GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
         }
     }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetShowFXWindows : public SurfaceAction
+class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows(string name, WidgetActionManager* manager, vector<string> params) : SurfaceAction(name, manager, params) {}
+    SetShowFXWindows(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, surface_->GetFXActivationManager()->GetShowFXWindows());
+        SetWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShowFXWindows());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        surface_->GetFXActivationManager()->ToggleShowFXWindows();
+        GetSurface()->GetFXActivationManager()->ToggleShowFXWindows();
     }
 };
 
@@ -261,14 +261,14 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetTrackNavigationManager()->GetScrollLink());
+        SetWidgetValue(GetWidget(), GetPage()->GetTrackNavigationManager()->GetScrollLink());
     }
     
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->GetTrackNavigationManager()->ToggleScrollLink(param_);
+        GetPage()->GetTrackNavigationManager()->ToggleScrollLink(param_);
     }
 };
 
@@ -335,17 +335,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoZone : public SurfaceActionWithStringParam
+class GoZone : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoZone(string name, WidgetActionManager* manager, vector<string> params) : SurfaceActionWithStringParam(name, manager, params) {}
+    GoZone(string name, WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(name, manager, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        page_->GoZone(surface_, param_, sender);
+        GetPage()->GoZone(GetSurface(), param_, sender);
     }
 };
 
@@ -360,7 +360,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        TheManager->AdjustTrackBank(page_, param_);
+        TheManager->AdjustTrackBank(GetPage(), param_);
     }
 };
 
@@ -373,12 +373,12 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetShift());
+        SetWidgetValue(GetWidget(), GetPage()->GetShift());
     }
 
     void Do(double value, WidgetActionManager* sender) override
     {
-        page_->SetShift(value);
+        GetPage()->SetShift(value);
     }
 };
 
@@ -391,12 +391,12 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetOption());
+        SetWidgetValue(GetWidget(), GetPage()->GetOption());
     }
 
     void Do(double value, WidgetActionManager* sender) override
     {
-        page_->SetOption(value);
+        GetPage()->SetOption(value);
     }
 };
 
@@ -409,12 +409,12 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetControl());
+        SetWidgetValue(GetWidget(), GetPage()->GetControl());
     }
 
     void Do(double value, WidgetActionManager* sender) override
     {
-        page_->SetControl(value);
+        GetPage()->SetControl(value);
     }
 };
 
@@ -427,12 +427,12 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, page_->GetAlt());
+        SetWidgetValue(GetWidget(), GetPage()->GetAlt());
     }
 
     void Do(double value, WidgetActionManager* sender) override
     {
-        page_->SetAlt(value);
+        GetPage()->SetAlt(value);
     }
 };
 
