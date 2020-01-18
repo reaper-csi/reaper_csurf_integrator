@@ -1146,19 +1146,25 @@ void EuCon_FeedbackProcessor::SetValue(string value)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Action::Action(string name, WidgetActionManager* widgetActionManager) : name_(name), widgetActionManager_(widgetActionManager)
-//{
-//    page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
-//    widget_ = widgetActionManager_->GetWidget();
-//}
-
 Action::Action(string name, WidgetActionManager* widgetActionManager, vector<string> params): name_(name), widgetActionManager_(widgetActionManager)
 {
-    page_ = widgetActionManager_->GetWidget()->GetSurface()->GetPage();
-    widget_ = widgetActionManager_->GetWidget();
-    
     SetRGB(params);
     SetSteppedValues(params);
+}
+
+Page* Action::GetPage()
+{
+    return widgetActionManager_->GetWidget()->GetSurface()->GetPage();
+}
+
+Widget* Action::GetWidget()
+{
+    return widgetActionManager_->GetWidget();
+}
+
+ControlSurface* Action::GetSurface()
+{
+    return GetWidget()->GetSurface();
 }
 
 void Action::DoAction(double value, WidgetActionManager* sender)
@@ -1173,8 +1179,8 @@ void Action::DoAction(double value, WidgetActionManager* sender)
     else
         Do(value, sender);
     
-    if( ! widget_->GetIsModifier())
-        page_->ActionPerformed(GetWidgetActionManager(), this);
+    if( ! GetWidget()->GetIsModifier())
+        GetPage()->ActionPerformed(GetWidgetActionManager(), this);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2509,10 +2515,10 @@ static void FillSubZones(Zone* zone, int zoneIndex)
         if (actionLineItem.actionName.find(FXParam) != string::npos && hasLoadedRawFXFile == false)
             hasLoadedRawFXFile = LoadRawFXFile(currentWidget->GetTrack(), zone->GetName());
         
-        if(hasLoadedRawFXFile && actionLineItem.actionName.find(FXParam) != string::npos && actionLineItem.param == currentAction->GetParamAsString())
+        if(hasLoadedRawFXFile && actionLineItem.actionName.find(FXParam) != string::npos && actionLineItem.param == currentAction->GetParamNumAsString())
         {
             actionNameWasSelectedBySurface = true;
-            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParam(), 0);
+            SendMessage(GetDlgItem(hwndLearn, IDC_LIST_ActionNames), LB_SETCURSEL, currentAction->GetParamNum(), 0);
         }
         
         string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
@@ -2874,7 +2880,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             FillSubZones(zone, zoneIndex);
             
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamAsString().c_str());
+            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamNumAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
 
             rgb_color color = currentAction->GetCurrentRGB();
