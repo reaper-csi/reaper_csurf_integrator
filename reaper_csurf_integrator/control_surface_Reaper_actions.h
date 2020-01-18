@@ -18,7 +18,7 @@ public:
     
     virtual void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, value);
     }
 };
@@ -32,7 +32,7 @@ public:
        
     virtual void Do(double relativeValue, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             double min, max = 0;
             double value = DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
@@ -52,7 +52,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        SetWidgetValue(widget_, volToNormalized(vol));
+        SetWidgetValue(GetWidget(), volToNormalized(vol));
     }
     
 public:
@@ -60,7 +60,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
 };
@@ -74,7 +74,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        SetWidgetValue(widget_, VAL2DB(vol));
+        SetWidgetValue(GetWidget(), VAL2DB(vol));
     }
     
 public:
@@ -82,7 +82,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
     }
 };
@@ -96,7 +96,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        SetWidgetValue(widget_, param_, panToNormalized(pan));
+        SetWidgetValue(GetWidget(), param_, panToNormalized(pan));
     }
     
 public:
@@ -104,7 +104,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
 };
@@ -118,7 +118,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        SetWidgetValue(widget_, pan * 100.0);
+        SetWidgetValue(GetWidget(), pan * 100.0);
     }
     
 public:
@@ -126,7 +126,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
     }
 };
@@ -138,7 +138,7 @@ class TrackPanWidth : public TrackActionWithIntParam
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, param_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        SetWidgetValue(GetWidget(), param_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
 public:
@@ -146,7 +146,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
 };
@@ -158,7 +158,7 @@ class TrackPanWidthPercent : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
     }
     
 public:
@@ -166,7 +166,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_OnWidthChange(track, value / 100.0, false);
     }
 };
@@ -182,7 +182,7 @@ protected:
         
         DAW::GetTrackName(track, buf, sizeof(buf));
         
-        SetWidgetValue(widget_, string(buf));
+        SetWidgetValue(GetWidget(), string(buf));
     }
 
 public:
@@ -198,7 +198,7 @@ protected:
     {
         char trackVolume[128];
         snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-        SetWidgetValue(widget_, string(trackVolume));
+        SetWidgetValue(GetWidget(), string(trackVolume));
     }
     
 public:
@@ -214,7 +214,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
-        SetWidgetValue(widget_, volToNormalized(vol));
+        SetWidgetValue(GetWidget(), volToNormalized(vol));
     }
 
 public:
@@ -222,7 +222,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, normalizedToVol(value), false);
             
@@ -240,7 +240,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
-        SetWidgetValue(widget_, VAL2DB(vol));
+        SetWidgetValue(GetWidget(), VAL2DB(vol));
     }
     
 public:
@@ -248,7 +248,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             double volume = DAW::CSurf_OnSendVolumeChange(track, sendIndex_, DB2VAL(value), false);
             
@@ -266,7 +266,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackSendUIVolPan(track, sendIndex_, &vol, &pan);
-        SetWidgetValue(widget_, panToNormalized(pan));
+        SetWidgetValue(GetWidget(), panToNormalized(pan));
     }
     
 public:
@@ -274,7 +274,7 @@ public:
     
     void Do(double value, WidgetActionManager* sender) override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             double pan = DAW::CSurf_OnSendPanChange(track, sendIndex_, normalizedToPan(value), false);
             
@@ -292,7 +292,7 @@ protected:
     {
         bool mute = false;
         DAW::GetTrackSendUIMute(track, sendIndex_, &mute);
-        SetWidgetValue(widget_, mute);
+        SetWidgetValue(GetWidget(), mute);
     }
 
 public:
@@ -302,7 +302,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_MUTE");
             
@@ -318,7 +318,7 @@ class TrackSendInvertPolarity : public TrackSendAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE"));
+        SetWidgetValue(GetWidget(), DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE"));
     }
     
 public:
@@ -328,7 +328,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "B_PHASE");
             
@@ -345,9 +345,9 @@ protected:
     void RequestTrackUpdate( MediaTrack* track) override
     {
         if(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0)
-            SetWidgetValue(widget_, 0);
+            SetWidgetValue(GetWidget(), 0);
         else
-            SetWidgetValue(widget_, 1);
+            SetWidgetValue(GetWidget(), 1);
     }
     
 public:
@@ -357,7 +357,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             bool isPre = DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "I_SENDMODE") == 0 ? 0 : 1;
             
@@ -380,7 +380,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             int param = param_ - 1 < 0 ? 0 : param_ - 1;
             
@@ -388,10 +388,10 @@ public:
             
             DAW::TrackFX_GetFXName(track, param, fxName, sizeof(fxName));
 
-            SetWidgetValue(widget_, widget_->GetSurface()->GetLocalZoneAlias(fxName));
+            SetWidgetValue(GetWidget(), GetWidget()->GetSurface()->GetLocalZoneAlias(fxName));
         }
         else
-            widget_->Reset();
+            GetWidget()->Reset();
     }
 };
 
@@ -404,10 +404,10 @@ public:
 
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget_->GetTrack())
-            SetWidgetValue(widget_, GetDisplayName());
+        if(MediaTrack* track = GetWidget()->GetTrack())
+            SetWidgetValue(GetWidget(), GetDisplayName());
         else
-            widget_->Reset();
+            GetWidget()->Reset();
     }
 };
 
@@ -420,14 +420,14 @@ public:
 
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             char fxParamValue[128];
             DAW::TrackFX_GetFormattedParamValue(track, fxIndex_, fxParamIndex_, fxParamValue, sizeof(fxParamValue));
-            SetWidgetValue(widget_, string(fxParamValue));
+            SetWidgetValue(GetWidget(), string(fxParamValue));
         }
         else
-            widget_->Reset();
+            GetWidget()->Reset();
     }
 };
 
@@ -442,7 +442,7 @@ protected:
         MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, sendIndex_, "P_DESTTRACK", 0);;
         if(destTrack)
             sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
-        SetWidgetValue(widget_, sendTrackName);
+        SetWidgetValue(GetWidget(), sendTrackName);
     }
 
 public:
@@ -458,7 +458,7 @@ protected:
     {
         char trackVolume[128];
         snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, sendIndex_, "D_VOL")));
-        SetWidgetValue(widget_, string(trackVolume));
+        SetWidgetValue(GetWidget(), string(trackVolume));
     }
 
 public:
@@ -513,7 +513,7 @@ protected:
         if(panIntVal == 0)
             trackPan = "  <C>  ";
         
-        SetWidgetValue(widget_, string(trackPan));
+        SetWidgetValue(GetWidget(), string(trackPan));
     }
 
 public:
@@ -548,7 +548,7 @@ protected:
         if(widthIntVal == 0)
             trackPanWidth = " <Mno> ";
         
-        SetWidgetValue(widget_, string(trackPanWidth));
+        SetWidgetValue(GetWidget(), string(trackPanWidth));
     }
 
 public:
@@ -598,7 +598,7 @@ public:
         if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
             playState = 1;
         else playState = 0;
-        SetWidgetValue(widget_, playState);
+        SetWidgetValue(GetWidget(), playState);
     }
     
     void Do(double value, WidgetActionManager* sender) override
@@ -623,7 +623,7 @@ public:
             stopState = 1;
         else stopState = 0;
         
-        SetWidgetValue(widget_, stopState);
+        SetWidgetValue(GetWidget(), stopState);
     }
     
     void Do(double value, WidgetActionManager* sender) override
@@ -648,7 +648,7 @@ public:
             recordState = 1;
         else recordState = 0;
         
-        SetWidgetValue(widget_, recordState);
+        SetWidgetValue(GetWidget(), recordState);
     }
     
     void Do(double value, WidgetActionManager* sender) override
@@ -669,9 +669,9 @@ protected:
         double folderDepth = DAW::GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH");
         
         if(folderDepth == 1)
-            SetWidgetValue(widget_, 1);
+            SetWidgetValue(GetWidget(), 1);
         else
-            SetWidgetValue(widget_, 0);
+            SetWidgetValue(GetWidget(), 0);
     }
 
 public:
@@ -698,7 +698,7 @@ class TrackSelect : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
 public:
@@ -708,10 +708,10 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
+            GetWidget()->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
 };
@@ -723,7 +723,7 @@ class TrackUniqueSelect : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
 public:
@@ -733,10 +733,10 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             DAW::SetOnlyTrackSelected(track);
-            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
+            GetWidget()->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
 };
@@ -748,7 +748,7 @@ class TrackRangeSelect : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
     }
     
 public:
@@ -762,13 +762,13 @@ public:
         int selectedTrackIndex = 0;
         int trackIndex = 0;
         
-        Page* page = widget_->GetSurface()->GetPage();
+        Page* page = GetWidget()->GetSurface()->GetPage();
         
         for(int i = 0; i < page->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
            MediaTrack* currentTrack = page->GetTrackNavigationManager()->GetTrackFromId(i);
             
-            if(currentTrack == widget_->GetTrack())
+            if(currentTrack == GetWidget()->GetTrack())
                 trackIndex = i;
             
             if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
@@ -802,7 +802,7 @@ class TrackRecordArm : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
     }
     
 public:
@@ -812,7 +812,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
         }
@@ -828,7 +828,7 @@ protected:
     {
         bool mute = false;
         DAW::GetTrackUIMute(track, &mute);
-        SetWidgetValue(widget_, mute);
+        SetWidgetValue(GetWidget(), mute);
     }
     
 public:
@@ -838,7 +838,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             bool mute = false;
             DAW::GetTrackUIMute(track, &mute);
@@ -854,7 +854,7 @@ class TrackSolo : public TrackAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
+        SetWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
     }
     
 public:
@@ -864,7 +864,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
         }
@@ -880,7 +880,7 @@ public:
 
     void Do(double value, WidgetActionManager* sender) override
     {
-        widget_->SetIsTouched(value == 0 ? false : true);
+        GetWidget()->SetIsTouched(value == 0 ? false : true);
     }
 };
 
@@ -893,7 +893,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, DAW::GetGlobalAutomationOverride());
+        SetWidgetValue(GetWidget(), DAW::GetGlobalAutomationOverride());
     }
     
     void Do(double value, WidgetActionManager* sender) override
@@ -919,9 +919,9 @@ public:
     {
         bool gotOne = false;
         
-        for(int i = 0; i < page_->GetTrackNavigationManager()->GetNumTracks(); i++)
+        for(int i = 0; i < GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
-            MediaTrack* track = page_->GetTrackNavigationManager()->GetTrackFromId(i);
+            MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(i);
             
             if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == param_)
             {
@@ -931,9 +931,9 @@ public:
         }
         
         if(gotOne)
-            SetWidgetValue(widget_, 1.0);
+            SetWidgetValue(GetWidget(), 1.0);
         else
-            SetWidgetValue(widget_, 0.0);
+            SetWidgetValue(GetWidget(), 0.0);
     }
     
     virtual void Do(double value, WidgetActionManager* sender) override
@@ -953,7 +953,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, 0);
+        SetWidgetValue(GetWidget(), 0);
     }
 };
 
@@ -966,7 +966,7 @@ public:
 
     void RequestUpdate() override
     {
-        SetWidgetValue(widget_, DAW::GetSetRepeatEx(nullptr, -1));
+        SetWidgetValue(GetWidget(), DAW::GetSetRepeatEx(nullptr, -1));
     }
     
     void Do(double value, WidgetActionManager* sender) override
@@ -986,7 +986,7 @@ public:
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(widget_, volToNormalized(DAW::Track_GetPeakInfo(track, param_)));
+        SetWidgetValue(GetWidget(), volToNormalized(DAW::Track_GetPeakInfo(track, param_)));
     }
 };
 
@@ -999,7 +999,7 @@ protected:
     {
         double lrVol = (DAW::Track_GetPeakInfo(track, 0) + DAW::Track_GetPeakInfo(track, 1)) / 2.0;
         
-        SetWidgetValue(widget_, volToNormalized(lrVol));
+        SetWidgetValue(GetWidget(), volToNormalized(lrVol));
     }
 
 public:
@@ -1018,7 +1018,7 @@ protected:
         
         double lrVol =  lVol > rVol ? lVol : rVol;
         
-        SetWidgetValue(widget_, volToNormalized(lrVol));
+        SetWidgetValue(GetWidget(), volToNormalized(lrVol));
     }
 
 public:
@@ -1036,15 +1036,15 @@ public:
     {
         char buffer[BUFSZ];
         
-        if(MediaTrack* track = widget_->GetTrack())
+        if(MediaTrack* track = GetWidget()->GetTrack())
         {
             if(DAW::TrackFX_GetNamedConfigParm(track, fxParamIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
-                SetWidgetValue(widget_, -atof(buffer)/20.0);
+                SetWidgetValue(GetWidget(), -atof(buffer)/20.0);
             else
-                SetWidgetValue(widget_, 0.0);
+                SetWidgetValue(GetWidget(), 0.0);
         }
         else
-            widget_->Reset();
+            GetWidget()->Reset();
     }
 };
 

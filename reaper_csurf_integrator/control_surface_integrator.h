@@ -457,8 +457,6 @@ protected:
     Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
 
     string name_ = "";
-    Page* page_ = nullptr;
-    Widget* widget_ = nullptr;
     
     vector<double> steppedValues_;
     
@@ -474,12 +472,15 @@ public:
     virtual ~Action() {}
     
     WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
-    
+    Page* GetPage();
+    Widget* GetWidget();
+    ControlSurface* GetSurface();
+
     virtual string GetDisplayName() { return ""; }
     string GetName() { return name_; }
     
-    virtual string GetParamAsString() { return ""; }
-    virtual int GetParam() { return 0; }
+    virtual string GetParamNumAsString() { return ""; }
+    virtual int GetParamNum() { return 0; }
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
     vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
@@ -496,7 +497,7 @@ public:
     virtual void RequestUpdate()
     {
         if(supportsRGB_)
-            widget_->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+            GetWidget()->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
     
     virtual void Do(string value, WidgetActionManager* sender) {}
@@ -510,7 +511,7 @@ public:
         
         actionLineItem.action = this;
         
-        actionLineItem.param = GetParamAsString();
+        actionLineItem.param = GetParamNumAsString();
         
         actionLineItem.alias = GetAlias();
 
@@ -581,12 +582,12 @@ public:
     
     void Activate(WidgetActionManager* widgetActionManager)
     {
-        widget_->SetWidgetActionManager(widgetActionManager);
+        GetWidget()->SetWidgetActionManager(widgetActionManager);
     }
     
     void ActivateNoAction()
     {
-        widget_->SetWidgetActionManager(nullptr);
+        GetWidget()->SetWidgetActionManager(nullptr);
     }
 };
 
@@ -598,7 +599,7 @@ public:
     NoAction(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager, params) {}
     virtual ~NoAction() {}
     
-    virtual void RequestUpdate() { widget_->Reset(); }
+    virtual void RequestUpdate() { GetWidget()->Reset(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
