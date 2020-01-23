@@ -108,26 +108,21 @@ struct ActionLineItem
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    TrackNavigationManager* const manager_;
-    Navigator(TrackNavigationManager* manager) : manager_(manager) {}
-
 public:
+    Navigator() {}
+
     virtual ~Navigator() {}
 
     virtual string GetName() { return ""; }
     virtual MediaTrack* GetTrack() { return nullptr; };
-    virtual bool GetIsFocusedFXNavigator() { return false; }
-    
-    
     virtual void SetTouchState(bool isChannelTouched) { }
     virtual bool GetIsChannelTouched() { return false; }
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() { }
     virtual void DecBias() { }
-    
     virtual void Pin() {}
     virtual void Unpin() {}
+    virtual bool GetIsFocusedFXNavigator() { return false; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,8 +136,12 @@ private:
     MediaTrack* pinnedTrack_ = nullptr;
     bool isChannelPinned_ = false;
     
+protected:
+    TrackNavigationManager* const manager_;
+
 public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : Navigator(manager), channelNum_(channelNum) {}
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
     virtual ~TrackNavigator() {}
     
     virtual void SetTouchState(bool isChannelTouched) override{ isChannelTouched_ = isChannelTouched; }
@@ -160,11 +159,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackNavigator : public Navigator
+class MasterTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
+    MasterTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
     virtual ~MasterTrackNavigator() {}
     
     virtual string GetName() override { return "MasterTrackNavigator"; }
@@ -173,11 +172,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public Navigator
+class SelectedTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
+    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
     virtual ~SelectedTrackNavigator() {}
     
     //virtual void SetTouchState(bool isChannelTouched) override {}
@@ -190,11 +189,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXNavigator : public Navigator
+class FocusedFXNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
+    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
     virtual ~FocusedFXNavigator() {}
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
@@ -488,7 +487,6 @@ protected:
 public:
     virtual ~Action() {}
     
-    WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_; }
     Page* GetPage();
     Widget* GetWidget();
     ControlSurface* GetSurface();
@@ -773,17 +771,20 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    vector<WidgetActionManager*> widgetActionManagers_;
-    vector<Zone*> includedZones_;
-    int index_ = 0;
-
-    Navigator* navigator_ = nullptr;
-    vector<ActionLineItem> actionLineItems;
-
-    ControlSurface* const surface_;
     string name_ = "";
     string alias_ = "";
     string sourceFilePath_ = "";
+    vector<Zone*> includedZones_;
+    int index_ = 0;
+    Navigator* const navigator_;
+    
+
+    
+    
+    
+    vector<WidgetActionManager*> widgetActionManagers_;
+    
+    vector<ActionLineItem> actionLineItems;
     
     void RemoveWidgetActionManager(WidgetActionManager* widgetActionManager)
     {
@@ -805,23 +806,28 @@ private:
         }
     }
     
+    
+    
+    
 public:
-    Zone(ControlSurface* surface, string name, string sourceFilePath, string alias) : surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
+    Zone(Navigator* navigator, string name, string sourceFilePath, string alias) : navigator_(navigator), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
     virtual ~Zone() {}
     
     int GetIndex() { return index_; }
     string GetName() { return name_ ;}
     string GetAlias() { return alias_;}
-    void SetAlias(string alias) { alias_ = alias;}
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
-    void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
 
     
     
     // GAW TBD -- remove -- change learn mode editor to file based
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     
+    // GAW TBD -- maybe allow this later after fully debugged
+    //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
+    //void SetAlias(string alias) { alias_ = alias;}
+
     
     
     void AddAction(ActionLineItem actionLineItem, int actionIndex);
