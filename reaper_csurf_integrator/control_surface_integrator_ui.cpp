@@ -36,7 +36,11 @@ CSurfIntegrator::CSurfIntegrator()
 CSurfIntegrator::~CSurfIntegrator()
 {
     if(TheManager)
+    {
         TheManager->ResetAllWidgets();
+        delete TheManager;
+        TheManager = nullptr;
+    }
 }
 
 void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)

@@ -105,7 +105,33 @@ struct ActionLineItem
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackNavigator
+class Navigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    TrackNavigationManager* const manager_;
+    Navigator(TrackNavigationManager* manager) : manager_(manager) {}
+
+public:
+    virtual ~Navigator() {}
+
+    virtual string GetName() { return ""; }
+    virtual MediaTrack* GetTrack() { return nullptr; };
+    virtual bool GetIsFocusedFXNavigator() { return false; }
+    
+    
+    virtual void SetTouchState(bool isChannelTouched) { }
+    virtual bool GetIsChannelTouched() { return false; }
+    virtual bool GetIsChannelPinned() { return false; }
+    virtual void IncBias() { }
+    virtual void DecBias() { }
+    
+    virtual void Pin() {}
+    virtual void Unpin() {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -115,39 +141,31 @@ private:
     MediaTrack* pinnedTrack_ = nullptr;
     bool isChannelPinned_ = false;
     
-protected:
-    TrackNavigationManager* const manager_;
-    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
-    
 public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
+    TrackNavigator(TrackNavigationManager* manager, int channelNum) : Navigator(manager), channelNum_(channelNum) {}
     virtual ~TrackNavigator() {}
     
-    virtual void SetTouchState(bool isChannelTouched) { isChannelTouched_ = isChannelTouched; }
-    bool GetIsChannelTouched() { return isChannelTouched_; }
-    bool GetIsChannelPinned() { return isChannelPinned_; }
-    virtual bool GetIsFocusedFXNavigator() { return false; }
-    void IncBias() { bias_++; }
-    void DecBias() { bias_--; }
+    virtual void SetTouchState(bool isChannelTouched) override{ isChannelTouched_ = isChannelTouched; }
+    virtual bool GetIsChannelTouched() override { return isChannelTouched_; }
+    virtual bool GetIsChannelPinned() override { return isChannelPinned_; }
+    virtual void IncBias() override { bias_++; }
+    virtual void DecBias() override { bias_--; }
     
-    virtual void Pin();
-    virtual void Unpin();
+    virtual void Pin() override;
+    virtual void Unpin() override;
     
-    virtual string GetName() { return "TrackNavigator"; }
+    virtual string GetName() override { return "TrackNavigator"; }
     
-    virtual MediaTrack* GetTrack();
+    virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackNavigator : public TrackNavigator
+class MasterTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    MasterTrackNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
     virtual ~MasterTrackNavigator() {}
-    
-    virtual void Pin() override {}
-    virtual void Unpin() override {}
     
     virtual string GetName() override { return "MasterTrackNavigator"; }
     
@@ -155,11 +173,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
+class SelectedTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    SelectedTrackNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
     virtual ~SelectedTrackNavigator() {}
     
     //virtual void SetTouchState(bool isChannelTouched) override {}
@@ -172,11 +190,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXNavigator : public TrackNavigator
+class FocusedFXNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    FocusedFXNavigator(TrackNavigationManager* manager) : Navigator(manager) {}
     virtual ~FocusedFXNavigator() {}
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
@@ -212,7 +230,6 @@ public:
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
-    WidgetActionManager* GetWidgetActionManager() { return widgetActionManager_;  }
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
@@ -614,7 +631,7 @@ private:
     
     map<string, vector <Action*>> trackTouchedActions_;
     
-    TrackNavigator* GetTrackNavigator();
+    Navigator* GetNavigator();
     string GetModifiers();
     
 public:
@@ -760,7 +777,7 @@ private:
     vector<Zone*> includedZones_;
     int index_ = 0;
 
-    TrackNavigator* trackNavigator_ = nullptr;
+    Navigator* navigator_ = nullptr;
     vector<ActionLineItem> actionLineItems;
 
     ControlSurface* const surface_;
@@ -797,18 +814,24 @@ public:
     string GetAlias() { return alias_;}
     void SetAlias(string alias) { alias_ = alias;}
     string GetSourceFilePath() { return sourceFilePath_; }
-    TrackNavigator* GetTrackNavigator() { return trackNavigator_; }
-    void SetTrackNavigator(TrackNavigator* trackNavigator) { trackNavigator_ = trackNavigator; }
+    Navigator* GetNavigator() { return navigator_; }
+    void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
 
+    
+    
+    // GAW TBD -- remove -- change learn mode editor to file based
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
+    
+    
+    
     void AddAction(ActionLineItem actionLineItem, int actionIndex);
     void Activate(WidgetActionManager* sender);
     void Deactivate();
     
     string GetNavigatorName()
     {
-        if(trackNavigator_ != nullptr)
-            return trackNavigator_->GetName();
+        if(navigator_ != nullptr)
+            return navigator_->GetName();
         else
             return "";
     }
@@ -839,10 +862,10 @@ public:
     
     bool GetHasFocusedFXTrackNavigator()
     {
-        if(trackNavigator_ == nullptr)
+        if(navigator_ == nullptr)
             return false;
         else
-            return trackNavigator_->GetIsFocusedFXNavigator();
+            return navigator_->GetIsFocusedFXNavigator();
     }
     
     virtual void AddWidgetActionManager(WidgetActionManager* manager)
@@ -1073,7 +1096,7 @@ protected:
 
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
-    const string name_ = "";
+    string const name_;
     vector<Widget*> widgets_;
 
     FXActivationManager* const fxActivationManager_;
@@ -1394,7 +1417,7 @@ private:
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> pinnedTracks_;
     vector<MediaTrack*> unpinnedTracks_;
-    vector<TrackNavigator*> trackNavigators_;
+    vector<Navigator*> navigators_;
     
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages) {}
@@ -1403,8 +1426,8 @@ public:
     {
         pinnedTracks_.push_back(track);
         
-        for(int i = channelNum + 1; i < trackNavigators_.size(); i++)
-            trackNavigators_[i]->IncBias();
+        for(int i = channelNum + 1; i < navigators_.size(); i++)
+            navigators_[i]->IncBias();
     }
     
     void UnpinTrackFromChannel(MediaTrack* track, int channelNum)
@@ -1414,8 +1437,8 @@ public:
         if(it != pinnedTracks_.end())
             pinnedTracks_.erase(it);
         
-        for(int i = channelNum + 1; i < trackNavigators_.size(); i++)
-            trackNavigators_[i]->DecBias();
+        for(int i = channelNum + 1; i < navigators_.size(); i++)
+            navigators_[i]->DecBias();
     }
     
     void TogglePin(MediaTrack* track)
@@ -1423,7 +1446,7 @@ public:
         if(track == tracks_[tracks_.size() - 1]) // GAW TBD -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors, or maybe ny usage :)
             return;
         
-        for(auto navigator : trackNavigators_)
+        for(auto navigator : navigators_)
         {
             if(track == navigator->GetTrack())
             {
@@ -1445,7 +1468,7 @@ public:
     
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
-    TrackNavigator* AddTrackNavigator();
+    Navigator* AddNavigator();
     void OnTrackSelection();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
@@ -1503,7 +1526,7 @@ public:
         // Unpin any removed tracks
         for(auto track : tracksToRemove)
         {
-            for(auto navigator : trackNavigators_)
+            for(auto navigator : navigators_)
             {
                 if(track == navigator->GetTrack())
                 {
@@ -1520,7 +1543,7 @@ public:
         unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
         subtract_vector(unpinnedTracks_, pinnedTracks_);
         
-        int top = GetNumTracks() - trackNavigators_.size();
+        int top = GetNumTracks() - navigators_.size();
         
         if(top < 0)
             trackOffset_ = 0;
@@ -1546,7 +1569,7 @@ public:
     
     bool GetIsTrackTouched(MediaTrack* track)
     {
-        for(auto navigator : trackNavigators_)
+        for(auto navigator : navigators_)
             if(navigator->GetTrack() == track && navigator->GetIsChannelTouched())
                 return true;
         

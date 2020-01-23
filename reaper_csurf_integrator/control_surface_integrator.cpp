@@ -171,17 +171,17 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
-static map<int, TrackNavigator*> trackNavigators;
+static map<int, Navigator*> navigators;
 
-static TrackNavigator* GetTrackNavigatorForChannel(ControlSurface* surface, int channelNum)
+static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum)
 {
     if(channelNum < 0)
         return nullptr;
     
-    if(trackNavigators.count(channelNum) < 1)
-        trackNavigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddTrackNavigator();
+    if(navigators.count(channelNum) < 1)
+        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator();
     
-    return trackNavigators[channelNum];
+    return navigators[channelNum];
 }
 
 static void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
@@ -262,7 +262,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     
         if(tokens.size() == 1 && tokens[0] == "TrackNavigator")
         {
-            zone->SetTrackNavigator(GetTrackNavigatorForChannel(surface, channelNum));
+            zone->SetTrackNavigator(GetNavigatorForChannel(surface, channelNum));
             continue;
         }
         else if(tokens.size() == 1 && tokens[0] == "MasterTrackNavigator")
@@ -283,7 +283,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
         else if(tokens.size() == 1 && tokens[0] == "ParentNavigator")
         {
             if(parentZone)
-                zone->SetTrackNavigator(parentZone->GetTrackNavigator());
+                zone->SetTrackNavigator(parentZone->GetNavigator());
             continue;
         }
         
@@ -557,6 +557,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
                                         outputZoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
                                 }
                             }
+                            
                             BuildZone(outputZoneLines, filePath, surface, widgets, nullptr, i);
                         }
                     }
@@ -1186,9 +1187,9 @@ void Action::DoAction(double value, WidgetActionManager* sender)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TrackNavigator* WidgetActionManager::GetTrackNavigator()
+Navigator* WidgetActionManager::GetNavigator()
 {
-    return zone_->GetTrackNavigator();
+    return zone_->GetNavigator();
 }
 
 string WidgetActionManager::GetModifiers()
@@ -1201,23 +1202,23 @@ string WidgetActionManager::GetModifiers()
 
 string WidgetActionManager::GetNavigatorName()
 {
-    if(GetTrackNavigator() == nullptr)
+    if(GetNavigator() == nullptr)
         return "";
     else
-        return GetTrackNavigator()->GetName();
+        return GetNavigator()->GetName();
 }
 
 MediaTrack* WidgetActionManager::GetTrack()
 {
-    if(GetTrackNavigator() == nullptr)
+    if(GetNavigator() == nullptr)
         return nullptr;
     else
-        return GetTrackNavigator()->GetTrack();
+        return GetNavigator()->GetTrack();
 }
 
 void WidgetActionManager::RequestUpdate()
 {
-    if(trackTouchedActions_.size() > 0 && GetTrackNavigator() != nullptr && GetTrackNavigator()->GetIsChannelTouched())
+    if(trackTouchedActions_.size() > 0 && GetNavigator() != nullptr && GetNavigator()->GetIsChannelTouched())
     {
         if(trackTouchedActions_.count(GetModifiers()) > 0)
             for(auto action : trackTouchedActions_[GetModifiers()])
@@ -1233,8 +1234,8 @@ void WidgetActionManager::RequestUpdate()
 
 void WidgetActionManager::SetIsTouched(bool isTouched)
 {
-    if(GetTrackNavigator() != nullptr)
-        GetTrackNavigator()->SetTouchState((isTouched));
+    if(GetNavigator() != nullptr)
+        GetNavigator()->SetTouchState((isTouched));
 }
 
 void WidgetActionManager::Deactivate()
@@ -1542,7 +1543,7 @@ void ControlSurface::InitZones(string zoneFolder)
         vector<string> zoneFilesToProcess;
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
-        trackNavigators.clear();
+        navigators.clear();
         
         for(auto zoneFilename : zoneFilesToProcess)
             ProcessZoneFile(zoneFilename, this, widgets_);
@@ -1607,8 +1608,8 @@ void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
     {
         for(auto zone : zonesInZoneFile_[zoneToDelete->GetSourceFilePath()])
         {
-            for(int i = 0; i < zone->GetIncludedZones().size(); i++)
-                if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName())
+            for(int i = 0; i < zone->GetIncludedZones().size(); i++) // GAW TBD -- change to file based
+                if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName()) // GAW TBD -- change to file based
                     zone->RemoveZone(i);
         }
     }
@@ -2087,11 +2088,11 @@ MediaTrack* FocusedFXNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-TrackNavigator* TrackNavigationManager::AddTrackNavigator()
+Navigator* TrackNavigationManager::AddNavigator()
 {
-    int channelNum = trackNavigators_.size();
-    trackNavigators_.push_back(new TrackNavigator(page_->GetTrackNavigationManager(), channelNum));
-    return trackNavigators_[channelNum];
+    int channelNum = navigators_.size();
+    navigators_.push_back(new TrackNavigator(this, channelNum));
+    return navigators_[channelNum];
 }
 
 void TrackNavigationManager::OnTrackSelection()
@@ -2103,7 +2104,7 @@ void TrackNavigationManager::OnTrackSelection()
         
         if(selectedTrack != nullptr)
         {
-            for(auto navigator : trackNavigators_)
+            for(auto navigator : navigators_)
                 if(selectedTrack == navigator->GetTrack())
                     return;
 
@@ -2116,7 +2117,7 @@ void TrackNavigationManager::OnTrackSelection()
             if(trackOffset_ <  0)
                 trackOffset_ =  0;
 
-            int top = GetNumTracks() - trackNavigators_.size();
+            int top = GetNumTracks() - navigators_.size();
             
             if(trackOffset_ >  top)
                 trackOffset_ = top;
@@ -2140,7 +2141,7 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 {
     int numTracks = GetNumTracks();
 
-    if(numTracks <= trackNavigators_.size())
+    if(numTracks <= navigators_.size())
         return;
     
     trackOffset_ += amount;
@@ -2148,7 +2149,7 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
     if(trackOffset_ <  0)
         trackOffset_ =  0;
     
-    int top = numTracks - trackNavigators_.size();
+    int top = numTracks - navigators_.size();
     
     if(trackOffset_ >  top)
         trackOffset_ = top;
@@ -2247,9 +2248,9 @@ static vector<Zone*> GetAvailableZones(int zoneIndex)
         {
             bool foundIt = false;
 
-            for(int j = 0; j < zonesInThisFile[zoneIndex]->GetIncludedZones().size(); j++)
+            for(int j = 0; j < zonesInThisFile[zoneIndex]->GetIncludedZones().size(); j++) // GAW TBD -- change to file based
             {
-                if(zonesInThisFile[zoneIndex]->GetIncludedZones()[j]->GetName() == zonesInThisFile[i]->GetName())
+                if(zonesInThisFile[zoneIndex]->GetIncludedZones()[j]->GetName() == zonesInThisFile[i]->GetName()) // GAW TBD -- change to file based
                 {
                     foundIt = true;
                     break;
@@ -2500,7 +2501,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_Navigator), navigatorName.c_str());
     
     // Included Zones
-    for(auto includedZone : zone->GetIncludedZones())
+    for(auto includedZone : zone->GetIncludedZones()) // GAW TBD -- change to file based
         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
     
     // Zone line Items
@@ -2968,11 +2969,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                         if(zone->GetNavigatorName() != "")
                                             zonFile << zone->GetNavigatorName() + GetLineEnding();
                                         
-                                        if(zone->GetIncludedZones().size() > 0)
+                                        if(zone->GetIncludedZones().size() > 0) // GAW TBD -- change to file based
                                         {
                                             zonFile << "IncludedZones" + GetLineEnding();
 
-                                            for(auto includedZone : zone->GetIncludedZones())
+                                            for(auto includedZone : zone->GetIncludedZones())     // GAW TBD -- change to file based
                                                 zonFile << includedZone->GetName() + GetLineEnding();
                                             
                                             zonFile << "IncludedZonesEnd" + GetLineEnding();
@@ -3271,7 +3272,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 zone->RemoveZone(index);
                                 
                                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
-                                for(auto includedZone : zone->GetIncludedZones())
+                                for(auto includedZone : zone->GetIncludedZones())     // GAW TBD -- change to file based
                                     SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
                             }
                         }
