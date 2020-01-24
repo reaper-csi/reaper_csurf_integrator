@@ -222,7 +222,7 @@ private:
     map<string, map<string, vector <Action*>>> actions_;
     map<string, map<string, vector <Action*>>> trackTouchedActions_;
 
-    
+    string activeZoneName = "Home";
     
     vector<FeedbackProcessor*> feedbackProcessors_;
 
@@ -509,7 +509,8 @@ public:
     virtual ~Action() {}
     
     Page* GetPage();
-    Widget* GetWidget();
+    Widget* GetWidget() { return widget_; }
+    Zone* GetZone() { return zone_; }
     ControlSurface* GetSurface();
 
     virtual string GetDisplayName() { return ""; }

@@ -1012,10 +1012,15 @@ void Widget::DoRelativeAction(double value)
     DoAction(lastValue_ + value);
 }
 
-void Widget::SetIsTouched(bool isTouched)
+void Widget::SetIsTouched(bool isChannelTouched)
 {
+    /*
+    if(actions_.count(activeZoneName) > 0 && actions_[activeZoneName].count(surface_->GetPage()->GetModifiers()) > 0)
+        for(auto action : actions_[activeZoneName][surface_->GetPage()->GetModifiers()])
+            action->GetZone()->GetNavigator()->SetTouchState(isChannelTouched);
+    */
     if(widgetActionManager_ != nullptr)
-        widgetActionManager_->SetIsTouched(isTouched);
+        widgetActionManager_->SetIsTouched(isChannelTouched); // REmove this at cutover
 }
 
 void  Widget::SetValue(double value)
@@ -1166,11 +1171,6 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
 Page* Action::GetPage()
 {
     return widget_->GetSurface()->GetPage();
-}
-
-Widget* Action::GetWidget()
-{
-    return widget_;
 }
 
 ControlSurface* Action::GetSurface()
