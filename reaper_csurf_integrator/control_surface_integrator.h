@@ -472,14 +472,14 @@ private:
 protected:
     Action(string name, Widget* widget, Zone* zone, vector<string> params);
 
-    string name_ = "";
-    
+    string const name_;
+    Widget* const widget_;
+    Zone* const zone_;
+
     vector<double> steppedValues_;
     
   
     
-    Widget* widget_ = nullptr;
-    Zone* zone_ = nullptr;
     
     
     
