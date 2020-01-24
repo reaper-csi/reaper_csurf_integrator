@@ -470,13 +470,19 @@ private:
     }
     
 protected:
-    Action(string name, WidgetActionManager* widgetActionManager, vector<string> params);
+    Action(string name, Widget* widget, Zone* zone, vector<string> params);
 
     string name_ = "";
     
     vector<double> steppedValues_;
     
-    WidgetActionManager* const widgetActionManager_;
+  
+    
+    Widget* widget_ = nullptr;
+    Zone* zone_ = nullptr;
+    
+    
+    
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     double delayAmount_ = 0.0;
@@ -611,7 +617,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NoAction(string name, WidgetActionManager* widgetActionManager, vector<string> params) : Action(name, widgetActionManager, params) {}
+    NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() { GetWidget()->Reset(); }
@@ -1954,7 +1960,7 @@ class Manager
 {
 private:
     CSurfIntegrator* const CSurfIntegrator_;
-    map<string, function<Action*(string name, WidgetActionManager* manager, vector<string>)>> actions_;
+    map<string, function<Action*(string name, Widget* widget, Zone* zone, vector<string>)>> actions_;
     vector <Page*> pages_;
     
     map<string, map<string, int>> fxParamIndices_;
@@ -2035,10 +2041,10 @@ public:
             return nullptr;
     }
     
-    Action* GetAction(WidgetActionManager* manager, vector<string> params)
+    Action* GetAction(Widget* widget, Zone* zone, vector<string> params)
     {
-        if(manager != nullptr && actions_.count(params[0]) > 0)
-            return actions_[params[0]](params[0], manager, params);
+        if(actions_.count(params[0]) > 0)
+            return actions_[params[0]](params[0], widget, zone, params);
         else
             return nullptr;
     }

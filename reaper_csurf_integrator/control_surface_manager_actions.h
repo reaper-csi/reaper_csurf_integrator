@@ -14,7 +14,7 @@ class ToggleLearnMode  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleLearnMode(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    ToggleLearnMode(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -29,7 +29,7 @@ class TogglePin  : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TogglePin(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
+    TogglePin(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
        
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -45,7 +45,7 @@ class ToggleMapSelectedTrackSends  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackSends(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    ToggleMapSelectedTrackSends(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void RequestUpdate() override
     {
@@ -65,7 +65,7 @@ class ToggleMapSelectedTrackFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFX(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    ToggleMapSelectedTrackFX(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void RequestUpdate() override
     {
@@ -85,7 +85,7 @@ class ToggleMapSelectedTrackFXMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapSelectedTrackFXMenu(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    ToggleMapSelectedTrackFXMenu(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void RequestUpdate() override
     {
@@ -105,7 +105,7 @@ class ToggleMapFocusedFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleMapFocusedFX(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    ToggleMapFocusedFX(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void RequestUpdate() override
     {
@@ -125,7 +125,7 @@ class GoFXSlot  : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoFXSlot(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
+    GoFXSlot(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(name, widget, zone, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -142,7 +142,7 @@ class MapSelectedTrackSendsToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackSendsToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    MapSelectedTrackSendsToWidgets(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -157,7 +157,7 @@ class MapSelectedTrackFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    MapSelectedTrackFXToWidgets(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -172,7 +172,7 @@ class MapSelectedTrackFXToMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapSelectedTrackFXToMenu(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    MapSelectedTrackFXToMenu(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -187,7 +187,7 @@ class MapFocusedFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MapFocusedFXToWidgets(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    MapFocusedFXToWidgets(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -202,7 +202,7 @@ class SelectTrackRelative : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectTrackRelative(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
+    SelectTrackRelative(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -237,7 +237,7 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShowFXWindows(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    SetShowFXWindows(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void RequestUpdate() override
     {
@@ -257,7 +257,7 @@ class ToggleScrollLink : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    ToggleScrollLink(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
+    ToggleScrollLink(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(name, widget, zone, params) {}
 
     void RequestUpdate() override
     {
@@ -277,7 +277,7 @@ class CycleTimeDisplayModes : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    CycleTimeDisplayModes(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    CycleTimeDisplayModes(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -309,7 +309,7 @@ class GoNextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoNextPage(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    GoNextPage(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -324,7 +324,7 @@ class GoPage : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoPage(string name, WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(name, manager, params) {}
+    GoPage(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(name, widget, zone, params) {}
     
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -339,7 +339,7 @@ class GoZone : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    GoZone(string name, WidgetActionManager* manager, vector<string> params) : ActionWithStringParam(name, manager, params) {}
+    GoZone(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -354,7 +354,7 @@ class TrackBank : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    TrackBank(string name, WidgetActionManager* manager, vector<string> params) : ActionWithIntParam(name, manager, params) {}
+    TrackBank(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(name, widget, zone, params) {}
 
     void Do(double value, WidgetActionManager* sender) override
     {
@@ -369,7 +369,7 @@ class SetShift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetShift(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    SetShift(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void RequestUpdate() override
     {
@@ -387,7 +387,7 @@ class SetOption : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetOption(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    SetOption(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void RequestUpdate() override
     {
@@ -405,7 +405,7 @@ class SetControl : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetControl(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    SetControl(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void RequestUpdate() override
     {
@@ -423,7 +423,7 @@ class SetAlt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetAlt(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) {}
+    SetAlt(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
 
     void RequestUpdate() override
     {
