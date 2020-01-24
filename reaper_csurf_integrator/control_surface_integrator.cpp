@@ -336,9 +336,15 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 if(action != nullptr)
                 {
                     if(isTrackTouch)
-                        widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action);
+                    {
+                        widget->AddTrackTouchedAction(zone->GetName(), modifiers, action);
+                        widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action); // GAW TBD -- remove at cutover
+                    }
                     else
-                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);
+                    {
+                        widget->AddAction(zone->GetName(), modifiers, action);
+                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);  // GAW TBD -- remove at cutover
+                    }
                     
                     if(isInverted)
                         action->SetIsInverted();

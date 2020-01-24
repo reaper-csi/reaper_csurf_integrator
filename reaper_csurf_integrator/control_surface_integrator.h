@@ -215,7 +215,15 @@ private:
     ControlSurface* const surface_;
     string name_ = "";
 
+    
+    
     WidgetActionManager* widgetActionManager_ = nullptr;
+    
+    map<string, map<string, vector <Action*>>> actions_;
+    map<string, map<string, vector <Action*>>> trackTouchedActions_;
+
+    
+    
     vector<FeedbackProcessor*> feedbackProcessors_;
 
     bool isModifier_ = false;
@@ -228,12 +236,19 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
+    
+    
     void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
+    
+    void AddAction(string zoneName, string modifiers, Action* action)  { actions_[zoneName][modifiers].push_back(action); }
+    void AddTrackTouchedAction(string zoneName, string modifiers, Action* action) { trackTouchedActions_[zoneName][modifiers].push_back(action); }
+
+    
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
     bool GetIsModifier() { return isModifier_; }
     double GetLastValue() {return lastValue_; }
-
+    
     void Reset()
     {
         SetValue(0.0);
