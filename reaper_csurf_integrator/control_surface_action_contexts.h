@@ -16,7 +16,7 @@ class ActionWithIntParam : public Action
 protected:
     int param_ = 0;
     
-    ActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
+    ActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -41,7 +41,7 @@ class ActionWithStringParam : public Action
 protected:
     string param_ = "";
     
-    ActionWithStringParam(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
+    ActionWithStringParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
         if(params.size() > 1)
             param_ = params[1];
@@ -63,7 +63,7 @@ private:
     string commandStr_ = "";
     
 public:
-    ReaperAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params)
+    ReaperAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
         if(params.size() > 1)
         {
@@ -102,7 +102,7 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackAction(string name, WidgetActionManager* manager, vector<string> params) : Action(name, manager, params) { }
+    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) { }
 
 public:
     virtual void RequestUpdate() override
@@ -127,7 +127,7 @@ class TrackSendAction : public TrackAction
 protected:
     int sendIndex_ = 0;
     
-    TrackSendAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params) {}
+    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
 public:
     virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
@@ -150,7 +150,7 @@ class TrackActionWithIntParam : public TrackAction
 protected:
     int param_ = 0;
 
-    TrackActionWithIntParam(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params)
+    TrackActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1)
             param_= atol(params[1].c_str());
@@ -178,7 +178,7 @@ protected:
     int fxParamIndex_ = 0;
     string fxParamDisplayName_ = "";
 
-    FXAction(string name, WidgetActionManager* manager, vector<string> params) : TrackAction(name, manager, params)
+    FXAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1)
             fxParamIndex_ = atol(params[1].c_str());
