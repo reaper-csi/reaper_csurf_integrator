@@ -91,7 +91,7 @@ public:
         SetWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
     }
     
-    virtual void Do(double value, WidgetActionManager* sender) override
+    virtual void Do(double value, Widget* sender) override
     {
         DAW::SendCommandMessage(commandId_);
     }
@@ -113,7 +113,7 @@ public:
             GetWidget()->Reset();
     }
     
-    virtual void DoAction(double value, WidgetActionManager* sender) override
+    virtual void DoAction(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             Action::DoAction(value, sender);

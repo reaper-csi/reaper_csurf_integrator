@@ -173,13 +173,13 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
 
 static map<int, Navigator*> navigators;
 
-static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum)
+static Navigator* GetNavigatorForChannel(Zone* zone, ControlSurface* surface, int channelNum)
 {
     if(channelNum < 0)
         return nullptr;
     
     if(navigators.count(channelNum) < 1)
-        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator();
+        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator(zone);
     
     return navigators[channelNum];
 }
@@ -197,7 +197,6 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
     
-    map<Widget*, WidgetActionManager*> widgetActionManagerForWidget;
 
     for(int i = 0 ; i < zoneLines.size(); i++)
     {
@@ -208,7 +207,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             if(tokens.size() < 2)
                 return;
             
-            Navigator* nav = nullptr;
+            string navigatorName = "";
 
             if(zoneLines.size() > i + 1) // we have another line
             {
@@ -218,25 +217,11 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                                              || navTokens[0] == "FocusedFXNavigator" || navTokens[0] == "ParentNavigator"))
                 {
                     i++;
-                    
-                    if(navTokens[0] == "TrackNavigator")
-                        nav = GetNavigatorForChannel(surface, channelNum);
-                    else if(navTokens[0] == "MasterTrackNavigator")
-                        nav = new MasterTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
-                    else if(navTokens[0] == "SelectedTrackNavigator")
-                        nav = new SelectedTrackNavigator(surface->GetPage()->GetTrackNavigationManager());
-                    else if(navTokens[0] == "FocusedFXNavigator")
-                        nav = new FocusedFXNavigator(surface->GetPage()->GetTrackNavigationManager());
-                    else if(navTokens[0] == "ParentNavigator")
-                        if(parentZone)
-                            nav = parentZone->GetNavigator();
+                    navigatorName = navTokens[0];
                 }
             }
             
-            if(nav == nullptr)
-                nav = new Navigator();
-            
-            zone = new Zone(nav, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided
+            zone = new Zone(navigatorName, surface, parentZone, channelNum, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
 
             if(zone == nullptr)
                 return;
@@ -324,27 +309,14 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
         {
             if(TheManager->IsActionAvailable(params[0]))
             {
-                if(widgetActionManagerForWidget.count(widget) < 1)
-                {
-                    widgetActionManagerForWidget[widget] = new WidgetActionManager(widget, zone);
-
-                    zone->AddWidgetActionManager(widgetActionManagerForWidget[widget]);
-                }
-                
                 Action* action = TheManager->GetAction(widget, zone, params);
                 
                 if(action != nullptr)
                 {
                     if(isTrackTouch)
-                    {
                         widget->AddTrackTouchedAction(zone->GetName(), modifiers, action);
-                        widgetActionManagerForWidget[widget]->AddTrackTouchedAction(modifiers, action); // GAW TBD -- remove at cutover
-                    }
                     else
-                    {
                         widget->AddAction(zone->GetName(), modifiers, action);
-                        widgetActionManagerForWidget[widget]->AddAction(modifiers, action);  // GAW TBD -- remove at cutover
-                    }
                     
                     if(isInverted)
                         action->SetIsInverted();
@@ -972,23 +944,184 @@ void Manager::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool TrackNavigator::GetIsZoneTouched()
+{
+    if(zone_)
+        return zone_->GetIsTouched();
+    else
+        return false;
+}
 
+void TrackNavigator::Pin()
+{
+    if( ! isChannelPinned_)
+    {
+        pinnedTrack_ = GetTrack();
+        
+        isChannelPinned_ = true;
+        
+        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+    }
+}
+
+void TrackNavigator::Unpin()
+{
+    if(isChannelPinned_)
+    {
+        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
+        
+        isChannelPinned_ = false;
+        
+        pinnedTrack_ = nullptr;
+    }
+}
+
+MediaTrack* TrackNavigator::GetTrack()
+{
+    if(isChannelPinned_)
+        return pinnedTrack_;
+    else
+        return manager_->GetTrackFromChannel(channelNum_ - bias_);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// MasterTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* MasterTrackNavigator::GetTrack()
+{
+    return DAW::GetMasterTrack(0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SelectedTrackNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* SelectedTrackNavigator::GetTrack()
+{
+    return manager_->GetSelectedTrack();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FocusedFXNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* FocusedFXNavigator::GetTrack()
+{
+    int trackNumber = 0;
+    int itemNumber = 0;
+    int fxIndex = 0;
+    
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+    {
+        if(trackNumber > 0)
+            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+        else
+            return nullptr;
+    }
+    else
+        return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// TrackNavigationManager
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+Navigator* TrackNavigationManager::AddNavigator(Zone* zone)
+{
+    int channelNum = navigators_.size();
+    navigators_.push_back(new TrackNavigator(zone, this, channelNum));
+    return navigators_[channelNum];
+}
+
+void TrackNavigationManager::OnTrackSelection()
+{
+    if(scrollLink_)
+    {
+        // Make sure selected track is visble on the control surface
+        MediaTrack* selectedTrack = GetSelectedTrack();
+        
+        if(selectedTrack != nullptr)
+        {
+            for(auto navigator : navigators_)
+                if(selectedTrack == navigator->GetTrack())
+                    return;
+            
+            for(int i = 0; i < unpinnedTracks_.size(); i++)
+                if(selectedTrack == unpinnedTracks_[i])
+                    trackOffset_ = i;
+            
+            trackOffset_ -= targetScrollLinkChannel_;
+            
+            if(trackOffset_ <  0)
+                trackOffset_ =  0;
+            
+            int top = GetNumTracks() - navigators_.size();
+            
+            if(trackOffset_ >  top)
+                trackOffset_ = top;
+        }
+    }
+}
+
+void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
+{
+    if(scrollLink_)
+    {
+        if(DAW::IsTrackVisible(track, true))
+            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
+        
+        if(DAW::IsTrackVisible(track, false))
+            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+    }
+}
+
+void TrackNavigationManager::AdjustTrackBank(int amount)
+{
+    int numTracks = GetNumTracks();
+    
+    if(numTracks <= navigators_.size())
+        return;
+    
+    trackOffset_ += amount;
+    
+    if(trackOffset_ <  0)
+        trackOffset_ =  0;
+    
+    int top = numTracks - navigators_.size();
+    
+    if(trackOffset_ >  top)
+        trackOffset_ = top;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(widgetActionManager_ != nullptr)
-        return widgetActionManager_->GetTrack();
-    else
+    string modifiers = "";
+    
+    if( ! isModifier_ )
+        modifiers = surface_->GetPage()->GetModifiers();
+
+    if(surface_->GetZones().count(activeZoneName) > 0)
+        return surface_->GetZones()[activeZoneName]->GetNavigator()->GetTrack();
+     else
         return nullptr;
 }
 
 void Widget::RequestUpdate()
 {
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->RequestUpdate();
+    string modifiers = "";
+    
+    if( ! isModifier_ )
+        modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(surface_->GetIsTouched(activeZoneName) && trackTouchedActions_.count(activeZoneName) > 0 && trackTouchedActions_[activeZoneName].count(modifiers) > 0)
+        for(auto action : trackTouchedActions_[activeZoneName][modifiers])
+            action->RequestUpdate();
+    else if(actions_.count(activeZoneName) > 0 && actions_[activeZoneName].count(modifiers) > 0)
+        for(auto action : actions_[activeZoneName][modifiers])
+            action->RequestUpdate();
 }
 
 void Widget::DoAction(double value)
@@ -1000,11 +1133,17 @@ void Widget::DoAction(double value)
         DAW::ShowConsoleMsg(buffer);
     }
 
-    if( ! GetIsModifier())
+    string modifiers = "";
+    
+    if( ! isModifier_)
+    {
+        modifiers = surface_->GetPage()->GetModifiers();
         GetSurface()->GetPage()->InputReceived(this, value);
+    }
 
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->DoAction(value);
+    if(actions_.count(activeZoneName) > 0 && actions_[activeZoneName].count(modifiers) > 0)
+        for(auto action : actions_[activeZoneName][modifiers])
+            action->Do(value, this);
 }
 
 void Widget::DoRelativeAction(double value)
@@ -1012,15 +1151,9 @@ void Widget::DoRelativeAction(double value)
     DoAction(lastValue_ + value);
 }
 
-void Widget::SetIsTouched(bool isChannelTouched)
+void Widget::SetIsTouched(bool isZoneTouched)
 {
-    /*
-    if(actions_.count(activeZoneName) > 0 && actions_[activeZoneName].count(surface_->GetPage()->GetModifiers()) > 0)
-        for(auto action : actions_[activeZoneName][surface_->GetPage()->GetModifiers()])
-            action->GetZone()->GetNavigator()->SetTouchState(isChannelTouched);
-    */
-    if(widgetActionManager_ != nullptr)
-        widgetActionManager_->SetIsTouched(isChannelTouched); // REmove this at cutover
+    surface_->SetIsTouched(activeZoneName, isZoneTouched);
 }
 
 void  Widget::SetValue(double value)
@@ -1035,26 +1168,88 @@ void  Widget::SetValue(int mode, double value)
 {
     lastValue_ = value;
     
-    for(auto feebackProcessor : feedbackProcessors_)
-        feebackProcessor->SetValue(mode, value);
+    for(auto feedbackProcessor : feedbackProcessors_)
+        feedbackProcessor->SetValue(mode, value);
 }
 
 void  Widget::SetValue(string value)
 {
-    for(auto feebackProcessor : feedbackProcessors_)
-        feebackProcessor->SetValue(value);
+    for(auto feedbackProcessor : feedbackProcessors_)
+        feedbackProcessor->SetValue(value);
 }
 
 void  Widget::SetRGBValue(int r, int g, int b)
 {
-    for(auto feebackProcessor : feedbackProcessors_)
-        feebackProcessor->SetRGBValue(r, g, b);
+    for(auto feedbackProcessor : feedbackProcessors_)
+        feedbackProcessor->SetRGBValue(r, g, b);
 }
 
 void Widget::ClearCache()
 {
     for(auto feedbackProcessor : feedbackProcessors_)
         feedbackProcessor->ClearCache();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): name_(name), widget_(widget), zone_(zone)
+{
+    SetRGB(params);
+    SetSteppedValues(params);
+}
+
+Page* Action::GetPage()
+{
+    return widget_->GetSurface()->GetPage();
+}
+
+ControlSurface* Action::GetSurface()
+{
+    return widget_->GetSurface();
+}
+
+void Action::DoAction(double value, Widget* sender)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    if(shouldToggle_)
+    {
+        if(value != 0.0)
+            Do( ! GetCurrentValue(), sender);
+    }
+    else
+        Do(value, sender);
+    
+    // GAW -- this will need to be changed
+    /*
+     if( ! GetWidget()->GetIsModifier())
+     GetPage()->ActionPerformed(GetWidgetActionManager(), this);
+     */
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Zone::Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias) : name_(name), sourceFilePath_(sourceFilePath), alias_(alias)
+{
+    if(navigatorName== "TrackNavigator")
+        navigator_ = GetNavigatorForChannel(this, surface, channelNum);
+    else if(navigatorName == "MasterTrackNavigator")
+        navigator_ = new MasterTrackNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+    else if(navigatorName == "SelectedTrackNavigator")
+        navigator_ = new SelectedTrackNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+    else if(navigatorName == "FocusedFXNavigator")
+        navigator_ = new FocusedFXNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+    else if(navigatorName == "ParentNavigator" && parentZone != nullptr)
+        navigator_ = parentZone->GetNavigator();
+    else
+        navigator_ = new Navigator(this);
+}
+
+void Zone::Activate(ControlSurface* surface)
+{
+    surface->WidgetsGoZone(GetName());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1159,160 +1354,6 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): name_(name), widget_(widget), zone_(zone)
-{
-    SetRGB(params);
-    SetSteppedValues(params);
-}
-
-Page* Action::GetPage()
-{
-    return widget_->GetSurface()->GetPage();
-}
-
-ControlSurface* Action::GetSurface()
-{
-    return widget_->GetSurface();
-}
-
-void Action::DoAction(double value, WidgetActionManager* sender)
-{
-    value = isInverted_ == false ? value : 1.0 - value;
-    
-    if(shouldToggle_)
-    {
-        if(value != 0.0)
-            Do( ! GetCurrentValue(), sender);
-    }
-    else
-        Do(value, sender);
-    
-    // GAW -- this will need to be changed
-    /*
-    if( ! GetWidget()->GetIsModifier())
-        GetPage()->ActionPerformed(GetWidgetActionManager(), this);
-     */
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// WidgetActionManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Navigator* WidgetActionManager::GetNavigator()
-{
-    return zone_->GetNavigator();
-}
-
-string WidgetActionManager::GetModifiers()
-{
-    if(widget_->GetIsModifier())
-        return ""; // Modifier Widgets cannot have Modifiers
-    else
-        return widget_->GetSurface()->GetPage()->GetModifiers();
-}
-
-string WidgetActionManager::GetNavigatorName()
-{
-    if(GetNavigator() == nullptr)
-        return "";
-    else
-        return GetNavigator()->GetName();
-}
-
-MediaTrack* WidgetActionManager::GetTrack()
-{
-    if(GetNavigator() == nullptr)
-        return nullptr;
-    else
-        return GetNavigator()->GetTrack();
-}
-
-void WidgetActionManager::RequestUpdate()
-{
-    if(trackTouchedActions_.size() > 0 && GetNavigator() != nullptr && GetNavigator()->GetIsChannelTouched())
-    {
-        if(trackTouchedActions_.count(GetModifiers()) > 0)
-            for(auto action : trackTouchedActions_[GetModifiers()])
-                action->RequestUpdate();
-    }
-    else
-    {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
-                action->RequestUpdate();
-    }
-}
-
-void WidgetActionManager::SetIsTouched(bool isTouched)
-{
-    if(GetNavigator() != nullptr)
-        GetNavigator()->SetTouchState((isTouched));
-}
-
-void WidgetActionManager::Deactivate()
-{
-    WidgetActionManager* managerForHome = widget_->GetSurface()->GetHomeWidgetActionManagerForWidget(widget_);
-    if(managerForHome == nullptr)
-        widget_->Reset();
-    widget_->SetWidgetActionManager(managerForHome);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::AddAction(ActionLineItem actionLineItem, int actionIndex)
-{
-    WidgetActionManager* widgetActionManager = nullptr;
-    
-    for(auto manager : widgetActionManagers_)
-        if(manager->GetWidget() == actionLineItem.widget)
-            widgetActionManager = manager;
-    
-    if(widgetActionManager == nullptr)
-        widgetActionManager = new WidgetActionManager(actionLineItem.widget, this);
-    
-    AddWidgetActionManager(widgetActionManager);
-    
-    vector<string> params;
-
-    params.push_back(actionLineItem.actionName);
-    
-    params.push_back(actionLineItem.param);
-
-    if(actionLineItem.alias != "")
-        params.push_back(actionLineItem.alias);
-
-    Action* action = TheManager->GetAction(widgetActionManager->GetWidget(), this, params);
-
-    if(action != nullptr)
-    {
-        action->SetIndex(actionIndex);
-        
-        widgetActionManager->AddAction(actionLineItem.modifiers, action);
-    }
-}
-
-void Zone::Activate(WidgetActionManager* sender)
-{
-    int index = 0;
-    
-    if(sender != nullptr)
-        index = sender->GetZone()->GetIndex();
-    
-    Activate(index);
-}
-
-void Zone::Deactivate()
-{
-    for(auto widgetActionManager : widgetActionManagers_)
-        widgetActionManager->Deactivate();
-    
-    for(auto zone : includedZones_)
-        zone->Deactivate();
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1322,8 +1363,8 @@ void SendsActivationManager::ToggleMapSends()
     
     if( ! shouldMapSends_)
     {
-        for(auto zone : activeSendZones_)
-            zone->Deactivate();
+        //for(auto zone : activeSendZones_)
+            //zone->Deactivate();
         
         activeSendZones_.clear();
     }
@@ -1333,8 +1374,8 @@ void SendsActivationManager::ToggleMapSends()
 
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
-    for(auto zone : activeSendZones_)
-        zone->Deactivate();
+    //for(auto zone : activeSendZones_)
+        //zone->Deactivate();
     
     activeSendZones_.clear();
     
@@ -1355,14 +1396,14 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
             
             if(i < numTrackSends)
             {
-                zone->Activate(i);
+                //zone->Activate(i);
                 activeSendZones_.push_back(zone);
             }
             else
             {
-                zone->ActivateNoAction(i);
+                //zone->ActivateNoAction(i);
                 activeSendZones_.push_back(zone);
-                zone->SetWidgetsToZero();
+                //zone->SetWidgetsToZero();
             }
         }
     }
@@ -1380,7 +1421,7 @@ void FXActivationManager::ToggleMapSelectedTrackFX()
         for(auto zone : activeSelectedTrackFXZones_)
         {
             surface_->LoadingZone(zone->GetName());
-            zone->Deactivate();
+            //zone->Deactivate();
         }
         
         activeSelectedTrackFXZones_.clear();
@@ -1407,7 +1448,7 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
             surface_->LoadingZone(zone->GetName());
-            zone->Deactivate();
+            //zone->Deactivate();
         }
 
         activeSelectedTrackFXMenuZones_.clear();
@@ -1421,7 +1462,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
     for(auto zone : activeSelectedTrackFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone->Deactivate();
+        //zone->Deactivate();
     }
     
     activeSelectedTrackFXZones_.clear();
@@ -1442,7 +1483,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         {
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
-            zone->Activate(i);
+            //zone->Activate(i);
             activeSelectedTrackFXZones_.push_back(zone);
             openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
         }
@@ -1453,13 +1494,13 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
-    for(auto zone : activeSelectedTrackFXMenuZones_)
-        zone->Deactivate();
+    //for(auto zone : activeSelectedTrackFXMenuZones_)
+        //zone->Deactivate();
     
     activeSelectedTrackFXMenuZones_.clear();
     
-    for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        zone->Deactivate();
+    //for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        //zone->Deactivate();
     
     activeSelectedTrackFXMenuFXZones_.clear();
     
@@ -1480,13 +1521,13 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             
             if(i < numTrackFX)
             {
-                zone->Activate(i);
+                //zone->Activate(i);
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
             else
             {
-                zone->ActivateNoAction(i);
-                zone->SetWidgetsToZero();
+                //zone->ActivateNoAction(i);
+                //zone->SetWidgetsToZero();
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
         }
@@ -1508,7 +1549,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
-        surface_->GetZones()[FXName]->Activate(fxIndex);
+        //urface_->GetZones()[FXName]->Activate(fxIndex);
         activeSelectedTrackFXMenuFXZones_.push_back(surface_->GetZones()[FXName]);
     }
 }
@@ -1527,7 +1568,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     for(auto zone : activeFocusedFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone->Deactivate();
+        //zone->Deactivate();
     }
     
     activeFocusedFXZones_.clear();
@@ -1540,7 +1581,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
         {
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
-            zone->Activate(fxIndex);
+            //zone->Activate(fxIndex);
             activeFocusedFXZones_.push_back(zone);
         }
     }
@@ -1567,14 +1608,6 @@ void ControlSurface::InitZones(string zoneFolder)
         snprintf(buffer, sizeof(buffer), "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
     }
-}
-
-WidgetActionManager* ControlSurface::GetHomeWidgetActionManagerForWidget(Widget* widget)
-{
-    if(zones_.count("Home") > 0)
-        return zones_["Home"]->GetHomeWidgetActionManagerForWidget(widget);
-    else
-        return nullptr;
 }
 
 string ControlSurface::GetZoneAlias(string zoneName)
@@ -1611,29 +1644,11 @@ bool ControlSurface::AddZone(Zone* zone)
     }
 }
 
-void ControlSurface::RemoveZone(Zone* zoneToDelete, int zoneIndexInZoneFile)
-{
-    zoneToDelete->Deactivate();
-    zones_.erase(zoneToDelete->GetName());
-    zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].erase(zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].begin() + zoneIndexInZoneFile);
-    
-    if(zonesInZoneFile_[zoneToDelete->GetSourceFilePath()].size() > 0)
-    {
-        for(auto zone : zonesInZoneFile_[zoneToDelete->GetSourceFilePath()])
-        {
-            for(int i = 0; i < zone->GetIncludedZones().size(); i++) // GAW TBD -- change to file based
-                if(zone->GetIncludedZones()[i]->GetName() == zoneToDelete->GetName()) // GAW TBD -- change to file based
-                    zone->RemoveZone(i);
-        }
-    }
-}
-
-void ControlSurface::GoZone(string zoneName, WidgetActionManager* sender)
+void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
     {
-        zones_[zoneName]->Activate(sender);
-        activeZone_ = zones_[zoneName];
+        zones_[zoneName]->Activate(this);
     }
 }
 
@@ -2027,147 +2042,6 @@ void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
     // GAW TBD
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigator::Pin()
-{
-    if( ! isChannelPinned_)
-    {
-        pinnedTrack_ = GetTrack();
-        
-        isChannelPinned_ = true;
-        
-        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
-    }
-}
-
-void TrackNavigator::Unpin()
-{
-    if(isChannelPinned_)
-    {
-        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
-        
-        isChannelPinned_ = false;
-        
-        pinnedTrack_ = nullptr;
-    }
-}
-
-MediaTrack* TrackNavigator::GetTrack()
-{
-    if(isChannelPinned_)
-        return pinnedTrack_;
-    else
-        return manager_->GetTrackFromChannel(channelNum_ - bias_);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// MasterTrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* MasterTrackNavigator::GetTrack()
-{
-    return DAW::GetMasterTrack(0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SelectedTrackNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* SelectedTrackNavigator::GetTrack()
-{
-    return manager_->GetSelectedTrack();
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FocusedFXNavigator
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* FocusedFXNavigator::GetTrack()
-{
-    int trackNumber = 0;
-    int itemNumber = 0;
-    int fxIndex = 0;
-    
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-    {
-        if(trackNumber > 0)
-            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
-        else
-            return nullptr;
-    }
-    else
-        return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TrackNavigationManager
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-Navigator* TrackNavigationManager::AddNavigator()
-{
-    int channelNum = navigators_.size();
-    navigators_.push_back(new TrackNavigator(this, channelNum));
-    return navigators_[channelNum];
-}
-
-void TrackNavigationManager::OnTrackSelection()
-{
-    if(scrollLink_)
-    {
-        // Make sure selected track is visble on the control surface      
-        MediaTrack* selectedTrack = GetSelectedTrack();
-        
-        if(selectedTrack != nullptr)
-        {
-            for(auto navigator : navigators_)
-                if(selectedTrack == navigator->GetTrack())
-                    return;
-
-            for(int i = 0; i < unpinnedTracks_.size(); i++)
-                if(selectedTrack == unpinnedTracks_[i])
-                    trackOffset_ = i;
-            
-            trackOffset_ -= targetScrollLinkChannel_;
-            
-            if(trackOffset_ <  0)
-                trackOffset_ =  0;
-
-            int top = GetNumTracks() - navigators_.size();
-            
-            if(trackOffset_ >  top)
-                trackOffset_ = top;
-        }
-    }
-}
-
-void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
-{
-    if(scrollLink_)
-    {
-        if(DAW::IsTrackVisible(track, true))
-            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
-        
-        if(DAW::IsTrackVisible(track, false))
-            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
-    }
-}
-
-void TrackNavigationManager::AdjustTrackBank(int amount)
-{
-    int numTracks = GetNumTracks();
-
-    if(numTracks <= navigators_.size())
-        return;
-    
-    trackOffset_ += amount;
-    
-    if(trackOffset_ <  0)
-        trackOffset_ =  0;
-    
-    int top = numTracks - navigators_.size();
-    
-    if(trackOffset_ >  top)
-        trackOffset_ = top;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2178,6 +2052,29 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Learn Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ActionLineItem
+{
+    string navigator = "";
+    string widgetName = "";
+    Widget* widget = nullptr;
+    string modifiers = "";
+    string allModifiers = "";
+    string actionName = "";
+    Action* action = nullptr;
+    string param = "";
+    string alias = "";
+    bool isShift = false;
+    bool isOption = false;
+    bool isControl = false;
+    bool isAlt = false;
+    bool isToggle = false;
+    bool isInvert = false;
+    bool isTouch = false;
+    bool isHold = false;
+    bool supportsRGB = false;
+    vector<rgb_color> colors;
+};
+
 static void AddComboBoxEntry(HWND hwndDlg, int x, string entryName, int comboId)
 {
     int a=SendDlgItemMessage(hwndDlg,comboId,CB_ADDSTRING,0,(LPARAM)entryName.c_str());
@@ -2191,7 +2088,6 @@ static int dlgResult = 0;
 static Page* currentPage = nullptr;
 static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
-static WidgetActionManager* currentWidgetActionManager = nullptr;
 static Action* currentAction = nullptr;
 static string trackNavigatorName = "";
 
@@ -2506,10 +2402,10 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     ClearActions();
     
     // Navigator
-    string navigatorName = currentWidgetActionManager->GetNavigatorName();
+    //string navigatorName = currentWidgetActionManager->GetNavigatorName();
     
-    if(navigatorName == "")
-        navigatorName = "NoNavigator";
+    //if(navigatorName == "")
+       string navigatorName = "NoNavigator";
     
     SetWindowText(GetDlgItem(hwndLearn, IDC_STATIC_Navigator), navigatorName.c_str());
     
@@ -2520,7 +2416,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
     // Zone line Items
     bool hasLoadedRawFXFile = false;
     
-    vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
+    /* vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
     
     for(int i = 0; i < actionLineItems.size(); i++)
     {
@@ -2567,7 +2463,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
             SetCheckBoxes(actionLineItem);
         }
     }
-    
+    */
     //Action Names
     vector<string> actionNames = TheManager->GetActionNames();
      
@@ -2887,7 +2783,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            Zone* zone = currentWidgetActionManager->GetZone();
+            Zone* zone = nullptr;
             
             int zoneIndex = FillZones(zone);
             
@@ -2992,7 +2888,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             zonFile << "IncludedZonesEnd" + GetLineEnding();
                                         }
                                         
-                                        for(auto actionLineItem : zone->GetActionLineItems())
+                                        /*for(auto actionLineItem : zone->GetActionLineItems())
                                         {
                                             string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                                             
@@ -3009,7 +2905,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             zonFile << lineItemAsString + GetLineEnding();
 
                                         }
-                                        
+                                        */
                                         zonFile << "ZoneEnd" + GetLineEnding() + GetLineEnding();
                                     }
                                 }
@@ -3233,8 +3129,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             GetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, buffer, sizeof(buffer));
                             actionLineItem.alias = string(buffer);
                             
-                            zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
-                            zonesInThisFile[zoneIndex]->Activate(currentFXIndex);
+                            //zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
+                            //zonesInThisFile[zoneIndex]->Activate(currentFXIndex);
                             
                             string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                             
@@ -3261,7 +3157,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         {
                             hasEdits = true;
                             Zone* zoneToDelete = zonesInThisFile[index];
-                            currentSurface->RemoveZone(zoneToDelete, index);
+                            //currentSurface->RemoveZone(zoneToDelete, index);
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), "");
@@ -3291,7 +3187,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             {
                                 hasEdits = true;
                                 Zone* zone = zonesInThisFile[zoneIndex];
-                                zone->RemoveZone(index);
+                                //zone->RemoveZone(index);
                                 
                                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
                                 for(auto includedZone : zone->GetIncludedZones())     // GAW TBD -- change to file based
@@ -3314,9 +3210,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             {
                                 hasEdits = true;
                            
-                                ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
+                                //ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
 
-                                zonesInThisFile[zoneIndex]->RemoveAction(actionLineItem);
+                                //zonesInThisFile[zoneIndex]->RemoveAction(actionLineItem);
                                 
                                 SendDlgItemMessage(hwndDlg, IDC_LIST_ZoneComponents, LB_DELETESTRING, index, 0);
                             }
@@ -3502,6 +3398,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 
                                 if(zoneIndex >= 0)
                                 {
+                                    /*
                                     ActionLineItem actionLineItem = zonesInThisFile[zoneIndex]->GetActionLineItems()[index];
 
                                     SetCheckBoxes(actionLineItem);
@@ -3535,6 +3432,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             }
                                         }
                                     }
+                                    
+                                    */
+                                    
+                                    
                                 }
                             }
                             
@@ -3730,21 +3631,13 @@ void Page::InputReceived(Widget* widget, double value)
         SendMessage(hwndLearn, WM_USER+1024, 0, 0);
 }
 
-void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* action)
+void Page::ActionPerformed(Action* action)
 {
     currentPage = this;
 
     if(hwndLearn == nullptr)
         return;
-
-    if(widgetActionManager == nullptr || action == nullptr)
-        return;
-
-    if(widgetActionManager == currentWidgetActionManager)
-        return;
     
-    currentWidget = widgetActionManager->GetWidget();
-    currentWidgetActionManager = widgetActionManager;
     currentAction = action;
     
     isShift = isShift_;
@@ -3752,8 +3645,8 @@ void Page::ActionPerformed(WidgetActionManager* widgetActionManager, Action* act
     isControl = isControl_;
     isAlt = isAlt_;
    
-    if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
-        SendMessage(hwndLearn, WM_USER+1025, 0, 0);
+    //if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
+        //SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
 
 

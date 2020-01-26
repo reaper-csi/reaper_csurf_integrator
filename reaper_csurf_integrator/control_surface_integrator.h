@@ -75,48 +75,28 @@ class EuCon_ControlSurface;
 class Zone;
 class Widget;
 class Action;
-class WidgetActionManager;
 class TrackNavigationManager;
 class FeedbackProcessor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-struct ActionLineItem
-{
-    string navigator = "";
-    string widgetName = "";
-    Widget* widget = nullptr;
-    string modifiers = "";
-    string allModifiers = "";
-    string actionName = "";
-    Action* action = nullptr;
-    WidgetActionManager* widgetActionManager = nullptr;
-    string param = "";
-    string alias = "";
-    bool isShift = false;
-    bool isOption = false;
-    bool isControl = false;
-    bool isAlt = false;
-    bool isToggle = false;
-    bool isInvert = false;
-    bool isTouch = false;
-    bool isHold = false;
-    bool supportsRGB = false;
-    vector<rgb_color> colors;
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    bool isZoneSet_ = false;
+    
+protected:
+    Zone* const zone_;
+    
 public:
-    Navigator() {}
-
-    virtual ~Navigator() {}
+    Navigator(Zone* zone) : zone_(zone) { }
+    virtual ~Navigator() { }
 
     virtual string GetName() { return ""; }
-    virtual MediaTrack* GetTrack() { return nullptr; };
-    virtual void SetTouchState(bool isChannelTouched) { }
-    virtual bool GetIsChannelTouched() { return false; }
+    virtual MediaTrack* GetTrack() { return nullptr; }
+    virtual bool GetIsZoneTouched() { return false; }
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() { }
     virtual void DecBias() { }
@@ -132,7 +112,6 @@ class TrackNavigator : public Navigator
 private:
     int channelNum_ = 0;
     int bias_ = 0;
-    bool isChannelTouched_ = false;
     MediaTrack* pinnedTrack_ = nullptr;
     bool isChannelPinned_ = false;
     
@@ -140,16 +119,15 @@ protected:
     TrackNavigationManager* const manager_;
 
 public:
-    TrackNavigator(TrackNavigationManager* manager, int channelNum) : manager_(manager), channelNum_(channelNum) {}
-    TrackNavigator(TrackNavigationManager* manager) : manager_(manager) {}
+    TrackNavigator(Zone* zone, TrackNavigationManager* manager, int channelNum) : Navigator(zone), manager_(manager), channelNum_(channelNum) {}
+    TrackNavigator(Zone* zone, TrackNavigationManager* manager) : Navigator(zone), manager_(manager) {}
     virtual ~TrackNavigator() {}
     
-    virtual void SetTouchState(bool isChannelTouched) override{ isChannelTouched_ = isChannelTouched; }
-    virtual bool GetIsChannelTouched() override { return isChannelTouched_; }
     virtual bool GetIsChannelPinned() override { return isChannelPinned_; }
     virtual void IncBias() override { bias_++; }
     virtual void DecBias() override { bias_--; }
     
+    virtual bool GetIsZoneTouched() override;
     virtual void Pin() override;
     virtual void Unpin() override;
     
@@ -163,7 +141,7 @@ class MasterTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    MasterTrackNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
     virtual ~MasterTrackNavigator() {}
     
     virtual string GetName() override { return "MasterTrackNavigator"; }
@@ -176,10 +154,10 @@ class SelectedTrackNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    SelectedTrackNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
     virtual ~SelectedTrackNavigator() {}
     
-    //virtual void SetTouchState(bool isChannelTouched) override {}
+    //virtual void SetTouchState(bool isZoneTouched) override {}
     //virtual void Pin() override {}
     //virtual void Unpin() override {}
     
@@ -193,12 +171,12 @@ class FocusedFXNavigator : public TrackNavigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXNavigator(TrackNavigationManager* manager) : TrackNavigator(manager) {}
+    FocusedFXNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
     virtual ~FocusedFXNavigator() {}
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
     
-    //virtual void SetTouchState(bool isChannelTouched) override {}
+    //virtual void SetTouchState(bool isZoneTouched) override {}
     //virtual void Pin() override {}
     //virtual void Unpin() override {}
     
@@ -213,41 +191,33 @@ class Widget
 {
 private:
     ControlSurface* const surface_;
-    string name_ = "";
-
-    
-    
-    WidgetActionManager* widgetActionManager_ = nullptr;
-    
-    map<string, map<string, vector <Action*>>> actions_;
-    map<string, map<string, vector <Action*>>> trackTouchedActions_;
-
-    string activeZoneName = "Home";
-    
-    vector<FeedbackProcessor*> feedbackProcessors_;
-
+    string const name_;
+    string activeZoneName = "";
     bool isModifier_ = false;
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
-    
+
+    vector<FeedbackProcessor*> feedbackProcessors_;
+
+    map<string, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
+    map<string, map<string, vector <Action*>>> trackTouchedActions_;
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    
-    
-    void SetWidgetActionManager(WidgetActionManager* widgetActionManager) { widgetActionManager_ = widgetActionManager;  }
-    
     void AddAction(string zoneName, string modifiers, Action* action)  { actions_[zoneName][modifiers].push_back(action); }
     void AddTrackTouchedAction(string zoneName, string modifiers, Action* action) { trackTouchedActions_[zoneName][modifiers].push_back(action); }
-
-    
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
-    bool GetIsModifier() { return isModifier_; }
-    double GetLastValue() {return lastValue_; }
+    double GetLastValue() { return lastValue_; }
+    
+    void GoZone(string zoneName)
+    {
+        if(actions_.count(zoneName) > 0)
+            activeZoneName = zoneName;
+    }
     
     void Reset()
     {
@@ -267,6 +237,245 @@ public:
     void SetValue(string value);
     void SetRGBValue(int r, int g, int b);
     void ClearCache();
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    bool supportsRGB_ = false;
+    vector<rgb_color> RGBValues_;
+    
+    int currentRGBIndex_ = 0;
+    
+    void SetRGB(vector<string> params)
+    {
+        vector<int> rawValues;
+        
+        auto openCurlyBrace = find(params.begin(), params.end(), "{");
+        auto closeCurlyBrace = find(params.begin(), params.end(), "}");
+        
+        if(openCurlyBrace != params.end() && closeCurlyBrace != params.end())
+        {
+            for(auto it = openCurlyBrace + 1; it != closeCurlyBrace; ++it)
+            {
+                string strVal = *(it);
+                
+                if(regex_match(strVal, regex("[0-9]+")))
+                {
+                    int value = stoi(strVal);
+                    value = value < 0 ? 0 : value;
+                    value = value > 255 ? 255 : value;
+                    
+                    rawValues.push_back(value);
+                }
+            }
+        }
+        
+        if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
+        {
+            supportsRGB_ = true;
+            
+            for(int i = 0; i < rawValues.size(); i += 3)
+            {
+                rgb_color color;
+                
+                color.r = rawValues[i];
+                color.g = rawValues[i + 1];
+                color.b = rawValues[i + 2];
+                
+                RGBValues_.push_back(color);
+            }
+        }
+    }
+    
+    void SetSteppedValues(vector<string> params)
+    {
+        auto openSquareBrace = find(params.begin(), params.end(), "[");
+        auto closeCurlyBrace = find(params.begin(), params.end(), "]");
+        
+        if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
+        {
+            for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
+            {
+                string strVal = *(it);
+                
+                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
+                    steppedValues_.push_back(stod(strVal));
+            }
+        }
+    }
+    
+protected:
+    Action(string name, Widget* widget, Zone* zone, vector<string> params);
+    
+    string const name_;
+    Widget* const widget_;
+    Zone* const zone_;
+    
+    vector<double> steppedValues_;
+    
+    bool isInverted_ = false;
+    bool shouldToggle_ = false;
+    double delayAmount_ = 0.0;
+    double delayStartTime_ = 0.0;
+    
+    virtual void RequestTrackUpdate(MediaTrack* track) {}
+    
+public:
+    virtual ~Action() {}
+    
+    Page* GetPage();
+    Widget* GetWidget() { return widget_; }
+    Zone* GetZone() { return zone_; }
+    ControlSurface* GetSurface();
+    
+    virtual string GetDisplayName() { return ""; }
+    string GetName() { return name_; }
+    
+    virtual string GetParamNumAsString() { return ""; }
+    virtual int GetParamNum() { return 0; }
+    virtual string GetAlias() { return ""; }
+    bool GetSupportsRGB() { return supportsRGB_; }
+    vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
+    
+    void SetIsInverted() { isInverted_ = true; }
+    void SetShouldToggle() { shouldToggle_ = true; }
+    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
+    
+    virtual void SetIndex(int index) {}
+    
+    virtual void DoAction(double value, Widget* sender);
+    
+    virtual double GetCurrentValue() { return 0.0; }
+    virtual void RequestUpdate()
+    {
+        if(supportsRGB_)
+            GetWidget()->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+    }
+    
+    virtual void Do(string value, Widget* sender) {}
+    virtual void Do(double value, Widget* sender) {}
+    
+    void SetCurrentRGB(rgb_color newColor)
+    {
+        supportsRGB_ = true;
+        RGBValues_[currentRGBIndex_] = newColor;
+    }
+    
+    rgb_color GetCurrentRGB()
+    {
+        rgb_color blankColor;
+        
+        if(RGBValues_.size() > 0 && currentRGBIndex_ < RGBValues_.size())
+            return RGBValues_[currentRGBIndex_];
+        else return blankColor;
+    }
+    
+    void SetWidgetValue(Widget* widget, double value)
+    {
+        value = isInverted_ == false ? value : 1.0 - value;
+        
+        widget->SetValue(value);
+        
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        
+        if(supportsRGB_)
+            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    
+    void SetWidgetValue(Widget* widget, int param, double value)
+    {
+        value = isInverted_ == false ? value : 1.0 - value;
+        
+        widget->SetValue(param, value);
+        
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        
+        if(supportsRGB_)
+            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    
+    void SetWidgetValue(Widget* widget, string value)
+    {
+        widget->SetValue(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class NoAction : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    virtual ~NoAction() {}
+    
+    virtual void RequestUpdate() { GetWidget()->Reset(); }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string const name_;
+    string const alias_;
+    string const sourceFilePath_;
+    Navigator* navigator_ = nullptr;
+    vector<Zone*> includedZones_;
+    int index_ = 0;
+    bool isTouched_ = false;
+    
+public:
+    Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias);
+    virtual ~Zone() {}
+    
+    int GetIndex() { return index_; }
+    string GetName() { return name_ ;}
+    string GetAlias() { return alias_;}
+    string GetSourceFilePath() { return sourceFilePath_; }
+    Navigator* GetNavigator() { return navigator_; }
+    void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
+    bool GetIsTouched() { return isTouched_; }
+    void Activate(ControlSurface* surface);
+    
+    // GAW TBD -- remove -- change learn mode editor to file based
+    vector<Zone*> &GetIncludedZones() { return includedZones_; }
+    
+    // GAW TBD -- maybe allow this later after fully debugged
+    //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
+    //void SetAlias(string alias) { alias_ = alias;}
+    
+    string GetNavigatorName()
+    {
+        if(navigator_ != nullptr)
+            return navigator_->GetName();
+        else
+            return "";
+    }
+    
+    bool GetHasFocusedFXTrackNavigator()
+    {
+        if(navigator_ == nullptr)
+            return false;
+        else
+            return navigator_->GetIsFocusedFXNavigator();
+    }
+    
+    void AddZone(Zone* zone)
+    {
+        includedZones_.push_back(zone);
+    }
+    
+    void Activate(ControlSurface* surface, int index)
+    {
+        index_ = index;
+        Activate(surface);
+        
+        for(auto zone : includedZones_)
+            zone->Activate(surface, index);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -417,549 +626,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    bool supportsRGB_ = false;
-    vector<rgb_color> RGBValues_;
-    
-    int currentRGBIndex_ = 0;
-
-    void SetRGB(vector<string> params)
-    {
-        vector<int> rawValues;
-        
-        auto openCurlyBrace = find(params.begin(), params.end(), "{");
-        auto closeCurlyBrace = find(params.begin(), params.end(), "}");
-
-        if(openCurlyBrace != params.end() && closeCurlyBrace != params.end())
-        {
-            for(auto it = openCurlyBrace + 1; it != closeCurlyBrace; ++it)
-            {
-                string strVal = *(it);
-                
-                if(regex_match(strVal, regex("[0-9]+")))
-                {
-                    int value = stoi(strVal);
-                    value = value < 0 ? 0 : value;
-                    value = value > 255 ? 255 : value;
-
-                    rawValues.push_back(value);
-                }
-            }
-        }
-        
-        if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
-        {
-            supportsRGB_ = true;
-
-            for(int i = 0; i < rawValues.size(); i += 3)
-            {
-                rgb_color color;
-                
-                color.r = rawValues[i];
-                color.g = rawValues[i + 1];
-                color.b = rawValues[i + 2];
-                
-                RGBValues_.push_back(color);
-            }
-        }
-    }
-    
-    void SetSteppedValues(vector<string> params)
-    {
-        auto openSquareBrace = find(params.begin(), params.end(), "[");
-        auto closeCurlyBrace = find(params.begin(), params.end(), "]");
-        
-        if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
-        {
-            for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
-            {
-                string strVal = *(it);
-                
-                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
-                    steppedValues_.push_back(stod(strVal));
-            }
-        }
-    }
-    
-protected:
-    Action(string name, Widget* widget, Zone* zone, vector<string> params);
-
-    string const name_;
-    Widget* const widget_;
-    Zone* const zone_;
-
-    vector<double> steppedValues_;
-    
-  
-    
-    
-    
-    
-    bool isInverted_ = false;
-    bool shouldToggle_ = false;
-    double delayAmount_ = 0.0;
-    double delayStartTime_ = 0.0;
-    
-    virtual void RequestTrackUpdate(MediaTrack* track) {}
-    
-public:
-    virtual ~Action() {}
-    
-    Page* GetPage();
-    Widget* GetWidget() { return widget_; }
-    Zone* GetZone() { return zone_; }
-    ControlSurface* GetSurface();
-
-    virtual string GetDisplayName() { return ""; }
-    string GetName() { return name_; }
-    
-    virtual string GetParamNumAsString() { return ""; }
-    virtual int GetParamNum() { return 0; }
-    virtual string GetAlias() { return ""; }
-    bool GetSupportsRGB() { return supportsRGB_; }
-    vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
-    
-    void SetIsInverted() { isInverted_ = true; }
-    void SetShouldToggle() { shouldToggle_ = true; }
-    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
-    
-    virtual void SetIndex(int index) {}
-    
-    virtual void DoAction(double value, WidgetActionManager* widgetActionManager);
-    
-    virtual double GetCurrentValue() { return 0.0; }
-    virtual void RequestUpdate()
-    {
-        if(supportsRGB_)
-            GetWidget()->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
-    }
-    
-    virtual void Do(string value, WidgetActionManager* sender) {}
-    virtual void Do(double value, WidgetActionManager* sender) {}
-    
-    ActionLineItem GetDescription()
-    {
-        ActionLineItem actionLineItem;
-        
-        actionLineItem.actionName = name_;
-        
-        actionLineItem.action = this;
-        
-        actionLineItem.param = GetParamNumAsString();
-        
-        actionLineItem.alias = GetAlias();
-
-        if(shouldToggle_)
-        {
-            actionLineItem.allModifiers += "Toggle+";
-            actionLineItem.isToggle = true;
-        }
-        
-        if(isInverted_)
-        {
-            actionLineItem.allModifiers += "Invert+";
-            actionLineItem.isInvert = true;
-        }
-           
-        if(delayAmount_ != 0.0)
-        {
-            actionLineItem.allModifiers += "Hold+";
-            actionLineItem.isHold = true;
-        }
-        
-        return actionLineItem;
-    }
-    
-    void SetCurrentRGB(rgb_color newColor)
-    {
-        supportsRGB_ = true;
-        RGBValues_[currentRGBIndex_] = newColor;
-    }
-    
-    rgb_color GetCurrentRGB()
-    {
-        rgb_color blankColor;
-        
-        if(RGBValues_.size() > 0 && currentRGBIndex_ < RGBValues_.size())
-            return RGBValues_[currentRGBIndex_];
-        else return blankColor;
-    }
-    
-    void SetWidgetValue(Widget* widget, double value)
-    {
-        value = isInverted_ == false ? value : 1.0 - value;
-        
-        widget->SetValue(value);
-        
-        currentRGBIndex_ = value == 0 ? 0 : 1;
-        
-        if(supportsRGB_)
-            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-    }
-    
-    void SetWidgetValue(Widget* widget, int param, double value)
-    {
-        value = isInverted_ == false ? value : 1.0 - value;
-        
-        widget->SetValue(param, value);
-
-        currentRGBIndex_ = value == 0 ? 0 : 1;
-        
-        if(supportsRGB_)
-            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-    }
-    
-    void SetWidgetValue(Widget* widget, string value)
-    {
-        widget->SetValue(value);
-    }
-    
-    void Activate(WidgetActionManager* widgetActionManager)
-    {
-        GetWidget()->SetWidgetActionManager(widgetActionManager);
-    }
-    
-    void ActivateNoAction()
-    {
-        GetWidget()->SetWidgetActionManager(nullptr);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NoAction : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
-    virtual ~NoAction() {}
-    
-    virtual void RequestUpdate() { GetWidget()->Reset(); }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* const widget_;
-    Zone* const zone_;
-    map<string, vector <Action*>> actions_;
-    vector<ActionLineItem> actionLineItems_;
-    
-    map<string, vector <Action*>> trackTouchedActions_;
-    
-    Navigator* GetNavigator();
-    string GetModifiers();
-    
-public:
-    WidgetActionManager(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
-    
-    Widget* GetWidget() { return widget_; }
-    Zone* GetZone() { return zone_; }
-    string GetNavigatorName();
-    MediaTrack* GetTrack();
-    void RequestUpdate();
-    void SetIsTouched(bool isTouched);
-    void Deactivate();
-
-    void GetActionLineItems(map<string, vector <Action*>> actionMap, string touch)
-    {
-        for(auto [modifiers, actions] : actionMap)
-        {
-            for(auto action : actions)
-            {
-                ActionLineItem actionLineItem = action->GetDescription();
-                
-                actionLineItem.widgetActionManager = this;
-                
-                actionLineItem.widgetName = widget_->GetName();
-                actionLineItem.widget = widget_;
-                
-                actionLineItem.action = action;
-                
-                actionLineItem.allModifiers = modifiers + touch + actionLineItem.allModifiers;
-                actionLineItem.modifiers = modifiers;
-                
-                if (actionLineItem.modifiers.find("Shift") != string::npos)
-                    actionLineItem.isShift = true;
-                
-                if (actionLineItem.modifiers.find("Option") != string::npos)
-                    actionLineItem.isOption = true;
-                
-                if (actionLineItem.modifiers.find("Control") != string::npos)
-                    actionLineItem.isControl = true;
-                
-                if (actionLineItem.modifiers.find("Alt") != string::npos)
-                    actionLineItem.isAlt = true;
-                
-                actionLineItem.supportsRGB = action->GetSupportsRGB();
-                
-                actionLineItem.colors = action->GetRGBValues();
-                
-                actionLineItems_.push_back(actionLineItem);
-            }
-        }
-    }
-    
-    vector<ActionLineItem> GetActionLineItems()
-    {
-        actionLineItems_.clear();
-        
-        GetActionLineItems(actions_, "");
-        GetActionLineItems(trackTouchedActions_, "Touch+");
-
-        return actionLineItems_;
-    }
-    
-    bool RemoveAction(ActionLineItem actionLineItem)
-    {
-        if(actionLineItem.isTouch)
-        {
-            if(trackTouchedActions_.count(actionLineItem.modifiers) > 0)
-            {
-                auto it = find(trackTouchedActions_[actionLineItem.modifiers].begin(), trackTouchedActions_[actionLineItem.modifiers].end(), actionLineItem.action);
-                
-                if ( it != trackTouchedActions_[actionLineItem.modifiers].end() )
-                trackTouchedActions_[actionLineItem.modifiers].erase(it);
-            }
-        }
-        else
-        {
-            if(actions_.count(actionLineItem.modifiers) > 0)
-            {
-                auto it = find(actions_[actionLineItem.modifiers].begin(), actions_[actionLineItem.modifiers].end(), actionLineItem.action);
-                
-                if ( it != actions_[actionLineItem.modifiers].end() )
-                    actions_[actionLineItem.modifiers].erase(it);
-            }
-        }
-        
-        if(actions_.size() == 0 && trackTouchedActions_.size() == 0)
-            return true;
-        else
-            return false;
-    }
-    
-    void DoAction(double value)
-    {
-        if(actions_.count(GetModifiers()) > 0)
-            for(auto action : actions_[GetModifiers()])
-                action->DoAction(value, this);
-    }
-    
-    void Activate()
-    {
-        for(auto [modifiers, actions] : actions_)
-            for(auto action: actions)
-               action->Activate(this);
-    }
-    
-    void Activate(int index)
-    {
-        for(auto [modifiers, actions] : actions_)
-            for(auto action : actions)
-            {
-                action->SetIndex(index);
-                action->Activate(this);
-            }
-    }
-    
-    void ActivateNoAction(int index)
-    {
-        for(auto [modifiers, actions] : actions_)
-            for(auto action : actions)
-            {
-                action->SetIndex(index);
-                action->ActivateNoAction();
-            }
-    }
-    
-    void AddAction(string modifiers, Action* action)
-    {
-        actions_[modifiers].push_back(action);
-    }
-    
-    void AddTrackTouchedAction(string modifiers, Action* action)
-    {
-        trackTouchedActions_[modifiers].push_back(action);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string name_ = "";
-    string alias_ = "";
-    string sourceFilePath_ = "";
-    vector<Zone*> includedZones_;
-    int index_ = 0;
-    Navigator* const navigator_;
-    
-
-    
-    
-    
-    vector<WidgetActionManager*> widgetActionManagers_;
-    
-    vector<ActionLineItem> actionLineItems;
-    
-    void RemoveWidgetActionManager(WidgetActionManager* widgetActionManager)
-    {
-        bool foundIt = false;
-        int locationToDelete = 0;
-        
-        for(int i = 0; i < widgetActionManagers_.size(); i++)
-            if(widgetActionManagers_[i] == widgetActionManager)
-            {
-                foundIt = true;
-                locationToDelete = i;
-                break;
-            }
-        
-        if(foundIt)
-        {
-            widgetActionManagers_[locationToDelete]->Deactivate();
-            widgetActionManagers_.erase(widgetActionManagers_.begin() + locationToDelete);
-        }
-    }
-    
-    
-    
-    
-public:
-    Zone(Navigator* navigator, string name, string sourceFilePath, string alias) : navigator_(navigator), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
-    virtual ~Zone() {}
-    
-    int GetIndex() { return index_; }
-    string GetName() { return name_ ;}
-    string GetAlias() { return alias_;}
-    string GetSourceFilePath() { return sourceFilePath_; }
-    Navigator* GetNavigator() { return navigator_; }
-
-    
-    
-    // GAW TBD -- remove -- change learn mode editor to file based
-    vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    
-    // GAW TBD -- maybe allow this later after fully debugged
-    //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
-    //void SetAlias(string alias) { alias_ = alias;}
-
-    
-    
-    void AddAction(ActionLineItem actionLineItem, int actionIndex);
-    void Activate(WidgetActionManager* sender);
-    void Deactivate();
-    
-    string GetNavigatorName()
-    {
-        if(navigator_ != nullptr)
-            return navigator_->GetName();
-        else
-            return "";
-    }
-
-    vector<ActionLineItem> &GetActionLineItems()
-    {
-        actionLineItems.clear();
-        
-        for(auto manager : widgetActionManagers_)
-            for(auto lineItem : manager->GetActionLineItems())
-                actionLineItems.push_back(lineItem);
-        
-        return actionLineItems;
-    }
-    
-    bool ContainsWidgetActionManager(WidgetActionManager* widgetActionManager)
-    {
-        for(auto manager : widgetActionManagers_)
-            if(widgetActionManager == manager)
-                return true;
-        
-        for(auto zone : includedZones_)
-            if(zone->ContainsWidgetActionManager(widgetActionManager))
-                return true;
-        
-        return false;
-    }
-    
-    bool GetHasFocusedFXTrackNavigator()
-    {
-        if(navigator_ == nullptr)
-            return false;
-        else
-            return navigator_->GetIsFocusedFXNavigator();
-    }
-    
-    virtual void AddWidgetActionManager(WidgetActionManager* manager)
-    {
-        widgetActionManagers_.push_back(manager);
-    }
-    
-    void RemoveAction(ActionLineItem actionLineItem)
-    {
-        if(actionLineItem.widgetActionManager->RemoveAction(actionLineItem))
-            RemoveWidgetActionManager(actionLineItem.widgetActionManager);
-    }
-    
-    void AddZone(Zone* zone)
-    {
-        includedZones_.push_back(zone);
-    }
-        
-    void RemoveZone(int index)
-    {
-        includedZones_.erase(includedZones_.begin() + index);
-    }
-    
-    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget)
-    {
-        for(auto manager : widgetActionManagers_)
-            if(manager->GetWidget() == widget)
-                return manager;
-        
-        for(auto zone : includedZones_)
-            if(WidgetActionManager* manager = zone->GetHomeWidgetActionManagerForWidget(widget))
-                return manager;
-        
-        return nullptr;
-    }
-    
-    void SetWidgetsToZero()
-    {
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->GetWidget()->Reset();
-    }
-    
-    void ActivateNoAction(int index)
-    {
-        index_ = index;
-        
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->ActivateNoAction(index);
-        
-        for(auto zone : includedZones_)
-            zone->ActivateNoAction(index);
-    }
-    
-    void Activate(int index)
-    {
-        index_ = index;
-        
-        for(auto widgetActionManager : widgetActionManagers_)
-            widgetActionManager->Activate(index);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(index);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SendsActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -981,14 +647,6 @@ public:
     void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
 
-    Zone* GetActiveZone(WidgetActionManager* widgetActionManager)
-    {
-        for(auto zone : activeSendZones_)
-            if(zone->ContainsWidgetActionManager(widgetActionManager))
-                return zone;
-
-        return nullptr;
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1061,8 +719,9 @@ public:
     void MapSelectedTrackFXSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     
-    Zone* GetActiveZone(WidgetActionManager* widgetActionManager)
+    Zone* GetActiveZone(Widget* sender)
     {
+        /*
         for(auto zone : activeSelectedTrackFXZones_)
             if(zone->ContainsWidgetActionManager(widgetActionManager))
                 return zone;
@@ -1074,6 +733,7 @@ public:
         for(auto zone : activeFocusedFXZones_)
             if(zone->ContainsWidgetActionManager(widgetActionManager))
                 return zone;
+         */
 
         return nullptr;
     }
@@ -1132,7 +792,6 @@ protected:
 
     map<string, Zone*> zones_;
     map<string, vector<Zone*>> zonesInZoneFile_;
-    Zone* activeZone_ = nullptr;
     bool useZoneLink_ = false;
 
     void InitZones(string zoneFolder);
@@ -1143,7 +802,7 @@ protected:
         widgets_.push_back(new Widget(this, "OnTrackSelection"));
         widgets_.push_back(new Widget(this, "OnFXFocus"));
     }
-
+    
 public:
     virtual ~ControlSurface() {};
     
@@ -1169,13 +828,31 @@ public:
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
 
-    WidgetActionManager* GetHomeWidgetActionManagerForWidget(Widget* widget);
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
     bool AddZone(Zone* zone);
-    void RemoveZone(Zone* zone, int zoneIndexInfile);
-    void GoZone(string zoneName, WidgetActionManager* sender);
-    void GoHome() { GoZone("Home", nullptr); }
+    void GoZone(string zoneName);
+    void GoHome() { GoZone("Home"); }
+    
+    void WidgetsGoZone(string zoneName)
+    {
+        for(auto widget : widgets_)
+            widget->GoZone(zoneName);
+    }
+    
+    bool GetIsTouched(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetIsTouched();
+        else
+            return false;
+    }
+    
+    void SetIsTouched(string zoneName, bool isTouched)
+    {
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->SetIsTouched(isTouched);
+    }
     
     void ToggleMapSends()
     {
@@ -1496,7 +1173,7 @@ public:
     
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
-    Navigator* AddNavigator();
+    Navigator* AddNavigator(Zone* zone);
     void OnTrackSelection();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
@@ -1598,7 +1275,7 @@ public:
     bool GetIsTrackTouched(MediaTrack* track)
     {
         for(auto navigator : navigators_)
-            if(navigator->GetTrack() == track && navigator->GetIsChannelTouched())
+            if(navigator->GetTrack() == track && navigator->GetIsZoneTouched())
                 return true;
         
         return false;
@@ -1693,7 +1370,7 @@ public:
     void OpenLearnModeWindow();
     void ToggleLearnMode();
     void InputReceived(Widget* widget, double value);
-    void ActionPerformed(WidgetActionManager* widgetActionManager, Action* action);
+    void ActionPerformed(Action* action);
 
     bool GetShift() { return isShift_; }
     bool GetOption() { return isOption_; }
@@ -1850,14 +1527,14 @@ public:
         return "";
     }
     
-    void GoZone(ControlSurface* surface, string zoneName, WidgetActionManager* sender)
+    void GoZone(ControlSurface* surface, string zoneName, Widget* sender)
     {
         if(! surface->GetUseZoneLink())
-          surface->GoZone(zoneName, sender);
+          surface->GoZone(zoneName);
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GoZone(zoneName, sender);
+                    surface->GoZone(zoneName);
     }
 
     void ToggleMapSends(ControlSurface* surface)

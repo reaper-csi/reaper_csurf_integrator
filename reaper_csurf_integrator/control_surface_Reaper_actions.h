@@ -16,7 +16,7 @@ class FXParam : public FXAction
 public:
     FXParam(string name, Widget* widget, Zone* zone, vector<string> params) : FXAction(name, widget, zone, params) {}
     
-    virtual void Do(double value, WidgetActionManager* sender) override
+    virtual void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::TrackFX_SetParam(track, fxIndex_, fxParamIndex_, value);
@@ -30,7 +30,7 @@ class FXParamRelative : public FXAction
 public:
     FXParamRelative(string name, Widget* widget, Zone* zone, vector<string> params) : FXAction(name, widget, zone, params) {}
        
-    virtual void Do(double relativeValue, WidgetActionManager* sender) override
+    virtual void Do(double relativeValue, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
@@ -58,7 +58,7 @@ protected:
 public:
     TrackVolume(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
@@ -80,7 +80,7 @@ protected:
 public:
     TrackVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
@@ -102,7 +102,7 @@ protected:
 public:
     TrackPan(string name, Widget* widget, Zone* zone, vector<string> params) : TrackActionWithIntParam(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
@@ -124,7 +124,7 @@ protected:
 public:
     TrackPanPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
@@ -144,7 +144,7 @@ protected:
 public:
     TrackPanWidth(string name, Widget* widget, Zone* zone, vector<string> params) : TrackActionWithIntParam(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
@@ -164,7 +164,7 @@ protected:
 public:
     TrackPanWidthPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
             DAW::CSurf_OnWidthChange(track, value / 100.0, false);
@@ -220,7 +220,7 @@ protected:
 public:
     TrackSendVolume(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
@@ -246,7 +246,7 @@ protected:
 public:
     TrackSendVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
@@ -272,7 +272,7 @@ protected:
 public:
     TrackSendPan(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
@@ -298,7 +298,7 @@ protected:
 public:
     TrackSendMute(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -324,7 +324,7 @@ protected:
 public:
     TrackSendInvertPolarity(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -353,7 +353,7 @@ protected:
 public:
     TrackSendPrePost(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -562,7 +562,7 @@ class Rewind : public Action
 public:
     Rewind(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) { }
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -577,7 +577,7 @@ class FastForward : public Action
 public:
     FastForward(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) { }
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -601,7 +601,7 @@ public:
         SetWidgetValue(GetWidget(), playState);
     }
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -626,7 +626,7 @@ public:
         SetWidgetValue(GetWidget(), stopState);
     }
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -651,7 +651,7 @@ public:
         SetWidgetValue(GetWidget(), recordState);
     }
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -677,7 +677,7 @@ protected:
 public:
     TrackFolderDive(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -704,7 +704,7 @@ protected:
 public:
     TrackSelect(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -729,7 +729,7 @@ protected:
 public:
     TrackUniqueSelect(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -754,7 +754,7 @@ protected:
 public:
     TrackRangeSelect(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    virtual void Do(double value, WidgetActionManager* sender) override
+    virtual void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -808,7 +808,7 @@ protected:
 public:
     TrackRecordArm(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -834,7 +834,7 @@ protected:
 public:
     TrackMute(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -860,7 +860,7 @@ protected:
 public:
     TrackSolo(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -878,7 +878,7 @@ class SetTrackTouch : public TrackAction
 public:
     SetTrackTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         GetWidget()->SetIsTouched(value == 0 ? false : true);
     }
@@ -896,7 +896,7 @@ public:
         SetWidgetValue(GetWidget(), DAW::GetGlobalAutomationOverride());
     }
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -936,7 +936,7 @@ public:
             SetWidgetValue(GetWidget(), 0.0);
     }
     
-    virtual void Do(double value, WidgetActionManager* sender) override
+    virtual void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -969,7 +969,7 @@ public:
         SetWidgetValue(GetWidget(), DAW::GetSetRepeatEx(nullptr, -1));
     }
     
-    void Do(double value, WidgetActionManager* sender) override
+    void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
