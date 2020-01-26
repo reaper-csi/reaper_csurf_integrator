@@ -72,8 +72,8 @@ class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
 class EuCon_ControlSurface;
-class Zone;
 class Widget;
+class Zone;
 class Action;
 class TrackNavigationManager;
 class FeedbackProcessor;
@@ -157,10 +157,6 @@ public:
     SelectedTrackNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
     virtual ~SelectedTrackNavigator() {}
     
-    //virtual void SetTouchState(bool isZoneTouched) override {}
-    //virtual void Pin() override {}
-    //virtual void Unpin() override {}
-    
     virtual string GetName() override { return "SelectedTrackNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
@@ -176,10 +172,6 @@ public:
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
     
-    //virtual void SetTouchState(bool isZoneTouched) override {}
-    //virtual void Pin() override {}
-    //virtual void Unpin() override {}
-    
     virtual string GetName() override { return "FocusedFXNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
@@ -192,7 +184,7 @@ class Widget
 private:
     ControlSurface* const surface_;
     string const name_;
-    string activeZoneName = "";
+    string activeZoneName_ = "";
     bool isModifier_ = false;
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
@@ -201,6 +193,7 @@ private:
 
     map<string, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
     map<string, map<string, vector <Action*>>> trackTouchedActions_;
+    
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
     virtual ~Widget() {};
@@ -216,7 +209,7 @@ public:
     void GoZone(string zoneName)
     {
         if(actions_.count(zoneName) > 0)
-            activeZoneName = zoneName;
+            activeZoneName_ = zoneName;
     }
     
     void Reset()
@@ -321,6 +314,8 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     
+    int GetSlotIndex();
+    
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     
 public:
@@ -343,8 +338,6 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
-    
-    virtual void SetIndex(int index) {}
     
     virtual void DoAction(double value, Widget* sender);
     
@@ -422,7 +415,7 @@ private:
     string const name_;
     string const alias_;
     string const sourceFilePath_;
-    Navigator* navigator_ = nullptr;
+    Navigator* navigator_ = nullptr; // safe -- set in constructor
     vector<Zone*> includedZones_;
     int index_ = 0;
     bool isTouched_ = false;
@@ -439,28 +432,18 @@ public:
     void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
     bool GetIsTouched() { return isTouched_; }
     void Activate(ControlSurface* surface);
-    
+    void Deactivate(ControlSurface* surface);
+
     // GAW TBD -- remove -- change learn mode editor to file based
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     
     // GAW TBD -- maybe allow this later after fully debugged
     //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
     //void SetAlias(string alias) { alias_ = alias;}
-    
-    string GetNavigatorName()
-    {
-        if(navigator_ != nullptr)
-            return navigator_->GetName();
-        else
-            return "";
-    }
-    
+       
     bool GetHasFocusedFXTrackNavigator()
     {
-        if(navigator_ == nullptr)
-            return false;
-        else
-            return navigator_->GetIsFocusedFXNavigator();
+        return navigator_->GetIsFocusedFXNavigator();
     }
     
     void AddZone(Zone* zone)
@@ -630,7 +613,7 @@ class SendsActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* const surface_ = nullptr;
+    ControlSurface* const surface_;
     int numSendSlots_ = 0;
     bool shouldMapSends_ = false;
     vector<Zone*> activeSendZones_;
@@ -719,38 +702,6 @@ public:
     void MapSelectedTrackFXSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     
-    Zone* GetActiveZone(Widget* sender)
-    {
-        /*
-        for(auto zone : activeSelectedTrackFXZones_)
-            if(zone->ContainsWidgetActionManager(widgetActionManager))
-                return zone;
-        
-        for(auto zone : activeSelectedTrackFXMenuFXZones_)
-            if(zone->ContainsWidgetActionManager(widgetActionManager))
-                return zone;
-        
-        for(auto zone : activeFocusedFXZones_)
-            if(zone->ContainsWidgetActionManager(widgetActionManager))
-                return zone;
-         */
-
-        return nullptr;
-    }
-    
-    vector<Zone*> GetActiveZones()
-    {
-        vector<Zone*> activeFXZones;
-        
-        for(auto zone : activeSelectedTrackFXZones_)
-            activeFXZones.push_back(zone);
-        
-        for(auto zone : activeFocusedFXZones_)
-            activeFXZones.push_back(zone);
-        
-        return activeFXZones;
-    }
-
     void ToggleShowFXWindows()
     {
         showFXWindows_ = ! showFXWindows_;
@@ -1127,6 +1078,20 @@ private:
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages) {}
     
+    Page* GetPage() { return page_; }
+    bool GetFollowMCP() { return followMCP_; }
+    bool GetSynchPages() { return synchPages_; }
+    bool GetScrollLink() { return scrollLink_; }
+    int  GetNumTracks() { return tracks_.size(); }
+    
+    void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
+    
+    Navigator* AddNavigator(Zone* zone);
+    void OnTrackSelection();
+    void OnTrackSelectionBySurface(MediaTrack* track);
+    void TrackListChanged();
+    void AdjustTrackBank(int amount);
+
     void PinTrackToChannel(MediaTrack* track, int channelNum)
     {
         pinnedTracks_.push_back(track);
@@ -1165,20 +1130,6 @@ public:
         }
     }
     
-    Page* GetPage() { return page_; }
-    bool GetFollowMCP() { return followMCP_; }
-    bool GetSynchPages() { return synchPages_; }
-    bool GetScrollLink() { return scrollLink_; }
-    int  GetNumTracks() { return tracks_.size(); }
-    
-    void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
-    
-    Navigator* AddNavigator(Zone* zone);
-    void OnTrackSelection();
-    void OnTrackSelectionBySurface(MediaTrack* track);
-    void TrackListChanged();
-    void AdjustTrackBank(int amount);
-
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
         if(unpinnedTracks_.size() > channelNumber + trackOffset_)
