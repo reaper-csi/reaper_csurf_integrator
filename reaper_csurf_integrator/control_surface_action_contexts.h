@@ -125,21 +125,17 @@ class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int sendIndex_ = 0;
-    
     TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
 
 public:
-    virtual void SetIndex(int sendIndex) override { sendIndex_ = sendIndex; }
-
     virtual string GetParamNumAsString() override
     {
-        return to_string(sendIndex_);
+        return to_string(GetSlotIndex());
     }
     
     virtual int GetParamNum() override
     {
-        return sendIndex_;
+        return GetSlotIndex();
     }
 };
 
@@ -174,7 +170,6 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int fxIndex_ = 0;
     int fxParamIndex_ = 0;
     string fxParamDisplayName_ = "";
 
@@ -190,8 +185,6 @@ protected:
 public:
     
     virtual string GetDisplayName() override { return fxParamDisplayName_; }
-    
-    virtual void SetIndex(int fxIndex) override { fxIndex_ = fxIndex; }
     
     virtual string GetParamNumAsString() override
     {
@@ -215,7 +208,7 @@ public:
         double retVal = 0.0;
         
         if(MediaTrack* track = GetWidget()->GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, fxIndex_, fxParamIndex_, &min, &max);
+            retVal = DAW::TrackFX_GetParam(track, GetSlotIndex(), fxParamIndex_, &min, &max);
         
         return retVal;
     }
