@@ -84,9 +84,6 @@ class FeedbackProcessor;
 class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    bool isZoneSet_ = false;
-    
 protected:
     Zone* const zone_;
     
@@ -340,8 +337,8 @@ public:
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void DoAction(double value, Widget* sender);
-    
     virtual double GetCurrentValue() { return 0.0; }
+    
     virtual void RequestUpdate()
     {
         if(supportsRGB_)
