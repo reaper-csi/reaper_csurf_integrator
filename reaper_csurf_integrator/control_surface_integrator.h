@@ -1144,7 +1144,7 @@ public:
     }
     
     
-    int cycles = 0;
+    //int cycles = 0;
 
     void RebuildTrackList()
     {

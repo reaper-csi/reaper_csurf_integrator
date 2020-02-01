@@ -1158,28 +1158,28 @@ void  Widget::SetValue(double value)
 {
     lastValue_ = value;
     
-    for(auto feebackProcessor : feedbackProcessors_)
-        feebackProcessor->SetValue(value);
+    if(feedbackProcessors_.size() > 0)
+        feedbackProcessors_[0]->SetValue(value);
 }
 
 void  Widget::SetValue(int mode, double value)
 {
     lastValue_ = value;
     
-    for(auto feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->SetValue(mode, value);
+    if(feedbackProcessors_.size() > 0)
+        feedbackProcessors_[0]->SetValue(mode, value);
 }
 
 void  Widget::SetValue(string value)
 {
-    for(auto feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->SetValue(value);
+    if(feedbackProcessors_.size() > 0)
+        feedbackProcessors_[0]->SetValue(value);
 }
 
 void  Widget::SetRGBValue(int r, int g, int b)
 {
-    for(auto feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->SetRGBValue(r, g, b);
+    if(feedbackProcessors_.size() > 0)
+        feedbackProcessors_[0]->SetRGBValue(r, g, b);
 }
 
 void Widget::ClearCache()
