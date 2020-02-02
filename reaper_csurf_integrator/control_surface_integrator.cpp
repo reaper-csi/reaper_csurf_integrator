@@ -616,6 +616,10 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             {
                 feedbackProcessor = new NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
             }
+            else if(widgetClass == "FB_FaderportRGB7Bit" && tokens.size() == 4)
+            {
+                feedbackProcessor = new FaderportRGB7Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(tokens[1]), strToHex(tokens[2]), strToHex(tokens[3])));
+            }
             else if(tokens.size() == 4 || tokens.size() == 5)
             {
                 if(widgetClass == "FB_Fader14Bit")

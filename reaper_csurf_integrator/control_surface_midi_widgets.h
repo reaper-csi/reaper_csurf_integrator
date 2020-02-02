@@ -166,7 +166,7 @@ private:
     int lastR = 0;
     int lastG = 0;
     int lastB = 0;
-
+    
 public:
     virtual ~NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor() {}
     NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
@@ -202,13 +202,45 @@ public:
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = midiFeedbackMessage1_->midi_message[1] ;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = r / 2; // only 127 bit for this device
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = r / 2; // only 127 bit max for this device
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = b / 2;
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
         SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FaderportRGB7Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int lastR = 0;
+    int lastG = 0;
+    int lastB = 0;
+    
+public:
+    virtual ~FaderportRGB7Bit_Midi_FeedbackProcessor() {}
+    FaderportRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    
+    virtual void SetValue(double value) override  {}
+    virtual void SetValue(int param, double value) override {}
+    virtual void SetValue(string value) override {}
+    
+    virtual void SetRGBValue(int r, int g, int b) override
+    {
+        if(r == lastR && g == lastG && b == lastB)
+            return;
+        
+        lastR = r;
+        lastG = g;
+        lastB = b;
+        
+        SendMidiMessage(0x91, midiFeedbackMessage1_->midi_message[1] , r / 2);  // only 127 bit allowed in Midi byte 3
+        SendMidiMessage(0x92, midiFeedbackMessage1_->midi_message[1] , g / 2);
+        SendMidiMessage(0x93, midiFeedbackMessage1_->midi_message[1] , b / 2);
     }
 };
 
