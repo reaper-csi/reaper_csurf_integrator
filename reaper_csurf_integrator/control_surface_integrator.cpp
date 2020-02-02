@@ -863,7 +863,7 @@ void Manager::Init()
                     
                     rgb_color pageColour;
                     
-                    if(tokens[6] == "{" and tokens[10] == "}")
+                    if(tokens[6] == "{" && tokens[10] == "}")
                     {
                         pageColour.r = atoi(tokens[7].c_str());
                         pageColour.g = atoi(tokens[8].c_str());
@@ -1115,12 +1115,10 @@ void Widget::RequestUpdate()
     if( ! isModifier_ )
         modifiers = surface_->GetPage()->GetModifiers();
     
-    if(surface_->GetIsTouched(activeZoneName_) && trackTouchedActions_.count(activeZoneName_) > 0 && trackTouchedActions_[activeZoneName_].count(modifiers) > 0)
-        for(auto action : trackTouchedActions_[activeZoneName_][modifiers])
-            action->RequestUpdate();
-    else if(actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count(modifiers) > 0)
-        for(auto action : actions_[activeZoneName_][modifiers])
-            action->RequestUpdate();
+    if(surface_->GetIsTouched(activeZoneName_) && trackTouchedActions_.count(activeZoneName_) > 0 && trackTouchedActions_[activeZoneName_].count(modifiers) > 0 && trackTouchedActions_[activeZoneName_][modifiers].size() > 0)
+            trackTouchedActions_[activeZoneName_][modifiers][0]->RequestUpdate();
+    else if(actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count(modifiers) > 0 && actions_[activeZoneName_][modifiers].size() > 0)
+            actions_[activeZoneName_][modifiers][0]->RequestUpdate();
 }
 
 void Widget::DoAction(double value)
