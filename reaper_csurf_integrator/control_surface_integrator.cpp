@@ -717,11 +717,13 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
     if(feedbackProcessor == nullptr)
         feedbackProcessor = new FeedbackProcessor();
     
-    Widget* widget = new Widget(surface, widgetName);
-    widgets.push_back(widget);
-
-    widget->AddFeedbackProcessor(feedbackProcessor);
+    Widget* widget = new Widget(surface, widgetName, feedbackProcessor);
     
+    if(! widget)
+        return;
+    
+    widgets.push_back(widget);
+   
     for(int i = 0; i < tokenLines.size(); i++)
     {
         int size = tokenLines[i].size();
@@ -773,9 +775,8 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     if(tokens.size() < 2)
         return;
     
-    Widget* widget = new Widget(surface, tokens[1]);
-    widgets.push_back(widget);
-    
+    vector<vector<string>> tokenLines;
+
     for (string line; getline(surfaceTemplateFile, line) ; )
     {
         line = regex_replace(line, regex(TabChars), " ");
@@ -789,20 +790,35 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
         vector<string> tokens(GetTokens(line));
         
         if(tokens[0] == "WidgetEnd")    // finito baybay - Widget processing complete
-            return;
+            break;
         
-        if(tokens.size() > 1)
-        {
-            string widgetClass = tokens[0];
+        tokenLines.push_back(tokens);
+    }
+    
+    FeedbackProcessor* feedbackProcessor = nullptr;
 
-            // Control Signal Generator
-            if(widgetClass == "Control")
-                new OSC_CSIMessageGenerator(surface, widget, tokens[1]);
-            // Feedback Processor
-            else if(widgetClass == "FB_Processor")
-                widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, tokens[1]));
+    for(auto tokenLine : tokenLines)
+    {
+        if(tokenLine.size() > 1 && tokenLine[0] == "FB_Processor")
+        {
+            feedbackProcessor = new OSC_FeedbackProcessor(surface, tokenLine[1]);
+            break;
         }
     }
+    
+    if(feedbackProcessor == nullptr)
+        feedbackProcessor = new FeedbackProcessor();
+
+    Widget* widget = new Widget(surface, tokens[1], feedbackProcessor);
+    
+    if(! widget)
+        return;
+    
+    widgets.push_back(widget);
+
+    for(auto tokenLine : tokenLines)
+        if(tokenLine.size() > 1 && tokenLine[0] == "Control")
+            new OSC_CSIMessageGenerator(surface, widget, tokenLine[1]);
 }
 
 static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
@@ -1244,35 +1260,28 @@ void Widget::SetIsTouched(bool isZoneTouched)
 void  Widget::SetValue(double value)
 {
     lastValue_ = value;
-    
-    if(feedbackProcessors_.size() > 0)
-        feedbackProcessors_[0]->SetValue(value);
+    feedbackProcessor_->SetValue(value);
 }
 
 void  Widget::SetValue(int mode, double value)
 {
     lastValue_ = value;
-    
-    if(feedbackProcessors_.size() > 0)
-        feedbackProcessors_[0]->SetValue(mode, value);
+    feedbackProcessor_->SetValue(mode, value);
 }
 
 void  Widget::SetValue(string value)
 {
-    if(feedbackProcessors_.size() > 0)
-        feedbackProcessors_[0]->SetValue(value);
+    feedbackProcessor_->SetValue(value);
 }
 
 void  Widget::SetRGBValue(int r, int g, int b)
 {
-    if(feedbackProcessors_.size() > 0)
-        feedbackProcessors_[0]->SetRGBValue(r, g, b);
+    feedbackProcessor_->SetRGBValue(r, g, b);
 }
 
 void Widget::ClearCache()
 {
-    for(auto feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->ClearCache();
+    feedbackProcessor_->ClearCache();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2020,17 +2029,16 @@ void EuCon_ControlSurface::InitializeEuCon()
 
 void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, string FB_Processor)
 {
-    if(name != "")
+    if(name != "" && control != "")
     {
-        Widget* widget = new Widget(this, name);
+        Widget* widget = nullptr;
+        if(FB_Processor != "")
+            widget = new Widget(this, name, new EuCon_FeedbackProcessor(this, FB_Processor));
+        else
+            widget = new Widget(this, name, new FeedbackProcessor());
+
         if(widget)
-        {
             widgets_.push_back(widget);
-            if(control != "")
-                new EuCon_CSIMessageGenerator(this, widget, control);
-            if(FB_Processor != "")
-                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, FB_Processor));
-        }
     }
 }
 
