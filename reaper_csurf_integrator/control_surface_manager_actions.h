@@ -49,7 +49,7 @@ public:
     
     void RequestUpdate() override
     {
-        SetWidgetValue(GetWidget(), GetSurface()->GetShouldMapSends());
+        SetWidgetValue(GetWidget(), GetSurface()->GetSendsActivationManager()->GetShouldMapSends());
     }
     
     void Do(double value, Widget* sender) override

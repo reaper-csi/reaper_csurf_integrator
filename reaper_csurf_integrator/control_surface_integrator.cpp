@@ -231,7 +231,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 if(surface->AddZone(zone))
                 {
                     if((tokens[1].compare(0, 4, "Send")) == 0)
-                        surface->SetNumSendSlots(surface->GetNumSendSlots() + 1);
+                        surface->GetSendsActivationManager()->SetNumSendSlots(surface->GetSendsActivationManager()->GetNumSendSlots() + 1);
                     if((tokens[1].compare(0, 6, "FXMenu")) == 0)
                         surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
                 }
@@ -241,7 +241,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 parentZone->AddZone(zone);
                 
                 if((tokens[1].compare(0, 4, "Send")) == 0)
-                    surface->SetNumSendSlots(surface->GetNumSendSlots() + 1);
+                    surface->GetSendsActivationManager()->SetNumSendSlots(surface->GetSendsActivationManager()->GetNumSendSlots() + 1);
                 if((tokens[1].compare(0, 6, "FXMenu")) == 0)
                     surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
             }
@@ -1014,7 +1014,7 @@ void Manager::Init()
                                 surface->SetUseZoneLink(true);
                             
                             if(tokens[7] == "AutoMapSends")
-                                surface->SetShouldMapSends(true);
+                                surface->GetSendsActivationManager()->SetShouldMapSends(true);
                             
                             if(tokens[8] == "AutoMapFX")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
@@ -1203,10 +1203,7 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    if(surface_->GetZones().count(activeZoneName_) > 0)
-        return surface_->GetZones()[activeZoneName_]->GetNavigator()->GetTrack();
-     else
-        return nullptr;
+    return surface_->GetTrack(activeZoneName_);
 }
 
 void Widget::RequestUpdate()
@@ -1236,7 +1233,9 @@ void Widget::DoAction(double value)
     if( ! isModifier_)
     {
         modifiers = surface_->GetPage()->GetModifiers();
-        GetSurface()->GetPage()->InputReceived(this, value);
+        
+        // GAW TBD LearnMode
+        // GetSurface()->GetPage()->InputReceived(this, value);
     }
 
     if(actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count(modifiers) > 0)
@@ -3404,8 +3403,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             
                             // Get selected index.
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_WidgetNames), LB_GETCURSEL, 0, 0);
-                            if(index >= 0)
-                                currentSurface->GetWidgets()[index]->DoAction(currentSurface->GetWidgets()[index]->GetLastValue());
+                            //if(index >= 0)
+                                //currentSurface->GetWidgets()[index]->DoAction(currentSurface->GetWidgets()[index]->GetLastValue());
 
                             break;
                         }
