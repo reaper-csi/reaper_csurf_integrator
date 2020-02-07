@@ -181,25 +181,24 @@ class Widget
 private:
     ControlSurface* const surface_;
     string const name_;
+    FeedbackProcessor* const feedbackProcessor_;
     string activeZoneName_ = "";
     bool isModifier_ = false;
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
 
-    vector<FeedbackProcessor*> feedbackProcessors_;
-
+ 
     map<string, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
     map<string, map<string, vector <Action*>>> trackTouchedActions_;
     
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
+    Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor) : surface_(surface), name_(name), feedbackProcessor_(feedbackProcessor) {}
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     void AddAction(string zoneName, string modifiers, Action* action)  { actions_[zoneName][modifiers].push_back(action); }
     void AddTrackTouchedAction(string zoneName, string modifiers, Action* action) { trackTouchedActions_[zoneName][modifiers].push_back(action); }
-    void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor) { feedbackProcessors_.push_back(feedbackProcessor); }
     void SetIsModifier() { isModifier_ = true; }
     double GetLastValue() { return lastValue_; }
     
@@ -747,8 +746,8 @@ protected:
     void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
-        widgets_.push_back(new Widget(this, "OnTrackSelection"));
-        widgets_.push_back(new Widget(this, "OnFXFocus"));
+        widgets_.push_back(new Widget(this, "OnTrackSelection", new FeedbackProcessor()));
+        widgets_.push_back(new Widget(this, "OnFXFocus", new FeedbackProcessor()));
     }
     
 public:
