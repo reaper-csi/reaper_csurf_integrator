@@ -91,7 +91,7 @@ public:
     Navigator(Zone* zone) : zone_(zone) { }
     virtual ~Navigator() { }
 
-    virtual string GetName() { return ""; }
+    virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
     virtual bool GetIsZoneTouched() { return false; }
     virtual bool GetIsChannelPinned() { return false; }
@@ -107,7 +107,7 @@ class TrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int channelNum_ = 0;
+    int const channelNum_ = 0;
     int bias_ = 0;
     MediaTrack* pinnedTrack_ = nullptr;
     bool isChannelPinned_ = false;
@@ -200,7 +200,6 @@ public:
     void AddAction(string zoneName, string modifiers, Action* action)  { actions_[zoneName][modifiers].push_back(action); }
     void AddTrackTouchedAction(string zoneName, string modifiers, Action* action) { trackTouchedActions_[zoneName][modifiers].push_back(action); }
     void SetIsModifier() { isModifier_ = true; }
-    double GetLastValue() { return lastValue_; }
     
     void GoZone(string zoneName)
     {
@@ -760,12 +759,9 @@ public:
     map<string, Zone*> &GetZones() { return zones_;}
     map<string, vector<Zone*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
+    SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     void SetUseZoneLink(bool useZoneLink) { useZoneLink_ = useZoneLink; }
-    bool GetShouldMapSends() { return sendsActivationManager_->GetShouldMapSends(); }
-    void SetShouldMapSends(bool shouldMapSends) { sendsActivationManager_->SetShouldMapSends(shouldMapSends); }
-    int GetNumSendSlots() { return sendsActivationManager_->GetNumSendSlots(); }
-    void SetNumSendSlots(int numSendSlots) { sendsActivationManager_->SetNumSendSlots(numSendSlots); }
     virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
@@ -780,6 +776,14 @@ public:
     bool AddZone(Zone* zone);
     void GoZone(string zoneName);
     void GoHome() { GoZone("Home"); }
+    
+    MediaTrack* GetTrack(string activeZoneName)
+    {
+        if(zones_.count(activeZoneName) > 0)
+            return zones_[activeZoneName]->GetNavigator()->GetTrack();
+        else
+            return nullptr;
+    }
     
     void WidgetsGoZone(string zoneName)
     {
