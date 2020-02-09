@@ -1054,10 +1054,7 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool TrackNavigator::GetIsZoneTouched()
 {
-    if(zone_)
-        return zone_->GetIsTouched();
-    else
-        return false;
+    return zone_->GetIsTouched();
 }
 
 void TrackNavigator::Pin()
@@ -1086,6 +1083,7 @@ void TrackNavigator::Unpin()
 
 MediaTrack* TrackNavigator::GetTrack()
 {
+    // GAW TBD - could pinnedTrack_ be stale ? -- have a look at the Track refresh code in TrackNavigationManager
     if(isChannelPinned_)
         return pinnedTrack_;
     else
@@ -1095,6 +1093,11 @@ MediaTrack* TrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MasterTrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool MasterTrackNavigator::GetIsZoneTouched()
+{
+    return zone_->GetIsTouched();
+}
+
 MediaTrack* MasterTrackNavigator::GetTrack()
 {
     return DAW::GetMasterTrack(0);
@@ -1105,7 +1108,7 @@ MediaTrack* MasterTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* SelectedTrackNavigator::GetTrack()
 {
-    return manager_->GetSelectedTrack();
+    return zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1120,7 +1123,7 @@ MediaTrack* FocusedFXNavigator::GetTrack()
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
     {
         if(trackNumber > 0)
-            return DAW::CSurf_TrackFromID(trackNumber, manager_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+            return DAW::CSurf_TrackFromID(trackNumber, zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
         else
             return nullptr;
     }
@@ -1286,12 +1289,6 @@ void Widget::ClearCache()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): name_(name), widget_(widget), zone_(zone)
-{
-    SetRGB(params);
-    SetSteppedValues(params);
-}
-
 Page* Action::GetPage()
 {
     return widget_->GetSurface()->GetPage();
@@ -1329,31 +1326,31 @@ void Action::DoAction(double value, Widget* sender)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Zone::Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias) : name_(name), sourceFilePath_(sourceFilePath), alias_(alias)
+Zone::Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias) : surface_(surface),  name_(name), sourceFilePath_(sourceFilePath), alias_(alias)
 {
     // The Zone and Navigator MUST be coupled
     if(navigatorName== "TrackNavigator")
         navigator_ = GetNavigatorForChannel(this, surface, channelNum);
     else if(navigatorName == "MasterTrackNavigator")
-        navigator_ = new MasterTrackNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+        navigator_ = new MasterTrackNavigator(this);
     else if(navigatorName == "SelectedTrackNavigator")
-        navigator_ = new SelectedTrackNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+        navigator_ = new SelectedTrackNavigator(this);
     else if(navigatorName == "FocusedFXNavigator")
-        navigator_ = new FocusedFXNavigator(this, surface->GetPage()->GetTrackNavigationManager());
+        navigator_ = new FocusedFXNavigator(this);
     else if(navigatorName == "ParentNavigator" && parentZone != nullptr)
         navigator_ = parentZone->GetNavigator();
     else
         navigator_ = new Navigator(this);
 }
 
-void Zone::Activate(ControlSurface* surface)
+void Zone::Activate()
 {
-    surface->WidgetsGoZone(GetName());
+    surface_->WidgetsGoZone(GetName());
 }
 
-void Zone::Deactivate(ControlSurface* surface)
+void Zone::Deactivate()
 {
-    surface->WidgetsGoZone("Home");
+    surface_->WidgetsGoZone("Home");
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1468,7 +1465,7 @@ void SendsActivationManager::ToggleMapSends()
     if( ! shouldMapSends_)
     {
         for(auto zone : activeSendZones_)
-            zone->Deactivate(surface_);
+            zone->Deactivate();
         
         activeSendZones_.clear();
     }
@@ -1479,7 +1476,7 @@ void SendsActivationManager::ToggleMapSends()
 void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
     for(auto zone : activeSendZones_)
-        zone->Deactivate(surface_);
+        zone->Deactivate();
     
     activeSendZones_.clear();
     
@@ -1500,7 +1497,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
             
             if(i < numTrackSends)
             {
-                zone->Activate(surface_, i);
+                zone->Activate(i);
                 activeSendZones_.push_back(zone);
             }
             else
@@ -1525,7 +1522,7 @@ void FXActivationManager::ToggleMapSelectedTrackFX()
         for(auto zone : activeSelectedTrackFXZones_)
         {
             surface_->LoadingZone(zone->GetName());
-            zone->Deactivate(surface_);
+            zone->Deactivate();
         }
         
         activeSelectedTrackFXZones_.clear();
@@ -1552,7 +1549,7 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
             surface_->LoadingZone(zone->GetName());
-            zone->Deactivate(surface_);
+            zone->Deactivate();
         }
 
         activeSelectedTrackFXMenuZones_.clear();
@@ -1566,7 +1563,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
     for(auto zone : activeSelectedTrackFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone->Deactivate(surface_);
+        zone->Deactivate();
     }
     
     activeSelectedTrackFXZones_.clear();
@@ -1587,7 +1584,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         {
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
-            zone->Activate(surface_, i);
+            zone->Activate(i);
             activeSelectedTrackFXZones_.push_back(zone);
             openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
         }
@@ -1599,12 +1596,12 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
     for(auto zone : activeSelectedTrackFXMenuZones_)
-        zone->Deactivate(surface_);
+        zone->Deactivate();
     
     activeSelectedTrackFXMenuZones_.clear();
     
     for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        zone->Deactivate(surface_);
+        zone->Deactivate();
     
     activeSelectedTrackFXMenuFXZones_.clear();
     
@@ -1625,7 +1622,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             
             if(i < numTrackFX)
             {
-                zone->Activate(surface_, i);
+                zone->Activate(i);
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
             else
@@ -1653,7 +1650,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
-        surface_->GetZones()[FXName]->Activate(surface_, fxIndex);
+        surface_->GetZones()[FXName]->Activate(fxIndex);
         activeSelectedTrackFXMenuFXZones_.push_back(surface_->GetZones()[FXName]);
     }
 }
@@ -1672,7 +1669,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     for(auto zone : activeFocusedFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone->Deactivate(surface_);
+        zone->Deactivate();
     }
     
     activeFocusedFXZones_.clear();
@@ -1685,7 +1682,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
         {
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
-            zone->Activate(surface_, fxIndex);
+            zone->Activate(fxIndex);
             activeFocusedFXZones_.push_back(zone);
         }
     }
@@ -1752,7 +1749,7 @@ void ControlSurface::GoZone(string zoneName)
 {
     if(zones_.count(zoneName) > 0)
     {
-        zones_[zoneName]->Activate(this);
+        zones_[zoneName]->Activate();
     }
 }
 
@@ -2037,7 +2034,11 @@ void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, st
             widget = new Widget(this, name, new FeedbackProcessor());
 
         if(widget)
+        {
             widgets_.push_back(widget);
+            if(control !="")
+                new EuCon_CSIMessageGenerator(this, widget, control);
+        }
     }
 }
 

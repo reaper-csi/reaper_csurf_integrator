@@ -160,6 +160,8 @@ public:
     
     static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
 
+    static bool ValidateTrackPtr(MediaTrack* track) { return ValidatePtr(track, "MediaTrack*"); }
+    
     static void TrackFX_Show(MediaTrack* track, int index, int showFlag)
     {
         if(ValidatePtr(track, "MediaTrack*"))

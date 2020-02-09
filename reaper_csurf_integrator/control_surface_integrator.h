@@ -134,24 +134,26 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MasterTrackNavigator : public TrackNavigator
+class MasterTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
+    MasterTrackNavigator(Zone* zone) : Navigator(zone) {}
     virtual ~MasterTrackNavigator() {}
     
+    virtual bool GetIsZoneTouched() override;
+
     virtual string GetName() override { return "MasterTrackNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectedTrackNavigator : public TrackNavigator
+class SelectedTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
+    SelectedTrackNavigator(Zone* zone) : Navigator(zone) {}
     virtual ~SelectedTrackNavigator() {}
     
     virtual string GetName() override { return "SelectedTrackNavigator"; }
@@ -160,11 +162,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXNavigator : public TrackNavigator
+class FocusedFXNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXNavigator(Zone* zone, TrackNavigationManager* manager) : TrackNavigator(zone, manager) {}
+    FocusedFXNavigator(Zone* zone) : Navigator(zone) {}
     virtual ~FocusedFXNavigator() {}
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
@@ -182,8 +184,8 @@ private:
     ControlSurface* const surface_;
     string const name_;
     FeedbackProcessor* const feedbackProcessor_;
-    string activeZoneName_ = "";
     bool isModifier_ = false;
+    string activeZoneName_ = "";
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
 
@@ -296,8 +298,12 @@ private:
     }
     
 protected:
-    Action(string name, Widget* widget, Zone* zone, vector<string> params);
-    
+    Action(string name, Widget* widget, Zone* zone, vector<string> params): name_(name), widget_(widget), zone_(zone)
+    {
+        SetRGB(params);
+        SetSteppedValues(params);
+    }
+
     string const name_;
     Widget* const widget_;
     Zone* const zone_;
@@ -317,9 +323,9 @@ public:
     virtual ~Action() {}
     
     Page* GetPage();
+    ControlSurface* GetSurface();
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
-    ControlSurface* GetSurface();
     
     virtual string GetDisplayName() { return ""; }
     string GetName() { return name_; }
@@ -407,6 +413,7 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    ControlSurface* const surface_;
     string const name_;
     string const alias_;
     string const sourceFilePath_;
@@ -419,6 +426,7 @@ public:
     Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias);
     virtual ~Zone() {}
     
+    ControlSurface* GetSurface() { return surface_; }
     int GetIndex() { return index_; }
     string GetName() { return name_ ;}
     string GetAlias() { return alias_;}
@@ -426,8 +434,8 @@ public:
     Navigator* GetNavigator() { return navigator_; }
     void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
     bool GetIsTouched() { return isTouched_; }
-    void Activate(ControlSurface* surface);
-    void Deactivate(ControlSurface* surface);
+    void Activate();
+    void Deactivate();
 
     // GAW TBD -- remove -- change learn mode editor to file based
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
@@ -446,13 +454,13 @@ public:
         includedZones_.push_back(zone);
     }
     
-    void Activate(ControlSurface* surface, int index)
+    void Activate(int index)
     {
         index_ = index;
-        Activate(surface);
+        Activate();
         
         for(auto zone : includedZones_)
-            zone->Activate(surface, index);
+            zone->Activate(index);
     }
 };
 
@@ -1162,13 +1170,14 @@ public:
             
             if(DAW::IsTrackVisible(track, followMCP_))
                 tracks_.push_back(track);
-             
-                // I_FOLDERDEPTH : int * : folder depth change (0=normal, 1=track is a folder parent, -1=track is the last in the innermost folder, -2=track is the last in the innermost and next-innermost folders, etc
-
-                //int retVal = DAW::GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH");
         }
         
+        
+        
         // find pinnedTracks_ that are no longer in tracks_
+        
+        // GAW TBD -- clean this up using DAW::ValidateTrackPtr()
+
         vector<MediaTrack*> tracksToRemove;
         for(auto track : pinnedTracks_)
         {
@@ -1191,9 +1200,12 @@ public:
                 }
             }
         }
+        
+        
 
         // remove removed tracks from pinnedTracks_
         subtract_vector(pinnedTracks_, tracksToRemove);
+        
         
         // clone tracks_ and remove pinnedTracks_
         unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
