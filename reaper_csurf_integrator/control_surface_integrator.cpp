@@ -274,7 +274,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             isDelayed = true;
     
         Widget* widget = nullptr;
-    
+        
         for(auto * aWidget : widgets)
         {
             if(aWidget->GetName() == widgetName)
@@ -1636,53 +1636,6 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
-string ControlSurface::GetZoneAlias(string zoneName)
-{
-    if(zones_.count(zoneName) > 0)
-        return zones_[zoneName]->GetAlias();
-    else
-        return "";
-}
-
-string ControlSurface::GetLocalZoneAlias(string zoneName)
-{
-    if(GetZoneAlias(zoneName) != "")
-        return GetZoneAlias(zoneName);
-    else
-        return page_->GetZoneAlias(zoneName);
-}
-
-void ControlSurface::AddZone(Zone* zone)
-{
-    if(zones_.count(zone->GetName()) > 0)
-    {
-        char buffer[5000];
-        snprintf(buffer, sizeof(buffer), "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
-        DAW::ShowConsoleMsg(buffer);
-    }
-    else
-    {
-        string zoneName = zone->GetName();
-        zones_[zoneName] = zone;
-        zonesInZoneFile_[zone->GetSourceFilePath()].push_back(zone);
-        
-        if((zoneName.compare(0, 4, "Send")) == 0)
-            GetSendsActivationManager()->SetNumSendSlots(GetSendsActivationManager()->GetNumSendSlots() + 1);
-        if((zoneName.compare(0, 6, "FXMenu")) == 0)
-            GetFXActivationManager()->SetNumFXSlots(GetFXActivationManager()->GetNumFXSlots() + 1);
-
-    }
-}
-
-void ControlSurface::GoZone(string zoneName)
-{
-    if(zones_.count(zoneName) > 0)
-    {
-        zones_[zoneName]->Activate();
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1955,9 +1908,10 @@ void EuCon_ControlSurface::InitializeEuCon()
 
 void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, string FB_Processor)
 {
-    if(name != "" && control != "")
+    if(name != "")
     {
         Widget* widget = nullptr;
+        
         if(FB_Processor != "")
             widget = new Widget(this, name, new EuCon_FeedbackProcessor(this, FB_Processor));
         else
@@ -1966,7 +1920,7 @@ void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, st
         if(widget)
         {
             widgets_.push_back(widget);
-            if(control !="")
+            if(control != "")
                 new EuCon_CSIMessageGenerator(this, widget, control);
         }
     }
