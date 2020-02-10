@@ -1120,7 +1120,6 @@ private:
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
-    vector<MediaTrack*> pinnedTracks_;
     vector<MediaTrack*> unpinnedTracks_;
     vector<Navigator*> navigators_;
     
@@ -1141,30 +1140,20 @@ public:
     void TrackListChanged();
     void AdjustTrackBank(int amount);
 
-    void PinTrackToChannel(MediaTrack* track, int channelNum)
+    void IncChannelBias(MediaTrack* track, int channelNum)
     {
-        pinnedTracks_.push_back(track);
-        
         for(int i = channelNum + 1; i < navigators_.size(); i++)
             navigators_[i]->IncBias();
     }
     
-    void UnpinTrackFromChannel(MediaTrack* track, int channelNum)
+    void DecChannelBias(MediaTrack* track, int channelNum)
     {
-        vector<MediaTrack*>::iterator it = find(pinnedTracks_.begin(), pinnedTracks_.end(), track);
-        
-        if(it != pinnedTracks_.end())
-            pinnedTracks_.erase(it);
-        
         for(int i = channelNum + 1; i < navigators_.size(); i++)
             navigators_[i]->DecBias();
     }
     
     void TogglePin(MediaTrack* track)
     {
-        if(track == tracks_[tracks_.size() - 1]) // GAW TBD -- prevent Pinning last Track -- this is a hack because of a bug in subtract_vectors, or maybe ny usage :)
-            return;
-        
         for(auto navigator : navigators_)
         {
             if(track == navigator->GetTrack())
@@ -1194,14 +1183,9 @@ public:
         else
             return nullptr;
     }
-    
-    
-    //int cycles = 0;
 
     void RebuildTrackList()
     {
-        //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        
         tracks_.clear();
         
         // Get Visible Tracks
@@ -1213,44 +1197,23 @@ public:
                 tracks_.push_back(track);
         }
         
-        
-        
-        // find pinnedTracks_ that are no longer in tracks_
-        
-        // GAW TBD -- clean this up using DAW::ValidateTrackPtr()
+        // clonce the tracks
+        unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
 
-        vector<MediaTrack*> tracksToRemove;
-        for(auto track : pinnedTracks_)
+        for(auto navigator : navigators_)
         {
-            if(find(tracks_.begin(), tracks_.end(), track) == tracks_.end())
+            if(navigator->GetIsChannelPinned())
             {
-                tracksToRemove.push_back(track);
-                break;
-            }
-        }
-        
-        // Unpin any removed tracks
-        for(auto track : tracksToRemove)
-        {
-            for(auto navigator : navigators_)
-            {
-                if(track == navigator->GetTrack())
+                if(DAW::ValidateTrackPtr(navigator->GetTrack()))
+                {
+                    remove(unpinnedTracks_.begin(), unpinnedTracks_.end(), navigator->GetTrack());
+                }
+                else
                 {
                     navigator->Unpin();
-                    break;
                 }
             }
         }
-        
-        
-
-        // remove removed tracks from pinnedTracks_
-        subtract_vector(pinnedTracks_, tracksToRemove);
-        
-        
-        // clone tracks_ and remove pinnedTracks_
-        unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
-        subtract_vector(unpinnedTracks_, pinnedTracks_);
         
         int top = GetNumTracks() - navigators_.size();
         
@@ -1258,22 +1221,6 @@ public:
             trackOffset_ = 0;
         else if(trackOffset_ >  top)
             trackOffset_ = top;
-        
-        /*
-         cycles++;
-         
-         if(cycles > 60)
-         {
-         cycles = 0;
-         
-         int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-         
-         char msgBuffer[250];
-         
-         sprintf(msgBuffer, "%d microseconds for TrackNavigator run method\n", duration);
-         DAW::ShowConsoleMsg(msgBuffer);
-         }
-         */
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
