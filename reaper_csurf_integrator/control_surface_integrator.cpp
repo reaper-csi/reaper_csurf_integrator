@@ -990,7 +990,6 @@ void TrackNavigator::Unpin()
 
 MediaTrack* TrackNavigator::GetTrack()
 {
-    // GAW TBD - could pinnedTrack_ be stale ? -- have a look at the Track refresh code in TrackNavigationManager
     if(isChannelPinned_)
         return pinnedTrack_;
     else
@@ -1238,7 +1237,7 @@ void Action::DoAction(double value, Widget* sender)
     else
         Do(value, sender);
     
-    // GAW -- this will need to be changed
+    // GAW TBD -- this will need to be changed
     /*
      if( ! GetWidget()->GetIsModifier())
      GetPage()->ActionPerformed(GetWidgetActionManager(), this);
