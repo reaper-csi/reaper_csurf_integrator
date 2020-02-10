@@ -786,10 +786,6 @@ public:
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
 
-    string GetZoneAlias(string ZoneName);
-    string GetLocalZoneAlias(string ZoneName);
-    void AddZone(Zone* zone);
-    void GoZone(string zoneName);
     void GoHome() { GoZone("Home"); }
     
     MediaTrack* GetTrack(string activeZoneName)
@@ -800,6 +796,52 @@ public:
             return nullptr;
     }
     
+    void GoZone(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            zones_[zoneName]->Activate();
+    }
+
+    
+    string GetZoneAlias(string zoneName)
+    {
+        if(zones_.count(zoneName) > 0)
+            return zones_[zoneName]->GetAlias();
+        else
+            return "";
+    }
+    
+    string GetLocalZoneAlias(string zoneName)
+    {
+        if(GetZoneAlias(zoneName) != "")
+            return GetZoneAlias(zoneName);
+        else
+            return "";
+            //return page_->GetZoneAlias(zoneName);
+    }
+    
+    void AddZone(Zone* zone)
+    {
+        if(zones_.count(zone->GetName()) > 0)
+        {
+            char buffer[5000];
+            snprintf(buffer, sizeof(buffer), "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
+                     zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
+            DAW::ShowConsoleMsg(buffer);
+        }
+        else
+        {
+            string zoneName = zone->GetName();
+            zones_[zoneName] = zone;
+            zonesInZoneFile_[zone->GetSourceFilePath()].push_back(zone);
+            
+            if((zoneName.compare(0, 4, "Send")) == 0)
+                GetSendsActivationManager()->SetNumSendSlots(GetSendsActivationManager()->GetNumSendSlots() + 1);
+            if((zoneName.compare(0, 6, "FXMenu")) == 0)
+                GetFXActivationManager()->SetNumFXSlots(GetFXActivationManager()->GetNumFXSlots() + 1);
+        }
+    }
+
     void WidgetsGoZone(string zoneName)
     {
         for(auto widget : widgets_)
