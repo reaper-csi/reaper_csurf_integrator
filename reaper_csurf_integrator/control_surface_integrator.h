@@ -185,13 +185,14 @@ private:
     string const name_;
     FeedbackProcessor* const feedbackProcessor_;
     bool isModifier_ = false;
-    string activeZoneName_ = "";
+    Zone* activeZone_ = nullptr;
+    map<string, Zone*> zonesAvailable_;
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
 
  
-    map<string, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
-    map<string, map<string, vector <Action*>>> trackTouchedActions_;
+    map<Zone*, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
+    map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
     
 public:
     Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor) : surface_(surface), name_(name), feedbackProcessor_(feedbackProcessor) {}
@@ -199,14 +200,14 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    void AddAction(string zoneName, string modifiers, Action* action)  { actions_[zoneName][modifiers].push_back(action); }
-    void AddTrackTouchedAction(string zoneName, string modifiers, Action* action) { trackTouchedActions_[zoneName][modifiers].push_back(action); }
+    void AddAction(Zone* zone, string modifiers, Action* action);
+    void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
     
     void GoZone(string zoneName)
     {
-        if(actions_.count(zoneName) > 0)
-            activeZoneName_ = zoneName;
+        if(zonesAvailable_.count(zoneName) > 0)
+            activeZone_ = zonesAvailable_[zoneName];
     }
     
     void Reset()
@@ -781,7 +782,7 @@ public:
 
     string GetZoneAlias(string ZoneName);
     string GetLocalZoneAlias(string ZoneName);
-    bool AddZone(Zone* zone);
+    void AddZone(Zone* zone);
     void GoZone(string zoneName);
     void GoHome() { GoZone("Home"); }
     
@@ -798,21 +799,7 @@ public:
         for(auto widget : widgets_)
             widget->GoZone(zoneName);
     }
-    
-    bool GetIsTouched(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            return zones_[zoneName]->GetIsTouched();
-        else
-            return false;
-    }
-    
-    void SetIsTouched(string zoneName, bool isTouched)
-    {
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->SetIsTouched(isTouched);
-    }
-    
+       
     void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends();
