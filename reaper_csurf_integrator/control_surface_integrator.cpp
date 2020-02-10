@@ -972,7 +972,7 @@ void TrackNavigator::Pin()
         
         isChannelPinned_ = true;
         
-        manager_->PinTrackToChannel(pinnedTrack_, channelNum_);
+        manager_->IncChannelBias(pinnedTrack_, channelNum_);
     }
 }
 
@@ -980,7 +980,7 @@ void TrackNavigator::Unpin()
 {
     if(isChannelPinned_)
     {
-        manager_->UnpinTrackFromChannel(pinnedTrack_, channelNum_);
+        manager_->DecChannelBias(pinnedTrack_, channelNum_);
         
         isChannelPinned_ = false;
         
