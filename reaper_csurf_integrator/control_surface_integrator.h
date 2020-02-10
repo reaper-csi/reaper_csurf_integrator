@@ -1197,7 +1197,7 @@ public:
                 tracks_.push_back(track);
         }
         
-        // clonce the tracks
+        // clone the tracks
         unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
 
         for(auto navigator : navigators_)
