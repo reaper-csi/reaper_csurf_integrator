@@ -210,6 +210,12 @@ public:
             activeZone_ = zonesAvailable_[zoneName];
     }
     
+    void Deactivate(Zone* zone)
+    {
+        if(zone == activeZone_ && zonesAvailable_.count("Home") > 0)
+            activeZone_ = zonesAvailable_["Home"];
+    }
+    
     void Reset()
     {
         SetValue(0.0);
@@ -799,7 +805,13 @@ public:
         for(auto widget : widgets_)
             widget->GoZone(zoneName);
     }
-       
+    
+    void Deactivate(Zone* zone)
+    {
+        for(auto widget : widgets_)
+            widget->Deactivate(zone);
+    }
+
     void ToggleMapSends()
     {
         sendsActivationManager_->ToggleMapSends();
