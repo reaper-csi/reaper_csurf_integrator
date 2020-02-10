@@ -184,10 +184,10 @@ static Navigator* GetNavigatorForChannel(Zone* zone, ControlSurface* surface, in
     return navigators[channelNum];
 }
 
-static void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
+static void BuildIncludedZone(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
 
 static map<string, vector<vector<string>>> zoneTemplates;
-static vector<vector<vector<string>>> zoneDefinitions;
+static map<string, vector<vector<string>>> zoneDefinitions;
 
 static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
 {
@@ -226,26 +226,12 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             if(zone == nullptr)
                 return;
             
-            if(parentZone == nullptr)
-            {
-                if(surface->AddZone(zone))
-                {
-                    if((tokens[1].compare(0, 4, "Send")) == 0)
-                        surface->GetSendsActivationManager()->SetNumSendSlots(surface->GetSendsActivationManager()->GetNumSendSlots() + 1);
-                    if((tokens[1].compare(0, 6, "FXMenu")) == 0)
-                        surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
-                }
-            }
-            else
-            {
+            if(parentZone != nullptr)
                 parentZone->AddZone(zone);
-                
-                if((tokens[1].compare(0, 4, "Send")) == 0)
-                    surface->GetSendsActivationManager()->SetNumSendSlots(surface->GetSendsActivationManager()->GetNumSendSlots() + 1);
-                if((tokens[1].compare(0, 6, "FXMenu")) == 0)
-                    surface->GetFXActivationManager()->SetNumFXSlots(surface->GetFXActivationManager()->GetNumFXSlots() + 1);
-            }
-
+            else
+                surface->AddZone(zone);
+            
+            
             continue;
         }
     
@@ -263,19 +249,16 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             if(tokens[0] == "IncludedZonesEnd")
             {
                 isInIncludedZonesSection = false;
-                
-                BuildIncludedZones(includedZones, filePath, surface, widgets, zone);
-                
                 continue;
             }
             
             if(tokens.size() == 1 && isInIncludedZonesSection)
             {
-                includedZones.push_back(tokens[0]);
+                BuildIncludedZone(tokens[0], filePath, surface, widgets, zone);
+                continue;
             }
         }
     
-        
         // GAW -- the first token is the Widget name, possibly decorated with modifiers
         string widgetName = "";
         string modifiers = "";
@@ -314,9 +297,9 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 if(action != nullptr)
                 {
                     if(isTrackTouch)
-                        widget->AddTrackTouchedAction(zone->GetName(), modifiers, action);
+                        widget->AddTrackTouchedAction(zone, modifiers, action);
                     else
-                        widget->AddAction(zone->GetName(), modifiers, action);
+                        widget->AddAction(zone, modifiers, action);
                     
                     if(isInverted)
                         action->SetIsInverted();
@@ -336,89 +319,73 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 // log error, etc.
             }
         }
-
     }
 }
 
-static void BuildIncludedZones(vector<string> &includedZoneNames, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildIncludedZone(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
 {
-    for(auto includedZoneName : includedZoneNames)
+    if(includedZoneName.back() == '|')
     {
-        if(includedZoneName.back() == '|')
+        if(zoneTemplates.count(includedZoneName) > 0)
+            BuildZone(zoneTemplates[includedZoneName], filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
+    }
+    else // This expands constructs like Channel|1-8 into multiple Zones
+    {
+        istringstream expandedZone(includedZoneName);
+        vector<string> expandedZoneTokens;
+        string expandedZoneToken;
+        
+        while (getline(expandedZone, expandedZoneToken, '|'))
+            expandedZoneTokens.push_back(expandedZoneToken);
+        
+        if(expandedZoneTokens.size() > 1)
         {
-            if(zoneTemplates.count(includedZoneName) > 0)
-            {
-                vector<vector<string>> zoneLines;
-                
-                for(auto line : zoneTemplates[includedZoneName])
-                {
-                    zoneLines.push_back(vector<string>());
-                    
-                    for(auto token : line)
-                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), ""));
-                }
-                
-                BuildZone(zoneLines, filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
-            }
-        }
-        else // This expands constructs like Channel|1-8 into multiple Zones
-        {
-            istringstream expandedZone(includedZoneName);
-            vector<string> expandedZoneTokens;
-            string expandedZoneToken;
+            string zoneBaseName = "";
+            int rangeBegin = 0;
+            int rangeEnd = 1;
             
-            while (getline(expandedZone, expandedZoneToken, '|'))
-                expandedZoneTokens.push_back(expandedZoneToken);
+            zoneBaseName = expandedZoneTokens[0];
             
-            if(expandedZoneTokens.size() > 1)
+            if(zoneTemplates.count(zoneBaseName + "|") > 0)
             {
-                string zoneBaseName = "";
-                int rangeBegin = 0;
-                int rangeEnd = 1;
+                istringstream range(expandedZoneTokens[1]);
+                vector<string> rangeTokens;
+                string rangeToken;
                 
-                zoneBaseName = expandedZoneTokens[0];
+                while (getline(range, rangeToken, '-'))
+                    rangeTokens.push_back(rangeToken);
                 
-                if(zoneTemplates.count(zoneBaseName + "|") > 0)
+                if(rangeTokens.size() > 1)
                 {
-                    istringstream range(expandedZoneTokens[1]);
-                    vector<string> rangeTokens;
-                    string rangeToken;
+                    rangeBegin = stoi(rangeTokens[0]);
+                    rangeEnd = stoi(rangeTokens[1]);
                     
-                    while (getline(range, rangeToken, '-'))
-                        rangeTokens.push_back(rangeToken);
-                    
-                    if(rangeTokens.size() > 1)
+                    for(int i = 0; i <= rangeEnd - rangeBegin; i++)
                     {
-                        rangeBegin = stoi(rangeTokens[0]);
-                        rangeEnd = stoi(rangeTokens[1]);
+                        vector<vector<string>> zoneLines;
                         
-                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
+                        bool isInIncludedZonesSection = false;
+                        
+                        for(auto line : zoneTemplates[zoneBaseName + "|"])
                         {
-                            vector<vector<string>> zoneLines;
-                            
-                            bool isInIncludedZonesSection = false;
-                            
-                            for(auto line : zoneTemplates[zoneBaseName + "|"])
+                            zoneLines.push_back(vector<string>());
+
+                            for(auto token : line)
                             {
-                                zoneLines.push_back(vector<string>());
+                                if(token == "IncludedZones")
+                                    isInIncludedZonesSection = true;
                                 
-                                for(auto token : line)
-                                {
-                                    if(token == "IncludedZones")
-                                        isInIncludedZonesSection = true;
-                                    
-                                    if(token == "IncludedZonesEnd")
-                                        isInIncludedZonesSection = false;
-                                    
-                                    if(isInIncludedZonesSection)
-                                        zoneLines.back().push_back(token);
-                                    else
-                                        zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                                }
+                                if(token == "IncludedZonesEnd")
+                                    isInIncludedZonesSection = false;
+                                
+                                if(isInIncludedZonesSection)
+                                    zoneLines.back().push_back(token);
+                                else
+                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
                             }
-                            
-                            BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
                         }
+                        
+                        BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
                     }
                 }
             }
@@ -462,18 +429,19 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
                     
                     if(tokens[1].size() > 1 && tokens[1].back() == '|')
                         isTemplate = true;
-                    
-                    if( ! isTemplate)
-                        zoneDefinitions.push_back(vector<vector<string>>());
-                }
+                                    }
              
+                if(tokens[0] == "ZoneEnd")
+                {
+                    isTemplate = false;
+                    continue;
+                }
+                
                 if(isTemplate)
                     zoneTemplates[zoneName].push_back(tokens);
                 else
-                    zoneDefinitions.back().push_back(tokens);
+                    zoneDefinitions[zoneName].push_back(tokens);
              
-                if(tokens[0] == "ZoneEnd")
-                    isTemplate = false;
              }
         }
     }
@@ -484,69 +452,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
         DAW::ShowConsoleMsg(buffer);
     }
     
-    for(auto inputZoneLines : zoneDefinitions)
-    {
-        if(inputZoneLines.size() > 0 && inputZoneLines[0].size() > 1 && inputZoneLines[0][0] == "Zone")
-        {
-            string zoneName = inputZoneLines[0][1];
-            
-            size_t pos = zoneName.find("|");
-            
-            if(pos == string::npos)
-                BuildZone(inputZoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zone -- parentZone == nullptr, track ptr == nullptr
-            else
-            {
-                istringstream expandedZone(zoneName);
-                vector<string> expandedZoneTokens;
-                string expandedZoneToken;
-                
-                while (getline(expandedZone, expandedZoneToken, '|'))
-                    expandedZoneTokens.push_back(expandedZoneToken);
-                
-                if(expandedZoneTokens.size() > 1)
-                {
-                    string zoneBaseName = "";
-                    int rangeBegin = 0;
-                    int rangeEnd = 1;
-                    
-                    zoneBaseName = expandedZoneTokens[0];
-                    
-                    istringstream range(expandedZoneTokens[1]);
-                    vector<string> rangeTokens;
-                    string rangeToken;
-                    
-                    while (getline(range, rangeToken, '-'))
-                        rangeTokens.push_back(rangeToken);
-                    
-                    if(rangeTokens.size() > 1)
-                    {
-                        rangeBegin = stoi(rangeTokens[0]);
-                        rangeEnd = stoi(rangeTokens[1]);
-                        
-                        for(int i = 0; i <= rangeEnd - rangeBegin; i++)
-                        {
-                            vector<vector<string>> outputZoneLines;
-                            
-                            for(auto line : inputZoneLines)
-                            {
-                                outputZoneLines.push_back(vector<string>());
-                                
-                                for(auto token : line)
-                                {
-                                    if(line.size() > 1 && line[0] == "Zone" && token.find("|") != string::npos)
-                                        outputZoneLines.back().push_back(zoneBaseName + to_string(i + 1));
-                                    else
-                                        outputZoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                                }
-                            }
-                            
-                            BuildZone(outputZoneLines, filePath, surface, widgets, nullptr, i);
-                        }
-                    }
-                }
-            }
-        }
-    }
+    for(auto [zoneName, zoneLines] : zoneDefinitions)
+        BuildZone(zoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zones -- parentZone == nullptr, track ptr == nullptr
 }
 
 static int strToHex(string valueStr)
@@ -1204,9 +1111,23 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Widget::AddAction(Zone* zone, string modifiers, Action* action)
+{
+    actions_[zone][modifiers].push_back(action);
+    zonesAvailable_[zone->GetName()] = zone;
+}
+
+void Widget::AddTrackTouchedAction(Zone* zone, string modifiers, Action* action)
+{
+    trackTouchedActions_[zone][modifiers].push_back(action);
+}
+
 MediaTrack* Widget::GetTrack()
 {
-    return surface_->GetTrack(activeZoneName_);
+    if(activeZone_ != nullptr)
+        return activeZone_->GetNavigator()->GetTrack();
+    else
+        return nullptr;
 }
 
 void Widget::RequestUpdate()
@@ -1216,10 +1137,10 @@ void Widget::RequestUpdate()
     if( ! isModifier_ )
         modifiers = surface_->GetPage()->GetModifiers();
     
-    if(surface_->GetIsTouched(activeZoneName_) && trackTouchedActions_.count(activeZoneName_) > 0 && trackTouchedActions_[activeZoneName_].count(modifiers) > 0 && trackTouchedActions_[activeZoneName_][modifiers].size() > 0)
-            trackTouchedActions_[activeZoneName_][modifiers][0]->RequestUpdate();
-    else if(actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count(modifiers) > 0 && actions_[activeZoneName_][modifiers].size() > 0)
-            actions_[activeZoneName_][modifiers][0]->RequestUpdate();
+    if(activeZone_ != nullptr && activeZone_->GetIsTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
+            trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
+    else if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+            actions_[activeZone_][modifiers][0]->RequestUpdate();
 }
 
 void Widget::DoAction(double value)
@@ -1241,11 +1162,11 @@ void Widget::DoAction(double value)
         // GetSurface()->GetPage()->InputReceived(this, value);
     }
 
-    if(actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count(modifiers) > 0)
-        for(auto action : actions_[activeZoneName_][modifiers])
+    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
+        for(auto action : actions_[activeZone_][modifiers])
             action->Do(value, this);
-    else if(modifiers != "" && actions_.count(activeZoneName_) > 0 && actions_[activeZoneName_].count("") > 0)
-        for(auto action : actions_[activeZoneName_][""])
+    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
+        for(auto action : actions_[activeZone_][""])
             action->Do(value, this);
 }
 
@@ -1256,7 +1177,8 @@ void Widget::DoRelativeAction(double value)
 
 void Widget::SetIsTouched(bool isZoneTouched)
 {
-    surface_->SetIsTouched(activeZoneName_, isZoneTouched);
+    if(activeZone_ != nullptr)
+        activeZone_->SetIsTouched(isZoneTouched);
 }
 
 void  Widget::SetValue(double value)
@@ -1346,6 +1268,9 @@ Zone::Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int 
 void Zone::Activate()
 {
     surface_->WidgetsGoZone(GetName());
+    
+    for(auto includedZone : includedZones_)
+        surface_->WidgetsGoZone(includedZone->GetName());
 }
 
 void Zone::Deactivate()
@@ -1727,7 +1652,7 @@ string ControlSurface::GetLocalZoneAlias(string zoneName)
         return page_->GetZoneAlias(zoneName);
 }
 
-bool ControlSurface::AddZone(Zone* zone)
+void ControlSurface::AddZone(Zone* zone)
 {
     if(zones_.count(zone->GetName()) > 0)
     {
@@ -1735,13 +1660,18 @@ bool ControlSurface::AddZone(Zone* zone)
         snprintf(buffer, sizeof(buffer), "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
                 zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
         DAW::ShowConsoleMsg(buffer);
-        return false;
     }
     else
     {
-        zones_[zone->GetName()] = zone;
+        string zoneName = zone->GetName();
+        zones_[zoneName] = zone;
         zonesInZoneFile_[zone->GetSourceFilePath()].push_back(zone);
-        return true;
+        
+        if((zoneName.compare(0, 4, "Send")) == 0)
+            GetSendsActivationManager()->SetNumSendSlots(GetSendsActivationManager()->GetNumSendSlots() + 1);
+        if((zoneName.compare(0, 6, "FXMenu")) == 0)
+            GetFXActivationManager()->SetNumFXSlots(GetFXActivationManager()->GetNumFXSlots() + 1);
+
     }
 }
 
