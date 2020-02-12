@@ -514,7 +514,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
     
     FeedbackProcessor* feedbackProcessor = nullptr;
 
-    if(tokenLines.size() > 1 && has_FB_Processor)
+    if(tokenLines.size() > 0 && has_FB_Processor)
     {
         int size = tokenLines[FB_ProcessorIndex].size();
         
@@ -549,7 +549,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             if(size == 8)
                 feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[FB_ProcessorIndex][7]));
         }
-        else if(widgetClass == "FB_NovationLaunchpadMiniRGB7Bit" && size== 4)
+        else if(widgetClass == "FB_NovationLaunchpadMiniRGB7Bit" && size == 4)
         {
             feedbackProcessor = new NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(surface, new MIDI_event_ex_t(strToHex(byte1), strToHex(byte2), strToHex(byte3)));
         }
