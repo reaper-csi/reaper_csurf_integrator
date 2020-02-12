@@ -329,7 +329,7 @@ static void BuildExpandedZones(string includedZoneName, string filePath, Control
     string expandedZoneToken;
 
     while (getline(expandedZone, expandedZoneToken, '|'))
-    expandedZoneTokens.push_back(expandedZoneToken);
+        expandedZoneTokens.push_back(expandedZoneToken);
 
     if(expandedZoneTokens.size() > 1)
     {
@@ -408,7 +408,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
         ifstream file(filePath);
         
         bool isTemplate = false;
-        
+        bool isTemplateAndDefintion = false;
+
         for (string line; getline(file, line) ; )
         {
             line = regex_replace(line, regex(TabChars), " ");
@@ -430,17 +431,27 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
                 {
                     zoneName = tokens[1];
                     
-                    if(tokens[1].size() > 1 && tokens[1].back() == '|')
+                    if(zoneName.size() > 1 && zoneName.back() == '|')
                         isTemplate = true;
-                                    }
+                    else if(regex_search(zoneName, regex("[|][0-9]+[-][0-9]+")))
+                        isTemplateAndDefintion = true;
+                }
              
                 if(tokens[0] == "ZoneEnd")
                 {
                     isTemplate = false;
+                    isTemplateAndDefintion = false;
                     continue;
                 }
                 
-                if(isTemplate)
+                if(isTemplateAndDefintion)
+                {
+                    zoneDefinitions[zoneName].push_back(tokens);
+                    
+                    string zoneTemplateName = regex_replace(zoneName, regex("[|][0-9]+[-][0-9]+"), "|", regex_constants::format_default);
+                    zoneTemplates[zoneTemplateName].push_back(tokens);
+                }
+                else if(isTemplate)
                     zoneTemplates[zoneName].push_back(tokens);
                 else
                     zoneDefinitions[zoneName].push_back(tokens);
