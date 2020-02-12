@@ -322,39 +322,32 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     }
 }
 
-static void BuildIncludedZone(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildExpandedZones(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
 {
-    if(includedZoneName.back() == '|')
+    istringstream expandedZone(includedZoneName);
+    vector<string> expandedZoneTokens;
+    string expandedZoneToken;
+
+    while (getline(expandedZone, expandedZoneToken, '|'))
+    expandedZoneTokens.push_back(expandedZoneToken);
+
+    if(expandedZoneTokens.size() > 1)
     {
-        if(zoneTemplates.count(includedZoneName) > 0)
-            BuildZone(zoneTemplates[includedZoneName], filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
-    }
-    else // This expands constructs like Channel|1-8 into multiple Zones
-    {
-        istringstream expandedZone(includedZoneName);
-        vector<string> expandedZoneTokens;
-        string expandedZoneToken;
+        string zoneBaseName = "";
+        int rangeBegin = 0;
+        int rangeEnd = 1;
         
-        while (getline(expandedZone, expandedZoneToken, '|'))
-            expandedZoneTokens.push_back(expandedZoneToken);
+        zoneBaseName = expandedZoneTokens[0];
         
-        if(expandedZoneTokens.size() > 1)
+        if(zoneTemplates.count(zoneBaseName + "|") > 0)
         {
-            string zoneBaseName = "";
-            int rangeBegin = 0;
-            int rangeEnd = 1;
+            istringstream range(expandedZoneTokens[1]);
+            vector<string> rangeTokens;
+            string rangeToken;
             
-            zoneBaseName = expandedZoneTokens[0];
+            while (getline(range, rangeToken, '-'))
+                rangeTokens.push_back(rangeToken);
             
-            if(zoneTemplates.count(zoneBaseName + "|") > 0)
-            {
-                istringstream range(expandedZoneTokens[1]);
-                vector<string> rangeTokens;
-                string rangeToken;
-                
-                while (getline(range, rangeToken, '-'))
-                    rangeTokens.push_back(rangeToken);
-                
                 if(rangeTokens.size() > 1)
                 {
                     rangeBegin = stoi(rangeTokens[0]);
@@ -369,28 +362,38 @@ static void BuildIncludedZone(string includedZoneName, string filePath, ControlS
                         for(auto line : zoneTemplates[zoneBaseName + "|"])
                         {
                             zoneLines.push_back(vector<string>());
-
+                            
                             for(auto token : line)
                             {
                                 if(token == "IncludedZones")
                                     isInIncludedZonesSection = true;
                                 
-                                if(token == "IncludedZonesEnd")
-                                    isInIncludedZonesSection = false;
+                                    if(token == "IncludedZonesEnd")
+                                        isInIncludedZonesSection = false;
                                 
-                                if(isInIncludedZonesSection)
-                                    zoneLines.back().push_back(token);
-                                else
-                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                            }
+                                        if(isInIncludedZonesSection)
+                                            zoneLines.back().push_back(token);
+                                            else
+                                                zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                                                }
                         }
                         
                         BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
                     }
                 }
-            }
         }
     }
+}
+
+static void BuildIncludedZone(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+{
+    if(includedZoneName.back() == '|')
+    {
+        if(zoneTemplates.count(includedZoneName) > 0)
+            BuildZone(zoneTemplates[includedZoneName], filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
+    }
+    else if(regex_search(includedZoneName, regex("[|][0-9]+[-][0-9]+"))) // This expands constructs like Channel|1-8 into multiple Zones
+        BuildExpandedZones(includedZoneName, filePath, surface, widgets, parentZone);
 }
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
@@ -453,7 +456,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
     }
     
     for(auto [zoneName, zoneLines] : zoneDefinitions)
-        BuildZone(zoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zones -- parentZone == nullptr, track ptr == nullptr
+    {
+        if(regex_search(zoneName, regex("[|][0-9]+[-][0-9]+"))) // This expands constructs like PanWidth|1-8 into multiple Zones
+            BuildExpandedZones(zoneName, filePath, surface, widgets, nullptr);
+        else
+            BuildZone(zoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zones -- parentZone == nullptr, track ptr == nullptr
+    }
 }
 
 static int strToHex(string valueStr)
