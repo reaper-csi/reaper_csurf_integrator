@@ -322,9 +322,9 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     }
 }
 
-static void BuildExpandedZones(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildExpandedZones(string zoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
 {
-    istringstream expandedZone(includedZoneName);
+    istringstream expandedZone(zoneName);
     vector<string> expandedZoneTokens;
     string expandedZoneToken;
 
@@ -368,14 +368,14 @@ static void BuildExpandedZones(string includedZoneName, string filePath, Control
                                 if(token == "IncludedZones")
                                     isInIncludedZonesSection = true;
                                 
-                                    if(token == "IncludedZonesEnd")
-                                        isInIncludedZonesSection = false;
-                                
-                                        if(isInIncludedZonesSection)
-                                            zoneLines.back().push_back(token);
-                                            else
-                                                zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                                                }
+                                if(token == "IncludedZonesEnd")
+                                    isInIncludedZonesSection = false;
+                            
+                                if(isInIncludedZonesSection)
+                                    zoneLines.back().push_back(token);
+                                else
+                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
+                            }
                         }
                         
                         BuildZone(zoneLines, filePath, surface, widgets, parentZone, i);
@@ -449,7 +449,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
                     zoneDefinitions[zoneName].push_back(tokens);
                     
                     string zoneTemplateName = regex_replace(zoneName, regex("[|][0-9]+[-][0-9]+"), "|", regex_constants::format_default);
-                    zoneTemplates[zoneTemplateName].push_back(tokens);
+                    vector<string> templateTokens;
+                    templateTokens.assign(tokens.begin(), tokens.end());
+                    for(int i = 0; i < templateTokens.size(); i++)
+                        if(regex_search(templateTokens[i], regex("[|][0-9]+[-][0-9]+")))
+                            templateTokens[i] = regex_replace(templateTokens[i], regex("[|][0-9]+[-][0-9]+"), "|", regex_constants::format_default);
+                    zoneTemplates[zoneTemplateName].push_back(templateTokens);
                 }
                 else if(isTemplate)
                     zoneTemplates[zoneName].push_back(tokens);
