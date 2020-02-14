@@ -398,10 +398,10 @@ static void BuildIncludedZone(string includedZoneName, string filePath, ControlS
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
+    string zoneName = "";
     zoneTemplates.clear();
     zoneDefinitions.clear();
     int lineNumber = 0;
-    string zoneName = "";
     
     try
     {
@@ -414,6 +414,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
         {
             line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
+            
+            line = line.substr(0, line.find("//")); // remove trailing commewnts
             
             lineNumber++;
             
