@@ -208,6 +208,15 @@ public:
             activeZone_ = zonesAvailable_[zoneName];
     }
     
+    void ActivateNoActionForZone(string zoneName)
+    {
+        if(zonesAvailable_.count(zoneName) > 0 && zonesAvailable_.count("NoAction") > 0)
+        {
+            activeZone_ = zonesAvailable_["NoAction"];
+            Reset();
+        }
+    }
+    
     void Deactivate(Zone* zone)
     {
         if(zone == activeZone_ && zonesAvailable_.count("Home") > 0)
@@ -800,7 +809,12 @@ public:
             zones_[zoneName]->Activate();
     }
 
-    
+    void ActivateNoActionForZone(string zoneName)
+    {
+        for(auto widget : widgets_)
+            widget->ActivateNoActionForZone(zoneName);
+    }
+
     string GetZoneAlias(string zoneName)
     {
         if(zones_.count(zoneName) > 0)

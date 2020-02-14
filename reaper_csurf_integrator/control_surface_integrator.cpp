@@ -1445,9 +1445,8 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
             }
             else
             {
-                //zone->ActivateNoAction(surface_, i);
+                surface_->ActivateNoActionForZone(zone->GetName());
                 activeSendZones_.push_back(zone);
-                //zone->SetWidgetsToZero();
             }
         }
     }
@@ -1570,8 +1569,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             }
             else
             {
-                //zone->ActivateNoAction(i);
-                //zone->SetWidgetsToZero();
+                surface_->ActivateNoActionForZone(zone->GetName());
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
         }
@@ -1645,6 +1643,13 @@ void ControlSurface::InitZones(string zoneFolder)
         
         for(auto zoneFilename : zoneFilesToProcess)
             ProcessZoneFile(zoneFilename, this, widgets_);
+        
+        Zone * zone = new Zone("", this, nullptr, 0, "NoAction", "", "NoAction");
+        
+        vector<string> params;
+        
+        for(auto widget : widgets_)
+            widget->AddAction(zone, "", new NoAction("NoAction", widget, zone, params));
     }
     catch (exception &e)
     {
