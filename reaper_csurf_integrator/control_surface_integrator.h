@@ -1131,7 +1131,6 @@ private:
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
-    vector<MediaTrack*> tracks_;
     vector<MediaTrack*> unpinnedTracks_;
     vector<Navigator*> navigators_;
     
@@ -1142,7 +1141,7 @@ public:
     bool GetFollowMCP() { return followMCP_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
-    int  GetNumTracks() { return tracks_.size(); }
+    int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
     
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
@@ -1190,7 +1189,7 @@ public:
     
     MediaTrack* GetTrackFromId(int trackNumber)
     {
-        if(DAW::CSurf_NumTracks(followMCP_) >= trackNumber)
+        if(GetNumTracks() >= trackNumber)
             return DAW::CSurf_TrackFromID(trackNumber, followMCP_);
         else
             return nullptr;
@@ -1198,19 +1197,16 @@ public:
 
     void RebuildTrackList()
     {
-        tracks_.clear();
+        unpinnedTracks_.clear();
         
         // Get Visible Tracks
-        for (int i = 1; i <= DAW::CSurf_NumTracks(followMCP_); i++)
+        for (int i = 1; i <= GetNumTracks(); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
             if(DAW::IsTrackVisible(track, followMCP_))
-                tracks_.push_back(track);
+                unpinnedTracks_.push_back(track);
         }
-        
-        // clone the tracks
-        unpinnedTracks_.assign(tracks_.begin(), tracks_.end());
 
         for(auto navigator : navigators_)
         {
