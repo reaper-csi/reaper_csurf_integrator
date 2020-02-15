@@ -26,7 +26,6 @@ public:
     virtual int Extended(int call, void *parm1, void *parm2, void *parm3) override;
     virtual bool GetTouchState(MediaTrack *trackid, int touchedControl) override;
     virtual void Run() override;
-    virtual void SetTrackListChange() override;
     const char *GetTypeString() override;
     const char *GetDescString() override;
     const char *GetConfigString() override; // string of configuration data
