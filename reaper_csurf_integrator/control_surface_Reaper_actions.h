@@ -766,7 +766,7 @@ public:
         
         Page* page = GetWidget()->GetSurface()->GetPage();
         
-        for(int i = 0; i < page->GetTrackNavigationManager()->GetNumTracks(); i++)
+        for(int i = 1; i <= page->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
             MediaTrack* currentTrack = page->GetTrackNavigationManager()->GetTrackFromId(i);
            
