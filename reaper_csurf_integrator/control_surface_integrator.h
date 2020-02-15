@@ -1131,7 +1131,7 @@ private:
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0;
     int folderTrackOffset_ = 0;
-    vector<MediaTrack*> unpinnedTracks_;
+    vector<MediaTrack*> tracks_;
     vector<Navigator*> navigators_;
     
 public:
@@ -1181,8 +1181,8 @@ public:
     
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
-        if(unpinnedTracks_.size() > channelNumber + trackOffset_)
-            return unpinnedTracks_[channelNumber + trackOffset_];
+        if(tracks_.size() > channelNumber)
+            return tracks_[channelNumber];
         else
             return nullptr;
     }
@@ -1197,15 +1197,22 @@ public:
 
     void RebuildTrackList()
     {
-        unpinnedTracks_.clear();
+        int top = GetNumTracks() - navigators_.size();
+        
+        if(top < 0)
+            trackOffset_ = 0;
+        else if(trackOffset_ >  top)
+            trackOffset_ = top;
+
+        tracks_.clear();
         
         // Get Visible Tracks
-        for (int i = 1; i <= GetNumTracks(); i++)
+        for (int i = 1 + trackOffset_; i <= GetNumTracks() && (i - trackOffset_) <= navigators_.size(); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
             if(DAW::IsTrackVisible(track, followMCP_))
-                unpinnedTracks_.push_back(track);
+                tracks_.push_back(track);
         }
 
         for(auto navigator : navigators_)
@@ -1213,18 +1220,11 @@ public:
             if(navigator->GetIsChannelPinned())
             {
                 if(DAW::ValidateTrackPtr(navigator->GetTrack()))
-                    remove(unpinnedTracks_.begin(), unpinnedTracks_.end(), navigator->GetTrack());
+                    remove(tracks_.begin(), tracks_.end(), navigator->GetTrack());
                 else
                     navigator->Unpin();
             }
         }
-        
-        int top = GetNumTracks() - navigators_.size();
-        
-        if(top < 0)
-            trackOffset_ = 0;
-        else if(trackOffset_ >  top)
-            trackOffset_ = top;
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
