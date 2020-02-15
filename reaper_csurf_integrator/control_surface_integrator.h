@@ -4,7 +4,7 @@
 //
 //
 
-// Note for Windows environments:
+//  Note for Windows environments:
 //  use std::byte for C++17 byte
 //  use ::byte for Windows byte
 
@@ -1217,13 +1217,9 @@ public:
             if(navigator->GetIsChannelPinned())
             {
                 if(DAW::ValidateTrackPtr(navigator->GetTrack()))
-                {
                     remove(unpinnedTracks_.begin(), unpinnedTracks_.end(), navigator->GetTrack());
-                }
                 else
-                {
                     navigator->Unpin();
-                }
             }
         }
         
@@ -1381,16 +1377,13 @@ public:
             surface->RequestUpdate();
     }
     
-    void ResetAll()
+    void Reset()
     {
         for(auto surface : surfaces_)
+        {
             surface->ResetAll();
-    }
-
-    void ResetAllWidgets()
-    {
-        for(auto surface : surfaces_)
             surface->ResetAllWidgets();
+        }
     }
     
     void AddSurface(ControlSurface* surface)
@@ -1658,10 +1651,7 @@ public:
         oscOutMonitor_ = false;
 
         if(pages_.size() > 0)
-        {
-            pages_[currentPageIndex_]->ResetAll();
-            pages_[currentPageIndex_]->ResetAllWidgets();
-        }
+            pages_[currentPageIndex_]->Reset();
     }
     
     void Init();

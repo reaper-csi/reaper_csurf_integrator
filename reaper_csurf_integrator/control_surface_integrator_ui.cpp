@@ -96,11 +96,6 @@ void CSurfIntegrator::Run()
         TheManager->Run();
 }
 
-void CSurfIntegrator::SetTrackListChange()
-{
-    //TheManager->TrackListChanged();
-}
-
 const char *CSurfIntegrator::GetTypeString()
 {
     return "CSI";
