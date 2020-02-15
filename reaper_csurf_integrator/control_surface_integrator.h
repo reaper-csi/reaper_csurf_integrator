@@ -1181,8 +1181,8 @@ public:
     
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
-        if(tracks_.size() > channelNumber)
-            return tracks_[channelNumber];
+        if(tracks_.size() > channelNumber + trackOffset_)
+            return tracks_[channelNumber + trackOffset_];
         else
             return nullptr;
     }
@@ -1207,7 +1207,7 @@ public:
         tracks_.clear();
         
         // Get Visible Tracks
-        for (int i = 1 + trackOffset_; i <= GetNumTracks() && (i - trackOffset_) <= navigators_.size(); i++)
+        for (int i = 1; i <= GetNumTracks(); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
