@@ -1190,8 +1190,8 @@ public:
     
     MediaTrack* GetTrackFromId(int trackNumber)
     {
-        if(tracks_.size() > trackNumber)
-            return tracks_[trackNumber];
+        if(DAW::CSurf_NumTracks(followMCP_) >= trackNumber)
+            return DAW::CSurf_TrackFromID(trackNumber, followMCP_);
         else
             return nullptr;
     }
