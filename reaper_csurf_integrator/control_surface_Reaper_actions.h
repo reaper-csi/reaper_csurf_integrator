@@ -756,6 +756,8 @@ public:
 
     virtual void Do(double value, Widget* sender) override
     {
+        // GAW TBD  fix highest track bug 
+        
         if(value == 0.0) return; // ignore button releases
 
         int currentlySelectedCount = 0;
