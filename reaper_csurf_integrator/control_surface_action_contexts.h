@@ -93,7 +93,8 @@ public:
     
     virtual void Do(double value, Widget* sender) override
     {
-        DAW::SendCommandMessage(commandId_);
+        if(value != 0)
+            DAW::SendCommandMessage(commandId_);
     }
 };
 
