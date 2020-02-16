@@ -1138,7 +1138,6 @@ public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages) {}
     
     Page* GetPage() { return page_; }
-    bool GetFollowMCP() { return followMCP_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
