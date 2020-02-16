@@ -1048,7 +1048,7 @@ MediaTrack* FocusedFXNavigator::GetTrack()
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
     {
         if(trackNumber > 0)
-            return DAW::CSurf_TrackFromID(trackNumber, zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+            return zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
         else
             return nullptr;
     }
@@ -1605,7 +1605,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1)
         if(trackNumber > 0)
-            focusedTrack = DAW::CSurf_TrackFromID(trackNumber, surface_->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+            focusedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     
     for(auto zone : activeFocusedFXZones_)
     {
@@ -2658,7 +2658,7 @@ static WDL_DLGRET dlgProcNewZoneFile(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 {
                     currentFXIndex = focusedFXIndex;
                     
-                    focusedFXTrack = DAW::CSurf_TrackFromID(trackNumber, currentSurface->GetPage()->GetTrackNavigationManager()->GetFollowMCP());
+                    focusedFXTrack = currentSurface->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
                 
                     DAW::TrackFX_GetFXName(focusedFXTrack, focusedFXIndex, buffer, sizeof(buffer));
 
