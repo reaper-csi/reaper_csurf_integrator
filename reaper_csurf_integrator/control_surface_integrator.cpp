@@ -1182,10 +1182,10 @@ void Widget::DoAction(double value)
 
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
-            action->Do(value, this);
+            action->DoAction(value, this);
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
-            action->Do(value, this);
+            action->DoAction(value, this);
 }
 
 void Widget::DoRelativeAction(double value)
