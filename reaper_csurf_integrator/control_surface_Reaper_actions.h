@@ -930,7 +930,7 @@ public:
     {
         bool gotOne = false;
         
-        for(int i = 0; i < GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
+        for(int i = 0; i <= GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
         {
             MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(i);
             

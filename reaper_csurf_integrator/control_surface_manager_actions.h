@@ -212,7 +212,7 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 0; i < GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
+            for(int i = 0; i <= GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
                 if(DAW::GetMediaTrackInfo_Value(GetPage()->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
@@ -224,8 +224,8 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > GetPage()->GetTrackNavigationManager()->GetNumTracks() - 1)
-                trackIndex = GetPage()->GetTrackNavigationManager()->GetNumTracks() - 1;
+            if(trackIndex > GetPage()->GetTrackNavigationManager()->GetNumTracks())
+                trackIndex = GetPage()->GetTrackNavigationManager()->GetNumTracks();
             
             DAW::SetOnlyTrackSelected(GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
         }
