@@ -332,6 +332,8 @@ protected:
     int GetSlotIndex();
     
     virtual void RequestTrackUpdate(MediaTrack* track) {}
+    virtual void Do(string value, Widget* sender) {}
+    virtual void Do(double value, Widget* sender) {}
     
 public:
     virtual ~Action() {}
@@ -362,9 +364,6 @@ public:
         if(supportsRGB_)
             GetWidget()->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
-    
-    virtual void Do(string value, Widget* sender) {}
-    virtual void Do(double value, Widget* sender) {}
     
     void SetCurrentRGB(rgb_color newColor)
     {
