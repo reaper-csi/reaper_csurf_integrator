@@ -1248,13 +1248,36 @@ void Action::DoAction(double value, Widget* sender)
 {
     value = isInverted_ == false ? value : 1.0 - value;
     
-    if(shouldToggle_)
+    if(rangeValues_.size() == 2)
+    {
+        if(value > rangeValues_[1])
+            value = rangeValues_[1];
+
+        if(value < rangeValues_[0])
+            value = rangeValues_[0];
+    }
+    
+    if(steppedValues_.size() > 0 && value != 0.0)
+    {
+        if(steppedValuesIndex_ == steppedValues_.size() - 1)
+        {
+            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrapper if 1st value is lower
+                steppedValuesIndex_ = 0;
+        }
+        else
+            steppedValuesIndex_++;
+        
+        Do(steppedValues_[steppedValuesIndex_], sender);
+    }
+    else if(shouldToggle_)
     {
         if(value != 0.0)
             Do( ! GetCurrentValue(), sender);
     }
     else
+    {
         Do(value, sender);
+    }
     
     // GAW TBD -- this will need to be changed
     /*

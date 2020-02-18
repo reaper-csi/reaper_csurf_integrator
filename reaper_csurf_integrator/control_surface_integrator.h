@@ -22,6 +22,7 @@
 #include <iomanip>
 #include <fstream>
 #include <regex>
+#include <cmath>
 
 #ifdef _WIN32
 #include "oscpkt.hh"
@@ -248,6 +249,8 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    int steppedValuesIndex_ = 0;
+
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     
@@ -307,6 +310,32 @@ private:
                 
                 if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
                     steppedValues_.push_back(stod(strVal));
+                else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
+                {
+                    istringstream range(strVal);
+                    vector<string> range_tokens;
+                    string range_token;
+                    
+                    while (getline(range, range_token, '-'))
+                        range_tokens.push_back(range_token);
+
+                    if(range_tokens.size() == 2)
+                    {
+                        double firstValue = stod(range_tokens[0]);
+                        double lastValue = stod(range_tokens[1]);
+
+                        if(lastValue > firstValue)
+                        {
+                            rangeValues_.push_back(firstValue);
+                            rangeValues_.push_back(lastValue);
+                        }
+                        else
+                        {
+                            rangeValues_.push_back(lastValue);
+                            rangeValues_.push_back(firstValue);
+                        }
+                    }
+                }
             }
         }
     }
@@ -323,7 +352,8 @@ protected:
     Zone* const zone_;
     
     vector<double> steppedValues_;
-    
+    vector<double> rangeValues_;
+
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     double delayAmount_ = 0.0;
@@ -380,9 +410,29 @@ public:
         else return blankColor;
     }
     
+    void SetSteppedValueIndex(double value)
+    {
+        if(steppedValues_.size() > 0)
+        {
+            int index = 0;
+            double delta = 100000000.0;
+            
+            for(int i = 0; i < steppedValues_.size(); i++)
+                if(abs(steppedValues_[i] - value) < delta)
+                {
+                    delta = abs(steppedValues_[i] - value);
+                    index = i;
+                }
+           
+            steppedValuesIndex_ = index;
+        }
+    }
+    
     void SetWidgetValue(Widget* widget, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
+     
+        SetSteppedValueIndex(value);
         
         widget->SetValue(value);
         
@@ -395,6 +445,8 @@ public:
     void SetWidgetValue(Widget* widget, int param, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
+        
+        SetSteppedValueIndex(value);
         
         widget->SetValue(param, value);
         
