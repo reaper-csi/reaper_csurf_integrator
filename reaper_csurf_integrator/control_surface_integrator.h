@@ -186,9 +186,6 @@ private:
     bool isModifier_ = false;
     Zone* activeZone_ = nullptr;
     map<string, Zone*> zonesAvailable_;
-    double lastValue_ = 0.0;
-    string lastStringValue_ = "";
-
  
     map<Zone*, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
     map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
@@ -249,6 +246,9 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    double lastValue_ = 0.0;
+    string lastStringValue_ = "";
+
     int steppedValuesIndex_ = 0;
 
     bool supportsRGB_ = false;
@@ -387,6 +387,7 @@ public:
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void DoAction(double value, Widget* sender);
+    virtual void DoRelativeAction(double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
     virtual void RequestUpdate()
@@ -434,6 +435,8 @@ public:
      
         SetSteppedValueIndex(value);
         
+        lastValue_ = value;
+       
         widget->SetValue(value);
         
         currentRGBIndex_ = value == 0 ? 0 : 1;
@@ -448,6 +451,8 @@ public:
         
         SetSteppedValueIndex(value);
         
+        lastValue_ = value;
+
         widget->SetValue(param, value);
         
         currentRGBIndex_ = value == 0 ? 0 : 1;
