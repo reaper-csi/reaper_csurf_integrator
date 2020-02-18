@@ -1190,7 +1190,29 @@ void Widget::DoAction(double value)
 
 void Widget::DoRelativeAction(double value)
 {
-    DoAction(lastValue_ + value);
+    if( TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    string modifiers = "";
+    
+    if( ! isModifier_)
+    {
+        modifiers = surface_->GetPage()->GetModifiers();
+        
+        // GAW TBD LearnMode
+        // GetSurface()->GetPage()->InputReceived(this, value);
+    }
+    
+    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
+        for(auto action : actions_[activeZone_][modifiers])
+            action->DoRelativeAction(value, this);
+    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
+        for(auto action : actions_[activeZone_][""])
+            action->DoRelativeAction(value, this);
 }
 
 void Widget::SetIsTouched(bool isZoneTouched)
@@ -1201,13 +1223,11 @@ void Widget::SetIsTouched(bool isZoneTouched)
 
 void  Widget::SetValue(double value)
 {
-    lastValue_ = value;
     feedbackProcessor_->SetValue(value);
 }
 
 void  Widget::SetValue(int mode, double value)
 {
-    lastValue_ = value;
     feedbackProcessor_->SetValue(mode, value);
 }
 
@@ -1252,7 +1272,7 @@ void Action::DoAction(double value, Widget* sender)
     {
         if(value > rangeValues_[1])
             value = rangeValues_[1];
-
+        
         if(value < rangeValues_[0])
             value = rangeValues_[0];
     }
@@ -1276,6 +1296,45 @@ void Action::DoAction(double value, Widget* sender)
     }
     else
     {
+        Do(value, sender);
+    }
+    
+    // GAW TBD -- this will need to be changed
+    /*
+     if( ! GetWidget()->GetIsModifier())
+     GetPage()->ActionPerformed(GetWidgetActionManager(), this);
+     */
+}
+
+void Action::DoRelativeAction(double value, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+    {
+        if(value < 0.0)
+            steppedValuesIndex_--;
+        if(steppedValuesIndex_ < 0)
+            steppedValuesIndex_ = 0;
+            
+        if(value > 0.0)
+            steppedValuesIndex_++;
+        if(steppedValuesIndex_ > steppedValues_.size() - 1)
+            steppedValuesIndex_ = steppedValues_.size() - 1;
+        
+        Do(steppedValues_[steppedValuesIndex_], sender);
+    }
+    else
+    {
+        value = lastValue_ + value;
+        
+        if(rangeValues_.size() == 2)
+        {
+            if(value > rangeValues_[1])
+                value = rangeValues_[1];
+            
+            if(value < rangeValues_[0])
+                value = rangeValues_[0];
+        }
+
         Do(value, sender);
     }
     
