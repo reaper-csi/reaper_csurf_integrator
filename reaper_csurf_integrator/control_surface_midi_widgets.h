@@ -242,9 +242,10 @@ public:
         lastG = g;
         lastB = b;
         
-        SendMidiMessage(0x91, midiFeedbackMessage1_->midi_message[1] , r / 2);  // only 127 bit allowed in Midi byte 3
-        SendMidiMessage(0x92, midiFeedbackMessage1_->midi_message[1] , g / 2);
-        SendMidiMessage(0x93, midiFeedbackMessage1_->midi_message[1] , b / 2);
+        SendMidiMessage(0x90, midiFeedbackMessage1_->midi_message[1], 0x7f);
+        SendMidiMessage(0x91, midiFeedbackMessage1_->midi_message[1], r / 2);  // only 127 bit allowed in Midi byte 3
+        SendMidiMessage(0x92, midiFeedbackMessage1_->midi_message[1], g / 2);
+        SendMidiMessage(0x93, midiFeedbackMessage1_->midi_message[1], b / 2);
     }
 };
 
