@@ -139,6 +139,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EncoderPlainReverse_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~EncoderPlainReverse_Midi_CSIMessageGenerator() {}
+    EncoderPlainReverse_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
+    {
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        double value = 1.0 / 64.0;
+        
+        if (! (midiMessage->midi_message[2] & 0x40))
+            value = -value;
+        
+        widget_->DoRelativeAction(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FeedbackProcessors
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TwoState_Midi_FeedbackProcessor : public Midi_FeedbackProcessor

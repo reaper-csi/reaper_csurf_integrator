@@ -694,6 +694,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             new Encoder_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(byte1), strToHex(byte2), strToHex(byte3)));
         else if(widgetClass == "EncoderPlain" && size == 4)
             new EncoderPlain_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(byte1), strToHex(byte2), strToHex(byte3)));
+        else if(widgetClass == "EncoderPlainReverse" && size == 4)
+            new EncoderPlainReverse_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(byte1), strToHex(byte2), strToHex(byte3)));
     }
 }
 
