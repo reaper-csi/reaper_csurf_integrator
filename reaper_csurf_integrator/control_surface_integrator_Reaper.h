@@ -101,6 +101,8 @@ public:
 
     static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
     
+    static bool GetLastTouchedFX(int* tracknumberOut, int* fxnumberOut, int* paramnumberOut) {  return ::GetLastTouchedFX(tracknumberOut, fxnumberOut, paramnumberOut); }
+
     static void CSurf_OnArrow(int whichdir, bool wantzoom) { ::CSurf_OnArrow(whichdir, wantzoom); }
     
     static void CSurf_OnRew(int seekplay) { ::CSurf_OnRew(seekplay); }

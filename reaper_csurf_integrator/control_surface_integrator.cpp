@@ -801,6 +801,7 @@ void Manager::InitActionDictionary()
     actions_["FXNameDisplay"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXNameDisplay(name, widget, zone, params); };
     actions_[FXParam] =                             [](string name, Widget* widget, Zone* zone, vector<string> params) { return new class FXParam(name, widget, zone, params); };
     actions_["FXParamRelative"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXParamRelative(name, widget, zone, params); };
+    actions_["FocusedFXParam"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FocusedFXParam(name, widget, zone, params); };
     actions_["FXParamNameDisplay"] =                [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXParamNameDisplay(name, widget, zone, params); };
     actions_["FXParamValueDisplay"] =               [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXParamValueDisplay(name, widget, zone, params); };
     actions_["FXGainReductionMeter"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXGainReductionMeter(name, widget, zone, params); };
@@ -1161,11 +1162,15 @@ void Widget::RequestUpdate()
     
     if( ! isModifier_ )
         modifiers = surface_->GetPage()->GetModifiers();
-    
-    if(activeZone_ != nullptr && activeZone_->GetIsTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
-            trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
-    else if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+    if(activeZone_ != nullptr)
+    {
+        if(activeZone_->GetIsTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
+                trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
+        else if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
             actions_[activeZone_][modifiers][0]->RequestUpdate();
+        else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0 && actions_[activeZone_][""].size() > 0)
+            actions_[activeZone_][""][0]->RequestUpdate();
+    }
 }
 
 void Widget::DoAction(double value)
@@ -1187,12 +1192,15 @@ void Widget::DoAction(double value)
         // GetSurface()->GetPage()->InputReceived(this, value);
     }
 
-    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
-        for(auto action : actions_[activeZone_][modifiers])
-            action->DoAction(value, this);
-    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
-        for(auto action : actions_[activeZone_][""])
-            action->DoAction(value, this);
+    if(activeZone_ != nullptr)
+    {
+        if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
+            for(auto action : actions_[activeZone_][modifiers])
+                action->DoAction(value, this);
+        else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
+            for(auto action : actions_[activeZone_][""])
+                action->DoAction(value, this);
+    }
 }
 
 void Widget::DoRelativeAction(double value)
