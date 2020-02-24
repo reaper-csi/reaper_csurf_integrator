@@ -38,7 +38,56 @@ public:
             double value = DAW::TrackFX_GetParam(track, GetSlotIndex(), fxParamIndex_, &min, &max);
             value +=  relativeValue;
             
+            if(value < min) value = min;
+            if(value > max) value = max;
+            
             DAW::TrackFX_SetParam(track, GetSlotIndex(), fxParamIndex_, value);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXParam : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        int trackNum = 0;
+        int fxSlotNum = 0;
+        int fxParamNum = 0;
+        
+        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+        {
+            if(track == GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            {
+                double min = 0.0;
+                double max = 0.0;
+                double value = DAW::TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max);
+
+                SetWidgetValue(GetWidget(), value);
+            }
+        }
+    }
+    
+public:
+    FocusedFXParam(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        int trackNum = 0;
+        int fxSlotNum = 0;
+        int fxParamNum = 0;
+
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+            {
+                if(track == widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+                {
+                    DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
+                }
+            }
         }
     }
 };
