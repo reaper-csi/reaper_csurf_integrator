@@ -938,7 +938,7 @@ public:
         
         int rgbVal = GetColorIntFromRGB(r, g, b);
         
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0] + 1, midiFeedbackMessage1_->midi_message[1], rgbVal);
+        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], rgbVal);
     }
 };
 
