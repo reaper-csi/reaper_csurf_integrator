@@ -47,11 +47,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXParam : public TrackAction
+class FocusedFXParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    void RequestTrackUpdate(MediaTrack* track) override
+    void RequestUpdate() override
     {
         int trackNum = 0;
         int fxSlotNum = 0;
@@ -59,7 +59,7 @@ protected:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(track == GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
             {
                 double min = 0.0;
                 double max = 0.0;
@@ -71,7 +71,7 @@ protected:
     }
     
 public:
-    FocusedFXParam(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    FocusedFXParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
     void Do(double value, Widget* sender) override
     {
@@ -79,16 +79,9 @@ public:
         int fxSlotNum = 0;
         int fxParamNum = 0;
 
-        if(MediaTrack* track = GetWidget()->GetTrack())
-        {
-            if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            {
-                if(track == widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
-                {
-                    DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
-                }
-            }
-        }
+        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+            if(MediaTrack* track = widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+                DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
     }
 };
 
