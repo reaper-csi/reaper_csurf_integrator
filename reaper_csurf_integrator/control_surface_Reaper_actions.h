@@ -443,7 +443,7 @@ class FXParamNameDisplay : public FXAction
 {
 public:
     FXParamNameDisplay(string name, Widget* widget, Zone* zone, vector<string> params) : FXAction(name, widget, zone, params) {}
-
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
@@ -459,7 +459,7 @@ class FXParamValueDisplay : public FXAction
 {
 public:
     FXParamValueDisplay(string name, Widget* widget, Zone* zone, vector<string> params) : FXAction(name, widget, zone, params) {}
-
+    
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
@@ -467,6 +467,60 @@ public:
             char fxParamValue[128];
             DAW::TrackFX_GetFormattedParamValue(track, GetSlotIndex(), fxParamIndex_, fxParamValue, sizeof(fxParamValue));
             SetWidgetValue(GetWidget(), string(fxParamValue));
+        }
+        else
+            GetWidget()->Reset();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXParamNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXParamNameDisplay(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    
+    virtual void RequestUpdate() override
+    {
+        int trackNum = 0;
+        int fxSlotNum = 0;
+        int fxParamNum = 0;
+        
+        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+        {
+            if(MediaTrack* track = GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            {
+                char fxParamName[128];
+                DAW::TrackFX_GetParamName(track, fxSlotNum, fxParamNum, fxParamName, sizeof(fxParamName));
+                SetWidgetValue(GetWidget(), string(fxParamName));
+            }
+        }
+        else
+            GetWidget()->Reset();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FocusedFXParamValueDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    FocusedFXParamValueDisplay(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    
+    virtual void RequestUpdate() override
+    {
+        int trackNum = 0;
+        int fxSlotNum = 0;
+        int fxParamNum = 0;
+        
+        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+        {
+            if(MediaTrack* track = GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            {
+                char fxParamValue[128];
+                DAW::TrackFX_GetFormattedParamValue(track, fxSlotNum, fxParamNum, fxParamValue, sizeof(fxParamValue));
+                SetWidgetValue(GetWidget(), string(fxParamValue));
+           }
         }
         else
             GetWidget()->Reset();
