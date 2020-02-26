@@ -173,13 +173,13 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
 
 static map<int, Navigator*> navigators;
 
-static Navigator* GetNavigatorForChannel(Zone* zone, ControlSurface* surface, int channelNum)
+static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum)
 {
     if(channelNum < 0)
         return nullptr;
     
     if(navigators.count(channelNum) < 1)
-        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator(zone);
+        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator();
     
     return navigators[channelNum];
 }
@@ -207,7 +207,7 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             if(tokens.size() < 2)
                 return;
             
-            string navigatorName = "";
+            Navigator* navigator = nullptr;
 
             if(zoneLines.size() > i + 1) // we have another line
             {
@@ -217,11 +217,24 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                                              || navTokens[0] == "FocusedFXNavigator" || navTokens[0] == "ParentNavigator"))
                 {
                     i++;
-                    navigatorName = navTokens[0];
+                    
+                    if(navTokens[0] == "TrackNavigator")
+                        navigator = GetNavigatorForChannel(surface, channelNum);
+                    else if(navTokens[0] == "MasterTrackNavigator")
+                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator();
+                    else if(navTokens[0] == "SelectedTrackNavigator")
+                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
+                    else if(navTokens[0] == "FocusedFXNavigator")
+                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator();
+                    else if(navTokens[0] == "ParentNavigator" && parentZone != nullptr)
+                        navigator = parentZone->GetNavigator();
                 }
             }
             
-            zone = new Zone(navigatorName, surface, parentZone, channelNum, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
+            if(navigator == nullptr)
+                navigator = new Navigator(surface->GetPage());
+            
+            zone = new Zone(navigator, surface, channelNum, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
 
             if(zone == nullptr)
                 return;
@@ -988,11 +1001,6 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool TrackNavigator::GetIsZoneTouched()
-{
-    return zone_->GetIsTouched();
-}
-
 void TrackNavigator::Pin()
 {
     if( ! isChannelPinned_)
@@ -1028,11 +1036,6 @@ MediaTrack* TrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MasterTrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool MasterTrackNavigator::GetIsZoneTouched()
-{
-    return zone_->GetIsTouched();
-}
-
 MediaTrack* MasterTrackNavigator::GetTrack()
 {
     return DAW::GetMasterTrack(0);
@@ -1043,7 +1046,7 @@ MediaTrack* MasterTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* SelectedTrackNavigator::GetTrack()
 {
-    return zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    return page_->GetTrackNavigationManager()->GetSelectedTrack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1056,12 +1059,7 @@ MediaTrack* FocusedFXNavigator::GetTrack()
     int fxIndex = 0;
     
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-    {
-        if(trackNumber > 0)
-            return zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
-        else
-            return nullptr;
-    }
+        return page_->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     else
         return nullptr;
 }
@@ -1069,10 +1067,10 @@ MediaTrack* FocusedFXNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Navigator* TrackNavigationManager::AddNavigator(Zone* zone)
+Navigator* TrackNavigationManager::AddNavigator()
 {
     int channelNum = navigators_.size();
-    navigators_.push_back(new TrackNavigator(zone, this, channelNum));
+    navigators_.push_back(new TrackNavigator(page_, this, channelNum));
     return navigators_[channelNum];
 }
 
@@ -1365,23 +1363,6 @@ void Action::DoRelativeAction(double value, Widget* sender)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Zone::Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias) : surface_(surface),  name_(name), sourceFilePath_(sourceFilePath), alias_(alias)
-{
-    // The Zone and Navigator MUST be coupled
-    if(navigatorName== "TrackNavigator")
-        navigator_ = GetNavigatorForChannel(this, surface, channelNum);
-    else if(navigatorName == "MasterTrackNavigator")
-        navigator_ = new MasterTrackNavigator(this);
-    else if(navigatorName == "SelectedTrackNavigator")
-        navigator_ = new SelectedTrackNavigator(this);
-    else if(navigatorName == "FocusedFXNavigator")
-        navigator_ = new FocusedFXNavigator(this);
-    else if(navigatorName == "ParentNavigator" && parentZone != nullptr)
-        navigator_ = parentZone->GetNavigator();
-    else
-        navigator_ = new Navigator(this);
-}
-
 void Zone::Activate()
 {
     surface_->WidgetsGoZone(GetName());
@@ -1743,7 +1724,7 @@ void ControlSurface::InitZones(string zoneFolder)
         for(auto zoneFilename : zoneFilesToProcess)
             ProcessZoneFile(zoneFilename, this, widgets_);
         
-        Zone * zone = new Zone("", this, nullptr, 0, "NoAction", "", "NoAction");
+        Zone * zone = new Zone(new Navigator(GetPage()), this, 0, "NoAction", "", "NoAction");
         
         vector<string> params;
         
