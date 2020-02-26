@@ -84,15 +84,18 @@ class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Zone* const zone_;
+    Page* const page_;
+    bool isTouched_ = false;
     
 public:
-    Navigator(Zone* zone) : zone_(zone) { }
+    Navigator(Page*  page) : page_(page) { }
     virtual ~Navigator() { }
 
+    bool GetIsTouched() { return isTouched_; }
+    void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
+    
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
-    virtual bool GetIsZoneTouched() { return false; }
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() { }
     virtual void DecBias() { }
@@ -115,15 +118,14 @@ protected:
     TrackNavigationManager* const manager_;
 
 public:
-    TrackNavigator(Zone* zone, TrackNavigationManager* manager, int channelNum) : Navigator(zone), manager_(manager), channelNum_(channelNum) {}
-    TrackNavigator(Zone* zone, TrackNavigationManager* manager) : Navigator(zone), manager_(manager) {}
+    TrackNavigator(Page*  page, TrackNavigationManager* manager, int channelNum) : Navigator(page), manager_(manager), channelNum_(channelNum) {}
+    TrackNavigator(Page*  page, TrackNavigationManager* manager) : Navigator(page), manager_(manager) {}
     virtual ~TrackNavigator() {}
     
     virtual bool GetIsChannelPinned() override { return isChannelPinned_; }
     virtual void IncBias() override { bias_++; }
     virtual void DecBias() override { bias_--; }
     
-    virtual bool GetIsZoneTouched() override;
     virtual void Pin() override;
     virtual void Unpin() override;
     
@@ -137,11 +139,9 @@ class MasterTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MasterTrackNavigator(Zone* zone) : Navigator(zone) {}
+    MasterTrackNavigator(Page*  page) : Navigator(page) {}
     virtual ~MasterTrackNavigator() {}
     
-    virtual bool GetIsZoneTouched() override;
-
     virtual string GetName() override { return "MasterTrackNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
@@ -152,7 +152,7 @@ class SelectedTrackNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SelectedTrackNavigator(Zone* zone) : Navigator(zone) {}
+    SelectedTrackNavigator(Page*  page) : Navigator(page) {}
     virtual ~SelectedTrackNavigator() {}
     
     virtual string GetName() override { return "SelectedTrackNavigator"; }
@@ -165,7 +165,7 @@ class FocusedFXNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    FocusedFXNavigator(Zone* zone) : Navigator(zone) {}
+    FocusedFXNavigator(Page*  page) : Navigator(page) {}
     virtual ~FocusedFXNavigator() {}
     
     virtual bool GetIsFocusedFXNavigator() override { return true; }
@@ -483,17 +483,17 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* const surface_;
-    string const name_;
-    string const alias_;
-    string const sourceFilePath_;
-    Navigator* navigator_ = nullptr; // safe -- set in constructor
+    Navigator* const navigator_= nullptr;
+    ControlSurface* const surface_ = nullptr;
+    string const name_ = "";
+    string const alias_ = "";
+    string const sourceFilePath_ = "";
     vector<Zone*> includedZones_;
     int index_ = 0;
-    bool isTouched_ = false;
     
 public:
-    Zone(string navigatorName, ControlSurface* surface, Zone* parentZone, int channelNum, string name, string sourceFilePath, string alias);
+    Zone(Navigator* navigator, ControlSurface* surface, int channelNum, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
+
     virtual ~Zone() {}
     
     ControlSurface* GetSurface() { return surface_; }
@@ -502,8 +502,8 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
-    void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
-    bool GetIsTouched() { return isTouched_; }
+    void SetIsTouched(bool isTouched) { navigator_->SetIsTouched(isTouched); }
+    bool GetIsTouched() { return navigator_->GetIsTouched();; }
     void Activate();
     void Deactivate();
 
@@ -1189,18 +1189,25 @@ private:
     int folderTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
     vector<Navigator*> navigators_;
+    Navigator* const masterTrackNavigator_ = nullptr;
+    Navigator* const selectedTrackNavigator_ = nullptr;
+    Navigator* const focusedFXNavigator_ = nullptr;
     
 public:
-    TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages) {}
+    TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages),
+    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)) {}
     
     Page* GetPage() { return page_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
-    
+    Navigator* GetMasterTrackNavigator() { return masterTrackNavigator_; }
+    Navigator* GetSelectedTrackNavigator() { return selectedTrackNavigator_; }
+    Navigator* GetFocusedFXNavigator() { return focusedFXNavigator_; }
+
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
-    Navigator* AddNavigator(Zone* zone);
+    Navigator* AddNavigator();
     void OnTrackSelection();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
@@ -1284,8 +1291,25 @@ public:
     
     bool GetIsTrackTouched(MediaTrack* track)
     {
+        if(masterTrackNavigator_->GetIsTouched() && track == DAW::GetMasterTrack(0))
+            return true;
+        
+        if(selectedTrackNavigator_->GetIsTouched() && track == GetSelectedTrack())
+            return true;
+        
+        if(focusedFXNavigator_->GetIsTouched())
+        {
+            int trackNumber = 0;
+            int itemNumber = 0;
+            int fxIndex = 0;
+            
+            if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+                if(track == GetTrackFromId(trackNumber))
+                    return true;
+        }
+        
         for(auto navigator : navigators_)
-            if(navigator->GetTrack() == track && navigator->GetIsZoneTouched())
+            if(navigator->GetIsTouched() && track == navigator->GetTrack())
                 return true;
         
         return false;
