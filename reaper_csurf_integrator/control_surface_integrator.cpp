@@ -1834,12 +1834,18 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
 {
     string oscAddress(zoneName);
     oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
-    oscAddress = "/" + oscAddress;
-    
+    string oscAddressTouchOSC = "/" + oscAddress;
+    string oscAddressLemur = "/Interface " + oscAddress;
+
     if(outSocket_.isOk())
     {
         oscpkt::Message message;
-        message.init(oscAddress);
+        
+        message.init(oscAddressTouchOSC);
+        packetWriter_.init().addMessage(message);
+        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        
+        message.init(oscAddressLemur);
         packetWriter_.init().addMessage(message);
         outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
@@ -1847,7 +1853,10 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s \n", name_.c_str(), oscAddressTouchOSC.c_str());
+        DAW::ShowConsoleMsg(buffer);
+        
+        snprintf(buffer, sizeof(buffer), "OUT -> %s %s \n", name_.c_str(), oscAddressLemur.c_str());
         DAW::ShowConsoleMsg(buffer);
     }
 }
