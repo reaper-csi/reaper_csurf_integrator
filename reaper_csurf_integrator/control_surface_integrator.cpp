@@ -1178,7 +1178,7 @@ void Widget::DoAction(double value)
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 
@@ -1208,7 +1208,7 @@ void Widget::DoRelativeAction(double value)
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s -> %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
     
@@ -1776,7 +1776,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     if( ! isMapped && TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
         DAW::ShowConsoleMsg(buffer);
         
     }
@@ -1825,7 +1825,7 @@ void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), message.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), message.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -2131,7 +2131,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
     if(TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN -> %s %s  %f  \n", name_.c_str(), address.c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), address.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
 }
