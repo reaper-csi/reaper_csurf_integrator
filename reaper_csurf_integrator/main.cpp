@@ -7,7 +7,7 @@
 gaccel_register_t acreg=
 {
     {FCONTROL|FALT|FVIRTKEY, '1', 0},
-    "CSI Learn Mode"
+    "CSI Edit Mode"
 };
 
 int g_registered_command = 0;
@@ -50,7 +50,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
         
-        acreg.accel.cmd = g_registered_command = reaper_plugin_info->Register("command_id", (void*)"CSILearnMode");
+        acreg.accel.cmd = g_registered_command = reaper_plugin_info->Register("command_id", (void*)"CSIEditMode");
         
         if (!g_registered_command)
             return 0; // failed getting a command id, fail!
