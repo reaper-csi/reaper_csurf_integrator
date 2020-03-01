@@ -1644,6 +1644,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             
             if(i < numTrackFX)
             {
+                surface_->LoadingZone(zone->GetName());
                 zone->Activate(i);
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
@@ -1671,6 +1672,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
+        surface_->LoadingZone(FXName);
         surface_->GetZones()[FXName]->Activate(fxIndex);
         activeSelectedTrackFXMenuFXZones_.push_back(surface_->GetZones()[FXName]);
     }
@@ -1835,7 +1837,7 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     string oscAddress(zoneName);
     oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
     string oscAddressTouchOSC = "/" + oscAddress;
-    string oscAddressLemur = "/Interface " + oscAddress;
+    string oscAddressLemur = "/interface " + oscAddress;
 
     if(outSocket_.isOk())
     {
