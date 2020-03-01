@@ -1368,7 +1368,7 @@ void Zone::Activate()
     surface_->WidgetsGoZone(GetName());
     
     for(auto includedZone : includedZones_)
-        surface_->WidgetsGoZone(includedZone->GetName());
+        includedZone->Activate();
 }
 
 void Zone::Deactivate()
