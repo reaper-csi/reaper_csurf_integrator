@@ -819,6 +819,8 @@ protected:
     bool useZoneLink_ = false;
 
     void InitZones(string zoneFolder);
+    map<string, vector<string>> zoneFileLines_;
+
     
     void InitHardwiredWidgets()
     {
@@ -910,6 +912,11 @@ public:
         }
     }
 
+    void AddZoneFileLine(string fileName, string line)
+    {
+        zoneFileLines_[fileName].push_back(line);
+    }
+    
     void WidgetsGoZone(string zoneName)
     {
         for(auto widget : widgets_)
