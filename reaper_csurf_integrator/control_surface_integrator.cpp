@@ -425,6 +425,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface, vector<Wid
 
         for (string line; getline(file, line) ; )
         {
+            surface->AddZoneFileLine(filePath, line);  // store in the raw map for EditMode
+            
             line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
             
