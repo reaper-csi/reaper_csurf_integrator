@@ -229,10 +229,9 @@ static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
 
-static void ModifyEuConZoneFile(int firstChannel, int lastChannel, int numSends, int numFX)
+static void ModifyEuConZoneFile(int firstChannel, int lastChannel)
 {
     string channelStr = to_string(firstChannel) + "-" + to_string(lastChannel);
-    string sendStr = "1-" + to_string(numSends);
     
     vector<string> inputLines;
     vector<string> outputLines;
@@ -246,14 +245,11 @@ static void ModifyEuConZoneFile(int firstChannel, int lastChannel, int numSends,
     {
         size_t zonePos = inputLine.find("Zone");
         size_t channelPos = inputLine.find("Channel|");
-        size_t sendPos = inputLine.find("Send|");
 
         string outputLine;
         
         if(channelPos != string::npos && zonePos == string::npos)
             outputLine = inputLine.substr(0, channelPos + strlen("Channel|")) + channelStr + "\"";
-        else if(sendPos != string::npos && zonePos == string::npos)
-            outputLine = inputLine.substr(0, sendPos + strlen("Send|")) + sendStr + "\"";
         else
             outputLine = inputLine;
 
@@ -1011,7 +1007,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->firstChannel = firstChannel;
                                     surface->lastChannel = lastChannel;
-                                    surface->numSends = numSends;
+                                    surface->numSends = numSends > 12 ? 12 : numSends;
                                     surface->numFX = numFX;
                                     surface->options = options;
                                     surface->useZoneLink = useZoneLink;
@@ -1108,7 +1104,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     // for EuCon
                                     pages[pageIndex]->surfaces[index]->firstChannel = firstChannel;
                                     pages[pageIndex]->surfaces[index]->lastChannel = lastChannel;
-                                    pages[pageIndex]->surfaces[index]->numSends = numSends;
+                                    pages[pageIndex]->surfaces[index]->numSends = numSends > 12 ? 12 : numSends;
                                     pages[pageIndex]->surfaces[index]->numFX = numFX;
                                     pages[pageIndex]->surfaces[index]->options = options;
                                 }
@@ -1323,7 +1319,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += to_string(surface->numFX) + " " ;
                             line += to_string(surface->options) + " " ;
                             
-                            ModifyEuConZoneFile(surface->firstChannel, surface->lastChannel, surface->numSends, surface->numFX);
+                            ModifyEuConZoneFile(surface->firstChannel, surface->lastChannel);
                         }
 
                         line += GetLineEnding();
