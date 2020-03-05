@@ -255,7 +255,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         double vol, pan = 0.0;
-        DAW::GetTrackSendUIVolPan(track, GetSlotIndex(), &vol, &pan);
+        DAW::GetTrackSendUIVolPan(track, GetParamNum(), &vol, &pan);
         SetWidgetValue(GetWidget(), volToNormalized(vol));
     }
 
@@ -266,9 +266,9 @@ public:
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, GetSlotIndex(), normalizedToVol(value), false);
+            double volume = DAW::CSurf_OnSendVolumeChange(track, GetParamNum(), normalizedToVol(value), false);
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "D_VOL", &volume);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "D_VOL", &volume);
         }
     }
 };
@@ -281,7 +281,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         double vol, pan = 0.0;
-        DAW::GetTrackSendUIVolPan(track, GetSlotIndex(), &vol, &pan);
+        DAW::GetTrackSendUIVolPan(track, GetParamNum(), &vol, &pan);
         SetWidgetValue(GetWidget(), VAL2DB(vol));
     }
     
@@ -292,9 +292,9 @@ public:
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, GetSlotIndex(), DB2VAL(value), false);
+            double volume = DAW::CSurf_OnSendVolumeChange(track, GetParamNum(), DB2VAL(value), false);
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "D_VOL", &volume);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "D_VOL", &volume);
         }
     }
 };
@@ -307,7 +307,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         double vol, pan = 0.0;
-        DAW::GetTrackSendUIVolPan(track, GetSlotIndex(), &vol, &pan);
+        DAW::GetTrackSendUIVolPan(track, GetParamNum(), &vol, &pan);
         SetWidgetValue(GetWidget(), panToNormalized(pan));
     }
     
@@ -318,9 +318,9 @@ public:
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            double pan = DAW::CSurf_OnSendPanChange(track, GetSlotIndex(), normalizedToPan(value), false);
+            double pan = DAW::CSurf_OnSendPanChange(track, GetParamNum(), normalizedToPan(value), false);
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "D_PAN", &pan);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "D_PAN", &pan);
         }
     }
 };
@@ -333,7 +333,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         bool mute = false;
-        DAW::GetTrackSendUIMute(track, GetSlotIndex(), &mute);
+        DAW::GetTrackSendUIMute(track, GetParamNum(), &mute);
         SetWidgetValue(GetWidget(), mute);
     }
 
@@ -346,9 +346,9 @@ public:
 
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "B_MUTE");
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "B_MUTE");
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "B_MUTE", &isMuted);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "B_MUTE", &isMuted);
         }
     }
 };
@@ -360,7 +360,7 @@ class TrackSendInvertPolarity : public TrackSendAction
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        SetWidgetValue(GetWidget(), DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "B_PHASE"));
+        SetWidgetValue(GetWidget(), DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "B_PHASE"));
     }
     
 public:
@@ -372,9 +372,9 @@ public:
 
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "B_PHASE");
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "B_PHASE");
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "B_PHASE", &reversed);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "B_PHASE", &reversed);
         }
     }
 };
@@ -386,7 +386,7 @@ class TrackSendPrePost : public TrackSendAction
 protected:
     void RequestTrackUpdate( MediaTrack* track) override
     {
-        if(DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "I_SENDMODE") == 0)
+        if(DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "I_SENDMODE") == 0)
             SetWidgetValue(GetWidget(), 0);
         else
             SetWidgetValue(GetWidget(), 1);
@@ -401,14 +401,14 @@ public:
 
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "I_SENDMODE") == 0 ? 0 : 1;
+            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "I_SENDMODE") == 0 ? 0 : 1;
             
             if(isPre == 0)
                 isPre = 3; // switch to post FX
             else
                 isPre = 0; // switch to post fader
             
-            DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "I_SENDMODE", &isPre);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "I_SENDMODE", &isPre);
         }
     }
 };
@@ -535,7 +535,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         string sendTrackName = "";
-        MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, GetSlotIndex(), "P_DESTTRACK", 0);;
+        MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "P_DESTTRACK", 0);;
         if(destTrack)
             sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
         SetWidgetValue(GetWidget(), sendTrackName);
@@ -553,7 +553,7 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         char trackVolume[128];
-        snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, GetSlotIndex(), "D_VOL")));
+        snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "D_VOL")));
         SetWidgetValue(GetWidget(), string(trackVolume));
     }
 

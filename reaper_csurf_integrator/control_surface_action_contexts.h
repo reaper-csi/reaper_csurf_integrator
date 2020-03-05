@@ -126,17 +126,36 @@ class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    int paramIndex_ = 0;
+    bool shouldUseLocalIndex_ = false;
+    
+    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        if(params.size() > 1)
+        {
+            if(isdigit(params[1][0]))
+            {
+                shouldUseLocalIndex_ = true;
+                paramIndex_ = atol(params[1].c_str());
+            }
+        }
+    }
 
 public:
     virtual string GetParamNumAsString() override
     {
-        return to_string(GetSlotIndex());
+        if(shouldUseLocalIndex_)
+            return to_string(paramIndex_);
+        else
+            return to_string(GetSlotIndex());
     }
     
     virtual int GetParamNum() override
     {
-        return GetSlotIndex();
+        if(shouldUseLocalIndex_)
+            return paramIndex_;
+        else
+            return GetSlotIndex();
     }
 };
 

@@ -1092,7 +1092,11 @@ public:
         GoHome();
     }
     
-    virtual ~OSC_ControlSurface() {}
+    virtual ~OSC_ControlSurface()
+    {
+        
+        // GAW TBD -- orderly Server shutdown  
+    }
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
     
