@@ -1282,9 +1282,7 @@ int Action::GetSlotIndex()
 }
 
 void Action::DoAction(double value, Widget* sender)
-{
-    value = isInverted_ == false ? value : 1.0 - value;
-    
+{   
     if(rangeValues_.size() == 2)
     {
         if(value > rangeValues_[1])
