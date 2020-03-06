@@ -401,14 +401,14 @@ public:
 
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
-            bool isPre = DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "I_SENDMODE") == 0 ? 0 : 1;
+            int mode = DAW::GetTrackSendInfo_Value(track, 0, GetParamNum(), "I_SENDMODE");
             
-            if(isPre == 0)
-                isPre = 3; // switch to post FX
+            if(mode == 0)
+                mode = 3; // switch to post FX
             else
-                isPre = 0; // switch to post fader
+                mode = 0; // switch to post fader
             
-            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "I_SENDMODE", &isPre);
+            DAW::GetSetTrackSendInfo(track, 0, GetParamNum(), "I_SENDMODE", &mode);
         }
     }
 };
