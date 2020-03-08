@@ -1160,18 +1160,33 @@ MediaTrack* Widget::GetTrack()
 
 void Widget::RequestUpdate()
 {
-    string modifiers = "";
-    
-    if( ! isModifier_ )
-        modifiers = surface_->GetPage()->GetModifiers();
     if(activeZone_ != nullptr)
     {
+        string modifiers = "";
+        if( ! isModifier_ )
+            modifiers = surface_->GetPage()->GetModifiers();
+        
         if(activeZone_->GetIsTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
-                trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
+        {
+            for(auto action : trackTouchedActions_[activeZone_][modifiers])
+                action->PerformDeferredActions();
+
+            trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
+        }
         else if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+        {
+            for(auto action : actions_[activeZone_][modifiers])
+                action->PerformDeferredActions();
+            
             actions_[activeZone_][modifiers][0]->RequestUpdate();
+        }
         else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0 && actions_[activeZone_][""].size() > 0)
+        {
+            for(auto action : actions_[activeZone_][""])
+                action->PerformDeferredActions();
+
             actions_[activeZone_][""][0]->RequestUpdate();
+        }
     }
 }
 
@@ -1308,6 +1323,21 @@ void Action::DoAction(double value, Widget* sender)
     {
         if(value != 0.0)
             Do( ! GetCurrentValue(), sender);
+    }
+    else if(delayAmount_ != 0.0)
+    {
+        if(value == 0.0)
+        {
+            delayStartTime_ = 0.0;
+            deferredValue_ = 0.0;
+            deferredSender_ = nullptr;
+        }
+        else
+        {
+            delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
+            deferredValue_ = value;
+            deferredSender_ = sender;
+        }
     }
     else
     {

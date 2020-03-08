@@ -356,8 +356,12 @@ protected:
 
     bool isInverted_ = false;
     bool shouldToggle_ = false;
+    
+    bool asa = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
+    double deferredValue_ = 0.0;
+    Widget* deferredSender_ = nullptr;
     
     int GetSlotIndex();
     
@@ -389,6 +393,20 @@ public:
     virtual void DoAction(double value, Widget* sender);
     virtual void DoRelativeAction(double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
+    
+    void PerformDeferredActions()
+    {
+        if(deferredSender_ != nullptr && delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
+        {
+            double savedDelayAmount = delayAmount_;
+            delayAmount_ = 0.0;
+            DoAction(deferredValue_, deferredSender_);
+            delayAmount_ = savedDelayAmount;
+            delayStartTime_ = 0.0;
+            deferredValue_ = 0.0;
+            deferredSender_ = nullptr;
+        }
+    }
     
     virtual void RequestUpdate()
     {
