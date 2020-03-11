@@ -1003,7 +1003,7 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigator::Pin()
+void TrackNavigator::PinChannel()
 {
     if( ! isChannelPinned_)
     {
@@ -1015,7 +1015,7 @@ void TrackNavigator::Pin()
     }
 }
 
-void TrackNavigator::Unpin()
+void TrackNavigator::UnpinChannel()
 {
     if(isChannelPinned_)
     {
