@@ -99,8 +99,8 @@ public:
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() { }
     virtual void DecBias() { }
-    virtual void Pin() {}
-    virtual void Unpin() {}
+    virtual void PinChannel() {}
+    virtual void UnpinChannel() {}
     virtual bool GetIsFocusedFXNavigator() { return false; }
 };
 
@@ -126,8 +126,8 @@ public:
     virtual void IncBias() override { bias_++; }
     virtual void DecBias() override { bias_--; }
     
-    virtual void Pin() override;
-    virtual void Unpin() override;
+    virtual void PinChannel() override;
+    virtual void UnpinChannel() override;
     
     virtual string GetName() override { return "TrackNavigator"; }
     
@@ -1261,9 +1261,9 @@ public:
             if(track == navigator->GetTrack())
             {
                 if(navigator->GetIsChannelPinned())
-                    navigator->Unpin();
+                    navigator->UnpinChannel();
                 else
-                    navigator->Pin();
+                    navigator->PinChannel();
                 
                 break;
             }
@@ -1313,7 +1313,7 @@ public:
                 if(DAW::ValidateTrackPtr(navigator->GetTrack()))
                     remove(tracks_.begin(), tracks_.end(), navigator->GetTrack());
                 else
-                    navigator->Unpin();
+                    navigator->UnpinChannel();
             }
         }
     }
