@@ -265,6 +265,14 @@ public:
         else
             return nullptr;
     }
+    
+    static unsigned int GetSetTrackGroupMembership(MediaTrack* track, const char* groupname, unsigned int setmask, unsigned int setvalue)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetSetTrackGroupMembership(track, groupname, setmask, setvalue);
+        else
+            return 0;
+    }
 
     static double CSurf_OnVolumeChange(MediaTrack* track, double volume, bool relative)
     {

@@ -860,6 +860,7 @@ void Manager::InitActionDictionary()
     actions_["TrackOutputMeterMaxPeakLR"] =         [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackOutputMeterMaxPeakLR(name, widget, zone, params); };
     actions_["SetShowFXWindows"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetShowFXWindows(name, widget, zone, params); };
     actions_["ToggleScrollLink"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ToggleScrollLink(name, widget, zone, params); };
+    actions_["ForceScrollLink"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ForceScrollLink(name, widget, zone, params); };
     actions_["CycleTimeDisplayModes"] =             [](string name, Widget* widget, Zone* zone, vector<string> params) { return new CycleTimeDisplayModes(name, widget, zone, params); };
     actions_["NextPage"] =                          [](string name, Widget* widget, Zone* zone, vector<string> params) { return new GoNextPage(name, widget, zone, params); };
     actions_["GoPage"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return new class GoPage(name, widget, zone, params); };
@@ -1079,30 +1080,33 @@ Navigator* TrackNavigationManager::AddNavigator()
 void TrackNavigationManager::OnTrackSelection()
 {
     if(scrollLink_)
+        ForceScrollLink();
+}
+
+void TrackNavigationManager::ForceScrollLink()
+{
+    // Make sure selected track is visble on the control surface
+    MediaTrack* selectedTrack = GetSelectedTrack();
+    
+    if(selectedTrack != nullptr)
     {
-        // Make sure selected track is visble on the control surface
-        MediaTrack* selectedTrack = GetSelectedTrack();
+        for(auto navigator : navigators_)
+            if(selectedTrack == navigator->GetTrack())
+                return;
         
-        if(selectedTrack != nullptr)
-        {
-            for(auto navigator : navigators_)
-                if(selectedTrack == navigator->GetTrack())
-                    return;
-            
-            for(int i = 0; i < tracks_.size(); i++)
-                if(selectedTrack == tracks_[i])
-                    trackOffset_ = i;
-            
-            trackOffset_ -= targetScrollLinkChannel_;
-            
-            if(trackOffset_ <  0)
-                trackOffset_ =  0;
-            
-            int top = GetNumTracks() - navigators_.size();
-            
-            if(trackOffset_ >  top)
-                trackOffset_ = top;
-        }
+        for(int i = 0; i < tracks_.size(); i++)
+            if(selectedTrack == tracks_[i])
+                trackOffset_ = i;
+        
+        trackOffset_ -= targetScrollLinkChannel_;
+        
+        if(trackOffset_ <  0)
+            trackOffset_ =  0;
+        
+        int top = GetNumTracks() - navigators_.size();
+        
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
     }
 }
 
