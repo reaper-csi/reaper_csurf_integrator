@@ -1238,6 +1238,7 @@ public:
     
     Navigator* AddNavigator();
     void OnTrackSelection();
+    void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void TrackListChanged();
     void AdjustTrackBank(int amount);
@@ -1301,6 +1302,14 @@ public:
         for (int i = 1; i <= GetNumTracks(); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
+            
+            //int vcaMaster = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_MASTER", 0, 0);
+
+
+
+            
+            
+            
             
             if(DAW::IsTrackVisible(track, followMCP_))
                 tracks_.push_back(track);
