@@ -49,6 +49,12 @@ void CSurfIntegrator::OnTrackSelection(MediaTrack *trackid)
         TheManager->OnTrackSelection(trackid);
 }
 
+void CSurfIntegrator::SetTrackListChange()
+{
+    if(TheManager)
+        TheManager->OnTrackListChange();
+}
+
 int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
 {
     if(call == CSURF_EXT_SUPPORTS_EXTENDED_TOUCH)
