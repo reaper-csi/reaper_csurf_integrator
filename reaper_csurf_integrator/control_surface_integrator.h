@@ -1240,7 +1240,6 @@ public:
     void OnTrackSelection();
     void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
-    void TrackListChanged();
     void AdjustTrackBank(int amount);
 
     void IncChannelBias(MediaTrack* track, int channelNum)
@@ -1325,6 +1324,9 @@ public:
                     navigator->UnpinChannel();
             }
         }
+        
+        if(scrollLink_)
+            ForceScrollLink();
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
