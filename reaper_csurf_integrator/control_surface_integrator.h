@@ -1237,7 +1237,6 @@ public:
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
     Navigator* AddNavigator();
-    void OnTrackSelection();
     void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
@@ -1286,6 +1285,18 @@ public:
             return nullptr;
     }
 
+    void OnTrackSelection()
+    {
+        if(scrollLink_)
+            ForceScrollLink();
+    }
+    
+    void OnTrackListChange()
+    {
+        if(scrollLink_)
+            ForceScrollLink();
+    }
+
     void RebuildTrackList()
     {
         int top = GetNumTracks() - navigators_.size();
@@ -1324,9 +1335,6 @@ public:
                     navigator->UnpinChannel();
             }
         }
-        
-        if(scrollLink_)
-            ForceScrollLink();
     }
     
     bool GetIsTrackTouched(MediaTrack* track)
@@ -1571,6 +1579,11 @@ public:
         
         for(auto surface : surfaces_)
             surface->OnTrackSelection();
+    }
+    
+    void OnTrackListChange()
+    {
+        trackNavigationManager_->OnTrackListChange();
     }
     
     void OnTrackSelectionBySurface(MediaTrack* track)
@@ -1822,6 +1835,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OnTrackSelection();
+    }
+    
+    void OnTrackListChange()
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->OnTrackListChange();
     }
     
     void OnFXFocus(MediaTrack *track, int fxIndex)
