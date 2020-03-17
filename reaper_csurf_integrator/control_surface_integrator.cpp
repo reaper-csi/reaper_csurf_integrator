@@ -1077,12 +1077,6 @@ Navigator* TrackNavigationManager::AddNavigator()
     return navigators_[channelNum];
 }
 
-void TrackNavigationManager::OnTrackSelection()
-{
-    if(scrollLink_)
-        ForceScrollLink();
-}
-
 void TrackNavigationManager::ForceScrollLink()
 {
     // Make sure selected track is visble on the control surface
