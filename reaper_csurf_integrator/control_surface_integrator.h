@@ -1213,10 +1213,12 @@ private:
     bool followMCP_ = true;
     bool synchPages_ = false;
     bool scrollLink_ = false;
+    bool vcaMode_ = false;
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0;
-    int folderTrackOffset_ = 0;
+    int savedTrackOffset_ = 0;
     vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> vcaSpillTracks_;
     vector<Navigator*> navigators_;
     Navigator* const masterTrackNavigator_ = nullptr;
     Navigator* const selectedTrackNavigator_ = nullptr;
@@ -1229,6 +1231,7 @@ public:
     Page* GetPage() { return page_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
+    bool GetVCAMode() { return vcaMode_; }
     int  GetNumTracks() { return DAW::CSurf_NumTracks(followMCP_); }
     Navigator* GetMasterTrackNavigator() { return masterTrackNavigator_; }
     Navigator* GetSelectedTrackNavigator() { return selectedTrackNavigator_; }
@@ -1269,8 +1272,22 @@ public:
         }
     }
     
+    void ToggleVCAMode()
+    {
+        if(vcaMode_)
+            trackOffset_ = savedTrackOffset_;
+        else
+        {
+            savedTrackOffset_ = trackOffset_;
+            trackOffset_ = 0;
+        }
+        
+        vcaMode_ = ! vcaMode_;
+    }
+
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
+        // GAW TBD -- maybe put a ValidatePtr in here ?
         if(tracks_.size() > channelNumber + trackOffset_)
             return tracks_[channelNumber + trackOffset_];
         else
@@ -1297,6 +1314,19 @@ public:
             ForceScrollLink();
     }
 
+    void ToggleVCASpill(MediaTrack* track)
+    {
+        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) == vcaSpillTracks_.end())
+            vcaSpillTracks_.push_back(track);
+        else
+            vcaSpillTracks_.erase(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track));
+    }
+    
+    static bool IsTrackPointerStale(MediaTrack* track)
+    {
+        return ! DAW::ValidateTrackPtr(track);
+    }
+    
     void RebuildTrackList()
     {
         int top = GetNumTracks() - navigators_.size();
@@ -1308,21 +1338,33 @@ public:
 
         tracks_.clear();
         
+        // Clean up vcaSpillTracks
+        vcaSpillTracks_.erase(remove_if(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), IsTrackPointerStale), vcaSpillTracks_.end());
+
         // Get Visible Tracks
         for (int i = 1; i <= GetNumTracks(); i++)
         {
             MediaTrack* track = DAW::CSurf_TrackFromID(i, followMCP_);
             
-            //int vcaMaster = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_MASTER", 0, 0);
-
-
-
-            
-            
-            
-            
             if(DAW::IsTrackVisible(track, followMCP_))
-                tracks_.push_back(track);
+            {
+                if(vcaMode_)
+                {
+                    int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_MASTER", 0, 0);
+
+                    if(vcaMasterGroup != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_SLAVE", 0, 0) == 0) // Only top level Masters for now
+                    {
+                        tracks_.push_back(track);
+                        
+                        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) != vcaSpillTracks_.end()) // should spill slaves for this master
+                            for (int j = 1; j <= GetNumTracks(); j++)
+                                if(vcaMasterGroup == DAW::GetSetTrackGroupMembership(DAW::CSurf_TrackFromID(j, followMCP_), "VOLUME_VCA_SLAVE", 0, 0)) // if this track is slave of master
+                                    tracks_.push_back(DAW::CSurf_TrackFromID(j, followMCP_));
+                    }
+                }
+                else
+                    tracks_.push_back(track);
+            }
         }
 
         for(auto navigator : navigators_)

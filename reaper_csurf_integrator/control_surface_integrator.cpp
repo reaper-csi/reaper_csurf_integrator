@@ -846,7 +846,7 @@ void Manager::InitActionDictionary()
     actions_["Play"] =                              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new Play(name, widget, zone, params); };
     actions_["Stop"] =                              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new Stop(name, widget, zone, params); };
     actions_["Record"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return new Record(name, widget, zone, params); };
-    actions_["TrackFolderDive"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackFolderDive(name, widget, zone, params); };
+    actions_["TrackToggleVCASpill"] =               [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackToggleVCASpill(name, widget, zone, params); };
     actions_["TrackSelect"] =                       [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackSelect(name, widget, zone, params); };
     actions_["TrackUniqueSelect"] =                 [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackUniqueSelect(name, widget, zone, params); };
     actions_["TrackRangeSelect"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackRangeSelect(name, widget, zone, params); };
@@ -861,6 +861,7 @@ void Manager::InitActionDictionary()
     actions_["SetShowFXWindows"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetShowFXWindows(name, widget, zone, params); };
     actions_["ToggleScrollLink"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ToggleScrollLink(name, widget, zone, params); };
     actions_["ForceScrollLink"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ForceScrollLink(name, widget, zone, params); };
+    actions_["ToggleVCAMode"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ToggleVCAMode(name, widget, zone, params); };
     actions_["CycleTimeDisplayModes"] =             [](string name, Widget* widget, Zone* zone, vector<string> params) { return new CycleTimeDisplayModes(name, widget, zone, params); };
     actions_["NextPage"] =                          [](string name, Widget* widget, Zone* zone, vector<string> params) { return new GoNextPage(name, widget, zone, params); };
     actions_["GoPage"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return new class GoPage(name, widget, zone, params); };
