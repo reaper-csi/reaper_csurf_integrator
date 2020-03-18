@@ -756,34 +756,18 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackFolderDive : public TrackAction
+class TrackToggleVCASpill : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        double folderDepth = DAW::GetMediaTrackInfo_Value(track, "I_FOLDERDEPTH");
-        
-        if(folderDepth == 1)
-            SetWidgetValue(GetWidget(), 1);
-        else
-            SetWidgetValue(GetWidget(), 0);
-    }
-
 public:
-    TrackFolderDive(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    TrackToggleVCASpill(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        /*
         if(MediaTrack* track = widget_->GetTrack())
-        {
-            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-            widget_->GetSurface()->GetPage()->OnTrackSelectionBySurface(track);
-        }
-         */
+            widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->ToggleVCASpill(track);
     }
 };
 
