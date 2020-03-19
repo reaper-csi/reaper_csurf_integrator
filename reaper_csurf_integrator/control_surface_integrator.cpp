@@ -659,6 +659,17 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             if(size == 4 && feedbackProcessor != nullptr)
                 feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[FB_ProcessorIndex][3]));
         }
+        
+        else if((widgetClass == "FB_FP8Display" || widgetClass == "FB_FP16Display") && (size == 2 || size == 3))
+        {
+            if(widgetClass == "FB_FP8Display")
+                feedbackProcessor = new FPDisplay_Midi_FeedbackProcessor(surface, 0x02, stoi(tokenLines[FB_ProcessorIndex][1]));
+            else if(widgetClass == "FB_FP16Display")
+                feedbackProcessor = new FPDisplay_Midi_FeedbackProcessor(surface, 0x16, stoi(tokenLines[FB_ProcessorIndex][1]));
+            
+            if(size == 3 && feedbackProcessor != nullptr)
+                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[FB_ProcessorIndex][2]));
+        }
     }
 
     if(feedbackProcessor == nullptr)

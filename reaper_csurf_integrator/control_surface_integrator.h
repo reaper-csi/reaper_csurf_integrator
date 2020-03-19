@@ -1217,6 +1217,7 @@ private:
     int targetScrollLinkChannel_ = 0;
     int trackOffset_ = 0;
     int savedTrackOffset_ = 0;
+    int savedVCAOffset_ = 0;
     vector<MediaTrack*> tracks_;
     vector<MediaTrack*> vcaSpillTracks_;
     vector<Navigator*> navigators_;
@@ -1275,14 +1276,17 @@ public:
     void ToggleVCAMode()
     {
         if(vcaMode_)
+        {
+            savedVCAOffset_ = trackOffset_;
             trackOffset_ = savedTrackOffset_;
+            vcaMode_ = false;
+        }
         else
         {
             savedTrackOffset_ = trackOffset_;
-            trackOffset_ = 0;
+            trackOffset_ = savedVCAOffset_;
+            vcaMode_ = true;
         }
-        
-        vcaMode_ = ! vcaMode_;
     }
 
     MediaTrack* GetTrackFromChannel(int channelNumber)

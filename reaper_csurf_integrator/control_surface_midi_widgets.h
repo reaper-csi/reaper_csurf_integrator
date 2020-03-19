@@ -558,6 +558,84 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FPDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int displayType_ = 0x02;
+    int channel_ = 0;
+    string lastStringSent_ = " ";
+    
+public:
+    virtual ~FPDisplay_Midi_FeedbackProcessor() {}
+    FPDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int displayType, int channel) : Midi_FeedbackProcessor(surface), displayType_(displayType), channel_(channel) { }
+    
+    virtual void ClearCache() override
+    {
+        lastStringSent_ = " ";
+    }
+    
+    virtual void SetValue(string displayText) override
+    {
+        if(shouldRefresh_)
+        {
+            double now = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
+                lastRefreshed_ = now;
+            else
+                return;
+        }
+        else
+        {
+            if(displayText == lastStringSent_) // no changes since last send
+                return;
+        }
+        
+        lastStringSent_ = displayText;
+
+        const char* text = displayText.c_str();
+    
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        }
+        midiSysExData;
+        
+        midiSysExData.evt.frame_offset = 0;
+        midiSysExData.evt.size = 0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x06;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_; // Faderport8=0x02, Faderport16=0x16
+        
+        // <SysExHdr> 12, xx, yy, zz, tx,tx,tx,... F7
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_;                // xx channel_ id
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;                    // yy line number 0-3
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x0000000;               // zz alignment flag 0000000=centre, see manual for other setups.
+        
+        int length = strlen(text);
+        
+        if (length > 200) length = 200;
+        
+        int count = 0;
+        
+        while (count < length)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;                // tx text in ASCII format
+            count++;
+        }
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
 int __g_projectconfig_timemode2, __g_projectconfig_timemode;
 int __g_projectconfig_measoffs;
 int __g_projectconfig_timeoffs; // double
