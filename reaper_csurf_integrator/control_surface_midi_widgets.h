@@ -243,9 +243,9 @@ class FaderportRGB7Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int lastR = 0;
-    int lastG = 0;
-    int lastB = 0;
+    int lastR_ = 0;
+    int lastG_ = 0;
+    int lastB_ = 0;
     
 public:
     virtual ~FaderportRGB7Bit_Midi_FeedbackProcessor() {}
@@ -257,12 +257,12 @@ public:
     
     virtual void SetRGBValue(int r, int g, int b) override
     {
-        if(r == lastR && g == lastG && b == lastB)
+        if(r == lastR_ && g == lastG_ && b == lastB_)
             return;
         
-        lastR = r;
-        lastG = g;
-        lastB = b;
+        lastR_ = r;
+        lastG_ = g;
+        lastB_ = b;
         
         SendMidiMessage(0x90, midiFeedbackMessage1_->midi_message[1], 0x7f);
         SendMidiMessage(0x91, midiFeedbackMessage1_->midi_message[1], r / 2);  // only 127 bit allowed in Midi byte 3
