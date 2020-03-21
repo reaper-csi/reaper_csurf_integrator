@@ -212,6 +212,7 @@ public:
         {
             activeZone_ = zonesAvailable_["NoAction"];
             Reset();
+            SetFaderToMinimumDB();
         }
     }
     
@@ -237,6 +238,7 @@ public:
     void SetValue(double value);
     void SetValue(int mode, double value);
     void SetValue(string value);
+    void SetFaderToMinimumDB();
     void SetRGBValue(int r, int g, int b);
     void ClearCache();
 };
@@ -394,6 +396,11 @@ public:
     virtual void DoRelativeAction(double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
+    virtual void Reset()
+    {
+        GetWidget()->Reset();
+    }
+    
     void PerformDeferredActions()
     {
         if(deferredSender_ != nullptr && delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
@@ -493,7 +500,7 @@ public:
     NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     virtual ~NoAction() {}
     
-    virtual void RequestUpdate() { GetWidget()->Reset(); }
+    virtual void RequestUpdate() { Reset(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -616,6 +623,7 @@ public:
     virtual void SetValue(double value) {}
     virtual void SetValue(int param, double value) {}
     virtual void SetValue(string value) {}
+    virtual void SetFaderToMinimumDB() {}
     virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
 };
@@ -691,7 +699,8 @@ public:
     virtual void SetValue(double value) override;
     virtual void SetValue(int param, double value) override;
     virtual void SetValue(string value) override;
-    
+    virtual void SetFaderToMinimumDB() override;
+
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;
@@ -966,7 +975,10 @@ public:
     void ResetAllWidgets()
     {
         for(auto widget : widgets_)
+        {
             widget->Reset();
+            widget->SetFaderToMinimumDB();
+        }
     }
     
     void ClearCache()
