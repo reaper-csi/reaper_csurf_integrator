@@ -111,7 +111,7 @@ public:
         if(MediaTrack* track = GetWidget()->GetTrack())
             RequestTrackUpdate(track);
         else
-            GetWidget()->Reset();
+            Reset();
     }
     
     virtual void DoAction(double value, Widget* sender) override
@@ -238,7 +238,7 @@ public:
         if(MediaTrack* track = GetWidget()->GetTrack())
             SetWidgetValue(GetWidget(), GetCurrentValue());
         else
-            GetWidget()->Reset();
+            Reset();
     }
 };
 

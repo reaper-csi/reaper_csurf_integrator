@@ -1278,6 +1278,11 @@ void  Widget::SetValue(string value)
     feedbackProcessor_->SetValue(value);
 }
 
+void  Widget::SetFaderToMinimumDB()
+{
+    feedbackProcessor_->SetFaderToMinimumDB();
+}
+
 void  Widget::SetRGBValue(int r, int g, int b)
 {
     feedbackProcessor_->SetRGBValue(r, g, b);
@@ -1515,6 +1520,22 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     {
         lastStringValue_ = value;
         surface_->SendEuConMessage(address_, value);
+    }
+}
+
+void EuCon_FeedbackProcessor::SetFaderToMinimumDB()
+{
+    string fader = "FaderDB";
+    
+    if(address_.find("FaderDB") != string::npos)
+    {
+        double min = -100.00;
+        
+        if(lastDoubleValue_ != min)
+        {
+            lastDoubleValue_ = min;
+            surface_->SendEuConMessage(address_, min);
+        }
     }
 }
 
@@ -2076,7 +2097,10 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     InitZones(zoneFolder_);
     GoHome();
     for(auto widget : widgets_)
+    {
         widget->Reset();
+        widget->SetFaderToMinimumDB();
+    }
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string address, double value)
