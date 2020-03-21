@@ -256,6 +256,8 @@ private:
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     
+    bool supportsTrackColor_ = false;
+    
     int currentRGBIndex_ = 0;
     
     void SetRGB(vector<string> params)
@@ -271,30 +273,38 @@ private:
             {
                 string strVal = *(it);
                 
-                if(regex_match(strVal, regex("[0-9]+")))
+                if(strVal == "Track")
                 {
-                    int value = stoi(strVal);
-                    value = value < 0 ? 0 : value;
-                    value = value > 255 ? 255 : value;
-                    
-                    rawValues.push_back(value);
+                    supportsTrackColor_ = true;
+                    break;
+                }
+                else
+                {
+                    if(regex_match(strVal, regex("[0-9]+")))
+                    {
+                        int value = stoi(strVal);
+                        value = value < 0 ? 0 : value;
+                        value = value > 255 ? 255 : value;
+                        
+                        rawValues.push_back(value);
+                    }
                 }
             }
-        }
-        
-        if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
-        {
-            supportsRGB_ = true;
             
-            for(int i = 0; i < rawValues.size(); i += 3)
+            if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
             {
-                rgb_color color;
+                supportsRGB_ = true;
                 
-                color.r = rawValues[i];
-                color.g = rawValues[i + 1];
-                color.b = rawValues[i + 2];
-                
-                RGBValues_.push_back(color);
+                for(int i = 0; i < rawValues.size(); i += 3)
+                {
+                    rgb_color color;
+                    
+                    color.r = rawValues[i];
+                    color.g = rawValues[i + 1];
+                    color.b = rawValues[i + 2];
+                    
+                    RGBValues_.push_back(color);
+                }
             }
         }
     }
@@ -464,10 +474,25 @@ public:
        
         widget->SetValue(value);
         
-        currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
+        {
+            currentRGBIndex_ = value == 0 ? 0 : 1;
             widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+        }
+        else if(supportsTrackColor_)
+        {
+            if(MediaTrack* track = GetWidget()->GetTrack())
+            {
+                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+
+                int r = (*rgb_colour >> 0) & 0xff;
+                int g = (*rgb_colour >> 8) & 0xff;
+                int b = (*rgb_colour >> 16) & 0xff;
+                
+                widget->SetRGBValue(r, g, b);
+            }
+        }
     }
     
     void SetWidgetValue(Widget* widget, int param, double value)
@@ -483,12 +508,42 @@ public:
         currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
+        {
+            currentRGBIndex_ = value == 0 ? 0 : 1;
             widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+        }
+        else if(supportsTrackColor_)
+        {
+            if(MediaTrack* track = GetWidget()->GetTrack())
+            {
+                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+                
+                int r = (*rgb_colour >> 0) & 0xff;
+                int g = (*rgb_colour >> 8) & 0xff;
+                int b = (*rgb_colour >> 16) & 0xff;
+                
+                widget->SetRGBValue(r, g, b);
+            }
+        }
     }
     
     void SetWidgetValue(Widget* widget, string value)
     {
         widget->SetValue(value);
+        
+        if(supportsTrackColor_)
+        {
+            if(MediaTrack* track = GetWidget()->GetTrack())
+            {
+                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+                
+                int r = (*rgb_colour >> 0) & 0xff;
+                int g = (*rgb_colour >> 8) & 0xff;
+                int b = (*rgb_colour >> 16) & 0xff;
+                
+                widget->SetRGBValue(r, g, b);
+            }
+        }
     }
 };
 
