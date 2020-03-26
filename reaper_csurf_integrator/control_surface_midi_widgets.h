@@ -98,6 +98,14 @@ public:
 class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    double height_ = 32.0;
+    double slope_ = 0.3;
+    
+    int lastTransition_ = 0;
+    int revolutionTime_ = 0;
+    int now_ = 0;
+    
 public:
     virtual ~Encoder_Midi_CSIMessageGenerator() {}
     Encoder_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
@@ -112,7 +120,21 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        widget_->DoRelativeAction(value / 8.0);
+        double z = value / 8.0;
+        
+        now_ = DAW::GetCurrentNumberOfMilliseconds();
+        revolutionTime_ = now_ - lastTransition_;
+        
+        if (revolutionTime_ < 27)
+        {
+            double rev = 27 - revolutionTime_ ;
+            double b = (int)slope_ * rev + height_;
+            z = z * b;
+        }
+        
+        lastTransition_ = now_;
+
+        widget_->DoRelativeAction(z);
     }
 };
 
