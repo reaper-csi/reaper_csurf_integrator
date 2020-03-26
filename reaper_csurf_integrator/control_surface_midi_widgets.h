@@ -99,12 +99,7 @@ class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    double height_ = 32.0;
-    double slope_ = 0.3;
-    
     int lastTransition_ = 0;
-    int revolutionTime_ = 0;
-    int now_ = 0;
     
 public:
     virtual ~Encoder_Midi_CSIMessageGenerator() {}
@@ -116,25 +111,26 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
-        
+
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        double z = value / 8.0;
+        value = value / 16.0;
         
-        now_ = DAW::GetCurrentNumberOfMilliseconds();
-        revolutionTime_ = now_ - lastTransition_;
-        
-        if (revolutionTime_ < 27)
-        {
-            double rev = 27 - revolutionTime_ ;
-            double b = (int)slope_ * rev + height_;
-            z = z * b;
-        }
-        
-        lastTransition_ = now_;
+        int now = DAW::GetCurrentNumberOfMilliseconds();
+        int revolutionTime = now - lastTransition_;
+        lastTransition_ = now;
 
-        widget_->DoRelativeAction(z);
+        if (revolutionTime < 25)
+            value *= 20.0;
+        else if (revolutionTime < 50)
+            value *= 10.0;
+        else if (revolutionTime < 100)
+            value *= 5.0;
+        else if (revolutionTime < 200)
+            value *= 3.0;
+
+        widget_->DoRelativeAction(value);
     }
 };
 
