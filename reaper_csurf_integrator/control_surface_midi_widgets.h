@@ -115,20 +115,20 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        value = value / 16.0;
+        value = value / 8.0;
         
         int now = DAW::GetCurrentNumberOfMilliseconds();
         int revolutionTime = now - lastTransition_;
         lastTransition_ = now;
 
         if (revolutionTime < 25)
-            value *= 20.0;
-        else if (revolutionTime < 50)
             value *= 10.0;
-        else if (revolutionTime < 100)
+        else if (revolutionTime < 50)
             value *= 5.0;
+        else if (revolutionTime < 100)
+            value *= 2.5;
         else if (revolutionTime < 200)
-            value *= 3.0;
+            value *= 1.5;
 
         widget_->DoRelativeAction(value);
     }
