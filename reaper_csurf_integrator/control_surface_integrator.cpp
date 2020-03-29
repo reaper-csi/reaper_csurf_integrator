@@ -1209,15 +1209,12 @@ void Widget::DoAction(double value)
         DAW::ShowConsoleMsg(buffer);
     }
 
+    GetSurface()->GetPage()->InputReceived(this, value);
+
     string modifiers = "";
     
     if( ! isModifier_)
-    {
         modifiers = surface_->GetPage()->GetModifiers();
-        
-        // GAW TBD LearnMode
-        // GetSurface()->GetPage()->InputReceived(this, value);
-    }
 
     if(activeZone_ != nullptr)
     {
@@ -1239,15 +1236,12 @@ void Widget::DoRelativeAction(double value)
         DAW::ShowConsoleMsg(buffer);
     }
     
+    GetSurface()->GetPage()->InputReceived(this, value);
+    
     string modifiers = "";
     
     if( ! isModifier_)
-    {
         modifiers = surface_->GetPage()->GetModifiers();
-        
-        // GAW TBD LearnMode
-        // GetSurface()->GetPage()->InputReceived(this, value);
-    }
     
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
@@ -2907,7 +2901,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_USER+1024:
         {
             currentSurface = currentWidget->GetSurface();
-            EnableButtons();
+            //EnableButtons();
 
             ClearWidgets();
             
