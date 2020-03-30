@@ -1566,7 +1566,8 @@ public:
     void ToggleLearnMode();
     void InputReceived(Widget* widget, double value);
     void ActionPerformed(Action* action);
-
+    void UpdateEditModeWindow();
+    
     bool GetShift() { return isShift_; }
     bool GetOption() { return isOption_; }
     bool GetControl() { return isControl_; }
@@ -1611,6 +1612,8 @@ public:
         
         for(auto surface : surfaces_)
             surface->RequestUpdate();
+        
+        UpdateEditModeWindow();
     }
     
     void Reset()
