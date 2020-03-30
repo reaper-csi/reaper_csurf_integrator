@@ -2248,10 +2248,6 @@ static string newZoneName = "";
 static string newZoneAlias = "";
 
 // Modifiers
-static bool isShift = false;
-static bool isOption = false;
-static bool isControl = false;
-static bool isAlt = false;
 static bool isTouch = false;
 static bool shouldToggle = false;
 static bool isHold = false;
@@ -2329,6 +2325,44 @@ static vector<Zone*> GetAvailableZones()
     int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
     
     return GetAvailableZones(zoneIndex);
+}
+
+static void UpdateCheckBoxes()
+{
+    if(currentPage != nullptr)
+    {
+        if (IsDlgButtonChecked(hwndLearn, IDC_CHECK_Shift) != currentPage->GetShift())
+        {
+            if(currentPage->GetShift())
+                CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_CHECKED);
+            else
+                CheckDlgButton(hwndLearn, IDC_CHECK_Shift, BST_UNCHECKED);
+        }
+        
+        if (IsDlgButtonChecked(hwndLearn, IDC_CHECK_Option) != currentPage->GetOption())
+        {
+            if(currentPage->GetOption())
+                CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_CHECKED);
+            else
+                CheckDlgButton(hwndLearn, IDC_CHECK_Option, BST_UNCHECKED);
+        }
+        
+        if (IsDlgButtonChecked(hwndLearn, IDC_CHECK_Control) != currentPage->GetControl())
+        {
+            if(currentPage->GetControl())
+                CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_CHECKED);
+            else
+                CheckDlgButton(hwndLearn, IDC_CHECK_Control, BST_UNCHECKED);
+        }
+        
+        if (IsDlgButtonChecked(hwndLearn, IDC_CHECK_Alt) != currentPage->GetAlt())
+        {
+            if(currentPage->GetAlt())
+                CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_CHECKED);
+            else
+                CheckDlgButton(hwndLearn, IDC_CHECK_Alt, BST_UNCHECKED);
+        }
+    }
 }
 
 static void SetCheckBoxes(ActionLineItem actionLineItem)
@@ -3228,10 +3262,10 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 actionLineItem.navigator = string(buffer);
                             }
                             
-                            actionLineItem.isShift = isShift;
-                            actionLineItem.isOption = isOption;
-                            actionLineItem.isControl = isControl;
-                            actionLineItem.isAlt = isAlt;
+                            actionLineItem.isShift =  currentPage != nullptr ? currentPage->GetShift() : false;
+                            actionLineItem.isOption = currentPage != nullptr ? currentPage->GetOption() : false;
+                            actionLineItem.isControl = currentPage != nullptr ? currentPage->GetControl() : false;
+                            actionLineItem.isAlt = currentPage != nullptr ? currentPage->GetAlt() : false;
                             actionLineItem.isToggle = shouldToggle;
                             actionLineItem.isInvert = isInvert;
                             actionLineItem.isTouch = isTouch;
@@ -3598,40 +3632,52 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 case IDC_CHECK_Shift:
                 {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Shift))
-                        isShift = true;
-                    else
-                        isShift = false;
-
+                    if(currentPage != nullptr)
+                    {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Shift))
+                            currentPage->SetShift(true);
+                        else
+                            currentPage->SetShift(false);
+                    }
+                    
                     break;
                 }
                     
                 case IDC_CHECK_Option:
                 {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Option))
-                        isOption = true;
-                    else
-                        isOption = false;
+                    if(currentPage != nullptr)
+                    {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Option))
+                            currentPage->SetOption(true);
+                        else
+                            currentPage->SetOption(false);
+                    }
 
                     break;
                 }
                     
                 case IDC_CHECK_Control:
                 {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Control))
-                        isControl = true;
-                    else
-                        isControl = false;
+                    if(currentPage != nullptr)
+                    {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Control))
+                            currentPage->SetControl(true);
+                        else
+                            currentPage->SetControl(false);
+                    }
 
                     break;
                 }
                     
                 case IDC_CHECK_Alt:
                 {
-                    if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Alt))
-                        isAlt = true;
-                    else
-                        isAlt = false;
+                    if(currentPage != nullptr)
+                    {
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_Alt))
+                            currentPage->SetAlt(true);
+                        else
+                            currentPage->SetAlt(false);
+                    }
 
                     break;
                 }
@@ -3790,16 +3836,14 @@ void Page::ActionPerformed(Action* action)
     
     currentAction = action;
     
-    isShift = isShift_;
-    isOption = isOption_;
-    isControl = isControl_;
-    isAlt = isAlt_;
-   
     //if(currentWidget != nullptr && currentWidgetActionManager != nullptr && currentAction != nullptr)
         //SendMessage(hwndLearn, WM_USER+1025, 0, 0);
 }
 
-
+void Page::UpdateEditModeWindow()
+{
+    UpdateCheckBoxes();
+}
 
 
 /*
