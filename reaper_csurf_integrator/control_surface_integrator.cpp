@@ -919,7 +919,7 @@ void Manager::Init()
             
             vector<string> tokens(GetTokens(line));
             
-            if(tokens.size() > 8) // ignore comment lines and blank lines
+            if(tokens.size() > 4) // ignore comment lines and blank lines
             {
                 if(tokens[0] == PageToken)
                 {
@@ -945,8 +945,14 @@ void Manager::Init()
                 }
                 else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
                 {
-                    int inPort = atoi(tokens[2].c_str());
-                    int outPort = atoi(tokens[3].c_str());
+                    int inPort = 0;
+                    int outPort = 0;
+                    
+                    if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
+                    {
+                        inPort = atoi(tokens[2].c_str());
+                        outPort = atoi(tokens[3].c_str());
+                    }
                     
                     if(currentPage)
                     {
@@ -956,23 +962,17 @@ void Manager::Init()
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[11]);
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 9)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4],
-                                                               atoi(tokens[2].c_str()), // firstChannel
-                                                               atoi(tokens[3].c_str()), // last Channel
-                                                               atoi(tokens[6].c_str()), // numSends
-                                                               atoi(tokens[7].c_str()), // numFX
-                                                               atoi(tokens[8].c_str())  // options
-                                                               );
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 5)
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[3], atoi(tokens[2].c_str()));
 
                         currentPage->AddSurface(surface);
                         
-                        if(tokens[0] == EuConSurfaceToken)
+                        if(tokens[0] == EuConSurfaceToken && tokens.size() == 5)
                         {
-                            if(tokens[5] == "UseZoneLink")
+                            if(tokens[4] == "UseZoneLink")
                                 surface->SetUseZoneLink(true);
                         }
-                        else
+                        else if(tokens.size() == 11 || tokens.size() == 12)
                         {
                             if(tokens[6] == "UseZoneLink")
                                 surface->SetUseZoneLink(true);
@@ -2023,8 +2023,8 @@ void HandleEuConMessageWithString(const char *address, const char *value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int lowChannel, int highChannel, int numSends, int numFX, int options)
-: ControlSurface(CSurfIntegrator, page, name), lowChannel_(lowChannel), highChannel_(highChannel), numSends_(numSends), numFX_(numFX), options_(options)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels)
+: ControlSurface(CSurfIntegrator, page, name), numChannels_(numChannels)
 {
     // EuCon takes care of managing navigation, so we just blast everything always
     sendsActivationManager_->SetShouldMapSends(true);
@@ -2056,12 +2056,12 @@ void EuCon_ControlSurface::InitializeEuCon()
 {
     if(g_reaper_plugin_info)
     {
-        void (*InitializeEuConWithParameters)(int firstChannel, int lastChannel, int numSends, int numFX, int numInputs, int numOutputs, int options);
+        void (*InitializeEuConWithParameters)(int numChannels_);
         
-        InitializeEuConWithParameters = (void (*)(int, int, int, int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
+        InitializeEuConWithParameters = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
         if(InitializeEuConWithParameters)
-            InitializeEuConWithParameters(lowChannel_, highChannel_, numSends_, numFX_, 0, 0, options_);
+            InitializeEuConWithParameters(numChannels_);
     }
 }
 
