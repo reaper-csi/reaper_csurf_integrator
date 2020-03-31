@@ -84,16 +84,10 @@
 #define IDC_BUTTON_NewFile              1075
 #define IDC_SLIDER_Blue                 1076
 #define IDC_SLIDER_Red                  1077
-#define IDC_EDIT_FirstChannel           1077
 #define IDC_BUTTON_Close                1078
-#define IDC_EDIT_NumSends               1078
 #define IDC_SLIDER_Green                1079
-#define IDC_EDIT_NumFX                  1079
-#define IDC_CHECK_PanWidth              1080
-#define IDC_CHECK_PanLPanR              1081
 #define IDC_EDIT_EuConSurfaceName       1084
-#define IDC_EDIT_LastChannel            1085
-
+#define IDC_EDIT_NumChannels            1085
 
 // Next default values for new objects
 // 

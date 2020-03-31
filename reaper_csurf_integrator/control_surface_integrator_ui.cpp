@@ -182,11 +182,7 @@ struct SurfaceLine
     string remoteDeviceIP = "";
 
     // for EuCon
-    int firstChannel = 0;
-    int lastChannel = 0;
-    int numSends = 0;
-    int numFX = 0;
-    int options = 0;
+    int numChannels = 0;
 };
 
 struct PageLine
@@ -216,11 +212,7 @@ static char remoteDeviceIP[BUFSZ];
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
 // for EuCon
-int firstChannel = 0;
-int lastChannel = 0;
-int numSends = 0;
-int numFX = 0;
-int options = 0;
+int numChannels = 0;
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -235,9 +227,9 @@ static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
 
-static void ModifyEuConZoneFile(int firstChannel, int lastChannel)
+static void ModifyEuConZoneFile(int numChannels)
 {
-    string channelStr = to_string(firstChannel) + "-" + to_string(lastChannel);
+    string channelStr = "1-" + to_string(numChannels);
     
     vector<string> inputLines;
     vector<string> outputLines;
@@ -781,24 +773,11 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name);
-                SetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, to_string(firstChannel).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, to_string(lastChannel).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-                
-                if(options & 0x01)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_PanWidth, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_PanWidth, BST_UNCHECKED);
-                
-                if(options & 0x02)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_PanLPanR, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_PanLPanR, BST_UNCHECKED);
                 
                 if(useZoneLink)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ZoneLink, BST_CHECKED);
@@ -808,10 +787,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             else
             {
                 SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, "EuCon");
-                SetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, "1");
-                SetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, "8");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "8");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "16");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, "8");
                 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)"EuCon");
                 if(index >= 0)
@@ -831,30 +807,15 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
                         char buf[BUFSZ];
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_FirstChannel, buf, sizeof(buf));
-                        firstChannel = atoi(buf);
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_LastChannel, buf, sizeof(buf));
-                        lastChannel = atoi(buf);
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, buf, sizeof(buf));
+                        numChannels = atoi(buf);
                         
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumSends, buf, sizeof(buf));
-                        numSends = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
-                        numFX = atoi(buf);
-                        
+                       
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
                             useZoneLink = true;
                         else
                             useZoneLink = false;
-                        
-                        options = 0;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PanWidth))
-                            options |= 0x01;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_PanLPanR))
-                            options |= 0x02;
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
 
@@ -1011,11 +972,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->type = EuConSurfaceToken;
                                     surface->name = name;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
-                                    surface->firstChannel = firstChannel;
-                                    surface->lastChannel = lastChannel;
-                                    surface->numSends = numSends > 12 ? 12 : numSends;
-                                    surface->numFX = numFX;
-                                    surface->options = options;
+                                    surface->numChannels = numChannels;
                                     surface->useZoneLink = useZoneLink;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
@@ -1076,12 +1033,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 autoMapFocusedFX = pages[pageIndex]->surfaces[index]->autoMapFocusedFX;
                                 
                                 // for EuCon
-                                firstChannel = pages[pageIndex]->surfaces[index]->firstChannel;
-                                lastChannel = pages[pageIndex]->surfaces[index]->lastChannel;
-                                numSends = pages[pageIndex]->surfaces[index]->numSends;
-                                numFX = pages[pageIndex]->surfaces[index]->numFX;
-                                options = pages[pageIndex]->surfaces[index]->options;
-
+                                numChannels = pages[pageIndex]->surfaces[index]->numChannels;
                                 
                                 dlgResult = false;
                                 editMode = true;
@@ -1108,11 +1060,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->autoMapFocusedFX = autoMapFocusedFX;
                                     
                                     // for EuCon
-                                    pages[pageIndex]->surfaces[index]->firstChannel = firstChannel;
-                                    pages[pageIndex]->surfaces[index]->lastChannel = lastChannel;
-                                    pages[pageIndex]->surfaces[index]->numSends = numSends > 12 ? 12 : numSends;
-                                    pages[pageIndex]->surfaces[index]->numFX = numFX;
-                                    pages[pageIndex]->surfaces[index]->options = options;
+                                    pages[pageIndex]->surfaces[index]->numChannels = numChannels;
                                 }
                             }
                         }
@@ -1231,16 +1179,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
                                 surface->remoteDeviceIP = tokens[11];
                         }
-                        else if(surface->type == EuConSurfaceToken && tokens.size() == 9 )
+                        else if(surface->type == EuConSurfaceToken && tokens.size() == 5 )
                         {
-                            surface->firstChannel = atoi(tokens[2].c_str());
-                            surface->lastChannel = atoi(tokens[3].c_str());
-                            surface->zoneTemplateFolder = tokens[4];
-                            surface->useZoneLink = tokens[5] == "UseZoneLink" ? true : false;
-                            surface->numSends = atoi(tokens[6].c_str());
-                            surface->numFX = atoi(tokens[7].c_str());
-                            surface->options = atoi(tokens[8].c_str());
-                        }
+                            surface->numChannels = atoi(tokens[2].c_str());
+                            surface->zoneTemplateFolder = tokens[3];
+                            surface->useZoneLink = tokens[4] == "UseZoneLink" ? true : false;
+                         }
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->surfaces.push_back(surface);
@@ -1317,15 +1261,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         else if(surface->type == EuConSurfaceToken)
                         {
-                            line += to_string(surface->firstChannel) + " " ;
-                            line += to_string(surface->lastChannel) + " " ;
+                            line += to_string(surface->numChannels) + " " ;
                             line += "\"" + surface->zoneTemplateFolder + "\" ";
                             line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
-                            line += to_string(surface->numSends) + " " ;
-                            line += to_string(surface->numFX) + " " ;
-                            line += to_string(surface->options) + " " ;
                             
-                            ModifyEuConZoneFile(surface->firstChannel, surface->lastChannel);
+                            ModifyEuConZoneFile( surface->numChannels);
                         }
 
                         line += GetLineEnding();
