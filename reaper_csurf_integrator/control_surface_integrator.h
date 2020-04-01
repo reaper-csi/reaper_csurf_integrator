@@ -223,16 +223,17 @@ public:
     }
     
     void Clear();
+    void ForceClear();
 
     MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
     void SetIsTouched(bool isTouched);
-    void SetValue(double value);
-    void SetValue(int mode, double value);
-    void SetValue(string value);
-    void SetRGBValue(int r, int g, int b);
+    void UpdateValue(double value);
+    void UpdateValue(int mode, double value);
+    void UpdateValue(string value);
+    void UpdateRGBValue(int r, int g, int b);
     void ClearCache();
 };
 
@@ -416,7 +417,7 @@ public:
     virtual void RequestUpdate()
     {
         if(supportsRGB_)
-            GetWidget()->SetRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+            GetWidget()->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
     
     void SetCurrentRGB(rgb_color newColor)
@@ -452,7 +453,7 @@ public:
         }
     }
     
-    void SetWidgetValue(Widget* widget, double value)
+    void UpdateWidgetValue(Widget* widget, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
      
@@ -460,13 +461,13 @@ public:
         
         lastValue_ = value;
        
-        widget->SetValue(value);
+        widget->UpdateValue(value);
         
         
         if(supportsRGB_)
         {
             currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+            widget->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
         }
         else if(supportsTrackColor_)
         {
@@ -478,12 +479,12 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->SetRGBValue(r, g, b);
+                widget->UpdateRGBValue(r, g, b);
             }
         }
     }
     
-    void SetWidgetValue(Widget* widget, int param, double value)
+    void UpdateWidgetValue(Widget* widget, int param, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
         
@@ -491,14 +492,14 @@ public:
         
         lastValue_ = value;
 
-        widget->SetValue(param, value);
+        widget->UpdateValue(param, value);
         
         currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
         {
             currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget->SetRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+            widget->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
         }
         else if(supportsTrackColor_)
         {
@@ -510,14 +511,14 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->SetRGBValue(r, g, b);
+                widget->UpdateRGBValue(r, g, b);
             }
         }
     }
     
-    void SetWidgetValue(Widget* widget, string value)
+    void UpdateWidgetValue(Widget* widget, string value)
     {
-        widget->SetValue(value);
+        widget->UpdateValue(value);
         
         if(supportsTrackColor_)
         {
@@ -529,7 +530,7 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->SetRGBValue(r, g, b);
+                widget->UpdateRGBValue(r, g, b);
             }
         }
     }
@@ -656,6 +657,7 @@ class FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    bool mustForce_ = false;
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
@@ -663,17 +665,30 @@ protected:
 public:
     virtual ~FeedbackProcessor() {}
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
-    virtual void SetValue(double value) {}
-    virtual void SetValue(int param, double value) {}
-    virtual void SetValue(string value) {}
-    virtual void SetRGBValue(int r, int g, int b) {}
+    virtual void UpdateValue(double value) {}
+    virtual void UpdateValue(int param, double value) {}
+    virtual void UpdateValue(string value) {}
+    virtual void UpdateRGBValue(int r, int g, int b) {}
+    virtual void ForceValue(double value) {}
+    virtual void ForceValue(int param, double value) {}
+    virtual void ForceValue(string value) {}
+    virtual void ForceRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
+    
     virtual void Clear(Widget* widget)
     {
-        widget->SetValue(0.0);
-        widget->SetValue(0, 0.0);
-        widget->SetValue(" ");
-        widget->SetRGBValue(0, 0, 0);
+        widget->UpdateValue(0.0);
+        widget->UpdateValue(0, 0.0);
+        widget->UpdateValue("");
+        widget->UpdateRGBValue(0, 0, 0);
+    }
+    
+    virtual void ForceClear(Widget* widget)
+    {
+        ForceValue(0.0);
+        ForceValue(0, 0.0);
+        ForceValue("");
+        ForceRGBValue(0, 0, 0);
     }
 };
 
@@ -694,7 +709,8 @@ protected:
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
-    
+    void ForceMidiMessage(int first, int second, int third);
+
 public:
     virtual void ClearCache() override
     {
@@ -719,9 +735,12 @@ public:
     OSC_FeedbackProcessor(OSC_ControlSurface* surface, string oscAddress) : surface_(surface), oscAddress_(oscAddress) {}
     ~OSC_FeedbackProcessor() {}
     
-    virtual void SetValue(double value) override;
-    virtual void SetValue(int param, double value) override;
-    virtual void SetValue(string value) override;
+    virtual void UpdateValue(double value) override;
+    virtual void UpdateValue(int param, double value) override;
+    virtual void UpdateValue(string value) override;
+    virtual void ForceValue(double value) override;
+    virtual void ForceValue(int param, double value) override;
+    virtual void ForceValue(string value) override;
     
     virtual void ClearCache() override
     {
@@ -745,10 +764,13 @@ public:
     EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, string address) : surface_(surface), address_(address) {}
     ~EuCon_FeedbackProcessor() {}
     
-    virtual void SetValue(double value) override;
-    virtual void SetValue(int param, double value) override;
-    virtual void SetValue(string value) override;
-    
+    virtual void UpdateValue(double value) override;
+    virtual void UpdateValue(int param, double value) override;
+    virtual void UpdateValue(string value) override;
+    virtual void ForceValue(double value) override;
+    virtual void ForceValue(int param, double value) override;
+    virtual void ForceValue(string value) override;
+
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;
@@ -766,6 +788,7 @@ public:
     ~EuCon_FeedbackProcessorDB() {}
     
     virtual void Clear(Widget* widget) override;
+    virtual void ForceClear(Widget* widget) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1031,10 +1054,10 @@ public:
             widget->RequestUpdate();
     }
 
-    virtual void ClearAllWidgets()
+    virtual void ForceClearAllWidgets()
     {
         for(auto widget : widgets_)
-            widget->Clear();
+            widget->ForceClear();
     }
     
     void ClearCache()
@@ -1083,7 +1106,7 @@ public:
     {
         InitWidgets(templateFilename);
         
-        ClearAllWidgets();
+        ForceClearAllWidgets();
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
@@ -1168,7 +1191,7 @@ public:
     {
         InitWidgets(templateFilename);
         
-        ClearAllWidgets();
+        ForceClearAllWidgets();
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
@@ -1190,10 +1213,10 @@ public:
     void SendOSCMessage(string oscAddress, double value);
     void SendOSCMessage(string oscAddress, string value);
     
-    virtual void ClearAllWidgets() override
+    virtual void ForceClearAllWidgets() override
     {
         LoadingZone("Home");
-        ControlSurface::ClearAllWidgets();
+        ControlSurface::ForceClearAllWidgets();
     }
     
     virtual void HandleExternalInput() override
@@ -1608,10 +1631,10 @@ public:
         UpdateEditModeWindow();
     }
     
-    void ClearAllWidgets()
+    void ForceClearAllWidgets()
     {
         for(auto surface : surfaces_)
-            surface->ClearAllWidgets();
+            surface->ForceClearAllWidgets();
     }
     
     void AddSurface(ControlSurface* surface)
@@ -1875,7 +1898,7 @@ public:
         InitActionDictionary();
     }
     
-    void ClearAllWidgets()
+    void ForceClearAllWidgets()
     {
         fxMonitor_ = false;
         surfaceInMonitor_ = false;
@@ -1884,7 +1907,7 @@ public:
         oscOutMonitor_ = false;
 
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ClearAllWidgets();
+            pages_[currentPageIndex_]->ForceClearAllWidgets();
     }
     
     void Init();
