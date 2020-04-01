@@ -222,13 +222,7 @@ public:
             activeZone_ = zonesAvailable_["Home"];
     }
     
-    void Clear()
-    {
-        SetValue(0.0);
-        SetValue(0, 0.0);
-        SetValue(" ");
-        SetRGBValue(0, 0, 0);
-    }
+    void Clear();
 
     MediaTrack* GetTrack();
     void RequestUpdate();
@@ -674,6 +668,13 @@ public:
     virtual void SetValue(string value) {}
     virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
+    virtual void Clear(Widget* widget)
+    {
+        widget->SetValue(0.0);
+        widget->SetValue(0, 0.0);
+        widget->SetValue(" ");
+        widget->SetRGBValue(0, 0, 0);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -763,6 +764,8 @@ public:
     
     EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, string address) : EuCon_FeedbackProcessor(surface, address) {}
     ~EuCon_FeedbackProcessorDB() {}
+    
+    virtual void Clear(Widget* widget) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

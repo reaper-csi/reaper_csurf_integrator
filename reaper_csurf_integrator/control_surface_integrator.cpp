@@ -1277,6 +1277,11 @@ void  Widget::SetRGBValue(int r, int g, int b)
     feedbackProcessor_->SetRGBValue(r, g, b);
 }
 
+void  Widget::Clear()
+{
+    feedbackProcessor_->Clear(this);
+}
+
 void Widget::ClearCache()
 {
     feedbackProcessor_->ClearCache();
@@ -1509,6 +1514,18 @@ void EuCon_FeedbackProcessor::SetValue(string value)
     {
         lastStringValue_ = value;
         surface_->SendEuConMessage(address_, value);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// EuCon_FeedbackProcessorDB
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EuCon_FeedbackProcessorDB::Clear(Widget* widget)
+{
+    if(lastDoubleValue_ != -100.0)
+    {
+        lastDoubleValue_ = -100.0;
+        surface_->SendEuConMessage(address_, -100.0);
     }
 }
 
