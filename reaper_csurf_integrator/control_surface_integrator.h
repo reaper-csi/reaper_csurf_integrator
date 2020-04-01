@@ -211,8 +211,8 @@ public:
         if(zonesAvailable_.count(zoneName) > 0 && zonesAvailable_.count("NoAction") > 0)
         {
             activeZone_ = zonesAvailable_["NoAction"];
-            Reset();
-            SetFaderToMinimumDB();
+            
+            Clear();
         }
     }
     
@@ -222,11 +222,11 @@ public:
             activeZone_ = zonesAvailable_["Home"];
     }
     
-    void Reset()
+    void Clear()
     {
         SetValue(0.0);
         SetValue(0, 0.0);
-        SetValue("");
+        SetValue(" ");
         SetRGBValue(0, 0, 0);
     }
 
@@ -238,7 +238,6 @@ public:
     void SetValue(double value);
     void SetValue(int mode, double value);
     void SetValue(string value);
-    void SetFaderToMinimumDB();
     void SetRGBValue(int r, int g, int b);
     void ClearCache();
 };
@@ -406,11 +405,6 @@ public:
     virtual void DoRelativeAction(double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
-    virtual void Reset()
-    {
-        GetWidget()->Reset();
-    }
-    
     void PerformDeferredActions()
     {
         if(deferredSender_ != nullptr && delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
@@ -555,7 +549,7 @@ public:
     NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     virtual ~NoAction() {}
     
-    virtual void RequestUpdate() { Reset(); }
+    virtual void RequestUpdate() {  GetWidget()->Clear(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -678,7 +672,6 @@ public:
     virtual void SetValue(double value) {}
     virtual void SetValue(int param, double value) {}
     virtual void SetValue(string value) {}
-    virtual void SetFaderToMinimumDB() {}
     virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
 };
@@ -754,13 +747,22 @@ public:
     virtual void SetValue(double value) override;
     virtual void SetValue(int param, double value) override;
     virtual void SetValue(string value) override;
-    virtual void SetFaderToMinimumDB() override;
-
+    
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;
         lastStringValue_ = "";
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuCon_FeedbackProcessorDB : public EuCon_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    
+    EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, string address) : EuCon_FeedbackProcessor(surface, address) {}
+    ~EuCon_FeedbackProcessorDB() {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -924,7 +926,6 @@ public:
     SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
     void SetUseZoneLink(bool useZoneLink) { useZoneLink_ = useZoneLink; }
-    virtual void ResetAll() {}
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1027,13 +1028,10 @@ public:
             widget->RequestUpdate();
     }
 
-    void ResetAllWidgets()
+    virtual void ClearAllWidgets()
     {
         for(auto widget : widgets_)
-        {
-            widget->Reset();
-            widget->SetFaderToMinimumDB();
-        }
+            widget->Clear();
     }
     
     void ClearCache()
@@ -1082,7 +1080,7 @@ public:
     {
         InitWidgets(templateFilename);
         
-        ResetAllWidgets();
+        ClearAllWidgets();
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
@@ -1167,7 +1165,7 @@ public:
     {
         InitWidgets(templateFilename);
         
-        ResetAllWidgets();
+        ClearAllWidgets();
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
@@ -1189,9 +1187,10 @@ public:
     void SendOSCMessage(string oscAddress, double value);
     void SendOSCMessage(string oscAddress, string value);
     
-    virtual void ResetAll() override
+    virtual void ClearAllWidgets() override
     {
         LoadingZone("Home");
+        ControlSurface::ClearAllWidgets();
     }
     
     virtual void HandleExternalInput() override
@@ -1254,11 +1253,6 @@ public:
     virtual void HandleExternalInput() override;
     void HandleEuConMessage(string oscAddress, double value);
     void HandleEuConMessage(string oscAddress, string value);
-
-    virtual void ResetAll() override
-    {
-        LoadingZone("Home");
-    }
     
     void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
     {
@@ -1611,13 +1605,10 @@ public:
         UpdateEditModeWindow();
     }
     
-    void Reset()
+    void ClearAllWidgets()
     {
         for(auto surface : surfaces_)
-        {
-            surface->ResetAll();
-            surface->ResetAllWidgets();
-        }
+            surface->ClearAllWidgets();
     }
     
     void AddSurface(ControlSurface* surface)
@@ -1881,7 +1872,7 @@ public:
         InitActionDictionary();
     }
     
-    void ResetAllWidgets()
+    void ClearAllWidgets()
     {
         fxMonitor_ = false;
         surfaceInMonitor_ = false;
@@ -1890,7 +1881,7 @@ public:
         oscOutMonitor_ = false;
 
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->Reset();
+            pages_[currentPageIndex_]->ClearAllWidgets();
     }
     
     void Init();
