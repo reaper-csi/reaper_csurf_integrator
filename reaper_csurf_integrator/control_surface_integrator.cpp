@@ -1279,12 +1279,12 @@ void  Widget::UpdateRGBValue(int r, int g, int b)
 
 void  Widget::Clear()
 {
-    feedbackProcessor_->Clear(this);
+    feedbackProcessor_->Clear();
 }
 
 void  Widget::ForceClear()
 {
-    feedbackProcessor_->ForceClear(this);
+    feedbackProcessor_->ForceClear();
 }
 
 void Widget::ClearCache()
@@ -1547,13 +1547,13 @@ void EuCon_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessorDB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessorDB::Clear(Widget* widget)
+void EuCon_FeedbackProcessorDB::Clear()
 {
     if(lastDoubleValue_ != -100.0)
-        ForceClear(widget);
+        ForceClear();
 }
 
-void EuCon_FeedbackProcessorDB::ForceClear(Widget* widget)
+void EuCon_FeedbackProcessorDB::ForceClear()
 {
     lastDoubleValue_ = -100.0;
     surface_->SendEuConMessage(address_, -100.0);
