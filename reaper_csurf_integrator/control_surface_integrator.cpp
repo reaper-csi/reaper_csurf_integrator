@@ -1257,29 +1257,34 @@ void Widget::SetIsTouched(bool isZoneTouched)
         activeZone_->SetIsTouched(isZoneTouched);
 }
 
-void  Widget::SetValue(double value)
+void  Widget::UpdateValue(double value)
 {
-    feedbackProcessor_->SetValue(value);
+    feedbackProcessor_->UpdateValue(value);
 }
 
-void  Widget::SetValue(int mode, double value)
+void  Widget::UpdateValue(int mode, double value)
 {
-    feedbackProcessor_->SetValue(mode, value);
+    feedbackProcessor_->UpdateValue(mode, value);
 }
 
-void  Widget::SetValue(string value)
+void  Widget::UpdateValue(string value)
 {
-    feedbackProcessor_->SetValue(value);
+    feedbackProcessor_->UpdateValue(value);
 }
 
-void  Widget::SetRGBValue(int r, int g, int b)
+void  Widget::UpdateRGBValue(int r, int g, int b)
 {
-    feedbackProcessor_->SetRGBValue(r, g, b);
+    feedbackProcessor_->UpdateRGBValue(r, g, b);
 }
 
 void  Widget::Clear()
 {
     feedbackProcessor_->Clear(this);
+}
+
+void  Widget::ForceClear()
+{
+    feedbackProcessor_->ForceClear(this);
 }
 
 void Widget::ClearCache()
@@ -1441,80 +1446,102 @@ void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 
 void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 {
-    if(first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
+    if(mustForce_ || first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
     {
-        lastMessageSent_->midi_message[0] = first;
-        lastMessageSent_->midi_message[1] = second;
-        lastMessageSent_->midi_message[2] = third;
-        surface_->SendMidiMessage(first, second, third);
+        ForceMidiMessage(first, second, third);
     }
     else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
     {
         lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
-        surface_->SendMidiMessage(first, second, third);
+        ForceMidiMessage(first, second, third);
     }
+}
+
+void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
+{
+    lastMessageSent_->midi_message[0] = first;
+    lastMessageSent_->midi_message[1] = second;
+    lastMessageSent_->midi_message[2] = third;
+    surface_->SendMidiMessage(first, second, third);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void OSC_FeedbackProcessor::SetValue(double value)
+void OSC_FeedbackProcessor::UpdateValue(double value)
 {
     if(lastDoubleValue_ != value)
-    {
-        lastDoubleValue_ = value;
-        surface_->SendOSCMessage(oscAddress_, value);
-    }
+        ForceValue(value);
 }
 
-void OSC_FeedbackProcessor::SetValue(int param, double value)
+void OSC_FeedbackProcessor::UpdateValue(int param, double value)
 {
     if(lastDoubleValue_ != value)
-    {
-        lastDoubleValue_ = value;
-        surface_->SendOSCMessage(oscAddress_, value);
-    }
+        ForceValue(value);
 }
 
-void OSC_FeedbackProcessor::SetValue(string value)
+void OSC_FeedbackProcessor::UpdateValue(string value)
 {
     if(lastStringValue_ != value)
-    {
-        lastStringValue_ = value;
-        surface_->SendOSCMessage(oscAddress_, value);
-    }
+        ForceValue(value);
+}
+
+void OSC_FeedbackProcessor::ForceValue(double value)
+{
+    lastDoubleValue_ = value;
+    surface_->SendOSCMessage(oscAddress_, value);
+}
+
+void OSC_FeedbackProcessor::ForceValue(int param, double value)
+{
+    lastDoubleValue_ = value;
+    surface_->SendOSCMessage(oscAddress_, value);
+}
+
+void OSC_FeedbackProcessor::ForceValue(string value)
+{
+    lastStringValue_ = value;
+    surface_->SendOSCMessage(oscAddress_, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessor::SetValue(double value)
+void EuCon_FeedbackProcessor::UpdateValue(double value)
 {
     if(lastDoubleValue_ != value)
-    {
-        lastDoubleValue_ = value;
-        surface_->SendEuConMessage(address_, value);
-    }
+        ForceValue(value);
 }
 
-void EuCon_FeedbackProcessor::SetValue(int param, double value)
+void EuCon_FeedbackProcessor::UpdateValue(int param, double value)
 {
-    // GAW TBD -- if needed must implement on EuCon side
-    
     if(lastDoubleValue_ != value)
-    {
-        lastDoubleValue_ = value;
-        //surface_->SendEuConMessage(address_, param, value);
-    }
+        ForceValue(param, value);
 }
 
-void EuCon_FeedbackProcessor::SetValue(string value)
+void EuCon_FeedbackProcessor::UpdateValue(string value)
 {
     if(lastStringValue_ != value)
-    {
-        lastStringValue_ = value;
-        surface_->SendEuConMessage(address_, value);
-    }
+        ForceValue(value);
+}
+
+void EuCon_FeedbackProcessor::ForceValue(double value)
+{
+    lastDoubleValue_ = value;
+    surface_->SendEuConMessage(address_, value);
+}
+
+void EuCon_FeedbackProcessor::ForceValue(int param, double value)
+{
+    // GAW TBD -- if needed must implement on EuCon side
+    lastDoubleValue_ = value;
+    //surface_->SendEuConMessage(address_, param, value);
+}
+
+void EuCon_FeedbackProcessor::ForceValue(string value)
+{
+    lastStringValue_ = value;
+    surface_->SendEuConMessage(address_, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1523,10 +1550,13 @@ void EuCon_FeedbackProcessor::SetValue(string value)
 void EuCon_FeedbackProcessorDB::Clear(Widget* widget)
 {
     if(lastDoubleValue_ != -100.0)
-    {
-        lastDoubleValue_ = -100.0;
-        surface_->SendEuConMessage(address_, -100.0);
-    }
+        ForceClear(widget);
+}
+
+void EuCon_FeedbackProcessorDB::ForceClear(Widget* widget)
+{
+    lastDoubleValue_ = -100.0;
+    surface_->SendEuConMessage(address_, -100.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2091,7 +2121,7 @@ void EuCon_ControlSurface::EuConInitializationComplete()
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
     GoHome();
-    ClearAllWidgets();
+    ForceClearAllWidgets();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string address, double value)

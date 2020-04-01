@@ -88,7 +88,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        SetWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
+        UpdateWidgetValue(GetWidget(), DAW::GetToggleCommandState(commandId_));
     }
     
     virtual void Do(double value, Widget* sender) override
@@ -236,7 +236,7 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            SetWidgetValue(GetWidget(), GetCurrentValue());
+            UpdateWidgetValue(GetWidget(), GetCurrentValue());
         else
              GetWidget()->Clear();
     }
