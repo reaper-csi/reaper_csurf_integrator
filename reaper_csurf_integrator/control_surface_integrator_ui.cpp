@@ -37,7 +37,7 @@ CSurfIntegrator::~CSurfIntegrator()
 {
     if(TheManager)
     {
-        TheManager->ResetAllWidgets();
+        TheManager->ClearAllWidgets();
         delete TheManager;
         TheManager = nullptr;
     }

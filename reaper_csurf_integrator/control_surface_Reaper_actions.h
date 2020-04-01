@@ -121,12 +121,7 @@ protected:
     
 public:
     TrackVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
-    
-    virtual void Reset() override
-    {
-        GetWidget()->SetFaderToMinimumDB();
-    }
-    
+        
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
@@ -292,11 +287,6 @@ protected:
     
 public:
     TrackSendVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
-    
-    virtual void Reset() override
-    {
-        GetWidget()->SetFaderToMinimumDB();
-    }
 
     void Do(double value, Widget* sender) override
     {
@@ -443,7 +433,7 @@ public:
             SetWidgetValue(GetWidget(), GetWidget()->GetSurface()->GetLocalZoneAlias(fxName));
         }
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
@@ -459,7 +449,7 @@ public:
         if(MediaTrack* track = GetWidget()->GetTrack())
             SetWidgetValue(GetWidget(), GetDisplayName());
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
@@ -479,7 +469,7 @@ public:
             SetWidgetValue(GetWidget(), string(fxParamValue));
         }
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
@@ -506,7 +496,7 @@ public:
             }
         }
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
@@ -533,7 +523,7 @@ public:
            }
         }
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
@@ -1148,7 +1138,7 @@ public:
                 SetWidgetValue(GetWidget(), 0.0);
         }
         else
-            Reset();
+             GetWidget()->Clear();
     }
 };
 
