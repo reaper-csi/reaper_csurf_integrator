@@ -675,15 +675,15 @@ public:
     virtual void ForceRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
     
-    virtual void Clear(Widget* widget)
+    virtual void Clear()
     {
-        widget->UpdateValue(0.0);
-        widget->UpdateValue(0, 0.0);
-        widget->UpdateValue("");
-        widget->UpdateRGBValue(0, 0, 0);
+        UpdateValue(0.0);
+        UpdateValue(0, 0.0);
+        UpdateValue("");
+        UpdateRGBValue(0, 0, 0);
     }
     
-    virtual void ForceClear(Widget* widget)
+    virtual void ForceClear()
     {
         ForceValue(0.0);
         ForceValue(0, 0.0);
@@ -787,8 +787,8 @@ public:
     EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, string address) : EuCon_FeedbackProcessor(surface, address) {}
     ~EuCon_FeedbackProcessorDB() {}
     
-    virtual void Clear(Widget* widget) override;
-    virtual void ForceClear(Widget* widget) override;
+    virtual void Clear() override;
+    virtual void ForceClear() override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
