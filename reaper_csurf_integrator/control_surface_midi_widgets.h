@@ -505,7 +505,7 @@ private:
     int displayType_ = 0x14;
     int displayRow_ = 0x12;
     int channel_ = 0;
-    string lastStringSent_ = " ";
+    string lastStringSent_ = "";
 
 public:
     virtual ~MCUDisplay_Midi_FeedbackProcessor() {}
