@@ -1147,47 +1147,19 @@ class OSC_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string remoteDeviceIP_ = "";
     string templateFilename_ = "";
-    int inPort_ = 0;
-    int outPort_ = 0;
-    oscpkt::UdpSocket inSocket_;
-    oscpkt::UdpSocket outSocket_;
+    oscpkt::UdpSocket* const inSocket_ = nullptr;
+    oscpkt::UdpSocket* const outSocket_ = nullptr;
     oscpkt::PacketReader packetReader_;
     oscpkt::PacketWriter packetWriter_;
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
     void InitWidgets(string templateFilename);
     void ProcessOSCMessage(string message, double value);
-    
-    void runServer()
-    {
-        inSocket_.bindTo(inPort_);
-        
-        if (!inSocket_.isOk())
-        {
-            //cerr << "Error opening port " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
-            return;
-        }
-        
-        if( ! outSocket_.connectTo(remoteDeviceIP_, outPort_))
-        {
-            //cerr << "Error connecting " << remoteDeviceIP_ << ": " << outSocket_.errorMessage() << "\n";
-            return;
-        }
 
-        outSocket_.bindTo(outPort_);
-        
-        if ( ! outSocket_.isOk())
-        {
-            //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
-            return;
-        }
-    }
-    
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int inPort, int outPort, string remoteDeviceIP)
-    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inPort_(inPort), outPort_(outPort), remoteDeviceIP_(remoteDeviceIP)
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
+    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
         InitWidgets(templateFilename);
         
@@ -1195,17 +1167,11 @@ public:
         
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
-        
-        runServer();
-        
+
         GoHome();
     }
     
-    virtual ~OSC_ControlSurface()
-    {
-        
-        // GAW TBD -- orderly Server shutdown  
-    }
+    virtual ~OSC_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
     
@@ -1221,11 +1187,11 @@ public:
     
     virtual void HandleExternalInput() override
     {
-        if(inSocket_.isOk())
+        if(inSocket_ != nullptr && inSocket_->isOk())
         {
-            while (inSocket_.receiveNextPacket(0))  // timeout, in ms
+            while (inSocket_->receiveNextPacket(0))  // timeout, in ms
             {
-                packetReader_.init(inSocket_.packetData(), inSocket_.packetSize());
+                packetReader_.init(inSocket_->packetData(), inSocket_->packetSize());
                 oscpkt::Message *message;
                 
                 while (packetReader_.isOk() && (message = packetReader_.popMessage()) != 0)

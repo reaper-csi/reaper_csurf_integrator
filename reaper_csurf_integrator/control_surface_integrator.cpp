@@ -89,6 +89,71 @@ void ShutdownMidiIO()
         input->midiInput_->stop();
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// OSC I/O Manager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static map<string, oscpkt::UdpSocket*> inputSockets_;
+static map<string, oscpkt::UdpSocket*> outputSockets_;
+
+static oscpkt::UdpSocket* GetInputSocketForPort(string surfaceName, int inputPort)
+{
+    if(inputSockets_.count(surfaceName) > 0)
+        return inputSockets_[surfaceName]; // return existing
+    
+    // otherwise make new
+    oscpkt::UdpSocket* newInputSocket = new oscpkt::UdpSocket();
+    
+    if(newInputSocket)
+    {
+        newInputSocket->bindTo(inputPort);
+        
+        if (! newInputSocket->isOk())
+        {
+            //cerr << "Error opening port " << PORT_NUM << ": " << inSocket_.errorMessage() << "\n";
+            return nullptr;
+        }
+        
+        inputSockets_[surfaceName] = newInputSocket;
+        
+        return inputSockets_[surfaceName];
+    }
+    
+    return nullptr;
+}
+
+static oscpkt::UdpSocket* GetOutputSocketForAddressAndPort(string surfaceName, string address, int outputPort)
+{
+    if(outputSockets_.count(surfaceName) > 0)
+        return outputSockets_[surfaceName]; // return existing
+    
+    // otherwise make new
+    oscpkt::UdpSocket* newOutputSocket = new oscpkt::UdpSocket();
+    
+    if(newOutputSocket)
+    {
+        if( ! newOutputSocket->connectTo(address, outputPort))
+        {
+            //cerr << "Error connecting " << remoteDeviceIP_ << ": " << outSocket_.errorMessage() << "\n";
+            return nullptr;
+        }
+        
+        newOutputSocket->bindTo(outputPort);
+        
+        if ( ! newOutputSocket->isOk())
+        {
+            //cerr << "Error opening port " << outPort_ << ": " << outSocket_.errorMessage() << "\n";
+            return nullptr;
+        }
+
+        outputSockets_[surfaceName] = newOutputSocket;
+        
+        return outputSockets_[surfaceName];
+    }
+    
+    return nullptr;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -961,7 +1026,7 @@ void Manager::Init()
                         if(tokens[0] == MidiSurfaceToken && tokens.size() == 11)
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], inPort, outPort, tokens[11]);
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[11], outPort));
                         else if(tokens[0] == EuConSurfaceToken && tokens.size() == 5)
                             surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[3], atoi(tokens[2].c_str()));
 
@@ -1919,12 +1984,12 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
     oscAddress = "/" + oscAddress;
 
-    if(outSocket_.isOk())
+    if(outSocket_->isOk())
     {
         oscpkt::Message message;
         message.init(oscAddress);
         packetWriter_.init().addMessage(message);
-        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
     if(TheManager->GetSurfaceOutMonitor())
@@ -1937,12 +2002,12 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
 
 void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
 {
-    if(outSocket_.isOk())
+    if(outSocket_ != nullptr && outSocket_->isOk())
     {
         oscpkt::Message message;
         message.init(oscAddress).pushFloat(value);
         packetWriter_.init().addMessage(message);
-        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
     if(TheManager->GetSurfaceOutMonitor())
@@ -1955,12 +2020,12 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
 
 void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
 {
-    if(outSocket_.isOk())
+    if(outSocket_ != nullptr && outSocket_->isOk())
     {
         oscpkt::Message message;
         message.init(oscAddress).pushStr(value);
         packetWriter_.init().addMessage(message);
-        outSocket_.sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
+        outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
     if(TheManager->GetSurfaceOutMonitor())
