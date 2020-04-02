@@ -214,6 +214,52 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanLPercent : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        UpdateWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL") * 100.0);
+    }
+    
+public:
+    TrackPanLPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            double panFromPercent = value / 100.0;
+            DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanRPercent : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        UpdateWidgetValue(GetWidget(), DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR") * 100.0);
+    }
+    
+public:
+    TrackPanRPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            double panFromPercent = value / 100.0;
+            DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackNameDisplay : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
