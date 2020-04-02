@@ -453,7 +453,7 @@ public:
         }
     }
     
-    void UpdateWidgetValue(Widget* widget, double value)
+    void UpdateWidgetValue(double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
      
@@ -461,13 +461,13 @@ public:
         
         lastValue_ = value;
        
-        widget->UpdateValue(value);
+        widget_->UpdateValue(value);
         
         
         if(supportsRGB_)
         {
             currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+            widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
         }
         else if(supportsTrackColor_)
         {
@@ -479,12 +479,12 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->UpdateRGBValue(r, g, b);
+                widget_->UpdateRGBValue(r, g, b);
             }
         }
     }
     
-    void UpdateWidgetValue(Widget* widget, int param, double value)
+    void UpdateWidgetValue(int param, double value)
     {
         value = isInverted_ == false ? value : 1.0 - value;
         
@@ -492,14 +492,14 @@ public:
         
         lastValue_ = value;
 
-        widget->UpdateValue(param, value);
+        widget_->UpdateValue(param, value);
         
         currentRGBIndex_ = value == 0 ? 0 : 1;
         
         if(supportsRGB_)
         {
             currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+            widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
         }
         else if(supportsTrackColor_)
         {
@@ -511,14 +511,14 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->UpdateRGBValue(r, g, b);
+                widget_->UpdateRGBValue(r, g, b);
             }
         }
     }
     
-    void UpdateWidgetValue(Widget* widget, string value)
+    void UpdateWidgetValue(string value)
     {
-        widget->UpdateValue(value);
+        widget_->UpdateValue(value);
         
         if(supportsTrackColor_)
         {
@@ -530,7 +530,7 @@ public:
                 int g = (*rgb_colour >> 8) & 0xff;
                 int b = (*rgb_colour >> 16) & 0xff;
                 
-                widget->UpdateRGBValue(r, g, b);
+                widget_->UpdateRGBValue(r, g, b);
             }
         }
     }
