@@ -2211,6 +2211,14 @@ void EuCon_ControlSurface::SendEuConMessage(string address, double value)
 
 void EuCon_ControlSurface::SendEuConMessage(string address, string value)
 {
+    if(address.find("Pan_Display") != string::npos
+       || address.find("Width_Display") != string::npos
+       || address.find("PanL_Display") != string::npos
+       || address.find("PanR_Display") != string::npos)
+    {
+        return; // GAW -- Hack to prevent overwrite of Pan, Width, etc. labels
+    }
+    
     if(g_reaper_plugin_info)
     {
         void (*HandleReaperMessageWthString)(const char *, const char *);
