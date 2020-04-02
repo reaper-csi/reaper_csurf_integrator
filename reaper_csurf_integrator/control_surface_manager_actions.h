@@ -49,7 +49,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetSurface()->GetSendsActivationManager()->GetShouldMapSends());
+        UpdateWidgetValue(GetSurface()->GetSendsActivationManager()->GetShouldMapSends());
     }
     
     void Do(double value, Widget* sender) override
@@ -69,7 +69,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
+        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
     }
     
     void Do(double value, Widget* sender) override
@@ -89,7 +89,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
+        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
     }
     
     void Do(double value, Widget* sender) override
@@ -109,7 +109,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
+        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
     }
     
     void Do(double value, Widget* sender) override
@@ -241,7 +241,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetSurface()->GetFXActivationManager()->GetShowFXWindows());
+        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShowFXWindows());
     }
     
     void Do(double value, Widget* sender) override
@@ -261,7 +261,7 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetTrackNavigationManager()->GetScrollLink());
+        UpdateWidgetValue(GetPage()->GetTrackNavigationManager()->GetScrollLink());
     }
     
     void Do(double value, Widget* sender) override
@@ -296,7 +296,7 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetTrackNavigationManager()->GetVCAMode());
+        UpdateWidgetValue(GetPage()->GetTrackNavigationManager()->GetVCAMode());
     }
     
     void Do(double value, Widget* sender) override
@@ -408,7 +408,7 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetShift());
+        UpdateWidgetValue(GetPage()->GetShift());
     }
 
     void Do(double value, Widget* sender) override
@@ -426,7 +426,7 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetOption());
+        UpdateWidgetValue(GetPage()->GetOption());
     }
 
     void Do(double value, Widget* sender) override
@@ -444,7 +444,7 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetControl());
+        UpdateWidgetValue(GetPage()->GetControl());
     }
 
     void Do(double value, Widget* sender) override
@@ -462,7 +462,7 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetWidget(), GetPage()->GetAlt());
+        UpdateWidgetValue(GetPage()->GetAlt());
     }
 
     void Do(double value, Widget* sender) override
