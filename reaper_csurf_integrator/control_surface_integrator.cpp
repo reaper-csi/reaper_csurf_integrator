@@ -1984,7 +1984,7 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     oscAddress = regex_replace(oscAddress, regex(BadFileChars), "_");
     oscAddress = "/" + oscAddress;
 
-    if(outSocket_->isOk())
+    if(outSocket_ != nullptr && outSocket_->isOk())
     {
         oscpkt::Message message;
         message.init(oscAddress);
