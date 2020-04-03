@@ -959,6 +959,7 @@ public:
     virtual void EuConInitializationComplete() {}
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
+    virtual void UpdateTimeLinePosition() {}
 
     void GoHome() { GoZone("Home"); }
     
@@ -1052,6 +1053,8 @@ public:
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
+        
+        UpdateTimeLinePosition();
     }
 
     virtual void ForceClearAllWidgets()
@@ -1222,6 +1225,7 @@ class EuCon_ControlSurface : public ControlSurface
 private:
     string zoneFolder_ = "";
     int numChannels_ = 0;
+    double previousPP = 0.0;
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
 
@@ -1245,6 +1249,7 @@ public:
     virtual void HandleExternalInput() override;
     void HandleEuConMessage(string oscAddress, double value);
     void HandleEuConMessage(string oscAddress, string value);
+    virtual void UpdateTimeLinePosition() override;
     
     void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
     {
@@ -1846,6 +1851,10 @@ private:
     bool oscInMonitor_ = false;
     bool oscOutMonitor_ = false;
     
+    int *timeModePtr_ = nullptr;
+    int *timeMode2Ptr_ = nullptr;
+    int *measOffsPtr_ = nullptr;
+    double *timeOffsPtr_ = nullptr;
     
     void InitActionDictionary();
 
@@ -1864,6 +1873,19 @@ public:
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionDictionary();
+        
+        int size = 0;
+        int index = projectconfig_var_getoffs("projtimemode", &size);
+        timeModePtr_ = (int *)projectconfig_var_addr(nullptr, index);
+        
+        index = projectconfig_var_getoffs("projtimemode2", &size);
+        timeMode2Ptr_ = (int *)projectconfig_var_addr(nullptr, index);
+        
+        index = projectconfig_var_getoffs("projmeasoffs", &size);
+        measOffsPtr_ = (int *)projectconfig_var_addr(nullptr, index);
+        
+        index = projectconfig_var_getoffs("projtimeoffs", &size);
+        timeOffsPtr_ = (double *)projectconfig_var_addr(nullptr, index);
     }
     
     void Shutdown()
@@ -1894,6 +1916,11 @@ public:
     double GetVUMaxDB() { return GetPrivateProfileDouble("vumaxvol"); }
     double GetVUMinDB() { return GetPrivateProfileDouble("vuminvol"); }
     
+    int *GetTimeModePtr() { return timeModePtr_; }
+    int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
+    int *GetMeasOffsPtr() { return measOffsPtr_; }
+    double *GetTimeOffsPtr() { return timeOffsPtr_; }
+
     vector<string> GetActionNames()
     {
         vector<string> actionNames;
