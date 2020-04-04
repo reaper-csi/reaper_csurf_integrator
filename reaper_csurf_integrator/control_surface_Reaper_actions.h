@@ -1105,7 +1105,7 @@ public:
     
     void RequestUpdate() override
     {
-        widget_->GetSurface()->UpdateTimeLinePosition();
+        widget_->GetSurface()->UpdateTimeDisplay();
     }
 };
 
