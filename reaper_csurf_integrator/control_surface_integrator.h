@@ -957,7 +957,8 @@ public:
     virtual void EuConInitializationComplete() {}
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
-    virtual void UpdateTimeLinePosition() {}
+    virtual void UpdateTimeDisplay() {}
+    virtual void ForceRefreshTimeDisplay() {}
 
     void GoHome() { GoZone("Home"); }
     
@@ -1245,8 +1246,13 @@ public:
     virtual void HandleExternalInput() override;
     void HandleEuConMessage(string oscAddress, double value);
     void HandleEuConMessage(string oscAddress, string value);
-    virtual void UpdateTimeLinePosition() override;
+    virtual void UpdateTimeDisplay() override;
     
+    virtual void ForceRefreshTimeDisplay() override
+    {
+        previousPP = 0.5;
+    }
+
     void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByMessage_[message] = messageGenerator;
@@ -1604,6 +1610,12 @@ public:
             surface->ForceClearAllWidgets();
     }
     
+    void ForceRefreshTimeDisplay()
+    {
+        for(auto surface : surfaces_)
+            surface->ForceRefreshTimeDisplay();
+    }
+
     void AddSurface(ControlSurface* surface)
     {
         surfaces_.push_back(surface);
@@ -1968,60 +1980,30 @@ public:
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
-       
-    void InitializeEuCon()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuCon();
-    }
     
-    void InitializeEuConWidget(string name, string control, string FB_Processor)
+    void NextTimeDisplayMode()
     {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
-    }
-    
-    void EuConInitializationComplete()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->EuConInitializationComplete();
-    }
-    
-    void ReceiveEuConMessage(string oscAddress, double value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    void ReceiveEuConMessage(string oscAddress, string value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    //int repeats = 0;
-    
-    void Run()
-    {
-        //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-        
-        if(shouldRun_ && pages_.size() > 0)
-            pages_[currentPageIndex_]->Run();
-        /*
-        repeats++;
-        
-        if(repeats > 15)
+        int *tmodeptr = GetTimeMode2Ptr();
+        if (tmodeptr && *tmodeptr>=0)
         {
-            repeats = 0;
-            
-            int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-            
-            char msgBuffer[250];
-            
-            sprintf(msgBuffer, "%d microseconds\n", duration);
-            DAW::ShowConsoleMsg(msgBuffer);
+            (*tmodeptr)++;
+            if ((*tmodeptr)>5)
+                (*tmodeptr)=0;
         }
-        */
+        else
+        {
+            tmodeptr = GetTimeModePtr();
+            
+            if (tmodeptr)
+            {
+                (*tmodeptr)++;
+                if ((*tmodeptr)>5)
+                    (*tmodeptr)=0;
+            }
+        }
+
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ForceRefreshTimeDisplay();
     }
     
     void AdjustTrackBank(Page* sendingPage, int amount)
@@ -2053,7 +2035,7 @@ public:
                 pages_[currentPageIndex_]->LeavePage();
                 currentPageIndex_ = i;
                 pages_[currentPageIndex_]->EnterPage();
-
+                
                 break;
             }
         }
@@ -2072,7 +2054,7 @@ public:
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OpenLearnModeWindow();
     }
-        
+    
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto & page : pages_)
@@ -2087,7 +2069,7 @@ public:
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
-            
+                
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
@@ -2105,6 +2087,64 @@ public:
                 }
             }
         }
+    }
+
+    void InitializeEuCon()
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->InitializeEuCon();
+    }
+    
+    void InitializeEuConWidget(string name, string control, string FB_Processor)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
+    }
+    
+    void EuConInitializationComplete()
+    {
+        if(pages_.size() > 0)
+        {
+            pages_[currentPageIndex_]->EuConInitializationComplete();
+            pages_[currentPageIndex_]->ForceRefreshTimeDisplay();
+        }
+    }
+    
+    void ReceiveEuConMessage(string oscAddress, double value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
+    }
+    
+    void ReceiveEuConMessage(string oscAddress, string value)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
+    }
+    
+    //int repeats = 0;
+    
+    void Run()
+    {
+        //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        
+        if(shouldRun_ && pages_.size() > 0)
+            pages_[currentPageIndex_]->Run();
+        /*
+         repeats++;
+         
+         if(repeats > 15)
+         {
+         repeats = 0;
+         
+         int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+         
+         char msgBuffer[250];
+         
+         sprintf(msgBuffer, "%d microseconds\n", duration);
+         DAW::ShowConsoleMsg(msgBuffer);
+         }
+         */
     }
 };
 

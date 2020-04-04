@@ -318,24 +318,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        int *tmodeptr = TheManager->GetTimeMode2Ptr();
-        if (tmodeptr && *tmodeptr>=0)
-        {
-            (*tmodeptr)++;
-            if ((*tmodeptr)>5)
-                (*tmodeptr)=0;
-        }
-        else
-        {
-            tmodeptr = TheManager->GetTimeModePtr();
-            
-            if (tmodeptr)
-            {
-                (*tmodeptr)++;
-                if ((*tmodeptr)>5)
-                    (*tmodeptr)=0;
-            }
-        }
+        TheManager->NextTimeDisplayMode();
     }
 };
 
