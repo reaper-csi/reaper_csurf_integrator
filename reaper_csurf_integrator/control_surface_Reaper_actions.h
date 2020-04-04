@@ -1008,15 +1008,28 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetTrackTouch : public TrackAction
+class SetTrackFaderTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
-
+    SetTrackFaderTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
     void Do(double value, Widget* sender) override
     {
-        GetWidget()->SetIsTouched(value == 0 ? false : true);
+        GetWidget()->SetIsFaderTouched(value == 0 ? false : true);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetTrackRotaryTouch : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SetTrackRotaryTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        GetWidget()->SetIsRotaryTouched(value == 0 ? false : true);
     }
 };
 
