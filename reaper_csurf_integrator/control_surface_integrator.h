@@ -61,8 +61,6 @@ const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
 const string TabChars = "[\t]";
 
-extern int __g_projectconfig_timemode2, __g_projectconfig_timemode;
-
 class Manager;
 extern Manager* TheManager;
 
@@ -1053,8 +1051,6 @@ public:
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
-        
-        UpdateTimeLinePosition();
     }
 
     virtual void ForceClearAllWidgets()
