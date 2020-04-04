@@ -2295,7 +2295,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
     // GAW TBD
 }
 
-void EuCon_ControlSurface::UpdateTimeLinePosition()
+void EuCon_ControlSurface::UpdateTimeDisplay()
 {
     double pp = (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition();
     
