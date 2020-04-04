@@ -318,7 +318,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        int *tmodeptr = &__g_projectconfig_timemode2;
+        int *tmodeptr = TheManager->GetTimeMode2Ptr();
         if (tmodeptr && *tmodeptr>=0)
         {
             (*tmodeptr)++;
@@ -327,7 +327,7 @@ public:
         }
         else
         {
-            tmodeptr = &__g_projectconfig_timemode;
+            tmodeptr = TheManager->GetTimeModePtr();
             
             if (tmodeptr)
             {
