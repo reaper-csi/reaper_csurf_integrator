@@ -83,20 +83,24 @@ class Navigator
 {
 protected:
     Page* const page_;
-    bool isTouched_ = false;
-    
-public:
-    Navigator(Page*  page) : page_(page) { }
-    virtual ~Navigator() { }
+    bool isFaderTouched_ = false;
+    bool isRotaryTouched_ = false;
 
-    bool GetIsTouched() { return isTouched_; }
-    void SetIsTouched(bool isTouched) { isTouched_ = isTouched; }
+public:
+    Navigator(Page*  page) : page_(page) {}
+    virtual ~Navigator() {}
+
+    bool GetIsFaderTouched() { return isFaderTouched_; }
+    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched; }
+    
+    bool GetIsRotaryTouched() { return isRotaryTouched_; }
+    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
     virtual bool GetIsChannelPinned() { return false; }
-    virtual void IncBias() { }
-    virtual void DecBias() { }
+    virtual void IncBias() {}
+    virtual void DecBias() {}
     virtual void PinChannel() {}
     virtual void UnpinChannel() {}
     virtual bool GetIsFocusedFXNavigator() { return false; }
@@ -227,7 +231,8 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
-    void SetIsTouched(bool isTouched);
+    void SetIsFaderTouched(bool isFaderTouched);
+    void SetIsRotaryTouched(bool isRotaryTouched);
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -569,8 +574,13 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
-    void SetIsTouched(bool isTouched) { navigator_->SetIsTouched(isTouched); }
-    bool GetIsTouched() { return navigator_->GetIsTouched();; }
+
+    bool GetIsFaderTouched() { return navigator_->GetIsFaderTouched();; }
+    void SetIsFaderTouched(bool isFaderTouched) { navigator_->SetIsFaderTouched(isFaderTouched); }
+
+    bool GetIsRotaryTouched() { return navigator_->GetIsRotaryTouched();; }
+    void SetIsRotaryTouched(bool isRotaryTouched) { navigator_->SetIsRotaryTouched(isRotaryTouched); }
+
     void Activate();
     void Deactivate();
 
@@ -1438,29 +1448,27 @@ public:
         }
     }
     
-    bool GetIsTrackTouched(MediaTrack* track)
+    bool GetIsControlTouched(MediaTrack* track, int touchedControl)
     {
-        if(masterTrackNavigator_->GetIsTouched() && track == DAW::GetMasterTrack(0))
-            return true;
-        
-        if(selectedTrackNavigator_->GetIsTouched() && track == GetSelectedTrack())
-            return true;
-        
-        if(focusedFXNavigator_->GetIsTouched())
+        if(track == masterTrackNavigator_->GetTrack())
         {
-            int trackNumber = 0;
-            int itemNumber = 0;
-            int fxIndex = 0;
-            
-            if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-                if(track == GetTrackFromId(trackNumber))
-                    return true;
+            if(touchedControl == 0)
+                return masterTrackNavigator_->GetIsFaderTouched(); // Fader/Volume
+            else
+                return masterTrackNavigator_->GetIsRotaryTouched(); // Rotary/Pan
         }
         
         for(auto navigator : navigators_)
-            if(navigator->GetIsTouched() && track == navigator->GetTrack())
-                return true;
-        
+        {
+            if(track == navigator->GetTrack())
+            {
+                if(touchedControl == 0)
+                    return navigator->GetIsFaderTouched(); // Fader/Volume
+                else
+                    return navigator->GetIsRotaryTouched(); // Rotary/Pan
+            }
+        }
+
         return false;
     }
     
@@ -1623,7 +1631,7 @@ public:
     
     bool GetTouchState(MediaTrack* track, int touchedControl)
     {
-        return trackNavigationManager_->GetIsTrackTouched(track);
+        return trackNavigationManager_->GetIsControlTouched(track, touchedControl);
     }
     
     void SetShift(bool value)
