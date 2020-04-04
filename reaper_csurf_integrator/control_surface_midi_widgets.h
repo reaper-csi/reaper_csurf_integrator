@@ -749,10 +749,6 @@ public:
     }
 };
 
-int __g_projectconfig_timemode2, __g_projectconfig_timemode;
-int __g_projectconfig_measoffs;
-int __g_projectconfig_timeoffs; // double
-
 char m_mackie_lasttime[10];
 int m_mackie_lasttime_mode;
 DWORD m_mcu_timedisp_lastforce, m_mcu_meter_lastrun;
@@ -778,21 +774,21 @@ public:
         
         memset(bla,0,sizeof(bla));
         
-        int *tmodeptr=&__g_projectconfig_timemode2;
+        int *tmodeptr = TheManager->GetTimeMode2Ptr();
         
         int tmode=0;
         
         if (tmodeptr && (*tmodeptr)>=0) tmode = *tmodeptr;
         else
         {
-            tmodeptr=&__g_projectconfig_timemode;
+            tmodeptr = TheManager->GetTimeModePtr();
             if (tmodeptr)
                 tmode=*tmodeptr;
         }
         
         if (tmode==3) // seconds
         {
-            double *toptr = (double*)projectconfig_var_addr(NULL,__g_projectconfig_timeoffs);
+            double *toptr = TheManager->GetTimeOffsPtr();
             
             if (toptr) pp+=*toptr;
             char buf[64];
@@ -847,7 +843,7 @@ public:
             
             int fracbeats = (int) (1000.0 * beats);
             
-            int *measptr = (int*)projectconfig_var_addr(NULL,__g_projectconfig_measoffs);
+            int *measptr = TheManager->GetMeasOffsPtr();
             int nm=num_measures+1+(measptr ? *measptr : 0);
             if (nm >= 100) bla[0]='0'+(nm/100)%10;//bars hund
             if (nm >= 10) bla[1]='0'+(nm/10)%10;//barstens
@@ -864,7 +860,7 @@ public:
         }
         else
         {
-            double *toptr = (double*)projectconfig_var_addr(NULL,__g_projectconfig_timeoffs);
+            double *toptr = TheManager->GetTimeOffsPtr();
             if (toptr) pp+=(*toptr);
             
             int ipp=(int)pp;
