@@ -61,6 +61,8 @@ const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
 const string TabChars = "[\t]";
 
+const int TempDisplayTime = 1250;
+
 class Manager;
 extern Manager* TheManager;
 
@@ -198,6 +200,7 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
+    FeedbackProcessor* GetFeedbackProcessor() { return feedbackProcessor_; }
     void AddAction(Zone* zone, string modifiers, Action* action);
     void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
@@ -666,9 +669,11 @@ class FeedbackProcessor
 {
 protected:
     bool mustForce_ = false;
+    bool isSilent_ = false;
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
+    double timeSilentlySet_ = 0.0;
     
 public:
     virtual ~FeedbackProcessor() {}
@@ -679,9 +684,26 @@ public:
     virtual void UpdateRGBValue(int r, int g, int b) {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
-    virtual void ForceValue(string value) {}
     virtual void ForceRGBValue(int r, int g, int b) {}
     virtual void ClearCache() {}
+
+    virtual void ForceValue(string displayText)
+    {
+        mustForce_ = true;
+        UpdateValue(displayText);
+        mustForce_ = false;
+    }
+    
+    virtual void SilentSetValue(string displayText)
+    {
+        isSilent_ = true;
+        mustForce_ = true;
+        UpdateValue(displayText);
+        mustForce_ = false;
+        isSilent_ = false;
+        
+        timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
+    }
     
     virtual void Clear()
     {
@@ -749,7 +771,8 @@ public:
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
-    
+    virtual void SilentSetValue(string value) override;
+
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;
@@ -778,7 +801,7 @@ public:
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
-
+    virtual void SilentSetValue(string value) override;
     virtual void ClearCache() override
     {
         lastDoubleValue_ = 0.0;

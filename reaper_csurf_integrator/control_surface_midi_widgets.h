@@ -559,13 +559,6 @@ public:
         SendMidiMessage(&midiSysExData.evt);
     }
     
-    virtual void ForceValue(double value) override
-    {
-        mustForce_ = true;
-        UpdateValue(value);
-        mustForce_ = false;
-    }
-    
     virtual void UpdateValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
@@ -597,15 +590,14 @@ public:
         lastStringSent_ = " ";
     }
     
-    virtual void ForceValue(string displayText) override
-    {
-        mustForce_ = true;
-        UpdateValue(displayText);
-        mustForce_ = false;
-    }
-    
     virtual void UpdateValue(string displayText) override
     {
+        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
+        {
+            lastStringSent_ = "   ";
+            timeSilentlySet_ = 0;
+        }
+
         if(shouldRefresh_)
         {
             double now = DAW::GetCurrentNumberOfMilliseconds();
@@ -615,13 +607,14 @@ public:
             else
                 return;
         }
-        else if( ! mustForce_)
+        else if( ! mustForce_ && ! isSilent_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
         }
         
-        lastStringSent_ = displayText;
+        if(! isSilent_)
+            lastStringSent_ = displayText;
         
         int pad = 7;
         const char* text = displayText.c_str();
@@ -681,16 +674,15 @@ public:
     {
         lastStringSent_ = " ";
     }
-    
-    virtual void ForceValue(string displayText) override
-    {
-        mustForce_ = true;
-        UpdateValue(displayText);
-        mustForce_ = false;
-    }
-    
+        
     virtual void UpdateValue(string displayText) override
     {
+        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
+        {
+            lastStringSent_ = "   ";
+            timeSilentlySet_ = 0;
+        }
+
         if(shouldRefresh_)
         {
             double now = DAW::GetCurrentNumberOfMilliseconds();
@@ -700,13 +692,14 @@ public:
             else
                 return;
         }
-        else if( ! mustForce_)
+        else if( ! mustForce_ && ! isSilent_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
         }
         
-        lastStringSent_ = displayText;
+        if(! isSilent_)
+            lastStringSent_ = displayText;
 
         const char* text = displayText.c_str();
     
