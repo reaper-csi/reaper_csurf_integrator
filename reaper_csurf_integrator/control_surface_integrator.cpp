@@ -964,6 +964,7 @@ void Manager::InitActionDictionary()
     actions_["MapFocusedFXToWidgets"] =             [](string name, Widget* widget, Zone* zone, vector<string> params) { return new MapFocusedFXToWidgets(name, widget, zone, params); };
     actions_["GoFXSlot"] =                          [](string name, Widget* widget, Zone* zone, vector<string> params) { return new GoFXSlot(name, widget, zone, params); };
     actions_["TrackAutoMode"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackAutoMode(name, widget, zone, params); };
+    actions_["CycleTrackAutoMode"] =                [](string name, Widget* widget, Zone* zone, vector<string> params) { return new CycleTrackAutoMode(name, widget, zone, params); };
     actions_["GlobalAutoMode"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return new GlobalAutoMode(name, widget, zone, params); };
 }
 

@@ -317,7 +317,7 @@ private:
             {
                 string strVal = *(it);
                 
-                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")))
+                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]")))
                     steppedValues_.push_back(stod(strVal));
                 else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
                 {
