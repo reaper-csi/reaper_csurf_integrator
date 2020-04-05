@@ -2305,107 +2305,69 @@ void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
 
 void EuCon_ControlSurface::UpdateTimeDisplay()
 {
-    double pp = (GetPlayState()&1) ? GetPlayPosition() : GetCursorPosition();
+    double playPosition = (GetPlayState() & 1 ) ? GetPlayPosition() : GetCursorPosition();
     
-    int *tmodeptr = TheManager->GetTimeMode2Ptr();
-    
-    int tmode = 0;
-    
-    if (tmodeptr && (*tmodeptr) >= 0)
+    if(previousPP != playPosition) // GAW :) Yeah I know shouldn't compare FP values, but the worst you get is an extra upadate or two, meh.
     {
-        tmode = *tmodeptr;
-    }
-    else
-    {
-        tmodeptr = TheManager->GetTimeModePtr();
-        
-        if (tmodeptr)
-        {
-            tmode = *tmodeptr;
-        }
-    }
-    
-    bool foundChange = false;
-    
-    if(previousPP != pp)
-    {
-        previousPP = pp;
-        foundChange = true;
-    }
-    
-    // Samples
-    char samples[512];
-    memset(samples, 0, sizeof(samples));
-    
-    format_timestr_pos(pp,samples,sizeof(samples),4);
+        previousPP = playPosition;
 
-    // Bars/Beats/Ticks
-    char bbt[512];
-    memset(bbt, 0, sizeof(bbt));
-    
-    int num_measures = 0;
-    double beats = TimeMap2_timeToBeats(NULL,pp,&num_measures,NULL,NULL,NULL)+ 0.000000000001;
-    double nbeats = floor(beats);
-    
-    beats -= nbeats;
-    
-    if(foundChange)
-        format_timestr_pos(pp,bbt,sizeof(bbt),2);
-    
-    // Hours/Minutes/Seconds
-    char hmsf[512];
-    memset(hmsf, 0, sizeof(hmsf));
-    
-    double *toptr = TheManager->GetTimeOffsPtr();
-    
-    if (toptr) pp+=(*toptr);
-    
-    if(foundChange)
-    {
-        int hmsfIndex = 0;
+        int *timeModePtr = TheManager->GetTimeMode2Ptr(); // transport
         
-        int ipp = (int)pp;
+        int timeMode = 0;
         
-        int fr = (int)((pp-ipp)*1000.0);
-        
-        if(tmode == 0 || tmode == 1) // Hours/Minutes/Seconds || Bars/Beats/Ticks + Hours/Minutes/Seconds
+        if (timeModePtr && (*timeModePtr) >= 0)
+            timeMode = *timeModePtr;
+        else
         {
-            format_timestr_pos(pp, hmsf, sizeof(hmsf), 0);
-        }
-        else if(tmode == 3) // Seconds
-        {
-            format_timestr_pos(pp, hmsf, sizeof(hmsf), 3);
+            timeModePtr = TheManager->GetTimeModePtr(); // ruler
+            
+            if (timeModePtr)
+                timeMode = *timeModePtr;
         }
         
-        else if(tmode == 5) // Hours/Minutes/Seconds/Frames
-        {
-            format_timestr_pos(pp, hmsf, sizeof(hmsf), 5);
-        }
-    }
-    
-    if(foundChange)
-    {
-        switch(tmode)
+        // Samples
+        char samplesBuf[64];
+        memset(samplesBuf, 0, sizeof(samplesBuf));
+        format_timestr_pos(playPosition, samplesBuf, sizeof(samplesBuf), 4);
+        
+        // Bars/Beats/Ticks
+        char measuresBuf[64];
+        memset(measuresBuf, 0, sizeof(measuresBuf));
+        int num_measures = 0;
+        double beats = TimeMap2_timeToBeats(NULL, playPosition, &num_measures, NULL, NULL, NULL) + 0.000000000001;
+        double nbeats = floor(beats);
+        beats -= nbeats;
+        format_timestr_pos(playPosition, measuresBuf, sizeof(measuresBuf), 2);
+        
+        // Hours/Minutes/Seconds/Frames
+        char chronoBuf[64];
+        memset(chronoBuf, 0, sizeof(chronoBuf));
+        double *timeOffsetPtr = TheManager->GetTimeOffsPtr();
+        if (timeOffsetPtr)
+            playPosition += (*timeOffsetPtr);
+        format_timestr_pos(playPosition, chronoBuf, sizeof(chronoBuf), timeMode == 1 ? 0 : timeMode);
+        
+        switch(timeMode)
         {
             case 0: // Hours/Minutes/Seconds
             case 3: // Seconds
             case 5: // Hours/Minutes/Seconds/Frames
-                SendEuConMessage("PrimaryTimeDisplay", hmsf);
+                SendEuConMessage("PrimaryTimeDisplay", chronoBuf);
                 SendEuConMessage("SecondaryTimeDisplay", "");
                 break;
                 
-            case 1:    // Bars/Beats/Ticks
-                SendEuConMessage("PrimaryTimeDisplay", bbt);
-                SendEuConMessage("SecondaryTimeDisplay", hmsf);
+            case 1:
+                SendEuConMessage("PrimaryTimeDisplay", measuresBuf);
+                SendEuConMessage("SecondaryTimeDisplay", chronoBuf);
                 break;
                 
             case 2:
-                SendEuConMessage("PrimaryTimeDisplay", bbt);
+                SendEuConMessage("PrimaryTimeDisplay", measuresBuf);
                 SendEuConMessage("SecondaryTimeDisplay", "");
                 break;
                 
-            case 4: // Samples
-                SendEuConMessage("PrimaryTimeDisplay", samples);
+            case 4:
+                SendEuConMessage("PrimaryTimeDisplay", samplesBuf);
                 SendEuConMessage("SecondaryTimeDisplay", "");
                 break;
         }
