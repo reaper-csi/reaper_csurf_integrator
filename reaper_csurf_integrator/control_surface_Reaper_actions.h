@@ -1100,12 +1100,28 @@ public:
 class CycleTrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-public:
-    CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) { }
+private:
+    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {3, "Write"}, {2, "Touch"}, {4, "Latch"}, {8, "LtchPre"}  };
+    Widget* displayWidget_ = nullptr;
     
+public:
+    CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
+    {
+        if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
+            for(auto widget : GetWidget()->GetSurface()->GetWidgets())
+                if(widget->GetName() == params[1])
+                {
+                    displayWidget_ = widget;
+                    break;
+                }
+    }
+
     virtual void Do(double value, Widget* sender) override
     {
         DAW::SetAutomationMode(value, true);
+        
+        if(displayWidget_ != nullptr && autoModes_.count(value) > 0)
+            displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[value]);
     }
 };
 
