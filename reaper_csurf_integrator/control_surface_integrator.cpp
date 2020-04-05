@@ -2325,27 +2325,34 @@ void EuCon_ControlSurface::UpdateTimeDisplay()
                 timeMode = *timeModePtr;
         }
         
-        // Samples
         char samplesBuf[64];
         memset(samplesBuf, 0, sizeof(samplesBuf));
-        format_timestr_pos(playPosition, samplesBuf, sizeof(samplesBuf), 4);
-        
-        // Bars/Beats/Ticks
         char measuresBuf[64];
         memset(measuresBuf, 0, sizeof(measuresBuf));
-        int num_measures = 0;
-        double beats = TimeMap2_timeToBeats(NULL, playPosition, &num_measures, NULL, NULL, NULL) + 0.000000000001;
-        double nbeats = floor(beats);
-        beats -= nbeats;
-        format_timestr_pos(playPosition, measuresBuf, sizeof(measuresBuf), 2);
-        
-        // Hours/Minutes/Seconds/Frames
         char chronoBuf[64];
         memset(chronoBuf, 0, sizeof(chronoBuf));
-        double *timeOffsetPtr = TheManager->GetTimeOffsPtr();
-        if (timeOffsetPtr)
-            playPosition += (*timeOffsetPtr);
-        format_timestr_pos(playPosition, chronoBuf, sizeof(chronoBuf), timeMode == 1 ? 0 : timeMode);
+
+        if(timeMode == 4)  // Samples
+        {
+            format_timestr_pos(playPosition, samplesBuf, sizeof(samplesBuf), timeMode);
+        }
+        
+        if(timeMode == 1 || timeMode == 2)  // Bars/Beats/Ticks
+        {
+            int num_measures = 0;
+            double beats = TimeMap2_timeToBeats(NULL, playPosition, &num_measures, NULL, NULL, NULL) + 0.000000000001;
+            double nbeats = floor(beats);
+            beats -= nbeats;
+            format_timestr_pos(playPosition, measuresBuf, sizeof(measuresBuf), 2);
+        }
+        
+        if(timeMode == 0 || timeMode == 1 || timeMode == 3  ||  timeMode == 5)  // Hours/Minutes/Seconds/Frames
+        {
+            double *timeOffsetPtr = TheManager->GetTimeOffsPtr();
+            if (timeOffsetPtr)
+                playPosition += (*timeOffsetPtr);
+            format_timestr_pos(playPosition, chronoBuf, sizeof(chronoBuf), timeMode == 1 ? 0 : timeMode);
+        }
         
         switch(timeMode)
         {
