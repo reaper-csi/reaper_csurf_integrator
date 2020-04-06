@@ -251,8 +251,6 @@ private:
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
 
-    int steppedValuesIndex_ = 0;
-
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     
@@ -364,6 +362,8 @@ protected:
     Zone* const zone_;
     
     vector<double> steppedValues_;
+    int steppedValuesIndex_ = 0;
+
     vector<double> rangeValues_;
 
     bool isInverted_ = false;
