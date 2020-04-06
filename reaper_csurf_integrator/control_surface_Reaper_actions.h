@@ -1101,7 +1101,7 @@ class CycleTrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {3, "Write"}, {2, "Touch"}, {4, "Latch"}, {8, "LtchPre"}  };
+    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {3, "Write"}, {2, "Touch"}, {4, "Latch"}, {5, "LtchPre"}  };
     Widget* displayWidget_ = nullptr;
     
 public:
