@@ -1066,26 +1066,13 @@ public:
 
     void RequestUpdate() override
     {
-        bool gotOne = false;
-        
-        for(int i = 0; i <= GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
+        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
         {
-            MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(i);
-            
-            if(track == nullptr)
-                continue;
-            
-            if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED") && DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == param_)
-            {
-                gotOne = true;
-                break;
-            }
+            if(param_ == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
+                UpdateWidgetValue(1.0);
+            else
+                UpdateWidgetValue(0.0);
         }
-        
-        if(gotOne)
-            UpdateWidgetValue(1.0);
-        else
-            UpdateWidgetValue(0.0);
     }
     
     virtual void Do(double value, Widget* sender) override
@@ -1097,15 +1084,23 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycleTrackAutoMode : public Action
+class CycleTrackAutoMode : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {3, "Write"}, {2, "Touch"}, {4, "Latch"}, {5, "LtchPre"}  };
     Widget* displayWidget_ = nullptr;
+  
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
+            if(track == selectedTrack)
+                SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
+    }
     
 public:
-    CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
+    CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
             for(auto widget : GetWidget()->GetSurface()->GetWidgets())
@@ -1115,13 +1110,18 @@ public:
                     break;
                 }
     }
-
+    
     virtual void Do(double value, Widget* sender) override
     {
-        DAW::SetAutomationMode(value, true);
-        
-        if(displayWidget_ != nullptr && autoModes_.count(value) > 0)
-            displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[value]);
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            DAW::SetOnlyTrackSelected(track);
+            
+            DAW::SetAutomationMode(value, true);
+            
+            if(displayWidget_ != nullptr && autoModes_.count(value) > 0)
+                displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[value]);
+        }
     }
 };
 
