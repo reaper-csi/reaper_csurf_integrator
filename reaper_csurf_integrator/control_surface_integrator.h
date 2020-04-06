@@ -2164,7 +2164,7 @@ public:
         /*
          repeats++;
          
-         if(repeats > 15)
+         if(repeats > 50)
          {
          repeats = 0;
          
