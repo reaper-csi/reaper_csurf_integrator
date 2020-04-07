@@ -2166,15 +2166,13 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 
 void EuCon_ControlSurface::InitializeEuCon()
 {
-    if(g_reaper_plugin_info)
-    {
-        void (*InitializeEuConWithParameters)(int numChannels_);
-        
+    static void (*InitializeEuConWithParameters)(int numChannels_) = nullptr;
+
+    if(g_reaper_plugin_info && InitializeEuConWithParameters == nullptr)
         InitializeEuConWithParameters = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
-        if(InitializeEuConWithParameters)
-            InitializeEuConWithParameters(numChannels_);
-    }
+    if(InitializeEuConWithParameters)
+        InitializeEuConWithParameters(numChannels_);
 }
 
 void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, string FB_Processor)
@@ -2212,16 +2210,14 @@ void EuCon_ControlSurface::EuConInitializationComplete()
 
 void EuCon_ControlSurface::SendEuConMessage(string address, double value)
 {
-    if(g_reaper_plugin_info)
-    {
-        void (*HandleReaperMessageWthDouble)(const char *, double);
-        
+    static void (*HandleReaperMessageWthDouble)(const char *, double) = nullptr;
+    
+    if(g_reaper_plugin_info && HandleReaperMessageWthDouble == nullptr)
         HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
         
-        if(HandleReaperMessageWthDouble)
-            HandleReaperMessageWthDouble(address.c_str(), value);
-    }
-    
+    if(HandleReaperMessageWthDouble)
+        HandleReaperMessageWthDouble(address.c_str(), value);
+
     if(TheManager->GetSurfaceOutMonitor())
     {
         char buffer[250];
@@ -2240,15 +2236,13 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
         return; // GAW -- Hack to prevent overwrite of Pan, Width, etc. labels
     }
     
-    if(g_reaper_plugin_info)
-    {
-        void (*HandleReaperMessageWthString)(const char *, const char *);
-        
+    static void (*HandleReaperMessageWthString)(const char *, const char *) = nullptr;
+    
+    if(g_reaper_plugin_info && HandleReaperMessageWthString == nullptr)
         HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
         
-        if(HandleReaperMessageWthString)
+    if(HandleReaperMessageWthString)
             HandleReaperMessageWthString(address.c_str(), value.c_str());
-    }
 
     if(TheManager->GetSurfaceOutMonitor())
     {
@@ -2308,7 +2302,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
     }
 }
 
-void EuCon_ControlSurface::HandleEuConMessage(string oscAddress, string value)
+void EuCon_ControlSurface::HandleEuConMessage(string address, string value)
 {
     // GAW TBD
 }
