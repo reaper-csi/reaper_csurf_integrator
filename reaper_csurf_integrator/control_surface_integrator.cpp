@@ -1558,12 +1558,6 @@ void OSC_FeedbackProcessor::UpdateValue(int param, double value)
 
 void OSC_FeedbackProcessor::UpdateValue(string value)
 {
-    if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
-    {
-        lastStringValue_ = "   ";
-        timeSilentlySet_ = 0;
-    }
-
     if(lastStringValue_ != value)
         ForceValue(value);
 }
@@ -1589,7 +1583,6 @@ void OSC_FeedbackProcessor::ForceValue(string value)
 void OSC_FeedbackProcessor::SilentSetValue(string value)
 {
     surface_->SendOSCMessage(oscAddress_, value);
-    timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1609,12 +1602,6 @@ void EuCon_FeedbackProcessor::UpdateValue(int param, double value)
 
 void EuCon_FeedbackProcessor::UpdateValue(string value)
 {
-    if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
-    {
-        lastStringValue_ = "   ";
-        timeSilentlySet_ = 0;
-    }
-
     if(lastStringValue_ != value)
         ForceValue(value);
 }
@@ -1641,7 +1628,6 @@ void EuCon_FeedbackProcessor::ForceValue(string value)
 void EuCon_FeedbackProcessor::SilentSetValue(string value)
 {
     surface_->SendEuConMessage(address_, value);
-    timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

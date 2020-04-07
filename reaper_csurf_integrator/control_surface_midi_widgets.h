@@ -592,12 +592,6 @@ public:
     
     virtual void UpdateValue(string displayText) override
     {
-        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
-        {
-            lastStringSent_ = "   ";
-            timeSilentlySet_ = 0;
-        }
-
         if(shouldRefresh_)
         {
             double now = DAW::GetCurrentNumberOfMilliseconds();
@@ -677,12 +671,6 @@ public:
         
     virtual void UpdateValue(string displayText) override
     {
-        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
-        {
-            lastStringSent_ = "   ";
-            timeSilentlySet_ = 0;
-        }
-
         if(shouldRefresh_)
         {
             double now = DAW::GetCurrentNumberOfMilliseconds();

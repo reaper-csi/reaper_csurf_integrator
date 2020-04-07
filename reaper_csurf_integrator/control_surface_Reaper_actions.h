@@ -1088,8 +1088,9 @@ class CycleTrackAutoMode : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {3, "Write"}, {2, "Touch"}, {4, "Latch"}, {5, "LtchPre"}  };
+    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
     Widget* displayWidget_ = nullptr;
+    double timeSilentlySet_ = 0.0;
   
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
@@ -1097,6 +1098,13 @@ protected:
         if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
             if(track == selectedTrack)
                 SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
+        
+        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
+        {
+            if(displayWidget_ != nullptr)
+                displayWidget_->UpdateValue("   ");
+            timeSilentlySet_ = 0;
+        }
     }
     
 public:
@@ -1111,16 +1119,34 @@ public:
                 }
     }
     
+    virtual void DoAction(double value, Widget* sender) override
+    {
+        if(value)
+            Do(value, sender);
+    }
+    
     virtual void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
         {
+            if(steppedValues_.size() > 0 && timeSilentlySet_ != 0)
+            {
+                if(steppedValuesIndex_ == steppedValues_.size() - 1)
+                        steppedValuesIndex_ = 0;
+                else
+                    steppedValuesIndex_++;
+            }
+
             DAW::SetOnlyTrackSelected(track);
             
-            DAW::SetAutomationMode(value, true);
+            int autoMode = steppedValues_[steppedValuesIndex_];
             
-            if(displayWidget_ != nullptr && autoModes_.count(value) > 0)
-                displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[value]);
+            DAW::SetAutomationMode(autoMode, true);
+            
+            if(displayWidget_ != nullptr && autoModes_.count(autoMode) > 0)
+                displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[autoMode]);
+
+            timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
         }
     }
 };
