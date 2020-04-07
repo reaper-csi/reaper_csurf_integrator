@@ -1127,9 +1127,11 @@ public:
     
     virtual void Do(double value, Widget* sender) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        MediaTrack* track = GetWidget()->GetTrack();
+        
+        if(track != nullptr && steppedValues_.size() > 0)
         {
-            if(steppedValues_.size() > 0 && timeSilentlySet_ != 0)
+            if(timeSilentlySet_ != 0)
             {
                 if(steppedValuesIndex_ == steppedValues_.size() - 1)
                         steppedValuesIndex_ = 0;
