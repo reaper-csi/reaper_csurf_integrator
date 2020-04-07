@@ -673,7 +673,6 @@ protected:
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
-    double timeSilentlySet_ = 0.0;
     
 public:
     virtual ~FeedbackProcessor() {}
@@ -701,8 +700,6 @@ public:
         UpdateValue(displayText);
         mustForce_ = false;
         isSilent_ = false;
-        
-        timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
     }
     
     virtual void Clear()
