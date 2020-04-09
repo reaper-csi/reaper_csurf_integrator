@@ -2108,16 +2108,10 @@ void EuConRequestsInitialization()
         TheManager->InitializeEuCon();
 }
 
-void InitializeEuConWidget(char *name, char *control, char *FB_Processor)
+void InitializeEuConWidgets(vector<CSIWidgetInfo> *assemblyInfoItems)
 {
     if(TheManager)
-        TheManager->InitializeEuConWidget(string(name), string(control), string(FB_Processor));
-}
-
-void EuConInitializationComplete()
-{
-    if(TheManager)
-        TheManager->EuConInitializationComplete();
+        TheManager->InitializeEuConWidgets(assemblyInfoItems);
 }
 
 void HandleEuConMessageWithDouble(const char *address, double value)
@@ -2148,13 +2142,10 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
-    
-    if( ! plugin_register("API_InitializeEuConWidget", (void *)::InitializeEuConWidget))
-        LOG::InitializationFailure("InitializeEuConWidget failed to register");
-    
-    if( ! plugin_register("API_EuConInitializationComplete", (void *)::EuConInitializationComplete))
-        LOG::InitializationFailure("EuConInitializationComplete failed to register");
-    
+
+    if( ! plugin_register("API_InitializeEuConWidgets", (void *)::InitializeEuConWidgets))
+        LOG::InitializationFailure("InitializeEuConWidgets failed to register");
+   
     if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)::HandleEuConMessageWithDouble))
         LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
     
@@ -2175,37 +2166,58 @@ void EuCon_ControlSurface::InitializeEuCon()
         InitializeEuConWithParameters(numChannels_);
 }
 
-void EuCon_ControlSurface::InitializeEuConWidget(string name, string control, string FB_Processor)
+Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
 {
-    if(name != "")
+    if(widgetInfo.name != "")
     {
         Widget* widget = nullptr;
         
-        if(FB_Processor != "")
+        if(widgetInfo.FB_Processor != "")
         {
-            if(FB_Processor.find("FaderDB") != string::npos)
-                widget = new Widget(this, name, new EuCon_FeedbackProcessorDB(this, FB_Processor));
+            if(widgetInfo.FB_Processor.find("FaderDB") != string::npos)
+                widget = new Widget(this, widgetInfo.name, new EuCon_FeedbackProcessorDB(this, widgetInfo.FB_Processor));
             else
-                widget = new Widget(this, name, new EuCon_FeedbackProcessor(this, FB_Processor));
+                widget = new Widget(this, widgetInfo.name, new EuCon_FeedbackProcessor(this, widgetInfo.FB_Processor));
         }
         else
-            widget = new Widget(this, name, new FeedbackProcessor());
+            widget = new Widget(this, widgetInfo.name, new FeedbackProcessor());
 
         if(widget)
         {
-            widgets_.push_back(widget);
-            if(control != "")
-                new EuCon_CSIMessageGenerator(this, widget, control);
+            if(widgetInfo.control != "")
+                new EuCon_CSIMessageGenerator(this, widget, widgetInfo.control);
+            
+            return widget;
         }
     }
+    
+    return nullptr;
 }
 
-void EuCon_ControlSurface::EuConInitializationComplete()
+void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
 {
+    for(auto item : *widgetInfoItems)
+    {
+        Widget* widget = InitializeEuConWidget(item);
+        widgets_.push_back(widget);
+
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
     GoHome();
     ForceClearAllWidgets();
+    GetPage()->ForceRefreshTimeDisplay();
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string address, double value)
