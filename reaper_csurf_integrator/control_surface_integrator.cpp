@@ -1983,7 +1983,11 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 void OSC_ControlSurface::InitWidgets(string templateFilename)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
+    
     InitHardwiredWidgets();
+    GoHome();
+    ForceClearAllWidgets();
+    GetPage()->ForceRefreshTimeDisplay();
 }
 
 void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
@@ -2197,13 +2201,10 @@ Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
 void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
 {
     for(auto item : *widgetInfoItems)
-    {
-        Widget* widget = InitializeEuConWidget(item);
-        widgets_.push_back(widget);
-
-        
-        
-    }
+        if(Widget* widget = InitializeEuConWidget(item))
+        {
+            widgets_.push_back(widget);
+        }
     
     
     
