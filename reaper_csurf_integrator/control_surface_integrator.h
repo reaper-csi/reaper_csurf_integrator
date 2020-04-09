@@ -1004,6 +1004,7 @@ public:
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
     virtual void UpdateTimeDisplay() {}
+    virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ForceRefreshTimeDisplay() {}
 
     void GoHome() { GoZone("Home"); }
@@ -1256,6 +1257,10 @@ public:
     }
 };
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// For EuCon_ControlSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetGroup
 {
 private:
@@ -1265,14 +1270,17 @@ private:
     map<string, WidgetGroup*> subGroups_;
     
 public:
-    void SetIsVisible(bool isVisible) { isVisible_ = isVisible; }
+    void SetIsVisible(bool isVisible)
+    {
+        isVisible_ = isVisible;
+    }
     
-    void SetSubgroupIsVisible(string subgroupName, bool isVisible)
+    void SetIsVisible(string subgroupName, bool isVisible)
     {
         if(subGroups_.count(subgroupName) > 0)
-           subGroups_[subgroupName]->isVisible_ = isVisible;
+           subGroups_[subgroupName]->SetIsVisible(isVisible);
     }
-
+    
     void RequestUpdate()
     {
         if(isVisible_)
@@ -1311,6 +1319,9 @@ private:
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
 
+    vector<Widget*> generalWidgets_;
+    map<int, WidgetGroup*> channelGroups_;
+    
     WDL_Mutex mutex_;
     list<MarshalledFunctionCall*> workQueue_;
 
@@ -1332,11 +1343,15 @@ public:
     void HandleEuConMessage(string oscAddress, double value);
     void HandleEuConMessage(string oscAddress, string value);
     virtual void UpdateTimeDisplay() override;
+    virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     
     virtual void RequestUpdate() override
     {
-        for(auto widget : widgets_)
+        for(auto widget : generalWidgets_)
             widget->RequestUpdate();
+        
+        for(auto [channel, group] : channelGroups_)
+            group->RequestUpdate();
     }
 
     virtual void ForceRefreshTimeDisplay() override
@@ -1674,7 +1689,12 @@ public:
             surface->ReceiveEuConMessage(oscAddress, value);
     }
     
-    /*
+    void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
+    {
+        for(auto surface : surfaces_)
+            surface->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
+    }
+    
     int repeats = 0;
     
     void Run()
@@ -1753,7 +1773,7 @@ public:
         DAW::ShowConsoleMsg(msgBuffer);
     }
     
-*/
+/*
 
 
     void Run()
@@ -1768,7 +1788,7 @@ public:
         
         UpdateEditModeWindow();
     }
-
+*/
     void ForceClearAllWidgets()
     {
         for(auto surface : surfaces_)
@@ -2276,6 +2296,12 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
+    }
+    
+    void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
     }
     
     //int repeats = 0;
