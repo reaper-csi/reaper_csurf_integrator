@@ -2130,6 +2130,12 @@ void HandleEuConMessageWithString(const char *address, const char *value)
         TheManager->ReceiveEuConMessage(string(address), string(value));
 }
 
+void HandleEuConGroupVisibilityChange(const char *groupName, int channelNumber, bool isVisible)
+{
+    if(TheManager)
+        TheManager->ReceiveEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2155,6 +2161,9 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     
     if( ! plugin_register("API_HandleEuConMessageWithString", (void *)::HandleEuConMessageWithString))
         LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
+    
+    if( ! plugin_register("API_HandleEuConGroupVisibilityChange", (void *)::HandleEuConGroupVisibilityChange))
+        LOG::InitializationFailure("HandleEuConGroupVisibilityChange failed to register");
     
     InitializeEuCon();
 }
@@ -2201,18 +2210,28 @@ Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
 void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
 {
     for(auto item : *widgetInfoItems)
+    {
         if(Widget* widget = InitializeEuConWidget(item))
         {
             widgets_.push_back(widget);
+            
+            if(item.channelNumber > 0 && channelGroups_.count(item.channelNumber) < 1 )
+                channelGroups_[item.channelNumber] = new WidgetGroup();
+
+            if(item.group == "General")
+                generalWidgets_.push_back(widget);
+            
+            if(channelGroups_.count(item.channelNumber) > 0)
+            {
+                if(item.group == "Channel")
+                    channelGroups_[item.channelNumber]->AddWidget(widget);
+                else if(item.group == "Pan")
+                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup("Pan", widget);
+                else if(item.group == "Send")
+                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup("Send", widget);
+            }
         }
-    
-    
-    
-    
-    
-    
-    
-    
+    }
     
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
@@ -2279,6 +2298,14 @@ void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
     mutex_.Leave();
 }
 
+void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
+{
+    if(channelGroups_.count(channelNumber) > 0)
+    {
+        if(groupName == "Channel")
+            channelGroups_[channelNumber]->SetIsVisible(isVisible);
+    }
+}
 void EuCon_ControlSurface::HandleExternalInput()
 {
     if(! workQueue_.empty())
