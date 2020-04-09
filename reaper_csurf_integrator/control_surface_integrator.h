@@ -66,6 +66,23 @@ const int TempDisplayTime = 1250;
 class Manager;
 extern Manager* TheManager;
 
+struct CSIWidgetInfo
+{
+    std::string group = "General";
+    int channelNumber = 0;
+    int sendNumber = 0;
+    bool isVisible = true;
+    std::string name = "";
+    std::string control = "";
+    std::string FB_Processor = "";
+    
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, true) {}
+    
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
+    
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
+};
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfIntegrator;
 class Page;
@@ -983,8 +1000,7 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
-    virtual void InitializeEuConWidget(string name, string control, string FB_Processor) {}
-    virtual void EuConInitializationComplete() {}
+    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) {}
     virtual void ReceiveEuConMessage(string oscAddress, double value) {}
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
     virtual void UpdateTimeDisplay() {}
@@ -1078,7 +1094,7 @@ public:
         sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
     
-    void RequestUpdate()
+    virtual void RequestUpdate()
     {
         for(auto widget : widgets_)
             widget->RequestUpdate();
@@ -1259,7 +1275,7 @@ private:
     WDL_Mutex mutex_;
     list<MarshalledFunctionCall*> workQueue_;
 
-    virtual void InitializeEuConWidget(string name, string control, string FB_Processor) override;
+    Widget* InitializeEuConWidget(CSIWidgetInfo &widgetInfo);
 
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels);
@@ -1268,7 +1284,7 @@ public:
     virtual string GetSourceFileName() override { return "EuCon"; }
     
     virtual void InitializeEuCon() override;
-    virtual void EuConInitializationComplete() override;
+    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) override;
     virtual void SendEuConMessage(string oscAddress, double value);
     virtual void SendEuConMessage(string oscAddress, string value);
     virtual void ReceiveEuConMessage(string oscAddress, double value) override;
@@ -1278,6 +1294,12 @@ public:
     void HandleEuConMessage(string oscAddress, string value);
     virtual void UpdateTimeDisplay() override;
     
+    virtual void RequestUpdate() override
+    {
+        for(auto widget : widgets_)
+            widget->RequestUpdate();
+    }
+
     virtual void ForceRefreshTimeDisplay() override
     {
         previousPP = 0.5;
@@ -1595,16 +1617,10 @@ public:
             surface->InitializeEuCon();
     }
     
-    void InitializeEuConWidget(string name, string control, string FB_Processor)
+    void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
     {
         for(auto surface : surfaces_)
-            surface->InitializeEuConWidget(name, control, FB_Processor);
-    }
-    
-    void EuConInitializationComplete()
-    {
-        for(auto surface : surfaces_)
-            surface->EuConInitializationComplete();
+            surface->InitializeEuConWidgets(widgetInfoItems);
     }
     
     void ReceiveEuConMessage(string oscAddress, double value)
@@ -1619,6 +1635,88 @@ public:
             surface->ReceiveEuConMessage(oscAddress, value);
     }
     
+    /*
+    int repeats = 0;
+    
+    void Run()
+    {
+        int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+        
+        trackNavigationManager_->RebuildTrackList();
+        
+        for(auto surface : surfaces_)
+            surface->HandleExternalInput();
+        
+        for(auto surface : surfaces_)
+            surface->RequestUpdate();
+        
+        UpdateEditModeWindow();
+
+         repeats++;
+         
+         if(repeats > 50)
+         {
+             repeats = 0;
+             
+             int totalDuration = 0;
+
+             start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+             trackNavigationManager_->RebuildTrackList();
+             int duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+             totalDuration += duration;
+             ShowDuration("Rebuild Track List", duration);
+             
+             for(auto surface : surfaces_)
+             {
+                 start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+                 surface->HandleExternalInput();
+                 duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+                 totalDuration += duration;
+                 ShowDuration(surface->GetName(), "HandleExternalInput", duration);
+             }
+             
+             for(auto surface : surfaces_)
+             {
+                 start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+                 surface->RequestUpdate();
+                 duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+                 totalDuration += duration;
+                 ShowDuration(surface->GetName(), "Request Update", duration);
+             }
+             
+             start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+             UpdateEditModeWindow();
+             duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
+             totalDuration += duration;
+             ShowDuration("Update Edit Mode Window", duration);
+             
+             char msgBuffer[250];
+             
+             sprintf(msgBuffer, "Total duration = %d\n\n\n", totalDuration);
+             DAW::ShowConsoleMsg(msgBuffer);
+         }
+    }
+    
+    
+    void ShowDuration(string item, int duration)
+    {
+        char msgBuffer[250];
+        
+        sprintf(msgBuffer, "%s - %d microseconds\n", item.c_str(), duration);
+        DAW::ShowConsoleMsg(msgBuffer);
+    }
+    
+    void ShowDuration(string surface, string item, int duration)
+    {
+        char msgBuffer[250];
+        
+        sprintf(msgBuffer, "%s - %s - %d microseconds\n", surface.c_str(), item.c_str(), duration);
+        DAW::ShowConsoleMsg(msgBuffer);
+    }
+    
+*/
+
+
     void Run()
     {
         trackNavigationManager_->RebuildTrackList();
@@ -1631,7 +1729,7 @@ public:
         
         UpdateEditModeWindow();
     }
-    
+
     void ForceClearAllWidgets()
     {
         for(auto surface : surfaces_)
@@ -2123,19 +2221,10 @@ public:
             pages_[currentPageIndex_]->InitializeEuCon();
     }
     
-    void InitializeEuConWidget(string name, string control, string FB_Processor)
+    void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuConWidget(name, control, FB_Processor);
-    }
-    
-    void EuConInitializationComplete()
-    {
-        if(pages_.size() > 0)
-        {
-            pages_[currentPageIndex_]->EuConInitializationComplete();
-            pages_[currentPageIndex_]->ForceRefreshTimeDisplay();
-        }
+            pages_[currentPageIndex_]->InitializeEuConWidgets(widgetInfoItems);
     }
     
     void ReceiveEuConMessage(string oscAddress, double value)
@@ -2172,7 +2261,7 @@ public:
          sprintf(msgBuffer, "%d microseconds\n", duration);
          DAW::ShowConsoleMsg(msgBuffer);
          }
-         */
+        */
     }
 };
 
