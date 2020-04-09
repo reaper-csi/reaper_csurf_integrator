@@ -2225,10 +2225,8 @@ void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetI
             {
                 if(item.group == "Channel")
                     channelGroups_[item.channelNumber]->AddWidget(widget);
-                else if(item.group == "Pan")
-                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup("Pan", widget);
-                else if(item.group == "Send")
-                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup("Send", widget);
+                else
+                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup(item.group, widget);
             }
         }
     }
@@ -2300,17 +2298,16 @@ void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
 
 void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
 {
-    if(channelGroups_.count(channelNumber) > 0)
-    {
-        if(groupName == "Channel")
-            channelGroups_[channelNumber]->SetIsVisible(isVisible);
-        
-        else if(groupName == "Pan")
-            channelGroups_[channelNumber]->SetIsVisible("Pan", isVisible);
-        
-        else if(groupName == "Send")
-            channelGroups_[channelNumber]->SetIsVisible("Send", isVisible);
-    }
+    if(groupName == "Pan")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("Pan", isVisible);
+    
+    else if(groupName == "Send")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("Send", isVisible);
+
+    else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
+        channelGroups_[channelNumber]->SetIsVisible(isVisible);
 }
 void EuCon_ControlSurface::HandleExternalInput()
 {
