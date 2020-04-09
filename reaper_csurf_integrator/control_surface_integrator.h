@@ -1151,13 +1151,11 @@ public:
     : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename);
-        
-        ForceClearAllWidgets();
-        
+               
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
-        
         GoHome();
+        ForceClearAllWidgets();
     }
     
     virtual ~Midi_ControlSurface() {}
@@ -1208,13 +1206,11 @@ public:
     : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
         InitWidgets(templateFilename);
-        
-        ForceClearAllWidgets();
-        
+              
         // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
         InitZones(zoneFolder);
-
         GoHome();
+        ForceClearAllWidgets();
     }
     
     virtual ~OSC_ControlSurface() {}
@@ -1257,6 +1253,49 @@ public:
     void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
     {
         CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
+    }
+};
+
+class WidgetGroup
+{
+private:
+    bool isVisible_ = false;
+    
+    vector<Widget*> widgets_;
+    map<string, WidgetGroup*> subGroups_;
+    
+public:
+    void SetIsVisible(bool isVisible) { isVisible_ = isVisible; }
+    
+    void SetSubgroupIsVisible(string subgroupName, bool isVisible)
+    {
+        if(subGroups_.count(subgroupName) > 0)
+           subGroups_[subgroupName]->isVisible_ = isVisible;
+    }
+
+    void RequestUpdate()
+    {
+        if(isVisible_)
+        {
+            for(auto widget : widgets_)
+                widget->RequestUpdate();
+            
+            for(auto [name, group] : subGroups_)
+                group->RequestUpdate();
+        }
+    }
+    
+    void AddWidget(Widget* widget)
+    {
+        widgets_.push_back(widget);
+    }
+    
+    void AddWidgetToSubgroup(string subgroupName, Widget* widget)
+    {
+        if(subGroups_.count(subgroupName) < 1)
+            subGroups_[subgroupName] = new WidgetGroup();
+        
+        subGroups_[subgroupName]->AddWidget(widget);
     }
 };
 
