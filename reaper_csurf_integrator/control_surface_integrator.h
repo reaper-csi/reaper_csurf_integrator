@@ -1694,7 +1694,7 @@ public:
         for(auto surface : surfaces_)
             surface->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
     }
-    
+   /*
     int repeats = 0;
     
     void Run()
@@ -1773,7 +1773,7 @@ public:
         DAW::ShowConsoleMsg(msgBuffer);
     }
     
-/*
+*/
 
 
     void Run()
@@ -1788,7 +1788,7 @@ public:
         
         UpdateEditModeWindow();
     }
-*/
+
     void ForceClearAllWidgets()
     {
         for(auto surface : surfaces_)
