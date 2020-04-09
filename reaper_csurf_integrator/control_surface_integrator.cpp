@@ -2304,6 +2304,12 @@ void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, i
     {
         if(groupName == "Channel")
             channelGroups_[channelNumber]->SetIsVisible(isVisible);
+        
+        else if(groupName == "Pan")
+            channelGroups_[channelNumber]->SetIsVisible("Pan", isVisible);
+        
+        else if(groupName == "Send")
+            channelGroups_[channelNumber]->SetIsVisible("Send", isVisible);
     }
 }
 void EuCon_ControlSurface::HandleExternalInput()
