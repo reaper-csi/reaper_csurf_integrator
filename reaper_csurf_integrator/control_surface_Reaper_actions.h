@@ -108,6 +108,48 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SoftTakeover7BitTrackVolume : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SoftTakeover7BitTrackVolume(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            double trackVolume, trackPan = 0.0;
+            DAW::GetTrackUIVolPan(track, &trackVolume, &trackPan);
+            trackVolume = volToNormalized(trackVolume);
+            
+            if( fabs(value - trackVolume) < 0.025) // GAW -- Magic number -- ne touche pas
+                DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SoftTakeover14BitTrackVolume : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    SoftTakeover14BitTrackVolume(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    
+    void Do(double value, Widget* sender) override
+    {
+        if(MediaTrack* track = GetWidget()->GetTrack())
+        {
+            double trackVolume, trackPan = 0.0;
+            DAW::GetTrackUIVolPan(track, &trackVolume, &trackPan);
+            trackVolume = volToNormalized(trackVolume);
+            
+            if( fabs(value - trackVolume) < 0.0025) // GAW -- Magic number -- ne touche pas
+                DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackVolumeDB : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

@@ -899,6 +899,8 @@ void Manager::InitActionDictionary()
     actions_["FocusedFXParamValueDisplay"] =        [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FocusedFXParamValueDisplay(name, widget, zone, params); };
     actions_["FXGainReductionMeter"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FXGainReductionMeter(name, widget, zone, params); };
     actions_["TrackVolume"] =                       [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackVolume(name, widget, zone, params); };
+    actions_["SoftTakeover7BitTrackVolume"] =       [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SoftTakeover7BitTrackVolume(name, widget, zone, params); };
+    actions_["SoftTakeover14BitTrackVolume"] =      [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SoftTakeover14BitTrackVolume(name, widget, zone, params); };
     actions_["TrackVolumeDB"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackVolumeDB(name, widget, zone, params); };
     actions_["TrackSendVolume"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackSendVolume(name, widget, zone, params); };
     actions_["TrackSendVolumeDB"] =                 [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackSendVolumeDB(name, widget, zone, params); };
