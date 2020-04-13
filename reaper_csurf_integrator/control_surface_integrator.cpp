@@ -914,6 +914,7 @@ void Manager::InitActionDictionary()
     actions_["TrackPanWidthPercent"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackPanWidthPercent(name, widget, zone, params); };
     actions_["TrackPanLPercent"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackPanLPercent(name, widget, zone, params); };
     actions_["TrackPanRPercent"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackPanRPercent(name, widget, zone, params); };
+    actions_["FixedTextDisplay"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new FixedTextDisplay(name, widget, zone, params); };
     actions_["TrackNameDisplay"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackNameDisplay(name, widget, zone, params); };
     actions_["TrackVolumeDisplay"] =                [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackVolumeDisplay(name, widget, zone, params); };
     actions_["TrackSendNameDisplay"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackSendNameDisplay(name, widget, zone, params); };
