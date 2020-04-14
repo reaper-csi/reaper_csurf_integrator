@@ -2258,17 +2258,17 @@ public:
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    DAW::ShowConsoleMsg(("\n" + to_string(j) + " - \"" + string(fxParamName)+ "\"").c_str());
                     
+                    /* Uncomdent this and comment the line ablove if you want to show steo sizes
                     double stepOut = 0;
                     double smallstepOut = 0;
                     double largestepOut = 0;
                     bool istoggleOut = false;
-                    
-                    DAW::ShowConsoleMsg(("\n\n" + string(fxParamName)).c_str());
-                    
                     TrackFX_GetParameterStepSizes(track, i, j, &stepOut, &smallstepOut, &largestepOut, &istoggleOut);
-                    
-                    DAW::ShowConsoleMsg(("\n" + to_string(stepOut) + " " +  to_string(smallstepOut) + " " + to_string(largestepOut) + " " + to_string(istoggleOut) + " ").c_str());
+
+                    DAW::ShowConsoleMsg(("\n\n" + to_string(j) + " - \"" + string(fxParamName) + "\"\t\t\t\t Step = " +  to_string(stepOut) + " Small Step = " + to_string(smallstepOut)  + " LargeStep = " + to_string(largestepOut)  + " Toggle Out = " + (istoggleOut == 0 ? "false" : "true")).c_str());
+                    */
                 }
             }
         }
