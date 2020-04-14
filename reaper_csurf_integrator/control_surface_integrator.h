@@ -2258,12 +2258,12 @@ public:
             for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                DAW::ShowConsoleMsg(("\n\n" + string(fxName)).c_str());
+                DAW::ShowConsoleMsg(("Zone \"" + string(fxName) + "\"").c_str());
                 
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    DAW::ShowConsoleMsg(("\n" + to_string(j) + " - \"" + string(fxParamName)+ "\"").c_str());
+                    DAW::ShowConsoleMsg(("\n\tFXParam " + to_string(j) + " \"" + string(fxParamName)+ "\"").c_str());
                     
                     /* Uncomdent this and comment the line ablove if you want to show steo sizes
                     double stepOut = 0;
@@ -2275,6 +2275,8 @@ public:
                     DAW::ShowConsoleMsg(("\n\n" + to_string(j) + " - \"" + string(fxParamName) + "\"\t\t\t\t Step = " +  to_string(stepOut) + " Small Step = " + to_string(smallstepOut)  + " LargeStep = " + to_string(largestepOut)  + " Toggle Out = " + (istoggleOut == 0 ? "false" : "true")).c_str());
                     */
                 }
+                
+                DAW::ShowConsoleMsg("\nZoneEnd\n\n");
             }
         }
     }
