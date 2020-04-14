@@ -256,13 +256,12 @@ static map<string, vector<vector<string>>> zoneDefinitions;
 
 static void BuildZone(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
 {
-    const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD don't forget this logic
+    const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD - don't forget to re-implement this
 
     Zone* zone = nullptr;
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
     
-
     for(int i = 0 ; i < zoneLines.size(); i++)
     {
         auto tokens = zoneLines[i];
@@ -1222,6 +1221,11 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+Widget::Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor) : surface_(surface), name_(name), feedbackProcessor_(feedbackProcessor)
+{
+    feedbackProcessor->SetWidget(this);
+}
+
 void Widget::AddAction(Zone* zone, string modifiers, Action* action)
 {
     actions_[zone][modifiers].push_back(action);
@@ -1239,6 +1243,30 @@ MediaTrack* Widget::GetTrack()
         return activeZone_->GetNavigator()->GetTrack();
     else
         return nullptr;
+}
+
+string Widget::GetCurrentZoneActionDisplay(string surfaceName)
+{
+    string modifiers = surface_->GetPage()->GetModifiers();
+
+    if(activeZone_ != nullptr && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+    {
+        string actionName = "";
+        
+        if(actions_[activeZone_][modifiers][0]->GetName() == "FXParam")
+        {
+            if(actions_[activeZone_][modifiers][0]->GetDisplayName() == "")
+                actionName = "FXParam " + actions_[activeZone_][modifiers][0]->GetParamNumAsString() + " ";
+            else
+                actionName = actions_[activeZone_][modifiers][0]->GetDisplayName();
+        }
+        else
+            actionName = actions_[activeZone_][modifiers][0]->GetName();
+        
+        return activeZone_->GetAlias() + "->" + actionName + "---->" + surfaceName + "->" + GetName();
+    }
+    else
+        return GetName();
 }
 
 void Widget::RequestUpdate()
@@ -1520,7 +1548,7 @@ EuCon_CSIMessageGenerator::EuCon_CSIMessageGenerator(EuCon_ControlSurface* surfa
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
-    surface_->SendMidiMessage(midiMessage);
+    surface_->SendMidiMessage(this, midiMessage);
 }
 
 void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
@@ -1541,7 +1569,7 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
     lastMessageSent_->midi_message[0] = first;
     lastMessageSent_->midi_message[1] = second;
     lastMessageSent_->midi_message[2] = third;
-    surface_->SendMidiMessage(first, second, third);
+    surface_->SendMidiMessage(this, first, second, third);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1568,24 +1596,24 @@ void OSC_FeedbackProcessor::UpdateValue(string value)
 void OSC_FeedbackProcessor::ForceValue(double value)
 {
     lastDoubleValue_ = value;
-    surface_->SendOSCMessage(oscAddress_, value);
+    surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(int param, double value)
 {
     lastDoubleValue_ = value;
-    surface_->SendOSCMessage(oscAddress_, value);
+    surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(string value)
 {
     lastStringValue_ = value;
-    surface_->SendOSCMessage(oscAddress_, value);
+    surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::SilentSetValue(string value)
 {
-    surface_->SendOSCMessage(oscAddress_, value);
+    surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1612,7 +1640,7 @@ void EuCon_FeedbackProcessor::UpdateValue(string value)
 void EuCon_FeedbackProcessor::ForceValue(double value)
 {
     lastDoubleValue_ = value;
-    surface_->SendEuConMessage(address_, value);
+    surface_->SendEuConMessage(this, address_, value);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(int param, double value)
@@ -1625,12 +1653,12 @@ void EuCon_FeedbackProcessor::ForceValue(int param, double value)
 void EuCon_FeedbackProcessor::ForceValue(string value)
 {
     lastStringValue_ = value;
-    surface_->SendEuConMessage(address_, value);
+    surface_->SendEuConMessage(this, address_, value);
 }
 
 void EuCon_FeedbackProcessor::SilentSetValue(string value)
 {
-    surface_->SendEuConMessage(address_, value);
+    surface_->SendEuConMessage(this, address_, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1645,7 +1673,7 @@ void EuCon_FeedbackProcessorDB::Clear()
 void EuCon_FeedbackProcessorDB::ForceClear()
 {
     lastDoubleValue_ = -100.0;
-    surface_->SendEuConMessage(address_, -100.0);
+    surface_->SendEuConMessage(this, address_, -100.0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1954,28 +1982,40 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     }
 }
 
-void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
+void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, MIDI_event_ex_t* midiMessage)
 {
     if(midiOutput_)
         midiOutput_->SendMsg(midiMessage, -1);
     
     if(TheManager->GetSurfaceOutMonitor())
     {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s SysEx \n", name_.c_str());
-        DAW::ShowConsoleMsg(buffer);
+        string displayString = "";
+        
+        if(Widget* widget = feedbackProcessor->GetWidget())
+            displayString = widget->GetCurrentZoneActionDisplay(name_) + " SysEx\n";
+        else
+            displayString = "OUT->" + name_ + " SysEx\n";
+        
+        DAW::ShowConsoleMsg(displayString.c_str());
     }
 }
 
-void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
+void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third)
 {
     if(midiOutput_)
         midiOutput_->Send(first, second, third, -1);
     
     if(TheManager->GetSurfaceOutMonitor())
     {
+        string displayString = "";
+        
+        if(Widget* widget = feedbackProcessor->GetWidget())
+            displayString = widget->GetCurrentZoneActionDisplay(name_);
+        else
+            displayString = "OUT->" + name_;
+        
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %02x  %02x  %02x \n", name_.c_str(), first, second, third);
+        snprintf(buffer, sizeof(buffer), "%s  %02x  %02x  %02x \n", displayString.c_str(), first, second, third);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -2021,14 +2061,10 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
     }
     
     if(TheManager->GetSurfaceOutMonitor())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s \n", name_.c_str(), oscAddress.c_str());
-        DAW::ShowConsoleMsg(buffer);
-    }
+        DAW::ShowConsoleMsg((zoneName + "->" + "LoadingZone---->" + name_ + "\n").c_str());
 }
 
-void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
+void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor, string oscAddress, double value)
 {
     if(outSocket_ != nullptr && outSocket_->isOk())
     {
@@ -2040,13 +2076,21 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, double value)
     
     if(TheManager->GetSurfaceOutMonitor())
     {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), oscAddress.c_str(), value);
-        DAW::ShowConsoleMsg(buffer);
+        if(TheManager->GetSurfaceOutMonitor())
+        {
+            string displayString = "";
+            
+            if(Widget* widget = feedbackProcessor->GetWidget())
+                displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + to_string(value) + "\n";
+            else
+                displayString = "OUT->" + name_ + " " + oscAddress + " " + to_string(value) + "\n";
+            
+            DAW::ShowConsoleMsg(displayString.c_str());
+        }
     }
 }
 
-void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
+void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor, string oscAddress, string value)
 {
     if(outSocket_ != nullptr && outSocket_->isOk())
     {
@@ -2058,9 +2102,14 @@ void OSC_ControlSurface::SendOSCMessage(string oscAddress, string value)
     
     if(TheManager->GetSurfaceOutMonitor())
     {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), oscAddress.c_str(), value.c_str());
-        DAW::ShowConsoleMsg(buffer);
+        string displayString = "";
+        
+        if(Widget* widget = feedbackProcessor->GetWidget())
+            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + value + "\n";
+        else
+            displayString = "OUT-> " + name_ + " " + oscAddress + " " + value + "\n";
+        
+        DAW::ShowConsoleMsg(displayString.c_str());
     }
 }
 
@@ -2241,7 +2290,7 @@ void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetI
     GetPage()->ForceRefreshTimeDisplay();
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string address, double value)
+void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value)
 {
     static void (*HandleReaperMessageWthDouble)(const char *, double) = nullptr;
     
@@ -2253,13 +2302,18 @@ void EuCon_ControlSurface::SendEuConMessage(string address, double value)
 
     if(TheManager->GetSurfaceOutMonitor())
     {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %f  \n", name_.c_str(), address.c_str(), value);
-        DAW::ShowConsoleMsg(buffer);
+        string displayString = "";
+        
+        if(Widget* widget = feedbackProcessor->GetWidget())
+            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + to_string(value) + "\n";
+        else
+            displayString = "OUT->" + name_ + " " + address + " " + to_string(value) + "\n";
+
+        DAW::ShowConsoleMsg(displayString.c_str());
     }
 }
 
-void EuCon_ControlSurface::SendEuConMessage(string address, string value)
+void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value)
 {
     if(address.find("Pan_Display") != string::npos
        || address.find("Width_Display") != string::npos
@@ -2273,16 +2327,32 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
     
     if(g_reaper_plugin_info && HandleReaperMessageWthString == nullptr)
         HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
-        
+    
     if(HandleReaperMessageWthString)
-            HandleReaperMessageWthString(address.c_str(), value.c_str());
-
+        HandleReaperMessageWthString(address.c_str(), value.c_str());
+    
     if(TheManager->GetSurfaceOutMonitor())
     {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "OUT -> %s %s  %s  \n", name_.c_str(), address.c_str(), value.c_str());
-        DAW::ShowConsoleMsg(buffer);
+        string displayString = "";
+        
+        if(Widget* widget = feedbackProcessor->GetWidget())
+            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
+        else
+            displayString = "OUT-> " + name_ + " " + address + " " + value + "\n";
+        
+        DAW::ShowConsoleMsg(displayString.c_str());
     }
+}
+
+void EuCon_ControlSurface::SendEuConMessage(string address, string value)
+{
+    static void (*HandleReaperMessageWthString)(const char *, const char *) = nullptr;
+    
+    if(g_reaper_plugin_info && HandleReaperMessageWthString == nullptr)
+        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
+    
+    if(HandleReaperMessageWthString)
+        HandleReaperMessageWthString(address.c_str(), value.c_str());
 }
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)

@@ -212,12 +212,13 @@ private:
     map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
     
 public:
-    Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor) : surface_(surface), name_(name), feedbackProcessor_(feedbackProcessor) {}
+    Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor);
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     FeedbackProcessor* GetFeedbackProcessor() { return feedbackProcessor_; }
+    string GetCurrentZoneActionDisplay(string surfaceName);
     void AddAction(Zone* zone, string modifiers, Action* action);
     void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
@@ -690,9 +691,12 @@ protected:
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
+    Widget* widget_ = nullptr;
     
 public:
     virtual ~FeedbackProcessor() {}
+    void SetWidget(Widget* widget) { widget_ = widget;  }
+    Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void UpdateValue(double value) {}
     virtual void UpdateValue(int param, double value) {}
@@ -1163,8 +1167,8 @@ public:
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/Midi/" + templateFilename_; }
     
-    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
-    void SendMidiMessage(int first, int second, int third);
+    void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, MIDI_event_ex_t* midiMessage);
+    void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third);
 
     bool hasSetGlobalSysEx_ = false;
 
@@ -1219,8 +1223,8 @@ public:
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/OSC/" + templateFilename_; }
     
     virtual void LoadingZone(string zoneName) override;
-    void SendOSCMessage(string oscAddress, double value);
-    void SendOSCMessage(string oscAddress, string value);
+    void SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor, string oscAddress, double value);
+    void SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor, string oscAddress, string value);
     
     virtual void ForceClearAllWidgets() override
     {
@@ -1335,7 +1339,8 @@ public:
     
     virtual void InitializeEuCon() override;
     virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) override;
-    virtual void SendEuConMessage(string oscAddress, double value);
+    virtual void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string oscAddress, double value);
+    virtual void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string oscAddress, string value);
     virtual void SendEuConMessage(string oscAddress, string value);
     virtual void ReceiveEuConMessage(string oscAddress, double value) override;
     virtual void ReceiveEuConMessage(string oscAddress, string value) override;
