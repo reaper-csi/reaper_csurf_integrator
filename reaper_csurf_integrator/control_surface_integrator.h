@@ -1009,6 +1009,8 @@ public:
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
     virtual void UpdateTimeDisplay() {}
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
+    virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
+
     virtual void ForceRefreshTimeDisplay() {}
 
     void GoHome() { GoZone("Home"); }
@@ -1349,6 +1351,7 @@ public:
     void HandleEuConMessage(string oscAddress, string value);
     virtual void UpdateTimeDisplay() override;
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
+    virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
     
     virtual void RequestUpdate() override
     {
@@ -1357,6 +1360,8 @@ public:
         
         for(auto [channel, group] : channelGroups_)
             group->RequestUpdate();
+        
+        SendEuConMessage("RequestUpdateMeters", "Update");
     }
 
     virtual void ForceRefreshTimeDisplay() override
@@ -1457,9 +1462,10 @@ public:
 
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
-        // GAW TBD -- maybe put a ValidatePtr in here ?
-        if(tracks_.size() > channelNumber + trackOffset_)
-            return tracks_[channelNumber + trackOffset_];
+        int trackNumber = channelNumber + trackOffset_;
+        
+        if(tracks_.size() > trackNumber && DAW::ValidateTrackPtr(tracks_[trackNumber]))
+            return tracks_[trackNumber];
         else
             return nullptr;
     }
@@ -1699,6 +1705,13 @@ public:
         for(auto surface : surfaces_)
             surface->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
     }
+    
+    void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+    {
+        for(auto surface : surfaces_)
+            surface->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
+    }
+    
    /*
     int repeats = 0;
     
@@ -2311,6 +2324,12 @@ public:
             pages_[currentPageIndex_]->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
     }
     
+    void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
+    }
+
     //int repeats = 0;
     
     void Run()
