@@ -2189,6 +2189,12 @@ void HandleEuConGroupVisibilityChange(const char *groupName, int channelNumber, 
         TheManager->ReceiveEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
 }
 
+void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+{
+    if(TheManager)
+        TheManager->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2217,6 +2223,9 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     
     if( ! plugin_register("API_HandleEuConGroupVisibilityChange", (void *)::HandleEuConGroupVisibilityChange))
         LOG::InitializationFailure("HandleEuConGroupVisibilityChange failed to register");
+    
+    if( ! plugin_register("API_HandleEuConGetMeterValues", (void *)::HandleEuConGetMeterValues))
+        LOG::InitializationFailure("HandleEuConGetMeterValues failed to register");
     
     InitializeEuCon();
 }
@@ -2383,6 +2392,17 @@ void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, i
     else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
         channelGroups_[channelNumber]->SetIsVisible(isVisible);
 }
+
+void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+{
+    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
+    {
+        oLevel = (VAL2DB(DAW::Track_GetPeakInfo(track, 0)) + VAL2DB(DAW::Track_GetPeakInfo(track, 1))) / 2.0;
+        oPeak = oLevel;
+        oLegClip = false;
+    }
+}
+
 void EuCon_ControlSurface::HandleExternalInput()
 {
     if(! workQueue_.empty())
