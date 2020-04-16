@@ -2397,8 +2397,43 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
 {
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
     {
-        oLevel = (VAL2DB(DAW::Track_GetPeakInfo(track, 0)) + VAL2DB(DAW::Track_GetPeakInfo(track, 1))) / 2.0;
-        oPeak = oLevel;
+        float left = VAL2DB(DAW::Track_GetPeakInfo(track, 0));
+        float right = VAL2DB(DAW::Track_GetPeakInfo(track, 1));
+        
+        oLevel = (left + right) / 2.0;
+       
+        float max = left > right ? left : right;
+        
+        if(peakInfo_.count(id) > 0 && peakInfo_[id].peakValue < max)
+        {
+            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
+            peakInfo_[id].peakValue = max;
+            if(max > 0.0)
+                peakInfo_[id].isClipping = true;
+        }
+        
+        if(peakInfo_.count(id) < 1)
+        {
+            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
+            peakInfo_[id].peakValue = max;
+            if(max > 0.0)
+                peakInfo_[id].isClipping = true;
+        }
+        
+        if(peakInfo_.count(id) > 0 && (DAW::GetCurrentNumberOfMilliseconds() - peakInfo_[id].timePeakSet > 2000))
+        {
+            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
+            peakInfo_[id].peakValue = max;
+            peakInfo_[id].isClipping = false;
+        }
+        
+        oPeak = peakInfo_[id].peakValue;
+        oLegClip = peakInfo_[id].isClipping;
+    }
+    else
+    {
+        oLevel = -144.0;
+        oPeak = -144.0;
         oLegClip = false;
     }
 }
