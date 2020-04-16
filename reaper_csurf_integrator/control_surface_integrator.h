@@ -2115,6 +2115,9 @@ public:
         surfaceOutMonitor_ = false;
         oscInMonitor_ = false;
         oscOutMonitor_ = false;
+        
+        // GAW -- IMPORTANT
+        // We want to stop polling and zero out all Widgets before shutting down
         shouldRun_ = false;
         
         if(pages_.size() > 0)
