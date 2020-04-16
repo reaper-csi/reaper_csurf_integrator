@@ -1313,6 +1313,13 @@ public:
     }
 };
 
+typedef struct PeakInfoStruct
+{
+    double timePeakSet;
+    float peakValue;
+    bool isClipping;
+} PeakInfo;
+
 class MarshalledFunctionCall;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class EuCon_ControlSurface : public ControlSurface
@@ -1332,7 +1339,9 @@ private:
     list<MarshalledFunctionCall*> workQueue_;
 
     Widget* InitializeEuConWidget(CSIWidgetInfo &widgetInfo);
-
+    
+    map<int, PeakInfo> peakInfo_;
+    
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels);
     virtual ~EuCon_ControlSurface() {}
