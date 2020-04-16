@@ -2061,8 +2061,6 @@ private:
     
     map<string, map<string, int>> fxParamIndices_;
     
-    bool shouldRun_ = true;
-    
     int currentPageIndex_ = 0;
     bool surfaceInMonitor_ = false;
     bool surfaceOutMonitor_ = false;
@@ -2115,7 +2113,6 @@ public:
         surfaceOutMonitor_ = false;
         oscInMonitor_ = false;
         oscOutMonitor_ = false;
-        shouldRun_ = false;
 
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->ForceClearAllWidgets();
@@ -2345,7 +2342,7 @@ public:
     {
         //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
         
-        if(shouldRun_ && pages_.size() > 0)
+        if(pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
         /*
          repeats++;
