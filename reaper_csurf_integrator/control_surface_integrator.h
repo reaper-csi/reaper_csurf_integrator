@@ -2069,6 +2069,8 @@ private:
     bool oscInMonitor_ = false;
     bool oscOutMonitor_ = false;
     
+    bool shouldRun_ = true;
+    
     int *timeModePtr_ = nullptr;
     int *timeMode2Ptr_ = nullptr;
     int *measOffsPtr_ = nullptr;
@@ -2113,7 +2115,8 @@ public:
         surfaceOutMonitor_ = false;
         oscInMonitor_ = false;
         oscOutMonitor_ = false;
-
+        shouldRun_ = false;
+        
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->ForceClearAllWidgets();
     }
@@ -2342,7 +2345,7 @@ public:
     {
         //int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
         
-        if(pages_.size() > 0)
+        if(shouldRun_ && pages_.size() > 0)
             pages_[currentPageIndex_]->Run();
         /*
          repeats++;
