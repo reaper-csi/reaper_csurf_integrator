@@ -2728,6 +2728,31 @@ static void UpdateCheckBoxes()
     }
 }
 
+static void UpdateActionName()
+{
+    if(currentPage != nullptr)
+    {
+        int trackNum = 0;
+        int fxSlotNum = 0;
+        int fxParamNum = 0;
+        
+        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
+        {
+            if(MediaTrack* track = currentPage->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            {
+                char nameBuf[512];
+                DAW::TrackFX_GetParamName(track, fxSlotNum, fxParamNum, nameBuf, sizeof(nameBuf));
+                
+                SetDlgItemText(hwndLearn, IDC_EDIT_ActionName, nameBuf);
+            }
+        }
+        else
+            SetDlgItemText(hwndLearn, IDC_EDIT_ActionName, "");
+    }
+    else
+        SetDlgItemText(hwndLearn, IDC_EDIT_ActionName, "");
+}
+
 static void SetCheckBoxes(ActionLineItem actionLineItem)
 {
     if(actionLineItem.isShift)
@@ -4206,6 +4231,7 @@ void Page::ActionPerformed(Action* action)
 void Page::UpdateEditModeWindow()
 {
     UpdateCheckBoxes();
+    UpdateActionName();
 }
 
 
