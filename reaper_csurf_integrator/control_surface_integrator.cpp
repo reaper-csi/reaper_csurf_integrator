@@ -2365,20 +2365,6 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
         HandleReaperMessageWthString(address.c_str(), value.c_str());
 }
 
-void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
-{
-    mutex_.Enter();
-    workQueue_.push_front(new Marshalled_Double(this, address, value));
-    mutex_.Leave();
-}
-
-void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
-{
-    mutex_.Enter();
-    workQueue_.push_front(new Marshalled_String(this, address, value));
-    mutex_.Leave();
-}
-
 void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
 {
     if(groupName == "Pan")
@@ -2436,6 +2422,20 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
         oPeak = -144.0;
         oLegClip = false;
     }
+}
+
+void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
+{
+    mutex_.Enter();
+    workQueue_.push_front(new Marshalled_Double(this, address, value));
+    mutex_.Leave();
+}
+
+void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
+{
+    mutex_.Enter();
+    workQueue_.push_front(new Marshalled_String(this, address, value));
+    mutex_.Leave();
 }
 
 void EuCon_ControlSurface::HandleExternalInput()
