@@ -1554,7 +1554,7 @@ void Action::DoRelativeAction(double value, Widget* sender)
         else if(value > 0.0)
             adjustedValue = lastValue_ + delta_;
         
-        Do(adjustedValue, sender);
+        DoAction(adjustedValue, sender);
     }
     
     // GAW TBD -- this will need to be changed
