@@ -203,7 +203,7 @@ class Widget
 private:
     ControlSurface* const surface_;
     string const name_;
-    FeedbackProcessor* const feedbackProcessor_;
+    vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     Zone* activeZone_ = nullptr;
     map<string, Zone*> zonesAvailable_;
@@ -212,17 +212,22 @@ private:
     map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
     
 public:
-    Widget(ControlSurface* surface, string name, FeedbackProcessor*  feedbackProcessor);
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    FeedbackProcessor* GetFeedbackProcessor() { return feedbackProcessor_; }
     string GetCurrentZoneActionDisplay(string surfaceName);
     void AddAction(Zone* zone, string modifiers, Action* action);
     void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
+    virtual void SilentSetValue(string displayText);
     
+    void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
+    {
+        feedbackProcessors_.push_back(feedbackProcessor);
+    }
+
     void GoZone(string zoneName)
     {
         if(zonesAvailable_.count(zoneName) > 0)
@@ -595,11 +600,11 @@ protected:
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
-    Widget* widget_ = nullptr;
+    Widget* const widget_ = nullptr;
     
 public:
+    FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
-    void SetWidget(Widget* widget) { widget_ = widget;  }
     Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void UpdateValue(double value) {}
@@ -655,9 +660,9 @@ protected:
     MIDI_event_ex_t* midiFeedbackMessage1_ = new MIDI_event_ex_t(0, 0, 0);
     MIDI_event_ex_t* midiFeedbackMessage2_ = new MIDI_event_ex_t(0, 0, 0);
     
-    Midi_FeedbackProcessor(Midi_ControlSurface* surface) : surface_(surface) {}
-    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : surface_(surface), midiFeedbackMessage1_(feedback1) {}
-    Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : surface_(surface), midiFeedbackMessage1_(feedback1), midiFeedbackMessage2_(feedback2) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget) : FeedbackProcessor(widget), surface_(surface) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : FeedbackProcessor(widget), surface_(surface), midiFeedbackMessage1_(feedback1) {}
+    Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : FeedbackProcessor(widget), surface_(surface), midiFeedbackMessage1_(feedback1), midiFeedbackMessage2_(feedback2) {}
     
     void SendMidiMessage(MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(int first, int second, int third);
@@ -684,7 +689,7 @@ protected:
     
 public:
     
-    OSC_FeedbackProcessor(OSC_ControlSurface* surface, string oscAddress) : surface_(surface), oscAddress_(oscAddress) {}
+    OSC_FeedbackProcessor(OSC_ControlSurface* surface, Widget* widget, string oscAddress) : FeedbackProcessor(widget), surface_(surface), oscAddress_(oscAddress) {}
     ~OSC_FeedbackProcessor() {}
     
     virtual void UpdateValue(double value) override;
@@ -714,7 +719,7 @@ protected:
     
 public:
     
-    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, string address) : surface_(surface), address_(address) {}
+    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, Widget* widget, string address) : FeedbackProcessor(widget), surface_(surface), address_(address) {}
     ~EuCon_FeedbackProcessor() {}
     
     virtual void UpdateValue(double value) override;
@@ -737,7 +742,7 @@ class EuCon_FeedbackProcessorDB : public EuCon_FeedbackProcessor
 {
 public:
     
-    EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, string address) : EuCon_FeedbackProcessor(surface, address) {}
+    EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, Widget* widget, string address) : EuCon_FeedbackProcessor(surface, widget, address) {}
     ~EuCon_FeedbackProcessorDB() {}
     
     virtual void Clear() override;
@@ -888,8 +893,8 @@ protected:
     void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
-        widgets_.push_back(new Widget(this, "OnTrackSelection", new FeedbackProcessor()));
-        widgets_.push_back(new Widget(this, "OnFXFocus", new FeedbackProcessor()));
+        widgets_.push_back(new Widget(this, "OnTrackSelection"));
+        widgets_.push_back(new Widget(this, "OnFXFocus"));
     }
     
 public:
