@@ -188,7 +188,7 @@ class TwoState_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 public:
     virtual ~TwoState_Midi_FeedbackProcessor() {}
-    TwoState_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : Midi_FeedbackProcessor(surface, feedback1, feedback2) { }
+    TwoState_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1, MIDI_event_ex_t* feedback2) : Midi_FeedbackProcessor(surface, widget, feedback1, feedback2) { }
     
     virtual void ForceValue(double value) override
     {
@@ -222,7 +222,7 @@ private:
     
 public:
     virtual ~NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor() {}
-    NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    NovationLaunchpadMiniRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceRGBValue(int r, int g, int b) override
     {
@@ -277,7 +277,7 @@ private:
     
 public:
     virtual ~FaderportRGB7Bit_Midi_FeedbackProcessor() {}
-    FaderportRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    FaderportRGB7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceRGBValue(int r, int g, int b) override
     {
@@ -306,7 +306,7 @@ class Fader14Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 public:
     virtual ~Fader14Bit_Midi_FeedbackProcessor() {}
-    Fader14Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    Fader14Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceValue(double value) override
     {
@@ -341,7 +341,7 @@ class Fader7Bit_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 public:
     virtual ~Fader7Bit_Midi_FeedbackProcessor() {}
-    Fader7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    Fader7Bit_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceValue(double value) override
     {
@@ -374,7 +374,7 @@ class Encoder_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 public:
     virtual ~Encoder_Midi_FeedbackProcessor() {}
-    Encoder_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    Encoder_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceValue(double value) override
     {
@@ -423,7 +423,7 @@ class VUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 public:
     virtual ~VUMeter_Midi_FeedbackProcessor() {}
-    VUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    VUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceValue(double value) override
     {
@@ -457,7 +457,7 @@ private:
     
 public:
     virtual ~GainReductionMeter_Midi_FeedbackProcessor() {}
-    GainReductionMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    GainReductionMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceValue(double value) override
     {
@@ -482,7 +482,7 @@ private:
     
 public:
     virtual ~QConProXMasterVUMeter_Midi_FeedbackProcessor() {}
-    QConProXMasterVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface) : Midi_FeedbackProcessor(surface) { }
+    QConProXMasterVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget) : Midi_FeedbackProcessor(surface, widget) { }
     
     virtual void ForceValue(int param, double value) override
     {
@@ -517,7 +517,7 @@ private:
 
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
-    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface), displayType_(displayType), channelNumber_(channelNumber)
+    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber)
     {    
         // Enable meter mode for signal LED and lower display
         struct
@@ -583,7 +583,7 @@ private:
 
 public:
     virtual ~MCUDisplay_Midi_FeedbackProcessor() {}
-    MCUDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_FeedbackProcessor(surface), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) { }
+    MCUDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_FeedbackProcessor(surface, widget), offset_(displayUpperLower * 56), displayType_(displayType), displayRow_(displayRow), channel_(channel) { }
     
     virtual void ClearCache() override
     {
@@ -662,7 +662,7 @@ private:
     
 public:
     virtual ~FPDisplay_Midi_FeedbackProcessor() {}
-    FPDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, int displayType, int channel) : Midi_FeedbackProcessor(surface), displayType_(displayType), channel_(channel) { }
+    FPDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channel) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channel_(channel) { }
     
     virtual void ClearCache() override
     {
@@ -739,7 +739,7 @@ class MCU_TimeDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    MCU_TimeDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface) : Midi_FeedbackProcessor(surface) {}
+    MCU_TimeDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget) : Midi_FeedbackProcessor(surface, widget) {}
     
     virtual void UpdateValue(double value) override
     {
@@ -1089,7 +1089,7 @@ private:
     
 public:
     virtual ~MFT_RGB_Midi_FeedbackProcessor() {}
-    MFT_RGB_Midi_FeedbackProcessor(Midi_ControlSurface* surface, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, feedback1) { }
+    MFT_RGB_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* feedback1) : Midi_FeedbackProcessor(surface, widget, feedback1) { }
     
     virtual void ForceRGBValue(int r, int g, int b) override
     {

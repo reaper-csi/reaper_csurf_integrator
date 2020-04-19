@@ -1216,7 +1216,7 @@ public:
             DAW::SetAutomationMode(autoMode, true);
             
             if(displayWidget_ != nullptr && autoModes_.count(autoMode) > 0)
-                displayWidget_->GetFeedbackProcessor()->SilentSetValue(autoModes_[autoMode]);
+                displayWidget_->SilentSetValue(autoModes_[autoMode]);
 
             timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
         }
