@@ -271,109 +271,12 @@ private:
 
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
-    
+    int currentRGBIndex_ = 0;
+
     bool supportsTrackColor_ = false;
     
-    int currentRGBIndex_ = 0;
-    
-    void SetRGB(vector<string> params)
-    {
-        vector<int> rawValues;
-        
-        auto openCurlyBrace = find(params.begin(), params.end(), "{");
-        auto closeCurlyBrace = find(params.begin(), params.end(), "}");
-        
-        if(openCurlyBrace != params.end() && closeCurlyBrace != params.end())
-        {
-            for(auto it = openCurlyBrace + 1; it != closeCurlyBrace; ++it)
-            {
-                string strVal = *(it);
-                
-                if(strVal == "Track")
-                {
-                    supportsTrackColor_ = true;
-                    break;
-                }
-                else
-                {
-                    if(regex_match(strVal, regex("[0-9]+")))
-                    {
-                        int value = stoi(strVal);
-                        value = value < 0 ? 0 : value;
-                        value = value > 255 ? 255 : value;
-                        
-                        rawValues.push_back(value);
-                    }
-                }
-            }
-            
-            if(rawValues.size() % 3 == 0 && rawValues.size() > 2)
-            {
-                supportsRGB_ = true;
-                
-                for(int i = 0; i < rawValues.size(); i += 3)
-                {
-                    rgb_color color;
-                    
-                    color.r = rawValues[i];
-                    color.g = rawValues[i + 1];
-                    color.b = rawValues[i + 2];
-                    
-                    RGBValues_.push_back(color);
-                }
-            }
-        }
-    }
-    
-    void SetSteppedValues(vector<string> params)
-    {
-        auto openSquareBrace = find(params.begin(), params.end(), "[");
-        auto closeCurlyBrace = find(params.begin(), params.end(), "]");
-        
-        if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
-        {
-            for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
-            {
-                string strVal = *(it);
-                
-                if(regex_match(strVal, regex("[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]")))
-                    steppedValues_.push_back(stod(strVal));
-                else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
-                {
-                    istringstream range(strVal);
-                    vector<string> range_tokens;
-                    string range_token;
-                    
-                    while (getline(range, range_token, '-'))
-                        range_tokens.push_back(range_token);
-
-                    if(range_tokens.size() == 2)
-                    {
-                        double firstValue = stod(range_tokens[0]);
-                        double lastValue = stod(range_tokens[1]);
-
-                        if(lastValue > firstValue)
-                        {
-                            rangeValues_.push_back(firstValue);
-                            rangeValues_.push_back(lastValue);
-                        }
-                        else
-                        {
-                            rangeValues_.push_back(lastValue);
-                            rangeValues_.push_back(firstValue);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
 protected:
-    Action(string name, Widget* widget, Zone* zone, vector<string> params): name_(name), widget_(widget), zone_(zone)
-    {
-        SetRGB(params);
-        SetSteppedValues(params);
-    }
+    Action(string name, Widget* widget, Zone* zone, vector<string> params);
 
     string const name_;
     Widget* const widget_;
