@@ -285,7 +285,9 @@ protected:
     vector<double> steppedValues_;
     int steppedValuesIndex_ = 0;
 
-    vector<double> rangeValues_;
+    double rangeMinimum_ = 0.0;
+    double rangeMaximum_ = 1.0;
+    double delta_ = 0.001;
 
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -389,7 +391,6 @@ public:
         lastValue_ = value;
        
         widget_->UpdateValue(value);
-        
         
         if(supportsRGB_)
         {

@@ -610,7 +610,7 @@ void SetRGB(vector<string> params, bool &supportsRGB, bool &supportsTrackColor, 
     }
 }
 
-void SetSteppedValues(vector<string> params, vector<double> &steppedValues, vector<double> &rangeValues)
+void SetSteppedValues(vector<string> params, double &delta, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues)
 {
     auto openSquareBrace = find(params.begin(), params.end(), "[");
     auto closeCurlyBrace = find(params.begin(), params.end(), "]");
@@ -623,6 +623,8 @@ void SetSteppedValues(vector<string> params, vector<double> &steppedValues, vect
             
             if(regex_match(strVal, regex("[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]")))
                 steppedValues.push_back(stod(strVal));
+            else if(regex_match(strVal, regex("[(][0-9]+[.][0-9]+[)]")))
+                delta = stod(strVal.substr( 1, strVal.length() - 2 ));
             else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
             {
                 istringstream range(strVal);
@@ -639,13 +641,13 @@ void SetSteppedValues(vector<string> params, vector<double> &steppedValues, vect
                     
                     if(lastValue > firstValue)
                     {
-                        rangeValues.push_back(firstValue);
-                        rangeValues.push_back(lastValue);
+                        rangeMinimum = firstValue;
+                        rangeMaximum = lastValue;
                     }
                     else
                     {
-                        rangeValues.push_back(lastValue);
-                        rangeValues.push_back(firstValue);
+                        rangeMinimum = lastValue;
+                        rangeMaximum = firstValue;
                     }
                 }
             }
@@ -1502,7 +1504,7 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
 {
     SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
 
-    SetSteppedValues(params, steppedValues_, rangeValues_);
+    SetSteppedValues(params, delta_, rangeMinimum_, rangeMaximum_, steppedValues_);
 }
 
 Page* Action::GetPage()
@@ -1522,14 +1524,11 @@ int Action::GetSlotIndex()
 
 void Action::DoAction(double value, Widget* sender)
 {   
-    if(rangeValues_.size() == 2)
-    {
-        if(value > rangeValues_[1])
-            value = rangeValues_[1];
-        
-        if(value < rangeValues_[0])
-            value = rangeValues_[0];
-    }
+    if(value > rangeMaximum_)
+        value = rangeMaximum_;
+    
+    if(value < rangeMinimum_)
+        value = rangeMinimum_;
     
     if(steppedValues_.size() > 0 && value != 0.0)
     {
@@ -1593,18 +1592,15 @@ void Action::DoRelativeAction(double value, Widget* sender)
     }
     else
     {
-        value = lastValue_ + value;
+        double adjustedValue = 0.0;
         
-        if(rangeValues_.size() == 2)
-        {
-            if(value > rangeValues_[1])
-                value = rangeValues_[1];
-            
-            if(value < rangeValues_[0])
-                value = rangeValues_[0];
-        }
-
-        Do(value, sender);
+        if(value < 0.0)
+            adjustedValue = lastValue_ - delta_;
+        
+        else if(value > 0.0)
+            adjustedValue = lastValue_ + delta_;
+        
+        Do(adjustedValue, sender);
     }
     
     // GAW TBD -- this will need to be changed
