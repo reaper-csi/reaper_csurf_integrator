@@ -257,6 +257,8 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
+    void DoAcceleratedRelativeActionIncrement(double value);
+    void DoAcceleratedRelativeActionDecrement(double value);
     void SetIsFaderTouched(bool isFaderTouched);
     void SetIsRotaryTouched(bool isRotaryTouched);
     void UpdateValue(double value);
@@ -292,7 +294,8 @@ protected:
 
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
-    double delta_ = 0.001;
+    
+    vector<double> deltaValues_;
 
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -332,6 +335,8 @@ public:
     
     virtual void DoAction(double value, Widget* sender);
     virtual void DoRelativeAction(double value, Widget* sender);
+    virtual void DoAcceleratedRelativeActionIncrement(double value, Widget* sender);
+    virtual void DoAcceleratedRelativeActionDecrement(double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
     void PerformDeferredActions()
