@@ -308,7 +308,6 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
             else
                 surface->AddZone(zone);
             
-            
             continue;
         }
     
@@ -610,7 +609,7 @@ void SetRGB(vector<string> params, bool &supportsRGB, bool &supportsTrackColor, 
     }
 }
 
-void SetSteppedValues(vector<string> params, double &delta, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues)
+void SetSteppedValues(vector<string> params, vector<double> &deltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues)
 {
     auto openSquareBrace = find(params.begin(), params.end(), "[");
     auto closeCurlyBrace = find(params.begin(), params.end(), "]");
@@ -624,7 +623,15 @@ void SetSteppedValues(vector<string> params, double &delta, double &rangeMinimum
             if(regex_match(strVal, regex("[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]")))
                 steppedValues.push_back(stod(strVal));
             else if(regex_match(strVal, regex("[(][0-9]+[.][0-9]+[)]")))
-                delta = stod(strVal.substr( 1, strVal.length() - 2 ));
+                deltaValues.push_back(stod(strVal.substr( 1, strVal.length() - 2 )));
+            else if(regex_match(strVal, regex("[(]([0-9]+[.][0-9]+[,])+[0-9]+[.][0-9]+[)]")))
+            {
+                istringstream deltaValueStream(strVal.substr( 1, strVal.length() - 2 ));
+                string deltaValue;
+                
+                while (getline(deltaValueStream, deltaValue, ','))
+                    deltaValues.push_back(stod(deltaValue));
+            }
             else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
             {
                 istringstream range(strVal);
@@ -724,6 +731,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             new Fader7Bit_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         else if(widgetClass == "Encoder" && size == 4)
             new Encoder_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
+        else if(widgetClass == "Encoder" && size > 4)
+            new AcceleratedEncoder_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])), tokenLines[i]);
         else if(widgetClass == "EncoderPlain" && size == 4)
             new EncoderPlain_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         else if(widgetClass == "EncoderPlainReverse" && size == 4)
@@ -1370,6 +1379,54 @@ void Widget::DoRelativeAction(double value)
             action->DoRelativeAction(value, this);
 }
 
+void Widget::DoAcceleratedRelativeActionIncrement(double value)
+{
+    if( TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    GetSurface()->GetPage()->InputReceived(this, value);
+    
+    string modifiers = "";
+    
+    if( ! isModifier_)
+        modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
+        for(auto action : actions_[activeZone_][modifiers])
+            action->DoAcceleratedRelativeActionIncrement(value, this);
+    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
+        for(auto action : actions_[activeZone_][""])
+            action->DoAcceleratedRelativeActionIncrement(value, this);
+}
+
+void Widget::DoAcceleratedRelativeActionDecrement(double value)
+{
+    if( TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    GetSurface()->GetPage()->InputReceived(this, value);
+    
+    string modifiers = "";
+    
+    if( ! isModifier_)
+        modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
+        for(auto action : actions_[activeZone_][modifiers])
+            action->DoAcceleratedRelativeActionDecrement(value, this);
+    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
+        for(auto action : actions_[activeZone_][""])
+            action->DoAcceleratedRelativeActionDecrement(value, this);
+}
+
 void Widget::SetIsFaderTouched(bool isFaderTouched)
 {
     if(activeZone_ != nullptr)
@@ -1437,7 +1494,10 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
 {
     SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
 
-    SetSteppedValues(params, delta_, rangeMinimum_, rangeMaximum_, steppedValues_);
+    SetSteppedValues(params, deltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_);
+    
+    if(deltaValues_.size() < 1)
+        deltaValues_.push_back(0.001);
 }
 
 Page* Action::GetPage()
@@ -1528,10 +1588,10 @@ void Action::DoRelativeAction(double value, Widget* sender)
         double adjustedValue = 0.0;
         
         if(value < 0.0)
-            adjustedValue = lastValue_ - delta_;
+            adjustedValue = lastValue_ - deltaValues_[0];
         
         else if(value > 0.0)
-            adjustedValue = lastValue_ + delta_;
+            adjustedValue = lastValue_ + deltaValues_[0];
         
         DoAction(adjustedValue, sender);
     }
@@ -1541,6 +1601,20 @@ void Action::DoRelativeAction(double value, Widget* sender)
      if( ! GetWidget()->GetIsModifier())
      GetPage()->ActionPerformed(GetWidgetActionManager(), this);
      */
+}
+
+void Action::DoAcceleratedRelativeActionIncrement(double percentage, Widget* sender)
+{
+    int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
+
+    DoAction(lastValue_ + deltaValues_[index], sender);
+}
+
+void Action::DoAcceleratedRelativeActionDecrement(double percentage, Widget* sender)
+{
+    int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
+    
+    DoAction(lastValue_ - deltaValues_[index], sender);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

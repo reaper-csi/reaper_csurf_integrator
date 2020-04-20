@@ -95,6 +95,77 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class AcceleratedEncoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<int, double> accelerationValuesForIncrement_;
+    map<int, double> accelerationValuesForDecrement_;
+
+public:
+    virtual ~AcceleratedEncoder_Midi_CSIMessageGenerator() {}
+    AcceleratedEncoder_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message, vector<string> params) : Midi_CSIMessageGenerator(widget)
+    {
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
+        
+        auto openSquareBrace = find(params.begin(), params.end(), "[");
+        auto closeCurlyBrace = find(params.begin(), params.end(), "]");
+        
+        if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
+        {
+            vector<int> incValues;
+            vector<int> decValues;
+
+            bool inDec = false;
+            
+            for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
+            {
+                string strVal = *(it);
+                
+                if(strVal == "<")
+                    inDec = true;
+                else if(strVal == ">")
+                    inDec = false;
+                else if(inDec == false)
+                    incValues.push_back(strtol(strVal.c_str(), nullptr, 16));
+                else
+                    decValues.push_back(strtol(strVal.c_str(), nullptr, 16));
+            }
+            
+            if(incValues.size() > 0)
+            {
+                if(incValues.size() == 1)
+                    accelerationValuesForIncrement_[incValues[0]] = 0.0;
+                else
+                    for(int i = 0; i < incValues.size(); i++)
+                        accelerationValuesForIncrement_[incValues[i]] = (double)i / (incValues.size() - 1);
+            }
+            
+            if(decValues.size() > 0)
+            {
+                if(decValues.size() == 1)
+                    accelerationValuesForDecrement_[decValues[0]] = 0.0;
+                else
+                    for(int i = 0; i < decValues.size(); i++)
+                        accelerationValuesForDecrement_[decValues[i]] = (double)i / (decValues.size() - 1);
+            }
+        }
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        int val = midiMessage->midi_message[2];
+        
+        if(accelerationValuesForIncrement_.count(val) > 0)
+            widget_->DoAcceleratedRelativeActionIncrement(accelerationValuesForIncrement_[val]);
+        
+        else if(accelerationValuesForDecrement_.count(val) > 0)
+            widget_->DoAcceleratedRelativeActionDecrement(accelerationValuesForDecrement_[val]);
+    }
+};
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -111,7 +182,7 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
-
+        
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
@@ -120,7 +191,7 @@ public:
         int now = DAW::GetCurrentNumberOfMilliseconds();
         int revolutionTime = now - lastTransition_;
         lastTransition_ = now;
-
+        
         if (revolutionTime < 25)
             value *= 10.0;
         else if (revolutionTime < 50)
@@ -129,7 +200,7 @@ public:
             value *= 2.5;
         else if (revolutionTime < 200)
             value *= 1.5;
-
+        
         widget_->DoRelativeAction(value);
     }
 };
