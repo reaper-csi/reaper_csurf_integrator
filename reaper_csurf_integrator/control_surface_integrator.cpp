@@ -1607,14 +1607,24 @@ void Action::DoAcceleratedRelativeActionIncrement(double percentage, Widget* sen
 {
     int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
 
-    DoAction(lastValue_ + deltaValues_[index], sender);
+    double value = lastValue_ + deltaValues_[index];
+    
+    if(value > rangeMaximum_)
+        value = rangeMaximum_;
+
+    Do(value, sender);
 }
 
 void Action::DoAcceleratedRelativeActionDecrement(double percentage, Widget* sender)
 {
     int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
     
-    DoAction(lastValue_ - deltaValues_[index], sender);
+    double value = lastValue_ - deltaValues_[index];
+    
+    if(value < rangeMinimum_)
+        value = rangeMinimum_;
+    
+    Do(value, sender);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

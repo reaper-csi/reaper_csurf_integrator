@@ -211,9 +211,6 @@ public:
 class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int lastTransition_ = 0;
-    
 public:
     virtual ~Encoder_Midi_CSIMessageGenerator() {}
     Encoder_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message) : Midi_CSIMessageGenerator(widget)
@@ -229,20 +226,7 @@ public:
             value = -value;
         
         value = value / 8.0;
-        
-        int now = DAW::GetCurrentNumberOfMilliseconds();
-        int revolutionTime = now - lastTransition_;
-        lastTransition_ = now;
-        
-        if (revolutionTime < 25)
-            value *= 10.0;
-        else if (revolutionTime < 50)
-            value *= 5.0;
-        else if (revolutionTime < 100)
-            value *= 2.5;
-        else if (revolutionTime < 200)
-            value *= 1.5;
-        
+
         widget_->DoRelativeAction(value);
     }
 };
