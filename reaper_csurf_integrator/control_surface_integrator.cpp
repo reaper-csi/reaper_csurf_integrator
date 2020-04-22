@@ -982,6 +982,7 @@ void Manager::InitActionDictionary()
     actions_["GoZone"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return new GoZone(name, widget, zone, params); };
     actions_["SelectTrackRelative"] =               [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SelectTrackRelative(name, widget, zone, params); };
     actions_["TrackBank"] =                         [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackBank(name, widget, zone, params); };
+    actions_["ClearAllSolo"] =                      [](string name, Widget* widget, Zone* zone, vector<string> params) { return new ClearAllSolo(name, widget, zone, params); };
     actions_["Shift"] =                             [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetShift(name, widget, zone, params); };
     actions_["Option"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetOption(name, widget, zone, params); };
     actions_["Control"] =                           [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetControl(name, widget, zone, params); };
@@ -1379,16 +1380,16 @@ void Widget::DoRelativeAction(double value)
             action->DoRelativeAction(value, this);
 }
 
-void Widget::DoAcceleratedRelativeActionIncrement(double value)
+void Widget::DoAcceleratedRelativeActionIncrement(int accelerationIndex)
 {
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %d\n", GetSurface()->GetName().c_str(), GetName().c_str(), accelerationIndex);
         DAW::ShowConsoleMsg(buffer);
     }
     
-    GetSurface()->GetPage()->InputReceived(this, value);
+    GetSurface()->GetPage()->InputReceived(this, accelerationIndex);
     
     string modifiers = "";
     
@@ -1397,22 +1398,22 @@ void Widget::DoAcceleratedRelativeActionIncrement(double value)
     
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
-            action->DoAcceleratedRelativeActionIncrement(value, this);
+            action->DoAcceleratedRelativeActionIncrement(accelerationIndex, this);
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
-            action->DoAcceleratedRelativeActionIncrement(value, this);
+            action->DoAcceleratedRelativeActionIncrement(accelerationIndex, this);
 }
 
-void Widget::DoAcceleratedRelativeActionDecrement(double value)
+void Widget::DoAcceleratedRelativeActionDecrement(int accelerationIndex)
 {
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %d\n", GetSurface()->GetName().c_str(), GetName().c_str(), accelerationIndex);
         DAW::ShowConsoleMsg(buffer);
     }
     
-    GetSurface()->GetPage()->InputReceived(this, value);
+    GetSurface()->GetPage()->InputReceived(this, accelerationIndex);
     
     string modifiers = "";
     
@@ -1421,10 +1422,10 @@ void Widget::DoAcceleratedRelativeActionDecrement(double value)
     
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
-            action->DoAcceleratedRelativeActionDecrement(value, this);
+            action->DoAcceleratedRelativeActionDecrement(accelerationIndex, this);
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
-            action->DoAcceleratedRelativeActionDecrement(value, this);
+            action->DoAcceleratedRelativeActionDecrement(accelerationIndex, this);
 }
 
 void Widget::SetIsFaderTouched(bool isFaderTouched)
@@ -1516,13 +1517,7 @@ int Action::GetSlotIndex()
 }
 
 void Action::DoAction(double value, Widget* sender)
-{   
-    if(value > rangeMaximum_)
-        value = rangeMaximum_;
-    
-    if(value < rangeMinimum_)
-        value = rangeMinimum_;
-    
+{
     if(steppedValues_.size() > 0 && value != 0.0)
     {
         if(steppedValuesIndex_ == steppedValues_.size() - 1)
@@ -1533,12 +1528,12 @@ void Action::DoAction(double value, Widget* sender)
         else
             steppedValuesIndex_++;
         
-        Do(steppedValues_[steppedValuesIndex_], sender);
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
     }
     else if(shouldToggle_)
     {
         if(value != 0.0)
-            Do( ! GetCurrentValue(), sender);
+            DoRangeBoundAction( ! GetCurrentValue(), sender);
     }
     else if(delayAmount_ != 0.0)
     {
@@ -1557,14 +1552,19 @@ void Action::DoAction(double value, Widget* sender)
     }
     else
     {
-        Do(value, sender);
+        DoRangeBoundAction(value, sender);
     }
+}
+
+void Action::DoRangeBoundAction(double value, Widget* sender)
+{
+    if(value > rangeMaximum_)
+        value = rangeMaximum_;
     
-    // GAW TBD -- this will need to be changed
-    /*
-     if( ! GetWidget()->GetIsModifier())
-     GetPage()->ActionPerformed(GetWidgetActionManager(), this);
-     */
+    if(value < rangeMinimum_)
+        value = rangeMinimum_;
+
+     Do(value, sender);
 }
 
 void Action::DoRelativeAction(double value, Widget* sender)
@@ -1580,46 +1580,34 @@ void Action::DoRelativeAction(double value, Widget* sender)
             steppedValuesIndex_++;
         if(steppedValuesIndex_ > steppedValues_.size() - 1)
             steppedValuesIndex_ = steppedValues_.size() - 1;
-        
-        Do(steppedValues_[steppedValuesIndex_], sender);
+
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
     }
     else
     {
         if(value < 0.0)
-            DoAction(lastValue_ - value, sender);
+            DoRangeBoundAction(lastValue_ - value, sender);
         else if(value > 0.0)
-            DoAction(lastValue_ + value, sender);
+            DoRangeBoundAction(lastValue_ + value, sender);
     }
-    
-    // GAW TBD -- this will need to be changed
-    /*
-     if( ! GetWidget()->GetIsModifier())
-     GetPage()->ActionPerformed(GetWidgetActionManager(), this);
-     */
 }
 
-void Action::DoAcceleratedRelativeActionIncrement(double percentage, Widget* sender)
+void Action::DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender)
 {
-    int index = (int)(percentage * (acceleratedDeltaValues_.size() - 1) + 0.5);
-
-    double value = lastValue_ + acceleratedDeltaValues_[index];
     
-    if(value > rangeMaximum_)
-        value = rangeMaximum_;
-
-    Do(value, sender);
+    
+    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
 }
 
-void Action::DoAcceleratedRelativeActionDecrement(double percentage, Widget* sender)
+void Action::DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender)
 {
-    int index = (int)(percentage * (acceleratedDeltaValues_.size() - 1) + 0.5);
-    
-    double value = lastValue_ - acceleratedDeltaValues_[index];
-    
-    if(value < rangeMinimum_)
-        value = rangeMinimum_;
-    
-    Do(value, sender);
+    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+
+    DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
