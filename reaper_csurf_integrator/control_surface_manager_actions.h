@@ -368,16 +368,36 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ClearAllSolo : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    ClearAllSolo(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    
+    void RequestUpdate() override
+    {
+        UpdateWidgetValue(DAW::AnyTrackSolo(nullptr));
+    }
+
+    void Do(double value, Widget* sender) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        DAW::SoloAllTracks(0);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackBank : public ActionWithIntParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     TrackBank(string name, Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(name, widget, zone, params) {}
-
+    
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
-
+        
         TheManager->AdjustTrackBank(GetPage(), param_);
     }
 };

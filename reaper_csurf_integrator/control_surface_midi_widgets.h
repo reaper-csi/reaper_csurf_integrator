@@ -99,8 +99,8 @@ class AcceleratedEncoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenera
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<int, int> accelerationValuesForIncrement_;
-    map<int, int> accelerationValuesForDecrement_;
+    map<int, int> accelerationIndicesForIncrement_;
+    map<int, int> accelerationIndicesForDecrement_;
 
 public:
     virtual ~AcceleratedEncoder_Midi_CSIMessageGenerator() {}
@@ -177,19 +177,19 @@ public:
             if(incValues.size() > 0)
             {
                 if(incValues.size() == 1)
-                    accelerationValuesForIncrement_[incValues[0]] = 0;
+                    accelerationIndicesForIncrement_[incValues[0]] = 0;
                 else
                     for(int i = 0; i < incValues.size(); i++)
-                        accelerationValuesForIncrement_[incValues[i]] = i;
+                        accelerationIndicesForIncrement_[incValues[i]] = i;
             }
             
             if(decValues.size() > 0)
             {
                 if(decValues.size() == 1)
-                    accelerationValuesForDecrement_[decValues[0]] = 0;
+                    accelerationIndicesForDecrement_[decValues[0]] = 0;
                 else
                     for(int i = 0; i < decValues.size(); i++)
-                        accelerationValuesForDecrement_[decValues[i]] = i;
+                        accelerationIndicesForDecrement_[decValues[i]] = i;
             }
         }
     }
@@ -198,11 +198,11 @@ public:
     {
         int val = midiMessage->midi_message[2];
         
-        if(accelerationValuesForIncrement_.count(val) > 0)
-            widget_->DoAcceleratedRelativeActionIncrement(accelerationValuesForIncrement_[val]);
+        if(accelerationIndicesForIncrement_.count(val) > 0)
+            widget_->DoAcceleratedRelativeActionIncrement(accelerationIndicesForIncrement_[val]);
         
-        else if(accelerationValuesForDecrement_.count(val) > 0)
-            widget_->DoAcceleratedRelativeActionDecrement(accelerationValuesForDecrement_[val]);
+        else if(accelerationIndicesForDecrement_.count(val) > 0)
+            widget_->DoAcceleratedRelativeActionDecrement(accelerationIndicesForDecrement_[val]);
     }
 };
 
