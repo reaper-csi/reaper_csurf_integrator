@@ -99,8 +99,8 @@ class AcceleratedEncoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenera
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    map<int, double> accelerationValuesForIncrement_;
-    map<int, double> accelerationValuesForDecrement_;
+    map<int, int> accelerationValuesForIncrement_;
+    map<int, int> accelerationValuesForDecrement_;
 
 public:
     virtual ~AcceleratedEncoder_Midi_CSIMessageGenerator() {}
@@ -177,19 +177,19 @@ public:
             if(incValues.size() > 0)
             {
                 if(incValues.size() == 1)
-                    accelerationValuesForIncrement_[incValues[0]] = 0.0;
+                    accelerationValuesForIncrement_[incValues[0]] = 0;
                 else
                     for(int i = 0; i < incValues.size(); i++)
-                        accelerationValuesForIncrement_[incValues[i]] = (double)i / (incValues.size() - 1);
+                        accelerationValuesForIncrement_[incValues[i]] = i;
             }
             
             if(decValues.size() > 0)
             {
                 if(decValues.size() == 1)
-                    accelerationValuesForDecrement_[decValues[0]] = 0.0;
+                    accelerationValuesForDecrement_[decValues[0]] = 0;
                 else
                     for(int i = 0; i < decValues.size(); i++)
-                        accelerationValuesForDecrement_[decValues[i]] = (double)i / (decValues.size() - 1);
+                        accelerationValuesForDecrement_[decValues[i]] = i;
             }
         }
     }

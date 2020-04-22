@@ -162,7 +162,11 @@ protected:
     }
     
 public:
-    TrackVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    TrackVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -144.0;
+        rangeMaximum_ = 24.0;
+    }
         
     void Do(double value, Widget* sender) override
     {
@@ -206,8 +210,12 @@ protected:
     }
     
 public:
-    TrackPanPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
-    
+    TrackPanPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
@@ -246,8 +254,12 @@ protected:
     }
     
 public:
-    TrackPanWidthPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
-    
+    TrackPanWidthPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
@@ -266,7 +278,11 @@ protected:
     }
     
 public:
-    TrackPanLPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    TrackPanLPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
     
     void Do(double value, Widget* sender) override
     {
@@ -289,7 +305,11 @@ protected:
     }
     
 public:
-    TrackPanRPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    TrackPanRPercent(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
     
     void Do(double value, Widget* sender) override
     {
@@ -340,7 +360,11 @@ protected:
     }
     
 public:
-    TrackSendVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params) {}
+    TrackSendVolumeDB(string name, Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(name, widget, zone, params)
+    {
+        rangeMinimum_ = -144.0;
+        rangeMaximum_ = 24.0;
+    }
 
     void Do(double value, Widget* sender) override
     {
