@@ -257,8 +257,8 @@ public:
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double value);
-    void DoAcceleratedRelativeActionIncrement(double value);
-    void DoAcceleratedRelativeActionDecrement(double value);
+    void DoAcceleratedRelativeActionIncrement(int accelerationIndex);
+    void DoAcceleratedRelativeActionDecrement(int accelerationIndex);
     void SetIsFaderTouched(bool isFaderTouched);
     void SetIsRotaryTouched(bool isRotaryTouched);
     void UpdateValue(double value);
@@ -299,8 +299,8 @@ protected:
     vector<double> acceleratedDeltaValues_;
     vector<int> acceleratedTickValues_;
     
-    int currentIncTicks_ = 0;
-    int currentDecTicks_ = 0;
+    int accumulatedIncTicks_ = 0;
+    int accumulatedDecTicks_ = 0;
     
     bool isInverted_ = false;
     bool shouldToggle_ = false;
@@ -339,9 +339,10 @@ public:
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void DoAction(double value, Widget* sender);
+    virtual void DoRangeBoundAction(double value, Widget* sender);
     virtual void DoRelativeAction(double value, Widget* sender);
-    virtual void DoAcceleratedRelativeActionIncrement(double value, Widget* sender);
-    virtual void DoAcceleratedRelativeActionDecrement(double value, Widget* sender);
+    virtual void DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender);
+    virtual void DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
     void PerformDeferredActions()

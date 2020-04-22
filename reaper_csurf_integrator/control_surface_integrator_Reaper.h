@@ -93,6 +93,10 @@ public:
     
     static midi_Output* CreateMIDIOutput(int dev, bool streamMode, int* msoffset100) {  return ::CreateMIDIOutput(dev, streamMode, msoffset100); }
    
+    static bool AnyTrackSolo(ReaProject* proj) { return ::AnyTrackSolo(proj); }
+    
+    static void SoloAllTracks(int solo) { ::SoloAllTracks(solo); }
+
     static void SetAutomationMode(int mode, bool onlySel) { ::SetAutomationMode(mode, onlySel); }
 
     static int GetGlobalAutomationOverride() { return ::GetGlobalAutomationOverride(); }
