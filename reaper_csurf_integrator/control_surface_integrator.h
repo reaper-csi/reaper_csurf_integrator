@@ -295,8 +295,13 @@ protected:
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
     
-    vector<double> deltaValues_;
-
+    double deltaValue_ = 0.0;
+    vector<double> acceleratedDeltaValues_;
+    vector<int> acceleratedTickValues_;
+    
+    int currentIncTicks_ = 0;
+    int currentDecTicks_ = 0;
+    
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     
