@@ -1494,10 +1494,10 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
 {
     SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
 
-    SetSteppedValues(params, deltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_);
+    SetSteppedValues(params, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_);
     
-    if(deltaValues_.size() < 1)
-        deltaValues_.push_back(0.001);
+    if(acceleratedTickValues_.size() < 1)
+        acceleratedTickValues_.push_back(10);
 }
 
 Page* Action::GetPage()
@@ -1585,15 +1585,10 @@ void Action::DoRelativeAction(double value, Widget* sender)
     }
     else
     {
-        double adjustedValue = 0.0;
-        
         if(value < 0.0)
-            adjustedValue = lastValue_ - deltaValues_[0];
-        
+            DoAction(lastValue_ - value, sender);
         else if(value > 0.0)
-            adjustedValue = lastValue_ + deltaValues_[0];
-        
-        DoAction(adjustedValue, sender);
+            DoAction(lastValue_ + value, sender);
     }
     
     // GAW TBD -- this will need to be changed
@@ -1605,9 +1600,9 @@ void Action::DoRelativeAction(double value, Widget* sender)
 
 void Action::DoAcceleratedRelativeActionIncrement(double percentage, Widget* sender)
 {
-    int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
+    int index = (int)(percentage * (acceleratedDeltaValues_.size() - 1) + 0.5);
 
-    double value = lastValue_ + deltaValues_[index];
+    double value = lastValue_ + acceleratedDeltaValues_[index];
     
     if(value > rangeMaximum_)
         value = rangeMaximum_;
@@ -1617,9 +1612,9 @@ void Action::DoAcceleratedRelativeActionIncrement(double percentage, Widget* sen
 
 void Action::DoAcceleratedRelativeActionDecrement(double percentage, Widget* sender)
 {
-    int index = (int)(percentage * (deltaValues_.size() - 1) + 0.5);
+    int index = (int)(percentage * (acceleratedDeltaValues_.size() - 1) + 0.5);
     
-    double value = lastValue_ - deltaValues_[index];
+    double value = lastValue_ - acceleratedDeltaValues_[index];
     
     if(value < rangeMinimum_)
         value = rangeMinimum_;
