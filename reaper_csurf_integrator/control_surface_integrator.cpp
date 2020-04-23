@@ -609,7 +609,7 @@ void SetRGB(vector<string> params, bool &supportsRGB, bool &supportsTrackColor, 
     }
 }
 
-void SetSteppedValues(vector<string> params, vector<double> &deltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues)
+void SetSteppedValues(vector<string> params, double &deltaValue, vector<double> &acceleratedDeltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues, vector<int> &acceleratedTickValues)
 {
     auto openSquareBrace = find(params.begin(), params.end(), "[");
     auto closeCurlyBrace = find(params.begin(), params.end(), "]");
@@ -620,25 +620,33 @@ void SetSteppedValues(vector<string> params, vector<double> &deltaValues, double
         {
             string strVal = *(it);
             
-            if(regex_match(strVal, regex("[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]")))
+            if(regex_match(strVal, regex("-?[0-9]+[.][0-9]+")) || regex_match(strVal, regex("-?[0-9]+")))
                 steppedValues.push_back(stod(strVal));
             else if(regex_match(strVal, regex("[(][0-9]+[.][0-9]+[)]")))
-                deltaValues.push_back(stod(strVal.substr( 1, strVal.length() - 2 )));
+                deltaValue = stod(strVal.substr( 1, strVal.length() - 2 ));
             else if(regex_match(strVal, regex("[(]([0-9]+[.][0-9]+[,])+[0-9]+[.][0-9]+[)]")))
             {
-                istringstream deltaValueStream(strVal.substr( 1, strVal.length() - 2 ));
+                istringstream acceleratedDeltaValueStream(strVal.substr( 1, strVal.length() - 2 ));
                 string deltaValue;
                 
-                while (getline(deltaValueStream, deltaValue, ','))
-                    deltaValues.push_back(stod(deltaValue));
+                while (getline(acceleratedDeltaValueStream, deltaValue, ','))
+                    acceleratedDeltaValues.push_back(stod(deltaValue));
             }
-            else if(regex_match(strVal, regex("[0-9]+[.][0-9]+[-][0-9]+[.][0-9]+")))
+            else if(regex_match(strVal, regex("[(]([0-9]+[,])+[0-9]+[)]")))
+            {
+                istringstream acceleratedTickValueStream(strVal.substr( 1, strVal.length() - 2 ));
+                string tickValue;
+                
+                while (getline(acceleratedTickValueStream, tickValue, ','))
+                    acceleratedTickValues.push_back(stod(tickValue));
+            }
+            else if(regex_match(strVal, regex("-?[0-9]+[.][0-9]+[>]-?[0-9]+[.][0-9]+")) || regex_match(strVal, regex("[0-9]+[-][0-9]+")))
             {
                 istringstream range(strVal);
                 vector<string> range_tokens;
                 string range_token;
                 
-                while (getline(range, range_token, '-'))
+                while (getline(range, range_token, '>'))
                     range_tokens.push_back(range_token);
                 
                 if(range_tokens.size() == 2)
@@ -1495,8 +1503,11 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
 {
     SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
 
-    SetSteppedValues(params, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_);
-    
+    SetSteppedValues(params, deltaValue_, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_, acceleratedTickValues_);
+
+    if(acceleratedDeltaValues_.size() < 1)
+        acceleratedDeltaValues_.push_back(0.001);
+        
     if(acceleratedTickValues_.size() < 1)
         acceleratedTickValues_.push_back(10);
 }
@@ -1522,7 +1533,7 @@ void Action::DoAction(double value, Widget* sender)
     {
         if(steppedValuesIndex_ == steppedValues_.size() - 1)
         {
-            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrapper if 1st value is lower
+            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
                 steppedValuesIndex_ = 0;
         }
         else
@@ -1567,47 +1578,90 @@ void Action::DoRangeBoundAction(double value, Widget* sender)
      Do(value, sender);
 }
 
-void Action::DoRelativeAction(double value, Widget* sender)
+void Action::DoRelativeSteppedValueAction(int accelerationIndex, double value, Widget* sender)
 {
-    if(steppedValues_.size() > 0)
+    if(value > 0)
     {
-        if(value < 0.0)
-            steppedValuesIndex_--;
-        if(steppedValuesIndex_ < 0)
-            steppedValuesIndex_ = 0;
-            
-        if(value > 0.0)
-            steppedValuesIndex_++;
+        accumulatedIncTicks_++;
+        accumulatedDecTicks_ = accumulatedDecTicks_ - 1 < 0 ? 0 : accumulatedDecTicks_ - 1;
+    }
+    else if(value < 0)
+    {
+        accumulatedDecTicks_++;
+        accumulatedIncTicks_ = accumulatedIncTicks_ - 1 < 0 ? 0 : accumulatedIncTicks_ - 1;
+    }
+
+    accelerationIndex = accelerationIndex > acceleratedTickValues_.size() - 1 ? acceleratedTickValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(value > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_++;
+        
         if(steppedValuesIndex_ > steppedValues_.size() - 1)
             steppedValuesIndex_ = steppedValues_.size() - 1;
-
+        
         DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
     }
+    else if(value < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_--;
+        
+        if(steppedValuesIndex_ < 0 )
+            steppedValuesIndex_ = 0;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+    }
+}
+
+void Action::DoRelativeAction(double delta, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+        DoRelativeSteppedValueAction(0, delta, sender);
     else
     {
-        if(value < 0.0)
-            DoRangeBoundAction(lastValue_ - value, sender);
-        else if(value > 0.0)
-            DoRangeBoundAction(lastValue_ + value, sender);
+        if(deltaValue_ != 0.0)
+        {
+            if(delta > 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta, sender);
     }
 }
 
 void Action::DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender)
 {
-    
-    
-    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
-    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
-    
-    DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
+    if(steppedValues_.size() > 0)
+        DoRelativeSteppedValueAction(accelerationIndex, 1.0, sender);
+    else
+    {
+        accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+        accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+        
+        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
+    }
 }
 
 void Action::DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender)
 {
-    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
-    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    if(steppedValues_.size() > 0)
+        DoRelativeSteppedValueAction(accelerationIndex, -1.0, sender);
+    else
+    {
+        accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+        accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
 
-    DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
+        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

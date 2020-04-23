@@ -305,7 +305,6 @@ protected:
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     
-    bool asa = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
@@ -316,6 +315,8 @@ protected:
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value, Widget* sender) {}
     virtual void Do(double value, Widget* sender) {}
+    void DoRangeBoundAction(double value, Widget* sender);
+    void DoRelativeSteppedValueAction(int accelerationIndex, double value, Widget* sender);
     
 public:
     virtual ~Action() {}
@@ -339,7 +340,6 @@ public:
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
     virtual void DoAction(double value, Widget* sender);
-    virtual void DoRangeBoundAction(double value, Widget* sender);
     virtual void DoRelativeAction(double value, Widget* sender);
     virtual void DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender);
     virtual void DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender);
