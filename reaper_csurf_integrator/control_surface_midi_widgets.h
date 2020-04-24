@@ -199,10 +199,10 @@ public:
         int val = midiMessage->midi_message[2];
         
         if(accelerationIndicesForIncrement_.count(val) > 0)
-            widget_->DoAcceleratedRelativeActionIncrement(accelerationIndicesForIncrement_[val]);
+            widget_->DoRelativeAction(accelerationIndicesForIncrement_[val], 0.001);
         
         else if(accelerationIndicesForDecrement_.count(val) > 0)
-            widget_->DoAcceleratedRelativeActionDecrement(accelerationIndicesForDecrement_[val]);
+            widget_->DoRelativeAction(accelerationIndicesForDecrement_[val], -0.001);
     }
 };
 
