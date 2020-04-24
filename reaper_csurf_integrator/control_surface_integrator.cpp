@@ -612,11 +612,11 @@ void SetRGB(vector<string> params, bool &supportsRGB, bool &supportsTrackColor, 
 void SetSteppedValues(vector<string> params, double &deltaValue, vector<double> &acceleratedDeltaValues, double &rangeMinimum, double &rangeMaximum, vector<double> &steppedValues, vector<int> &acceleratedTickValues)
 {
     auto openSquareBrace = find(params.begin(), params.end(), "[");
-    auto closeCurlyBrace = find(params.begin(), params.end(), "]");
+    auto closeSquareBrace = find(params.begin(), params.end(), "]");
     
-    if(openSquareBrace != params.end() && closeCurlyBrace != params.end())
+    if(openSquareBrace != params.end() && closeSquareBrace != params.end())
     {
-        for(auto it = openSquareBrace + 1; it != closeCurlyBrace; ++it)
+        for(auto it = openSquareBrace + 1; it != closeSquareBrace; ++it)
         {
             string strVal = *(it);
             
