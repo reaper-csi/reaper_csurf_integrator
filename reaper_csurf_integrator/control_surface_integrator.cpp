@@ -1366,16 +1366,16 @@ void Widget::DoAction(double value)
     }
 }
 
-void Widget::DoRelativeAction(double value)
+void Widget::DoRelativeAction(double delta)
 {
     if( TheManager->GetSurfaceInMonitor())
     {
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), delta);
         DAW::ShowConsoleMsg(buffer);
     }
     
-    GetSurface()->GetPage()->InputReceived(this, value);
+    GetSurface()->GetPage()->InputReceived(this, delta);
     
     string modifiers = "";
     
@@ -1384,13 +1384,13 @@ void Widget::DoRelativeAction(double value)
     
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
-            action->DoRelativeAction(value, this);
+            action->DoRelativeAction(delta, this);
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
-            action->DoRelativeAction(value, this);
+            action->DoRelativeAction(delta, this);
 }
 
-void Widget::DoAcceleratedRelativeActionIncrement(int accelerationIndex)
+void Widget::DoRelativeAction(int accelerationIndex, double delta)
 {
     if( TheManager->GetSurfaceInMonitor())
     {
@@ -1408,34 +1408,10 @@ void Widget::DoAcceleratedRelativeActionIncrement(int accelerationIndex)
     
     if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
         for(auto action : actions_[activeZone_][modifiers])
-            action->DoAcceleratedRelativeActionIncrement(accelerationIndex, this);
+            action->DoRelativeAction(accelerationIndex, delta, this);
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
-            action->DoAcceleratedRelativeActionIncrement(accelerationIndex, this);
-}
-
-void Widget::DoAcceleratedRelativeActionDecrement(int accelerationIndex)
-{
-    if( TheManager->GetSurfaceInMonitor())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %d\n", GetSurface()->GetName().c_str(), GetName().c_str(), accelerationIndex);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    GetSurface()->GetPage()->InputReceived(this, accelerationIndex);
-    
-    string modifiers = "";
-    
-    if( ! isModifier_)
-        modifiers = surface_->GetPage()->GetModifiers();
-    
-    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
-        for(auto action : actions_[activeZone_][modifiers])
-            action->DoAcceleratedRelativeActionDecrement(accelerationIndex, this);
-    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
-        for(auto action : actions_[activeZone_][""])
-            action->DoAcceleratedRelativeActionDecrement(accelerationIndex, this);
+            action->DoRelativeAction(accelerationIndex, delta, this);
 }
 
 void Widget::SetIsFaderTouched(bool isFaderTouched)
@@ -1506,10 +1482,7 @@ Action::Action(string name, Widget* widget, Zone* zone, vector<string> params): 
     SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
 
     SetSteppedValues(params, deltaValue_, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_, acceleratedTickValues_);
-
-    if(acceleratedDeltaValues_.size() < 1)
-        acceleratedDeltaValues_.push_back(0.001);
-        
+    
     if(acceleratedTickValues_.size() < 1)
         acceleratedTickValues_.push_back(10);
 }
@@ -1543,12 +1516,51 @@ void Action::DoAction(double value, Widget* sender)
         
         DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
     }
-    else if(shouldToggle_)
+    else
+        DoRangeBoundAction(value, sender);
+}
+
+void Action::DoRelativeAction(double delta, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(0, delta, sender);
+    else
     {
-        if(value != 0.0)
-            DoRangeBoundAction( ! GetCurrentValue(), sender);
+        if(deltaValue_ != 0.0)
+        {
+            if(delta > 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta, sender);
     }
-    else if(delayAmount_ != 0.0)
+}
+
+void Action::DoRelativeAction(int accelerationIndex, double delta, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(accelerationIndex, delta, sender);
+    else if(acceleratedDeltaValues_.size() > 0)
+        DoAcceleratedDeltaValueAction(accelerationIndex, delta, sender);
+    else
+    {
+        if(deltaValue_ != 0.0)
+        {
+            if(delta >= 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta, sender);
+    }
+}
+
+void Action::DoRangeBoundAction(double value, Widget* sender)
+{
+    if(delayAmount_ != 0.0)
     {
         if(value == 0.0)
         {
@@ -1565,29 +1577,27 @@ void Action::DoAction(double value, Widget* sender)
     }
     else
     {
-        DoRangeBoundAction(value, sender);
+        if(shouldToggle_ && value != 0.0)
+            value = ! GetCurrentValue();
+        
+        if(value > rangeMaximum_)
+            value = rangeMaximum_;
+        
+        if(value < rangeMinimum_)
+            value = rangeMinimum_;
+        
+        Do(value, sender);
     }
 }
 
-void Action::DoRangeBoundAction(double value, Widget* sender)
+void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta, Widget* sender)
 {
-    if(value > rangeMaximum_)
-        value = rangeMaximum_;
-    
-    if(value < rangeMinimum_)
-        value = rangeMinimum_;
-
-     Do(value, sender);
-}
-
-void Action::DoRelativeSteppedValueAction(int accelerationIndex, double value, Widget* sender)
-{
-    if(value > 0)
+    if(delta > 0)
     {
         accumulatedIncTicks_++;
         accumulatedDecTicks_ = accumulatedDecTicks_ - 1 < 0 ? 0 : accumulatedDecTicks_ - 1;
     }
-    else if(value < 0)
+    else if(delta < 0)
     {
         accumulatedDecTicks_++;
         accumulatedIncTicks_ = accumulatedIncTicks_ - 1 < 0 ? 0 : accumulatedIncTicks_ - 1;
@@ -1596,7 +1606,7 @@ void Action::DoRelativeSteppedValueAction(int accelerationIndex, double value, W
     accelerationIndex = accelerationIndex > acceleratedTickValues_.size() - 1 ? acceleratedTickValues_.size() - 1 : accelerationIndex;
     accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
     
-    if(value > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
+    if(delta > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
     {
         accumulatedIncTicks_ = 0;
         accumulatedDecTicks_ = 0;
@@ -1608,7 +1618,7 @@ void Action::DoRelativeSteppedValueAction(int accelerationIndex, double value, W
         
         DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
     }
-    else if(value < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
+    else if(delta < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
     {
         accumulatedIncTicks_ = 0;
         accumulatedDecTicks_ = 0;
@@ -1622,48 +1632,15 @@ void Action::DoRelativeSteppedValueAction(int accelerationIndex, double value, W
     }
 }
 
-void Action::DoRelativeAction(double delta, Widget* sender)
+void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, Widget* sender)
 {
-    if(steppedValues_.size() > 0)
-        DoRelativeSteppedValueAction(0, delta, sender);
-    else
-    {
-        if(deltaValue_ != 0.0)
-        {
-            if(delta > 0.0)
-                delta = deltaValue_;
-            else if(delta < 0.0)
-                delta = -deltaValue_;
-        }
-        
-        DoRangeBoundAction(lastValue_ + delta, sender);
-    }
-}
-
-void Action::DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender)
-{
-    if(steppedValues_.size() > 0)
-        DoRelativeSteppedValueAction(accelerationIndex, 1.0, sender);
-    else
-    {
-        accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
-        accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
-        
+    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(delta > 0.0)
         DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
-    }
-}
-
-void Action::DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender)
-{
-    if(steppedValues_.size() > 0)
-        DoRelativeSteppedValueAction(accelerationIndex, -1.0, sender);
     else
-    {
-        accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
-        accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
-
         DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

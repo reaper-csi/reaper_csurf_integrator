@@ -256,9 +256,8 @@ public:
     MediaTrack* GetTrack();
     void RequestUpdate();
     void DoAction(double value);
-    void DoRelativeAction(double value);
-    void DoAcceleratedRelativeActionIncrement(int accelerationIndex);
-    void DoAcceleratedRelativeActionDecrement(int accelerationIndex);
+    void DoRelativeAction(double delta);
+    void DoRelativeAction(int accelerationIndex, double delta);
     void SetIsFaderTouched(bool isFaderTouched);
     void SetIsRotaryTouched(bool isRotaryTouched);
     void UpdateValue(double value);
@@ -316,7 +315,8 @@ protected:
     virtual void Do(string value, Widget* sender) {}
     virtual void Do(double value, Widget* sender) {}
     void DoRangeBoundAction(double value, Widget* sender);
-    void DoRelativeSteppedValueAction(int accelerationIndex, double value, Widget* sender);
+    void DoAcceleratedSteppedValueAction(int accelerationIndex, double value, Widget* sender);
+    void DoAcceleratedDeltaValueAction(int accelerationIndex, double value, Widget* sender);
     
 public:
     virtual ~Action() {}
@@ -341,8 +341,7 @@ public:
     
     virtual void DoAction(double value, Widget* sender);
     virtual void DoRelativeAction(double value, Widget* sender);
-    virtual void DoAcceleratedRelativeActionIncrement(int accelerationIndex, Widget* sender);
-    virtual void DoAcceleratedRelativeActionDecrement(int accelerationIndex, Widget* sender);
+    virtual void DoRelativeAction(int accelerationIndex, double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
     void PerformDeferredActions()
