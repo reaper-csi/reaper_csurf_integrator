@@ -88,6 +88,10 @@
 #define IDC_SLIDER_Green                1079
 #define IDC_EDIT_EuConSurfaceName       1084
 #define IDC_EDIT_NumChannels            1085
+#define IDC_EDIT_NumSends               1086
+#define IDC_EDIT_NumFX                  1087
+#define IDC_RADIO1                      1088
+#define IDC_RADIO2                      1089
 
 // Next default values for new objects
 // 
@@ -95,7 +99,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1086
+#define _APS_NEXT_CONTROL_VALUE         1089
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

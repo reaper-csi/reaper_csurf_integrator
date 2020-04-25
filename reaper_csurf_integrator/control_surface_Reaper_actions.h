@@ -1193,6 +1193,9 @@ protected:
             if(track == selectedTrack)
                 SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
         
+        if(autoModes_.count(steppedValuesIndex_) > 0)
+            UpdateWidgetValue(autoModes_[steppedValuesIndex_]);
+        
         if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
         {
             if(displayWidget_ != nullptr)

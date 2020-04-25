@@ -1077,14 +1077,14 @@ void Manager::Init()
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[11], outPort));
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 5)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[3], atoi(tokens[2].c_str()));
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 8)
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[6], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()));
 
                         currentPage->AddSurface(surface);
                         
-                        if(tokens[0] == EuConSurfaceToken && tokens.size() == 5)
+                        if(tokens[0] == EuConSurfaceToken && tokens.size() == 8)
                         {
-                            if(tokens[4] == "UseZoneLink")
+                            if(tokens[7] == "UseZoneLink")
                                 surface->SetUseZoneLink(true);
                         }
                         else if(tokens.size() == 11 || tokens.size() == 12)
@@ -2329,8 +2329,8 @@ void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bo
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels)
-: ControlSurface(CSurfIntegrator, page, name), numChannels_(numChannels)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions)
+: ControlSurface(CSurfIntegrator, page, name), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), panOptions_(panOptions)
 {
     // EuCon takes care of managing navigation, so we just blast everything always
     sendsActivationManager_->SetShouldMapSends(true);
@@ -2363,13 +2363,13 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 
 void EuCon_ControlSurface::InitializeEuCon()
 {
-    static void (*InitializeEuConWithParameters)(int numChannels_) = nullptr;
+    static void (*InitializeEuConWithParameters)(int numChannels, int numSends, int numFX, int panOptions) = nullptr;
 
     if(g_reaper_plugin_info && InitializeEuConWithParameters == nullptr)
-        InitializeEuConWithParameters = (void (*)(int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
+        InitializeEuConWithParameters = (void (*)(int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
     if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(numChannels_);
+        InitializeEuConWithParameters(numChannels_, numSends_, numFX_, panOptions_);
 }
 
 Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
@@ -2384,8 +2384,6 @@ Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
         if(widgetInfo.control != "")
             new EuCon_CSIMessageGenerator(this, widget, widgetInfo.control);
        
-        FeedbackProcessor* feedbackProcessor = nullptr;
-    
         if(widgetInfo.FB_Processor != "")
         {
             if(widgetInfo.FB_Processor.find("FaderDB") != string::npos)
@@ -2498,6 +2496,10 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
 
 void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
 {
+    if(groupName == "FX")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("FX", isVisible);
+    
     if(groupName == "Pan")
         for(auto [channel, group] : channelGroups_)
             group->SetIsVisible("Pan", isVisible);
