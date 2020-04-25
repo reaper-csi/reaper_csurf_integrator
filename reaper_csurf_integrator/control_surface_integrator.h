@@ -1247,6 +1247,10 @@ class EuCon_ControlSurface : public ControlSurface
 private:
     string zoneFolder_ = "";
     int numChannels_ = 0;
+    int numSends_ = 0;
+    int numFX_ = 0;
+    int panOptions_ = 0;
+    
     double previousPP = 0.0;
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
@@ -1262,7 +1266,7 @@ private:
     map<int, PeakInfo> peakInfo_;
     
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions);
     virtual ~EuCon_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "EuCon"; }
