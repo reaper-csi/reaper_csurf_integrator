@@ -183,6 +183,9 @@ struct SurfaceLine
 
     // for EuCon
     int numChannels = 0;
+    int numSends = 0;
+    int numFX = 0;
+    int panOptions = 0;
 };
 
 struct PageLine
@@ -213,6 +216,9 @@ static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
 // for EuCon
 int numChannels = 0;
+int numSends = 0;
+int numFX = 0;
+int panOptions = 0;
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -774,6 +780,13 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
+
+                if(panOptions == 1)
+                    CheckDlgButton(hwndDlg, IDC_RADIO1, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_RADIO2, BST_CHECKED);
 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
@@ -807,11 +820,20 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 
                         char buf[BUFSZ];
                         
-                        
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, buf, sizeof(buf));
                         numChannels = atoi(buf);
                         
-                       
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumSends, buf, sizeof(buf));
+                        numSends = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
+                        numFX = atoi(buf);
+
+                        if (IsDlgButtonChecked(hwndDlg, IDC_RADIO1))
+                            panOptions = 01;
+                        else
+                            panOptions = 02;
+
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
                             useZoneLink = true;
                         else
@@ -973,6 +995,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->name = name;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
                                     surface->numChannels = numChannels;
+                                    surface->numSends = numSends;
+                                    surface->numFX = numFX;
+                                    surface->panOptions = panOptions;
                                     surface->useZoneLink = useZoneLink;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
@@ -1034,7 +1059,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 
                                 // for EuCon
                                 numChannels = pages[pageIndex]->surfaces[index]->numChannels;
-                                
+                                numSends = pages[pageIndex]->surfaces[index]->numSends;
+                                numFX = pages[pageIndex]->surfaces[index]->numFX;
+                                panOptions = pages[pageIndex]->surfaces[index]->panOptions;
+
                                 dlgResult = false;
                                 editMode = true;
                                 
@@ -1061,6 +1089,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     
                                     // for EuCon
                                     pages[pageIndex]->surfaces[index]->numChannels = numChannels;
+                                    pages[pageIndex]->surfaces[index]->numSends = numSends;
+                                    pages[pageIndex]->surfaces[index]->numFX = numFX;
+                                    pages[pageIndex]->surfaces[index]->panOptions = panOptions;
                                 }
                             }
                         }
@@ -1179,11 +1210,14 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
                                 surface->remoteDeviceIP = tokens[11];
                         }
-                        else if(surface->type == EuConSurfaceToken && tokens.size() == 5 )
+                        else if(surface->type == EuConSurfaceToken && tokens.size() == 8 )
                         {
                             surface->numChannels = atoi(tokens[2].c_str());
-                            surface->zoneTemplateFolder = tokens[3];
-                            surface->useZoneLink = tokens[4] == "UseZoneLink" ? true : false;
+                            surface->numSends = atoi(tokens[3].c_str());
+                            surface->numFX = atoi(tokens[4].c_str());
+                            surface->panOptions = atoi(tokens[5].c_str());
+                            surface->zoneTemplateFolder = tokens[6];
+                            surface->useZoneLink = tokens[7] == "UseZoneLink" ? true : false;
                          }
                         
                         if(pages.size() > 0)
@@ -1262,6 +1296,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else if(surface->type == EuConSurfaceToken)
                         {
                             line += to_string(surface->numChannels) + " " ;
+                            line += to_string(surface->numSends) + " " ;
+                            line += to_string(surface->numFX) + " " ;
+                            line += to_string(surface->panOptions) + " " ;
                             line += "\"" + surface->zoneTemplateFolder + "\" ";
                             line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
                             
