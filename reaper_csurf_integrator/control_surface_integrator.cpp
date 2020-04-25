@@ -2290,6 +2290,22 @@ public:
     virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
 };
 
+/////////////////////////////////////////////////////////////////////////////
+class Marshalled_VisibilityChange : public MarshalledFunctionCall
+/////////////////////////////////////////////////////////////////////////////
+{
+private:
+    std::string groupName_ = "";
+    int  channelNumber_ = 0;
+    bool isVisible_ = false;
+    
+public:
+    Marshalled_VisibilityChange(EuCon_ControlSurface* surface, std::string groupName, int channelNumber, bool isVisible) : MarshalledFunctionCall(surface), groupName_(groupName), channelNumber_(channelNumber), isVisible_(isVisible)  { }
+    virtual ~Marshalled_VisibilityChange() {}
+    
+    virtual void Execute() override { surface_->HandleEuConGroupVisibilityChange(groupName_, channelNumber_, isVisible_); }
+};
+
 void EuConRequestsInitialization()
 {
     if(TheManager)
@@ -2494,24 +2510,6 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
         HandleReaperMessageWthString(address.c_str(), value.c_str());
 }
 
-void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
-{
-    if(groupName == "FX")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("FX", isVisible);
-    
-    if(groupName == "Pan")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("Pan", isVisible);
-    
-    else if(groupName == "Send")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("Send", isVisible);
-
-    else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
-        channelGroups_[channelNumber]->SetIsVisible(isVisible);
-}
-
 void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
 {
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
@@ -2569,6 +2567,49 @@ void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
     mutex_.Enter();
     workQueue_.push_front(new Marshalled_String(this, address, value));
     mutex_.Leave();
+}
+
+void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
+{
+    mutex_.Enter();
+    workQueue_.push_front(new Marshalled_VisibilityChange(this, groupName, channelNumber, isVisible));
+    mutex_.Leave();
+}
+
+void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
+{
+    if(groupName == "FX")
+    {
+        for(auto widget : widgets_)
+        {
+            if(isVisible && widget->GetName() == "OnEuConFXAreaGainedFocus")
+            {
+                widget->DoAction(1.0);
+                break;
+            }
+            
+            if( ! isVisible && widget->GetName() == "OnEuConFXAreaLostFocus")
+            {
+                widget->DoAction(1.0);
+                break;
+            }
+        }
+    }
+    
+    if(groupName == "FX")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("FX", isVisible);
+    
+    if(groupName == "Pan")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("Pan", isVisible);
+    
+    else if(groupName == "Send")
+        for(auto [channel, group] : channelGroups_)
+            group->SetIsVisible("Send", isVisible);
+    
+    else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
+        channelGroups_[channelNumber]->SetIsVisible(isVisible);
 }
 
 void EuCon_ControlSurface::HandleExternalInput()

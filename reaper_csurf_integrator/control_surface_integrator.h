@@ -900,7 +900,7 @@ protected:
     map<string, vector<string>> zoneFileLines_;
 
     
-    void InitHardwiredWidgets()
+    virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
         widgets_.push_back(new Widget(this, "OnTrackSelection"));
@@ -928,6 +928,7 @@ public:
     virtual void ReceiveEuConMessage(string oscAddress, string value) {}
     virtual void UpdateTimeDisplay() {}
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
+    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
 
     virtual void ForceRefreshTimeDisplay() {}
@@ -1265,6 +1266,15 @@ private:
     
     map<int, PeakInfo> peakInfo_;
     
+protected:
+    virtual void InitHardwiredWidgets() override
+    {
+        ControlSurface::InitHardwiredWidgets();
+        // Add the "hardwired" widgets
+        widgets_.push_back(new Widget(this, "OnEuConFXAreaGainedFocus"));
+        widgets_.push_back(new Widget(this, "OnEuConFXAreaLostFocus"));
+    }
+    
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions);
     virtual ~EuCon_ControlSurface() {}
@@ -1283,6 +1293,7 @@ public:
     void HandleEuConMessage(string oscAddress, string value);
     virtual void UpdateTimeDisplay() override;
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
+    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
     
     virtual void RequestUpdate() override
