@@ -1269,7 +1269,7 @@ protected:
         if(autoModes_.count(steppedValuesIndex_) > 0)
             UpdateWidgetValue(autoModes_[steppedValuesIndex_]);
         
-        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
+        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime / 2)
         {
             if(displayWidget_ != nullptr)
                 displayWidget_->UpdateValue("   ");
