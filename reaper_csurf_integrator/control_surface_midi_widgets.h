@@ -225,7 +225,7 @@ public:
         if (midiMessage->midi_message[2] & 0x40)
             value = -value;
         
-        value = value / 8.0;
+        value = value / 2.0;
 
         widget_->DoRelativeAction(value);
     }
