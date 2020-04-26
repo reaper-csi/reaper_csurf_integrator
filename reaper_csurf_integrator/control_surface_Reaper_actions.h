@@ -1251,6 +1251,76 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConCycleTrackAutoMode : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
+    Widget* displayWidget_ = nullptr;
+    double timeSilentlySet_ = 0.0;
+    
+protected:
+    void RequestTrackUpdate(MediaTrack* track) override
+    {
+        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
+            if(track == selectedTrack)
+                SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
+        
+        if(autoModes_.count(steppedValuesIndex_) > 0)
+            UpdateWidgetValue(autoModes_[steppedValuesIndex_]);
+        
+        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
+        {
+            if(displayWidget_ != nullptr)
+                displayWidget_->UpdateValue("   ");
+            timeSilentlySet_ = 0;
+        }
+    }
+    
+public:
+    EuConCycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    {
+        if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
+            for(auto widget : GetWidget()->GetSurface()->GetWidgets())
+                if(widget->GetName() == params[1])
+                {
+                    displayWidget_ = widget;
+                    break;
+                }
+    }
+    
+    virtual void DoAction(double value, Widget* sender) override
+    {
+        if(value)
+            Do(value, sender);
+    }
+    
+    virtual void Do(double value, Widget* sender) override
+    {
+        MediaTrack* track = GetWidget()->GetTrack();
+        
+        if(track != nullptr && steppedValues_.size() > 0)
+        {
+            if(steppedValuesIndex_ == steppedValues_.size() - 1)
+                steppedValuesIndex_ = 0;
+            else
+                steppedValuesIndex_++;
+           
+            DAW::SetOnlyTrackSelected(track);
+            
+            int autoMode = steppedValues_[steppedValuesIndex_];
+            
+            DAW::SetAutomationMode(autoMode, true);
+            
+            if(displayWidget_ != nullptr && autoModes_.count(autoMode) > 0)
+                displayWidget_->SilentSetValue(autoModes_[autoMode]);
+            
+            timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
