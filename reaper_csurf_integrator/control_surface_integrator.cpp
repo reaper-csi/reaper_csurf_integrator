@@ -1876,15 +1876,15 @@ void FXActivationManager::ToggleMapSelectedTrackFX()
     
     if( ! shouldMapSelectedTrackFX_)
     {
-        for(auto zone : activeSelectedTrackFXZones_)
+        for(auto openFX : openFX_)
         {
-            surface_->LoadingZone(zone->GetName());
-            zone->Deactivate();
+            surface_->LoadingZone(openFX.zone->GetName());
+            openFX.zone->Deactivate();
         }
         
-        activeSelectedTrackFXZones_.clear();
-        
-        DeleteFXWindows();
+        for(auto fx : openFX_)
+            DAW::TrackFX_Show(fx.track, fx.fxIndex, 2);
+        openFX_.clear();
     }
     
     surface_->GetPage()->OnTrackSelection();
@@ -1917,19 +1917,83 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-    for(auto zone : activeSelectedTrackFXZones_)
-    {
-        surface_->LoadingZone("Home");
-        zone->Deactivate();
-    }
-    
-    activeSelectedTrackFXZones_.clear();
-    DeleteFXWindows();
-    
     MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
+
+    vector<FXInfo> fxToActivate;
+
+    for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+    {
+        char FXName[BUFSZ];
+        
+        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+        
+        if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
+        {
+            Zone* zone = surface_->GetZones()[FXName];
+            fxToActivate.push_back(FXInfo(zone, FXName, selectedTrack, i));
+        }
+    }
+
+    vector<FXInfo> fxAlreadyActivated;
+    vector<FXInfo> fxToDeactivate;
+
+    for(auto openFX : openFX_)
+        for(auto anFXToActivate : fxToActivate)
+            if(anFXToActivate.IsEqualTo(openFX))
+                fxAlreadyActivated.push_back(openFX);
+            else
+                fxToDeactivate.push_back(openFX);
+    
+    
+    if(fxToDeactivate.size() > 0)
+    {
+        surface_->LoadingZone("Home");
+        
+        for(auto fx : fxToDeactivate)
+        {
+            fx.zone->Deactivate();
+            DAW::TrackFX_Show(fx.track, fx.fxIndex, 2);
+        }
+    }
+
+    for(auto fx : fxToActivate)
+    {
+        bool alreadyActivated = false;
+        
+        for(auto fxActivated : fxAlreadyActivated)
+            if(fxActivated.IsEqualTo(fx))
+            {
+                alreadyActivated = true;
+                break;
+            }
+        
+        if( ! alreadyActivated)
+        {
+            fx.zone->Activate(fx.fxIndex);
+            if(showFXWindows_)
+                DAW::TrackFX_Show(fx.track, fx.fxIndex, 3);
+        }
+    }
+    
+    openFX_.clear();
+    
+    for(auto fx : fxToActivate)
+        openFX_.push_back(fx);
+    
+    
+    /*
+    //for(auto zone : activeSelectedTrackFXZones_)
+    //{
+        //surface_->LoadingZone("Home");
+        //zone->Deactivate();
+    //}
+    
+    //activeSelectedTrackFXZones_.clear();
+    DeleteFXWindows();
+    
     
     for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
     {
@@ -1942,12 +2006,13 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
             Zone* zone = surface_->GetZones()[FXName];
             surface_->LoadingZone(FXName);
             zone->Activate(i);
-            activeSelectedTrackFXZones_.push_back(zone);
-            openFXWindows_.push_back(FXWindow(FXName, selectedTrack, i));
+            //activeSelectedTrackFXZones_.push_back(zone);
+            openFX_.push_back(FXInfo(zone, FXName, selectedTrack, i));
         }
     }
     
     OpenFXWindows();
+    */
 }
 
 void FXActivationManager::MapSelectedTrackFXToMenu()
