@@ -675,8 +675,18 @@ protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
         char buf[BUFSZ];
-        
-        DAW::GetTrackName(track, buf, sizeof(buf));
+
+        if(GetSurface()->GetIsEuConFXAreaFocused())
+        {
+            if(track == GetWidget()->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+                DAW::GetTrackName(track, buf, sizeof(buf));
+            else
+                buf[0] = 0;
+        }
+        else
+        {
+            DAW::GetTrackName(track, buf, sizeof(buf));
+        }
         
         UpdateWidgetValue(string(buf));
     }

@@ -930,6 +930,7 @@ public:
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
+    virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
 
@@ -1047,8 +1048,13 @@ public:
     void OnTrackSelection()
     {
         for(auto widget : widgets_)
+        {
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(1.0);
+            
+            if(GetIsEuConFXAreaFocused() && widget->GetName() == "OnEuConFXAreaGainedFocus")
+                widget->DoAction(1.0);
+        }
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
@@ -1252,6 +1258,8 @@ private:
     int numFX_ = 0;
     int panOptions_ = 0;
     
+    bool isEuConFXAreaFocused_ = false;
+    
     double previousPP = 0.0;
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
@@ -1281,6 +1289,8 @@ public:
     
     virtual string GetSourceFileName() override { return "EuCon"; }
     
+    virtual bool GetIsEuConFXAreaFocused() override { return isEuConFXAreaFocused_; }
+
     virtual void InitializeEuCon() override;
     virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) override;
     virtual void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string oscAddress, double value);

@@ -2585,12 +2585,14 @@ void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, in
         {
             if(isVisible && widget->GetName() == "OnEuConFXAreaGainedFocus")
             {
+                isEuConFXAreaFocused_ = true;
                 widget->DoAction(1.0);
                 break;
             }
             
             if( ! isVisible && widget->GetName() == "OnEuConFXAreaLostFocus")
             {
+                isEuConFXAreaFocused_ = false;
                 widget->DoAction(1.0);
                 break;
             }
