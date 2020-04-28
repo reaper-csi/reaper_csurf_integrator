@@ -366,6 +366,8 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
     
         if(params.size() > 0 && widget != nullptr)
         {
+            zone->AddWidget(widget);
+            
             if(TheManager->IsActionAvailable(params[0]))
             {
                 Action* action = TheManager->GetAction(widget, zone, params);
@@ -1649,7 +1651,8 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Activate()
 {
-    surface_->WidgetsGoZone(GetName());
+    for(auto widget : widgets_)
+        widget->GoZone(GetName());
     
     for(auto includedZone : includedZones_)
         includedZone->Activate();
@@ -1657,7 +1660,8 @@ void Zone::Activate()
 
 void Zone::Deactivate()
 {
-    surface_->GoHome();
+    for(auto widget : widgets_)
+        widget->Deactivate();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2075,10 +2079,14 @@ void ControlSurface::InitZones(string zoneFolder)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Midi_ControlSurface::InitWidgets(string templateFilename)
+void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     InitHardwiredWidgets();
+    InitZones(zoneFolder);
+    GoHome();
+    ForceClearAllWidgets();
+    GetPage()->ForceRefreshTimeDisplay();
 }
 
 void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
@@ -2156,11 +2164,12 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void OSC_ControlSurface::InitWidgets(string templateFilename)
+void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
     
     InitHardwiredWidgets();
+    InitZones(zoneFolder);
     GoHome();
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
