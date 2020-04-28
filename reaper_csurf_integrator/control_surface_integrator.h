@@ -244,10 +244,15 @@ public:
         }
     }
     
-    void Deactivate(Zone* zone)
+    void Deactivate()
     {
-        if(zone == activeZone_ && zonesAvailable_.count("Home") > 0)
+        if(zonesAvailable_.count("Home") > 0)
             activeZone_ = zonesAvailable_["Home"];
+        else
+        {
+            activeZone_ = nullptr;
+            ForceClear();
+        }
     }
     
     void Clear();
@@ -503,6 +508,8 @@ private:
     vector<Zone*> includedZones_;
     int index_ = 0;
     
+    vector<Widget*> widgets_;
+    
 public:
     Zone(Navigator* navigator, ControlSurface* surface, int channelNum, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
 
@@ -521,6 +528,11 @@ public:
     bool GetIsRotaryTouched() { return navigator_->GetIsRotaryTouched();; }
     void SetIsRotaryTouched(bool isRotaryTouched) { navigator_->SetIsRotaryTouched(isRotaryTouched); }
 
+    void AddWidget(Widget* widget)
+    {
+        widgets_.push_back(widget);
+    }
+    
     void Activate();
     void Deactivate();
 
@@ -999,18 +1011,6 @@ public:
     {
         zoneFileLines_[fileName].push_back(line);
     }
-    
-    void WidgetsGoZone(string zoneName)
-    {
-        for(auto widget : widgets_)
-            widget->GoZone(zoneName);
-    }
-    
-    void Deactivate(Zone* zone)
-    {
-        for(auto widget : widgets_)
-            widget->Deactivate(zone);
-    }
 
     void ToggleMapSends()
     {
@@ -1060,8 +1060,13 @@ public:
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         for(auto widget : widgets_)
+        {
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(1.0);
+            
+            if(GetIsEuConFXAreaFocused() && widget->GetName() == "OnEuConFXAreaGainedFocus")
+                widget->DoAction(1.0);
+        }
     }
 };
 
@@ -1077,18 +1082,13 @@ private:
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
    
-    void InitWidgets(string templateFilename);
+    void InitWidgets(string templateFilename, string zoneFolder);
 
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput)
     : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
-        InitWidgets(templateFilename);
-               
-        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-        InitZones(zoneFolder);
-        GoHome();
-        ForceClearAllWidgets();
+        InitWidgets(templateFilename, zoneFolder);
     }
     
     virtual ~Midi_ControlSurface() {}
@@ -1131,19 +1131,14 @@ private:
     oscpkt::PacketWriter packetWriter_;
     map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
-    void InitWidgets(string templateFilename);
+    void InitWidgets(string templateFilename, string zoneFolder);
     void ProcessOSCMessage(string message, double value);
 
 public:
     OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
     : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
-        InitWidgets(templateFilename);
-              
-        // GAW IMPORTANT -- This must happen AFTER the Widgets have been instantiated
-        InitZones(zoneFolder);
-        GoHome();
-        ForceClearAllWidgets();
+        InitWidgets(templateFilename, zoneFolder);
     }
     
     virtual ~OSC_ControlSurface() {}
