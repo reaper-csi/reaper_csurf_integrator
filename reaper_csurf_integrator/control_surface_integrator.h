@@ -796,14 +796,20 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXWindow
+struct FXInfo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    Zone* zone = nullptr;
     string fxName = "";
     MediaTrack* const track = nullptr;;
     int fxIndex = 0;
     
-    FXWindow(string anFxName, MediaTrack* aTrack, int anFxIndex) : fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
+    FXInfo(Zone* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
+    
+    bool IsEqualTo(FXInfo other) const
+    {
+        return zone == other.zone && fxName == other.fxName && track == other.track && fxIndex == other.fxIndex;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -816,34 +822,26 @@ private:
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
-    vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    vector<FXWindow> openFXWindows_;
+    vector<FXInfo> openFX_;
     bool showFXWindows_ = false;
     
     void OpenFXWindows()
     {
         if(showFXWindows_)
-            for(auto fxWindow : openFXWindows_)
-                DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 3);
+            for(auto fx : openFX_)
+                DAW::TrackFX_Show(fx.track, fx.fxIndex, 3);
     }
     
     void CloseFXWindows()
     {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
+        for(auto fx : openFX_)
+            DAW::TrackFX_Show(fx.track, fx.fxIndex, 2);
     }
-    
-    void DeleteFXWindows()
-    {
-        for(auto fxWindow : openFXWindows_)
-            DAW::TrackFX_Show(fxWindow.track, fxWindow.fxIndex, 2);
-        openFXWindows_.clear();
-    }
-    
+        
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
