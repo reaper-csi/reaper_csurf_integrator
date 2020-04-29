@@ -1900,12 +1900,54 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-    for(auto activeZone : activeSelectedTrackFXZones_)
-        activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+
+    if(DAW::TrackFX_GetCount(selectedTrack) > 0)
+    {
+        vector<OpenFXWindow> windowsToOpen;
+        
+        for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+        {
+            char FXName[BUFSZ];
+            
+            DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
+            
+            if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
+                windowsToOpen.push_back(OpenFXWindow(selectedTrack, surface_->GetZones()[FXName]));
+        }
+
+        if(windowsToOpen.size() != activeSelectedTrackFXZones_.size())
+        {
+            for(auto activeZone : activeSelectedTrackFXZones_)
+                activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+        }
+        else
+        {
+            bool congruent = true;
+            
+            for(int i = 0; i < windowsToOpen.size(); i++)
+            {
+                if(windowsToOpen[i].zone != activeSelectedTrackFXZones_[i].zone || windowsToOpen[i].track != activeSelectedTrackFXZones_[i].track)
+                {
+                    congruent = false;
+                    break;
+                }
+            }
+           
+            if(! congruent)
+            {
+                for(auto activeZone : activeSelectedTrackFXZones_)
+                    activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+            }
+        }
+    }
+    else
+    {
+        for(auto activeZone : activeSelectedTrackFXZones_)
+            activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+    }
     
     activeSelectedTrackFXZones_.clear();
-
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
