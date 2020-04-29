@@ -532,9 +532,6 @@ public:
     {
         widgets_.push_back(widget);
     }
-    
-    void Activate();
-    void Deactivate();
 
     // GAW TBD -- remove -- change learn mode editor to file based
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
@@ -553,13 +550,53 @@ public:
         includedZones_.push_back(zone);
     }
     
-    void Activate(int index)
+    void SetIndex(int index)
     {
         index_ = index;
+        
+        for(auto includedZone : includedZones_)
+            includedZone->SetIndex(index);
+    }
+
+    void Activate()
+    {
+        for(auto widget : widgets_)
+            widget->GoZone(name_);
+        
+        for(auto includedZone : includedZones_)
+            includedZone->Activate();
+    }
+    
+    void Deactivate()
+    {
+        for(auto widget : widgets_)
+            widget->Deactivate();
+        
+        for(auto includedZone : includedZones_)
+            includedZone->Deactivate();
+    }
+
+    void Activate(MediaTrack* track, bool shouldShowFXWindows)
+    {
         Activate();
         
+        if(shouldShowFXWindows && GetNavigator()->GetTrack() != nullptr)
+            DAW::TrackFX_Show(track, index_, 3);
+        
         for(auto zone : includedZones_)
-            zone->Activate(index);
+            zone->Activate(track, shouldShowFXWindows);
+    }
+
+    void Deactivate(MediaTrack* track, bool shouldShowFXWindows)
+    {
+        for(auto widget : widgets_)
+            widget->Deactivate();
+        
+        if(shouldShowFXWindows)
+            DAW::TrackFX_Show(track, index_, 2);
+
+        for(auto zone : includedZones_)
+            zone->Deactivate(track, shouldShowFXWindows);
     }
 };
 
@@ -806,10 +843,14 @@ struct FXInfo
     
     FXInfo(Zone* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
     
-    bool IsEqualTo(FXInfo other) const
-    {
-        return zone == other.zone && fxName == other.fxName && track == other.track && fxIndex == other.fxIndex;
-    }
+};
+
+struct OpenFXWindow
+{
+    MediaTrack* track;
+    Zone* zone;
+    
+    OpenFXWindow(MediaTrack* aTrack, Zone* aZone) : track(aTrack),  zone(aZone) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -822,24 +863,25 @@ private:
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
+    vector<OpenFXWindow> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    vector<FXInfo> openFX_;
-    bool showFXWindows_ = false;
+    
+    bool shouldShowFXWindows_ = false;
     
     void OpenFXWindows()
     {
-        if(showFXWindows_)
-            for(auto fx : openFX_)
-                DAW::TrackFX_Show(fx.track, fx.fxIndex, 3);
+        if(shouldShowFXWindows_)
+            for(auto openFXWindow : activeSelectedTrackFXZones_)
+                DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 3);
     }
     
     void CloseFXWindows()
     {
-        for(auto fx : openFX_)
-            DAW::TrackFX_Show(fx.track, fx.fxIndex, 2);
+        for(auto openFXWindow : activeSelectedTrackFXZones_)
+            DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 2);
     }
         
 public:
@@ -850,8 +892,9 @@ public:
     bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
     int GetNumFXSlots() { return numFXlots_; }
     void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
-    bool GetShowFXWindows() { return showFXWindows_; }
+    bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
+    void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
     void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
     void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
     void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
@@ -865,9 +908,9 @@ public:
     
     void ToggleShowFXWindows()
     {
-        showFXWindows_ = ! showFXWindows_;
+        shouldShowFXWindows_ = ! shouldShowFXWindows_;
         
-        if(showFXWindows_ == true)
+        if(shouldShowFXWindows_ == true)
             OpenFXWindows();
         else
             CloseFXWindows();
@@ -2222,6 +2265,8 @@ public:
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
                 DAW::ShowConsoleMsg(("Zone \"" + string(fxName) + "\"").c_str());
                 
+                DAW::ShowConsoleMsg("\n\n\tSelectedTrackNavigator\n");
+
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
