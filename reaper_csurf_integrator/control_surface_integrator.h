@@ -1089,25 +1089,15 @@ public:
     void OnTrackSelection()
     {
         for(auto widget : widgets_)
-        {
             if(widget->GetName() == "OnTrackSelection")
                 widget->DoAction(1.0);
-            
-            if(GetIsEuConFXAreaFocused() && widget->GetName() == "OnEuConFXAreaGainedFocus")
-                widget->DoAction(1.0);
-        }
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         for(auto widget : widgets_)
-        {
             if(widget->GetName() == "OnFXFocus")
                 widget->DoAction(1.0);
-            
-            if(GetIsEuConFXAreaFocused() && widget->GetName() == "OnEuConFXAreaGainedFocus")
-                widget->DoAction(1.0);
-        }
     }
 };
 
