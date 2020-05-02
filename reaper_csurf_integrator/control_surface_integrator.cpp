@@ -197,7 +197,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isTrackTouch, bool &isTrackRotaryTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -222,6 +222,8 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
             
             else if(modifier_tokens[i] == "TrackTouch")
                 isTrackTouch = true;
+            else if(modifier_tokens[i] == "RotaryTouch")
+                isTrackRotaryTouch = true;
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
@@ -339,12 +341,13 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
         string widgetName = "";
         string modifiers = "";
         bool isTrackTouch = false;
+        bool isTrackRotaryTouch = false;
         bool isInverted = false;
         bool shouldToggle = false;
         bool isDelayed = false;
         double delayAmount = 0.0;
     
-        GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isInverted, shouldToggle, delayAmount);
+        GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, delayAmount);
     
         if(delayAmount > 0.0)
             isDelayed = true;
@@ -376,6 +379,8 @@ static void BuildZone(vector<vector<string>> &zoneLines, string filePath, Contro
                 {
                     if(isTrackTouch)
                         widget->AddTrackTouchedAction(zone, modifiers, action);
+                    else if(isTrackRotaryTouch)
+                        widget->AddTrackRotaryTouchedAction(zone, modifiers, action);
                     else
                         widget->AddAction(zone, modifiers, action);
                     
@@ -978,8 +983,8 @@ void Manager::InitActionDictionary()
     actions_["TrackRecordArm"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackRecordArm(name, widget, zone, params); };
     actions_["TrackMute"] =                         [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackMute(name, widget, zone, params); };
     actions_["TrackSolo"] =                         [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackSolo(name, widget, zone, params); };
-    actions_["TrackTouch"] =                        [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetTrackFaderTouch(name, widget, zone, params); };
-    actions_["TrackRotaryTouch"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetTrackRotaryTouch(name, widget, zone, params); };
+    actions_["TrackTouch"] =                        [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetFaderTouch(name, widget, zone, params); };
+    actions_["RotaryTouch"] =                       [](string name, Widget* widget, Zone* zone, vector<string> params) { return new SetRotaryTouch(name, widget, zone, params); };
     actions_["CycleTimeline"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return new CycleTimeline(name, widget, zone, params); };
     actions_["TrackOutputMeter"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackOutputMeter(name, widget, zone, params); };
     actions_["TrackOutputMeterAverageLR"] =         [](string name, Widget* widget, Zone* zone, vector<string> params) { return new TrackOutputMeterAverageLR(name, widget, zone, params); };
@@ -1278,12 +1283,45 @@ void Widget::AddTrackTouchedAction(Zone* zone, string modifiers, Action* action)
     trackTouchedActions_[zone][modifiers].push_back(action);
 }
 
+void Widget::AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action)
+{
+    trackRotaryTouchedActions_[zone][modifiers].push_back(action);
+}
+
 MediaTrack* Widget::GetTrack()
 {
     if(activeZone_ != nullptr)
         return activeZone_->GetNavigator()->GetTrack();
     else
         return nullptr;
+}
+
+bool Widget::GetIsFaderTouched()
+{
+    if(activeZone_ != nullptr)
+        return activeZone_->GetIsFaderTouched();
+    else
+        return false;
+}
+
+bool Widget::GetIsRotaryTouched()
+{
+    if(activeZone_ != nullptr)
+        return activeZone_->GetIsRotaryTouched();
+    else
+        return false;
+}
+
+void Widget::SetIsFaderTouched(bool isFaderTouched)
+{
+    if(activeZone_ != nullptr)
+        activeZone_->SetIsFaderTouched(isFaderTouched);
+}
+
+void Widget::SetIsRotaryTouched(bool isRotaryTouched)
+{
+    if(activeZone_ != nullptr)
+        activeZone_->SetIsRotaryTouched(isRotaryTouched);
 }
 
 string Widget::GetCurrentZoneActionDisplay(string surfaceName)
@@ -1318,7 +1356,17 @@ void Widget::RequestUpdate()
         if( ! isModifier_ )
             modifiers = surface_->GetPage()->GetModifiers();
         
-        if(activeZone_->GetIsFaderTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
+        if(GetIsRotaryTouched()  )
+        {
+            if(trackRotaryTouchedActions_.count(activeZone_) > 0 && trackRotaryTouchedActions_[activeZone_].count(modifiers) > 0 && trackRotaryTouchedActions_[activeZone_][modifiers].size() > 0)
+            {
+                for(auto action : trackRotaryTouchedActions_[activeZone_][modifiers])
+                    action->PerformDeferredActions();
+                
+                trackRotaryTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
+            }
+        }
+        else if(GetIsFaderTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
         {
             for(auto action : trackTouchedActions_[activeZone_][modifiers])
                 action->PerformDeferredActions();
@@ -1415,18 +1463,6 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
     else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
         for(auto action : actions_[activeZone_][""])
             action->DoRelativeAction(accelerationIndex, delta, this);
-}
-
-void Widget::SetIsFaderTouched(bool isFaderTouched)
-{
-    if(activeZone_ != nullptr)
-        activeZone_->SetIsFaderTouched(isFaderTouched);
-}
-
-void Widget::SetIsRotaryTouched(bool isRotaryTouched)
-{
-    if(activeZone_ != nullptr)
-        activeZone_->SetIsRotaryTouched(isRotaryTouched);
 }
 
 void Widget::SilentSetValue(string displayText)

@@ -102,18 +102,10 @@ class Navigator
 {
 protected:
     Page* const page_;
-    bool isFaderTouched_ = false;
-    bool isRotaryTouched_ = false;
 
 public:
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
-
-    bool GetIsFaderTouched() { return isFaderTouched_; }
-    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched; }
-    
-    bool GetIsRotaryTouched() { return isRotaryTouched_; }
-    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
@@ -207,10 +199,11 @@ private:
     bool isModifier_ = false;
     Zone* activeZone_ = nullptr;
     map<string, Zone*> zonesAvailable_;
- 
+    
     map<Zone*, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
     map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
-    
+    map<Zone*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
+
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
     virtual ~Widget() {};
@@ -220,9 +213,16 @@ public:
     string GetCurrentZoneActionDisplay(string surfaceName);
     void AddAction(Zone* zone, string modifiers, Action* action);
     void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
+    void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
+    bool GetIsFaderTouched();
+    bool GetIsRotaryTouched();
+    
+    void SetIsFaderTouched(bool isFaderTouched);
+    void SetIsRotaryTouched(bool isRotaryTouched);
+
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
@@ -263,8 +263,6 @@ public:
     void DoAction(double value);
     void DoRelativeAction(double delta);
     void DoRelativeAction(int accelerationIndex, double delta);
-    void SetIsFaderTouched(bool isFaderTouched);
-    void SetIsRotaryTouched(bool isRotaryTouched);
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -508,6 +506,9 @@ private:
     vector<Zone*> includedZones_;
     int index_ = 0;
     
+    bool isFaderTouched_ = false;
+    bool isRotaryTouched_ = false;
+
     vector<Widget*> widgets_;
     
 public:
@@ -521,12 +522,12 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
-
-    bool GetIsFaderTouched() { return navigator_->GetIsFaderTouched();; }
-    void SetIsFaderTouched(bool isFaderTouched) { navigator_->SetIsFaderTouched(isFaderTouched); }
-
-    bool GetIsRotaryTouched() { return navigator_->GetIsRotaryTouched();; }
-    void SetIsRotaryTouched(bool isRotaryTouched) { navigator_->SetIsRotaryTouched(isRotaryTouched); }
+    
+    bool GetIsFaderTouched() { return isFaderTouched_;  }
+    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
+    
+    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
+    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
 
     void AddWidget(Widget* widget)
     {
@@ -1536,6 +1537,9 @@ public:
     
     bool GetIsControlTouched(MediaTrack* track, int touchedControl)
     {
+        // GAW TBD -- don't forget this query 
+        
+        /*
         if(track == masterTrackNavigator_->GetTrack())
         {
             if(touchedControl == 0)
@@ -1554,7 +1558,7 @@ public:
                     return navigator->GetIsRotaryTouched(); // Rotary/Pan
             }
         }
-
+*/
         return false;
     }
     
