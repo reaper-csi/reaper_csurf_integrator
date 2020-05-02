@@ -1112,11 +1112,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetTrackFaderTouch : public TrackAction
+class SetFaderTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackFaderTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    SetFaderTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
     void Do(double value, Widget* sender) override
     {
@@ -1125,11 +1125,11 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetTrackRotaryTouch : public TrackAction
+class SetRotaryTouch : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    SetTrackRotaryTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
+    SetRotaryTouch(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params) {}
     
     void Do(double value, Widget* sender) override
     {
