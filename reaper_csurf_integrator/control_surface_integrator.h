@@ -944,6 +944,7 @@ protected:
     Page* const page_;
     string const name_;
     vector<Widget*> widgets_;
+    map<string, Widget*> widgetsByName_;
 
     FXActivationManager* const fxActivationManager_;
     SendsActivationManager* const sendsActivationManager_ = nullptr;
@@ -959,8 +960,8 @@ protected:
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
-        widgets_.push_back(new Widget(this, "OnTrackSelection"));
-        widgets_.push_back(new Widget(this, "OnFXFocus"));
+        AddWidget(new Widget(this, "OnTrackSelection"));
+        AddWidget(new Widget(this, "OnFXFocus"));
     }
     
 public:
@@ -1089,20 +1090,19 @@ public:
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
+        widgetsByName_[widget->GetName()] = widget;
     }
 
     void OnTrackSelection()
     {
-        for(auto widget : widgets_)
-            if(widget->GetName() == "OnTrackSelection")
-                widget->DoAction(1.0);
+        if(widgetsByName_.count("OnTrackSelection") > 0)
+            widgetsByName_["OnTrackSelection"]->DoAction(1.0);
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
-        for(auto widget : widgets_)
-            if(widget->GetName() == "OnFXFocus")
-                widget->DoAction(1.0);
+        if(widgetsByName_.count("OnFXFocus") > 0)
+            widgetsByName_["OnFXFocus"]->DoAction(1.0);
     }
 };
 
@@ -1310,8 +1310,8 @@ protected:
     {
         ControlSurface::InitHardwiredWidgets();
         // Add the "hardwired" widgets
-        widgets_.push_back(new Widget(this, "OnEuConFXAreaGainedFocus"));
-        widgets_.push_back(new Widget(this, "OnEuConFXAreaLostFocus"));
+        AddWidget(new Widget(this, "OnEuConFXAreaGainedFocus"));
+        AddWidget(new Widget(this, "OnEuConFXAreaLostFocus"));
     }
     
 public:
