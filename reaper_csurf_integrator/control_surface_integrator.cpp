@@ -1314,11 +1314,11 @@ int Widget::GetParamIndex()
         {
             return actions_[activeZone_][modifiers][0]->GetParamNum();
         }
+        else
+            return 0;
     }
     else
         return 0;
-    
-    return 0;
 }
 
 bool Widget::GetIsFaderTouched()
@@ -2484,7 +2484,7 @@ void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetI
     {
         if(Widget* widget = InitializeEuConWidget(item))
         {
-            widgets_.push_back(widget);
+            AddWidget(widget);
             
             if(item.channelNumber > 0 && channelGroups_.count(item.channelNumber) < 1 )
                 channelGroups_[item.channelNumber] = new WidgetGroup();
@@ -2621,14 +2621,18 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
 
 void EuCon_ControlSurface::ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
 {
-    for(auto widget : widgets_)
-        if(widget->GetName() == string(address))
-            if((*track = widget->GetTrack()) != nullptr)
-            {
-                *fxSlot = widget->GetZoneIndex();
-                *fxParamIndex = widget->GetParamIndex();
-                break;
-            }
+    string name(address);
+    
+    if(widgetsByName_.count(name) > 0)
+    {
+        Widget* widget =  widgetsByName_[name];
+        
+        if((*track = widget->GetTrack()) != nullptr)
+        {
+            *fxSlot = widget->GetZoneIndex();
+            *fxParamIndex = widget->GetParamIndex();
+        }
+    }
 }
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
@@ -2656,21 +2660,17 @@ void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, in
 {
     if(groupName == "FX")
     {
-        for(auto widget : widgets_)
+        
+        if(isVisible && widgetsByName_.count("OnEuConFXAreaGainedFocus") > 0)
         {
-            if(isVisible && widget->GetName() == "OnEuConFXAreaGainedFocus")
-            {
-                isEuConFXAreaFocused_ = true;
-                widget->DoAction(1.0);
-                break;
-            }
-            
-            if( ! isVisible && widget->GetName() == "OnEuConFXAreaLostFocus")
-            {
-                isEuConFXAreaFocused_ = false;
-                widget->DoAction(1.0);
-                break;
-            }
+            isEuConFXAreaFocused_ = true;
+            widgetsByName_["OnEuConFXAreaGainedFocus"]->DoAction(1.0);
+        }
+        
+        if( ! isVisible && widgetsByName_.count("OnEuConFXAreaLostFocus") > 0)
+        {
+            isEuConFXAreaFocused_ = false;
+            widgetsByName_["OnEuConFXAreaLostFocus"]->DoAction(1.0);
         }
     }
     
