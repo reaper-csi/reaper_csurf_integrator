@@ -1296,6 +1296,31 @@ MediaTrack* Widget::GetTrack()
         return nullptr;
 }
 
+int Widget::GetZoneIndex()
+{
+    if(activeZone_ != nullptr)
+        return activeZone_->GetIndex();
+    else
+        return 0;
+}
+
+int Widget::GetParamIndex()
+{
+    if(activeZone_ != nullptr)
+    {
+        string modifiers = surface_->GetPage()->GetModifiers();
+
+        if(activeZone_ != nullptr && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+        {
+            return actions_[activeZone_][modifiers][0]->GetParamNum();
+        }
+    }
+    else
+        return 0;
+    
+    return 0;
+}
+
 bool Widget::GetIsFaderTouched()
 {
     if(activeZone_ != nullptr)
@@ -2294,10 +2319,10 @@ class Marshalled_Double : public MarshalledFunctionCall
 /////////////////////////////////////////////////////////////////////////////
 {
 private:
-    std::string address_ = "";
+    string address_ = "";
     double value_ = 0;
 public:
-    Marshalled_Double(EuCon_ControlSurface* surface, std::string address, double value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
+    Marshalled_Double(EuCon_ControlSurface* surface, string address, double value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
     virtual ~Marshalled_Double() {}
     
     virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
@@ -2308,14 +2333,30 @@ class Marshalled_String : public MarshalledFunctionCall
 /////////////////////////////////////////////////////////////////////////////
 {
 private:
-    std::string address_ = "";
-    std::string  value_ = "";
+    string address_ = "";
+    string  value_ = "";
     
 public:
-    Marshalled_String(EuCon_ControlSurface* surface, std::string address, string value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
+    Marshalled_String(EuCon_ControlSurface* surface, string address, string value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
     virtual ~Marshalled_String() {}
     
     virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
+};
+
+/////////////////////////////////////////////////////////////////////////////
+class Marshalled_Query : public MarshalledFunctionCall
+/////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string address_ = "";
+    string  query_ = "";
+    void* ptr_ = nullptr;
+    
+public:
+    Marshalled_Query(EuCon_ControlSurface* surface, string address, string query, void* ptr) : MarshalledFunctionCall(surface), address_(address), query_(query), ptr_(ptr)  { }
+    virtual ~Marshalled_Query() {}
+    
+    //virtual void Execute() override { surface_->HandleEuConParamQuery(address_, query_, ptr_); }
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2323,12 +2364,12 @@ class Marshalled_VisibilityChange : public MarshalledFunctionCall
 /////////////////////////////////////////////////////////////////////////////
 {
 private:
-    std::string groupName_ = "";
+    string groupName_ = "";
     int  channelNumber_ = 0;
     bool isVisible_ = false;
     
 public:
-    Marshalled_VisibilityChange(EuCon_ControlSurface* surface, std::string groupName, int channelNumber, bool isVisible) : MarshalledFunctionCall(surface), groupName_(groupName), channelNumber_(channelNumber), isVisible_(isVisible)  { }
+    Marshalled_VisibilityChange(EuCon_ControlSurface* surface, string groupName, int channelNumber, bool isVisible) : MarshalledFunctionCall(surface), groupName_(groupName), channelNumber_(channelNumber), isVisible_(isVisible)  { }
     virtual ~Marshalled_VisibilityChange() {}
     
     virtual void Execute() override { surface_->HandleEuConGroupVisibilityChange(groupName_, channelNumber_, isVisible_); }
@@ -2370,6 +2411,12 @@ void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bo
         TheManager->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
 }
 
+void HandleEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+{
+    if(TheManager)
+        TheManager->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2403,6 +2450,9 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     
     if( ! plugin_register("API_HandleEuConGetMeterValues", (void *)::HandleEuConGetMeterValues))
         LOG::InitializationFailure("HandleEuConGetMeterValues failed to register");
+    
+    if( ! plugin_register("API_HandleEuConParamQuery", (void *)::HandleEuConParamQuery))
+        LOG::InitializationFailure("HandleEuConParamQuery failed to register");
     
     InitializeEuCon();
 }
@@ -2582,6 +2632,22 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
         oLevel = -144.0;
         oPeak = -144.0;
         oLegClip = false;
+    }
+}
+
+void EuCon_ControlSurface::ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+{
+    for(auto widget : widgets_)
+    {
+        if(widget->GetName() == string(address))
+        {
+            if((*track = widget->GetTrack()) != nullptr)
+            {
+                *fxSlot = widget->GetZoneIndex();
+                *fxParamIndex = widget->GetParamIndex();
+                break;
+            }
+        }
     }
 }
 
