@@ -216,7 +216,7 @@ public:
     void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
-    
+       
     bool GetIsFaderTouched();
     bool GetIsRotaryTouched();
     
@@ -259,6 +259,8 @@ public:
     void ForceClear();
 
     MediaTrack* GetTrack();
+    int GetZoneIndex();
+    int GetParamIndex();
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double delta);
@@ -984,6 +986,8 @@ public:
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
+    virtual void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex) {}
+  
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
@@ -1332,7 +1336,8 @@ public:
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
-    
+    virtual void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex) override;
+
     virtual void RequestUpdate() override
     {
         for(auto widget : generalWidgets_)
@@ -1693,6 +1698,12 @@ public:
     {
         for(auto surface : surfaces_)
             surface->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
+    }
+
+    void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+    {
+        for(auto surface : surfaces_)
+            surface->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
     }
     
    /*
@@ -2318,6 +2329,12 @@ public:
             pages_[currentPageIndex_]->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
     }
 
+    void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+    {
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
+    }
+    
     //int repeats = 0;
     
     void Run()
