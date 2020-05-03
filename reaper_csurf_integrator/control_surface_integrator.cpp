@@ -2344,22 +2344,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////
-class Marshalled_Query : public MarshalledFunctionCall
-/////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string address_ = "";
-    string  query_ = "";
-    void* ptr_ = nullptr;
-    
-public:
-    Marshalled_Query(EuCon_ControlSurface* surface, string address, string query, void* ptr) : MarshalledFunctionCall(surface), address_(address), query_(query), ptr_(ptr)  { }
-    virtual ~Marshalled_Query() {}
-    
-    //virtual void Execute() override { surface_->HandleEuConParamQuery(address_, query_, ptr_); }
-};
-
-/////////////////////////////////////////////////////////////////////////////
 class Marshalled_VisibilityChange : public MarshalledFunctionCall
 /////////////////////////////////////////////////////////////////////////////
 {
@@ -2638,17 +2622,13 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
 void EuCon_ControlSurface::ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
 {
     for(auto widget : widgets_)
-    {
         if(widget->GetName() == string(address))
-        {
             if((*track = widget->GetTrack()) != nullptr)
             {
                 *fxSlot = widget->GetZoneIndex();
                 *fxParamIndex = widget->GetParamIndex();
                 break;
             }
-        }
-    }
 }
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
