@@ -1825,9 +1825,8 @@ void EuCon_FeedbackProcessor::ForceValue(double value)
 
 void EuCon_FeedbackProcessor::ForceValue(int param, double value)
 {
-    // GAW TBD -- if needed must implement on EuCon side
     lastDoubleValue_ = value;
-    //surface_->SendEuConMessage(address_, param, value);
+    surface_->SendEuConMessage(this, address_, value, param);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(string value)
@@ -2119,6 +2118,21 @@ void ControlSurface::InitZones(string zoneFolder)
     }
 }
 
+void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string value)
+{
+    if(TheManager->GetSurfaceOutMonitor())
+    {
+        string displayString = "";
+        
+        if(widget)
+            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
+        else
+            displayString = "OUT->" + name_ + " " + address + " " + value + "\n";
+        
+        DAW::ShowConsoleMsg(displayString.c_str());
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2285,17 +2299,8 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
         outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
-    if(TheManager->GetSurfaceOutMonitor())
-    {
-        string displayString = "";
-        
-        if(Widget* widget = feedbackProcessor->GetWidget())
-            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + value + "\n";
-        else
-            displayString = "OUT-> " + name_ + " " + oscAddress + " " + value + "\n";
-        
-        DAW::ShowConsoleMsg(displayString.c_str());
-    }
+    SurfaceOutMonitor(feedbackProcessor->GetWidget(), oscAddress, value);
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -2515,21 +2520,24 @@ void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackPro
     
     if(g_reaper_plugin_info && HandleReaperMessageWthDouble == nullptr)
         HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
-        
+    
     if(HandleReaperMessageWthDouble)
         HandleReaperMessageWthDouble(address.c_str(), value);
+    
+    SurfaceOutMonitor(feedbackProcessor->GetWidget(), address, to_string(value));
+}
 
-    if(TheManager->GetSurfaceOutMonitor())
-    {
-        string displayString = "";
-        
-        if(Widget* widget = feedbackProcessor->GetWidget())
-            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + to_string(value) + "\n";
-        else
-            displayString = "OUT->" + name_ + " " + address + " " + to_string(value) + "\n";
-
-        DAW::ShowConsoleMsg(displayString.c_str());
-    }
+void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value, int param)
+{
+    static void (*HandleReaperMessageWthParam)(const char *, double, int) = nullptr;
+    
+    if(g_reaper_plugin_info && HandleReaperMessageWthParam == nullptr)
+        HandleReaperMessageWthParam = (void (*)(const char *, double, int))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthParam");
+    
+    if(HandleReaperMessageWthParam)
+        HandleReaperMessageWthParam(address.c_str(), value, param);
+    
+    SurfaceOutMonitor(feedbackProcessor->GetWidget(), address, to_string(value));
 }
 
 void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value)

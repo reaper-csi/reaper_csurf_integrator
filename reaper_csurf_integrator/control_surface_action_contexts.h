@@ -200,6 +200,12 @@ protected:
         
         if(params.size() > 2)
             fxParamDisplayName_ = params[2];
+        
+        if(params.size() > 3 && params[3] != "[" && params[3] != "{")
+        {
+            shouldUseDisplayStyle_ = true;
+            displayStyle_ = atol(params[3].c_str());
+        }
     }
     
 public:
@@ -236,7 +242,12 @@ public:
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetWidget()->GetTrack())
-            UpdateWidgetValue(GetCurrentValue());
+        {
+            if(shouldUseDisplayStyle_)
+                UpdateWidgetValue(displayStyle_, GetCurrentValue());
+            else
+                UpdateWidgetValue(GetCurrentValue());
+        }
         else
              GetWidget()->Clear();
     }
