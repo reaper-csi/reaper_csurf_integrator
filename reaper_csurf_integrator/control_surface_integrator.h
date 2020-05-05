@@ -306,6 +306,9 @@ protected:
     int accumulatedIncTicks_ = 0;
     int accumulatedDecTicks_ = 0;
     
+    bool shouldUseDisplayStyle_ = false;
+    int displayStyle_ = 0;
+    
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     
@@ -953,10 +956,11 @@ protected:
     map<string, vector<Zone*>> zonesInZoneFile_;
     bool useZoneLink_ = false;
 
+    virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
+    
     void InitZones(string zoneFolder);
     map<string, vector<string>> zoneFileLines_;
 
-    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1324,15 +1328,16 @@ public:
 
     virtual void InitializeEuCon() override;
     virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) override;
-    virtual void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string oscAddress, double value);
-    virtual void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string oscAddress, string value);
-    virtual void SendEuConMessage(string oscAddress, string value);
-    virtual void ReceiveEuConMessage(string oscAddress, double value) override;
-    virtual void ReceiveEuConMessage(string oscAddress, string value) override;
-    virtual void HandleExternalInput() override;
-    void HandleEuConMessage(string oscAddress, double value);
-    void HandleEuConMessage(string oscAddress, string value);
+    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value);
+    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value, int param);
+    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value);
+    void SendEuConMessage(string address, string value);
+    void HandleEuConMessage(string address, double value);
+    void HandleEuConMessage(string address, string value);
     virtual void UpdateTimeDisplay() override;
+    virtual void ReceiveEuConMessage(string address, double value) override;
+    virtual void ReceiveEuConMessage(string address, string value) override;
+    virtual void HandleExternalInput() override;
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
