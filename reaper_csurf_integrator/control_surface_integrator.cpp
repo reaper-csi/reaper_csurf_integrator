@@ -629,11 +629,11 @@ void SetSteppedValues(vector<string> params, double &deltaValue, vector<double> 
             
             if(regex_match(strVal, regex("-?[0-9]+[.][0-9]+")) || regex_match(strVal, regex("-?[0-9]+")))
                 steppedValues.push_back(stod(strVal));
-            else if(regex_match(strVal, regex("[(][0-9]+[.][0-9]+[)]")))
+            else if(regex_match(strVal, regex("[(]-?[0-9]+[.][0-9]+[)]")))
                 deltaValue = stod(strVal.substr( 1, strVal.length() - 2 ));
-            else if(regex_match(strVal, regex("[(][0-9]+[)]")))
+            else if(regex_match(strVal, regex("[(]-?[0-9]+[)]")))
                 acceleratedTickValues.push_back(stod(strVal.substr( 1, strVal.length() - 2 )));
-            else if(regex_match(strVal, regex("[(]([0-9]+[.][0-9]+[,])+[0-9]+[.][0-9]+[)]")))
+            else if(regex_match(strVal, regex("[(](-?[0-9]+[.][0-9]+[,])+-?[0-9]+[.][0-9]+[)]")))
             {
                 istringstream acceleratedDeltaValueStream(strVal.substr( 1, strVal.length() - 2 ));
                 string deltaValue;
@@ -641,7 +641,7 @@ void SetSteppedValues(vector<string> params, double &deltaValue, vector<double> 
                 while (getline(acceleratedDeltaValueStream, deltaValue, ','))
                     acceleratedDeltaValues.push_back(stod(deltaValue));
             }
-            else if(regex_match(strVal, regex("[(]([0-9]+[,])+[0-9]+[)]")))
+            else if(regex_match(strVal, regex("[(](-?[0-9]+[,])+-?[0-9]+[)]")))
             {
                 istringstream acceleratedTickValueStream(strVal.substr( 1, strVal.length() - 2 ));
                 string tickValue;
