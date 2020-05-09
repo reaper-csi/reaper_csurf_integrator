@@ -1274,7 +1274,7 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::AddAction(Zone* zone, string modifiers, Action* action)
 {
-    actions_[zone][modifiers].push_back(action);
+    actionsOld_[zone][modifiers].push_back(action);
     zonesAvailable_[zone->GetName()] = zone;
 }
 
@@ -1310,9 +1310,9 @@ int Widget::GetParamIndex()
     {
         string modifiers = surface_->GetPage()->GetModifiers();
 
-        if(activeZone_ != nullptr && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+        if(activeZone_ != nullptr && actionsOld_[activeZone_].count(modifiers) > 0 && actionsOld_[activeZone_][modifiers].size() > 0)
         {
-            return actions_[activeZone_][modifiers][0]->GetParamNum();
+            return actionsOld_[activeZone_][modifiers][0]->GetParamNum();
         }
         else
             return 0;
@@ -1353,19 +1353,19 @@ string Widget::GetCurrentZoneActionDisplay(string surfaceName)
 {
     string modifiers = surface_->GetPage()->GetModifiers();
 
-    if(activeZone_ != nullptr && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+    if(activeZone_ != nullptr && actionsOld_[activeZone_].count(modifiers) > 0 && actionsOld_[activeZone_][modifiers].size() > 0)
     {
         string actionName = "";
         
-        if(actions_[activeZone_][modifiers][0]->GetName() == "FXParam")
+        if(actionsOld_[activeZone_][modifiers][0]->GetName() == "FXParam")
         {
-            if(actions_[activeZone_][modifiers][0]->GetDisplayName() == "")
-                actionName = "FXParam " + actions_[activeZone_][modifiers][0]->GetParamNumAsString() + " ";
+            if(actionsOld_[activeZone_][modifiers][0]->GetDisplayName() == "")
+                actionName = "FXParam " + actionsOld_[activeZone_][modifiers][0]->GetParamNumAsString() + " ";
             else
-                actionName = actions_[activeZone_][modifiers][0]->GetDisplayName();
+                actionName = actionsOld_[activeZone_][modifiers][0]->GetDisplayName();
         }
         else
-            actionName = actions_[activeZone_][modifiers][0]->GetName();
+            actionName = actionsOld_[activeZone_][modifiers][0]->GetName();
         
         return activeZone_->GetAlias() + "->" + actionName + "---->" + surfaceName + "->" + GetName();
     }
@@ -1398,19 +1398,19 @@ void Widget::RequestUpdate()
 
             trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
         }
-        else if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0 && actions_[activeZone_][modifiers].size() > 0)
+        else if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0 && actionsOld_[activeZone_][modifiers].size() > 0)
         {
-            for(auto action : actions_[activeZone_][modifiers])
+            for(auto action : actionsOld_[activeZone_][modifiers])
                 action->PerformDeferredActions();
             
-            actions_[activeZone_][modifiers][0]->RequestUpdate();
+            actionsOld_[activeZone_][modifiers][0]->RequestUpdate();
         }
-        else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0 && actions_[activeZone_][""].size() > 0)
+        else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0 && actionsOld_[activeZone_][""].size() > 0)
         {
-            for(auto action : actions_[activeZone_][""])
+            for(auto action : actionsOld_[activeZone_][""])
                 action->PerformDeferredActions();
 
-            actions_[activeZone_][""][0]->RequestUpdate();
+            actionsOld_[activeZone_][""][0]->RequestUpdate();
         }
     }
 }
@@ -1433,11 +1433,11 @@ void Widget::DoAction(double value)
 
     if(activeZone_ != nullptr)
     {
-        if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
-            for(auto action : actions_[activeZone_][modifiers])
+        if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
+            for(auto action : actionsOld_[activeZone_][modifiers])
                 action->DoAction(value, this);
-        else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
-            for(auto action : actions_[activeZone_][""])
+        else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
+            for(auto action : actionsOld_[activeZone_][""])
                 action->DoAction(value, this);
     }
 }
@@ -1458,11 +1458,11 @@ void Widget::DoRelativeAction(double delta)
     if( ! isModifier_)
         modifiers = surface_->GetPage()->GetModifiers();
     
-    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
-        for(auto action : actions_[activeZone_][modifiers])
+    if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
+        for(auto action : actionsOld_[activeZone_][modifiers])
             action->DoRelativeAction(delta, this);
-    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
-        for(auto action : actions_[activeZone_][""])
+    else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
+        for(auto action : actionsOld_[activeZone_][""])
             action->DoRelativeAction(delta, this);
 }
 
@@ -1482,11 +1482,11 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
     if( ! isModifier_)
         modifiers = surface_->GetPage()->GetModifiers();
     
-    if(actions_.count(activeZone_) > 0 && actions_[activeZone_].count(modifiers) > 0)
-        for(auto action : actions_[activeZone_][modifiers])
+    if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
+        for(auto action : actionsOld_[activeZone_][modifiers])
             action->DoRelativeAction(accelerationIndex, delta, this);
-    else if(modifiers != "" && actions_.count(activeZone_) > 0 && actions_[activeZone_].count("") > 0)
-        for(auto action : actions_[activeZone_][""])
+    else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
+        for(auto action : actionsOld_[activeZone_][""])
             action->DoRelativeAction(accelerationIndex, delta, this);
 }
 

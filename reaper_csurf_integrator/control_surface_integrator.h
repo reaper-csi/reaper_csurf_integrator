@@ -197,12 +197,29 @@ private:
     string const name_;
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
+    
+    
+    
+    
     Zone* activeZone_ = nullptr;
     map<string, Zone*> zonesAvailable_;
     
-    map<Zone*, map<string, vector <Action*>>> actions_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
+    map<Zone*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
     map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
     map<Zone*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
+    
+    
+    
+    
+    
+    // modifers->Action
+    map<string, vector<Action>> defaultActions_;
+    map<string, vector<Action>> actions_;
+
+    
+    
+    
+    
 
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
@@ -503,18 +520,33 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Navigator* const navigator_= nullptr;
     ControlSurface* const surface_ = nullptr;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
     vector<Zone*> includedZones_;
-    int index_ = 0;
     
+
+    // Move to ZoneInstance
+
     bool isFaderTouched_ = false;
     bool isRotaryTouched_ = false;
 
-    vector<Widget*> widgets_;
+    map<string, vector<string>> widgets_;
+    
+    
+    
+    Navigator* const navigator_= nullptr; // TBD -- move this -- it will be om a per Action basis
+
+    
+    
+
+    // GAW TBD -- remove eventually
+    int index_ = 0;
+    vector<Widget*> widgetsOld_;
+
+    
+
     
 public:
     Zone(Navigator* navigator, ControlSurface* surface, int channelNum, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
@@ -528,15 +560,21 @@ public:
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
     
+    
+    // Move to ZoneInstance
+
     bool GetIsFaderTouched() { return isFaderTouched_;  }
     bool GetIsRotaryTouched() { return isRotaryTouched_;  }
     
     void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
 
+    
+    
+    
     void AddWidget(Widget* widget)
     {
-        widgets_.push_back(widget);
+        widgetsOld_.push_back(widget);
     }
 
     // GAW TBD -- remove -- change learn mode editor to file based
@@ -566,7 +604,7 @@ public:
 
     void Activate()
     {
-        for(auto widget : widgets_)
+        for(auto widget : widgetsOld_)
             widget->GoZone(name_);
         
         for(auto includedZone : includedZones_)
@@ -575,7 +613,7 @@ public:
     
     void Deactivate()
     {
-        for(auto widget : widgets_)
+        for(auto widget : widgetsOld_)
             widget->Deactivate();
         
         for(auto includedZone : includedZones_)
@@ -595,7 +633,7 @@ public:
 
     void Deactivate(MediaTrack* track, bool shouldShowFXWindows)
     {
-        for(auto widget : widgets_)
+        for(auto widget : widgetsOld_)
             widget->Deactivate();
         
         if(shouldShowFXWindows)

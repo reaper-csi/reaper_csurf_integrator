@@ -102,8 +102,13 @@ public:
 class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+private:
+    Navigator* navigator_ = nullptr;
+    
 protected:
-    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) { }
+    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    
+    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator) : Action(name, widget, zone, params), navigator_(navigator) {}
 
 public:
     virtual void RequestUpdate() override
