@@ -105,21 +105,18 @@ class TrackAction : public Action
 protected:
     TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
-    Navigator* navigator_ = nullptr;
-    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator) : Action(name, widget, zone, params), navigator_(navigator) {}
-
 public:
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = GetTrack())
             RequestTrackUpdate(track);
         else
-             GetWidget()->Clear();
+             ClearWidget();
     }
     
     virtual void DoAction(double value, Widget* sender) override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = GetTrack())
             Action::DoAction(value, sender);
     }
 };
@@ -145,15 +142,12 @@ protected:
         }
     }
     
-    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator) : TrackAction(name, widget, zone, params, navigator)
+    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params, int sendIndex) : TrackAction(name, widget, zone, params), sendIndex_(sendIndex)
     {
         if(params.size() > 0)
         {
             if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
-            {
-                shouldUseLocalIndex_ = true;
                 paramIndex_ = atol(params[0].c_str());
-            }
         }
     }
 
@@ -225,7 +219,7 @@ protected:
         }
     }
     
-    FXAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator, int fxIndex) : TrackAction(name, widget, zone, params, navigator), fxIndex_(fxIndex)
+    FXAction(string name, Widget* widget, Zone* zone, vector<string> params, int fxIndex) : TrackAction(name, widget, zone, params), fxIndex_(fxIndex)
     {
         if(params.size() > 0)
             fxParamIndex_ = atol(params[0].c_str());
@@ -265,7 +259,7 @@ public:
         double max = 0.0;
         double retVal = 0.0;
         
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = GetTrack())
             retVal = DAW::TrackFX_GetParam(track, GetSlotIndex(), fxParamIndex_, &min, &max);
         
         return retVal;
@@ -273,7 +267,7 @@ public:
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = GetTrack())
         {
             if(shouldUseDisplayStyle_)
                 UpdateWidgetValue(displayStyle_, GetCurrentValue());
@@ -281,7 +275,7 @@ public:
                 UpdateWidgetValue(GetCurrentValue());
         }
         else
-             GetWidget()->Clear();
+             ClearWidget();
     }
 };
 

@@ -936,27 +936,6 @@ void Manager::InitActionDictionary()
 {
     actions_["NoAction"] =                          [](string name, Widget* widget, Zone* zone, vector<string> params) { return NoAction(name, widget, zone, params); };
     actions_["Reaper"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return ReaperAction(name, widget, zone, params); };
-    
-    actions_["FXNameDisplay"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXNameDisplay(name, widget, zone, params); };
-    actions_["FXParam"] =                           [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXParam(name, widget, zone, params); };
-    actions_["FXParamRelative"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXParamRelative(name, widget, zone, params); };
-    actions_["FocusedFXParam"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParam(name, widget, zone, params); };
-    actions_["FXParamNameDisplay"] =                [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXParamNameDisplay(name, widget, zone, params); };
-    actions_["FXParamValueDisplay"] =               [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXParamValueDisplay(name, widget, zone, params); };
-    actions_["FocusedFXParamNameDisplay"] =         [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParamNameDisplay(name, widget, zone, params); };
-    actions_["FocusedFXParamValueDisplay"] =        [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParamValueDisplay(name, widget, zone, params); };
-    actions_["FXGainReductionMeter"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXGainReductionMeter(name, widget, zone, params); };
-   
-    
-    actions_["TrackSendVolume"] =                   [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendVolume(name, widget, zone, params); };
-    actions_["TrackSendVolumeDB"] =                 [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendVolumeDB(name, widget, zone, params); };
-    actions_["TrackSendPan"] =                      [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendPan(name, widget, zone, params); };
-    actions_["TrackSendMute"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendMute(name, widget, zone, params); };
-    actions_["TrackSendInvertPolarity"] =           [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendInvertPolarity(name, widget, zone, params); };
-    actions_["TrackSendPrePost"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendPrePost(name, widget, zone, params); };
-    actions_["TrackSendNameDisplay"] =              [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendNameDisplay(name, widget, zone, params); };
-    actions_["TrackSendVolumeDisplay"] =            [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackSendVolumeDisplay(name, widget, zone, params); };
-   
     actions_["TrackVolume"] =                       [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackVolume(name, widget, zone, params); };
     actions_["SoftTakeover7BitTrackVolume"] =       [](string name, Widget* widget, Zone* zone, vector<string> params) { return SoftTakeover7BitTrackVolume(name, widget, zone, params); };
     actions_["SoftTakeover14BitTrackVolume"] =      [](string name, Widget* widget, Zone* zone, vector<string> params) { return SoftTakeover14BitTrackVolume(name, widget, zone, params); };
@@ -987,7 +966,6 @@ void Manager::InitActionDictionary()
     actions_["TrackOutputMeterMaxPeakLR"] =         [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackOutputMeterMaxPeakLR(name, widget, zone, params); };
     actions_["SelectTrackRelative"] =               [](string name, Widget* widget, Zone* zone, vector<string> params) { return SelectTrackRelative(name, widget, zone, params); };
     actions_["TrackAutoMode"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return TrackAutoMode(name, widget, zone, params); };
-
     actions_["TimeDisplay"] =                       [](string name, Widget* widget, Zone* zone, vector<string> params) { return TimeDisplay(name, widget, zone, params); };
     actions_["EuConTimeDisplay"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params) { return EuConTimeDisplay(name, widget, zone, params); };
     actions_["Rewind"] =                            [](string name, Widget* widget, Zone* zone, vector<string> params) { return Rewind(name, widget, zone, params); };
@@ -1024,6 +1002,26 @@ void Manager::InitActionDictionary()
     actions_["CycleTrackAutoMode"] =                [](string name, Widget* widget, Zone* zone, vector<string> params) { return CycleTrackAutoMode(name, widget, zone, params); };
     actions_["EuConCycleTrackAutoMode"] =           [](string name, Widget* widget, Zone* zone, vector<string> params) { return EuConCycleTrackAutoMode(name, widget, zone, params); };
     actions_["GlobalAutoMode"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return GlobalAutoMode(name, widget, zone, params); };
+    actions_["FXNameDisplay"] =                     [](string name, Widget* widget, Zone* zone, vector<string> params) { return FXNameDisplay(name, widget, zone, params); };
+    actions_["FocusedFXParam"] =                    [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParam(name, widget, zone, params); };
+    actions_["FocusedFXParamNameDisplay"] =         [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParamNameDisplay(name, widget, zone, params); };
+    actions_["FocusedFXParamValueDisplay"] =        [](string name, Widget* widget, Zone* zone, vector<string> params) { return FocusedFXParamValueDisplay(name, widget, zone, params); };
+}
+void Manager::InitActionsWithIndexDictionary()
+{
+    actionsWithIndex_["FXParam"] =                  [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return FXParam(name, widget, zone, params, index); };
+    actionsWithIndex_["FXParamRelative"] =          [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return FXParamRelative(name, widget, zone, params, index); };
+    actionsWithIndex_["FXParamNameDisplay"] =       [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return FXParamNameDisplay(name, widget, zone, params, index); };
+    actionsWithIndex_["FXParamValueDisplay"] =      [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return FXParamValueDisplay(name, widget, zone, params, index); };
+    actionsWithIndex_["FXGainReductionMeter"] =     [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return FXGainReductionMeter(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendVolume"] =          [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendVolume(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendVolumeDB"] =        [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendVolumeDB(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendPan"] =             [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendPan(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendMute"] =            [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendMute(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendInvertPolarity"] =  [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendInvertPolarity(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendPrePost"] =         [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendPrePost(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendNameDisplay"] =     [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendNameDisplay(name, widget, zone, params, index); };
+    actionsWithIndex_["TrackSendVolumeDisplay"] =   [](string name, Widget* widget, Zone* zone, vector<string> params, int index) { return TrackSendVolumeDisplay(name, widget, zone, params, index); };
 }
 
 void Manager::InitActionDictionaryOld()
@@ -1655,6 +1653,11 @@ Page* Action::GetPage()
 ControlSurface* Action::GetSurface()
 {
     return widget_->GetSurface();
+}
+
+MediaTrack* Action::GetTrack()
+{
+    return zone_->GetNavigator()->GetTrack();
 }
 
 int Action::GetSlotIndex()
