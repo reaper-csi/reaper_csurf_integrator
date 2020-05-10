@@ -325,6 +325,8 @@ protected:
     bool shouldUseDisplayStyle_ = false;
     int displayStyle_ = 0;
     
+    bool ignoreRelease_ = true;
+    
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     
@@ -347,8 +349,8 @@ public:
     
     Page* GetPage();
     ControlSurface* GetSurface();
-    Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
+    MediaTrack* GetTrack();
     
     virtual string GetDisplayName() { return ""; }
     string GetName() { return name_; }
@@ -368,6 +370,11 @@ public:
     virtual void DoRelativeAction(int accelerationIndex, double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
     
+    void ClearWidget()
+    {
+        widget_->Clear();
+    }
+    
     void PerformDeferredActions()
     {
         if(deferredSender_ != nullptr && delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
@@ -385,7 +392,7 @@ public:
     virtual void RequestUpdate()
     {
         if(supportsRGB_)
-            GetWidget()->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+            widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
     
     void SetCurrentRGB(rgb_color newColor)
@@ -438,7 +445,7 @@ public:
         }
         else if(supportsTrackColor_)
         {
-            if(MediaTrack* track = GetWidget()->GetTrack())
+            if(MediaTrack* track = GetTrack())
             {
                 unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
 
@@ -470,7 +477,7 @@ public:
         }
         else if(supportsTrackColor_)
         {
-            if(MediaTrack* track = GetWidget()->GetTrack())
+            if(MediaTrack* track = GetTrack())
             {
                 unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
                 
@@ -489,7 +496,7 @@ public:
         
         if(supportsTrackColor_)
         {
-            if(MediaTrack* track = GetWidget()->GetTrack())
+            if(MediaTrack* track = GetTrack())
             {
                 unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
                 
@@ -511,7 +518,7 @@ public:
     NoAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     virtual ~NoAction() {}
     
-    virtual void RequestUpdate() {  GetWidget()->Clear(); }
+    virtual void RequestUpdate() {  ClearWidget(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2082,7 +2089,10 @@ class Manager
 private:
     CSurfIntegrator* const CSurfIntegrator_;
     map<string, function<Action*(string name, Widget* widget, Zone* zone, vector<string>)>> actionsOld_;
+    
     map<string, function<Action(string name, Widget* widget, Zone* zone, vector<string>)>> actions_;
+    map<string, function<Action(string name, Widget* widget, Zone* zone, vector<string>, int slotIndex)>> actionsWithIndex_;
+
     vector <Page*> pages_;
     
     map<string, map<string, int>> fxParamIndices_;
@@ -2104,6 +2114,7 @@ private:
     
     void InitActionDictionaryOld();
     void InitActionDictionary();
+    void InitActionsWithIndexDictionary();
 
     double GetPrivateProfileDouble(string key)
     {
@@ -2197,10 +2208,18 @@ public:
             return nullptr;
     }
     
-    Action GetAction(Widget* widget, Zone* zone, vector<string> params)
+    Action GetAction(Widget* widget, Zone* zone, string actionName, vector<string> params)
     {
-        if(actions_.count(params[0]) > 0)
-            return actions_[params[0]](params[0], widget, zone, params);
+        if(actions_.count(actionName) > 0)
+            return actions_[actionName](actionName, widget, zone, params);
+        else
+            return actions_["NoAction"]("NoAction", widget, zone, params);;
+    }
+    
+    Action GetActionWithIndex(Widget* widget, Zone* zone, string actionName, vector<string> params, int index)
+    {
+        if(actionsWithIndex_.count(actionName) > 0)
+            return actionsWithIndex_[actionName](actionName, widget, zone, params, index);
         else
             return actions_["NoAction"]("NoAction", widget, zone, params);;
     }
@@ -2208,6 +2227,16 @@ public:
     bool IsActionAvailable(string actionName)
     {
         if(actionsOld_.count(actionName) > 0)
+            return true;
+        else if(actions_.count(actionName) > 0)
+            return true;
+        else
+            return false;
+    }
+    
+    bool IsActionWithIndexAvailable(string actionName)
+    {
+        if(actionsWithIndex_.count(actionName) > 0)
             return true;
         else
             return false;

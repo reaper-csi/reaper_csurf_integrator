@@ -35,7 +35,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        if(MediaTrack* track = GetWidget()->GetTrack())
+        if(MediaTrack* track = GetTrack())
             GetPage()->GetTrackNavigationManager()->TogglePin(track);
     }
 };
