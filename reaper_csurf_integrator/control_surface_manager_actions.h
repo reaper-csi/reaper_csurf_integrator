@@ -348,7 +348,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        TheManager->GoPage(param_);
+        TheManager->GoToPage(param_);
     }
 };
 

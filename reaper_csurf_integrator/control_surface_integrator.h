@@ -55,7 +55,6 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-const string FXParam = "FXParam";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
@@ -534,9 +533,7 @@ private:
 
     map<string, vector<string>> widgets_;
     
-    
-    
-    Navigator* const navigator_= nullptr; // TBD -- move this -- it will be om a per Action basis
+    Navigator* const navigator_= nullptr;
 
     
     
@@ -2084,7 +2081,8 @@ class Manager
 {
 private:
     CSurfIntegrator* const CSurfIntegrator_;
-    map<string, function<Action*(string name, Widget* widget, Zone* zone, vector<string>)>> actions_;
+    map<string, function<Action*(string name, Widget* widget, Zone* zone, vector<string>)>> actionsOld_;
+    map<string, function<Action(string name, Widget* widget, Zone* zone, vector<string>)>> actions_;
     vector <Page*> pages_;
     
     map<string, map<string, int>> fxParamIndices_;
@@ -2104,6 +2102,7 @@ private:
     int *measOffsPtr_ = nullptr;
     double *timeOffsPtr_ = nullptr;
     
+    void InitActionDictionaryOld();
     void InitActionDictionary();
 
     double GetPrivateProfileDouble(string key)
@@ -2120,7 +2119,7 @@ public:
     ~Manager() {};
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
-        InitActionDictionary();
+        InitActionDictionaryOld();
         
         int size = 0;
         int index = projectconfig_var_getoffs("projtimemode", &size);
@@ -2176,7 +2175,7 @@ public:
     {
         vector<string> actionNames;
         
-        for(auto [key, value] : actions_)
+        for(auto [key, value] : actionsOld_)
             actionNames.push_back(regex_replace(key, regex("[\"]"), ""));
         
         return actionNames;
@@ -2190,17 +2189,25 @@ public:
             return nullptr;
     }
     
-    Action* GetAction(Widget* widget, Zone* zone, vector<string> params)
+    Action* GetActionOld(Widget* widget, Zone* zone, string actionName, vector<string> params)
+    {
+        if(actionsOld_.count(actionName) > 0)
+            return actionsOld_[actionName](actionName, widget, zone, params);
+        else
+            return nullptr;
+    }
+    
+    Action GetAction(Widget* widget, Zone* zone, vector<string> params)
     {
         if(actions_.count(params[0]) > 0)
             return actions_[params[0]](params[0], widget, zone, params);
         else
-            return nullptr;
+            return actions_["NoAction"]("NoAction", widget, zone, params);;
     }
-
+    
     bool IsActionAvailable(string actionName)
     {
-        if(actions_.count(actionName) > 0)
+        if(actionsOld_.count(actionName) > 0)
             return true;
         else
             return false;
@@ -2269,7 +2276,7 @@ public:
         }
     }
     
-    void GoPage(string pageName)
+    void GoToPage(string pageName)
     {
         for(int i = 0; i < pages_.size(); i++)
         {
