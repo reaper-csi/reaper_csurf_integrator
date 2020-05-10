@@ -18,8 +18,8 @@ protected:
     
     ActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
-        if(params.size() > 1)
-            param_= atol(params[1].c_str());
+        if(params.size() > 0)
+            param_= atol(params[0].c_str());
     }
     
 public:
@@ -43,8 +43,8 @@ protected:
     
     ActionWithStringParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
-        if(params.size() > 1)
-            param_ = params[1];
+        if(params.size() > 0)
+            param_ = params[0];
     }
     
 public:
@@ -65,9 +65,9 @@ private:
 public:
     ReaperAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
     {
-        if(params.size() > 1)
+        if(params.size() > 0)
         {
-            commandStr_ = params[1];
+            commandStr_ = params[0];
             
             commandId_ =  atol(commandStr_.c_str());
             
@@ -102,12 +102,10 @@ public:
 class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    Navigator* navigator_ = nullptr;
-    
 protected:
     TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
     
+    Navigator* navigator_ = nullptr;
     TrackAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator) : Action(name, widget, zone, params), navigator_(navigator) {}
 
 public:
@@ -131,17 +129,30 @@ class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    int sendIndex_ = 0;
     int paramIndex_ = 0;
     bool shouldUseLocalIndex_ = false;
     
     TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
-        if(params.size() > 1)
+        if(params.size() > 0)
         {
-            if(isdigit(params[1][0]))
+            if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
             {
                 shouldUseLocalIndex_ = true;
-                paramIndex_ = atol(params[1].c_str());
+                paramIndex_ = atol(params[0].c_str());
+            }
+        }
+    }
+    
+    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator) : TrackAction(name, widget, zone, params, navigator)
+    {
+        if(params.size() > 0)
+        {
+            if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
+            {
+                shouldUseLocalIndex_ = true;
+                paramIndex_ = atol(params[0].c_str());
             }
         }
     }
@@ -173,8 +184,8 @@ protected:
 
     TrackActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
-        if(params.size() > 1)
-            param_= atol(params[1].c_str());
+        if(params.size() > 0)
+            param_= atol(params[0].c_str());
     }
     
 public:
@@ -195,21 +206,37 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    int fxIndex_ = 0;
     int fxParamIndex_ = 0;
     string fxParamDisplayName_ = "";
 
     FXAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
+        if(params.size() > 0)
+            fxParamIndex_ = atol(params[0].c_str());
+        
         if(params.size() > 1)
-            fxParamIndex_ = atol(params[1].c_str());
+            fxParamDisplayName_ = params[1];
         
-        if(params.size() > 2)
-            fxParamDisplayName_ = params[2];
-        
-        if(params.size() > 3 && params[3] != "[" && params[3] != "{")
+        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
         {
             shouldUseDisplayStyle_ = true;
-            displayStyle_ = atol(params[3].c_str());
+            displayStyle_ = atol(params[2].c_str());
+        }
+    }
+    
+    FXAction(string name, Widget* widget, Zone* zone, vector<string> params, Navigator* navigator, int fxIndex) : TrackAction(name, widget, zone, params, navigator), fxIndex_(fxIndex)
+    {
+        if(params.size() > 0)
+            fxParamIndex_ = atol(params[0].c_str());
+        
+        if(params.size() > 1)
+            fxParamDisplayName_ = params[1];
+        
+        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
+        {
+            shouldUseDisplayStyle_ = true;
+            displayStyle_ = atol(params[2].c_str());
         }
     }
     
