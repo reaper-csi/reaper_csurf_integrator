@@ -522,6 +522,45 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct Wzat  // Widget Zone Action Template, that's what :)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string widgetName;
+    string actionNmae;
+    
+    bool isModifier;
+    bool isPressRelease;
+    bool isTrackTouch;
+    bool isTrackRotaryTouch;
+    bool isInverted;
+    bool shouldToggle;
+    bool isDelayed;
+    double delayAmount;
+
+    vector<string> params;
+
+    Wzat(string widget, string action, vector<string> prams, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionNmae(action), params(prams), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ZoneTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string navigator = "";
+    string name = "";
+    string alias = "";
+    string sourceFilePath = "";
+    vector<string> companionZoneTemplates;
+    vector<string> includedZoneTemplates;
+    vector<Wzat> zoneMembers;
+
+    ZoneTemplate() = default;
+    
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> companionZones, vector<string> includedZones, vector<Wzat> wzats)
+        : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), companionZoneTemplates(companionZones), includedZoneTemplates(includedZones), zoneMembers(wzats) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -553,7 +592,7 @@ private:
 
     
 public:
-    Zone(Navigator* navigator, ControlSurface* surface, int channelNum, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
+    Zone(Navigator* navigator, ControlSurface* surface, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
 
     virtual ~Zone() {}
     
@@ -994,14 +1033,21 @@ protected:
     FXActivationManager* const fxActivationManager_;
     SendsActivationManager* const sendsActivationManager_ = nullptr;
 
-    map<string, Zone*> zones_;
-    map<string, vector<Zone*>> zonesInZoneFile_;
-    bool useZoneLink_ = false;
-
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
     
+    bool useZoneLink_ = false;
+
     void InitZones(string zoneFolder);
     map<string, vector<string>> zoneFileLines_;
+    map<string, ZoneTemplate> zoneTemplates_;
+    
+    
+
+    
+    
+    map<string, Zone*> zones_;
+    map<string, vector<Zone*>> zonesInZoneFile_;
+    
 
     virtual void InitHardwiredWidgets()
     {
@@ -1076,6 +1122,11 @@ public:
         else
             return "";
             //return page_->GetZoneAlias(zoneName);
+    }
+    
+    void AddZoneTemplate(ZoneTemplate zoneTemplate)
+    {
+        zoneTemplates_[zoneTemplate.name] = zoneTemplate;
     }
     
     void AddZone(Zone* zone)
