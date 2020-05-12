@@ -90,7 +90,7 @@ class Midi_ControlSurface;
 class OSC_ControlSurface;
 class EuCon_ControlSurface;
 class Zone;
-class Action;
+class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +103,7 @@ protected:
     Page* const page_ = nullptr;
 
 public:
+    Navigator() = default;
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
@@ -188,111 +189,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Widget
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* const surface_;
-    string const name_;
-    vector<FeedbackProcessor*> feedbackProcessors_;
-    bool isModifier_ = false;
-    
-    bool isFaderTouched_ = false;
-    bool isRotaryTouched_ = false;
-
-    Navigator* const defaultNavigator_;
-    
-    
-    Zone* activeZone_ = nullptr;
-    map<string, Zone*> zonesAvailable_;
-    
-    map<Zone*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
-    map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
-    map<Zone*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
-    
-    
-    
-    
-    
-    // modifers->Action
-    map<string, vector<Action>> defaultActions_;
-    map<string, vector<Action>> actions_;
-
-    
-    
-    
-    
-
-public:
-    Widget(ControlSurface* surface, string name);
-    virtual ~Widget() {};
-    
-    ControlSurface* GetSurface() { return surface_; }
-    string GetName() { return name_; }
-    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
-    void AddAction(Zone* zone, string modifiers, Action* action);
-    void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
-    void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
-    void SetIsModifier() { isModifier_ = true; }
-    virtual void SilentSetValue(string displayText);
-    
-    bool GetIsFaderTouched() { return isFaderTouched_;  }
-    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
-    
-    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
-    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
-
-    void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
-    {
-        feedbackProcessors_.push_back(feedbackProcessor);
-    }
-
-    void GoZone(string zoneName)
-    {
-        if(zonesAvailable_.count(zoneName) > 0)
-            activeZone_ = zonesAvailable_[zoneName];
-    }
-    
-    void ActivateNoActionForZone(string zoneName)
-    {
-        if(zonesAvailable_.count(zoneName) > 0 && zonesAvailable_.count("NoAction") > 0)
-        {
-            activeZone_ = zonesAvailable_["NoAction"];
-            
-            Clear();
-        }
-    }
-    
-    void Deactivate()
-    {
-        if(zonesAvailable_.count("Home") > 0)
-            activeZone_ = zonesAvailable_["Home"];
-        else
-        {
-            activeZone_ = nullptr;
-            ForceClear();
-        }
-    }
-    
-    void Clear();
-    void ForceClear();
-
-    MediaTrack* GetTrack();
-    Navigator* GetNavigator();
-    int GetSlotIndex();
-    int GetParamIndex();
-    void RequestUpdate();
-    void DoAction(double value);
-    void DoRelativeAction(double delta);
-    void DoRelativeAction(int accelerationIndex, double delta);
-    void UpdateValue(double value);
-    void UpdateValue(int mode, double value);
-    void UpdateValue(string value);
-    void UpdateRGBValue(int r, int g, int b);
-    void ClearCache();
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -307,6 +203,7 @@ private:
     bool supportsTrackColor_ = false;
     
 protected:
+    Action() = default;
     Action(Widget* widget, vector<string> params);
     Action(Widget* widget, vector<string> params, Navigator* navigator);
     Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex);
@@ -375,11 +272,11 @@ public:
     virtual void DoRelativeAction(double value, Widget* sender);
     virtual void DoRelativeAction(int accelerationIndex, double value, Widget* sender);
     virtual double GetCurrentValue() { return 0.0; }
-    
-    void ClearWidget()
-    {
-        widget_->Clear();
-    }
+    virtual void RequestUpdate();
+    void ClearWidget();
+    void UpdateWidgetValue(double value);
+    void UpdateWidgetValue(int param, double value);
+    void UpdateWidgetValue(string value);
     
     void PerformDeferredActions()
     {
@@ -393,12 +290,6 @@ public:
             deferredValue_ = 0.0;
             deferredSender_ = nullptr;
         }
-    }
-    
-    virtual void RequestUpdate()
-    {
-        if(supportsRGB_)
-            widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
     }
     
     void SetCurrentRGB(rgb_color newColor)
@@ -433,87 +324,6 @@ public:
             steppedValuesIndex_ = index;
         }
     }
-    
-    void UpdateWidgetValue(double value)
-    {
-        value = isInverted_ == false ? value : 1.0 - value;
-     
-        SetSteppedValueIndex(value);
-        
-        lastValue_ = value;
-       
-        widget_->UpdateValue(value);
-        
-        if(supportsRGB_)
-        {
-            currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-        }
-        else if(supportsTrackColor_)
-        {
-            if(MediaTrack* track = GetTrack())
-            {
-                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-
-                int r = (*rgb_colour >> 0) & 0xff;
-                int g = (*rgb_colour >> 8) & 0xff;
-                int b = (*rgb_colour >> 16) & 0xff;
-                
-                widget_->UpdateRGBValue(r, g, b);
-            }
-        }
-    }
-    
-    void UpdateWidgetValue(int param, double value)
-    {
-        value = isInverted_ == false ? value : 1.0 - value;
-        
-        SetSteppedValueIndex(value);
-        
-        lastValue_ = value;
-
-        widget_->UpdateValue(param, value);
-        
-        currentRGBIndex_ = value == 0 ? 0 : 1;
-        
-        if(supportsRGB_)
-        {
-            currentRGBIndex_ = value == 0 ? 0 : 1;
-            widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-        }
-        else if(supportsTrackColor_)
-        {
-            if(MediaTrack* track = GetTrack())
-            {
-                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-                
-                int r = (*rgb_colour >> 0) & 0xff;
-                int g = (*rgb_colour >> 8) & 0xff;
-                int b = (*rgb_colour >> 16) & 0xff;
-                
-                widget_->UpdateRGBValue(r, g, b);
-            }
-        }
-    }
-    
-    void UpdateWidgetValue(string value)
-    {
-        widget_->UpdateValue(value);
-        
-        if(supportsTrackColor_)
-        {
-            if(MediaTrack* track = GetTrack())
-            {
-                unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-                
-                int r = (*rgb_colour >> 0) & 0xff;
-                int g = (*rgb_colour >> 8) & 0xff;
-                int b = (*rgb_colour >> 16) & 0xff;
-                
-                widget_->UpdateRGBValue(r, g, b);
-            }
-        }
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -525,6 +335,127 @@ public:
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() {  ClearWidget(); }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Widget
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    ControlSurface* const surface_;
+    string const name_;
+    vector<FeedbackProcessor*> feedbackProcessors_;
+    bool isModifier_ = false;
+    
+    bool isFaderTouched_ = false;
+    bool isRotaryTouched_ = false;
+    
+    Navigator* const defaultNavigator_;
+    
+    
+    Zone* activeZone_ = nullptr;
+    map<string, Zone*> zonesAvailable_;
+    
+    map<Zone*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
+    map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
+    map<Zone*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
+    
+    
+    
+    
+    
+    // modifers->Action
+    map<string, vector<Action>> actions_;
+    map<string, vector<Action>> defaultActions_;
+
+    
+    
+public:
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), defaultNavigator_(new Navigator())
+    {
+        defaultActions_[""].push_back(NoAction(this, {}));
+    }
+    virtual ~Widget() {};
+    
+    ControlSurface* GetSurface() { return surface_; }
+    string GetName() { return name_; }
+    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
+    void AddAction(Zone* zone, string modifiers, Action* action);
+    void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
+    void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
+    void SetIsModifier() { isModifier_ = true; }
+    virtual void SilentSetValue(string displayText);
+    
+    bool GetIsFaderTouched() { return isFaderTouched_;  }
+    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
+    
+    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
+    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
+    
+    void SetActions(string modifiers, vector<Action> actions)
+    {
+        actions_[modifiers].clear();
+        
+        for(auto action : actions)
+            actions_[modifiers].push_back(action);
+    }
+    
+    void SetDefaultActions(string modifiers, vector<Action> actions)
+    {
+        defaultActions_[modifiers].clear();
+        
+        for(auto action : actions)
+            defaultActions_[modifiers].push_back(action);
+    }
+    
+    void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
+    {
+        feedbackProcessors_.push_back(feedbackProcessor);
+    }
+    
+    void GoZone(string zoneName)
+    {
+        if(zonesAvailable_.count(zoneName) > 0)
+            activeZone_ = zonesAvailable_[zoneName];
+    }
+    
+    void ActivateNoActionForZone(string zoneName)
+    {
+        if(zonesAvailable_.count(zoneName) > 0 && zonesAvailable_.count("NoAction") > 0)
+        {
+            activeZone_ = zonesAvailable_["NoAction"];
+            
+            Clear();
+        }
+    }
+    
+    void Deactivate()
+    {
+        if(zonesAvailable_.count("Home") > 0)
+            activeZone_ = zonesAvailable_["Home"];
+        else
+        {
+            activeZone_ = nullptr;
+            ForceClear();
+        }
+    }
+    
+    void Clear();
+    void ForceClear();
+    
+    MediaTrack* GetTrack();
+    Navigator* GetNavigator();
+    int GetSlotIndex();
+    int GetParamIndex();
+    void RequestUpdate();
+    void DoAction(double value);
+    void DoRelativeAction(double delta);
+    void DoRelativeAction(int accelerationIndex, double delta);
+    void UpdateValue(double value);
+    void UpdateValue(int mode, double value);
+    void UpdateValue(string value);
+    void UpdateRGBValue(int r, int g, int b);
+    void ClearCache();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
