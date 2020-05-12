@@ -61,7 +61,7 @@ protected:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
             {
                 double min = 0.0;
                 double max = 0.0;
@@ -82,7 +82,7 @@ public:
         int fxParamNum = 0;
 
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
                 DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
     }
 };
@@ -581,7 +581,7 @@ public:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
             {
                 char fxParamName[128];
                 DAW::TrackFX_GetParamName(track, fxSlotNum, fxParamNum, fxParamName, sizeof(fxParamName));
@@ -608,7 +608,7 @@ public:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
             {
                 char fxParamValue[128];
                 DAW::TrackFX_GetFormattedParamValue(track, fxSlotNum, fxParamNum, fxParamValue, sizeof(fxParamValue));
@@ -695,7 +695,7 @@ protected:
 
         if(GetSurface()->GetIsEuConFXAreaFocused())
         {
-            if(track == widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+            if(track == GetTrackNavigationManager()->GetSelectedTrack())
                 DAW::GetTrackName(track, buf, sizeof(buf));
             else
                 buf[0] = 0;
@@ -934,7 +934,7 @@ public:
         if(value == 0.0) return; // ignore button releases
 
         if(MediaTrack* track = GetTrack())
-            widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->ToggleVCASpill(track);
+            GetTrackNavigationManager()->ToggleVCASpill(track);
     }
 };
 
@@ -1012,9 +1012,9 @@ public:
         int trackIndex = 0;
         
        
-        for(int i = 1; i <= GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
+        for(int i = 1; i <= GetTrackNavigationManager()->GetNumTracks(); i++)
         {
-            MediaTrack* currentTrack = GetPage()->GetTrackNavigationManager()->GetTrackFromId(i);
+            MediaTrack* currentTrack = GetTrackNavigationManager()->GetTrackFromId(i);
            
             if(currentTrack == nullptr)
                 continue;
@@ -1037,7 +1037,7 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = GetPage()->GetTrackNavigationManager()->GetTrackFromId(i);
+            MediaTrack* currentTrack = GetTrackNavigationManager()->GetTrackFromId(i);
             
             if(currentTrack == nullptr)
                 continue;
@@ -1045,7 +1045,7 @@ public:
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
         }
         
-        MediaTrack* lowestTrack = GetPage()->GetTrackNavigationManager()->GetTrackFromId(lowerBound);
+        MediaTrack* lowestTrack = GetTrackNavigationManager()->GetTrackFromId(lowerBound);
         
         if(lowestTrack != nullptr)
             GetPage()->OnTrackSelectionBySurface(lowestTrack);
@@ -1187,7 +1187,7 @@ public:
 
     void RequestUpdate() override
     {
-        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
+        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
         {
             if(param_ == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
                 UpdateWidgetValue(1.0);
@@ -1216,7 +1216,7 @@ private:
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
+        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
             if(track == selectedTrack)
                 SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
         
@@ -1235,7 +1235,7 @@ public:
     CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : widget_->GetSurface()->GetWidgets())
+            for(auto widget : GetSurface()->GetWidgets())
                 if(widget->GetName() == params[1])
                 {
                     displayWidget_ = widget;
@@ -1289,7 +1289,7 @@ private:
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
+        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
             if(track == selectedTrack)
                 SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
         
@@ -1308,7 +1308,7 @@ public:
     EuConCycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : widget_->GetSurface()->GetWidgets())
+            for(auto widget : GetSurface()->GetWidgets())
                 if(widget->GetName() == params[1])
                 {
                     displayWidget_ = widget;
@@ -1369,7 +1369,7 @@ public:
     
     void RequestUpdate() override
     {
-        widget_->GetSurface()->UpdateTimeDisplay();
+        GetSurface()->UpdateTimeDisplay();
     }
 };
 
