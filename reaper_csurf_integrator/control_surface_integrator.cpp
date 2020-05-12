@@ -1509,11 +1509,6 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), defaultNavigator_(new Navigator(surface_->GetPage()))
-{
-    
-}
-
 void Widget::AddAction(Zone* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
@@ -1810,6 +1805,98 @@ MediaTrack* Action::GetTrack()
 int Action::GetSlotIndex()
 {
     return widget_->GetSlotIndex();
+}
+
+void Action::RequestUpdate()
+{
+    if(supportsRGB_)
+        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+}
+
+void Action::ClearWidget()
+{
+    widget_->Clear();
+}
+
+void Action::UpdateWidgetValue(double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(value);
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void Action::UpdateWidgetValue(int param, double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(param, value);
+    
+    currentRGBIndex_ = value == 0 ? 0 : 1;
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void Action::UpdateWidgetValue(string value)
+{
+    widget_->UpdateValue(value);
+    
+    if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
 }
 
 void Action::DoAction(double value, Widget* sender)
