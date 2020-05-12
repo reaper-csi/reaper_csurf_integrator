@@ -36,7 +36,7 @@ public:
         if(value == 0.0) return; // ignore button releases
 
         if(MediaTrack* track = GetTrack())
-            GetPage()->GetTrackNavigationManager()->TogglePin(track);
+            GetTrackNavigationManager()->TogglePin(track);
     }
 };
 
@@ -212,8 +212,8 @@ public:
         {
             int trackIndex = 0;
             
-            for(int i = 0; i <= GetPage()->GetTrackNavigationManager()->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(GetPage()->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
+            for(int i = 0; i <= GetTrackNavigationManager()->GetNumTracks(); i++)
+                if(DAW::GetMediaTrackInfo_Value(GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
                 {
                     trackIndex = i;
                     break;
@@ -224,10 +224,10 @@ public:
             if(trackIndex < 0)
                 trackIndex = 0;
             
-            if(trackIndex > GetPage()->GetTrackNavigationManager()->GetNumTracks())
-                trackIndex = GetPage()->GetTrackNavigationManager()->GetNumTracks();
+            if(trackIndex > GetTrackNavigationManager()->GetNumTracks())
+                trackIndex = GetTrackNavigationManager()->GetNumTracks();
             
-            DAW::SetOnlyTrackSelected(GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
+            DAW::SetOnlyTrackSelected(GetTrackNavigationManager()->GetTrackFromId(trackIndex));
         }
     }
 };
@@ -261,14 +261,14 @@ public:
 
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetPage()->GetTrackNavigationManager()->GetScrollLink());
+        UpdateWidgetValue(GetTrackNavigationManager()->GetScrollLink());
     }
     
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->GetTrackNavigationManager()->ToggleScrollLink(param_);
+        GetTrackNavigationManager()->ToggleScrollLink(param_);
     }
 };
 
@@ -283,7 +283,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        GetPage()->GetTrackNavigationManager()->ForceScrollLink();
+        GetTrackNavigationManager()->ForceScrollLink();
     }
 };
 
@@ -296,14 +296,14 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetPage()->GetTrackNavigationManager()->GetVCAMode());
+        UpdateWidgetValue(GetTrackNavigationManager()->GetVCAMode());
     }
     
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
         
-        GetPage()->GetTrackNavigationManager()->ToggleVCAMode();
+        GetTrackNavigationManager()->ToggleVCAMode();
     }
 };
 

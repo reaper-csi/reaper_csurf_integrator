@@ -349,6 +349,7 @@ public:
     
     Page* GetPage();
     ControlSurface* GetSurface();
+    TrackNavigationManager* GetTrackNavigationManager();
     MediaTrack* GetTrack();
     
     virtual string GetDisplayName() { return ""; }
@@ -1747,7 +1748,6 @@ public:
     
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
-    
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
     void OpenLearnModeWindow();
@@ -1994,8 +1994,6 @@ public:
         for(auto surface : surfaces_)
             surface->OnTrackSelection();
     }
- 
-    MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
     
     void OnFXFocus(MediaTrack *track, int fxIndex)
     {
