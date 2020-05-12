@@ -349,7 +349,6 @@ public:
     
     Page* GetPage();
     ControlSurface* GetSurface();
-    Zone* GetZone() { return zone_; }
     MediaTrack* GetTrack();
     
     virtual string GetDisplayName() { return ""; }
@@ -572,7 +571,7 @@ private:
     vector<Zone*> includedZones_;
     
 
-    // Move to ZoneInstance
+
 
     bool isFaderTouched_ = false;
     bool isRotaryTouched_ = false;

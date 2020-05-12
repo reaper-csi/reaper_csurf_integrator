@@ -695,7 +695,7 @@ protected:
 
         if(GetSurface()->GetIsEuConFXAreaFocused())
         {
-            if(track == zone_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+            if(track == widget_->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
                 DAW::GetTrackName(track, buf, sizeof(buf));
             else
                 buf[0] = 0;
@@ -1235,7 +1235,7 @@ public:
     CycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : zone_->GetSurface()->GetWidgets())
+            for(auto widget : widget_->GetSurface()->GetWidgets())
                 if(widget->GetName() == params[1])
                 {
                     displayWidget_ = widget;
@@ -1308,7 +1308,7 @@ public:
     EuConCycleTrackAutoMode(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
     {
         if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : zone_->GetSurface()->GetWidgets())
+            for(auto widget : widget_->GetSurface()->GetWidgets())
                 if(widget->GetName() == params[1])
                 {
                     displayWidget_ = widget;

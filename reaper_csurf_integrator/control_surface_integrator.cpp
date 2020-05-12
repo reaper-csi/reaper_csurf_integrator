@@ -597,6 +597,12 @@ static void ProcessZoneFileOld(string filePath, ControlSurface* surface, vector<
 
 
 
+
+
+
+
+
+
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
     vector<string> companionZones;
@@ -705,13 +711,6 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
         DAW::ShowConsoleMsg(buffer);
     }
 }
-
-
-
-
-
-
-
 
 void SetRGB(vector<string> params, bool &supportsRGB, bool &supportsTrackColor, vector<rgb_color> &RGBValues)
 {
