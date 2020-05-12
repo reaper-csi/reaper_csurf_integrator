@@ -16,7 +16,7 @@ class ActionWithIntParam : public Action
 protected:
     int param_ = 0;
     
-    ActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
+    ActionWithIntParam(string name, Widget* widget, vector<string> params) : Action(name, widget, params)
     {
         if(params.size() > 0)
             param_= atol(params[0].c_str());
@@ -41,7 +41,7 @@ class ActionWithStringParam : public Action
 protected:
     string param_ = "";
     
-    ActionWithStringParam(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
+    ActionWithStringParam(string name, Widget* widget, vector<string> params) : Action(name, widget, params)
     {
         if(params.size() > 0)
             param_ = params[0];
@@ -63,7 +63,7 @@ private:
     string commandStr_ = "";
     
 public:
-    ReaperAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params)
+    ReaperAction(string name, Widget* widget, vector<string> params) : Action(name, widget, params)
     {
         if(params.size() > 0)
         {
@@ -103,7 +103,7 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackAction(string name, Widget* widget, Zone* zone, vector<string> params) : Action(name, widget, zone, params) {}
+    TrackAction(string name, Widget* widget, vector<string> params) : Action(name, widget, params) {}
     
 public:
     virtual void RequestUpdate() override
@@ -130,7 +130,7 @@ protected:
     int paramIndex_ = 0;
     bool shouldUseLocalIndex_ = false;
     
-    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    TrackSendAction(string name, Widget* widget, vector<string> params) : TrackAction(name, widget, params)
     {
         if(params.size() > 0)
         {
@@ -142,7 +142,7 @@ protected:
         }
     }
     
-    TrackSendAction(string name, Widget* widget, Zone* zone, vector<string> params, int sendIndex) : TrackAction(name, widget, zone, params), sendIndex_(sendIndex)
+    TrackSendAction(string name, Widget* widget, vector<string> params, int sendIndex) : TrackAction(name, widget, params), sendIndex_(sendIndex)
     {
         if(params.size() > 0)
         {
@@ -176,7 +176,7 @@ class TrackActionWithIntParam : public TrackAction
 protected:
     int param_ = 0;
 
-    TrackActionWithIntParam(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    TrackActionWithIntParam(string name, Widget* widget, vector<string> params) : TrackAction(name, widget, params)
     {
         if(params.size() > 0)
             param_= atol(params[0].c_str());
@@ -204,7 +204,7 @@ protected:
     int fxParamIndex_ = 0;
     string fxParamDisplayName_ = "";
 
-    FXAction(string name, Widget* widget, Zone* zone, vector<string> params) : TrackAction(name, widget, zone, params)
+    FXAction(string name, Widget* widget, vector<string> params) : TrackAction(name, widget, params)
     {
         if(params.size() > 0)
             fxParamIndex_ = atol(params[0].c_str());
@@ -219,7 +219,7 @@ protected:
         }
     }
     
-    FXAction(string name, Widget* widget, Zone* zone, vector<string> params, int fxIndex) : TrackAction(name, widget, zone, params), fxIndex_(fxIndex)
+    FXAction(string name, Widget* widget, vector<string> params, int fxIndex) : TrackAction(name, widget, params), fxIndex_(fxIndex)
     {
         if(params.size() > 0)
             fxParamIndex_ = atol(params[0].c_str());
