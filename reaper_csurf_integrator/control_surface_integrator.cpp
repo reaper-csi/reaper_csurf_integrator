@@ -1800,6 +1800,11 @@ ControlSurface* Action::GetSurface()
     return widget_->GetSurface();
 }
 
+TrackNavigationManager* Action::GetTrackNavigationManager()
+{
+    return GetPage()->GetTrackNavigationManager();
+}
+
 MediaTrack* Action::GetTrack()
 {
     return zone_->GetNavigator()->GetTrack();
@@ -2124,7 +2129,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
     
     activeSendZones_.clear();
     
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
@@ -2209,7 +2214,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
     
     activeSelectedTrackFXZones_.clear();
     
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
@@ -2243,7 +2248,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     
     activeSelectedTrackFXMenuFXZones_.clear();
     
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
@@ -2276,7 +2281,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 
 void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
 {
-    MediaTrack* selectedTrack = surface_->GetPage()->GetSelectedTrack();
+    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
