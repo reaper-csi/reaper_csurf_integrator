@@ -1079,183 +1079,183 @@ static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::InitActionDictionary()
 {
-    actions_["NoAction"] =                          [](string name, Widget* widget, vector<string> params) { return NoAction(name, widget, params); };
-    actions_["Reaper"] =                            [](string name, Widget* widget, vector<string> params) { return ReaperAction(name, widget, params); };
-    actions_["TrackVolume"] =                       [](string name, Widget* widget, vector<string> params) { return TrackVolume(name, widget, params); };
-    actions_["SoftTakeover7BitTrackVolume"] =       [](string name, Widget* widget, vector<string> params) { return SoftTakeover7BitTrackVolume(name, widget, params); };
-    actions_["SoftTakeover14BitTrackVolume"] =      [](string name, Widget* widget, vector<string> params) { return SoftTakeover14BitTrackVolume(name, widget, params); };
-    actions_["TrackVolumeDB"] =                     [](string name, Widget* widget, vector<string> params) { return TrackVolumeDB(name, widget, params); };
-    actions_["TrackToggleVCASpill"] =               [](string name, Widget* widget, vector<string> params) { return TrackToggleVCASpill(name, widget, params); };
-    actions_["TrackSelect"] =                       [](string name, Widget* widget, vector<string> params) { return TrackSelect(name, widget, params); };
-    actions_["TrackUniqueSelect"] =                 [](string name, Widget* widget, vector<string> params) { return TrackUniqueSelect(name, widget, params); };
-    actions_["TrackRangeSelect"] =                  [](string name, Widget* widget, vector<string> params) { return TrackRangeSelect(name, widget, params); };
-    actions_["TrackRecordArm"] =                    [](string name, Widget* widget, vector<string> params) { return TrackRecordArm(name, widget, params); };
-    actions_["TrackMute"] =                         [](string name, Widget* widget, vector<string> params) { return TrackMute(name, widget, params); };
-    actions_["TrackSolo"] =                         [](string name, Widget* widget, vector<string> params) { return TrackSolo(name, widget, params); };
-    actions_["TrackTouch"] =                        [](string name, Widget* widget, vector<string> params) { return SetFaderTouch(name, widget, params); };
-    actions_["RotaryTouch"] =                       [](string name, Widget* widget, vector<string> params) { return SetRotaryTouch(name, widget, params); };
-    actions_["TrackPan"] =                          [](string name, Widget* widget, vector<string> params) { return TrackPan(name, widget, params); };
-    actions_["TrackPanPercent"] =                   [](string name, Widget* widget, vector<string> params) { return TrackPanPercent(name, widget, params); };
-    actions_["TrackPanWidth"] =                     [](string name, Widget* widget, vector<string> params) { return TrackPanWidth(name, widget, params); };
-    actions_["TrackPanWidthPercent"] =              [](string name, Widget* widget, vector<string> params) { return TrackPanWidthPercent(name, widget, params); };
-    actions_["TrackPanLPercent"] =                  [](string name, Widget* widget, vector<string> params) { return TrackPanLPercent(name, widget, params); };
-    actions_["TrackPanRPercent"] =                  [](string name, Widget* widget, vector<string> params) { return TrackPanRPercent(name, widget, params); };
-    actions_["FixedTextDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return FixedTextDisplay(name, widget, params); };
-    actions_["FixedRGBColourDisplay"] =             [](string name, Widget* widget, vector<string> params) { return FixedRGBColourDisplay(name, widget, params); };
-    actions_["TrackNameDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return TrackNameDisplay(name, widget, params); };
-    actions_["TrackVolumeDisplay"] =                [](string name, Widget* widget, vector<string> params) { return TrackVolumeDisplay(name, widget, params); };
-    actions_["TrackPanDisplay"] =                   [](string name, Widget* widget, vector<string> params) { return TrackPanDisplay(name, widget, params); };
-    actions_["TrackPanWidthDisplay"] =              [](string name, Widget* widget, vector<string> params) { return TrackPanWidthDisplay(name, widget, params); };
-    actions_["TrackOutputMeter"] =                  [](string name, Widget* widget, vector<string> params) { return TrackOutputMeter(name, widget, params); };
-    actions_["TrackOutputMeterAverageLR"] =         [](string name, Widget* widget, vector<string> params) { return TrackOutputMeterAverageLR(name, widget, params); };
-    actions_["TrackOutputMeterMaxPeakLR"] =         [](string name, Widget* widget, vector<string> params) { return TrackOutputMeterMaxPeakLR(name, widget, params); };
-    actions_["SelectTrackRelative"] =               [](string name, Widget* widget, vector<string> params) { return SelectTrackRelative(name, widget, params); };
-    actions_["TrackAutoMode"] =                     [](string name, Widget* widget, vector<string> params) { return TrackAutoMode(name, widget, params); };
-    actions_["TimeDisplay"] =                       [](string name, Widget* widget, vector<string> params) { return TimeDisplay(name, widget, params); };
-    actions_["EuConTimeDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return EuConTimeDisplay(name, widget, params); };
-    actions_["Rewind"] =                            [](string name, Widget* widget, vector<string> params) { return Rewind(name, widget, params); };
-    actions_["FastForward"] =                       [](string name, Widget* widget, vector<string> params) { return FastForward(name, widget, params); };
-    actions_["Play"] =                              [](string name, Widget* widget, vector<string> params) { return Play(name, widget, params); };
-    actions_["Stop"] =                              [](string name, Widget* widget, vector<string> params) { return Stop(name, widget, params); };
-    actions_["Record"] =                            [](string name, Widget* widget, vector<string> params) { return Record(name, widget, params); };
-    actions_["CycleTimeline"] =                     [](string name, Widget* widget, vector<string> params) { return CycleTimeline(name, widget, params); };
-    actions_["SetShowFXWindows"] =                  [](string name, Widget* widget, vector<string> params) { return SetShowFXWindows(name, widget, params); };
-    actions_["ToggleScrollLink"] =                  [](string name, Widget* widget, vector<string> params) { return ToggleScrollLink(name, widget, params); };
-    actions_["ForceScrollLink"] =                   [](string name, Widget* widget, vector<string> params) { return ForceScrollLink(name, widget, params); };
-    actions_["ToggleVCAMode"] =                     [](string name, Widget* widget, vector<string> params) { return ToggleVCAMode(name, widget, params); };
-    actions_["CycleTimeDisplayModes"] =             [](string name, Widget* widget, vector<string> params) { return CycleTimeDisplayModes(name, widget, params); };
-    actions_["NextPage"] =                          [](string name, Widget* widget, vector<string> params) { return GoNextPage(name, widget, params); };
-    actions_["GoPage"] =                            [](string name, Widget* widget, vector<string> params) { return  GoPage(name, widget, params); };
-    actions_["GoZone"] =                            [](string name, Widget* widget, vector<string> params) { return GoZone(name, widget, params); };
-    actions_["TrackBank"] =                         [](string name, Widget* widget, vector<string> params) { return TrackBank(name, widget, params); };
-    actions_["ClearAllSolo"] =                      [](string name, Widget* widget, vector<string> params) { return ClearAllSolo(name, widget, params); };
-    actions_["Shift"] =                             [](string name, Widget* widget, vector<string> params) { return SetShift(name, widget, params); };
-    actions_["Option"] =                            [](string name, Widget* widget, vector<string> params) { return SetOption(name, widget, params); };
-    actions_["Control"] =                           [](string name, Widget* widget, vector<string> params) { return SetControl(name, widget, params); };
-    actions_["Alt"] =                               [](string name, Widget* widget, vector<string> params) { return SetAlt(name, widget, params); };
-    actions_["TogglePin"] =                         [](string name, Widget* widget, vector<string> params) { return TogglePin(name, widget, params); };
-    actions_["ToggleLearnMode"] =                   [](string name, Widget* widget, vector<string> params) { return ToggleLearnMode(name, widget, params); };
-    actions_["ToggleMapSelectedTrackSends"] =       [](string name, Widget* widget, vector<string> params) { return ToggleMapSelectedTrackSends(name, widget, params); };
-    actions_["MapSelectedTrackSendsToWidgets"] =    [](string name, Widget* widget, vector<string> params) { return MapSelectedTrackSendsToWidgets(name, widget, params); };
-    actions_["ToggleMapSelectedTrackFX"] =          [](string name, Widget* widget, vector<string> params) { return ToggleMapSelectedTrackFX(name, widget, params); };
-    actions_["MapSelectedTrackFXToWidgets"] =       [](string name, Widget* widget, vector<string> params) { return MapSelectedTrackFXToWidgets(name, widget, params); };
-    actions_["ToggleMapSelectedTrackFXMenu"] =      [](string name, Widget* widget, vector<string> params) { return ToggleMapSelectedTrackFXMenu(name, widget, params); };
-    actions_["MapSelectedTrackFXToMenu"] =          [](string name, Widget* widget, vector<string> params) { return MapSelectedTrackFXToMenu(name, widget, params); };
-    actions_["ToggleMapFocusedFX"] =                [](string name, Widget* widget, vector<string> params) { return ToggleMapFocusedFX(name, widget, params); };
-    actions_["MapFocusedFXToWidgets"] =             [](string name, Widget* widget, vector<string> params) { return MapFocusedFXToWidgets(name, widget, params); };
-    actions_["GoFXSlot"] =                          [](string name, Widget* widget, vector<string> params) { return GoFXSlot(name, widget, params); };
-    actions_["CycleTrackAutoMode"] =                [](string name, Widget* widget, vector<string> params) { return CycleTrackAutoMode(name, widget, params); };
-    actions_["EuConCycleTrackAutoMode"] =           [](string name, Widget* widget, vector<string> params) { return EuConCycleTrackAutoMode(name, widget, params); };
-    actions_["GlobalAutoMode"] =                    [](string name, Widget* widget, vector<string> params) { return GlobalAutoMode(name, widget, params); };
-    actions_["FXNameDisplay"] =                     [](string name, Widget* widget, vector<string> params) { return FXNameDisplay(name, widget, params); };
-    actions_["FocusedFXParam"] =                    [](string name, Widget* widget, vector<string> params) { return FocusedFXParam(name, widget, params); };
-    actions_["FocusedFXParamNameDisplay"] =         [](string name, Widget* widget, vector<string> params) { return FocusedFXParamNameDisplay(name, widget, params); };
-    actions_["FocusedFXParamValueDisplay"] =        [](string name, Widget* widget, vector<string> params) { return FocusedFXParamValueDisplay(name, widget, params); };
+    actions_["NoAction"] =                          [](Widget* widget, vector<string> params) { return NoAction(widget, params); };
+    actions_["Reaper"] =                            [](Widget* widget, vector<string> params) { return ReaperAction(widget, params); };
+    actions_["TrackVolume"] =                       [](Widget* widget, vector<string> params) { return TrackVolume(widget, params); };
+    actions_["SoftTakeover7BitTrackVolume"] =       [](Widget* widget, vector<string> params) { return SoftTakeover7BitTrackVolume(widget, params); };
+    actions_["SoftTakeover14BitTrackVolume"] =      [](Widget* widget, vector<string> params) { return SoftTakeover14BitTrackVolume(widget, params); };
+    actions_["TrackVolumeDB"] =                     [](Widget* widget, vector<string> params) { return TrackVolumeDB(widget, params); };
+    actions_["TrackToggleVCASpill"] =               [](Widget* widget, vector<string> params) { return TrackToggleVCASpill(widget, params); };
+    actions_["TrackSelect"] =                       [](Widget* widget, vector<string> params) { return TrackSelect(widget, params); };
+    actions_["TrackUniqueSelect"] =                 [](Widget* widget, vector<string> params) { return TrackUniqueSelect(widget, params); };
+    actions_["TrackRangeSelect"] =                  [](Widget* widget, vector<string> params) { return TrackRangeSelect(widget, params); };
+    actions_["TrackRecordArm"] =                    [](Widget* widget, vector<string> params) { return TrackRecordArm(widget, params); };
+    actions_["TrackMute"] =                         [](Widget* widget, vector<string> params) { return TrackMute(widget, params); };
+    actions_["TrackSolo"] =                         [](Widget* widget, vector<string> params) { return TrackSolo(widget, params); };
+    actions_["TrackTouch"] =                        [](Widget* widget, vector<string> params) { return SetFaderTouch(widget, params); };
+    actions_["RotaryTouch"] =                       [](Widget* widget, vector<string> params) { return SetRotaryTouch(widget, params); };
+    actions_["TrackPan"] =                          [](Widget* widget, vector<string> params) { return TrackPan(widget, params); };
+    actions_["TrackPanPercent"] =                   [](Widget* widget, vector<string> params) { return TrackPanPercent(widget, params); };
+    actions_["TrackPanWidth"] =                     [](Widget* widget, vector<string> params) { return TrackPanWidth(widget, params); };
+    actions_["TrackPanWidthPercent"] =              [](Widget* widget, vector<string> params) { return TrackPanWidthPercent(widget, params); };
+    actions_["TrackPanLPercent"] =                  [](Widget* widget, vector<string> params) { return TrackPanLPercent(widget, params); };
+    actions_["TrackPanRPercent"] =                  [](Widget* widget, vector<string> params) { return TrackPanRPercent(widget, params); };
+    actions_["FixedTextDisplay"] =                  [](Widget* widget, vector<string> params) { return FixedTextDisplay(widget, params); };
+    actions_["FixedRGBColourDisplay"] =             [](Widget* widget, vector<string> params) { return FixedRGBColourDisplay(widget, params); };
+    actions_["TrackNameDisplay"] =                  [](Widget* widget, vector<string> params) { return TrackNameDisplay(widget, params); };
+    actions_["TrackVolumeDisplay"] =                [](Widget* widget, vector<string> params) { return TrackVolumeDisplay(widget, params); };
+    actions_["TrackPanDisplay"] =                   [](Widget* widget, vector<string> params) { return TrackPanDisplay(widget, params); };
+    actions_["TrackPanWidthDisplay"] =              [](Widget* widget, vector<string> params) { return TrackPanWidthDisplay(widget, params); };
+    actions_["TrackOutputMeter"] =                  [](Widget* widget, vector<string> params) { return TrackOutputMeter(widget, params); };
+    actions_["TrackOutputMeterAverageLR"] =         [](Widget* widget, vector<string> params) { return TrackOutputMeterAverageLR(widget, params); };
+    actions_["TrackOutputMeterMaxPeakLR"] =         [](Widget* widget, vector<string> params) { return TrackOutputMeterMaxPeakLR(widget, params); };
+    actions_["SelectTrackRelative"] =               [](Widget* widget, vector<string> params) { return SelectTrackRelative(widget, params); };
+    actions_["TrackAutoMode"] =                     [](Widget* widget, vector<string> params) { return TrackAutoMode(widget, params); };
+    actions_["TimeDisplay"] =                       [](Widget* widget, vector<string> params) { return TimeDisplay(widget, params); };
+    actions_["EuConTimeDisplay"] =                  [](Widget* widget, vector<string> params) { return EuConTimeDisplay(widget, params); };
+    actions_["Rewind"] =                            [](Widget* widget, vector<string> params) { return Rewind(widget, params); };
+    actions_["FastForward"] =                       [](Widget* widget, vector<string> params) { return FastForward(widget, params); };
+    actions_["Play"] =                              [](Widget* widget, vector<string> params) { return Play(widget, params); };
+    actions_["Stop"] =                              [](Widget* widget, vector<string> params) { return Stop(widget, params); };
+    actions_["Record"] =                            [](Widget* widget, vector<string> params) { return Record(widget, params); };
+    actions_["CycleTimeline"] =                     [](Widget* widget, vector<string> params) { return CycleTimeline(widget, params); };
+    actions_["SetShowFXWindows"] =                  [](Widget* widget, vector<string> params) { return SetShowFXWindows(widget, params); };
+    actions_["ToggleScrollLink"] =                  [](Widget* widget, vector<string> params) { return ToggleScrollLink(widget, params); };
+    actions_["ForceScrollLink"] =                   [](Widget* widget, vector<string> params) { return ForceScrollLink(widget, params); };
+    actions_["ToggleVCAMode"] =                     [](Widget* widget, vector<string> params) { return ToggleVCAMode(widget, params); };
+    actions_["CycleTimeDisplayModes"] =             [](Widget* widget, vector<string> params) { return CycleTimeDisplayModes(widget, params); };
+    actions_["NextPage"] =                          [](Widget* widget, vector<string> params) { return GoNextPage(widget, params); };
+    actions_["GoPage"] =                            [](Widget* widget, vector<string> params) { return  GoPage(widget, params); };
+    actions_["GoZone"] =                            [](Widget* widget, vector<string> params) { return GoZone(widget, params); };
+    actions_["TrackBank"] =                         [](Widget* widget, vector<string> params) { return TrackBank(widget, params); };
+    actions_["ClearAllSolo"] =                      [](Widget* widget, vector<string> params) { return ClearAllSolo(widget, params); };
+    actions_["Shift"] =                             [](Widget* widget, vector<string> params) { return SetShift(widget, params); };
+    actions_["Option"] =                            [](Widget* widget, vector<string> params) { return SetOption(widget, params); };
+    actions_["Control"] =                           [](Widget* widget, vector<string> params) { return SetControl(widget, params); };
+    actions_["Alt"] =                               [](Widget* widget, vector<string> params) { return SetAlt(widget, params); };
+    actions_["TogglePin"] =                         [](Widget* widget, vector<string> params) { return TogglePin(widget, params); };
+    actions_["ToggleLearnMode"] =                   [](Widget* widget, vector<string> params) { return ToggleLearnMode(widget, params); };
+    actions_["ToggleMapSelectedTrackSends"] =       [](Widget* widget, vector<string> params) { return ToggleMapSelectedTrackSends(widget, params); };
+    actions_["MapSelectedTrackSendsToWidgets"] =    [](Widget* widget, vector<string> params) { return MapSelectedTrackSendsToWidgets(widget, params); };
+    actions_["ToggleMapSelectedTrackFX"] =          [](Widget* widget, vector<string> params) { return ToggleMapSelectedTrackFX(widget, params); };
+    actions_["MapSelectedTrackFXToWidgets"] =       [](Widget* widget, vector<string> params) { return MapSelectedTrackFXToWidgets(widget, params); };
+    actions_["ToggleMapSelectedTrackFXMenu"] =      [](Widget* widget, vector<string> params) { return ToggleMapSelectedTrackFXMenu(widget, params); };
+    actions_["MapSelectedTrackFXToMenu"] =          [](Widget* widget, vector<string> params) { return MapSelectedTrackFXToMenu(widget, params); };
+    actions_["ToggleMapFocusedFX"] =                [](Widget* widget, vector<string> params) { return ToggleMapFocusedFX(widget, params); };
+    actions_["MapFocusedFXToWidgets"] =             [](Widget* widget, vector<string> params) { return MapFocusedFXToWidgets(widget, params); };
+    actions_["GoFXSlot"] =                          [](Widget* widget, vector<string> params) { return GoFXSlot(widget, params); };
+    actions_["CycleTrackAutoMode"] =                [](Widget* widget, vector<string> params) { return CycleTrackAutoMode(widget, params); };
+    actions_["EuConCycleTrackAutoMode"] =           [](Widget* widget, vector<string> params) { return EuConCycleTrackAutoMode(widget, params); };
+    actions_["GlobalAutoMode"] =                    [](Widget* widget, vector<string> params) { return GlobalAutoMode(widget, params); };
+    actions_["FXNameDisplay"] =                     [](Widget* widget, vector<string> params) { return FXNameDisplay(widget, params); };
+    actions_["FocusedFXParam"] =                    [](Widget* widget, vector<string> params) { return FocusedFXParam(widget, params); };
+    actions_["FocusedFXParamNameDisplay"] =         [](Widget* widget, vector<string> params) { return FocusedFXParamNameDisplay(widget, params); };
+    actions_["FocusedFXParamValueDisplay"] =        [](Widget* widget, vector<string> params) { return FocusedFXParamValueDisplay(widget, params); };
 }
 void Manager::InitActionsWithIndexDictionary()
 {
-    actionsWithIndex_["FXParam"] =                  [](string name, Widget* widget, vector<string> params, int index) { return FXParam(name, widget, params, index); };
-    actionsWithIndex_["FXParamRelative"] =          [](string name, Widget* widget, vector<string> params, int index) { return FXParamRelative(name, widget, params, index); };
-    actionsWithIndex_["FXParamNameDisplay"] =       [](string name, Widget* widget, vector<string> params, int index) { return FXParamNameDisplay(name, widget, params, index); };
-    actionsWithIndex_["FXParamValueDisplay"] =      [](string name, Widget* widget, vector<string> params, int index) { return FXParamValueDisplay(name, widget, params, index); };
-    actionsWithIndex_["FXGainReductionMeter"] =     [](string name, Widget* widget, vector<string> params, int index) { return FXGainReductionMeter(name, widget, params, index); };
-    actionsWithIndex_["TrackSendVolume"] =          [](string name, Widget* widget, vector<string> params, int index) { return TrackSendVolume(name, widget, params, index); };
-    actionsWithIndex_["TrackSendVolumeDB"] =        [](string name, Widget* widget, vector<string> params, int index) { return TrackSendVolumeDB(name, widget, params, index); };
-    actionsWithIndex_["TrackSendPan"] =             [](string name, Widget* widget, vector<string> params, int index) { return TrackSendPan(name, widget, params, index); };
-    actionsWithIndex_["TrackSendMute"] =            [](string name, Widget* widget, vector<string> params, int index) { return TrackSendMute(name, widget, params, index); };
-    actionsWithIndex_["TrackSendInvertPolarity"] =  [](string name, Widget* widget, vector<string> params, int index) { return TrackSendInvertPolarity(name, widget, params, index); };
-    actionsWithIndex_["TrackSendPrePost"] =         [](string name, Widget* widget, vector<string> params, int index) { return TrackSendPrePost(name, widget, params, index); };
-    actionsWithIndex_["TrackSendNameDisplay"] =     [](string name, Widget* widget, vector<string> params, int index) { return TrackSendNameDisplay(name, widget, params, index); };
-    actionsWithIndex_["TrackSendVolumeDisplay"] =   [](string name, Widget* widget, vector<string> params, int index) { return TrackSendVolumeDisplay(name, widget, params, index); };
+    actionsWithIndex_["FXParam"] =                  [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return FXParam(widget, params, navigator, index); };
+    actionsWithIndex_["FXParamRelative"] =          [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return FXParamRelative(widget, params, navigator, index); };
+    actionsWithIndex_["FXParamNameDisplay"] =       [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return FXParamNameDisplay(widget, params, navigator, index); };
+    actionsWithIndex_["FXParamValueDisplay"] =      [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return FXParamValueDisplay(widget, params, navigator, index); };
+    actionsWithIndex_["FXGainReductionMeter"] =     [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return FXGainReductionMeter(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendVolume"] =          [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendVolume(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendVolumeDB"] =        [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendVolumeDB(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendPan"] =             [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendPan(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendMute"] =            [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendMute(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendInvertPolarity"] =  [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendInvertPolarity(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendPrePost"] =         [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendPrePost(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendNameDisplay"] =     [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendNameDisplay(widget, params, navigator, index); };
+    actionsWithIndex_["TrackSendVolumeDisplay"] =   [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return TrackSendVolumeDisplay(widget, params, navigator, index); };
 }
 
 void Manager::InitActionDictionaryOld()
 {
-    actionsOld_["NoAction"] =                          [](string name, Widget* widget, vector<string> params) { return new NoAction(name, widget, params); };
-    actionsOld_["Reaper"] =                            [](string name, Widget* widget, vector<string> params) { return new ReaperAction(name, widget, params); };
-    actionsOld_["FXNameDisplay"] =                     [](string name, Widget* widget, vector<string> params) { return new FXNameDisplay(name, widget, params); };
-    actionsOld_["FXParam"] =                           [](string name, Widget* widget, vector<string> params) { return new FXParam(name, widget, params); };
-    actionsOld_["FXParamRelative"] =                   [](string name, Widget* widget, vector<string> params) { return new FXParamRelative(name, widget, params); };
-    actionsOld_["FocusedFXParam"] =                    [](string name, Widget* widget, vector<string> params) { return new FocusedFXParam(name, widget, params); };
-    actionsOld_["FXParamNameDisplay"] =                [](string name, Widget* widget, vector<string> params) { return new FXParamNameDisplay(name, widget, params); };
-    actionsOld_["FXParamValueDisplay"] =               [](string name, Widget* widget, vector<string> params) { return new FXParamValueDisplay(name, widget, params); };
-    actionsOld_["FocusedFXParamNameDisplay"] =         [](string name, Widget* widget, vector<string> params) { return new FocusedFXParamNameDisplay(name, widget, params); };
-    actionsOld_["FocusedFXParamValueDisplay"] =        [](string name, Widget* widget, vector<string> params) { return new FocusedFXParamValueDisplay(name, widget, params); };
-    actionsOld_["FXGainReductionMeter"] =              [](string name, Widget* widget, vector<string> params) { return new FXGainReductionMeter(name, widget, params); };
-    actionsOld_["TrackVolume"] =                       [](string name, Widget* widget, vector<string> params) { return new TrackVolume(name, widget, params); };
-    actionsOld_["SoftTakeover7BitTrackVolume"] =       [](string name, Widget* widget, vector<string> params) { return new SoftTakeover7BitTrackVolume(name, widget, params); };
-    actionsOld_["SoftTakeover14BitTrackVolume"] =      [](string name, Widget* widget, vector<string> params) { return new SoftTakeover14BitTrackVolume(name, widget, params); };
-    actionsOld_["TrackVolumeDB"] =                     [](string name, Widget* widget, vector<string> params) { return new TrackVolumeDB(name, widget, params); };
-    actionsOld_["TrackSendVolume"] =                   [](string name, Widget* widget, vector<string> params) { return new TrackSendVolume(name, widget, params); };
-    actionsOld_["TrackSendVolumeDB"] =                 [](string name, Widget* widget, vector<string> params) { return new TrackSendVolumeDB(name, widget, params); };
-    actionsOld_["TrackSendPan"] =                      [](string name, Widget* widget, vector<string> params) { return new TrackSendPan(name, widget, params); };
-    actionsOld_["TrackSendMute"] =                     [](string name, Widget* widget, vector<string> params) { return new TrackSendMute(name, widget, params); };
-    actionsOld_["TrackSendInvertPolarity"] =           [](string name, Widget* widget, vector<string> params) { return new TrackSendInvertPolarity(name, widget, params); };
-    actionsOld_["TrackSendPrePost"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackSendPrePost(name, widget, params); };
-    actionsOld_["TrackPan"] =                          [](string name, Widget* widget, vector<string> params) { return new TrackPan(name, widget, params); };
-    actionsOld_["TrackPanPercent"] =                   [](string name, Widget* widget, vector<string> params) { return new TrackPanPercent(name, widget, params); };
-    actionsOld_["TrackPanWidth"] =                     [](string name, Widget* widget, vector<string> params) { return new TrackPanWidth(name, widget, params); };
-    actionsOld_["TrackPanWidthPercent"] =              [](string name, Widget* widget, vector<string> params) { return new TrackPanWidthPercent(name, widget, params); };
-    actionsOld_["TrackPanLPercent"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackPanLPercent(name, widget, params); };
-    actionsOld_["TrackPanRPercent"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackPanRPercent(name, widget, params); };
-    actionsOld_["FixedTextDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return new FixedTextDisplay(name, widget, params); };
-    actionsOld_["FixedRGBColourDisplay"] =             [](string name, Widget* widget, vector<string> params) { return new FixedRGBColourDisplay(name, widget, params); };
-    actionsOld_["TrackNameDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackNameDisplay(name, widget, params); };
-    actionsOld_["TrackVolumeDisplay"] =                [](string name, Widget* widget, vector<string> params) { return new TrackVolumeDisplay(name, widget, params); };
-    actionsOld_["TrackSendNameDisplay"] =              [](string name, Widget* widget, vector<string> params) { return new TrackSendNameDisplay(name, widget, params); };
-    actionsOld_["TrackSendVolumeDisplay"] =            [](string name, Widget* widget, vector<string> params) { return new TrackSendVolumeDisplay(name, widget, params); };
-    actionsOld_["TrackPanDisplay"] =                   [](string name, Widget* widget, vector<string> params) { return new TrackPanDisplay(name, widget, params); };
-    actionsOld_["TrackPanWidthDisplay"] =              [](string name, Widget* widget, vector<string> params) { return new TrackPanWidthDisplay(name, widget, params); };
-    actionsOld_["TimeDisplay"] =                       [](string name, Widget* widget, vector<string> params) { return new TimeDisplay(name, widget, params); };
-    actionsOld_["EuConTimeDisplay"] =                  [](string name, Widget* widget, vector<string> params) { return new EuConTimeDisplay(name, widget, params); };
-    actionsOld_["Rewind"] =                            [](string name, Widget* widget, vector<string> params) { return new Rewind(name, widget, params); };
-    actionsOld_["FastForward"] =                       [](string name, Widget* widget, vector<string> params) { return new FastForward(name, widget, params); };
-    actionsOld_["Play"] =                              [](string name, Widget* widget, vector<string> params) { return new Play(name, widget, params); };
-    actionsOld_["Stop"] =                              [](string name, Widget* widget, vector<string> params) { return new Stop(name, widget, params); };
-    actionsOld_["Record"] =                            [](string name, Widget* widget, vector<string> params) { return new Record(name, widget, params); };
-    actionsOld_["TrackToggleVCASpill"] =               [](string name, Widget* widget, vector<string> params) { return new TrackToggleVCASpill(name, widget, params); };
-    actionsOld_["TrackSelect"] =                       [](string name, Widget* widget, vector<string> params) { return new TrackSelect(name, widget, params); };
-    actionsOld_["TrackUniqueSelect"] =                 [](string name, Widget* widget, vector<string> params) { return new TrackUniqueSelect(name, widget, params); };
-    actionsOld_["TrackRangeSelect"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackRangeSelect(name, widget, params); };
-    actionsOld_["TrackRecordArm"] =                    [](string name, Widget* widget, vector<string> params) { return new TrackRecordArm(name, widget, params); };
-    actionsOld_["TrackMute"] =                         [](string name, Widget* widget, vector<string> params) { return new TrackMute(name, widget, params); };
-    actionsOld_["TrackSolo"] =                         [](string name, Widget* widget, vector<string> params) { return new TrackSolo(name, widget, params); };
-    actionsOld_["TrackTouch"] =                        [](string name, Widget* widget, vector<string> params) { return new SetFaderTouch(name, widget, params); };
-    actionsOld_["RotaryTouch"] =                       [](string name, Widget* widget, vector<string> params) { return new SetRotaryTouch(name, widget, params); };
-    actionsOld_["CycleTimeline"] =                     [](string name, Widget* widget, vector<string> params) { return new CycleTimeline(name, widget, params); };
-    actionsOld_["TrackOutputMeter"] =                  [](string name, Widget* widget, vector<string> params) { return new TrackOutputMeter(name, widget, params); };
-    actionsOld_["TrackOutputMeterAverageLR"] =         [](string name, Widget* widget, vector<string> params) { return new TrackOutputMeterAverageLR(name, widget, params); };
-    actionsOld_["TrackOutputMeterMaxPeakLR"] =         [](string name, Widget* widget, vector<string> params) { return new TrackOutputMeterMaxPeakLR(name, widget, params); };
-    actionsOld_["SetShowFXWindows"] =                  [](string name, Widget* widget, vector<string> params) { return new SetShowFXWindows(name, widget, params); };
-    actionsOld_["ToggleScrollLink"] =                  [](string name, Widget* widget, vector<string> params) { return new ToggleScrollLink(name, widget, params); };
-    actionsOld_["ForceScrollLink"] =                   [](string name, Widget* widget, vector<string> params) { return new ForceScrollLink(name, widget, params); };
-    actionsOld_["ToggleVCAMode"] =                     [](string name, Widget* widget, vector<string> params) { return new ToggleVCAMode(name, widget, params); };
-    actionsOld_["CycleTimeDisplayModes"] =             [](string name, Widget* widget, vector<string> params) { return new CycleTimeDisplayModes(name, widget, params); };
-    actionsOld_["NextPage"] =                          [](string name, Widget* widget, vector<string> params) { return new GoNextPage(name, widget, params); };
-    actionsOld_["GoPage"] =                            [](string name, Widget* widget, vector<string> params) { return new  GoPage(name, widget, params); };
-    actionsOld_["GoZone"] =                            [](string name, Widget* widget, vector<string> params) { return new GoZone(name, widget, params); };
-    actionsOld_["SelectTrackRelative"] =               [](string name, Widget* widget, vector<string> params) { return new SelectTrackRelative(name, widget, params); };
-    actionsOld_["TrackBank"] =                         [](string name, Widget* widget, vector<string> params) { return new TrackBank(name, widget, params); };
-    actionsOld_["ClearAllSolo"] =                      [](string name, Widget* widget, vector<string> params) { return new ClearAllSolo(name, widget, params); };
-    actionsOld_["Shift"] =                             [](string name, Widget* widget, vector<string> params) { return new SetShift(name, widget, params); };
-    actionsOld_["Option"] =                            [](string name, Widget* widget, vector<string> params) { return new SetOption(name, widget, params); };
-    actionsOld_["Control"] =                           [](string name, Widget* widget, vector<string> params) { return new SetControl(name, widget, params); };
-    actionsOld_["Alt"] =                               [](string name, Widget* widget, vector<string> params) { return new SetAlt(name, widget, params); };
-    actionsOld_["TogglePin"] =                         [](string name, Widget* widget, vector<string> params) { return new TogglePin(name, widget, params); };
-    actionsOld_["ToggleLearnMode"] =                   [](string name, Widget* widget, vector<string> params) { return new ToggleLearnMode(name, widget, params); };
-    actionsOld_["ToggleMapSelectedTrackSends"] =       [](string name, Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackSends(name, widget, params); };
-    actionsOld_["MapSelectedTrackSendsToWidgets"] =    [](string name, Widget* widget, vector<string> params) { return new MapSelectedTrackSendsToWidgets(name, widget, params); };
-    actionsOld_["ToggleMapSelectedTrackFX"] =          [](string name, Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFX(name, widget, params); };
-    actionsOld_["MapSelectedTrackFXToWidgets"] =       [](string name, Widget* widget, vector<string> params) { return new MapSelectedTrackFXToWidgets(name, widget, params); };
-    actionsOld_["ToggleMapSelectedTrackFXMenu"] =      [](string name, Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFXMenu(name, widget, params); };
-    actionsOld_["MapSelectedTrackFXToMenu"] =          [](string name, Widget* widget, vector<string> params) { return new MapSelectedTrackFXToMenu(name, widget, params); };
-    actionsOld_["ToggleMapFocusedFX"] =                [](string name, Widget* widget, vector<string> params) { return new ToggleMapFocusedFX(name, widget, params); };
-    actionsOld_["MapFocusedFXToWidgets"] =             [](string name, Widget* widget, vector<string> params) { return new MapFocusedFXToWidgets(name, widget, params); };
-    actionsOld_["GoFXSlot"] =                          [](string name, Widget* widget, vector<string> params) { return new GoFXSlot(name, widget, params); };
-    actionsOld_["TrackAutoMode"] =                     [](string name, Widget* widget, vector<string> params) { return new TrackAutoMode(name, widget, params); };
-    actionsOld_["CycleTrackAutoMode"] =                [](string name, Widget* widget, vector<string> params) { return new CycleTrackAutoMode(name, widget, params); };
-    actionsOld_["EuConCycleTrackAutoMode"] =           [](string name, Widget* widget, vector<string> params) { return new EuConCycleTrackAutoMode(name, widget, params); };
-    actionsOld_["GlobalAutoMode"] =                    [](string name, Widget* widget, vector<string> params) { return new GlobalAutoMode(name, widget, params); };
+    actionsOld_["NoAction"] =                          [](Widget* widget, vector<string> params) { return new NoAction(widget, params); };
+    actionsOld_["Reaper"] =                            [](Widget* widget, vector<string> params) { return new ReaperAction(widget, params); };
+    actionsOld_["FXNameDisplay"] =                     [](Widget* widget, vector<string> params) { return new FXNameDisplay(widget, params); };
+    actionsOld_["FXParam"] =                           [](Widget* widget, vector<string> params) { return new FXParam(widget, params); };
+    actionsOld_["FXParamRelative"] =                   [](Widget* widget, vector<string> params) { return new FXParamRelative(widget, params); };
+    actionsOld_["FocusedFXParam"] =                    [](Widget* widget, vector<string> params) { return new FocusedFXParam(widget, params); };
+    actionsOld_["FXParamNameDisplay"] =                [](Widget* widget, vector<string> params) { return new FXParamNameDisplay(widget, params); };
+    actionsOld_["FXParamValueDisplay"] =               [](Widget* widget, vector<string> params) { return new FXParamValueDisplay(widget, params); };
+    actionsOld_["FocusedFXParamNameDisplay"] =         [](Widget* widget, vector<string> params) { return new FocusedFXParamNameDisplay(widget, params); };
+    actionsOld_["FocusedFXParamValueDisplay"] =        [](Widget* widget, vector<string> params) { return new FocusedFXParamValueDisplay(widget, params); };
+    actionsOld_["FXGainReductionMeter"] =              [](Widget* widget, vector<string> params) { return new FXGainReductionMeter(widget, params); };
+    actionsOld_["TrackVolume"] =                       [](Widget* widget, vector<string> params) { return new TrackVolume(widget, params); };
+    actionsOld_["SoftTakeover7BitTrackVolume"] =       [](Widget* widget, vector<string> params) { return new SoftTakeover7BitTrackVolume(widget, params); };
+    actionsOld_["SoftTakeover14BitTrackVolume"] =      [](Widget* widget, vector<string> params) { return new SoftTakeover14BitTrackVolume(widget, params); };
+    actionsOld_["TrackVolumeDB"] =                     [](Widget* widget, vector<string> params) { return new TrackVolumeDB(widget, params); };
+    actionsOld_["TrackSendVolume"] =                   [](Widget* widget, vector<string> params) { return new TrackSendVolume(widget, params); };
+    actionsOld_["TrackSendVolumeDB"] =                 [](Widget* widget, vector<string> params) { return new TrackSendVolumeDB(widget, params); };
+    actionsOld_["TrackSendPan"] =                      [](Widget* widget, vector<string> params) { return new TrackSendPan(widget, params); };
+    actionsOld_["TrackSendMute"] =                     [](Widget* widget, vector<string> params) { return new TrackSendMute(widget, params); };
+    actionsOld_["TrackSendInvertPolarity"] =           [](Widget* widget, vector<string> params) { return new TrackSendInvertPolarity(widget, params); };
+    actionsOld_["TrackSendPrePost"] =                  [](Widget* widget, vector<string> params) { return new TrackSendPrePost(widget, params); };
+    actionsOld_["TrackPan"] =                          [](Widget* widget, vector<string> params) { return new TrackPan(widget, params); };
+    actionsOld_["TrackPanPercent"] =                   [](Widget* widget, vector<string> params) { return new TrackPanPercent(widget, params); };
+    actionsOld_["TrackPanWidth"] =                     [](Widget* widget, vector<string> params) { return new TrackPanWidth(widget, params); };
+    actionsOld_["TrackPanWidthPercent"] =              [](Widget* widget, vector<string> params) { return new TrackPanWidthPercent(widget, params); };
+    actionsOld_["TrackPanLPercent"] =                  [](Widget* widget, vector<string> params) { return new TrackPanLPercent(widget, params); };
+    actionsOld_["TrackPanRPercent"] =                  [](Widget* widget, vector<string> params) { return new TrackPanRPercent(widget, params); };
+    actionsOld_["FixedTextDisplay"] =                  [](Widget* widget, vector<string> params) { return new FixedTextDisplay(widget, params); };
+    actionsOld_["FixedRGBColourDisplay"] =             [](Widget* widget, vector<string> params) { return new FixedRGBColourDisplay(widget, params); };
+    actionsOld_["TrackNameDisplay"] =                  [](Widget* widget, vector<string> params) { return new TrackNameDisplay(widget, params); };
+    actionsOld_["TrackVolumeDisplay"] =                [](Widget* widget, vector<string> params) { return new TrackVolumeDisplay(widget, params); };
+    actionsOld_["TrackSendNameDisplay"] =              [](Widget* widget, vector<string> params) { return new TrackSendNameDisplay(widget, params); };
+    actionsOld_["TrackSendVolumeDisplay"] =            [](Widget* widget, vector<string> params) { return new TrackSendVolumeDisplay(widget, params); };
+    actionsOld_["TrackPanDisplay"] =                   [](Widget* widget, vector<string> params) { return new TrackPanDisplay(widget, params); };
+    actionsOld_["TrackPanWidthDisplay"] =              [](Widget* widget, vector<string> params) { return new TrackPanWidthDisplay(widget, params); };
+    actionsOld_["TimeDisplay"] =                       [](Widget* widget, vector<string> params) { return new TimeDisplay(widget, params); };
+    actionsOld_["EuConTimeDisplay"] =                  [](Widget* widget, vector<string> params) { return new EuConTimeDisplay(widget, params); };
+    actionsOld_["Rewind"] =                            [](Widget* widget, vector<string> params) { return new Rewind(widget, params); };
+    actionsOld_["FastForward"] =                       [](Widget* widget, vector<string> params) { return new FastForward(widget, params); };
+    actionsOld_["Play"] =                              [](Widget* widget, vector<string> params) { return new Play(widget, params); };
+    actionsOld_["Stop"] =                              [](Widget* widget, vector<string> params) { return new Stop(widget, params); };
+    actionsOld_["Record"] =                            [](Widget* widget, vector<string> params) { return new Record(widget, params); };
+    actionsOld_["TrackToggleVCASpill"] =               [](Widget* widget, vector<string> params) { return new TrackToggleVCASpill(widget, params); };
+    actionsOld_["TrackSelect"] =                       [](Widget* widget, vector<string> params) { return new TrackSelect(widget, params); };
+    actionsOld_["TrackUniqueSelect"] =                 [](Widget* widget, vector<string> params) { return new TrackUniqueSelect(widget, params); };
+    actionsOld_["TrackRangeSelect"] =                  [](Widget* widget, vector<string> params) { return new TrackRangeSelect(widget, params); };
+    actionsOld_["TrackRecordArm"] =                    [](Widget* widget, vector<string> params) { return new TrackRecordArm(widget, params); };
+    actionsOld_["TrackMute"] =                         [](Widget* widget, vector<string> params) { return new TrackMute(widget, params); };
+    actionsOld_["TrackSolo"] =                         [](Widget* widget, vector<string> params) { return new TrackSolo(widget, params); };
+    actionsOld_["TrackTouch"] =                        [](Widget* widget, vector<string> params) { return new SetFaderTouch(widget, params); };
+    actionsOld_["RotaryTouch"] =                       [](Widget* widget, vector<string> params) { return new SetRotaryTouch(widget, params); };
+    actionsOld_["CycleTimeline"] =                     [](Widget* widget, vector<string> params) { return new CycleTimeline(widget, params); };
+    actionsOld_["TrackOutputMeter"] =                  [](Widget* widget, vector<string> params) { return new TrackOutputMeter(widget, params); };
+    actionsOld_["TrackOutputMeterAverageLR"] =         [](Widget* widget, vector<string> params) { return new TrackOutputMeterAverageLR(widget, params); };
+    actionsOld_["TrackOutputMeterMaxPeakLR"] =         [](Widget* widget, vector<string> params) { return new TrackOutputMeterMaxPeakLR(widget, params); };
+    actionsOld_["SetShowFXWindows"] =                  [](Widget* widget, vector<string> params) { return new SetShowFXWindows(widget, params); };
+    actionsOld_["ToggleScrollLink"] =                  [](Widget* widget, vector<string> params) { return new ToggleScrollLink(widget, params); };
+    actionsOld_["ForceScrollLink"] =                   [](Widget* widget, vector<string> params) { return new ForceScrollLink(widget, params); };
+    actionsOld_["ToggleVCAMode"] =                     [](Widget* widget, vector<string> params) { return new ToggleVCAMode(widget, params); };
+    actionsOld_["CycleTimeDisplayModes"] =             [](Widget* widget, vector<string> params) { return new CycleTimeDisplayModes(widget, params); };
+    actionsOld_["NextPage"] =                          [](Widget* widget, vector<string> params) { return new GoNextPage(widget, params); };
+    actionsOld_["GoPage"] =                            [](Widget* widget, vector<string> params) { return new  GoPage(widget, params); };
+    actionsOld_["GoZone"] =                            [](Widget* widget, vector<string> params) { return new GoZone(widget, params); };
+    actionsOld_["SelectTrackRelative"] =               [](Widget* widget, vector<string> params) { return new SelectTrackRelative(widget, params); };
+    actionsOld_["TrackBank"] =                         [](Widget* widget, vector<string> params) { return new TrackBank(widget, params); };
+    actionsOld_["ClearAllSolo"] =                      [](Widget* widget, vector<string> params) { return new ClearAllSolo(widget, params); };
+    actionsOld_["Shift"] =                             [](Widget* widget, vector<string> params) { return new SetShift(widget, params); };
+    actionsOld_["Option"] =                            [](Widget* widget, vector<string> params) { return new SetOption(widget, params); };
+    actionsOld_["Control"] =                           [](Widget* widget, vector<string> params) { return new SetControl(widget, params); };
+    actionsOld_["Alt"] =                               [](Widget* widget, vector<string> params) { return new SetAlt(widget, params); };
+    actionsOld_["TogglePin"] =                         [](Widget* widget, vector<string> params) { return new TogglePin(widget, params); };
+    actionsOld_["ToggleLearnMode"] =                   [](Widget* widget, vector<string> params) { return new ToggleLearnMode(widget, params); };
+    actionsOld_["ToggleMapSelectedTrackSends"] =       [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackSends(widget, params); };
+    actionsOld_["MapSelectedTrackSendsToWidgets"] =    [](Widget* widget, vector<string> params) { return new MapSelectedTrackSendsToWidgets(widget, params); };
+    actionsOld_["ToggleMapSelectedTrackFX"] =          [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFX(widget, params); };
+    actionsOld_["MapSelectedTrackFXToWidgets"] =       [](Widget* widget, vector<string> params) { return new MapSelectedTrackFXToWidgets(widget, params); };
+    actionsOld_["ToggleMapSelectedTrackFXMenu"] =      [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFXMenu(widget, params); };
+    actionsOld_["MapSelectedTrackFXToMenu"] =          [](Widget* widget, vector<string> params) { return new MapSelectedTrackFXToMenu(widget, params); };
+    actionsOld_["ToggleMapFocusedFX"] =                [](Widget* widget, vector<string> params) { return new ToggleMapFocusedFX(widget, params); };
+    actionsOld_["MapFocusedFXToWidgets"] =             [](Widget* widget, vector<string> params) { return new MapFocusedFXToWidgets(widget, params); };
+    actionsOld_["GoFXSlot"] =                          [](Widget* widget, vector<string> params) { return new GoFXSlot(widget, params); };
+    actionsOld_["TrackAutoMode"] =                     [](Widget* widget, vector<string> params) { return new TrackAutoMode(widget, params); };
+    actionsOld_["CycleTrackAutoMode"] =                [](Widget* widget, vector<string> params) { return new CycleTrackAutoMode(widget, params); };
+    actionsOld_["EuConCycleTrackAutoMode"] =           [](Widget* widget, vector<string> params) { return new EuConCycleTrackAutoMode(widget, params); };
+    actionsOld_["GlobalAutoMode"] =                    [](Widget* widget, vector<string> params) { return new GlobalAutoMode(widget, params); };
 }
 
 void Manager::Init()
@@ -1509,6 +1509,11 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), defaultNavigator_(new Navigator(surface_->GetPage()))
+{
+    
+}
+
 void Widget::AddAction(Zone* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
@@ -1566,6 +1571,7 @@ int Widget::GetParamIndex()
         return 0;
 }
 
+/*
 string Widget::GetCurrentZoneActionDisplay(string surfaceName)
 {
     string modifiers = surface_->GetPage()->GetModifiers();
@@ -1589,6 +1595,7 @@ string Widget::GetCurrentZoneActionDisplay(string surfaceName)
     else
         return GetName();
 }
+*/
 
 void Widget::RequestUpdate()
 {
@@ -1758,7 +1765,17 @@ void Widget::ClearCache()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(string name, Widget* widget, vector<string> params): name_(name), widget_(widget)
+Action::Action(Widget* widget, vector<string> params): widget_(widget), navigator_(widget->GetDefaultNavigator())
+{
+    SetParams(params);
+}
+
+Action::Action(Widget* widget, vector<string> params, Navigator* navigator): widget_(widget), navigator_(navigator)
+{
+    SetParams(params);
+}
+
+void Action::SetParams(vector<string> params)
 {
     if(params.size() > 0)
     {
@@ -2349,9 +2366,9 @@ void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string va
     {
         string displayString = "";
         
-        if(widget)
-            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
-        else
+        //if(widget)
+            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
+        //else
             displayString = "OUT->" + name_ + " " + address + " " + value + "\n";
         
         DAW::ShowConsoleMsg(displayString.c_str());
@@ -2414,9 +2431,9 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
     {
         string displayString = "";
         
-        if(Widget* widget = feedbackProcessor->GetWidget())
-            displayString = widget->GetCurrentZoneActionDisplay(name_) + " SysEx\n";
-        else
+        //f(Widget* widget = feedbackProcessor->GetWidget())
+            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " SysEx\n";
+        //else
             displayString = "OUT->" + name_ + " SysEx\n";
         
         DAW::ShowConsoleMsg(displayString.c_str());
@@ -2432,9 +2449,9 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
     {
         string displayString = "";
         
-        if(Widget* widget = feedbackProcessor->GetWidget())
-            displayString = widget->GetCurrentZoneActionDisplay(name_);
-        else
+        //if(Widget* widget = feedbackProcessor->GetWidget())
+            //displayString = widget->GetCurrentZoneActionDisplay(name_);
+        //else
             displayString = "OUT->" + name_;
         
         char buffer[250];
@@ -2504,9 +2521,9 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
         {
             string displayString = "";
             
-            if(Widget* widget = feedbackProcessor->GetWidget())
-                displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + to_string(value) + "\n";
-            else
+            //if(Widget* widget = feedbackProcessor->GetWidget())
+                //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + to_string(value) + "\n";
+            //else
                 displayString = "OUT->" + name_ + " " + oscAddress + " " + to_string(value) + "\n";
             
             DAW::ShowConsoleMsg(displayString.c_str());
@@ -2787,9 +2804,9 @@ void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackPro
     {
         string displayString = "";
         
-        if(Widget* widget = feedbackProcessor->GetWidget())
-            displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
-        else
+        //if(Widget* widget = feedbackProcessor->GetWidget())
+            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
+        //else
             displayString = "OUT-> " + name_ + " " + address + " " + value + "\n";
         
         DAW::ShowConsoleMsg(displayString.c_str());
@@ -3520,7 +3537,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
             SetCheckBoxes(actionLineItem);
         }
     }
-    */
+    
     //Action Names
     vector<string> actionNames = TheManager->GetActionNames();
      
@@ -3537,6 +3554,7 @@ static void FillSubZones(Zone* zone, int zoneIndex)
         }
 
     }
+     */
 }
 
 static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -3846,7 +3864,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             
             FillSubZones(zone, zoneIndex);
             
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
+            //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamNumAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
 

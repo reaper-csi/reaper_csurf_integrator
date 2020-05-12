@@ -100,7 +100,7 @@ class Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    Page* const page_;
+    Page* const page_ = nullptr;
 
 public:
     Navigator(Page*  page) : page_(page) {}
@@ -200,6 +200,7 @@ private:
     bool isFaderTouched_ = false;
     bool isRotaryTouched_ = false;
 
+    Navigator* const defaultNavigator_;
     
     
     Zone* activeZone_ = nullptr;
@@ -223,12 +224,12 @@ private:
     
 
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
+    Widget(ControlSurface* surface, string name);
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    string GetCurrentZoneActionDisplay(string surfaceName);
+    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
     void AddAction(Zone* zone, string modifiers, Action* action);
     void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
     void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
@@ -306,10 +307,15 @@ private:
     bool supportsTrackColor_ = false;
     
 protected:
-    Action(string name, Widget* widget, vector<string> params);
+    Action(Widget* widget, vector<string> params);
+    Action(Widget* widget, vector<string> params, Navigator* navigator);
+    Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex);
 
-    string const name_;
+    void SetParams(vector<string> params);
+    int GetSlotIndex();
+    
     Widget* const widget_;
+    Navigator* const navigator_;
     
     vector<double> steppedValues_;
     int steppedValuesIndex_ = 0;
@@ -337,7 +343,6 @@ protected:
     double deferredValue_ = 0.0;
     Widget* deferredSender_ = nullptr;
     
-    int GetSlotIndex();
     
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value, Widget* sender) {}
@@ -355,7 +360,6 @@ public:
     MediaTrack* GetTrack();
     
     virtual string GetDisplayName() { return ""; }
-    string GetName() { return name_; }
     
     virtual string GetParamNumAsString() { return ""; }
     virtual int GetParamNum() { return 0; }
@@ -517,7 +521,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NoAction(string name, Widget* widget, vector<string> params) : Action(name, widget, params) {}
+    NoAction(Widget* widget, vector<string> params) : Action(widget, params) {}
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() {  ClearWidget(); }
@@ -2130,10 +2134,10 @@ class Manager
 {
 private:
     CSurfIntegrator* const CSurfIntegrator_;
-    map<string, function<Action*(string name, Widget* widget, vector<string>)>> actionsOld_;
+    map<string, function<Action*(Widget* widget, vector<string>)>> actionsOld_;
     
-    map<string, function<Action(string name, Widget* widget, vector<string>)>> actions_;
-    map<string, function<Action(string name, Widget* widget, vector<string>, int slotIndex)>> actionsWithIndex_;
+    map<string, function<Action(Widget* widget, vector<string>)>> actions_;
+    map<string, function<Action(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithIndex_;
 
     vector <Page*> pages_;
     
@@ -2245,7 +2249,7 @@ public:
     Action* GetActionOld(Widget* widget, Zone* zone, string actionName, vector<string> params)
     {
         if(actionsOld_.count(actionName) > 0)
-            return actionsOld_[actionName](actionName, widget, params);
+            return actionsOld_[actionName](widget, params);
         else
             return nullptr;
     }
@@ -2253,17 +2257,17 @@ public:
     Action GetAction(Widget* widget, string actionName, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
-            return actions_[actionName](actionName, widget, params);
+            return actions_[actionName](widget, params);
         else
-            return actions_["NoAction"]("NoAction", widget, params);;
+            return actions_["NoAction"](widget, params);;
     }
     
-    Action GetActionWithIndex(Widget* widget, string actionName, vector<string> params, int index)
+    Action GetActionWithIndex(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
     {
         if(actionsWithIndex_.count(actionName) > 0)
-            return actionsWithIndex_[actionName](actionName, widget, params, index);
+            return actionsWithIndex_[actionName](widget, params, navigator, index);
         else
-            return actions_["NoAction"]("NoAction", widget, params);;
+            return actions_["NoAction"](widget, params);;
     }
     
     bool IsActionAvailable(string actionName)
