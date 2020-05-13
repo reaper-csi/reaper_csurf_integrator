@@ -400,6 +400,15 @@ public:
             actions_[modifiers].push_back(action);
     }
     
+    void ResetActions(string modifiers)
+    {
+        actions_[modifiers].clear();
+     
+        if(defaultActions_.count(modifiers) > 0)
+            for(auto action : defaultActions_[modifiers])
+                actions_[modifiers].push_back(action);
+    }
+    
     void SetDefaultActions(string modifiers, vector<Action> actions)
     {
         defaultActions_[modifiers].clear();
@@ -950,8 +959,13 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name) : CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name),
-    fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this))  { }
+    string zoneFolder_ = "";
+    int numChannels_ = 0;
+    int numSends_ = 0;
+    int numFX_ = 0;
+    int options_ = 0;
+
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options) {}
 
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
@@ -973,11 +987,13 @@ protected:
     
 
     
-    
+    // Old
     map<string, Zone*> zones_;
     map<string, vector<Zone*>> zonesInZoneFile_;
     
 
+    
+    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1147,8 +1163,8 @@ private:
     void InitWidgets(string templateFilename, string zoneFolder);
 
 public:
-    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, midi_Input* midiInput, midi_Output* midiOutput)
-    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int options, midi_Input* midiInput, midi_Output* midiOutput)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1197,8 +1213,8 @@ private:
     void ProcessOSCMessage(string message, double value);
 
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
-    : ControlSurface(CSurfIntegrator, page, name), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int options, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1309,14 +1325,7 @@ class EuCon_ControlSurface : public ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string zoneFolder_ = "";
-    int numChannels_ = 0;
-    int numSends_ = 0;
-    int numFX_ = 0;
-    int panOptions_ = 0;
-    
     bool isEuConFXAreaFocused_ = false;
-    
     double previousPP = 0.0;
     
     map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
@@ -1341,7 +1350,7 @@ protected:
     }
     
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
     virtual ~EuCon_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "EuCon"; }
