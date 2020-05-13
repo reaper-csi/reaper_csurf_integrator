@@ -1318,12 +1318,12 @@ void Manager::Init()
                     {
                         ControlSurface* surface = nullptr;
                         
-                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 11)
-                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
-                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[11], outPort));
+                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 15)
+                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 16)
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[15], outPort));
                         else if(tokens[0] == EuConSurfaceToken && tokens.size() == 8)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[6], atoi(tokens[2].c_str()), atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()));
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
 
                         currentPage->AddSurface(surface);
                         
@@ -1332,21 +1332,21 @@ void Manager::Init()
                             if(tokens[7] == "UseZoneLink")
                                 surface->SetUseZoneLink(true);
                         }
-                        else if(tokens.size() == 11 || tokens.size() == 12)
+                        else if(tokens.size() == 15 || tokens.size() == 16)
                         {
-                            if(tokens[6] == "UseZoneLink")
+                            if(tokens[10] == "UseZoneLink")
                                 surface->SetUseZoneLink(true);
                             
-                            if(tokens[7] == "AutoMapSends")
+                            if(tokens[11] == "AutoMapSends")
                                 surface->GetSendsActivationManager()->SetShouldMapSends(true);
                             
-                            if(tokens[8] == "AutoMapFX")
+                            if(tokens[12] == "AutoMapFX")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
                             
-                            if(tokens[9] == "AutoMapFXMenu")
+                            if(tokens[13] == "AutoMapFXMenu")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
                             
-                            if(tokens[10] == "AutoMapFocusedFX")
+                            if(tokens[14] == "AutoMapFocusedFX")
                                 surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
                         }
                     }
@@ -2739,7 +2739,7 @@ void HandleEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot,
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions)
-: ControlSurface(CSurfIntegrator, page, name), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), panOptions_(panOptions)
+: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, panOptions)
 {
     // EuCon takes care of managing navigation, so we just blast everything always
     sendsActivationManager_->SetShouldMapSends(true);
@@ -2748,8 +2748,6 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     fxActivationManager_->SetShouldMapFocusedFX(true);
     
     fxActivationManager_->SetShouldShowFXWindows(true);
-    
-    zoneFolder_ = zoneFolder;
     
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
@@ -2783,7 +2781,7 @@ void EuCon_ControlSurface::InitializeEuCon()
         InitializeEuConWithParameters = (void (*)(int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
     if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(numChannels_, numSends_, numFX_, panOptions_);
+        InitializeEuConWithParameters(numChannels_, numSends_, numFX_, options_);
 }
 
 Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
