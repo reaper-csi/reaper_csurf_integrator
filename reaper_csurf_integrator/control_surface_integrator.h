@@ -89,7 +89,7 @@ class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
 class EuCon_ControlSurface;
-class Zone;
+class ZoneOld;
 class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
@@ -103,7 +103,6 @@ protected:
     Page* const page_ = nullptr;
 
 public:
-    Navigator() = default;
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
@@ -350,15 +349,12 @@ private:
     bool isFaderTouched_ = false;
     bool isRotaryTouched_ = false;
     
-    Navigator* const defaultNavigator_;
+    ZoneOld* activeZone_ = nullptr;
+    map<string, ZoneOld*> zonesAvailable_;
     
-    
-    Zone* activeZone_ = nullptr;
-    map<string, Zone*> zonesAvailable_;
-    
-    map<Zone*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
-    map<Zone*, map<string, vector <Action*>>> trackTouchedActions_;
-    map<Zone*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
+    map<ZoneOld*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
+    map<ZoneOld*, map<string, vector <Action*>>> trackTouchedActions_;
+    map<ZoneOld*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
     
     
     
@@ -371,7 +367,7 @@ private:
     
     
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), defaultNavigator_(new Navigator())
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name)
     {
         defaultActions_[""].push_back(NoAction(this, {}));
     }
@@ -379,10 +375,9 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
-    void AddAction(Zone* zone, string modifiers, Action* action);
-    void AddTrackTouchedAction(Zone* zone, string modifiers, Action* action);
-    void AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action);
+    void AddAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
@@ -468,6 +463,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Navigator* const navigator_= nullptr;
+    vector<Zone> includedZones_;
+    vector<string> widgets_;
+
+public:
+    Zone(Navigator* navigator) : navigator_(navigator) {}
+
+    Navigator* GetNavigator() { return navigator_; }
+
+    void AddWidget(string widget)
+    {
+        widgets_.push_back(widget);
+    }
+    
+    void AddZone(Zone zone)
+    {
+        includedZones_.push_back(zone);
+    }
+    
+    void Deactivate()
+    {
+        for(auto widget : widgets_)
+        {
+            
+        }
+        
+        for(auto includedZone : includedZones_)
+            includedZone.Deactivate();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct Wzat  // Widget Zone Action Template, that's what :)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -482,9 +513,9 @@ struct Wzat  // Widget Zone Action Template, that's what :)
     bool shouldToggle;
     bool isDelayed;
     double delayAmount;
-
+    
     vector<string> params;
-
+    
     Wzat(string widget, string action, vector<string> prams, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionNmae(action), params(prams), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
 };
 
@@ -499,15 +530,19 @@ struct ZoneTemplate
     vector<string> companionZoneTemplates;
     vector<string> includedZoneTemplates;
     vector<Wzat> zoneMembers;
-
+    
     ZoneTemplate() = default;
     
     ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> companionZones, vector<string> includedZones, vector<Wzat> wzats)
-        : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), companionZoneTemplates(companionZones), includedZoneTemplates(includedZones), zoneMembers(wzats) {}
+    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), companionZoneTemplates(companionZones), includedZoneTemplates(includedZones), zoneMembers(wzats) {}
+    
+    Zone  Activate(ControlSurface*  surface);
+    Zone  Activate(ControlSurface*  surface, Navigator* navigator);
+    Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
+class ZoneOld
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -515,30 +550,30 @@ private:
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-    vector<Zone*> includedZones_;
+    vector<ZoneOld*> includedZones_;
     
-
-
-
-
-    map<string, vector<string>> widgets_;
+    
+    
+    
+    
+    vector<string> widgets_;
     
     Navigator* const navigator_= nullptr;
-
     
     
-
+    
+    
     // GAW TBD -- remove eventually
     int index_ = 0;
     vector<Widget*> widgetsOld_;
-
     
-
+    
+    
     
 public:
-    Zone(Navigator* navigator, ControlSurface* surface, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
-
-    virtual ~Zone() {}
+    ZoneOld(Navigator* navigator, ControlSurface* surface, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
+    
+    virtual ~ZoneOld() {}
     
     ControlSurface* GetSurface() { return surface_; }
     int GetIndex() { return index_; }
@@ -547,30 +582,35 @@ public:
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
     
-
-    
-
     
     
+    
+    
+    
+    
+    void AddWidget(string widget)
+    {
+        widgets_.push_back(widget);
+    }
     
     void AddWidget(Widget* widget)
     {
         widgetsOld_.push_back(widget);
     }
-
+    
     // GAW TBD -- remove -- change learn mode editor to file based
-    vector<Zone*> &GetIncludedZones() { return includedZones_; }
+    vector<ZoneOld*> &GetIncludedZones() { return includedZones_; }
     
     // GAW TBD -- maybe allow this later after fully debugged
     //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
     //void SetAlias(string alias) { alias_ = alias;}
-       
+    
     bool GetHasFocusedFXTrackNavigator()
     {
         return navigator_->GetIsFocusedFXNavigator();
     }
     
-    void AddZone(Zone* zone)
+    void AddZone(ZoneOld* zone)
     {
         includedZones_.push_back(zone);
     }
@@ -582,7 +622,7 @@ public:
         for(auto includedZone : includedZones_)
             includedZone->SetIndex(index);
     }
-
+    
     void Activate()
     {
         for(auto widget : widgetsOld_)
@@ -600,7 +640,7 @@ public:
         for(auto includedZone : includedZones_)
             includedZone->Deactivate();
     }
-
+    
     void Activate(MediaTrack* track, bool shouldShowFXWindows)
     {
         Activate();
@@ -611,7 +651,7 @@ public:
         for(auto zone : includedZones_)
             zone->Activate(track, shouldShowFXWindows);
     }
-
+    
     void Deactivate(MediaTrack* track, bool shouldShowFXWindows)
     {
         for(auto widget : widgetsOld_)
@@ -619,7 +659,7 @@ public:
         
         if(shouldShowFXWindows)
             DAW::TrackFX_Show(track, index_, 2);
-
+        
         for(auto zone : includedZones_)
             zone->Deactivate(track, shouldShowFXWindows);
     }
@@ -841,7 +881,7 @@ private:
     ControlSurface* const surface_;
     int numSendSlots_ = 0;
     bool shouldMapSends_ = false;
-    vector<Zone*> activeSendZones_;
+    vector<ZoneOld*> activeSendZones_;
     
 public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
@@ -850,10 +890,10 @@ public:
     void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
     int GetNumSendSlots() { return numSendSlots_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-    vector<Zone*> GetActiveZones() { return activeSendZones_; }
+    vector<ZoneOld*> GetActiveZones() { return activeSendZones_; }
     
     void ToggleMapSends();
-    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
+    void MapSelectedTrackSendsToWidgets(map<string, ZoneOld*> &zones);
 
 };
 
@@ -861,21 +901,21 @@ public:
 struct FXInfo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    Zone* zone = nullptr;
+    ZoneOld* zone = nullptr;
     string fxName = "";
     MediaTrack* const track = nullptr;;
     int fxIndex = 0;
     
-    FXInfo(Zone* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
+    FXInfo(ZoneOld* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
     
 };
 
 struct OpenFXWindow
 {
     MediaTrack* track;
-    Zone* zone;
+    ZoneOld* zone;
     
-    OpenFXWindow(MediaTrack* aTrack, Zone* aZone) : track(aTrack),  zone(aZone) {}
+    OpenFXWindow(MediaTrack* aTrack, ZoneOld* aZone) : track(aTrack),  zone(aZone) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -889,9 +929,9 @@ private:
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
     vector<OpenFXWindow> activeSelectedTrackFXZones_;
-    vector<Zone*> activeSelectedTrackFXMenuZones_;
-    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
-    vector<Zone*> activeFocusedFXZones_;
+    vector<ZoneOld*> activeSelectedTrackFXMenuZones_;
+    vector<ZoneOld*> activeSelectedTrackFXMenuFXZones_;
+    vector<ZoneOld*> activeFocusedFXZones_;
     
     
     bool shouldShowFXWindows_ = false;
@@ -959,13 +999,15 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
+
     string zoneFolder_ = "";
     int numChannels_ = 0;
     int numSends_ = 0;
     int numFX_ = 0;
     int options_ = 0;
 
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options) {}
+    map<int, Navigator*> navigators_;
 
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
@@ -984,12 +1026,9 @@ protected:
     map<string, vector<string>> zoneFileLines_;
     map<string, ZoneTemplate> zoneTemplates_;
     
-    
-
-    
     // Old
-    map<string, Zone*> zones_;
-    map<string, vector<Zone*>> zonesInZoneFile_;
+    map<string, ZoneOld*> zones_;
+    map<string, vector<ZoneOld*>> zonesInZoneFile_;
     
 
     
@@ -1006,10 +1045,14 @@ public:
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
+    
     virtual string GetSourceFileName() { return ""; }
     vector<Widget*> &GetWidgets() { return widgets_; }
-    map<string, Zone*> &GetZones() { return zones_;}
-    map<string, vector<Zone*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
+    map<string, ZoneOld*> &GetZones() { return zones_;}
+    map<string, vector<ZoneOld*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
+    
+    Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum);
+    
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
     bool GetUseZoneLink() { return useZoneLink_; }
@@ -1030,7 +1073,7 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
 
-    void GoHome() { GoZone("Home"); }
+    void GoHome() { GoZoneOld("Home"); }
     
     MediaTrack* GetTrack(string activeZoneName)
     {
@@ -1040,12 +1083,22 @@ public:
             return nullptr;
     }
     
-    void GoZone(string zoneName)
+    void GoZoneOld(string zoneName)
     {
         if(zones_.count(zoneName) > 0)
             zones_[zoneName]->Activate();
+        
+        GoZone(zoneName);
     }
-
+    
+    void GoZone(string zoneName)
+    {
+        if(zoneTemplates_.count(zoneName) > 0)
+        {
+            int blah =  1;
+        }
+    }
+    
     void ActivateNoActionForZone(string zoneName)
     {
         for(auto widget : widgets_)
@@ -1074,7 +1127,7 @@ public:
         zoneTemplates_[zoneTemplate.name] = zoneTemplate;
     }
     
-    void AddZone(Zone* zone)
+    void AddZone(ZoneOld* zone)
     {
         if(zones_.count(zone->GetName()) > 0)
         {
@@ -1680,7 +1733,9 @@ private:
     double altPressedTime_ = 0;
 
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
-   
+    
+    Navigator* defaultNavigator_ = new Navigator(this);
+    
 public:
     Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)) { }
     
@@ -1698,7 +1753,9 @@ public:
     bool GetOption() { return isOption_; }
     bool GetControl() { return isControl_; }
     bool GetAlt() { return isAlt_; }
-   
+
+    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
+
     void InitializeEuCon()
     {
         for(auto surface : surfaces_)
@@ -1948,14 +2005,14 @@ public:
         return "";
     }
     
-    void GoZone(ControlSurface* surface, string zoneName, Widget* sender)
+    void GoZone(ControlSurface* surface, string zoneName)
     {
         if(! surface->GetUseZoneLink())
-          surface->GoZone(zoneName);
+          surface->GoZoneOld(zoneName);
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GoZone(zoneName);
+                    surface->GoZoneOld(zoneName);
     }
 
     void ToggleMapSends(ControlSurface* surface)
@@ -2167,7 +2224,7 @@ public:
     int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
-
+    
     vector<string> GetActionNames()
     {
         vector<string> actionNames;
@@ -2186,7 +2243,7 @@ public:
             return nullptr;
     }
     
-    Action* GetActionOld(Widget* widget, Zone* zone, string actionName, vector<string> params)
+    Action* GetActionOld(Widget* widget, ZoneOld* zone, string actionName, vector<string> params)
     {
         if(actionsOld_.count(actionName) > 0)
             return actionsOld_[actionName](widget, params);
