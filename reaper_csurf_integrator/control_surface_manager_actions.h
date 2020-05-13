@@ -363,7 +363,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->GoZone(GetSurface(), param_, sender);
+        GetPage()->GoZone(GetSurface(), param_);
     }
 };
 
