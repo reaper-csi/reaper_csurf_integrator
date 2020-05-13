@@ -172,6 +172,10 @@ struct SurfaceLine
     int outPort = 0;
     string templateFilename = "";
     string zoneTemplateFolder = "";
+    int numChannels = 0;
+    int numSends = 0;
+    int numFX = 0;
+    int options = 0;
     bool useZoneLink = false;
     bool autoMapSends = false;
     bool autoMapFX = false;
@@ -181,11 +185,6 @@ struct SurfaceLine
     // for OSC
     string remoteDeviceIP = "";
 
-    // for EuCon
-    int numChannels = 0;
-    int numSends = 0;
-    int numFX = 0;
-    int panOptions = 0;
 };
 
 struct PageLine
@@ -218,7 +217,7 @@ static char zoneTemplateFolder[BUFSZ];
 int numChannels = 0;
 int numSends = 0;
 int numFX = 0;
-int panOptions = 0;
+int options = 0;
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -232,43 +231,6 @@ static bool autoMapFXMenu = false;
 static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
-
-static void ModifyEuConZoneFile(int numChannels)
-{
-    string channelStr = "1-" + to_string(numChannels);
-    
-    vector<string> inputLines;
-    vector<string> outputLines;
-
-    ifstream euconInputZoneFile(string(DAW::GetResourcePath()) + "/CSI/Zones/EuCon/EuCon.zon");
-
-    for (string line; getline(euconInputZoneFile, line) ; )
-        inputLines.push_back(line);
-    
-    for(auto inputLine : inputLines)
-    {
-        size_t zonePos = inputLine.find("Zone");
-        size_t channelPos = inputLine.find("Channel|");
-
-        string outputLine;
-        
-        if(channelPos != string::npos && zonePos == string::npos)
-            outputLine = inputLine.substr(0, channelPos + strlen("Channel|")) + channelStr + "\"";
-        else
-            outputLine = inputLine;
-
-        outputLines.push_back(outputLine);
-    }
-    
-    euconInputZoneFile.close();
-    
-    ofstream euconOutputZoneFile(string(DAW::GetResourcePath()) + "/CSI/Zones/EuCon/EuCon.zon");
-    
-    for(auto outputLine : outputLines)
-        euconOutputZoneFile << outputLine + "\n";
-    
-    euconOutputZoneFile.close();
-}
 
 void AddComboEntry(HWND hwndDlg, int x, char * buf, int comboId)
 {
@@ -442,7 +404,10 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
-                
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
+
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRING, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
@@ -483,6 +448,9 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_MidiOut), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, "0");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "0");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "0");
             }
         }
             break;
@@ -526,6 +494,19 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        char buf[BUFSZ];
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, buf, sizeof(buf));
+                        numChannels = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumSends, buf, sizeof(buf));
+                        numSends = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
+                        numFX = atoi(buf);
+                        
+                        options = 0;
+
                         GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
@@ -612,6 +593,9 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             {
                 editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
@@ -657,6 +641,9 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, "");
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, 0, 0);
                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, 0, 0);
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, "0");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "0");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "0");
             }
         }
             break;
@@ -700,10 +687,21 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 case IDOK:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        char buf[BUFSZ];
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, buf, sizeof(buf));
+                        numChannels = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumSends, buf, sizeof(buf));
+                        numSends = atoi(buf);
+                        
+                        GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
+                        numFX = atoi(buf);
+                        
+                        options = 0;
+                        
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
-                        
-                        char buf[BUFSZ];
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, buf, sizeof(buf));
                         inPort = atoi(buf);
@@ -783,7 +781,7 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
 
-                if(panOptions == 1)
+                if(options == 1)
                     CheckDlgButton(hwndDlg, IDC_RADIO1, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_RADIO2, BST_CHECKED);
@@ -801,7 +799,9 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             {
                 SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, "EuCon");
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, "8");
-                
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "8");
+                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "8");
+
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)"EuCon");
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
@@ -830,9 +830,9 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         numFX = atoi(buf);
 
                         if (IsDlgButtonChecked(hwndDlg, IDC_RADIO1))
-                            panOptions = 01;
+                            options = 01;
                         else
-                            panOptions = 02;
+                            options = 02;
 
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ZoneLink))
                             useZoneLink = true;
@@ -932,6 +932,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->outPort = outPort;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
+                                    surface->numChannels = numChannels;
+                                    surface->numSends = numSends;
+                                    surface->numFX = numFX;
+                                    surface->options = options;
+                                    surface->useZoneLink = useZoneLink;
                                     surface->useZoneLink = useZoneLink;
                                     surface->autoMapSends = autoMapSends;
                                     surface->autoMapFX = autoMapFX;
@@ -965,6 +970,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->outPort = outPort;
                                     surface->templateFilename = templateFilename;
                                     surface->zoneTemplateFolder = zoneTemplateFolder;
+                                    surface->numChannels = numChannels;
+                                    surface->numSends = numSends;
+                                    surface->numFX = numFX;
+                                    surface->options = options;
+                                    surface->useZoneLink = useZoneLink;
                                     surface->useZoneLink = useZoneLink;
                                     surface->autoMapSends = autoMapSends;
                                     surface->autoMapFX = autoMapFX;
@@ -997,7 +1007,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->numChannels = numChannels;
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
-                                    surface->panOptions = panOptions;
+                                    surface->options = options;
                                     surface->useZoneLink = useZoneLink;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
@@ -1051,17 +1061,16 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 strcpy(remoteDeviceIP, pages[pageIndex]->surfaces[index]->remoteDeviceIP.c_str());
                                 strcpy(templateFilename, pages[pageIndex]->surfaces[index]->templateFilename.c_str());
                                 strcpy(zoneTemplateFolder, pages[pageIndex]->surfaces[index]->zoneTemplateFolder.c_str());
+                                numChannels = pages[pageIndex]->surfaces[index]->numChannels;
+                                numSends = pages[pageIndex]->surfaces[index]->numSends;
+                                numFX = pages[pageIndex]->surfaces[index]->numFX;
+                                options = pages[pageIndex]->surfaces[index]->options;
                                 useZoneLink = pages[pageIndex]->surfaces[index]->useZoneLink;
                                 autoMapSends = pages[pageIndex]->surfaces[index]->autoMapSends;
                                 autoMapFX = pages[pageIndex]->surfaces[index]->autoMapFX;
                                 autoMapFXMenu = pages[pageIndex]->surfaces[index]->autoMapFXMenu;
                                 autoMapFocusedFX = pages[pageIndex]->surfaces[index]->autoMapFocusedFX;
-                                
-                                // for EuCon
-                                numChannels = pages[pageIndex]->surfaces[index]->numChannels;
-                                numSends = pages[pageIndex]->surfaces[index]->numSends;
-                                numFX = pages[pageIndex]->surfaces[index]->numFX;
-                                panOptions = pages[pageIndex]->surfaces[index]->panOptions;
+ 
 
                                 dlgResult = false;
                                 editMode = true;
@@ -1081,17 +1090,15 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->outPort = outPort;
                                     pages[pageIndex]->surfaces[index]->templateFilename = templateFilename;
                                     pages[pageIndex]->surfaces[index]->zoneTemplateFolder = zoneTemplateFolder;
+                                    pages[pageIndex]->surfaces[index]->numChannels = numChannels;
+                                    pages[pageIndex]->surfaces[index]->numSends = numSends;
+                                    pages[pageIndex]->surfaces[index]->numFX = numFX;
+                                    pages[pageIndex]->surfaces[index]->options = options;
                                     pages[pageIndex]->surfaces[index]->useZoneLink = useZoneLink;
                                     pages[pageIndex]->surfaces[index]->autoMapSends = autoMapSends;
                                     pages[pageIndex]->surfaces[index]->autoMapFX =autoMapFX;
                                     pages[pageIndex]->surfaces[index]->autoMapFXMenu = autoMapFXMenu;
                                     pages[pageIndex]->surfaces[index]->autoMapFocusedFX = autoMapFocusedFX;
-                                    
-                                    // for EuCon
-                                    pages[pageIndex]->surfaces[index]->numChannels = numChannels;
-                                    pages[pageIndex]->surfaces[index]->numSends = numSends;
-                                    pages[pageIndex]->surfaces[index]->numFX = numFX;
-                                    pages[pageIndex]->surfaces[index]->panOptions = panOptions;
                                 }
                             }
                         }
@@ -1195,28 +1202,32 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->type = tokens[0];
                         surface->name = tokens[1];
                         
-                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 11 || tokens.size() == 12))
+                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 15 || tokens.size() == 16))
                         {
                             surface->inPort = atoi(tokens[2].c_str());
                             surface->outPort = atoi(tokens[3].c_str());
                             surface->templateFilename = tokens[4];
                             surface->zoneTemplateFolder = tokens[5];
-                            surface->useZoneLink = tokens[6] == "UseZoneLink" ? true : false;
-                            surface->autoMapSends = tokens[7] == "AutoMapSends" ? true : false;
-                            surface->autoMapFX = tokens[8] == "AutoMapFX" ? true : false;
-                            surface->autoMapFXMenu = tokens[9] == "AutoMapFXMenu" ? true : false;
-                            surface->autoMapFocusedFX = tokens[10] == "AutoMapFocusedFX" ? true : false;
+                            surface->numChannels = atoi(tokens[6].c_str());
+                            surface->numSends = atoi(tokens[7].c_str());
+                            surface->numFX = atoi(tokens[8].c_str());
+                            surface->options = atoi(tokens[9].c_str());
+                            surface->useZoneLink = tokens[10] == "UseZoneLink" ? true : false;
+                            surface->autoMapSends = tokens[11] == "AutoMapSends" ? true : false;
+                            surface->autoMapFX = tokens[12] == "AutoMapFX" ? true : false;
+                            surface->autoMapFXMenu = tokens[13] == "AutoMapFXMenu" ? true : false;
+                            surface->autoMapFocusedFX = tokens[14] == "AutoMapFocusedFX" ? true : false;
 
-                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 12)
-                                surface->remoteDeviceIP = tokens[11];
+                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 16)
+                                surface->remoteDeviceIP = tokens[15];
                         }
                         else if(surface->type == EuConSurfaceToken && tokens.size() == 8 )
                         {
-                            surface->numChannels = atoi(tokens[2].c_str());
-                            surface->numSends = atoi(tokens[3].c_str());
-                            surface->numFX = atoi(tokens[4].c_str());
-                            surface->panOptions = atoi(tokens[5].c_str());
-                            surface->zoneTemplateFolder = tokens[6];
+                            surface->zoneTemplateFolder = tokens[2];
+                            surface->numChannels = atoi(tokens[3].c_str());
+                            surface->numSends = atoi(tokens[4].c_str());
+                            surface->numFX = atoi(tokens[5].c_str());
+                            surface->options = atoi(tokens[6].c_str());
                             surface->useZoneLink = tokens[7] == "UseZoneLink" ? true : false;
                          }
                         
@@ -1284,6 +1295,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += to_string(surface->outPort) + " " ;
                             line += "\"" + surface->templateFilename + "\" ";
                             line += "\"" + surface->zoneTemplateFolder + "\" ";
+                            line += to_string(surface->numChannels) + " " ;
+                            line += to_string(surface->numSends) + " " ;
+                            line += to_string(surface->numFX) + " " ;
+                            line += to_string(surface->options) + " " ;
                             line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
                             line += surface->autoMapSends == true ? "AutoMapSends " : "NoAutoMapSends ";
                             line += surface->autoMapFX == true ? "AutoMapFX " : "NoAutoMapFX ";
@@ -1295,14 +1310,12 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         else if(surface->type == EuConSurfaceToken)
                         {
+                            line += "\"" + surface->zoneTemplateFolder + "\" ";
                             line += to_string(surface->numChannels) + " " ;
                             line += to_string(surface->numSends) + " " ;
                             line += to_string(surface->numFX) + " " ;
-                            line += to_string(surface->panOptions) + " " ;
-                            line += "\"" + surface->zoneTemplateFolder + "\" ";
+                            line += to_string(surface->options) + " " ;
                             line += surface->useZoneLink == true ? "UseZoneLink " : "NoZoneLink ";
-                            
-                            ModifyEuConZoneFile( surface->numChannels);
                         }
 
                         line += GetLineEnding();

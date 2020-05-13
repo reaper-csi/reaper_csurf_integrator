@@ -2738,8 +2738,8 @@ void HandleEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int panOptions)
-: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, panOptions)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options)
+: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options)
 {
     // EuCon takes care of managing navigation, so we just blast everything always
     sendsActivationManager_->SetShouldMapSends(true);
