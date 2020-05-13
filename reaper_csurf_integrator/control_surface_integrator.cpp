@@ -268,21 +268,21 @@ static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum
         return nullptr;
     
     if(navigators.count(channelNum) < 1)
-        navigators[channelNum] = surface->GetPage()->GetTrackNavigationManager()->AddNavigator();
+        navigators[channelNum] = surface->GetNavigatorForChannel(surface, channelNum);
     
     return navigators[channelNum];
 }
 
-static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone);
+static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone);
 
 static map<string, vector<vector<string>>> zoneTemplates;
 static map<string, vector<vector<string>>> zoneDefinitions;
 
-static void BuildZoneOld(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone, int channelNum)
+static void BuildZoneOld(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone, int channelNum)
 {
     const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD - don't forget to re-implement this
 
-    Zone* zone = nullptr;
+    ZoneOld* zone = nullptr;
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
     
@@ -322,7 +322,7 @@ static void BuildZoneOld(vector<vector<string>> &zoneLines, string filePath, Con
             if(navigator == nullptr)
                 navigator = new Navigator(surface->GetPage());
             
-            zone = new Zone(navigator, surface, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
+            zone = new ZoneOld(navigator, surface, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
 
             if(zone == nullptr)
                 return;
@@ -433,7 +433,7 @@ static void BuildZoneOld(vector<vector<string>> &zoneLines, string filePath, Con
     }
 }
 
-static void BuildExpandedZonesOld(string zoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildExpandedZonesOld(string zoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone)
 {
     istringstream expandedZone(zoneName);
     vector<string> expandedZoneTokens;
@@ -496,7 +496,7 @@ static void BuildExpandedZonesOld(string zoneName, string filePath, ControlSurfa
     }
 }
 
-static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, Zone* parentZone)
+static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone)
 {
     if(includedZoneName.back() == '|')
     {
@@ -1509,18 +1509,18 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Widget::AddAction(Zone* zone, string modifiers, Action* action)
+void Widget::AddAction(ZoneOld* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
     zonesAvailable_[zone->GetName()] = zone;
 }
 
-void Widget::AddTrackTouchedAction(Zone* zone, string modifiers, Action* action)
+void Widget::AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action)
 {
     trackTouchedActions_[zone][modifiers].push_back(action);
 }
 
-void Widget::AddTrackRotaryTouchedAction(Zone* zone, string modifiers, Action* action)
+void Widget::AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action)
 {
     trackRotaryTouchedActions_[zone][modifiers].push_back(action);
 }
@@ -1760,7 +1760,7 @@ void Widget::ClearCache()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(Widget* widget, vector<string> params): widget_(widget), navigator_(widget->GetDefaultNavigator())
+Action::Action(Widget* widget, vector<string> params): widget_(widget), navigator_(widget->GetSurface()->GetPage()->GetDefaultNavigator())
 {
     SetParams(params);
 }
@@ -2041,6 +2041,37 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ZoneTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Zone ZoneTemplate::Activate(ControlSurface*  surface)
+{
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    return Zone(new Navigator(surface->GetPage()));
+}
+
+Zone  ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator)
+{
+    return Zone(new Navigator(surface->GetPage()));
+}
+
+Zone  ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
+{
+    return Zone(new Navigator(surface->GetPage()));
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_CSIMessageGenerator : public CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 OSC_CSIMessageGenerator::OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(widget)
@@ -2206,7 +2237,7 @@ void SendsActivationManager::ToggleMapSends()
     surface_->GetPage()->OnTrackSelection();
 }
 
-void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
+void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, ZoneOld*> &zones)
 {
     for(auto zone : activeSendZones_)
         zone->Deactivate();
@@ -2226,7 +2257,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &
         
         if(shouldMapSends_ && zones.count(zoneName) > 0)
         {
-            Zone* zone =  zones[zoneName];
+            ZoneOld* zone =  zones[zoneName];
             zone->SetIndex(i);
             
             if(i < numTrackSends)
@@ -2311,7 +2342,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         
         if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
-            Zone* zone = surface_->GetZones()[FXName];
+            ZoneOld* zone = surface_->GetZones()[FXName];
             zone->SetIndex(i);
             
             zone->Activate(selectedTrack, shouldShowFXWindows_);
@@ -2345,7 +2376,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
         
         if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
         {
-            Zone* zone =  surface_->GetZones()[zoneName];
+            ZoneOld* zone =  surface_->GetZones()[zoneName];
             zone->SetIndex(i);
             
             if(i < numTrackFX)
@@ -2378,7 +2409,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
-        Zone* zone = surface_->GetZones()[FXName];
+        ZoneOld* zone = surface_->GetZones()[FXName];
         zone->SetIndex(fxIndex);
         
         zone->Activate();
@@ -2411,7 +2442,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
         DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
         if(surface_->GetZones().count(FXName) > 0 && surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
-            Zone* zone = surface_->GetZones()[FXName];
+            ZoneOld* zone = surface_->GetZones()[FXName];
             zone->SetIndex(fxIndex);
             
             surface_->LoadingZone(FXName);
@@ -2424,6 +2455,13 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options)
+{
+    
+    for(int i = 0; i < numChannels; i++)
+        navigators_[i] = GetPage()->GetTrackNavigationManager()->AddNavigator();
+}
+
 void ControlSurface::InitZones(string zoneFolder)
 {
     try
@@ -2445,6 +2483,17 @@ void ControlSurface::InitZones(string zoneFolder)
         snprintf(buffer, sizeof(buffer), "Trouble parsing Zone folders\n");
         DAW::ShowConsoleMsg(buffer);
     }
+}
+
+Navigator* ControlSurface::GetNavigatorForChannel(ControlSurface* surface, int channelNum)
+{
+    if(channelNum < 0)
+        return nullptr;
+    
+    if(navigators_.count(channelNum) > 0)
+        return navigators_[channelNum];
+    else
+        return nullptr;
 }
 
 void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string value)
@@ -3191,7 +3240,7 @@ static Widget* currentWidget = nullptr;
 static Action* currentAction = nullptr;
 static string trackNavigatorName = "";
 
-static vector<Zone*> zonesInThisFile;
+static vector<ZoneOld*> zonesInThisFile;
 
 static string newZoneFilename = "";
 static string newZoneName = "";
@@ -3243,9 +3292,9 @@ static void DisableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), false);
 }
 
-static vector<Zone*> GetAvailableZones(int zoneIndex)
+static vector<ZoneOld*> GetAvailableZones(int zoneIndex)
 {
-    vector<Zone*> availableZones;
+    vector<ZoneOld*> availableZones;
     
     if(zoneIndex >= 0)
     {       
@@ -3270,7 +3319,7 @@ static vector<Zone*> GetAvailableZones(int zoneIndex)
     return availableZones;
 }
 
-static vector<Zone*> GetAvailableZones()
+static vector<ZoneOld*> GetAvailableZones()
 {
     int zoneIndex = (int)SendMessage(GetDlgItem(hwndLearn, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
     
@@ -3498,7 +3547,7 @@ static void ClearActions()
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionAlias, "");
 }
 
-static int FillZones(Zone* zone)
+static int FillZones(ZoneOld* zone)
 {
     ClearZones();
 
@@ -3555,7 +3604,7 @@ static int FillZones(Zone* zone)
     return zoneIndex;
 }
 
-static void FillSubZones(Zone* zone, int zoneIndex)
+static void FillSubZones(ZoneOld* zone, int zoneIndex)
 {
     ClearSubZones();
     ClearActions();
@@ -3760,11 +3809,11 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
 
                                 if(currentSurface->GetZones().count(zoneName) > 0)
                                 {
-                                    Zone* enclosingZone = currentSurface->GetZones()[zoneName];
+                                    ZoneOld* enclosingZone = currentSurface->GetZones()[zoneName];
                                     
                                     if(currentSurface->GetZones().count(includedZoneName) > 0)
                                     {
-                                        Zone* includedZone = currentSurface->GetZones()[includedZoneName];
+                                        ZoneOld* includedZone = currentSurface->GetZones()[includedZoneName];
                                         enclosingZone->AddZone(includedZone);
                                         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZoneName.c_str());
                                     }
@@ -3943,7 +3992,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            Zone* zone = nullptr;
+            ZoneOld* zone = nullptr;
             
             int zoneIndex = FillZones(zone);
             
@@ -4316,7 +4365,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         if (index >= 0)
                         {
                             hasEdits = true;
-                            Zone* zoneToDelete = zonesInThisFile[index];
+                            ZoneOld* zoneToDelete = zonesInThisFile[index];
                             //currentSurface->RemoveZone(zoneToDelete, index);
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
@@ -4346,7 +4395,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(zoneIndex >= 0)
                             {
                                 hasEdits = true;
-                                Zone* zone = zonesInThisFile[zoneIndex];
+                                ZoneOld* zone = zonesInThisFile[zoneIndex];
                                 //zone->RemoveZone(index);
                                 
                                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
