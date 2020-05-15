@@ -1639,6 +1639,14 @@ void Widget::DoAction(double value)
     if( ! isModifier_)
         modifiers = surface_->GetPage()->GetModifiers();
 
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        for(auto action : actions_[modifiers])
+            action->DoAction(value, this);
+    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
+        for(auto action : actions_[""])
+            action->DoAction(value, this);
+
+    /*
     if(activeZone_ != nullptr)
     {
         if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
@@ -1648,6 +1656,7 @@ void Widget::DoAction(double value)
             for(auto action : actionsOld_[activeZone_][""])
                 action->DoAction(value, this);
     }
+    */
 }
 
 void Widget::DoRelativeAction(double delta)
@@ -1666,12 +1675,21 @@ void Widget::DoRelativeAction(double delta)
     if( ! isModifier_)
         modifiers = surface_->GetPage()->GetModifiers();
     
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        for(auto action : actions_[modifiers])
+            action->DoRelativeAction(delta, this);
+    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
+        for(auto action : actions_[""])
+            action->DoRelativeAction(delta, this);
+    
+    /*
     if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
         for(auto action : actionsOld_[activeZone_][modifiers])
             action->DoRelativeAction(delta, this);
     else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
         for(auto action : actionsOld_[activeZone_][""])
             action->DoRelativeAction(delta, this);
+     */
 }
 
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
@@ -1690,12 +1708,21 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
     if( ! isModifier_)
         modifiers = surface_->GetPage()->GetModifiers();
     
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        for(auto action : actions_[modifiers])
+            action->DoRelativeAction(accelerationIndex, delta, this);
+    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
+        for(auto action : actions_[""])
+            action->DoRelativeAction(accelerationIndex, delta, this);
+    
+    /*
     if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
         for(auto action : actionsOld_[activeZone_][modifiers])
             action->DoRelativeAction(accelerationIndex, delta, this);
     else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
         for(auto action : actionsOld_[activeZone_][""])
             action->DoRelativeAction(accelerationIndex, delta, this);
+     */
 }
 
 void Widget::SilentSetValue(string displayText)
