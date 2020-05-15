@@ -361,15 +361,15 @@ private:
     
     
     // modifers->Action
-    map<string, vector<Action>> actions_;
-    map<string, vector<Action>> defaultActions_;
+    map<string, vector<Action*>> actions_;
+    map<string, vector<Action*>> defaultActions_;
 
     
     
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name)
     {
-        defaultActions_[""].push_back(NoAction(this, {}));
+        defaultActions_[""].push_back(new NoAction(this, {}));
     }
     virtual ~Widget() {};
     
@@ -387,7 +387,7 @@ public:
     void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     
-    void SetActions(string modifiers, vector<Action> actions)
+    void SetActions(string modifiers, vector<Action*> actions)
     {
         actions_[modifiers].clear();
         
@@ -404,7 +404,7 @@ public:
                 actions_[modifiers].push_back(action);
     }
     
-    void SetDefaultActions(string modifiers, vector<Action> actions)
+    void SetDefaultActions(string modifiers, vector<Action*> actions)
     {
         defaultActions_[modifiers].clear();
         
@@ -467,16 +467,11 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Navigator* const navigator_= nullptr;
     vector<Zone> includedZones_;
-    vector<string> widgets_;
+    vector<Widget*> widgets_;
 
 public:
-    Zone(Navigator* navigator) : navigator_(navigator) {}
-
-    Navigator* GetNavigator() { return navigator_; }
-
-    void AddWidget(string widget)
+    void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
     }
@@ -503,7 +498,7 @@ struct Wzat  // Widget Zone Action Template, that's what :)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string widgetName;
-    string actionNmae;
+    string actionName;
     
     bool isModifier;
     bool isPressRelease;
@@ -513,10 +508,11 @@ struct Wzat  // Widget Zone Action Template, that's what :)
     bool shouldToggle;
     bool isDelayed;
     double delayAmount;
+    string modifiers;
     
     vector<string> params;
     
-    Wzat(string widget, string action, vector<string> prams, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionNmae(action), params(prams), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+    Wzat(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -540,6 +536,20 @@ struct ZoneTemplate
     Zone  Activate(ControlSurface*  surface, Navigator* navigator);
     Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ZoneOld
@@ -664,6 +674,16 @@ public:
             zone->Deactivate(track, shouldShowFXWindows);
     }
 };
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSIMessageGenerator
@@ -1024,7 +1044,7 @@ protected:
 
     void InitZones(string zoneFolder);
     map<string, vector<string>> zoneFileLines_;
-    map<string, ZoneTemplate> zoneTemplates_;
+    map<string, ZoneTemplate*> zoneTemplates_;
     
     // Old
     map<string, ZoneOld*> zones_;
@@ -1094,9 +1114,15 @@ public:
     void GoZone(string zoneName)
     {
         if(zoneTemplates_.count(zoneName) > 0)
-        {
-            int blah =  1;
-        }
+            zoneTemplates_[zoneName]->Activate(this);
+    }
+    
+    ZoneTemplate* GetZoneTemplate(string zoneName)
+    {
+        if(zoneTemplates_.count(zoneName) > 0)
+            return zoneTemplates_[zoneName];
+        else
+            return nullptr;
     }
     
     void ActivateNoActionForZone(string zoneName)
@@ -1122,9 +1148,9 @@ public:
             //return page_->GetZoneAlias(zoneName);
     }
     
-    void AddZoneTemplate(ZoneTemplate zoneTemplate)
+    void AddZoneTemplate(ZoneTemplate* zoneTemplate)
     {
-        zoneTemplates_[zoneTemplate.name] = zoneTemplate;
+        zoneTemplates_[zoneTemplate->name] = zoneTemplate;
     }
     
     void AddZone(ZoneOld* zone)
@@ -1188,6 +1214,14 @@ public:
         widgetsByName_[widget->GetName()] = widget;
     }
 
+    Widget* GetWidgetByName(string name)
+    {
+        if(widgetsByName_.count(name) > 0)
+            return widgetsByName_[name];
+        else
+            return nullptr;
+    }
+    
     void OnTrackSelection()
     {
         if(widgetsByName_.count("OnTrackSelection") > 0)
@@ -2133,8 +2167,8 @@ private:
     CSurfIntegrator* const CSurfIntegrator_;
     map<string, function<Action*(Widget* widget, vector<string>)>> actionsOld_;
     
-    map<string, function<Action(Widget* widget, vector<string>)>> actions_;
-    map<string, function<Action(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithIndex_;
+    map<string, function<Action*(Widget* widget, vector<string>)>> actions_;
+    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithIndex_;
 
     vector <Page*> pages_;
     
@@ -2174,6 +2208,8 @@ public:
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionDictionaryOld();
+        InitActionDictionary();
+        InitActionsWithIndexDictionary();
         
         int size = 0;
         int index = projectconfig_var_getoffs("projtimemode", &size);
@@ -2251,7 +2287,7 @@ public:
             return nullptr;
     }
     
-    Action GetAction(Widget* widget, string actionName, vector<string> params)
+    Action* GetAction(Widget* widget, string actionName, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
             return actions_[actionName](widget, params);
@@ -2259,7 +2295,7 @@ public:
             return actions_["NoAction"](widget, params);;
     }
     
-    Action GetActionWithIndex(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
+    Action* GetActionWithIndex(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
     {
         if(actionsWithIndex_.count(actionName) > 0)
             return actionsWithIndex_[actionName](widget, params, navigator, index);
