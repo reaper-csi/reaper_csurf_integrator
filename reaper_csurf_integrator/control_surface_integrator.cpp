@@ -655,6 +655,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, companionZones, includedZones, zoneMembers));
                     companionZones.clear();
                     includedZones.clear();
+                    zoneMembers.clear();
                 }
                 
                 else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator")
@@ -1513,6 +1514,15 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
 void Widget::AddAction(ZoneOld* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
@@ -1569,6 +1579,15 @@ int Widget::GetParamIndex()
     else
         return 0;
 }
+
+
+
+
+
+
+
+
+
 
 void Widget::RequestUpdate()
 {
@@ -1786,6 +1805,11 @@ Action::Action(Widget* widget, vector<string> params, Navigator* navigator): wid
     SetParams(params);
 }
 
+Action::Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex): widget_(widget), navigator_(navigator), slotIndex_(slotIndex), paramIndex_(paramIndex)
+{
+    SetParams(params);
+}
+
 void Action::SetParams(vector<string> params)
 {
     if(params.size() > 0)
@@ -1808,6 +1832,16 @@ ControlSurface* Action::GetSurface()
     return widget_->GetSurface();
 }
 
+
+
+
+
+
+
+
+
+
+
 TrackNavigationManager* Action::GetTrackNavigationManager()
 {
     return GetPage()->GetTrackNavigationManager();
@@ -1815,6 +1849,7 @@ TrackNavigationManager* Action::GetTrackNavigationManager()
 
 MediaTrack* Action::GetTrack()
 {
+    //return navigator_->GetTrack();
     return widget_->GetNavigator()->GetTrack();
 }
 
@@ -1822,6 +1857,14 @@ int Action::GetSlotIndex()
 {
     return widget_->GetSlotIndex();
 }
+
+
+
+
+
+
+
+
 
 void Action::RequestUpdate()
 {
@@ -2064,23 +2107,37 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
     Zone zone;
     
     for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+    {
+        if(includedZoneTemplate.find("Channel|") != string::npos)
+        {
+            int numChannels = surface->GetNumChannels();
+            string chTemplate = "Channel|";
+            
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(chTemplate))
+            {
+                int blah = 0;
+            }
+            
+            
+            
+            
+        }
+        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
             zone.AddZone(zoneTemplate->Activate(surface));
+    }
     
     map<Widget*, map<string, vector<Action*>>> widgetActions;
     
     for(auto member : zoneMembers)
-    {
         if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-        {
             widgetActions[widget][member.modifiers].push_back(TheManager->GetAction(widget, member.actionName, member.params));
-            zone.AddWidget(widget);
-        }
-    }
     
     for(auto [widget, modifierActions] : widgetActions)
         for(auto [modifier, actions] : modifierActions)
-            widget->SetActions(modifier, actions);
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
     
     return zone;
 }

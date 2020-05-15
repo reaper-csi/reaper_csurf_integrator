@@ -202,16 +202,25 @@ private:
     bool supportsTrackColor_ = false;
     
 protected:
-    Action() = default;
     Action(Widget* widget, vector<string> params);
     Action(Widget* widget, vector<string> params, Navigator* navigator);
     Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex);
 
-    void SetParams(vector<string> params);
-    int GetSlotIndex();
-    
     Widget* const widget_;
     Navigator* const navigator_;
+    
+    int slotIndex_ = 0;
+    int paramIndex_ = 0;
+    
+
+    
+    
+    
+    int GetSlotIndex();
+    
+    
+    
+    
     
     vector<double> steppedValues_;
     int steppedValuesIndex_ = 0;
@@ -239,7 +248,7 @@ protected:
     double deferredValue_ = 0.0;
     Widget* deferredSender_ = nullptr;
     
-    
+    void SetParams(vector<string> params);
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value, Widget* sender) {}
     virtual void Do(double value, Widget* sender) {}
@@ -255,10 +264,14 @@ public:
     TrackNavigationManager* GetTrackNavigationManager();
     MediaTrack* GetTrack();
     
-    virtual string GetDisplayName() { return ""; }
-    
     virtual string GetParamNumAsString() { return ""; }
     virtual int GetParamNum() { return 0; }
+
+    
+    
+    
+    virtual string GetDisplayName() { return ""; }
+    
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
     vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
@@ -349,6 +362,17 @@ private:
     bool isFaderTouched_ = false;
     bool isRotaryTouched_ = false;
     
+    // modifers->Action
+    map<string, vector<Action*>> actions_;
+    map<string, vector<Action*>> defaultActions_;
+
+    
+    
+    
+    
+    
+    
+    
     ZoneOld* activeZone_ = nullptr;
     map<string, ZoneOld*> zonesAvailable_;
     
@@ -360,9 +384,6 @@ private:
     
     
     
-    // modifers->Action
-    map<string, vector<Action*>> actions_;
-    map<string, vector<Action*>> defaultActions_;
 
     
     
@@ -375,9 +396,6 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
-    void AddAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
@@ -387,35 +405,81 @@ public:
     void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     
-    void SetActions(string modifiers, vector<Action*> actions)
+    void RequestUpdate();
+    void DoAction(double value);
+    void DoRelativeAction(double delta);
+    void DoRelativeAction(int accelerationIndex, double delta);
+    void UpdateValue(double value);
+    void UpdateValue(int mode, double value);
+    void UpdateValue(string value);
+    void UpdateRGBValue(int r, int g, int b);
+    void ClearCache();
+    void Clear();
+    void ForceClear();
+
+    void Activate(string modifier, vector<Action*> actions)
     {
-        actions_[modifiers].clear();
+        if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+            for(auto action : actions_[modifier] )
+                delete action;
+        
+        actions_[modifier].clear();
         
         for(auto action : actions)
-            actions_[modifiers].push_back(action);
+            actions_[modifier].push_back(action);
     }
     
-    void ResetActions(string modifiers)
+    void Deactivate(string modifier)
     {
-        actions_[modifiers].clear();
-     
-        if(defaultActions_.count(modifiers) > 0)
-            for(auto action : defaultActions_[modifiers])
-                actions_[modifiers].push_back(action);
-    }
-    
-    void SetDefaultActions(string modifiers, vector<Action*> actions)
-    {
-        defaultActions_[modifiers].clear();
+        if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+            for(auto action : actions_[modifier] )
+                delete action;
         
-        for(auto action : actions)
-            defaultActions_[modifiers].push_back(action);
+        actions_[modifier].clear();
+        
+        if(defaultActions_.count(modifier) > 0 && defaultActions_[modifier].size() > 0)
+            for(auto action : defaultActions_[modifier] )
+                actions_[modifier].push_back(action);
+        
     }
     
+    void SetDefaultFromCurrent()
+    {
+        for(auto [modifier, actions] : actions_ )
+        {
+            if(defaultActions_.count(modifier) > 0 && defaultActions_[modifier].size() > 0)
+                for(auto action : actions_[modifier] )
+                    delete action;
+            
+            defaultActions_[modifier].clear();
+            
+            for(auto action : actions_[modifier] )
+                defaultActions_[modifier].push_back(action);
+        }
+    }
+   
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    void AddAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
+
+    MediaTrack* GetTrack();
+    Navigator* GetNavigator();
+    int GetSlotIndex();
+    int GetParamIndex();
     
     void GoZone(string zoneName)
     {
@@ -444,22 +508,14 @@ public:
         }
     }
     
-    void Clear();
-    void ForceClear();
     
-    MediaTrack* GetTrack();
-    Navigator* GetNavigator();
-    int GetSlotIndex();
-    int GetParamIndex();
-    void RequestUpdate();
-    void DoAction(double value);
-    void DoRelativeAction(double delta);
-    void DoRelativeAction(int accelerationIndex, double delta);
-    void UpdateValue(double value);
-    void UpdateValue(int mode, double value);
-    void UpdateValue(string value);
-    void UpdateRGBValue(int r, int g, int b);
-    void ClearCache();
+    
+    
+    
+    
+    
+    
+    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -468,12 +524,12 @@ class Zone
 {
 private:
     vector<Zone> includedZones_;
-    vector<Widget*> widgets_;
+    map<Widget*, vector<string>> widgets_;
 
 public:
-    void AddWidget(Widget* widget)
+    void AddWidget(Widget* widget, string modifiers)
     {
-        widgets_.push_back(widget);
+        widgets_[widget].push_back(modifiers);
     }
     
     void AddZone(Zone zone)
@@ -483,11 +539,10 @@ public:
     
     void Deactivate()
     {
-        for(auto widget : widgets_)
-        {
+        for(auto [widget, modifiers] : widgets_)
+            for(auto modifier : modifiers)
+                widget->Deactivate(modifier);
             
-        }
-        
         for(auto includedZone : includedZones_)
             includedZone.Deactivate();
     }
@@ -561,24 +616,12 @@ private:
     string const alias_ = "";
     string const sourceFilePath_ = "";
     vector<ZoneOld*> includedZones_;
-    
-    
-    
-    
-    
     vector<string> widgets_;
     
     Navigator* const navigator_= nullptr;
-    
-    
-    
-    
-    // GAW TBD -- remove eventually
+
     int index_ = 0;
     vector<Widget*> widgetsOld_;
-    
-    
-    
     
 public:
     ZoneOld(Navigator* navigator, ControlSurface* surface, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
@@ -591,12 +634,6 @@ public:
     string GetAlias() { return alias_;}
     string GetSourceFilePath() { return sourceFilePath_; }
     Navigator* GetNavigator() { return navigator_; }
-    
-    
-    
-    
-    
-    
     
     void AddWidget(string widget)
     {
@@ -1071,6 +1108,10 @@ public:
     map<string, ZoneOld*> &GetZones() { return zones_;}
     map<string, vector<ZoneOld*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
     
+    int GetNumChannels() { return numChannels_; }
+    int GetNumSends() { return numSends_; }
+    int GetNumFX() { return numFX_; }
+
     Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
