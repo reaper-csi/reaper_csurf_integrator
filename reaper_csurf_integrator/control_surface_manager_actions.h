@@ -10,6 +10,24 @@
 #include "control_surface_integrator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TogglePin  : public TrackAction
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    TogglePin(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TogglePin(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
+    
+    void Do(double value, Widget* sender) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = GetTrack())
+            GetTrackNavigationManager()->TogglePin(track);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ToggleLearnMode  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -21,22 +39,6 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         GetPage()->ToggleLearnMode();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TogglePin  : public TrackAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    TogglePin(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-       
-    void Do(double value, Widget* sender) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetTrack())
-            GetTrackNavigationManager()->TogglePin(track);
     }
 };
 
