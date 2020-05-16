@@ -183,6 +183,12 @@ protected:
             param_= atol(params[0].c_str());
     }
     
+    TrackActionWithIntParam(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
+    {
+        if(params.size() > 0)
+            param_= atol(params[0].c_str());
+    }
+    
 public:
     virtual string GetParamNumAsString() override
     {
