@@ -588,7 +588,7 @@ struct ZoneTemplate
     : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), companionZoneTemplates(companionZones), includedZoneTemplates(includedZones), zoneMembers(wzats) {}
     
     Zone  Activate(ControlSurface*  surface);
-    Zone  Activate(ControlSurface*  surface, Navigator* navigator);
+    Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
     Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
 };
 
@@ -1112,7 +1112,7 @@ public:
     int GetNumSends() { return numSends_; }
     int GetNumFX() { return numFX_; }
 
-    Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum);
+    Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
@@ -2209,7 +2209,8 @@ private:
     map<string, function<Action*(Widget* widget, vector<string>)>> actionsOld_;
     
     map<string, function<Action*(Widget* widget, vector<string>)>> actions_;
-    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithIndex_;
+    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator)>> actionsWithNavigator_;
+    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithNavigatorAndIndex_;
 
     vector <Page*> pages_;
     
@@ -2231,8 +2232,9 @@ private:
     double *timeOffsPtr_ = nullptr;
     
     void InitActionDictionaryOld();
-    void InitActionDictionary();
-    void InitActionsWithIndexDictionary();
+    void InitActionsDictionary();
+    void InitActionsWithNavigatorDictionary();
+    void InitActionsWithNavigatorAndIndexDictionary();
 
     double GetPrivateProfileDouble(string key)
     {
@@ -2249,9 +2251,10 @@ public:
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionDictionaryOld();
-        InitActionDictionary();
-        InitActionsWithIndexDictionary();
-        
+        InitActionsDictionary();
+        InitActionsWithNavigatorDictionary();
+        InitActionsWithNavigatorAndIndexDictionary();
+
         int size = 0;
         int index = projectconfig_var_getoffs("projtimemode", &size);
         timeModePtr_ = (int *)projectconfig_var_addr(nullptr, index);
@@ -2336,14 +2339,22 @@ public:
             return actions_["NoAction"](widget, params);;
     }
     
-    Action* GetActionWithIndex(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
+    Action* GetAction(Widget* widget, string actionName, vector<string> params, Navigator* navigator)
     {
-        if(actionsWithIndex_.count(actionName) > 0)
-            return actionsWithIndex_[actionName](widget, params, navigator, index);
+        if(actionsWithNavigator_.count(actionName) > 0)
+            return actionsWithNavigator_[actionName](widget, params, navigator);
         else
             return actions_["NoAction"](widget, params);;
     }
     
+    Action* GetAction(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
+    {
+        if(actionsWithNavigatorAndIndex_.count(actionName) > 0)
+            return actionsWithNavigatorAndIndex_[actionName](widget, params, navigator, index);
+        else
+            return actions_["NoAction"](widget, params);;
+    }
+
     bool IsActionAvailable(string actionName)
     {
         if(actionsOld_.count(actionName) > 0)
@@ -2356,7 +2367,7 @@ public:
     
     bool IsActionWithIndexAvailable(string actionName)
     {
-        if(actionsWithIndex_.count(actionName) > 0)
+        if(actionsWithNavigatorAndIndex_.count(actionName) > 0)
             return true;
         else
             return false;

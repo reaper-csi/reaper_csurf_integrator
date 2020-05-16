@@ -101,7 +101,8 @@ protected:
     
 public:
     TrackVolume(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    TrackVolume(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -115,7 +116,8 @@ class SoftTakeover7BitTrackVolume : public TrackAction
 {
 public:
     SoftTakeover7BitTrackVolume(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    SoftTakeover7BitTrackVolume(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -136,7 +138,8 @@ class SoftTakeover14BitTrackVolume : public TrackAction
 {
 public:
     SoftTakeover14BitTrackVolume(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    SoftTakeover14BitTrackVolume(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -169,7 +172,13 @@ public:
         rangeMinimum_ = -144.0;
         rangeMaximum_ = 24.0;
     }
-        
+    
+    TrackVolumeDB(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
+    {
+        rangeMinimum_ = -144.0;
+        rangeMaximum_ = 24.0;
+    }
+    
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -191,7 +200,8 @@ protected:
     
 public:
     TrackPan(Widget* widget, vector<string> params) : TrackActionWithIntParam(widget, params) {}
-    
+    TrackPan(Widget* widget, vector<string> params, Navigator* navigator) : TrackActionWithIntParam(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -217,7 +227,13 @@ public:
         rangeMinimum_ = -100.0;
         rangeMaximum_ = 100.0;
     }
-
+    
+    TrackPanPercent(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+    
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -237,7 +253,8 @@ protected:
     
 public:
     TrackPanWidth(Widget* widget, vector<string> params) : TrackActionWithIntParam(widget, params) {}
-    
+    TrackPanWidth(Widget* widget, vector<string> params, Navigator* navigator) : TrackActionWithIntParam(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -261,7 +278,13 @@ public:
         rangeMinimum_ = -100.0;
         rangeMaximum_ = 100.0;
     }
-
+    
+    TrackPanWidthPercent(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+    
     void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = GetTrack())
@@ -281,6 +304,12 @@ protected:
     
 public:
     TrackPanLPercent(Widget* widget, vector<string> params) : TrackAction(widget, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+    
+    TrackPanLPercent(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
     {
         rangeMinimum_ = -100.0;
         rangeMaximum_ = 100.0;
@@ -308,6 +337,12 @@ protected:
     
 public:
     TrackPanRPercent(Widget* widget, vector<string> params) : TrackAction(widget, params)
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+    
+    TrackPanRPercent(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
     {
         rangeMinimum_ = -100.0;
         rangeMaximum_ = 100.0;
@@ -510,7 +545,8 @@ class FXNameDisplay : public TrackActionWithIntParam
 {
 public:
     FXNameDisplay(Widget* widget, vector<string> params) : TrackActionWithIntParam(widget, params) {}
-    
+    FXNameDisplay(Widget* widget, vector<string> params, Navigator* navigator) : TrackActionWithIntParam(widget, params, navigator) {}
+
     virtual void RequestUpdate() override
     {
         if(MediaTrack* track = GetTrack())
@@ -710,6 +746,8 @@ protected:
     
 public:
     TrackNameDisplay(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackNameDisplay(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -726,6 +764,7 @@ protected:
     
 public:
     TrackVolumeDisplay(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackVolumeDisplay(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -781,6 +820,7 @@ protected:
 
 public:
     TrackPanDisplay(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackPanDisplay(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -816,6 +856,7 @@ protected:
 
 public:
     TrackPanWidthDisplay(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackPanWidthDisplay(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -928,6 +969,7 @@ class TrackToggleVCASpill : public TrackAction
 {
 public:
     TrackToggleVCASpill(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackToggleVCASpill(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
     
     void Do(double value, Widget* sender) override
     {
@@ -950,7 +992,8 @@ protected:
     
 public:
     TrackSelect(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    TrackSelect(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -975,6 +1018,7 @@ protected:
     
 public:
     TrackUniqueSelect(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackUniqueSelect(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 
     void Do(double value, Widget* sender) override
     {
@@ -1000,6 +1044,7 @@ protected:
     
 public:
     TrackRangeSelect(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackRangeSelect(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 
     virtual void Do(double value, Widget* sender) override
     {
@@ -1064,6 +1109,7 @@ protected:
     
 public:
     TrackRecordArm(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackRecordArm(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 
     void Do(double value, Widget* sender) override
     {
@@ -1090,6 +1136,7 @@ protected:
     
 public:
     TrackMute(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackMute(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 
     void Do(double value, Widget* sender) override
     {
@@ -1116,6 +1163,7 @@ protected:
     
 public:
     TrackSolo(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackSolo(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 
     void Do(double value, Widget* sender) override
     {
@@ -1134,7 +1182,8 @@ class SetFaderTouch : public TrackAction
 {
 public:
     SetFaderTouch(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    SetFaderTouch(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         widget_->SetIsFaderTouched(value == 0 ? false : true);
@@ -1147,7 +1196,8 @@ class SetRotaryTouch : public TrackAction
 {
 public:
     SetRotaryTouch(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
-    
+    SetRotaryTouch(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
+
     void Do(double value, Widget* sender) override
     {
         widget_->SetIsRotaryTouched(value == 0 ? false : true);
@@ -1399,6 +1449,7 @@ class TrackOutputMeter : public TrackActionWithIntParam
 {
 public:
     TrackOutputMeter(Widget* widget, vector<string> params) : TrackActionWithIntParam(widget, params) {}
+    TrackOutputMeter(Widget* widget, vector<string> params, Navigator* navigator) : TrackActionWithIntParam(widget, params, navigator) {}
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -1420,6 +1471,7 @@ protected:
 
 public:
     TrackOutputMeterAverageLR(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackOutputMeterAverageLR(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1439,6 +1491,7 @@ protected:
 
 public:
     TrackOutputMeterMaxPeakLR(Widget* widget, vector<string> params) : TrackAction(widget, params) {}
+    TrackOutputMeterMaxPeakLR(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
