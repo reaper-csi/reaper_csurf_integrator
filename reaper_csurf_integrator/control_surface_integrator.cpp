@@ -259,7 +259,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
 
 
 
-
+/*
 static map<int, Navigator*> navigators;
 
 static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum)
@@ -595,7 +595,7 @@ static void ProcessZoneFileOld(string filePath, ControlSurface* surface, vector<
     }
 }
 
-
+*/
 
 
 
@@ -667,8 +667,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens[0] == "IncludedZonesEnd")
                     isInIncludedZonesSection = false;
-                
-                
+
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
                 {
                     // GAW -- For legacy syntax
