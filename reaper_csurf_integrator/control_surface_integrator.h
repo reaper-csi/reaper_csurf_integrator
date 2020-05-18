@@ -2205,7 +2205,6 @@ class Manager
 {
 private:
     CSurfIntegrator* const CSurfIntegrator_;
-    map<string, function<Action*(Widget* widget, vector<string>)>> actionsOld_;
     
     map<string, function<Action*(Widget* widget, vector<string>)>> actions_;
     map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator)>> actionsWithNavigator_;
@@ -2230,7 +2229,6 @@ private:
     int *measOffsPtr_ = nullptr;
     double *timeOffsPtr_ = nullptr;
     
-    void InitActionDictionaryOld();
     void InitActionsDictionary();
     void InitActionsWithNavigatorDictionary();
     void InitActionsWithNavigatorAndIndexDictionary();
@@ -2249,7 +2247,6 @@ public:
     ~Manager() {};
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
-        InitActionDictionaryOld();
         InitActionsDictionary();
         InitActionsWithNavigatorDictionary();
         InitActionsWithNavigatorAndIndexDictionary();
@@ -2303,17 +2300,7 @@ public:
     int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
-    
-    vector<string> GetActionNames()
-    {
-        vector<string> actionNames;
-        
-        for(auto [key, value] : actionsOld_)
-            actionNames.push_back(regex_replace(key, regex("[\"]"), ""));
-        
-        return actionNames;
-    }
-    
+
     Page* GetCurrentPage()
     {
         if(pages_.size() > 0)
@@ -2321,15 +2308,7 @@ public:
         else
             return nullptr;
     }
-    
-    Action* GetActionOld(Widget* widget, ZoneOld* zone, string actionName, vector<string> params)
-    {
-        if(actionsOld_.count(actionName) > 0)
-            return actionsOld_[actionName](widget, params);
-        else
-            return nullptr;
-    }
-    
+
     Action* GetAction(Widget* widget, string actionName, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
@@ -2352,24 +2331,6 @@ public:
             return actionsWithNavigatorAndIndex_[actionName](widget, params, navigator, index);
         else
             return actions_["NoAction"](widget, params);;
-    }
-
-    bool IsActionAvailable(string actionName)
-    {
-        if(actionsOld_.count(actionName) > 0)
-            return true;
-        else if(actions_.count(actionName) > 0)
-            return true;
-        else
-            return false;
-    }
-    
-    bool IsActionWithIndexAvailable(string actionName)
-    {
-        if(actionsWithNavigatorAndIndex_.count(actionName) > 0)
-            return true;
-        else
-            return false;
     }
     
     void OnTrackSelection(MediaTrack *track)
