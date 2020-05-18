@@ -1176,7 +1176,7 @@ void Manager::InitActionsWithNavigatorAndIndexDictionary()
     actionsWithNavigatorAndIndex_["TrackSendNameDisplay"] =     [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return new TrackSendNameDisplay(widget, params, navigator, index); };
     actionsWithNavigatorAndIndex_["TrackSendVolumeDisplay"] =   [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return new TrackSendVolumeDisplay(widget, params, navigator, index); };
 }
-
+/*
 void Manager::InitActionDictionaryOld()
 {
     actionsOld_["NoAction"] =                          [](Widget* widget, vector<string> params) { return new NoAction(widget, params); };
@@ -1265,7 +1265,7 @@ void Manager::InitActionDictionaryOld()
     actionsOld_["EuConCycleTrackAutoMode"] =           [](Widget* widget, vector<string> params) { return new EuConCycleTrackAutoMode(widget, params); };
     actionsOld_["GlobalAutoMode"] =                    [](Widget* widget, vector<string> params) { return new GlobalAutoMode(widget, params); };
 }
-
+*/
 void Manager::Init()
 {
     pages_.clear();
@@ -4281,9 +4281,9 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(focusedFXTrack && focusedFXName == newZoneName)
                                 LoadRawFXFile(focusedFXTrack, focusedFXName);
                             
-                            for(auto name : TheManager->GetActionNames())
-                                if(name != Shift && name != Option && name != Control && name != Alt)
-                                    SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
+                            //for(auto name : TheManager->GetActionNames())
+                                //if(name != Shift && name != Option && name != Control && name != Alt)
+                                    //SendDlgItemMessage(hwndDlg, IDC_LIST_ActionNames, LB_ADDSTRING, 0, (LPARAM)name.c_str());
                             
                             newZoneFilename = filePath + newZoneFilename + ".zon";
                             
@@ -4559,11 +4559,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         snprintf(buffer, sizeof(buffer), "CSI Actions %s",  (GetLineEnding() + GetLineEnding()).c_str() );
                         DAW::ShowConsoleMsg(buffer);
                         
-                        for(auto name : TheManager->GetActionNames())
-                        {
-                            snprintf(buffer, sizeof(buffer), "%s", (name + GetLineEnding()).c_str());
-                            DAW::ShowConsoleMsg(buffer);
-                        }
+                        //for(auto name : TheManager->GetActionNames())
+                        //{
+                            //snprintf(buffer, sizeof(buffer), "%s", (name + GetLineEnding()).c_str());
+                            //DAW::ShowConsoleMsg(buffer);
+                       // }
                         
                         snprintf(buffer, sizeof(buffer), "%s", (GetLineEnding() + GetLineEnding() + GetLineEnding() + GetLineEnding()).c_str());
                         DAW::ShowConsoleMsg(buffer);
