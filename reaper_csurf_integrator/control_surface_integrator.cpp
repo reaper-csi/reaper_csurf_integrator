@@ -605,13 +605,10 @@ static void ProcessZoneFileOld(string filePath, ControlSurface* surface, vector<
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
-    vector<string> companionZones;
-    bool isInCompanionZonesSection = false;
-
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
     
-    vector<Wzat> zoneMembers;
+    vector<ZoneMember> zoneMembers;
 
     string zoneName = "";
     string zoneAlias = "";
@@ -652,8 +649,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens[0] == "ZoneEnd")
                 {
-                    surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, companionZones, includedZones, zoneMembers));
-                    companionZones.clear();
+                    // GAW -- For legacy syntax -- Geeez not even out of beta and already supporting legacy syntax :)
+                    zoneName = regex_replace(zoneName, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+                    zoneAlias = regex_replace(zoneAlias, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+
+                    surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, zoneMembers));
+
                     includedZones.clear();
                     zoneMembers.clear();
                 }
@@ -666,18 +667,16 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens[0] == "IncludedZonesEnd")
                     isInIncludedZonesSection = false;
-                                
+                
+                
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
-                    includedZones.push_back(tokens[0]);
+                {
+                    // GAW -- For legacy syntax
+                    string includedZoneName = regex_replace(tokens[0], regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+                    
+                    includedZones.push_back(includedZoneName);
+                }
                 
-                else if(tokens[0] == "CompanionZones")
-                    isInCompanionZonesSection = true;
-                
-                else if(tokens[0] == "CompanionZonesEnd")
-                    isInCompanionZonesSection = false;
-                
-                else if(tokens.size() == 1 && isInCompanionZonesSection)
-                    companionZones.push_back(tokens[0]);
                 else
                 {
                     actionName = tokens[1];
@@ -704,7 +703,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                    
-                    zoneMembers.push_back(Wzat(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, isDelayed, delayAmount));
+                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, isDelayed, delayAmount));
                 }
             }
         }
@@ -1854,8 +1853,7 @@ TrackNavigationManager* Action::GetTrackNavigationManager()
 
 MediaTrack* Action::GetTrack()
 {
-    //return navigator_->GetTrack();
-    return widget_->GetNavigator()->GetTrack();
+    return navigator_->GetTrack();
 }
 
 int Action::GetSlotIndex()
@@ -2113,13 +2111,16 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
     
     for(auto includedZoneTemplate : includedZoneTemplates)
     {
-        if(includedZoneTemplate.find("Channel|") != string::npos)
+        if(includedZoneTemplate == "Channel")
         {
-            string chTemplate = "Channel|";
-            
-            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(chTemplate))
-                for(int i = 0; i < surface->GetNumChannels(); i++)
-                    zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            {
+                if(zoneTemplate->navigator == "")
+                    zone.AddZone(zoneTemplate->Activate(surface));
+                else if(zoneTemplate->navigator == "TrackNavigator")
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
+            }
         }
         else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
             zone.AddZone(zoneTemplate->Activate(surface));
@@ -2145,11 +2146,18 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
 {
     Zone zone;
 
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface));
+    
     map<Widget*, map<string, vector<Action*>>> widgetActions;
 
     if(navigator != nullptr)
         for(auto member : zoneMembers)
         {
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
+            
             member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
             
             if(Widget* widget = surface->GetWidgetByName(member.widgetName))
@@ -2571,13 +2579,8 @@ void ControlSurface::InitZones(string zoneFolder)
         vector<string> zoneFilesToProcess;
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
-        navigators.clear();
-        
         for(auto zoneFilename : zoneFilesToProcess)
-        {
             ProcessZoneFile(zoneFilename, this);
-            ProcessZoneFileOld(zoneFilename, this, widgets_);
-        }
     }
     catch (exception &e)
     {
