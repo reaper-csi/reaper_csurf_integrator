@@ -549,7 +549,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct Wzat  // Widget Zone Action Template, that's what :)
+struct ZoneMember
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string widgetName;
@@ -567,7 +567,7 @@ struct Wzat  // Widget Zone Action Template, that's what :)
     
     vector<string> params;
     
-    Wzat(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -578,14 +578,13 @@ struct ZoneTemplate
     string name = "";
     string alias = "";
     string sourceFilePath = "";
-    vector<string> companionZoneTemplates;
     vector<string> includedZoneTemplates;
-    vector<Wzat> zoneMembers;
+    vector<ZoneMember> zoneMembers;
     
     ZoneTemplate() = default;
     
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> companionZones, vector<string> includedZones, vector<Wzat> wzats)
-    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), companionZoneTemplates(companionZones), includedZoneTemplates(includedZones), zoneMembers(wzats) {}
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
+    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
     
     Zone  Activate(ControlSurface*  surface);
     Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
