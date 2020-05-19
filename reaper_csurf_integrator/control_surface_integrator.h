@@ -212,16 +212,6 @@ protected:
     int slotIndex_ = 0;
     int paramIndex_ = 0;
     
-
-    
-    
-    
-    int GetSlotIndex();
-    
-    
-    
-    
-    
     vector<double> steppedValues_;
     int steppedValuesIndex_ = 0;
 
@@ -262,14 +252,10 @@ public:
     Page* GetPage();
     ControlSurface* GetSurface();
     TrackNavigationManager* GetTrackNavigationManager();
-    MediaTrack* GetTrack();
-    
-    virtual string GetParamNumAsString() { return ""; }
-    virtual int GetParamNum() { return 0; }
-
-    
-    
-    
+    Navigator* GetNavigator() { return navigator_; }
+    MediaTrack* GetTrack() { return navigator_->GetTrack(); }
+    int GetSlotIndex() { return slotIndex_; }
+    int GetParamIndex() { return paramIndex_; }
     virtual string GetDisplayName() { return ""; }
     
     virtual string GetAlias() { return ""; }
@@ -399,11 +385,20 @@ public:
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
-    bool GetIsFaderTouched() { return isFaderTouched_;  }
-    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
-    
     void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
+    bool GetIsFaderTouched() { return isFaderTouched_;  }
+    
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
+    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
+
+    void AddAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
+    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
+    
+    MediaTrack* GetTrack();
+    Navigator* GetNavigator();
+    int GetSlotIndex();
+    int GetParamIndex();
     
     void RequestUpdate();
     void DoAction(double value);
@@ -463,24 +458,6 @@ public:
         feedbackProcessors_.push_back(feedbackProcessor);
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    void AddAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
-
-    MediaTrack* GetTrack();
-    Navigator* GetNavigator();
-    int GetSlotIndex();
-    int GetParamIndex();
-    
     void GoZone(string zoneName)
     {
         if(zonesAvailable_.count(zoneName) > 0)
@@ -507,15 +484,6 @@ public:
             ForceClear();
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

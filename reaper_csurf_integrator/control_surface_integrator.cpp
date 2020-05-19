@@ -1544,41 +1544,40 @@ void Widget::AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action
 
 MediaTrack* Widget::GetTrack()
 {
-    if(activeZone_ != nullptr)
-        return activeZone_->GetNavigator()->GetTrack();
+    string modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        return actions_[modifiers][0]->GetTrack();
     else
         return nullptr;
 }
 
 Navigator* Widget::GetNavigator()
 {
-    if(activeZone_ != nullptr)
-        return activeZone_->GetNavigator();
+    string modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        return actions_[modifiers][0]->GetNavigator();
     else
         return nullptr;
 }
 
 int Widget::GetSlotIndex()
 {
-    if(activeZone_ != nullptr)
-        return activeZone_->GetIndex();
+    string modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        return actions_[modifiers][0]->GetSlotIndex();
     else
         return 0;
 }
 
 int Widget::GetParamIndex()
 {
-    if(activeZone_ != nullptr)
-    {
-        string modifiers = surface_->GetPage()->GetModifiers();
-
-        if(activeZone_ != nullptr && actionsOld_[activeZone_].count(modifiers) > 0 && actionsOld_[activeZone_][modifiers].size() > 0)
-        {
-            return actionsOld_[activeZone_][modifiers][0]->GetParamNum();
-        }
-        else
-            return 0;
-    }
+    string modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        return actions_[modifiers][0]->GetParamIndex();
     else
         return 0;
 }
@@ -1850,15 +1849,6 @@ TrackNavigationManager* Action::GetTrackNavigationManager()
     return GetPage()->GetTrackNavigationManager();
 }
 
-MediaTrack* Action::GetTrack()
-{
-    return navigator_->GetTrack();
-}
-
-int Action::GetSlotIndex()
-{
-    return widget_->GetSlotIndex();
-}
 
 
 
@@ -4103,7 +4093,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
             FillSubZones(zone, zoneIndex);
             
             //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
-            SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamNumAsString().c_str());
+            //SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamNumAsString().c_str());
             SetDlgItemText(hwndDlg, IDC_EDIT_ActionAlias, currentAction->GetAlias().c_str());
 
             rgb_color color = currentAction->GetCurrentRGB();
