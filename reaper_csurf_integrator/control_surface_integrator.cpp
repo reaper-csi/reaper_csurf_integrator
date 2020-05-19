@@ -1515,17 +1515,382 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Zone
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::Deactivate()
+{
+    for(auto [widget, modifiers] : widgets_)
+        for(auto modifier : modifiers)
+            widget->Deactivate(modifier);
+    
+    for(auto includedZone : includedZones_)
+        includedZone.Deactivate();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ZoneTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Zone ZoneTemplate::Activate(ControlSurface*  surface)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+    {
+        if(includedZoneTemplate == "Channel")
+        {
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            {
+                if(zoneTemplate->navigator == "")
+                    zone.AddZone(zoneTemplate->Activate(surface));
+                else if(zoneTemplate->navigator == "TrackNavigator")
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
+            }
+        }
+        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface));
+    }
+    
+    map<Widget*, map<string, vector<ActionWrapper*>>> widgetActions;
+    
+    for(auto member : zoneMembers)
+        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+        {
+            widgetActions[widget][member.modifiers].push_back(new ActionWrapper(TheManager->GetAction(widget, member.actionName, member.params), member));
+            if(member.isModifier)
+                widget->SetIsModifier();
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
+    
+    return zone;
+}
+
+Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator* navigator)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface));
+    
+    map<Widget*, map<string, vector<ActionWrapper*>>> widgetActions;
+    
+    if(navigator != nullptr)
+        for(auto member : zoneMembers)
+        {
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
+            
+            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
+            
+            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+                widgetActions[widget][member.modifiers].push_back(new ActionWrapper(TheManager->GetAction(widget, member.actionName, member.params, navigator), member));
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
+    
+    return zone;
+}
+
+Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
+{
+    Zone zone;
+    
+    return zone;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Action::Action(Widget* widget, vector<string> params): widget_(widget), navigator_(widget->GetSurface()->GetPage()->GetDefaultNavigator())
+{
+    SetParams(params);
+}
+
+Action::Action(Widget* widget, vector<string> params, Navigator* navigator): widget_(widget), navigator_(navigator)
+{
+    SetParams(params);
+}
+
+Action::Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex): widget_(widget), navigator_(navigator), slotIndex_(slotIndex), paramIndex_(paramIndex)
+{
+    SetParams(params);
+}
+
+void Action::SetParams(vector<string> params)
+{
+    if(params.size() > 0)
+    {
+        SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
+        SetSteppedValues(params, deltaValue_, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_, acceleratedTickValues_);
+    }
+    
+    if(acceleratedTickValues_.size() < 1)
+        acceleratedTickValues_.push_back(10);
+}
+
+Page* Action::GetPage()
+{
+    return widget_->GetSurface()->GetPage();
+}
+
+ControlSurface* Action::GetSurface()
+{
+    return widget_->GetSurface();
+}
+
+TrackNavigationManager* Action::GetTrackNavigationManager()
+{
+    return GetPage()->GetTrackNavigationManager();
+}
+
+void Action::RequestUpdate()
+{
+    if(supportsRGB_)
+        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+}
+
+void Action::ClearWidget()
+{
+    widget_->Clear();
+}
+
+void Action::UpdateWidgetValue(double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(value);
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void Action::UpdateWidgetValue(int param, double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(param, value);
+    
+    currentRGBIndex_ = value == 0 ? 0 : 1;
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void Action::UpdateWidgetValue(string value)
+{
+    widget_->UpdateValue(value);
+    
+    if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void Action::DoAction(double value, Widget* sender)
+{
+    if(steppedValues_.size() > 0 && value != 0.0)
+    {
+        if(steppedValuesIndex_ == steppedValues_.size() - 1)
+        {
+            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
+                steppedValuesIndex_ = 0;
+        }
+        else
+            steppedValuesIndex_++;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+    }
+    else
+        DoRangeBoundAction(value, sender);
+}
+
+void Action::DoRelativeAction(double delta, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(0, delta, sender);
+    else
+    {
+        if(deltaValue_ != 0.0)
+        {
+            if(delta > 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta, sender);
+    }
+}
+
+void Action::DoRelativeAction(int accelerationIndex, double delta, Widget* sender)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(accelerationIndex, delta, sender);
+    else if(acceleratedDeltaValues_.size() > 0)
+        DoAcceleratedDeltaValueAction(accelerationIndex, delta, sender);
+    else
+    {
+        if(deltaValue_ != 0.0)
+        {
+            if(delta >= 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta, sender);
+    }
+}
+
+void Action::DoRangeBoundAction(double value, Widget* sender)
+{
+    if(delayAmount_ != 0.0)
+    {
+        if(value == 0.0)
+        {
+            delayStartTime_ = 0.0;
+            deferredValue_ = 0.0;
+            deferredSender_ = nullptr;
+        }
+        else
+        {
+            delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
+            deferredValue_ = value;
+            deferredSender_ = sender;
+        }
+    }
+    else
+    {
+        if(shouldToggle_ && value != 0.0)
+            value = ! GetCurrentValue();
+        
+        if(value > rangeMaximum_)
+            value = rangeMaximum_;
+        
+        if(value < rangeMinimum_)
+            value = rangeMinimum_;
+        
+        Do(value, sender);
+    }
+}
+
+void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta, Widget* sender)
+{
+    if(delta > 0)
+    {
+        accumulatedIncTicks_++;
+        accumulatedDecTicks_ = accumulatedDecTicks_ - 1 < 0 ? 0 : accumulatedDecTicks_ - 1;
+    }
+    else if(delta < 0)
+    {
+        accumulatedDecTicks_++;
+        accumulatedIncTicks_ = accumulatedIncTicks_ - 1 < 0 ? 0 : accumulatedIncTicks_ - 1;
+    }
+    
+    accelerationIndex = accelerationIndex > acceleratedTickValues_.size() - 1 ? acceleratedTickValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(delta > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_++;
+        
+        if(steppedValuesIndex_ > steppedValues_.size() - 1)
+            steppedValuesIndex_ = steppedValues_.size() - 1;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+    }
+    else if(delta < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_--;
+        
+        if(steppedValuesIndex_ < 0 )
+            steppedValuesIndex_ = 0;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+    }
+}
+
+void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, Widget* sender)
+{
+    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(delta > 0.0)
+        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
+    else
+        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-
-
-
 void Widget::AddAction(ZoneOld* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
@@ -1581,15 +1946,6 @@ int Widget::GetParamIndex()
     else
         return 0;
 }
-
-
-
-
-
-
-
-
-
 
 void Widget::RequestUpdate()
 {
@@ -1792,382 +2148,6 @@ void Widget::ClearCache()
 {
     for(auto processor : feedbackProcessors_)
         processor->ClearCache();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Action::Action(Widget* widget, vector<string> params): widget_(widget), navigator_(widget->GetSurface()->GetPage()->GetDefaultNavigator())
-{
-    SetParams(params);
-}
-
-Action::Action(Widget* widget, vector<string> params, Navigator* navigator): widget_(widget), navigator_(navigator)
-{
-    SetParams(params);
-}
-
-Action::Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex): widget_(widget), navigator_(navigator), slotIndex_(slotIndex), paramIndex_(paramIndex)
-{
-    SetParams(params);
-}
-
-void Action::SetParams(vector<string> params)
-{
-    if(params.size() > 0)
-    {
-        SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
-        SetSteppedValues(params, deltaValue_, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_, acceleratedTickValues_);
-    }
-    
-    if(acceleratedTickValues_.size() < 1)
-        acceleratedTickValues_.push_back(10);
-}
-
-Page* Action::GetPage()
-{
-    return widget_->GetSurface()->GetPage();
-}
-
-ControlSurface* Action::GetSurface()
-{
-    return widget_->GetSurface();
-}
-
-
-
-
-
-
-
-
-
-
-
-TrackNavigationManager* Action::GetTrackNavigationManager()
-{
-    return GetPage()->GetTrackNavigationManager();
-}
-
-
-
-
-
-
-
-
-
-
-void Action::RequestUpdate()
-{
-    if(supportsRGB_)
-        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
-}
-
-void Action::ClearWidget()
-{
-    widget_->Clear();
-}
-
-void Action::UpdateWidgetValue(double value)
-{
-    value = isInverted_ == false ? value : 1.0 - value;
-    
-    SetSteppedValueIndex(value);
-    
-    lastValue_ = value;
-    
-    widget_->UpdateValue(value);
-    
-    if(supportsRGB_)
-    {
-        currentRGBIndex_ = value == 0 ? 0 : 1;
-        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-    }
-    else if(supportsTrackColor_)
-    {
-        if(MediaTrack* track = GetTrack())
-        {
-            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-            
-            int r = (*rgb_colour >> 0) & 0xff;
-            int g = (*rgb_colour >> 8) & 0xff;
-            int b = (*rgb_colour >> 16) & 0xff;
-            
-            widget_->UpdateRGBValue(r, g, b);
-        }
-    }
-}
-
-void Action::UpdateWidgetValue(int param, double value)
-{
-    value = isInverted_ == false ? value : 1.0 - value;
-    
-    SetSteppedValueIndex(value);
-    
-    lastValue_ = value;
-    
-    widget_->UpdateValue(param, value);
-    
-    currentRGBIndex_ = value == 0 ? 0 : 1;
-    
-    if(supportsRGB_)
-    {
-        currentRGBIndex_ = value == 0 ? 0 : 1;
-        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-    }
-    else if(supportsTrackColor_)
-    {
-        if(MediaTrack* track = GetTrack())
-        {
-            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-            
-            int r = (*rgb_colour >> 0) & 0xff;
-            int g = (*rgb_colour >> 8) & 0xff;
-            int b = (*rgb_colour >> 16) & 0xff;
-            
-            widget_->UpdateRGBValue(r, g, b);
-        }
-    }
-}
-
-void Action::UpdateWidgetValue(string value)
-{
-    widget_->UpdateValue(value);
-    
-    if(supportsTrackColor_)
-    {
-        if(MediaTrack* track = GetTrack())
-        {
-            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-            
-            int r = (*rgb_colour >> 0) & 0xff;
-            int g = (*rgb_colour >> 8) & 0xff;
-            int b = (*rgb_colour >> 16) & 0xff;
-            
-            widget_->UpdateRGBValue(r, g, b);
-        }
-    }
-}
-
-void Action::DoAction(double value, Widget* sender)
-{
-    if(steppedValues_.size() > 0 && value != 0.0)
-    {
-        if(steppedValuesIndex_ == steppedValues_.size() - 1)
-        {
-            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
-                steppedValuesIndex_ = 0;
-        }
-        else
-            steppedValuesIndex_++;
-        
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
-    }
-    else
-        DoRangeBoundAction(value, sender);
-}
-
-void Action::DoRelativeAction(double delta, Widget* sender)
-{
-    if(steppedValues_.size() > 0)
-        DoAcceleratedSteppedValueAction(0, delta, sender);
-    else
-    {
-        if(deltaValue_ != 0.0)
-        {
-            if(delta > 0.0)
-                delta = deltaValue_;
-            else if(delta < 0.0)
-                delta = -deltaValue_;
-        }
-        
-        DoRangeBoundAction(lastValue_ + delta, sender);
-    }
-}
-
-void Action::DoRelativeAction(int accelerationIndex, double delta, Widget* sender)
-{
-    if(steppedValues_.size() > 0)
-        DoAcceleratedSteppedValueAction(accelerationIndex, delta, sender);
-    else if(acceleratedDeltaValues_.size() > 0)
-        DoAcceleratedDeltaValueAction(accelerationIndex, delta, sender);
-    else
-    {
-        if(deltaValue_ != 0.0)
-        {
-            if(delta >= 0.0)
-                delta = deltaValue_;
-            else if(delta < 0.0)
-                delta = -deltaValue_;
-        }
-        
-        DoRangeBoundAction(lastValue_ + delta, sender);
-    }
-}
-
-void Action::DoRangeBoundAction(double value, Widget* sender)
-{
-    if(delayAmount_ != 0.0)
-    {
-        if(value == 0.0)
-        {
-            delayStartTime_ = 0.0;
-            deferredValue_ = 0.0;
-            deferredSender_ = nullptr;
-        }
-        else
-        {
-            delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
-            deferredValue_ = value;
-            deferredSender_ = sender;
-        }
-    }
-    else
-    {
-        if(shouldToggle_ && value != 0.0)
-            value = ! GetCurrentValue();
-        
-        if(value > rangeMaximum_)
-            value = rangeMaximum_;
-        
-        if(value < rangeMinimum_)
-            value = rangeMinimum_;
-        
-        Do(value, sender);
-    }
-}
-
-void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta, Widget* sender)
-{
-    if(delta > 0)
-    {
-        accumulatedIncTicks_++;
-        accumulatedDecTicks_ = accumulatedDecTicks_ - 1 < 0 ? 0 : accumulatedDecTicks_ - 1;
-    }
-    else if(delta < 0)
-    {
-        accumulatedDecTicks_++;
-        accumulatedIncTicks_ = accumulatedIncTicks_ - 1 < 0 ? 0 : accumulatedIncTicks_ - 1;
-    }
-
-    accelerationIndex = accelerationIndex > acceleratedTickValues_.size() - 1 ? acceleratedTickValues_.size() - 1 : accelerationIndex;
-    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
-    
-    if(delta > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
-    {
-        accumulatedIncTicks_ = 0;
-        accumulatedDecTicks_ = 0;
-        
-        steppedValuesIndex_++;
-        
-        if(steppedValuesIndex_ > steppedValues_.size() - 1)
-            steppedValuesIndex_ = steppedValues_.size() - 1;
-        
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
-    }
-    else if(delta < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
-    {
-        accumulatedIncTicks_ = 0;
-        accumulatedDecTicks_ = 0;
-        
-        steppedValuesIndex_--;
-        
-        if(steppedValuesIndex_ < 0 )
-            steppedValuesIndex_ = 0;
-        
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
-    }
-}
-
-void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, Widget* sender)
-{
-    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
-    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
-    
-    if(delta > 0.0)
-        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
-    else
-        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ZoneTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Zone ZoneTemplate::Activate(ControlSurface*  surface)
-{
-    Zone zone;
-    
-    for(auto includedZoneTemplate : includedZoneTemplates)
-    {
-        if(includedZoneTemplate == "Channel")
-        {
-            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            {
-                if(zoneTemplate->navigator == "")
-                    zone.AddZone(zoneTemplate->Activate(surface));
-                else if(zoneTemplate->navigator == "TrackNavigator")
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
-                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
-            }
-        }
-        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
-    }
-    
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-    
-    for(auto member : zoneMembers)
-        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            widgetActions[widget][member.modifiers].push_back(TheManager->GetAction(widget, member.actionName, member.params));
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    
-    return zone;
-}
-
-Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator* navigator)
-{
-    Zone zone;
-
-    for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
-    
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-
-    if(navigator != nullptr)
-        for(auto member : zoneMembers)
-        {
-            for(int i = 0; i < member.params.size(); i++)
-                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
-            
-            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
-            
-            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-                widgetActions[widget][member.modifiers].push_back(TheManager->GetAction(widget, member.actionName, member.params, navigator));
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-
-    return zone;
-}
-
-Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
-{
-    Zone zone;
-
-    return zone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

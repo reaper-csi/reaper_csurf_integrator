@@ -228,11 +228,9 @@ protected:
     bool shouldUseDisplayStyle_ = false;
     int displayStyle_ = 0;
     
-    bool ignoreRelease_ = true;
-    
+    bool supportsRelease_ = false;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
-    
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
@@ -260,8 +258,8 @@ public:
     
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
-    vector<rgb_color> &GetRGBValues() { return  RGBValues_; }
     
+    void SetSupportsRelease() { supportsRelease_ = true; }
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
@@ -336,6 +334,127 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    vector<Zone> includedZones_;
+    map<Widget*, vector<string>> widgets_;
+    
+public:
+    void Deactivate();
+    
+    void AddWidget(Widget* widget, string modifiers)
+    {
+        widgets_[widget].push_back(modifiers);
+    }
+    
+    void AddZone(Zone zone)
+    {
+        includedZones_.push_back(zone);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ZoneMember
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string widgetName;
+    string actionName;
+    
+    bool isModifier;
+    bool supportsRelease;
+    bool isTrackTouch;
+    bool isTrackRotaryTouch;
+    bool isInverted;
+    bool shouldToggle;
+    bool isDelayed;
+    double delayAmount;
+    string modifiers;
+    
+    vector<string> params;
+    
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionWrapper
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Action* action_;
+    
+public:
+    ActionWrapper(Action* action,  ZoneMember& member) : action_(action)
+    {
+        if(member.supportsRelease)
+            action_->SetSupportsRelease();
+        
+        if(member.isInverted)
+            action_->SetIsInverted();
+        
+        if(member.shouldToggle)
+            action_->SetShouldToggle();
+        
+        if(member.isDelayed)
+            action_->SetDelayAmount(member.delayAmount * 1000.0);
+    }
+     
+    Page* GetPage() { return action_->GetPage(); }
+    ControlSurface* GetSurface() { return action_->GetSurface(); }
+    TrackNavigationManager* GetTrackNavigationManager() { return action_->GetTrackNavigationManager(); }
+    Navigator* GetNavigator() { return action_->GetNavigator(); }
+    MediaTrack* GetTrack() { return action_->GetTrack(); }
+    int GetSlotIndex() { return action_->GetSlotIndex(); }
+    int GetParamIndex() { return action_->GetParamIndex(); }
+    string GetDisplayName() { return action_->GetDisplayName(); }
+    
+    string GetAlias() { return action_->GetAlias(); }
+    bool GetSupportsRGB() { return action_->GetSupportsRGB(); }
+    
+    void SetSupportsRelease() { action_->SetSupportsRelease(); }
+    void SetIsInverted() { action_->SetIsInverted(); }
+    void SetShouldToggle() { action_->SetShouldToggle(); }
+    void SetDelayAmount(double delayAmount) { action_->SetDelayAmount(delayAmount); }
+
+    void DoAction(double value, Widget* sender) { action_->DoAction(value, sender); }
+    void DoRelativeAction(double value, Widget* sender) { action_->DoRelativeAction(value, sender); }
+    void DoRelativeAction(int accelerationIndex, double value, Widget* sender) { action_->DoRelativeAction(accelerationIndex, value, sender); }
+    double GetCurrentValue() { return action_->GetCurrentValue(); }
+    void RequestUpdate() { action_->RequestUpdate(); }
+    void ClearWidget() { action_->ClearWidget(); }
+    void UpdateWidgetValue(double value) { action_->UpdateWidgetValue(value); }
+    void UpdateWidgetValue(int param, double value) { action_->UpdateWidgetValue(param, value); }
+    void UpdateWidgetValue(string value) { action_->UpdateWidgetValue(value); }
+ 
+    void PerformDeferredActions() { action_->PerformDeferredActions(); }
+    void SetCurrentRGB(rgb_color newColor) { action_->SetCurrentRGB(newColor); }
+    rgb_color GetCurrentRGB() { return action_->GetCurrentRGB(); }
+    void SetSteppedValueIndex(double value) { action_->SetSteppedValueIndex(value); }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ZoneTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string navigator = "";
+    string name = "";
+    string alias = "";
+    string sourceFilePath = "";
+    vector<string> includedZoneTemplates;
+    vector<ZoneMember> zoneMembers;
+    
+    ZoneTemplate() = default;
+    
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
+    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
+    
+    Zone  Activate(ControlSurface*  surface);
+    Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
+    Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -349,8 +468,8 @@ private:
     bool isRotaryTouched_ = false;
     
     // modifers->Action
-    map<string, vector<Action*>> actions_;
-    map<string, vector<Action*>> defaultActions_;
+    map<string, vector<ActionWrapper*>> actions_;
+    map<string, vector<ActionWrapper*>> defaultActions_;
 
     
     
@@ -374,10 +493,7 @@ private:
     
     
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name)
-    {
-        defaultActions_[""].push_back(new NoAction(this, {}));
-    }
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
@@ -412,12 +528,8 @@ public:
     void Clear();
     void ForceClear();
 
-    void Activate(string modifier, vector<Action*> actions)
+    void Activate(string modifier, vector<ActionWrapper*> actions)
     {
-        if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
-            for(auto action : actions_[modifier] )
-                delete action;
-        
         actions_[modifier].clear();
         
         for(auto action : actions)
@@ -426,10 +538,6 @@ public:
     
     void Deactivate(string modifier)
     {
-        if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
-            for(auto action : actions_[modifier] )
-                delete action;
-        
         actions_[modifier].clear();
         
         if(defaultActions_.count(modifier) > 0 && defaultActions_[modifier].size() > 0)
@@ -442,10 +550,6 @@ public:
     {
         for(auto [modifier, actions] : actions_ )
         {
-            if(defaultActions_.count(modifier) > 0 && defaultActions_[modifier].size() > 0)
-                for(auto action : actions_[modifier] )
-                    delete action;
-            
             defaultActions_[modifier].clear();
             
             for(auto action : actions_[modifier] )
@@ -485,85 +589,6 @@ public:
         }
     }
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    vector<Zone> includedZones_;
-    map<Widget*, vector<string>> widgets_;
-
-public:
-    void AddWidget(Widget* widget, string modifiers)
-    {
-        widgets_[widget].push_back(modifiers);
-    }
-    
-    void AddZone(Zone zone)
-    {
-        includedZones_.push_back(zone);
-    }
-    
-    void Deactivate()
-    {
-        for(auto [widget, modifiers] : widgets_)
-            for(auto modifier : modifiers)
-                widget->Deactivate(modifier);
-            
-        for(auto includedZone : includedZones_)
-            includedZone.Deactivate();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ZoneMember
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    string widgetName;
-    string actionName;
-    
-    bool isModifier;
-    bool isPressRelease;
-    bool isTrackTouch;
-    bool isTrackRotaryTouch;
-    bool isInverted;
-    bool shouldToggle;
-    bool isDelayed;
-    double delayAmount;
-    string modifiers;
-    
-    vector<string> params;
-    
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), isPressRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ZoneTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    string navigator = "";
-    string name = "";
-    string alias = "";
-    string sourceFilePath = "";
-    vector<string> includedZoneTemplates;
-    vector<ZoneMember> zoneMembers;
-    
-    ZoneTemplate() = default;
-    
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
-    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
-    
-    Zone  Activate(ControlSurface*  surface);
-    Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
-    Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
-};
-
-
-
-
-
-
 
 
 
