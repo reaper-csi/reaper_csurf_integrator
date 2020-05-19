@@ -89,7 +89,7 @@ class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
 class EuCon_ControlSurface;
-class ZoneOld;
+//class ZoneOld;
 class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
@@ -442,6 +442,9 @@ struct ZoneTemplate
     ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
     : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
     
+    void  SetAsDefault(ControlSurface*  surface);
+    void  SetAsDefault(ControlSurface*  surface, int channel, Navigator* navigator);
+    
     Zone  Activate(ControlSurface*  surface);
     Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
     Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
@@ -461,29 +464,8 @@ private:
     bool isRotaryTouched_ = false;
     
     // modifers->Action
-    map<string, vector<ActionWrapper*>> actions_;
-    map<string, vector<ActionWrapper*>> defaultActions_;
-
-    
-    
-    
-    
-    
-    
-    
-    ZoneOld* activeZone_ = nullptr;
-    map<string, ZoneOld*> zonesAvailable_;
-    
-    map<ZoneOld*, map<string, vector <Action*>>> actionsOld_;   // vector<Action*> actionList = actions_[zoneName][modifiers];
-    map<ZoneOld*, map<string, vector <Action*>>> trackTouchedActions_;
-    map<ZoneOld*, map<string, vector <Action*>>> trackRotaryTouchedActions_;
-    
-    
-    
-    
-    
-
-    
+    map<string, vector<unique_ptr<ActionWrapper>>> actions_;
+    map<string, vector<ZoneMember>> defaultZoneMembers_;
     
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
@@ -499,10 +481,6 @@ public:
     
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     bool GetIsRotaryTouched() { return isRotaryTouched_;  }
-
-    void AddAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action);
-    void AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action);
     
     MediaTrack* GetTrack();
     Navigator* GetNavigator();
@@ -526,60 +504,27 @@ public:
         actions_[modifier].clear();
         
         for(auto action : actions)
-            actions_[modifier].push_back(new ActionWrapper(action));
+            actions_[modifier].push_back(make_unique<ActionWrapper>(action));
+    }
+    
+    void SetAsDefault(string modifier, vector<ZoneMember> zoneMembers)
+    {
+        defaultZoneMembers_[modifier].clear();
+        
+        for(auto member : zoneMembers)
+            defaultZoneMembers_[modifier].push_back(member);
     }
     
     void Deactivate(string modifier)
     {
         actions_[modifier].clear();
         
-        if(defaultActions_.count(modifier) > 0 && defaultActions_[modifier].size() > 0)
-            for(auto action : defaultActions_[modifier] )
-                actions_[modifier].push_back(action);
-        
+        // GAW TBD -- try to find a "Home" set of Actions for this widget
     }
-    
-    void SetDefaultFromCurrent()
-    {
-        for(auto [modifier, actions] : actions_ )
-        {
-            defaultActions_[modifier].clear();
-            
-            for(auto action : actions_[modifier] )
-                defaultActions_[modifier].push_back(action);
-        }
-    }
-   
+      
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
-    }
-    
-    void GoZone(string zoneName)
-    {
-        if(zonesAvailable_.count(zoneName) > 0)
-            activeZone_ = zonesAvailable_[zoneName];
-    }
-    
-    void ActivateNoActionForZone(string zoneName)
-    {
-        if(zonesAvailable_.count(zoneName) > 0 && zonesAvailable_.count("NoAction") > 0)
-        {
-            activeZone_ = zonesAvailable_["NoAction"];
-            
-            Clear();
-        }
-    }
-    
-    void Deactivate()
-    {
-        if(zonesAvailable_.count("Home") > 0)
-            activeZone_ = zonesAvailable_["Home"];
-        else
-        {
-            activeZone_ = nullptr;
-            ForceClear();
-        }
     }
 };
 
@@ -590,89 +535,7 @@ public:
 
 
 
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ZoneOld
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* const surface_ = nullptr;
-    string const name_ = "";
-    string const alias_ = "";
-    string const sourceFilePath_ = "";
-    vector<ZoneOld*> includedZones_;
-    vector<string> widgets_;
-    
-    Navigator* const navigator_= nullptr;
-
-    int index_ = 0;
-    vector<Widget*> widgetsOld_;
-    
-public:
-    ZoneOld(Navigator* navigator, ControlSurface* surface, string name, string sourceFilePath, string alias) : navigator_(navigator), surface_(surface), name_(name), sourceFilePath_(sourceFilePath), alias_(alias) {}
-    
-    virtual ~ZoneOld() {}
-    
-    ControlSurface* GetSurface() { return surface_; }
-    int GetIndex() { return index_; }
-    string GetName() { return name_ ;}
-    string GetAlias() { return alias_;}
-    string GetSourceFilePath() { return sourceFilePath_; }
-    Navigator* GetNavigator() { return navigator_; }
-    
-    void AddWidget(string widget)
-    {
-        widgets_.push_back(widget);
-    }
-    
-    void AddWidget(Widget* widget)
-    {
-        widgetsOld_.push_back(widget);
-    }
-    
-    // GAW TBD -- remove -- change learn mode editor to file based
-    vector<ZoneOld*> &GetIncludedZones() { return includedZones_; }
-    
-    // GAW TBD -- maybe allow this later after fully debugged
-    //void SetTrackNavigator(Navigator* navigator) { navigator_ = navigator; }
-    //void SetAlias(string alias) { alias_ = alias;}
-    
-    bool GetHasFocusedFXTrackNavigator()
-    {
-        return navigator_->GetIsFocusedFXNavigator();
-    }
-    
-    void AddZone(ZoneOld* zone)
-    {
-        includedZones_.push_back(zone);
-    }
-    
-    void SetIndex(int index)
-    {
-        index_ = index;
-        
-        for(auto includedZone : includedZones_)
-            includedZone->SetIndex(index);
-    }
-    
-    void Activate()
-    {
-        for(auto widget : widgetsOld_)
-            widget->GoZone(name_);
-        
-        for(auto includedZone : includedZones_)
-            includedZone->Activate();
-    }
-    
-    void Deactivate()
-    {
-        for(auto widget : widgetsOld_)
-            widget->Deactivate();
-        
-        for(auto includedZone : includedZones_)
-            includedZone->Deactivate();
-    }
-    
+/*  
     void Activate(MediaTrack* track, bool shouldShowFXWindows)
     {
         Activate();
@@ -697,7 +560,7 @@ public:
     }
 };
 
-
+*/
 
 
 
@@ -923,7 +786,7 @@ private:
     ControlSurface* const surface_;
     int numSendSlots_ = 0;
     bool shouldMapSends_ = false;
-    vector<ZoneOld*> activeSendZones_;
+    vector<Zone*> activeSendZones_;
     
 public:
     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
@@ -932,10 +795,10 @@ public:
     void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
     int GetNumSendSlots() { return numSendSlots_; }
     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-    vector<ZoneOld*> GetActiveZones() { return activeSendZones_; }
+    vector<Zone*> GetActiveZones() { return activeSendZones_; }
     
     void ToggleMapSends();
-    void MapSelectedTrackSendsToWidgets(map<string, ZoneOld*> &zones);
+    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
 
 };
 
@@ -943,21 +806,21 @@ public:
 struct FXInfo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    ZoneOld* zone = nullptr;
+    Zone* zone = nullptr;
     string fxName = "";
     MediaTrack* const track = nullptr;;
     int fxIndex = 0;
     
-    FXInfo(ZoneOld* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
+    FXInfo(Zone* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
     
 };
 
 struct OpenFXWindow
 {
     MediaTrack* track;
-    ZoneOld* zone;
+    Zone* zone;
     
-    OpenFXWindow(MediaTrack* aTrack, ZoneOld* aZone) : track(aTrack),  zone(aZone) {}
+    OpenFXWindow(MediaTrack* aTrack, Zone* aZone) : track(aTrack),  zone(aZone) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -971,24 +834,28 @@ private:
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
     vector<OpenFXWindow> activeSelectedTrackFXZones_;
-    vector<ZoneOld*> activeSelectedTrackFXMenuZones_;
-    vector<ZoneOld*> activeSelectedTrackFXMenuFXZones_;
-    vector<ZoneOld*> activeFocusedFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuZones_;
+    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
+    vector<Zone*> activeFocusedFXZones_;
     
     
     bool shouldShowFXWindows_ = false;
     
     void OpenFXWindows()
     {
+        /*
         if(shouldShowFXWindows_)
             for(auto openFXWindow : activeSelectedTrackFXZones_)
                 DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 3);
+         */
     }
     
     void CloseFXWindows()
     {
+        /*
         for(auto openFXWindow : activeSelectedTrackFXZones_)
             DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 2);
+         */
     }
         
 public:
@@ -1068,13 +935,6 @@ protected:
     map<string, vector<string>> zoneFileLines_;
     map<string, ZoneTemplate*> zoneTemplates_;
     
-    // Old
-    map<string, ZoneOld*> zones_;
-    map<string, vector<ZoneOld*>> zonesInZoneFile_;
-    
-
-    
-    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1090,8 +950,6 @@ public:
     
     virtual string GetSourceFileName() { return ""; }
     vector<Widget*> &GetWidgets() { return widgets_; }
-    map<string, ZoneOld*> &GetZones() { return zones_;}
-    map<string, vector<ZoneOld*>> &GetZonesInZoneFile() { return zonesInZoneFile_; }
     
     int GetNumChannels() { return numChannels_; }
     int GetNumSends() { return numSends_; }
@@ -1119,22 +977,10 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
 
-    void GoHome() { GoZoneOld("Home"); }
-    
-    MediaTrack* GetTrack(string activeZoneName)
+    void SetZoneAsDefault(string zoneName)
     {
-        if(zones_.count(activeZoneName) > 0)
-            return zones_[activeZoneName]->GetNavigator()->GetTrack();
-        else
-            return nullptr;
-    }
-    
-    void GoZoneOld(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            zones_[zoneName]->Activate();
-        
-        GoZone(zoneName);
+        if(zoneTemplates_.count(zoneName) > 0)
+            zoneTemplates_[zoneName]->SetAsDefault(this);
     }
     
     void GoZone(string zoneName)
@@ -1150,55 +996,10 @@ public:
         else
             return nullptr;
     }
-    
-    void ActivateNoActionForZone(string zoneName)
-    {
-        for(auto widget : widgets_)
-            widget->ActivateNoActionForZone(zoneName);
-    }
-
-    string GetZoneAlias(string zoneName)
-    {
-        if(zones_.count(zoneName) > 0)
-            return zones_[zoneName]->GetAlias();
-        else
-            return "";
-    }
-    
-    string GetLocalZoneAlias(string zoneName)
-    {
-        if(GetZoneAlias(zoneName) != "")
-            return GetZoneAlias(zoneName);
-        else
-            return "";
-            //return page_->GetZoneAlias(zoneName);
-    }
-    
+   
     void AddZoneTemplate(ZoneTemplate* zoneTemplate)
     {
         zoneTemplates_[zoneTemplate->name] = zoneTemplate;
-    }
-    
-    void AddZone(ZoneOld* zone)
-    {
-        if(zones_.count(zone->GetName()) > 0)
-        {
-            char buffer[5000];
-            snprintf(buffer, sizeof(buffer), "The Zone named \"%s\" is already defined in file\n %s\n\n The new Zone named \"%s\" defined in file\n %s\n will not be added\n\n\n\n",
-                     zone->GetName().c_str(), zones_[zone->GetName()]->GetSourceFilePath().c_str(), zone->GetName().c_str(), zone->GetSourceFilePath().c_str());
-            DAW::ShowConsoleMsg(buffer);
-        }
-        else
-        {
-            string zoneName = zone->GetName();
-            zones_[zoneName] = zone;
-            zonesInZoneFile_[zone->GetSourceFilePath()].push_back(zone);
-            
-            if((zoneName.compare(0, 4, "Send")) == 0)
-                GetSendsActivationManager()->SetNumSendSlots(GetSendsActivationManager()->GetNumSendSlots() + 1);
-            if((zoneName.compare(0, 6, "FXMenu")) == 0)
-                GetFXActivationManager()->SetNumFXSlots(GetFXActivationManager()->GetNumFXSlots() + 1);
-        }
     }
 
     void AddZoneFileLine(string fileName, string line)
@@ -1213,7 +1014,7 @@ public:
     
     void MapSelectedTrackSendsToWidgets()
     {
-        sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
+        //sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
     
     virtual void RequestUpdate()
@@ -1375,7 +1176,6 @@ public:
     }
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // For EuCon_ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1432,6 +1232,7 @@ typedef struct PeakInfoStruct
     bool isClipping;
 } PeakInfo;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MarshalledFunctionCall;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class EuCon_ControlSurface : public ControlSurface
@@ -2056,23 +1857,14 @@ public:
             surface->OnFXFocus(track, fxIndex);
     }
 
-    string GetZoneAlias(string zoneName)
-    {
-        for(auto surface : surfaces_)
-            if(surface->GetZoneAlias(zoneName) != "")
-                return surface->GetZoneAlias(zoneName);
-            
-        return "";
-    }
-    
     void GoZone(ControlSurface* surface, string zoneName)
     {
         if(! surface->GetUseZoneLink())
-          surface->GoZoneOld(zoneName);
+          surface->GoZone(zoneName);
         else
             for(auto surface : surfaces_)
                 if(surface->GetUseZoneLink())
-                    surface->GoZoneOld(zoneName);
+                    surface->GoZone(zoneName);
     }
 
     void ToggleMapSends(ControlSurface* surface)
@@ -2431,9 +2223,12 @@ public:
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
+                    
+                    
+                    
                     DAW::ShowConsoleMsg(("\n\tFXParam " + to_string(j) + " \"" + string(fxParamName)+ "\"").c_str());
                     
-                    /* Uncomdent this and comment the line ablove if you want to show steo sizes
+                    /* Uncomment this and comment the line above if you want to show steo sizes
                     double stepOut = 0;
                     double smallstepOut = 0;
                     double largestepOut = 0;

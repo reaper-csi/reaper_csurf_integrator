@@ -1530,6 +1530,63 @@ void Zone::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+    {
+        if(includedZoneTemplate == "Channel")
+        {
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            {
+                if(zoneTemplate->navigator == "")
+                    zone.AddZone(zoneTemplate->Activate(surface));
+                else if(zoneTemplate->navigator == "TrackNavigator")
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        zoneTemplate->SetAsDefault(surface, i, surface->GetNavigatorForChannel(i));
+            }
+        }
+        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zoneTemplate->Activate(surface);
+    }
+    
+    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
+    
+    for(auto member : zoneMembers)
+        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+            widgetActions[widget][member.modifiers].push_back(member);
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+            widget->SetAsDefault(modifier, actions);
+}
+
+void ZoneTemplate::SetAsDefault(ControlSurface*  surface, int channelNum, Navigator* navigator)
+{
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zoneTemplate->SetAsDefault(surface);
+    
+    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
+    
+    if(navigator != nullptr)
+        for(auto member : zoneMembers)
+        {
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
+            
+            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
+            
+            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+                widgetActions[widget][member.modifiers].push_back(member);
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+            widget->SetAsDefault(modifier, actions);
+}
+
 Zone ZoneTemplate::Activate(ControlSurface*  surface)
 {
     Zone zone;
@@ -1558,7 +1615,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
         {
             if(member.isModifier)
                 widget->SetIsModifier();
-
+            
             Action* action = TheManager->GetAction(widget, member.actionName, member.params);
             
             if(member.supportsRelease)
@@ -1572,7 +1629,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
             
             if(member.isDelayed)
                 action->SetDelayAmount(member.delayAmount * 1000.0);
-
+            
             widgetActions[widget][member.modifiers].push_back(action);
         }
     
@@ -1619,8 +1676,6 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
                 
                 if(member.isDelayed)
                     action->SetDelayAmount(member.delayAmount * 1000.0);
-                
-                widgetActions[widget][member.modifiers].push_back(action);
                 
                 widgetActions[widget][member.modifiers].push_back(action);
             }
@@ -1924,6 +1979,8 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/*
 void Widget::AddAction(ZoneOld* zone, string modifiers, Action* action)
 {
     actionsOld_[zone][modifiers].push_back(action);
@@ -1939,7 +1996,8 @@ void Widget::AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action
 {
     trackRotaryTouchedActions_[zone][modifiers].push_back(action);
 }
-
+*/
+ 
 MediaTrack* Widget::GetTrack()
 {
     string modifiers = surface_->GetPage()->GetModifiers();
@@ -2050,23 +2108,11 @@ void Widget::DoAction(double value)
         modifiers = surface_->GetPage()->GetModifiers();
 
     if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        for(auto action : actions_[modifiers])
-            action->DoAction(value, this);
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoAction(value, this);
     else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(auto action : actions_[""])
-            action->DoAction(value, this);
-
-    /*
-    if(activeZone_ != nullptr)
-    {
-        if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
-            for(auto action : actionsOld_[activeZone_][modifiers])
-                action->DoAction(value, this);
-        else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
-            for(auto action : actionsOld_[activeZone_][""])
-                action->DoAction(value, this);
-    }
-    */
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoAction(value, this);
 }
 
 void Widget::DoRelativeAction(double delta)
@@ -2086,20 +2132,11 @@ void Widget::DoRelativeAction(double delta)
         modifiers = surface_->GetPage()->GetModifiers();
     
     if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        for(auto action : actions_[modifiers])
-            action->DoRelativeAction(delta, this);
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoRelativeAction(delta, this);
     else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(auto action : actions_[""])
-            action->DoRelativeAction(delta, this);
-    
-    /*
-    if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
-        for(auto action : actionsOld_[activeZone_][modifiers])
-            action->DoRelativeAction(delta, this);
-    else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
-        for(auto action : actionsOld_[activeZone_][""])
-            action->DoRelativeAction(delta, this);
-     */
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoRelativeAction(delta, this);
 }
 
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
@@ -2119,20 +2156,11 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
         modifiers = surface_->GetPage()->GetModifiers();
     
     if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        for(auto action : actions_[modifiers])
-            action->DoRelativeAction(accelerationIndex, delta, this);
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
     else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(auto action : actions_[""])
-            action->DoRelativeAction(accelerationIndex, delta, this);
-    
-    /*
-    if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0)
-        for(auto action : actionsOld_[activeZone_][modifiers])
-            action->DoRelativeAction(accelerationIndex, delta, this);
-    else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0)
-        for(auto action : actionsOld_[activeZone_][""])
-            action->DoRelativeAction(accelerationIndex, delta, this);
-     */
+        for(int i = 0; i < actions_[modifiers].size(); i++)
+            actions_[modifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
 }
 
 void Widget::SilentSetValue(string displayText)
@@ -2349,7 +2377,7 @@ void SendsActivationManager::ToggleMapSends()
     surface_->GetPage()->OnTrackSelection();
 }
 
-void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, ZoneOld*> &zones)
+void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
     for(auto zone : activeSendZones_)
         zone->Deactivate();
@@ -2369,7 +2397,8 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, ZoneOld*
         
         if(shouldMapSends_ && zones.count(zoneName) > 0)
         {
-            ZoneOld* zone =  zones[zoneName];
+            /*
+            Zone* zone =  zones[zoneName];
             zone->SetIndex(i);
             
             if(i < numTrackSends)
@@ -2382,6 +2411,7 @@ void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, ZoneOld*
                 surface_->ActivateNoActionForZone(zone->GetName());
                 activeSendZones_.push_back(zone);
             }
+             */
         }
     }
 }
@@ -2397,13 +2427,13 @@ void FXActivationManager::ToggleMapSelectedTrackFX()
     {
         for(auto selectedZone : activeSelectedTrackFXZones_)
         {
-            surface_->LoadingZone(selectedZone.zone->GetName());
-            selectedZone.zone->Deactivate();
+            //surface_->LoadingZone(selectedZone.zone->GetName());
+            //selectedZone.zone->Deactivate();
         }
         
-        for(auto selectedZone : activeSelectedTrackFXZones_)
-            DAW::TrackFX_Show(selectedZone.track, selectedZone.zone->GetIndex(), 2);
-        activeSelectedTrackFXZones_.clear();
+        //for(auto selectedZone : activeSelectedTrackFXZones_)
+            //DAW::TrackFX_Show(selectedZone.track, selectedZone.zone->GetIndex(), 2);
+        //activeSelectedTrackFXZones_.clear();
     }
     
     surface_->GetPage()->OnTrackSelection();
@@ -2424,7 +2454,7 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
     {
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
-            surface_->LoadingZone(zone->GetName());
+            //surface_->LoadingZone(zone->GetName());
             zone->Deactivate();
         }
 
@@ -2436,8 +2466,8 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-   for(auto activeZone : activeSelectedTrackFXZones_)
-       activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+   //for(auto activeZone : activeSelectedTrackFXZones_)
+       //activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
     
     activeSelectedTrackFXZones_.clear();
     
@@ -2451,7 +2481,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         char FXName[BUFSZ];
         
         DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-        
+        /*
         if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
             ZoneOld* zone = surface_->GetZones()[FXName];
@@ -2460,6 +2490,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
             zone->Activate(selectedTrack, shouldShowFXWindows_);
             activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
         }
+         */
     }
 }
 
@@ -2486,8 +2517,9 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     {
         string zoneName = "FXMenu" + to_string(i + 1);
         
-        if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
-        {
+        //if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
+        //{
+            /*
             ZoneOld* zone =  surface_->GetZones()[zoneName];
             zone->SetIndex(i);
             
@@ -2502,7 +2534,8 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
                 surface_->ActivateNoActionForZone(zone->GetName());
                 activeSelectedTrackFXMenuZones_.push_back(zone);
             }
-        }
+            */
+        //}
     }
 }
 
@@ -2518,7 +2551,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
     
     char FXName[BUFSZ];
     DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
-    
+    /*
     if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
     {
         ZoneOld* zone = surface_->GetZones()[FXName];
@@ -2527,6 +2560,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
         zone->Activate();
         activeSelectedTrackFXMenuFXZones_.push_back(zone);
     }
+     */
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()
@@ -2552,6 +2586,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     {
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
+        /*
         if(surface_->GetZones().count(FXName) > 0 && surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
         {
             ZoneOld* zone = surface_->GetZones()[FXName];
@@ -2561,6 +2596,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
             zone->Activate();
             activeFocusedFXZones_.push_back(zone);
         }
+        */
     }
 }
 
@@ -2626,7 +2662,8 @@ void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder
     ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     InitHardwiredWidgets();
     InitZones(zoneFolder);
-    GoHome();
+    SetZoneAsDefault("Home");
+    GoZone("Home");
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }
@@ -2712,7 +2749,8 @@ void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
     
     InitHardwiredWidgets();
     InitZones(zoneFolder);
-    GoHome();
+    SetZoneAsDefault("Home");
+    GoZone("Home");
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }
@@ -2992,7 +3030,8 @@ void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetI
     
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
-    GoHome();
+    SetZoneAsDefault("Home");
+    GoZone("Home");
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }
@@ -3347,7 +3386,7 @@ static Widget* currentWidget = nullptr;
 static Action* currentAction = nullptr;
 static string trackNavigatorName = "";
 
-static vector<ZoneOld*> zonesInThisFile;
+//static vector<ZoneOld*> zonesInThisFile;
 
 static string newZoneFilename = "";
 static string newZoneName = "";
@@ -3398,7 +3437,7 @@ static void DisableButtons()
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_NewFile), false);
     EnableWindow(GetDlgItem(hwndLearn, IDC_BUTTON_SaveFile), false);
 }
-
+/*
 static vector<ZoneOld*> GetAvailableZones(int zoneIndex)
 {
     vector<ZoneOld*> availableZones;
@@ -3432,7 +3471,7 @@ static vector<ZoneOld*> GetAvailableZones()
     
     return GetAvailableZones(zoneIndex);
 }
-
+*/
 static void UpdateCheckBoxes()
 {
     if(currentPage != nullptr)
@@ -3653,7 +3692,7 @@ static void ClearActions()
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionParameter, "");
     SetDlgItemText(hwndLearn, IDC_EDIT_ActionAlias, "");
 }
-
+/*
 static int FillZones(ZoneOld* zone)
 {
     ClearZones();
@@ -3731,7 +3770,7 @@ static void FillSubZones(ZoneOld* zone, int zoneIndex)
     // Zone line Items
     bool hasLoadedRawFXFile = false;
     
-    /* vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
+    vector<ActionLineItem> actionLineItems = zone->GetActionLineItems();
     
     for(int i = 0; i < actionLineItems.size(); i++)
     {
@@ -3795,9 +3834,9 @@ static void FillSubZones(ZoneOld* zone, int zoneIndex)
         }
 
     }
-     */
+     
 }
-
+*/
 static WDL_DLGRET dlgProcAddZone(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -3886,11 +3925,11 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     {
         case WM_INITDIALOG:
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_RESETCONTENT, 0, 0);
-            for(auto zone : GetAvailableZones())
-            {
-                AddComboBoxEntry(hwndDlg, 0, zone->GetName().c_str(), IDC_COMBO_IncludedZone);
-                SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_SETCURSEL, 0, 0);
-            }
+            //for(auto zone : GetAvailableZones())
+            //{
+                //AddComboBoxEntry(hwndDlg, 0, zone->GetName().c_str(), IDC_COMBO_IncludedZone);
+                //endMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_SETCURSEL, 0, 0);
+            //}
             
             break;
             
@@ -3913,7 +3952,7 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                             {
                                 SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_IncludedZone), CB_GETLBTEXT, includedZoneIndex, (LPARAM)(LPCTSTR)(buffer));
                                 string includedZoneName = string(buffer);
-
+/*
                                 if(currentSurface->GetZones().count(zoneName) > 0)
                                 {
                                     ZoneOld* enclosingZone = currentSurface->GetZones()[zoneName];
@@ -3925,6 +3964,7 @@ static WDL_DLGRET dlgProcAddIncludedZone(HWND hwndDlg, UINT uMsg, WPARAM wParam,
                                         SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZoneName.c_str());
                                     }
                                 }
+                                */
                             }
                         }
                         
@@ -4099,11 +4139,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
         case WM_USER+1025:
         {
-            ZoneOld* zone = nullptr;
+            Zone* zone = nullptr;
             
-            int zoneIndex = FillZones(zone);
+            //int zoneIndex = FillZones(zone);
             
-            FillSubZones(zone, zoneIndex);
+            //FillSubZones(zone, zoneIndex);
             
             //SetDlgItemText(hwndDlg, IDC_EDIT_ActionName, currentAction->GetName().c_str());
             //SetDlgItemText(hwndDlg, IDC_EDIT_ActionParameter, currentAction->GetParamNumAsString().c_str());
@@ -4172,6 +4212,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_BUTTON_SaveFile:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                        /*
                         if(zonesInThisFile.size() > 0)
                         {
                             string filePath = zonesInThisFile[0]->GetSourceFilePath();
@@ -4204,7 +4245,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             zonFile << "IncludedZonesEnd" + GetLineEnding();
                                         }
                                         
-                                        /*for(auto actionLineItem : zone->GetActionLineItems())
+                                        for(auto actionLineItem : zone->GetActionLineItems())
                                         {
                                             string lineItemAsString = actionLineItem.allModifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
                                             
@@ -4221,7 +4262,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                             zonFile << lineItemAsString + GetLineEnding();
 
                                         }
-                                        */
+                                        
                                         zonFile << "ZoneEnd" + GetLineEnding() + GetLineEnding();
                                     }
                                 }
@@ -4236,6 +4277,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 DAW::ShowConsoleMsg(buffer);
                             }
                         }
+                        
+                        */
                     }
                     break ;
                     
@@ -4304,7 +4347,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_Navigator), trackNavigatorName.c_str());
                             
                             //currentSurface->AddZone(newZone);
-                            zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
+                            //zonesInThisFile = currentSurface->GetZonesInZoneFile()[newZoneFilename];
                             
                             SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_ZoneFilename), newZoneFilename.c_str());
                             if(newZoneName != newZoneAlias)
@@ -4322,10 +4365,12 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_BUTTON_AddZone:
                     if (HIWORD(wParam) == BN_CLICKED)
                     {
+                         /*
                         dlgResult = false;
                         DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_AddZone), g_hwnd, dlgProcAddZone);
                         if(dlgResult == IDOK)
                         {
+                           
                             if(zonesInThisFile.size() > 0)
                             {
                                 hasEdits = true;
@@ -4337,13 +4382,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 
                                // Zone* newZone = new Zone(currentSurface, newZoneName, zoneFilename, newZoneAlias);
                                 
-                                /*
+                             
 
                                 if(trackNavigatorName == "SelectedTrackNavigator")
                                     newZone->SetTrackNavigator(new SelectedTrackNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
                                 else if(trackNavigatorName == "FocusedFXNavigator")
                                     newZone->SetTrackNavigator(new FocusedFXNavigator(currentSurface->GetPage()->GetTrackNavigationManager()));
-                                */
+                             
                                 
                                 SetWindowText(GetDlgItem(hwndDlg, IDC_STATIC_Navigator), trackNavigatorName.c_str());
 
@@ -4357,7 +4402,11 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 zoneWasSelectedBySurface = true;
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_SETCURSEL, (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCOUNT, 0, 0) - 1, 0);
                             }
+                            
+                          
                         }
+                          
+                          */
                     }
                     break ;
                     
@@ -4471,15 +4520,14 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_GETCURSEL, 0, 0);
                         if (index >= 0)
                         {
-                            hasEdits = true;
-                            ZoneOld* zoneToDelete = zonesInThisFile[index];
+                            //ZoneOld* zoneToDelete = zonesInThisFile[index];
                             //currentSurface->RemoveZone(zoneToDelete, index);
                             
                             SendDlgItemMessage(hwndDlg, IDC_LIST_Zones, LB_DELETESTRING, index, 0);
                             SetWindowText(GetDlgItem(hwndDlg, IDC_EDIT_Alias), "");
 
                             ClearSubZones();
-
+/*
                             if(zonesInThisFile.size() > 0)
                             {
                                 zoneWasSelectedBySurface = true;
@@ -4488,6 +4536,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                     SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), zonesInThisFile[0]->GetAlias().c_str());
                                 FillSubZones(zonesInThisFile[0], 0);
                             }
+                            */
                         }
                     }
                     break ;
@@ -4502,12 +4551,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             if(zoneIndex >= 0)
                             {
                                 hasEdits = true;
-                                ZoneOld* zone = zonesInThisFile[zoneIndex];
+                                //ZoneOld* zone = zonesInThisFile[zoneIndex];
                                 //zone->RemoveZone(index);
-                                
+                                /*
                                 SendMessage(GetDlgItem(hwndLearn, IDC_LIST_IncludedZones), LB_RESETCONTENT, 0, 0);
                                 for(auto includedZone : zone->GetIncludedZones())     // GAW TBD -- change to file based
                                     SendDlgItemMessage(hwndLearn, IDC_LIST_IncludedZones, LB_ADDSTRING, 0, (LPARAM)includedZone->GetName().c_str());
+                                 */
                             }
                         }
                         break ;
@@ -4682,11 +4732,13 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Zones), LB_GETCURSEL, 0, 0);
                             if(index >= 0)
                             {
+                                /*
                                 FillSubZones(zonesInThisFile[index], index);
                                 if(zonesInThisFile[index]->GetName() != zonesInThisFile[index]->GetAlias())
                                     SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), zonesInThisFile[index]->GetAlias().c_str());
                                 else
                                     SetWindowText(GetDlgItem(hwndLearn, IDC_EDIT_Alias), "");
+                                 */
                             }
                         }
                     }
