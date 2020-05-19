@@ -1551,14 +1551,29 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
             zone.AddZone(zoneTemplate->Activate(surface));
     }
     
-    map<Widget*, map<string, vector<ActionWrapper*>>> widgetActions;
+    map<Widget*, map<string, vector<Action*>>> widgetActions;
     
     for(auto member : zoneMembers)
         if(Widget* widget = surface->GetWidgetByName(member.widgetName))
         {
-            widgetActions[widget][member.modifiers].push_back(new ActionWrapper(TheManager->GetAction(widget, member.actionName, member.params), member));
             if(member.isModifier)
                 widget->SetIsModifier();
+
+            Action* action = TheManager->GetAction(widget, member.actionName, member.params);
+            
+            if(member.supportsRelease)
+                action->SetSupportsRelease();
+            
+            if(member.isInverted)
+                action->SetIsInverted();
+            
+            if(member.shouldToggle)
+                action->SetShouldToggle();
+            
+            if(member.isDelayed)
+                action->SetDelayAmount(member.delayAmount * 1000.0);
+
+            widgetActions[widget][member.modifiers].push_back(action);
         }
     
     for(auto [widget, modifierActions] : widgetActions)
@@ -1579,7 +1594,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
             zone.AddZone(zoneTemplate->Activate(surface));
     
-    map<Widget*, map<string, vector<ActionWrapper*>>> widgetActions;
+    map<Widget*, map<string, vector<Action*>>> widgetActions;
     
     if(navigator != nullptr)
         for(auto member : zoneMembers)
@@ -1590,7 +1605,25 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
             member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
             
             if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-                widgetActions[widget][member.modifiers].push_back(new ActionWrapper(TheManager->GetAction(widget, member.actionName, member.params, navigator), member));
+            {
+                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator);
+                
+                if(member.supportsRelease)
+                    action->SetSupportsRelease();
+                
+                if(member.isInverted)
+                    action->SetIsInverted();
+                
+                if(member.shouldToggle)
+                    action->SetShouldToggle();
+                
+                if(member.isDelayed)
+                    action->SetDelayAmount(member.delayAmount * 1000.0);
+                
+                widgetActions[widget][member.modifiers].push_back(action);
+                
+                widgetActions[widget][member.modifiers].push_back(action);
+            }
         }
     
     for(auto [widget, modifierActions] : widgetActions)

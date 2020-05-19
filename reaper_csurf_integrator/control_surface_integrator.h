@@ -385,21 +385,14 @@ private:
     Action* action_;
     
 public:
-    ActionWrapper(Action* action,  ZoneMember& member) : action_(action)
+    ActionWrapper(Action* action) : action_(action) {}
+    
+    ~ActionWrapper()
     {
-        if(member.supportsRelease)
-            action_->SetSupportsRelease();
-        
-        if(member.isInverted)
-            action_->SetIsInverted();
-        
-        if(member.shouldToggle)
-            action_->SetShouldToggle();
-        
-        if(member.isDelayed)
-            action_->SetDelayAmount(member.delayAmount * 1000.0);
+        if(action_ != nullptr)
+            delete action_;
     }
-     
+    
     Page* GetPage() { return action_->GetPage(); }
     ControlSurface* GetSurface() { return action_->GetSurface(); }
     TrackNavigationManager* GetTrackNavigationManager() { return action_->GetTrackNavigationManager(); }
@@ -528,12 +521,12 @@ public:
     void Clear();
     void ForceClear();
 
-    void Activate(string modifier, vector<ActionWrapper*> actions)
+    void Activate(string modifier, vector<Action*> actions)
     {
         actions_[modifier].clear();
         
         for(auto action : actions)
-            actions_[modifier].push_back(action);
+            actions_[modifier].push_back(new ActionWrapper(action));
     }
     
     void Deactivate(string modifier)
