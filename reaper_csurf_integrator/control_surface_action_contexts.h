@@ -21,17 +21,6 @@ protected:
         if(params.size() > 0)
             param_= atol(params[0].c_str());
     }
-    
-public:
-    virtual string GetParamNumAsString() override
-    {
-        return to_string(param_);
-    }
-    
-    virtual int GetParamNum() override
-    {
-        return param_;
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,12 +34,6 @@ protected:
     {
         if(params.size() > 0)
             param_ = params[0];
-    }
-    
-public:
-    virtual string GetParamNumAsString() override
-    {
-        return param_;
     }
 };
 
@@ -80,12 +63,7 @@ public:
             }
         }
     }
-    
-    virtual string GetParamNumAsString() override
-    {
-        return commandStr_;
-    }
-    
+
     virtual void RequestUpdate() override
     {
         UpdateWidgetValue(DAW::GetToggleCommandState(commandId_));
@@ -151,23 +129,6 @@ protected:
                 paramIndex_ = atol(params[0].c_str());
         }
     }
-
-public:
-    virtual string GetParamNumAsString() override
-    {
-        if(shouldUseLocalIndex_)
-            return to_string(paramIndex_);
-        else
-            return to_string(GetSlotIndex());
-    }
-    
-    virtual int GetParamNum() override
-    {
-        if(shouldUseLocalIndex_)
-            return paramIndex_;
-        else
-            return GetSlotIndex();
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -188,18 +149,6 @@ protected:
         if(params.size() > 0)
             param_= atol(params[0].c_str());
     }
-    
-public:
-    virtual string GetParamNumAsString() override
-    {
-        return to_string(param_);
-    }
-    
-    virtual int GetParamNum() override
-    {
-        return param_;
-    }
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -244,19 +193,8 @@ protected:
     }
     
 public:
-    
     virtual string GetDisplayName() override { return fxParamDisplayName_; }
-    
-    virtual string GetParamNumAsString() override
-    {
-        return to_string(fxParamIndex_);
-    }
-    
-    virtual int GetParamNum() override
-    {
-        return fxParamIndex_;
-    }
-    
+
     virtual string GetAlias() override
     {
         return fxParamDisplayName_;
