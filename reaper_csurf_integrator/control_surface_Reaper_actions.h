@@ -557,7 +557,7 @@ public:
             
             DAW::TrackFX_GetFXName(track, param, fxName, sizeof(fxName));
 
-            UpdateWidgetValue(GetSurface()->GetLocalZoneAlias(fxName));
+            //UpdateWidgetValue(GetSurface()->GetLocalZoneAlias(fxName));
         }
         else
              ClearWidget();
