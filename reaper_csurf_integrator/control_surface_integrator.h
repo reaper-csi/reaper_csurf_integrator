@@ -334,6 +334,55 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionWrapper
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Action* action_;
+    
+public:
+    ActionWrapper(Action* action) : action_(action) {}
+    
+    ~ActionWrapper()
+    {
+        if(action_ != nullptr)
+            delete action_;
+    }
+    
+    Page* GetPage() { return action_->GetPage(); }
+    ControlSurface* GetSurface() { return action_->GetSurface(); }
+    TrackNavigationManager* GetTrackNavigationManager() { return action_->GetTrackNavigationManager(); }
+    Navigator* GetNavigator() { return action_->GetNavigator(); }
+    MediaTrack* GetTrack() { return action_->GetTrack(); }
+    int GetSlotIndex() { return action_->GetSlotIndex(); }
+    int GetParamIndex() { return action_->GetParamIndex(); }
+    string GetDisplayName() { return action_->GetDisplayName(); }
+    
+    string GetAlias() { return action_->GetAlias(); }
+    bool GetSupportsRGB() { return action_->GetSupportsRGB(); }
+    
+    void SetSupportsRelease() { action_->SetSupportsRelease(); }
+    void SetIsInverted() { action_->SetIsInverted(); }
+    void SetShouldToggle() { action_->SetShouldToggle(); }
+    void SetDelayAmount(double delayAmount) { action_->SetDelayAmount(delayAmount); }
+    
+    void DoAction(double value, Widget* sender) { action_->DoAction(value, sender); }
+    void DoRelativeAction(double value, Widget* sender) { action_->DoRelativeAction(value, sender); }
+    void DoRelativeAction(int accelerationIndex, double value, Widget* sender) { action_->DoRelativeAction(accelerationIndex, value, sender); }
+    double GetCurrentValue() { return action_->GetCurrentValue(); }
+    void RequestUpdate() { action_->RequestUpdate(); }
+    void ClearWidget() { action_->ClearWidget(); }
+    void UpdateWidgetValue(double value) { action_->UpdateWidgetValue(value); }
+    void UpdateWidgetValue(int param, double value) { action_->UpdateWidgetValue(param, value); }
+    void UpdateWidgetValue(string value) { action_->UpdateWidgetValue(value); }
+    
+    void PerformDeferredActions() { action_->PerformDeferredActions(); }
+    void SetCurrentRGB(rgb_color newColor) { action_->SetCurrentRGB(newColor); }
+    rgb_color GetCurrentRGB() { return action_->GetCurrentRGB(); }
+    void SetSteppedValueIndex(double value) { action_->SetSteppedValueIndex(value); }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -375,56 +424,10 @@ struct ZoneMember
     vector<string> params;
     
     ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+    
+    void SetProperties(Widget* widget, Action* action);
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionWrapper
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Action* action_;
-    
-public:
-    ActionWrapper(Action* action) : action_(action) {}
-    
-    ~ActionWrapper()
-    {
-        if(action_ != nullptr)
-            delete action_;
-    }
-    
-    Page* GetPage() { return action_->GetPage(); }
-    ControlSurface* GetSurface() { return action_->GetSurface(); }
-    TrackNavigationManager* GetTrackNavigationManager() { return action_->GetTrackNavigationManager(); }
-    Navigator* GetNavigator() { return action_->GetNavigator(); }
-    MediaTrack* GetTrack() { return action_->GetTrack(); }
-    int GetSlotIndex() { return action_->GetSlotIndex(); }
-    int GetParamIndex() { return action_->GetParamIndex(); }
-    string GetDisplayName() { return action_->GetDisplayName(); }
-    
-    string GetAlias() { return action_->GetAlias(); }
-    bool GetSupportsRGB() { return action_->GetSupportsRGB(); }
-    
-    void SetSupportsRelease() { action_->SetSupportsRelease(); }
-    void SetIsInverted() { action_->SetIsInverted(); }
-    void SetShouldToggle() { action_->SetShouldToggle(); }
-    void SetDelayAmount(double delayAmount) { action_->SetDelayAmount(delayAmount); }
-
-    void DoAction(double value, Widget* sender) { action_->DoAction(value, sender); }
-    void DoRelativeAction(double value, Widget* sender) { action_->DoRelativeAction(value, sender); }
-    void DoRelativeAction(int accelerationIndex, double value, Widget* sender) { action_->DoRelativeAction(accelerationIndex, value, sender); }
-    double GetCurrentValue() { return action_->GetCurrentValue(); }
-    void RequestUpdate() { action_->RequestUpdate(); }
-    void ClearWidget() { action_->ClearWidget(); }
-    void UpdateWidgetValue(double value) { action_->UpdateWidgetValue(value); }
-    void UpdateWidgetValue(int param, double value) { action_->UpdateWidgetValue(param, value); }
-    void UpdateWidgetValue(string value) { action_->UpdateWidgetValue(value); }
- 
-    void PerformDeferredActions() { action_->PerformDeferredActions(); }
-    void SetCurrentRGB(rgb_color newColor) { action_->SetCurrentRGB(newColor); }
-    rgb_color GetCurrentRGB() { return action_->GetCurrentRGB(); }
-    void SetSteppedValueIndex(double value) { action_->SetSteppedValueIndex(value); }
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct ZoneTemplate
@@ -486,6 +489,7 @@ public:
     Navigator* GetNavigator();
     int GetSlotIndex();
     int GetParamIndex();
+    void Deactivate(string modifier);
     
     void RequestUpdate();
     void DoAction(double value);
@@ -509,19 +513,13 @@ public:
     
     void SetAsDefault(string modifier, vector<ZoneMember> zoneMembers)
     {
-        defaultZoneMembers_[modifier].clear();
+        if(defaultZoneMembers_.count(modifier) > 0)
+            defaultZoneMembers_[modifier].clear();
         
         for(auto member : zoneMembers)
             defaultZoneMembers_[modifier].push_back(member);
     }
     
-    void Deactivate(string modifier)
-    {
-        actions_[modifier].clear();
-        
-        // GAW TBD -- try to find a "Home" set of Actions for this widget
-    }
-      
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);

@@ -1514,190 +1514,6 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
         trackOffset_ = top;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Zone
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::Deactivate()
-{
-    for(auto [widget, modifiers] : widgets_)
-        for(auto modifier : modifiers)
-            widget->Deactivate(modifier);
-    
-    for(auto includedZone : includedZones_)
-        includedZone.Deactivate();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ZoneTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
-{
-    Zone zone;
-    
-    for(auto includedZoneTemplate : includedZoneTemplates)
-    {
-        if(includedZoneTemplate == "Channel")
-        {
-            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            {
-                if(zoneTemplate->navigator == "")
-                    zone.AddZone(zoneTemplate->Activate(surface));
-                else if(zoneTemplate->navigator == "TrackNavigator")
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
-                        zoneTemplate->SetAsDefault(surface, i, surface->GetNavigatorForChannel(i));
-            }
-        }
-        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zoneTemplate->Activate(surface);
-    }
-    
-    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
-    
-    for(auto member : zoneMembers)
-        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            widgetActions[widget][member.modifiers].push_back(member);
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-            widget->SetAsDefault(modifier, actions);
-}
-
-void ZoneTemplate::SetAsDefault(ControlSurface*  surface, int channelNum, Navigator* navigator)
-{
-    for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zoneTemplate->SetAsDefault(surface);
-    
-    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
-    
-    if(navigator != nullptr)
-        for(auto member : zoneMembers)
-        {
-            for(int i = 0; i < member.params.size(); i++)
-                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
-            
-            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
-            
-            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-                widgetActions[widget][member.modifiers].push_back(member);
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-            widget->SetAsDefault(modifier, actions);
-}
-
-Zone ZoneTemplate::Activate(ControlSurface*  surface)
-{
-    Zone zone;
-    
-    for(auto includedZoneTemplate : includedZoneTemplates)
-    {
-        if(includedZoneTemplate == "Channel")
-        {
-            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            {
-                if(zoneTemplate->navigator == "")
-                    zone.AddZone(zoneTemplate->Activate(surface));
-                else if(zoneTemplate->navigator == "TrackNavigator")
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
-                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
-            }
-        }
-        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
-    }
-    
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-    
-    for(auto member : zoneMembers)
-        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-        {
-            if(member.isModifier)
-                widget->SetIsModifier();
-            
-            Action* action = TheManager->GetAction(widget, member.actionName, member.params);
-            
-            if(member.supportsRelease)
-                action->SetSupportsRelease();
-            
-            if(member.isInverted)
-                action->SetIsInverted();
-            
-            if(member.shouldToggle)
-                action->SetShouldToggle();
-            
-            if(member.isDelayed)
-                action->SetDelayAmount(member.delayAmount * 1000.0);
-            
-            widgetActions[widget][member.modifiers].push_back(action);
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    
-    return zone;
-}
-
-Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator* navigator)
-{
-    Zone zone;
-    
-    for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
-    
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-    
-    if(navigator != nullptr)
-        for(auto member : zoneMembers)
-        {
-            for(int i = 0; i < member.params.size(); i++)
-                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
-            
-            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
-            
-            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            {
-                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator);
-                
-                if(member.supportsRelease)
-                    action->SetSupportsRelease();
-                
-                if(member.isInverted)
-                    action->SetIsInverted();
-                
-                if(member.shouldToggle)
-                    action->SetShouldToggle();
-                
-                if(member.isDelayed)
-                    action->SetDelayAmount(member.delayAmount * 1000.0);
-                
-                widgetActions[widget][member.modifiers].push_back(action);
-            }
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    
-    return zone;
-}
-
-Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
-{
-    Zone zone;
-    
-    return zone;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1977,6 +1793,187 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Zone
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Zone::Deactivate()
+{
+    for(auto [widget, modifiers] : widgets_)
+        for(auto modifier : modifiers)
+            widget->Deactivate(modifier);
+    
+    for(auto includedZone : includedZones_)
+        includedZone.Deactivate();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ZoneTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+    {
+        if(includedZoneTemplate == "Channel")
+        {
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            {
+                if(zoneTemplate->navigator == "")
+                    zone.AddZone(zoneTemplate->Activate(surface));
+                else if(zoneTemplate->navigator == "TrackNavigator")
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        zoneTemplate->SetAsDefault(surface, i, surface->GetNavigatorForChannel(i));
+            }
+        }
+        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zoneTemplate->Activate(surface);
+    }
+    
+    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
+    
+    for(auto member : zoneMembers)
+        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+            widgetActions[widget][member.modifiers].push_back(member);
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+            widget->SetAsDefault(modifier, actions);
+}
+
+void ZoneTemplate::SetAsDefault(ControlSurface*  surface, int channelNum, Navigator* navigator)
+{
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zoneTemplate->SetAsDefault(surface);
+    
+    map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
+    
+    if(navigator != nullptr)
+        for(auto member : zoneMembers)
+        {
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), to_string(channelNum + 1));
+            
+            member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
+            
+            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+                widgetActions[widget][member.modifiers].push_back(member);
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+            widget->SetAsDefault(modifier, actions);
+}
+
+Zone ZoneTemplate::Activate(ControlSurface*  surface)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+    {
+        if(includedZoneTemplate == "Channel")
+        {
+            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            {
+                if(zoneTemplate->navigator == "")
+                    zone.AddZone(zoneTemplate->Activate(surface));
+                else if(zoneTemplate->navigator == "TrackNavigator")
+                    for(int i = 0; i < surface->GetNumChannels(); i++)
+                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
+            }
+        }
+        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface));
+    }
+    
+    map<Widget*, map<string, vector<Action*>>> widgetActions;
+    
+    for(auto member : zoneMembers)
+        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+        {
+            Action* action = TheManager->GetAction(widget, member.actionName, member.params);
+            member.SetProperties(widget, action);
+            widgetActions[widget][member.modifiers].push_back(action);
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
+    
+    return zone;
+}
+
+Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator* navigator)
+{
+    Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface));
+    
+    map<Widget*, map<string, vector<Action*>>> widgetActions;
+    
+    if(navigator != nullptr)
+        for(auto member : zoneMembers)
+        {
+            string channelNumStr = to_string(channelNum + 1);
+            
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), channelNumStr);
+            
+            member.widgetName = regex_replace(member.widgetName, regex("[|]"), channelNumStr);
+            member.actionName = regex_replace(member.actionName, regex("[|]"), channelNumStr);
+
+            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+            {
+                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator);
+                member.SetProperties(widget, action);
+                widgetActions[widget][member.modifiers].push_back(action);
+            }
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
+    
+    return zone;
+}
+
+Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
+{
+    Zone zone;
+    
+    return zone;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ZoneMember
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ZoneMember::SetProperties(Widget* widget, Action* action)
+{
+    if(isModifier)
+        widget->SetIsModifier();
+    
+    if(supportsRelease)
+        action->SetSupportsRelease();
+    
+    if(isInverted)
+        action->SetIsInverted();
+    
+    if(shouldToggle)
+        action->SetShouldToggle();
+    
+    if(isDelayed)
+        action->SetDelayAmount(delayAmount * 1000.0);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -2036,6 +2033,30 @@ int Widget::GetParamIndex()
         return actions_[modifiers][0]->GetParamIndex();
     else
         return 0;
+}
+
+void Widget::Deactivate(string modifier)
+{
+    map<string, vector<Action*>> widgetActions;
+
+    if(defaultZoneMembers_.count(modifier) > 0)
+    {
+        for(auto member : defaultZoneMembers_[modifier])
+        {
+            Action* action = TheManager->GetAction(this, member.actionName, member.params);
+            member.SetProperties(this, action);
+            widgetActions[member.modifiers].push_back(action);
+        }
+    }
+    else
+    {
+        vector<string> params;
+        Action* action = TheManager->GetAction(this, "NoAction", params);
+        widgetActions[""].push_back(action);
+    }
+    
+    for(auto [modifier, actions] : widgetActions)
+        Activate(modifier, actions);
 }
 
 void Widget::RequestUpdate()
