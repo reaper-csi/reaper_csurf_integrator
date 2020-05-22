@@ -89,7 +89,6 @@ class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
 class EuCon_ControlSurface;
-//class ZoneOld;
 class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
@@ -212,16 +211,15 @@ protected:
     int slotIndex_ = 0;
     int paramIndex_ = 0;
     
-    vector<double> steppedValues_;
-    int steppedValuesIndex_ = 0;
-
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
     
+    vector<double> steppedValues_;
+    int steppedValuesIndex_ = 0;
+
     double deltaValue_ = 0.0;
     vector<double> acceleratedDeltaValues_;
     vector<int> acceleratedTickValues_;
-    
     int accumulatedIncTicks_ = 0;
     int accumulatedDecTicks_ = 0;
     
@@ -463,9 +461,6 @@ private:
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     
-    bool isFaderTouched_ = false;
-    bool isRotaryTouched_ = false;
-    
     // modifers->Action
     map<string, vector<unique_ptr<ActionWrapper>>> actions_;
     map<string, vector<ZoneMember>> defaultZoneMembers_;
@@ -479,16 +474,28 @@ public:
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
+    
+
+    // GAW TBD - redesign this -- it's really "is the Track Touched by this this fader/rotary ?"
+    bool isFaderTouched_ = false;
+    bool isRotaryTouched_ = false;
+
     void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
     bool GetIsFaderTouched() { return isFaderTouched_;  }
     
     void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
     bool GetIsRotaryTouched() { return isRotaryTouched_;  }
     
-    MediaTrack* GetTrack();
-    Navigator* GetNavigator();
+    
+    // GAW TBD -- This is needed only for EuCon, ses if there is a better way
     int GetSlotIndex();
     int GetParamIndex();
+
+    
+    
+    
+    MediaTrack* GetTrack();
+    Navigator* GetNavigator();
     void Deactivate(string modifier);
     
     void RequestUpdate();
@@ -799,6 +806,9 @@ public:
     void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
 
 };
+
+
+// GAW -- TBD -- FXInfo and OpenFXWindow could likely be moved into Zone instance, now that we have one :)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct FXInfo
@@ -1175,7 +1185,17 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // For EuCon_ControlSurface
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetGroup
 {
@@ -1490,7 +1510,7 @@ public:
     
     bool GetIsControlTouched(MediaTrack* track, int touchedControl)
     {
-        // GAW TBD -- don't forget this query 
+        // GAW TBD -- don't forget this
         
         /*
         if(track == masterTrackNavigator_->GetTrack())
@@ -1602,8 +1622,8 @@ public:
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
     
-    void OpenLearnModeWindow();
-    void ToggleLearnMode();
+    void OpenEditModeWindow();
+    void ToggleEditMode();
     void InputReceived(Widget* widget, double value);
     void ActionPerformed(Action* action);
     void UpdateEditModeWindow();
@@ -1995,9 +2015,6 @@ private:
     bool surfaceOutMonitor_ = false;
     bool fxMonitor_ = false;
     
-    bool oscInMonitor_ = false;
-    bool oscOutMonitor_ = false;
-    
     bool shouldRun_ = true;
     
     int *timeModePtr_ = nullptr;
@@ -2046,9 +2063,7 @@ public:
         fxMonitor_ = false;
         surfaceInMonitor_ = false;
         surfaceOutMonitor_ = false;
-        oscInMonitor_ = false;
-        oscOutMonitor_ = false;
-        
+       
         // GAW -- IMPORTANT
         // We want to stop polling and zero out all Widgets before shutting down
         shouldRun_ = false;
@@ -2076,14 +2091,6 @@ public:
     int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
-
-    Page* GetCurrentPage()
-    {
-        if(pages_.size() > 0)
-            return pages_[currentPageIndex_];
-        else
-            return nullptr;
-    }
 
     Action* GetAction(Widget* widget, string actionName, vector<string> params)
     {
@@ -2198,7 +2205,7 @@ public:
     void OpenLearnModeWindow()
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->OpenLearnModeWindow();
+            pages_[currentPageIndex_]->OpenEditModeWindow();
     }
     
     void TrackFXListChanged(MediaTrack* track)
