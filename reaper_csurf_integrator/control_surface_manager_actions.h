@@ -38,7 +38,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        GetPage()->ToggleLearnMode();
+        GetPage()->ToggleEditMode();
     }
 };
 

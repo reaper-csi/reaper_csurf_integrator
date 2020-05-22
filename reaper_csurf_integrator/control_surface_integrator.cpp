@@ -1040,7 +1040,7 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     }
 }
 
-static void ProcessFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessWidgetFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
 {
     int lineNumber = 0;
     
@@ -1976,25 +1976,6 @@ void ZoneMember::SetProperties(Widget* widget, Action* action)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/*
-void Widget::AddAction(ZoneOld* zone, string modifiers, Action* action)
-{
-    actionsOld_[zone][modifiers].push_back(action);
-    zonesAvailable_[zone->GetName()] = zone;
-}
-
-void Widget::AddTrackTouchedAction(ZoneOld* zone, string modifiers, Action* action)
-{
-    trackTouchedActions_[zone][modifiers].push_back(action);
-}
-
-void Widget::AddTrackRotaryTouchedAction(ZoneOld* zone, string modifiers, Action* action)
-{
-    trackRotaryTouchedActions_[zone][modifiers].push_back(action);
-}
-*/
- 
 MediaTrack* Widget::GetTrack()
 {
     string modifiers = surface_->GetPage()->GetModifiers();
@@ -2680,7 +2661,7 @@ void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string va
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
+    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     InitHardwiredWidgets();
     InitZones(zoneFolder);
     SetZoneAsDefault("Home");
@@ -2766,7 +2747,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
-    ProcessFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
+    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
     
     InitHardwiredWidgets();
     InitZones(zoneFolder);
@@ -3366,7 +3347,7 @@ void EuCon_ControlSurface::UpdateTimeDisplay()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Learn Mode
+// Edit Mode
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct ActionLineItem
 {
@@ -4988,7 +4969,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Page::OpenLearnModeWindow()
+void Page::OpenEditModeWindow()
 {
     currentPage = this;
     
@@ -5000,7 +4981,7 @@ void Page::OpenLearnModeWindow()
     }
 }
 
-void Page::ToggleLearnMode()
+void Page::ToggleEditMode()
 {
     currentPage = this;
 
