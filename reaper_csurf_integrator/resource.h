@@ -35,7 +35,6 @@
 #define IDC_BUTTON_AddOSCSurface        1036
 #define IDC_RADIO_TCP                   1037
 #define IDC_BUTTON_AddEuConSurface      1037
-#define IDC_CHECK_ZoneLink              1038
 #define IDC_EDIT_OSCSurfaceName         1039
 #define IDC_CHECK_ScrollLink            1040
 #define IDC_LIST_ZoneComponents         1040

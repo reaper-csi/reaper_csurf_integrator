@@ -1326,35 +1326,27 @@ void Manager::Init()
                     {
                         ControlSurface* surface = nullptr;
                         
-                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 15)
+                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 14)
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
-                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 16)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[15], outPort));
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 8)
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[14], outPort));
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
                             surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
 
                         currentPage->AddSurface(surface);
                         
-                        if(tokens[0] == EuConSurfaceToken && tokens.size() == 8)
+                        if(tokens.size() == 14 || tokens.size() == 15)
                         {
-                            if(tokens[7] == "UseZoneLink")
-                                surface->SetUseZoneLink(true);
-                        }
-                        else if(tokens.size() == 15 || tokens.size() == 16)
-                        {
-                            if(tokens[10] == "UseZoneLink")
-                                surface->SetUseZoneLink(true);
-                            
-                            if(tokens[11] == "AutoMapSends")
+                            if(tokens[10] == "AutoMapSends")
                                 surface->GetSendsActivationManager()->SetShouldMapSends(true);
                             
-                            if(tokens[12] == "AutoMapFX")
+                            if(tokens[11] == "AutoMapFX")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
                             
-                            if(tokens[13] == "AutoMapFXMenu")
+                            if(tokens[12] == "AutoMapFXMenu")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
                             
-                            if(tokens[14] == "AutoMapFocusedFX")
+                            if(tokens[13] == "AutoMapFocusedFX")
                                 surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
                         }
                     }
@@ -2490,41 +2482,6 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
     surface_->GetPage()->OnTrackSelection();
 }
 
-void FXActivationManager::MapSelectedTrackFXToWidgets()
-{
-   for(auto activeZone : activeSelectedTrackFXZones_)
-       activeZone.zone->Deactivate();
-    
-    activeSelectedTrackFXZones_.clear();
-    
-    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
-    Navigator* navigator = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
-    
-    if(selectedTrack == nullptr)
-        return;
-
-    for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
-    {
-        char FXName[BUFSZ];
-        
-        DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-
-        if(shouldMapSelectedTrackFX_)
-        {
-            if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
-            {
-                if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
-                {
-                    zoneTemplate->Activate(surface_, navigator, i);
-                    
-                    //zone->Activate(selectedTrack, shouldShowFXWindows_);
-                    //activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
-                }
-            }
-        }
-    }
-}
-
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
     for(auto zone : activeSelectedTrackFXMenuZones_)
@@ -2544,54 +2501,68 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     
     int numTrackFX = DAW::TrackFX_GetCount(selectedTrack);
     
-    for(int i = 0; i < numFXlots_; i ++)
+    for(int i = 0; i < numFXSlots_; i ++)
     {
         string zoneName = "FXMenu" + to_string(i + 1);
         
         //if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
         //{
-            /*
-            ZoneOld* zone =  surface_->GetZones()[zoneName];
-            zone->SetIndex(i);
-            
-            if(i < numTrackFX)
-            {
-                surface_->LoadingZone(zone->GetName());
-                zone->Activate();
-                activeSelectedTrackFXMenuZones_.push_back(zone);
-            }
-            else
-            {
-                surface_->ActivateNoActionForZone(zone->GetName());
-                activeSelectedTrackFXMenuZones_.push_back(zone);
-            }
-            */
+        /*
+         ZoneOld* zone =  surface_->GetZones()[zoneName];
+         zone->SetIndex(i);
+         
+         if(i < numTrackFX)
+         {
+         surface_->LoadingZone(zone->GetName());
+         zone->Activate();
+         activeSelectedTrackFXMenuZones_.push_back(zone);
+         }
+         else
+         {
+         surface_->ActivateNoActionForZone(zone->GetName());
+         activeSelectedTrackFXMenuZones_.push_back(zone);
+         }
+         */
         //}
     }
 }
 
-void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxIndex)
+void FXActivationManager::MapSelectedTrackFXToWidgets()
+{
+   for(auto activeZone : activeSelectedTrackFXZones_)
+       activeZone.zone->Deactivate();
+    
+    activeSelectedTrackFXZones_.clear();
+    
+    if(MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+        for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+            MapSelectedTrackFXSlotToWidgets(i);
+}
+
+void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
 {
     MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    Navigator* navigator = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
     
-    if(selectedTrack == nullptr)
+    if(selectedTrack == nullptr || navigator == nullptr)
         return;
     
-    if(fxIndex >= DAW::TrackFX_GetCount(selectedTrack))
+    if(fxSlot >= DAW::TrackFX_GetCount(selectedTrack))
         return;
     
     char FXName[BUFSZ];
-    DAW::TrackFX_GetFXName(selectedTrack, fxIndex, FXName, sizeof(FXName));
-    /*
-    if(surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
-    {
-        ZoneOld* zone = surface_->GetZones()[FXName];
-        zone->SetIndex(fxIndex);
-        
-        zone->Activate();
-        activeSelectedTrackFXMenuFXZones_.push_back(zone);
-    }
-     */
+    
+    DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
+    
+    if(shouldMapSelectedTrackFX_)
+        if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
+            if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
+            {
+                zoneTemplate->Activate(surface_, navigator, fxSlot);
+                
+                //zone->Activate(selectedTrack, shouldShowFXWindows_);
+                //activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
+            }
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()

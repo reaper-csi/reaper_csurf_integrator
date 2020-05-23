@@ -837,7 +837,7 @@ class FXActivationManager
 {
 private:
     ControlSurface* const surface_ = nullptr;
-    int numFXlots_ = 0;
+    int numFXSlots_ = 0;
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
@@ -872,8 +872,8 @@ public:
     bool GetShouldMapSelectedTrackFXMenus() { return shouldMapSelectedTrackFXMenus_; }
     bool GetShouldMapSelectedTrackFX() { return shouldMapSelectedTrackFX_; }
     bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
-    int GetNumFXSlots() { return numFXlots_; }
-    void SetNumFXSlots(int numFXSlots) { numFXlots_ = numFXSlots; }
+    int GetNumFXSlots() { return numFXSlots_; }
+    void SetNumFXSlots(int numFXSlots) { numFXSlots_ = numFXSlots; }
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
     void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
@@ -936,8 +936,6 @@ protected:
     SendsActivationManager* const sendsActivationManager_ = nullptr;
 
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
-    
-    bool useZoneLink_ = false;
 
     void InitZones(string zoneFolder);
     map<string, vector<string>> zoneFileLines_;
@@ -967,8 +965,6 @@ public:
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
-    bool GetUseZoneLink() { return useZoneLink_; }
-    void SetUseZoneLink(bool useZoneLink) { useZoneLink_ = useZoneLink; }
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1013,16 +1009,6 @@ public:
     void AddZoneFileLine(string fileName, string line)
     {
         zoneFileLines_[fileName].push_back(line);
-    }
-
-    void ToggleMapSends()
-    {
-        sendsActivationManager_->ToggleMapSends();
-    }
-    
-    void MapSelectedTrackSendsToWidgets()
-    {
-        //sendsActivationManager_->MapSelectedTrackSendsToWidgets(zones_);
     }
     
     virtual void RequestUpdate()
@@ -1874,7 +1860,7 @@ public:
         for(auto surface : surfaces_)
             surface->OnFXFocus(track, fxIndex);
     }
-
+/*
     void GoZone(ControlSurface* surface, string zoneName)
     {
         if(! surface->GetUseZoneLink())
@@ -1974,7 +1960,7 @@ public:
                 if(surface->GetUseZoneLink())
                     surface->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(fxIndex);
     }
-    
+    */
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto surface : surfaces_)
