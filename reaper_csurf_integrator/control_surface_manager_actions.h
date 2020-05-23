@@ -58,7 +58,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->ToggleMapSends(GetSurface());
+        GetSurface()->GetSendsActivationManager()->ToggleMapSends();
     }
 };
 
@@ -78,7 +78,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->ToggleMapSelectedFX(GetSurface());
+        GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFX();
     }
 };
 
@@ -98,7 +98,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->ToggleMapFXMenu(GetSurface());
+        GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
     }
 };
 
@@ -118,7 +118,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->ToggleMapFocusedTrackFX(GetSurface());
+        GetSurface()->GetFXActivationManager()->ToggleMapFocusedFX();
     }
 };
 
@@ -133,9 +133,9 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        int fxIndex = param_ - 1 < 0 ? 0 : param_ - 1;
+        int fxSlot = param_ - 1 < 0 ? 0 : param_ - 1;
         
-        GetPage()->MapSelectedTrackFXSlotToWidgets(GetSurface(), fxIndex);
+        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(fxSlot);
     }
 };
 
@@ -150,7 +150,8 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->MapSelectedTrackSendsToWidgets(GetSurface());
+        // GAW TBD
+        //GetSurface()->GetSendsActivationManager()->MapSelectedTrackSendsToWidgets(slotIndex_);
     }
 };
 
@@ -165,7 +166,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->MapSelectedTrackFXToWidgets(GetSurface());
+        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
     }
 };
 
@@ -180,7 +181,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->MapSelectedTrackFXToMenu(GetSurface());
+        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToMenu();
     }
 };
 
@@ -195,7 +196,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->MapFocusedTrackFXToWidgets(GetSurface());
+       GetSurface()->GetFXActivationManager()->MapFocusedFXToWidgets();
     }
 };
 
@@ -365,7 +366,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetPage()->GoZone(GetSurface(), param_);
+        GetSurface()->GoZone(param_);
     }
 };
 
