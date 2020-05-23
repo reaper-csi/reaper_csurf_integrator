@@ -650,8 +650,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 else if(tokens[0] == "ZoneEnd")
                 {
                     // GAW -- For legacy syntax -- Geeez not even out of beta and already supporting legacy syntax :)
-                    zoneName = regex_replace(zoneName, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
-                    zoneAlias = regex_replace(zoneAlias, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+                    //zoneName = regex_replace(zoneName, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+                    //zoneAlias = regex_replace(zoneAlias, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
 
                     surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, zoneMembers));
 
@@ -671,9 +671,9 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
                 {
                     // GAW -- For legacy syntax
-                    string includedZoneName = regex_replace(tokens[0], regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
+                    //string includedZoneName = regex_replace(tokens[0], regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
                     
-                    includedZones.push_back(includedZoneName);
+                    includedZones.push_back(tokens[0]);
                 }
                 
                 else
@@ -1912,7 +1912,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
     
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
+            zone.AddZone(zoneTemplate->Activate(surface, channelNum, navigator));
     
     map<Widget*, map<string, vector<Action*>>> widgetActions;
     
@@ -1948,6 +1948,30 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
 Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
 {
     Zone zone;
+    
+    for(auto includedZoneTemplate : includedZoneTemplates)
+        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+            zone.AddZone(zoneTemplate->Activate(surface, navigator, slotindex));
+    
+    map<Widget*, map<string, vector<Action*>>> widgetActions;
+    
+    if(navigator != nullptr)
+        for(auto member : zoneMembers)
+        {
+            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
+            {
+                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator, slotindex);
+                member.SetProperties(widget, action);
+                widgetActions[widget][member.modifiers].push_back(action);
+            }
+        }
+    
+    for(auto [widget, modifierActions] : widgetActions)
+        for(auto [modifier, actions] : modifierActions)
+        {
+            widget->Activate(modifier, actions);
+            zone.AddWidget(widget, modifier);
+        }
     
     return zone;
 }
@@ -2468,12 +2492,13 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-   //for(auto activeZone : activeSelectedTrackFXZones_)
-       //activeZone.zone->Deactivate(activeZone.track, shouldShowFXWindows_);
+   for(auto activeZone : activeSelectedTrackFXZones_)
+       activeZone.zone->Deactivate();
     
     activeSelectedTrackFXZones_.clear();
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    Navigator* navigator = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
     
     if(selectedTrack == nullptr)
         return;
@@ -2483,16 +2508,20 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
         char FXName[BUFSZ];
         
         DAW::TrackFX_GetFXName(selectedTrack, i, FXName, sizeof(FXName));
-        /*
-        if(shouldMapSelectedTrackFX_ && surface_->GetZones().count(FXName) > 0 && ! surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
+
+        if(shouldMapSelectedTrackFX_)
         {
-            ZoneOld* zone = surface_->GetZones()[FXName];
-            zone->SetIndex(i);
-            
-            zone->Activate(selectedTrack, shouldShowFXWindows_);
-            activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
+            if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
+            {
+                if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
+                {
+                    zoneTemplate->Activate(surface_, navigator, i);
+                    
+                    //zone->Activate(selectedTrack, shouldShowFXWindows_);
+                    //activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
+                }
+            }
         }
-         */
     }
 }
 
