@@ -385,11 +385,28 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Navigator* navigator_ = nullptr;
+    int slotIndex_ = 0;
+    
     vector<Zone> includedZones_;
     map<Widget*, vector<string>> widgets_;
     
 public:
+    Zone() {}
+    Zone(Navigator* navigator, int slotIndex) : navigator_(navigator), slotIndex_(slotIndex) {}
     void Deactivate();
+    
+    void OpenFXWindow()
+    {
+        if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
+            DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 3);
+    }
+    
+    void CloseFXWindow()
+    {
+        if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
+            DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 2);
+    }
     
     void AddWidget(Widget* widget, string modifiers)
     {
@@ -437,8 +454,6 @@ struct ZoneTemplate
     string sourceFilePath = "";
     vector<string> includedZoneTemplates;
     vector<ZoneMember> zoneMembers;
-    
-    ZoneTemplate() = default;
     
     ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
     : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
@@ -492,8 +507,7 @@ public:
     int GetParamIndex();
 
     
-    
-    
+
     MediaTrack* GetTrack();
     Navigator* GetNavigator();
     void Deactivate(string modifier);
@@ -532,48 +546,6 @@ public:
         feedbackProcessors_.push_back(feedbackProcessor);
     }
 };
-
-
-
-
-
-
-
-
-/*  
-    void Activate(MediaTrack* track, bool shouldShowFXWindows)
-    {
-        Activate();
-        
-        if(shouldShowFXWindows && GetNavigator()->GetTrack() != nullptr)
-            DAW::TrackFX_Show(track, index_, 3);
-        
-        for(auto zone : includedZones_)
-            zone->Activate(track, shouldShowFXWindows);
-    }
-    
-    void Deactivate(MediaTrack* track, bool shouldShowFXWindows)
-    {
-        for(auto widget : widgetsOld_)
-            widget->Deactivate();
-        
-        if(shouldShowFXWindows)
-            DAW::TrackFX_Show(track, index_, 2);
-        
-        for(auto zone : includedZones_)
-            zone->Deactivate(track, shouldShowFXWindows);
-    }
-};
-
-*/
-
-
-
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSIMessageGenerator
@@ -807,30 +779,6 @@ public:
 
 };
 
-
-// GAW -- TBD -- FXInfo and OpenFXWindow could likely be moved into Zone instance, now that we have one :)
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct FXInfo
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    Zone* zone = nullptr;
-    string fxName = "";
-    MediaTrack* const track = nullptr;;
-    int fxIndex = 0;
-    
-    FXInfo(Zone* aZone, string anFxName, MediaTrack* aTrack, int anFxIndex) : zone(aZone), fxName(anFxName), track(aTrack), fxIndex(anFxIndex) {}
-    
-};
-
-struct OpenFXWindow
-{
-    MediaTrack* track;
-    Zone* zone;
-    
-    OpenFXWindow(MediaTrack* aTrack, Zone* aZone) : track(aTrack),  zone(aZone) {}
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -841,38 +789,20 @@ private:
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
-    vector<OpenFXWindow> activeSelectedTrackFXZones_;
+    vector<Zone> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    
     bool shouldShowFXWindows_ = false;
     
-    void OpenFXWindows()
-    {
-        /*
-        if(shouldShowFXWindows_)
-            for(auto openFXWindow : activeSelectedTrackFXZones_)
-                DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 3);
-         */
-    }
-    
-    void CloseFXWindows()
-    {
-        /*
-        for(auto openFXWindow : activeSelectedTrackFXZones_)
-            DAW::TrackFX_Show(openFXWindow.track, openFXWindow.zone->GetIndex(), 2);
-         */
-    }
-        
 public:
     FXActivationManager(ControlSurface* surface) : surface_(surface) {}
     
     bool GetShouldMapSelectedTrackFXMenus() { return shouldMapSelectedTrackFXMenus_; }
     bool GetShouldMapSelectedTrackFX() { return shouldMapSelectedTrackFX_; }
     bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
-    int GetNumFXSlots() { return numFXSlots_; }
+    int  GetNumFXSlots() { return numFXSlots_; }
     void SetNumFXSlots(int numFXSlots) { numFXSlots_ = numFXSlots; }
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
@@ -893,9 +823,11 @@ public:
         shouldShowFXWindows_ = ! shouldShowFXWindows_;
         
         if(shouldShowFXWindows_ == true)
-            OpenFXWindows();
+            for(auto zone : activeSelectedTrackFXZones_)
+                zone.OpenFXWindow();
         else
-            CloseFXWindows();
+            for(auto zone : activeSelectedTrackFXZones_)
+                zone.CloseFXWindow();
     }
     
     void TrackFXListChanged()
@@ -2202,8 +2134,6 @@ public:
         */
     }
 };
-
-// GetAsyncKeyState(VK_SHIFT) // get the state of the Shift key00
 
 /*
  int start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
