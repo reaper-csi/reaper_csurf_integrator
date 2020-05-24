@@ -100,11 +100,19 @@ class Navigator
 {
 protected:
     Page* const page_ = nullptr;
+    bool isFaderTouched_ = false;
+    bool isRotaryTouched_ = false;
 
 public:
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
+    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
+    bool GetIsFaderTouched() { return isFaderTouched_;  }
+    
+    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
+    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
+
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
     virtual bool GetIsChannelPinned() { return false; }
@@ -428,7 +436,7 @@ struct ZoneMember
     
     bool isModifier;
     bool supportsRelease;
-    bool isTrackTouch;
+    bool isTrackFaderTouch;
     bool isTrackRotaryTouch;
     bool isInverted;
     bool shouldToggle;
@@ -438,7 +446,7 @@ struct ZoneMember
     
     vector<string> params;
     
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isTrackTouch(isTT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTFT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isTrackFaderTouch(isTFT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
     
     void SetProperties(Widget* widget, Action* action);
 };
@@ -491,17 +499,6 @@ public:
     
     
 
-    // GAW TBD - redesign this -- it's really "is the Track Touched by this this fader/rotary ?"
-    bool isFaderTouched_ = false;
-    bool isRotaryTouched_ = false;
-
-    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
-    bool GetIsFaderTouched() { return isFaderTouched_;  }
-    
-    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
-    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
-    
-    
     // GAW TBD -- This is needed only for EuCon, ses if there is a better way
     int GetSlotIndex();
     int GetParamIndex();
@@ -1369,6 +1366,7 @@ public:
             vcaSpillTracks_.erase(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track));
     }
     
+    // For vcaSpillTracks_.erase -- see Clean up vcaSpillTracks below
     static bool IsTrackPointerStale(MediaTrack* track)
     {
         return ! DAW::ValidateTrackPtr(track);
@@ -1428,15 +1426,12 @@ public:
     
     bool GetIsControlTouched(MediaTrack* track, int touchedControl)
     {
-        // GAW TBD -- don't forget this
-        
-        /*
         if(track == masterTrackNavigator_->GetTrack())
         {
             if(touchedControl == 0)
-                return masterTrackNavigator_->GetIsFaderTouched(); // Fader/Volume
+                return masterTrackNavigator_->GetIsFaderTouched();
             else
-                return masterTrackNavigator_->GetIsRotaryTouched(); // Rotary/Pan
+                return masterTrackNavigator_->GetIsRotaryTouched();
         }
         
         for(auto navigator : navigators_)
@@ -1444,13 +1439,22 @@ public:
             if(track == navigator->GetTrack())
             {
                 if(touchedControl == 0)
-                    return navigator->GetIsFaderTouched(); // Fader/Volume
+                    return navigator->GetIsFaderTouched();
                 else
-                    return navigator->GetIsRotaryTouched(); // Rotary/Pan
+                    return navigator->GetIsRotaryTouched();
             }
         }
-*/
+
         return false;
+    }
+    
+    void ClearTouchStates()
+    {
+        for(auto navigator : navigators_)
+        {
+            navigator->SetIsFaderTouched(false);
+            navigator->SetIsRotaryTouched(false);
+        }
     }
     
     void EnterPage()
