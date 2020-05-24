@@ -1188,7 +1188,8 @@ public:
 
     void Do(double value, Widget* sender) override
     {
-        widget_->SetIsFaderTouched(value == 0 ? false : true);
+        if(navigator_ != nullptr)
+            navigator_->SetIsFaderTouched(value == 0 ? false : true);
     }
 };
 
@@ -1202,7 +1203,8 @@ public:
 
     void Do(double value, Widget* sender) override
     {
-        widget_->SetIsRotaryTouched(value == 0 ? false : true);
+        if(navigator_ != nullptr)
+            navigator_->SetIsRotaryTouched(value == 0 ? false : true);
     }
 };
 
