@@ -197,11 +197,11 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isPressRelease, bool &isTrackTouch, bool &isTrackRotaryTouch, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
-    vector<string> modifierSlots = { "", "", "", "" };
+    vector<string> modifierSlots = { "", "", "", "", "", "" };
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -219,13 +219,13 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
                 modifierSlots[2] = Control + "+";
             else if(modifier_tokens[i] == Alt)
                 modifierSlots[3] = Alt + "+";
-            
+            else if(modifier_tokens[i] == "TrackTouch")
+                modifierSlots[4] = "TrackTouch+";
+            else if(modifier_tokens[i] == "RotaryTouch")
+                modifierSlots[5] = "RotaryTouch+";
+
             else if(modifier_tokens[i] == "PR")
                 isPressRelease = true;
-            else if(modifier_tokens[i] == "TrackTouch")
-                isTrackTouch = true;
-            else if(modifier_tokens[i] == "RotaryTouch")
-                isTrackRotaryTouch = true;
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
@@ -237,7 +237,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
-    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
 }
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
@@ -312,14 +312,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     string widgetName = "";
                     string modifiers = "";
                     bool isPressRelease = false;
-                    bool isTrackTouch = false;
-                    bool isTrackRotaryTouch = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
                     bool isDelayed = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, delayAmount);
+                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     if(delayAmount > 0.0)
                         isDelayed = true;
@@ -330,7 +328,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                    
-                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, isDelayed, delayAmount));
+                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isInverted, shouldToggle, isDelayed, delayAmount));
                 }
             }
         }
@@ -1531,7 +1529,7 @@ void ZoneMember::SetProperties(Widget* widget, Action* action)
     if(shouldToggle)
         action->SetShouldToggle();
     
-    if(isDelayed)
+    if(delayAmount != 0.0)
         action->SetDelayAmount(delayAmount * 1000.0);
 }
 
