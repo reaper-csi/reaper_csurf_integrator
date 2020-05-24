@@ -436,17 +436,14 @@ struct ZoneMember
     
     bool isModifier;
     bool supportsRelease;
-    bool isTrackFaderTouch;
-    bool isTrackRotaryTouch;
     bool isInverted;
     bool shouldToggle;
-    bool isDelayed;
     double delayAmount;
     string modifiers;
     
     vector<string> params;
     
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isTFT, bool isTRT, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isTrackFaderTouch(isTFT), isTrackRotaryTouch(isTRT), isInverted(isI), shouldToggle(shouldT), isDelayed(isD), delayAmount(amount) {}
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
     void SetProperties(Widget* widget, Action* action);
 };
