@@ -999,6 +999,8 @@ void TrackNavigationManager::ForceScrollLink()
             if(selectedTrack == navigator->GetTrack())
                 return;
         
+        ClearTouchStates();
+        
         for(int i = 0; i < tracks_.size(); i++)
             if(selectedTrack == tracks_[i])
                 trackOffset_ = i;
@@ -1033,6 +1035,8 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
     
     if(numTracks <= navigators_.size())
         return;
+ 
+    ClearTouchStates();
     
     trackOffset_ += amount;
     
