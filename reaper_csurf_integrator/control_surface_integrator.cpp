@@ -240,369 +240,6 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-static map<int, Navigator*> navigators;
-
-static Navigator* GetNavigatorForChannel(ControlSurface* surface, int channelNum)
-{
-    if(channelNum < 0)
-        return nullptr;
-    
-    if(navigators.count(channelNum) < 1)
-        navigators[channelNum] = surface->GetNavigatorForChannel(channelNum);
-    
-    return navigators[channelNum];
-}
-
-static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone);
-
-static map<string, vector<vector<string>>> zoneTemplates;
-static map<string, vector<vector<string>>> zoneDefinitions;
-
-static void BuildZoneOld(vector<vector<string>> &zoneLines, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone, int channelNum)
-{
-    const string FXGainReductionMeter = "FXGainReductionMeter"; // GAW TBD - don't forget to re-implement this
-
-    ZoneOld* zone = nullptr;
-    vector<string> includedZones;
-    bool isInIncludedZonesSection = false;
-    
-    for(int i = 0 ; i < zoneLines.size(); i++)
-    {
-        auto tokens = zoneLines[i];
-        
-        if(tokens.size() > 0 && tokens[0] == "Zone")
-        {
-            if(tokens.size() < 2)
-                return;
-            
-            Navigator* navigator = nullptr;
-
-            if(zoneLines.size() > i + 1) // we have another line
-            {
-                auto navTokens = zoneLines[i + 1];
-            
-                if(navTokens.size() == 1 && (navTokens[0] == "TrackNavigator" || navTokens[0] == "MasterTrackNavigator" || navTokens[0] == "SelectedTrackNavigator"
-                                             || navTokens[0] == "FocusedFXNavigator" || navTokens[0] == "ParentNavigator"))
-                {
-                    i++;
-                    
-                    if(navTokens[0] == "TrackNavigator")
-                        navigator = GetNavigatorForChannel(surface, channelNum);
-                    else if(navTokens[0] == "MasterTrackNavigator")
-                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator();
-                    else if(navTokens[0] == "SelectedTrackNavigator")
-                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
-                    else if(navTokens[0] == "FocusedFXNavigator")
-                        navigator = surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator();
-                    else if(navTokens[0] == "ParentNavigator" && parentZone != nullptr)
-                        navigator = parentZone->GetNavigator();
-                }
-            }
-            
-            if(navigator == nullptr)
-                navigator = new Navigator(surface->GetPage());
-            
-            zone = new ZoneOld(navigator, surface, tokens[1], filePath, tokens.size() > 2 ? tokens[2] : tokens[1]); // tokens[2] == alias, if provided, otherwise just use name (tokens[1])
-
-            if(zone == nullptr)
-                return;
-            
-            if(parentZone != nullptr)
-                parentZone->AddZone(zone);
-            else
-                surface->AddZone(zone);
-            
-            continue;
-        }
-    
-        if(tokens.size() > 0)
-        {
-            if(tokens[0] == "ZoneEnd")    // finito baybay - Zone processing complete
-                return;
-            
-            if(tokens[0] == "IncludedZones")
-            {
-                isInIncludedZonesSection = true;
-                continue;
-            }
-            
-            if(tokens[0] == "IncludedZonesEnd")
-            {
-                isInIncludedZonesSection = false;
-                continue;
-            }
-            
-            if(tokens.size() == 1 && isInIncludedZonesSection)
-            {
-                BuildIncludedZoneOld(tokens[0], filePath, surface, widgets, zone);
-                continue;
-            }
-        }
-    
-        // GAW -- the first token is the Widget name, possibly decorated with modifiers
-        string widgetName = "";
-        string modifiers = "";
-        bool isPressRelease = false;
-        bool isTrackTouch = false;
-        bool isTrackRotaryTouch = false;
-        bool isInverted = false;
-        bool shouldToggle = false;
-        bool isDelayed = false;
-        double delayAmount = 0.0;
-    
-        GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isTrackTouch, isTrackRotaryTouch, isInverted, shouldToggle, delayAmount);
-    
-        if(delayAmount > 0.0)
-            isDelayed = true;
-    
-        Widget* widget = nullptr;
-        
-        for(auto * aWidget : widgets)
-        {
-            if(aWidget->GetName() == widgetName)
-            {
-                widget = aWidget;
-                break;
-            }
-        }
-        
-        vector<string> params;
-        for(int j = 2; j < tokens.size(); j++)
-            params.push_back(tokens[j]);
-    
-        if(widget != nullptr)
-        {
-            zone->AddWidget(widget);
-            
-            if(TheManager->IsActionAvailable(tokens[1]))
-            {
-                Action* action = TheManager->GetActionOld(widget, zone, tokens[1],  params);
-                
-                if(action != nullptr)
-                {
-                    if(isTrackTouch)
-                        widget->AddTrackTouchedAction(zone, modifiers, action);
-                    else if(isTrackRotaryTouch)
-                        widget->AddTrackRotaryTouchedAction(zone, modifiers, action);
-                    else
-                        widget->AddAction(zone, modifiers, action);
-                    
-                    if(isPressRelease)
-                    {
-                        // GAS TBD -- action->SetIsPressRelease()
-                    }
-                    
-                    if(isInverted)
-                        action->SetIsInverted();
-                    
-                    if(shouldToggle)
-                        action->SetShouldToggle();
-                    
-                    if(isDelayed)
-                        action->SetDelayAmount(delayAmount * 1000.0);
-
-                    if(tokens[1] == Shift || tokens[1] == Option || tokens[1] == Control || tokens[1] == Alt)
-                        widget->SetIsModifier();
-                }
-            }
-            else
-            {
-                // log error, etc.
-            }
-        }
-    }
-}
-
-static void BuildExpandedZonesOld(string zoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone)
-{
-    istringstream expandedZone(zoneName);
-    vector<string> expandedZoneTokens;
-    string expandedZoneToken;
-
-    while (getline(expandedZone, expandedZoneToken, '|'))
-        expandedZoneTokens.push_back(expandedZoneToken);
-
-    if(expandedZoneTokens.size() > 1)
-    {
-        string zoneBaseName = "";
-        int rangeBegin = 0;
-        int rangeEnd = 1;
-        
-        zoneBaseName = expandedZoneTokens[0];
-        
-        if(zoneTemplates.count(zoneBaseName + "|") > 0)
-        {
-            istringstream range(expandedZoneTokens[1]);
-            vector<string> rangeTokens;
-            string rangeToken;
-            
-            while (getline(range, rangeToken, '-'))
-                rangeTokens.push_back(rangeToken);
-            
-                if(rangeTokens.size() > 1)
-                {
-                    rangeBegin = stoi(rangeTokens[0]);
-                    rangeEnd = stoi(rangeTokens[1]);
-                    
-                    for(int i = 0; i <= rangeEnd - rangeBegin; i++)
-                    {
-                        vector<vector<string>> zoneLines;
-                        
-                        bool isInIncludedZonesSection = false;
-                        
-                        for(auto line : zoneTemplates[zoneBaseName + "|"])
-                        {
-                            zoneLines.push_back(vector<string>());
-                            
-                            for(auto token : line)
-                            {
-                                if(token == "IncludedZones")
-                                    isInIncludedZonesSection = true;
-                                
-                                if(token == "IncludedZonesEnd")
-                                    isInIncludedZonesSection = false;
-                            
-                                if(isInIncludedZonesSection)
-                                    zoneLines.back().push_back(token);
-                                else
-                                    zoneLines.back().push_back(regex_replace(token, regex("[|]"), to_string(i + 1)));
-                            }
-                        }
-                        
-                        BuildZoneOld(zoneLines, filePath, surface, widgets, parentZone, i);
-                    }
-                }
-        }
-    }
-}
-
-static void BuildIncludedZoneOld(string includedZoneName, string filePath, ControlSurface* surface, vector<Widget*> &widgets, ZoneOld* parentZone)
-{
-    if(includedZoneName.back() == '|')
-    {
-        if(zoneTemplates.count(includedZoneName) > 0)
-            BuildZoneOld(zoneTemplates[includedZoneName], filePath, surface, widgets, parentZone, -1); // track ptr == nullptr
-    }
-    else if(regex_search(includedZoneName, regex("[|][0-9]+[-][0-9]+"))) // This expands constructs like Channel|1-8 into multiple Zones
-        BuildExpandedZonesOld(includedZoneName, filePath, surface, widgets, parentZone);
-}
-
-static void ProcessZoneFileOld(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
-{
-    string zoneName = "";
-    zoneTemplates.clear();
-    zoneDefinitions.clear();
-    int lineNumber = 0;
-    
-    try
-    {
-        ifstream file(filePath);
-        
-        bool isTemplate = false;
-        bool isTemplateAndDefintion = false;
-
-        for (string line; getline(file, line) ; )
-        {
-            surface->AddZoneFileLine(filePath, line);  // store in the raw map for EditMode
-            
-            line = regex_replace(line, regex(TabChars), " ");
-            line = regex_replace(line, regex(CRLFChars), "");
-            
-            line = line.substr(0, line.find("//")); // remove trailing commewnts
-            
-            lineNumber++;
-            
-            // Trim leading and trailing spaces
-            line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
-            
-            if(line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
-                continue;
-            
-            vector<string> tokens(GetTokens(line));
-            
-            if(tokens.size() > 0)
-            {
-                if(tokens[0] == "Zone")
-                {
-                    zoneName = tokens[1];
-                    
-                    if(zoneName.size() > 1 && zoneName.back() == '|')
-                        isTemplate = true;
-                    else if(regex_search(zoneName, regex("[|][0-9]+[-][0-9]+")))
-                        isTemplateAndDefintion = true;
-                }
-             
-                if(tokens[0] == "ZoneEnd")
-                {
-                    isTemplate = false;
-                    isTemplateAndDefintion = false;
-                    continue;
-                }
-                
-                if(isTemplateAndDefintion)
-                {
-                    zoneDefinitions[zoneName].push_back(tokens);
-                    
-                    string zoneTemplateName = regex_replace(zoneName, regex("[|][0-9]+[-][0-9]+"), "|", regex_constants::format_default);
-                    vector<string> templateTokens;
-                    templateTokens.assign(tokens.begin(), tokens.end());
-                    for(int i = 0; i < templateTokens.size(); i++)
-                        if(regex_search(templateTokens[i], regex("[|][0-9]+[-][0-9]+")))
-                            templateTokens[i] = regex_replace(templateTokens[i], regex("[|][0-9]+[-][0-9]+"), "|", regex_constants::format_default);
-                    zoneTemplates[zoneTemplateName].push_back(templateTokens);
-                }
-                else if(isTemplate)
-                    zoneTemplates[zoneName].push_back(tokens);
-                else
-                    zoneDefinitions[zoneName].push_back(tokens);
-             
-             }
-        }
-    }
-    catch (exception &e)
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    for(auto [zoneName, zoneLines] : zoneDefinitions)
-    {
-        if(regex_search(zoneName, regex("[|][0-9]+[-][0-9]+"))) // This expands constructs like PanWidth|1-8 into multiple Zones
-            BuildExpandedZonesOld(zoneName, filePath, surface, widgets, nullptr);
-        else
-            BuildZoneOld(zoneLines, filePath, surface, widgets, nullptr, -1); // Start with the outermost Zones -- parentZone == nullptr, track ptr == nullptr
-    }
-}
-
-*/
-
-
-
-
-
-
-
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
     vector<string> includedZones;
@@ -649,10 +286,6 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens[0] == "ZoneEnd")
                 {
-                    // GAW -- For legacy syntax -- Geeez not even out of beta and already supporting legacy syntax :)
-                    //zoneName = regex_replace(zoneName, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
-                    //zoneAlias = regex_replace(zoneAlias, regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
-
                     surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, zoneMembers));
 
                     includedZones.clear();
@@ -669,12 +302,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     isInIncludedZonesSection = false;
 
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
-                {
-                    // GAW -- For legacy syntax
-                    //string includedZoneName = regex_replace(tokens[0], regex("[|?0-9+-?0-9+]"), "", regex_constants::format_default);
-                    
                     includedZones.push_back(tokens[0]);
-                }
                 
                 else
                 {
@@ -1176,96 +804,7 @@ void Manager::InitActionsWithNavigatorAndIndexDictionary()
     actionsWithNavigatorAndIndex_["TrackSendNameDisplay"] =     [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return new TrackSendNameDisplay(widget, params, navigator, index); };
     actionsWithNavigatorAndIndex_["TrackSendVolumeDisplay"] =   [](Widget* widget, vector<string> params, Navigator* navigator, int index) { return new TrackSendVolumeDisplay(widget, params, navigator, index); };
 }
-/*
-void Manager::InitActionDictionaryOld()
-{
-    actionsOld_["NoAction"] =                          [](Widget* widget, vector<string> params) { return new NoAction(widget, params); };
-    actionsOld_["Reaper"] =                            [](Widget* widget, vector<string> params) { return new ReaperAction(widget, params); };
-    actionsOld_["FXNameDisplay"] =                     [](Widget* widget, vector<string> params) { return new FXNameDisplay(widget, params); };
-    actionsOld_["FXParam"] =                           [](Widget* widget, vector<string> params) { return new FXParam(widget, params); };
-    actionsOld_["FXParamRelative"] =                   [](Widget* widget, vector<string> params) { return new FXParamRelative(widget, params); };
-    actionsOld_["FocusedFXParam"] =                    [](Widget* widget, vector<string> params) { return new FocusedFXParam(widget, params); };
-    actionsOld_["FXParamNameDisplay"] =                [](Widget* widget, vector<string> params) { return new FXParamNameDisplay(widget, params); };
-    actionsOld_["FXParamValueDisplay"] =               [](Widget* widget, vector<string> params) { return new FXParamValueDisplay(widget, params); };
-    actionsOld_["FocusedFXParamNameDisplay"] =         [](Widget* widget, vector<string> params) { return new FocusedFXParamNameDisplay(widget, params); };
-    actionsOld_["FocusedFXParamValueDisplay"] =        [](Widget* widget, vector<string> params) { return new FocusedFXParamValueDisplay(widget, params); };
-    actionsOld_["FXGainReductionMeter"] =              [](Widget* widget, vector<string> params) { return new FXGainReductionMeter(widget, params); };
-    actionsOld_["TrackVolume"] =                       [](Widget* widget, vector<string> params) { return new TrackVolume(widget, params); };
-    actionsOld_["SoftTakeover7BitTrackVolume"] =       [](Widget* widget, vector<string> params) { return new SoftTakeover7BitTrackVolume(widget, params); };
-    actionsOld_["SoftTakeover14BitTrackVolume"] =      [](Widget* widget, vector<string> params) { return new SoftTakeover14BitTrackVolume(widget, params); };
-    actionsOld_["TrackVolumeDB"] =                     [](Widget* widget, vector<string> params) { return new TrackVolumeDB(widget, params); };
-    actionsOld_["TrackSendVolume"] =                   [](Widget* widget, vector<string> params) { return new TrackSendVolume(widget, params); };
-    actionsOld_["TrackSendVolumeDB"] =                 [](Widget* widget, vector<string> params) { return new TrackSendVolumeDB(widget, params); };
-    actionsOld_["TrackSendPan"] =                      [](Widget* widget, vector<string> params) { return new TrackSendPan(widget, params); };
-    actionsOld_["TrackSendMute"] =                     [](Widget* widget, vector<string> params) { return new TrackSendMute(widget, params); };
-    actionsOld_["TrackSendInvertPolarity"] =           [](Widget* widget, vector<string> params) { return new TrackSendInvertPolarity(widget, params); };
-    actionsOld_["TrackSendPrePost"] =                  [](Widget* widget, vector<string> params) { return new TrackSendPrePost(widget, params); };
-    actionsOld_["TrackPan"] =                          [](Widget* widget, vector<string> params) { return new TrackPan(widget, params); };
-    actionsOld_["TrackPanPercent"] =                   [](Widget* widget, vector<string> params) { return new TrackPanPercent(widget, params); };
-    actionsOld_["TrackPanWidth"] =                     [](Widget* widget, vector<string> params) { return new TrackPanWidth(widget, params); };
-    actionsOld_["TrackPanWidthPercent"] =              [](Widget* widget, vector<string> params) { return new TrackPanWidthPercent(widget, params); };
-    actionsOld_["TrackPanLPercent"] =                  [](Widget* widget, vector<string> params) { return new TrackPanLPercent(widget, params); };
-    actionsOld_["TrackPanRPercent"] =                  [](Widget* widget, vector<string> params) { return new TrackPanRPercent(widget, params); };
-    actionsOld_["FixedTextDisplay"] =                  [](Widget* widget, vector<string> params) { return new FixedTextDisplay(widget, params); };
-    actionsOld_["FixedRGBColourDisplay"] =             [](Widget* widget, vector<string> params) { return new FixedRGBColourDisplay(widget, params); };
-    actionsOld_["TrackNameDisplay"] =                  [](Widget* widget, vector<string> params) { return new TrackNameDisplay(widget, params); };
-    actionsOld_["TrackVolumeDisplay"] =                [](Widget* widget, vector<string> params) { return new TrackVolumeDisplay(widget, params); };
-    actionsOld_["TrackSendNameDisplay"] =              [](Widget* widget, vector<string> params) { return new TrackSendNameDisplay(widget, params); };
-    actionsOld_["TrackSendVolumeDisplay"] =            [](Widget* widget, vector<string> params) { return new TrackSendVolumeDisplay(widget, params); };
-    actionsOld_["TrackPanDisplay"] =                   [](Widget* widget, vector<string> params) { return new TrackPanDisplay(widget, params); };
-    actionsOld_["TrackPanWidthDisplay"] =              [](Widget* widget, vector<string> params) { return new TrackPanWidthDisplay(widget, params); };
-    actionsOld_["TimeDisplay"] =                       [](Widget* widget, vector<string> params) { return new TimeDisplay(widget, params); };
-    actionsOld_["EuConTimeDisplay"] =                  [](Widget* widget, vector<string> params) { return new EuConTimeDisplay(widget, params); };
-    actionsOld_["Rewind"] =                            [](Widget* widget, vector<string> params) { return new Rewind(widget, params); };
-    actionsOld_["FastForward"] =                       [](Widget* widget, vector<string> params) { return new FastForward(widget, params); };
-    actionsOld_["Play"] =                              [](Widget* widget, vector<string> params) { return new Play(widget, params); };
-    actionsOld_["Stop"] =                              [](Widget* widget, vector<string> params) { return new Stop(widget, params); };
-    actionsOld_["Record"] =                            [](Widget* widget, vector<string> params) { return new Record(widget, params); };
-    actionsOld_["TrackToggleVCASpill"] =               [](Widget* widget, vector<string> params) { return new TrackToggleVCASpill(widget, params); };
-    actionsOld_["TrackSelect"] =                       [](Widget* widget, vector<string> params) { return new TrackSelect(widget, params); };
-    actionsOld_["TrackUniqueSelect"] =                 [](Widget* widget, vector<string> params) { return new TrackUniqueSelect(widget, params); };
-    actionsOld_["TrackRangeSelect"] =                  [](Widget* widget, vector<string> params) { return new TrackRangeSelect(widget, params); };
-    actionsOld_["TrackRecordArm"] =                    [](Widget* widget, vector<string> params) { return new TrackRecordArm(widget, params); };
-    actionsOld_["TrackMute"] =                         [](Widget* widget, vector<string> params) { return new TrackMute(widget, params); };
-    actionsOld_["TrackSolo"] =                         [](Widget* widget, vector<string> params) { return new TrackSolo(widget, params); };
-    actionsOld_["TrackTouch"] =                        [](Widget* widget, vector<string> params) { return new SetFaderTouch(widget, params); };
-    actionsOld_["RotaryTouch"] =                       [](Widget* widget, vector<string> params) { return new SetRotaryTouch(widget, params); };
-    actionsOld_["CycleTimeline"] =                     [](Widget* widget, vector<string> params) { return new CycleTimeline(widget, params); };
-    actionsOld_["TrackOutputMeter"] =                  [](Widget* widget, vector<string> params) { return new TrackOutputMeter(widget, params); };
-    actionsOld_["TrackOutputMeterAverageLR"] =         [](Widget* widget, vector<string> params) { return new TrackOutputMeterAverageLR(widget, params); };
-    actionsOld_["TrackOutputMeterMaxPeakLR"] =         [](Widget* widget, vector<string> params) { return new TrackOutputMeterMaxPeakLR(widget, params); };
-    actionsOld_["SetShowFXWindows"] =                  [](Widget* widget, vector<string> params) { return new SetShowFXWindows(widget, params); };
-    actionsOld_["ToggleScrollLink"] =                  [](Widget* widget, vector<string> params) { return new ToggleScrollLink(widget, params); };
-    actionsOld_["ForceScrollLink"] =                   [](Widget* widget, vector<string> params) { return new ForceScrollLink(widget, params); };
-    actionsOld_["ToggleVCAMode"] =                     [](Widget* widget, vector<string> params) { return new ToggleVCAMode(widget, params); };
-    actionsOld_["CycleTimeDisplayModes"] =             [](Widget* widget, vector<string> params) { return new CycleTimeDisplayModes(widget, params); };
-    actionsOld_["NextPage"] =                          [](Widget* widget, vector<string> params) { return new GoNextPage(widget, params); };
-    actionsOld_["GoPage"] =                            [](Widget* widget, vector<string> params) { return new  GoPage(widget, params); };
-    actionsOld_["GoZone"] =                            [](Widget* widget, vector<string> params) { return new GoZone(widget, params); };
-    actionsOld_["SelectTrackRelative"] =               [](Widget* widget, vector<string> params) { return new SelectTrackRelative(widget, params); };
-    actionsOld_["TrackBank"] =                         [](Widget* widget, vector<string> params) { return new TrackBank(widget, params); };
-    actionsOld_["ClearAllSolo"] =                      [](Widget* widget, vector<string> params) { return new ClearAllSolo(widget, params); };
-    actionsOld_["Shift"] =                             [](Widget* widget, vector<string> params) { return new SetShift(widget, params); };
-    actionsOld_["Option"] =                            [](Widget* widget, vector<string> params) { return new SetOption(widget, params); };
-    actionsOld_["Control"] =                           [](Widget* widget, vector<string> params) { return new SetControl(widget, params); };
-    actionsOld_["Alt"] =                               [](Widget* widget, vector<string> params) { return new SetAlt(widget, params); };
-    actionsOld_["TogglePin"] =                         [](Widget* widget, vector<string> params) { return new TogglePin(widget, params); };
-    actionsOld_["ToggleLearnMode"] =                   [](Widget* widget, vector<string> params) { return new ToggleLearnMode(widget, params); };
-    actionsOld_["ToggleMapSelectedTrackSends"] =       [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackSends(widget, params); };
-    actionsOld_["MapSelectedTrackSendsToWidgets"] =    [](Widget* widget, vector<string> params) { return new MapSelectedTrackSendsToWidgets(widget, params); };
-    actionsOld_["ToggleMapSelectedTrackFX"] =          [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFX(widget, params); };
-    actionsOld_["MapSelectedTrackFXToWidgets"] =       [](Widget* widget, vector<string> params) { return new MapSelectedTrackFXToWidgets(widget, params); };
-    actionsOld_["ToggleMapSelectedTrackFXMenu"] =      [](Widget* widget, vector<string> params) { return new ToggleMapSelectedTrackFXMenu(widget, params); };
-    actionsOld_["MapSelectedTrackFXToMenu"] =          [](Widget* widget, vector<string> params) { return new MapSelectedTrackFXToMenu(widget, params); };
-    actionsOld_["ToggleMapFocusedFX"] =                [](Widget* widget, vector<string> params) { return new ToggleMapFocusedFX(widget, params); };
-    actionsOld_["MapFocusedFXToWidgets"] =             [](Widget* widget, vector<string> params) { return new MapFocusedFXToWidgets(widget, params); };
-    actionsOld_["GoFXSlot"] =                          [](Widget* widget, vector<string> params) { return new GoFXSlot(widget, params); };
-    actionsOld_["TrackAutoMode"] =                     [](Widget* widget, vector<string> params) { return new TrackAutoMode(widget, params); };
-    actionsOld_["CycleTrackAutoMode"] =                [](Widget* widget, vector<string> params) { return new CycleTrackAutoMode(widget, params); };
-    actionsOld_["EuConCycleTrackAutoMode"] =           [](Widget* widget, vector<string> params) { return new EuConCycleTrackAutoMode(widget, params); };
-    actionsOld_["GlobalAutoMode"] =                    [](Widget* widget, vector<string> params) { return new GlobalAutoMode(widget, params); };
-}
-*/
+
 void Manager::Init()
 {
     pages_.clear();
@@ -1789,6 +1328,9 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Deactivate()
 {
+    if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
+        DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 2);
+    
     for(auto [widget, modifiers] : widgets_)
         for(auto modifier : modifiers)
             widget->Deactivate(modifier);
@@ -1939,7 +1481,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
 
 Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
 {
-    Zone zone;
+    Zone zone(navigator, slotindex);
     
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
@@ -2530,7 +2072,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
    for(auto activeZone : activeSelectedTrackFXZones_)
-       activeZone.zone->Deactivate();
+       activeZone.Deactivate();
     
     activeSelectedTrackFXZones_.clear();
     
@@ -2558,10 +2100,12 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
         if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
             if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
             {
-                zoneTemplate->Activate(surface_, navigator, fxSlot);
+                Zone zone = zoneTemplate->Activate(surface_, navigator, fxSlot);
                 
-                //zone->Activate(selectedTrack, shouldShowFXWindows_);
-                //activeSelectedTrackFXZones_.push_back(OpenFXWindow(selectedTrack, zone));
+                if(shouldShowFXWindows_ && navigator->GetTrack() != nullptr)
+                    DAW::TrackFX_Show(navigator->GetTrack(), fxSlot, 3);
+         
+                activeSelectedTrackFXZones_.push_back(zone);
             }
 }
 
