@@ -1330,8 +1330,7 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Deactivate()
 {
-    if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
-        DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 2);
+    DAW::TrackFX_Show(track_, slotIndex_, 2);
     
     for(auto [widget, modifiers] : widgets_)
         for(auto modifier : modifiers)
@@ -1345,9 +1344,7 @@ void Zone::Deactivate()
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
-{
-    Zone zone;
-    
+{   
     for(auto includedZoneTemplate : includedZoneTemplates)
     {
         if(includedZoneTemplate == "Channel")
@@ -1355,14 +1352,14 @@ void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
             if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
             {
                 if(zoneTemplate->navigator == "")
-                    zone.AddZone(zoneTemplate->Activate(surface));
+                    zoneTemplate->SetAsDefault(surface);
                 else if(zoneTemplate->navigator == "TrackNavigator")
                     for(int i = 0; i < surface->GetNumChannels(); i++)
                         zoneTemplate->SetAsDefault(surface, i, surface->GetNavigatorForChannel(i));
             }
         }
         else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zoneTemplate->Activate(surface);
+            zoneTemplate->SetAsDefault(surface);
     }
     
     map<Widget*, map<string, vector<ZoneMember>>> widgetActions;
@@ -1483,7 +1480,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
 
 Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
 {
-    Zone zone(navigator, slotindex);
+    Zone zone(navigator->GetTrack(), slotindex);
     
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
@@ -2074,8 +2071,8 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
             {
                 Zone zone = zoneTemplate->Activate(surface_, navigator, fxSlot);
                 
-                if(shouldShowFXWindows_ && navigator->GetTrack() != nullptr)
-                    DAW::TrackFX_Show(navigator->GetTrack(), fxSlot, 3);
+                if(shouldShowFXWindows_)
+                    DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
          
                 activeSelectedTrackFXZones_.push_back(zone);
             }
