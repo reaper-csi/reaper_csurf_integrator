@@ -1546,16 +1546,6 @@ MediaTrack* Widget::GetTrack()
         return nullptr;
 }
 
-Navigator* Widget::GetNavigator()
-{
-    string modifiers = surface_->GetPage()->GetModifiers();
-    
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        return actions_[modifiers][0]->GetNavigator();
-    else
-        return nullptr;
-}
-
 int Widget::GetSlotIndex()
 {
     string modifiers = surface_->GetPage()->GetModifiers();
@@ -1574,6 +1564,16 @@ int Widget::GetParamIndex()
         return actions_[modifiers][0]->GetParamIndex();
     else
         return 0;
+}
+
+Navigator* Widget::GetNavigator()
+{
+    string modifiers = surface_->GetPage()->GetModifiers();
+    
+    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+        return actions_[modifiers][0]->GetNavigator();
+    else
+        return nullptr;
 }
 
 void Widget::Deactivate(string modifier)
@@ -1602,58 +1602,34 @@ void Widget::Deactivate(string modifier)
 
 void Widget::RequestUpdate()
 {
+    
+    // GAW TBD -- same with track touched etc,
     string modifiers = "";
     if( ! isModifier_ )
         modifiers = surface_->GetPage()->GetModifiers();
 
     if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
         actions_[modifiers][0]->RequestUpdate();
-    
-    /*
-    
-    if(activeZone_ != nullptr)
-    {
-        string modifiers = "";
-        if( ! isModifier_ )
-            modifiers = surface_->GetPage()->GetModifiers();
-        
-        if(GetIsRotaryTouched()  )
-        {
-            if(trackRotaryTouchedActions_.count(activeZone_) > 0 && trackRotaryTouchedActions_[activeZone_].count(modifiers) > 0 && trackRotaryTouchedActions_[activeZone_][modifiers].size() > 0)
-            {
-                for(auto action : trackRotaryTouchedActions_[activeZone_][modifiers])
-                    action->PerformDeferredActions();
-                
-                trackRotaryTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
-            }
-        }
-        else if(GetIsFaderTouched() && trackTouchedActions_.count(activeZone_) > 0 && trackTouchedActions_[activeZone_].count(modifiers) > 0 && trackTouchedActions_[activeZone_][modifiers].size() > 0)
-        {
-            for(auto action : trackTouchedActions_[activeZone_][modifiers])
-                action->PerformDeferredActions();
-
-            trackTouchedActions_[activeZone_][modifiers][0]->RequestUpdate();
-        }
-        else if(actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count(modifiers) > 0 && actionsOld_[activeZone_][modifiers].size() > 0)
-        {
-            for(auto action : actionsOld_[activeZone_][modifiers])
-                action->PerformDeferredActions();
-            
-            actionsOld_[activeZone_][modifiers][0]->RequestUpdate();
-        }
-        else if(modifiers != "" && actionsOld_.count(activeZone_) > 0 && actionsOld_[activeZone_].count("") > 0 && actionsOld_[activeZone_][""].size() > 0)
-        {
-            for(auto action : actionsOld_[activeZone_][""])
-                action->PerformDeferredActions();
-
-            actionsOld_[activeZone_][""][0]->RequestUpdate();
-        }
-    }
-    */
-    
 }
 
-void Widget::DoAction(double value)
+void Widget::GetModifiers(string &modifiers, string &touchModifiers)
+{      
+    if( ! isModifier_)
+        modifiers = surface_->GetPage()->GetModifiers();
+    
+    touchModifiers = modifiers;
+    
+    if(GetNavigator() != nullptr)
+    {
+        if(GetNavigator()->GetIsFaderTouched())
+            touchModifiers += "TrackTouch+";
+        
+        if(GetNavigator()->GetIsRotaryTouched())
+            touchModifiers += "RotaryTouch+";
+    }
+}
+
+void Widget::LogInput(double value)
 {
     if( TheManager->GetSurfaceInMonitor())
     {
@@ -1661,68 +1637,62 @@ void Widget::DoAction(double value)
         snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
-
-    GetSurface()->GetPage()->InputReceived(this, value);
-
-    string modifiers = "";
     
-    if( ! isModifier_)
-        modifiers = surface_->GetPage()->GetModifiers();
+    GetSurface()->GetPage()->InputReceived(this, value);
+}
 
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+void Widget::DoAction(double value)
+{
+    LogInput(value);
+    string modifiers = "";
+    string touchModifiers = "";
+    GetModifiers(modifiers, touchModifiers);
+    
+    if(actions_.count(touchModifiers) > 0)
+        for(int i = 0; i < actions_[touchModifiers].size(); i++)
+            actions_[touchModifiers][i]->DoAction(value, this);
+    else if(actions_.count(modifiers) > 0)
         for(int i = 0; i < actions_[modifiers].size(); i++)
             actions_[modifiers][i]->DoAction(value, this);
-    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoAction(value, this);
+    else if(actions_.count("") > 0)
+        for(int i = 0; i < actions_[""].size(); i++)
+            actions_[""][i]->DoAction(value, this);
 }
 
 void Widget::DoRelativeAction(double delta)
 {
-    if( TheManager->GetSurfaceInMonitor())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), delta);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    GetSurface()->GetPage()->InputReceived(this, delta);
-    
+    LogInput(delta);
     string modifiers = "";
-    
-    if( ! isModifier_)
-        modifiers = surface_->GetPage()->GetModifiers();
-    
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+    string touchModifiers = "";
+    GetModifiers(modifiers, touchModifiers);
+
+    if(actions_.count(touchModifiers) > 0)
+        for(int i = 0; i < actions_[touchModifiers].size(); i++)
+            actions_[touchModifiers][i]->DoRelativeAction(delta, this);
+    else if(actions_.count(modifiers) > 0)
         for(int i = 0; i < actions_[modifiers].size(); i++)
             actions_[modifiers][i]->DoRelativeAction(delta, this);
-    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoRelativeAction(delta, this);
+    else if(actions_.count("") > 0)
+        for(int i = 0; i < actions_[""].size(); i++)
+            actions_[""][i]->DoRelativeAction(delta, this);
 }
 
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
 {
-    if( TheManager->GetSurfaceInMonitor())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %d\n", GetSurface()->GetName().c_str(), GetName().c_str(), accelerationIndex);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    GetSurface()->GetPage()->InputReceived(this, accelerationIndex);
-    
+    LogInput(accelerationIndex);
     string modifiers = "";
-    
-    if( ! isModifier_)
-        modifiers = surface_->GetPage()->GetModifiers();
-    
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
+    string touchModifiers = "";
+    GetModifiers(modifiers, touchModifiers);
+
+    if(actions_.count(touchModifiers) > 0)
+        for(int i = 0; i < actions_[touchModifiers].size(); i++)
+            actions_[touchModifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
+    else if(actions_.count(modifiers) > 0)
         for(int i = 0; i < actions_[modifiers].size(); i++)
             actions_[modifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
-    else if(modifiers != "" && actions_.count("") > 0 && actions_[""].size() > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
+    else if(actions_.count("") > 0)
+        for(int i = 0; i < actions_[""].size(); i++)
+            actions_[""][i]->DoRelativeAction(accelerationIndex, delta, this);
 }
 
 void Widget::SilentSetValue(string displayText)
