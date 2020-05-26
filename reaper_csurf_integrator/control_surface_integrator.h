@@ -448,7 +448,6 @@ struct ZoneMember
     void SetProperties(Widget* widget, Action* action);
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -485,6 +484,9 @@ private:
     map<string, vector<unique_ptr<ActionWrapper>>> actions_;
     map<string, vector<ZoneMember>> defaultZoneMembers_;
     
+    void GetModifiers(string &modifiers, string &touchModifiers);
+    void LogInput(double value);
+
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
     virtual ~Widget() {};
@@ -497,12 +499,12 @@ public:
     
 
     // GAW TBD -- This is needed only for EuCon, ses if there is a better way
+    MediaTrack* GetTrack();
     int GetSlotIndex();
     int GetParamIndex();
 
     
 
-    MediaTrack* GetTrack();
     Navigator* GetNavigator();
     void Deactivate(string modifier);
     
