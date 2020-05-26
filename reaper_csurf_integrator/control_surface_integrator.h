@@ -393,27 +393,25 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Navigator* navigator_ = nullptr;
-    int slotIndex_ = 0;
+    MediaTrack* const track_= nullptr;
+    int const slotIndex_ = 0;
     
     vector<Zone> includedZones_;
     map<Widget*, vector<string>> widgets_;
     
 public:
     Zone() {}
-    Zone(Navigator* navigator, int slotIndex) : navigator_(navigator), slotIndex_(slotIndex) {}
+    Zone(MediaTrack* track, int slotIndex) : track_(track), slotIndex_(slotIndex) {}
     void Deactivate();
     
     void OpenFXWindow()
     {
-        if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
-            DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 3);
+        DAW::TrackFX_Show(track_, slotIndex_, 3);
     }
     
     void CloseFXWindow()
     {
-        if(navigator_ != nullptr && navigator_->GetTrack() != nullptr)
-            DAW::TrackFX_Show(navigator_->GetTrack(), slotIndex_, 2);
+        DAW::TrackFX_Show(track_, slotIndex_, 2);
     }
     
     void AddWidget(Widget* widget, string modifiers)
