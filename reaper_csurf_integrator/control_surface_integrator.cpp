@@ -314,13 +314,13 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     bool isPressRelease = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
-                    bool isDelayed = false;
                     double delayAmount = 0.0;
                     
                     GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
-                    if(delayAmount > 0.0)
-                        isDelayed = true;
+                    
+                    
+                    
                     
                     bool isModifier = (actionName == Shift || actionName == Option || actionName == Control || actionName == Alt);
                     
@@ -328,7 +328,115 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                    
-                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isInverted, shouldToggle, isDelayed, delayAmount));
+                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isInverted, shouldToggle, delayAmount));
+                }
+            }
+        }
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
+static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
+{
+    vector<string> includedZones;
+    bool isInIncludedZonesSection = false;
+    map<string, WidgetActionTemplate*> widgetTemplates;
+     
+    string zoneName = "";
+    string zoneAlias = "";
+    string navigatorName = "";
+    string actionName = "";
+    int lineNumber = 0;
+    
+    try
+    {
+        ifstream file(filePath);
+        
+        for (string line; getline(file, line) ; )
+        {
+            surface->AddZoneFileLine(filePath, line);  // store in the raw map for EditMode
+            
+            line = regex_replace(line, regex(TabChars), " ");
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            line = line.substr(0, line.find("//")); // remove trailing commewnts
+            
+            lineNumber++;
+            
+            // Trim leading and trailing spaces
+            line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
+            
+            if(line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
+                continue;
+            
+            vector<string> tokens(GetTokens(line));
+            
+            if(tokens.size() > 0)
+            {
+                if(tokens[0] == "Zone")
+                {
+                    zoneName = tokens[1];
+                    zoneAlias = tokens.size() > 2 ? tokens[2] : tokens[1];
+                }
+                
+                else if(tokens[0] == "ZoneEnd")
+                {
+                    vector<WidgetActionTemplate*> widgetActionTemplates;
+                    
+                    for(auto [widgetName, actionTemplate] : widgetTemplates)
+                        widgetActionTemplates.push_back(actionTemplate);
+                    
+                    surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
+                    
+                    includedZones.clear();
+                    widgetTemplates.clear();
+                }
+                
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator")
+                    navigatorName = tokens[0];
+                
+                else if(tokens[0] == "IncludedZones")
+                    isInIncludedZonesSection = true;
+                
+                else if(tokens[0] == "IncludedZonesEnd")
+                    isInIncludedZonesSection = false;
+                
+                else if(tokens.size() == 1 && isInIncludedZonesSection)
+                    includedZones.push_back(tokens[0]);
+                
+                else
+                {
+                    actionName = tokens[1];
+                    
+                    // GAW -- the first token is the Widget name, possibly decorated with modifiers
+                    string widgetName = "";
+                    string modifiers = "";
+                    bool isPressRelease = false;
+                    bool isInverted = false;
+                    bool shouldToggle = false;
+                    double delayAmount = 0.0;
+                    
+                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isInverted, shouldToggle, delayAmount);
+                    
+                    if(widgetTemplates.count(widgetName) < 1)
+                        widgetTemplates[widgetName] = new WidgetActionTemplate(widgetName);
+
+                    if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
+                        widgetTemplates[widgetName]->isModifier = true;
+                    
+                    vector<string> params;
+                    for(int j = 2; j < tokens.size(); j++)
+                        params.push_back(tokens[j]);
+                    
+                    if(widgetTemplates[widgetName]->actionTemplates.count(modifiers) < 1)
+                        widgetTemplates[widgetName]->actionTemplates[modifiers] = new ActionsForModiferTemplate(modifiers);
+                    
+                    widgetTemplates[widgetName]->actionTemplates[modifiers]->members.push_back(new ZoneMember(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
                 }
             }
         }
@@ -1323,6 +1431,37 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
         DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
     else
         DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// WidgetActionBroker
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+ActionsForModifier* WidgetActionBroker::GetActionsForModifier(Widget* widget)
+{
+    string modifiers = "";
+    
+    if( ! widget->GetIsModifier())
+        modifiers = surface_->GetPage()->GetModifiers();
+    
+    string touchModifiers = modifiers;
+    
+    if(widget->GetNavigator() != nullptr)
+    {
+        if(widget->GetNavigator()->GetIsFaderTouched())
+            touchModifiers += "TrackTouch+";
+        
+        if(widget->GetNavigator()->GetIsRotaryTouched())
+            touchModifiers += "RotaryTouch+";
+    }
+    
+    if(actionsForModifier_.count(touchModifiers) > 0)
+        return actionsForModifier_[touchModifiers];
+    else if(actionsForModifier_.count(modifiers) > 0)
+        return actionsForModifier_[modifiers];
+    else if(actionsForModifier_.count("") > 0)
+        return actionsForModifier_[""];
+    else
+        return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
