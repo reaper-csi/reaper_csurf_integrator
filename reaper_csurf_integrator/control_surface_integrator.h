@@ -355,37 +355,113 @@ public:
             delete action_;
     }
     
-    Page* GetPage() { return action_->GetPage(); }
-    ControlSurface* GetSurface() { return action_->GetSurface(); }
-    TrackNavigationManager* GetTrackNavigationManager() { return action_->GetTrackNavigationManager(); }
     Navigator* GetNavigator() { return action_->GetNavigator(); }
     MediaTrack* GetTrack() { return action_->GetTrack(); }
     int GetSlotIndex() { return action_->GetSlotIndex(); }
     int GetParamIndex() { return action_->GetParamIndex(); }
-    string GetDisplayName() { return action_->GetDisplayName(); }
-    
-    string GetAlias() { return action_->GetAlias(); }
-    bool GetSupportsRGB() { return action_->GetSupportsRGB(); }
-    
-    void SetSupportsRelease() { action_->SetSupportsRelease(); }
-    void SetIsInverted() { action_->SetIsInverted(); }
-    void SetShouldToggle() { action_->SetShouldToggle(); }
-    void SetDelayAmount(double delayAmount) { action_->SetDelayAmount(delayAmount); }
     
     void DoAction(double value, Widget* sender) { action_->DoAction(value, sender); }
     void DoRelativeAction(double value, Widget* sender) { action_->DoRelativeAction(value, sender); }
     void DoRelativeAction(int accelerationIndex, double value, Widget* sender) { action_->DoRelativeAction(accelerationIndex, value, sender); }
-    double GetCurrentValue() { return action_->GetCurrentValue(); }
     void RequestUpdate() { action_->RequestUpdate(); }
-    void ClearWidget() { action_->ClearWidget(); }
-    void UpdateWidgetValue(double value) { action_->UpdateWidgetValue(value); }
-    void UpdateWidgetValue(int param, double value) { action_->UpdateWidgetValue(param, value); }
-    void UpdateWidgetValue(string value) { action_->UpdateWidgetValue(value); }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ActionsForModifier
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string const modifier_ = "";
+    vector<Action*> actions_;
     
-    void PerformDeferredActions() { action_->PerformDeferredActions(); }
-    void SetCurrentRGB(rgb_color newColor) { action_->SetCurrentRGB(newColor); }
-    rgb_color GetCurrentRGB() { return action_->GetCurrentRGB(); }
-    void SetSteppedValueIndex(double value) { action_->SetSteppedValueIndex(value); }
+public:
+    ActionsForModifier(string modifier) : modifier_(modifier) {}
+    
+    string GetModifier() { return modifier_; }
+        
+    void RequestUpdate()
+    {
+        if(actions_.size() > 0)
+            actions_[0]->RequestUpdate();
+    }
+
+    MediaTrack* GetTrack()
+    {
+        if(actions_.size() > 0)
+            return actions_[0]->GetTrack();
+        else
+            return nullptr;
+    }
+    
+    int GetSlotIndex()
+    {
+        if(actions_.size() > 0)
+            return actions_[0]->GetSlotIndex();
+        else
+            return 0;
+    }
+    
+    int GetParamIndex()
+    {
+        if(actions_.size() > 0)
+            return actions_[0]->GetParamIndex();
+        else
+            return 0;
+    }
+    
+    Navigator* GetNavigator()
+    {
+        if(actions_.size() > 0)
+            return actions_[0]->GetNavigator();
+        else
+            return nullptr;
+    }
+    
+    void AddAction(Action* action)
+    {
+        actions_.push_back(action);
+    }
+    
+    void DoAction(Widget* widget, double value)
+    {
+        for(auto action : actions_)
+            action->DoAction(value, widget);
+    }
+    
+    void DoRelativeAction(Widget* widget, double delta)
+    {
+        for(auto action : actions_)
+            action->DoRelativeAction(delta, widget);
+    }
+    
+    void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
+    {
+        for(auto action : actions_)
+            action->DoRelativeAction(accelerationIndex, delta, widget);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class WidgetActionBroker
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    ControlSurface* const surface_ = nullptr;
+    map<string, ActionsForModifier*> actionsForModifier_;
+    
+public:
+    WidgetActionBroker(ControlSurface* surface, vector<ActionsForModifier*> actionsForModifier) : surface_(surface)
+    {
+        for(int i = 0; i < actionsForModifier.size(); i++)
+            actionsForModifier_[actionsForModifier[i]->GetModifier()] = actionsForModifier[i];
+    }
+    
+    ~WidgetActionBroker()
+    {
+        // GAW TBD -- delete modifierActions
+    }
+    
+    ActionsForModifier* GetActionsForModifier(Widget* widget);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -430,35 +506,80 @@ struct ZoneMember
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string widgetName;
-    string actionName;
-    
+    string modifiers;
     bool isModifier;
+
+
+    string actionName;
+    vector<string> params;
     bool supportsRelease;
     bool isInverted;
     bool shouldToggle;
     double delayAmount;
-    string modifiers;
     
-    vector<string> params;
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, bool isD, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
+    ZoneMember(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
     void SetProperties(Widget* widget, Action* action);
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ActionsForModiferTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string modifier = "";
+    vector<ZoneMember*> members;
+    
+    ActionsForModiferTemplate(string modifierStr) : modifier(modifierStr) {}
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct WidgetActionTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string widgetName = "";
+    bool isModifier = false;
+    map<string, ActionsForModiferTemplate*> actionTemplates;
+    
+    WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    vector<ZoneMember> zoneMembers;
+    
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
+    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
+
+    
+    
+    
+    
     string navigator = "";
     string name = "";
     string alias = "";
     string sourceFilePath = "";
     vector<string> includedZoneTemplates;
-    vector<ZoneMember> zoneMembers;
+    vector<WidgetActionTemplate*> widgetActionTemplates;
+
     
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
-    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
+    
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<WidgetActionTemplate*> &templates)
+    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones)
+    {
+        for(auto widgetActionTemplate : templates)
+            widgetActionTemplates.push_back(widgetActionTemplate);
+    }
+
+    
+    
+    
+    
+    
+    
     
     void  SetAsDefault(ControlSurface*  surface);
     void  SetAsDefault(ControlSurface*  surface, int channel, Navigator* navigator);
@@ -491,6 +612,7 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
+    bool GetIsModifier() { return isModifier_; }
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
