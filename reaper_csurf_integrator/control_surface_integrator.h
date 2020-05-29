@@ -490,9 +490,9 @@ public:
         DAW::TrackFX_Show(track_, slotIndex_, 2);
     }
     
-    void AddWidget(Widget* widget, string modifiers)
+    void AddWidget(Widget* widget, string modifier)
     {
-        widgets_[widget].push_back(modifiers);
+        widgets_[widget].push_back(modifier);
     }
     
     void AddZone(Zone zone)
@@ -506,7 +506,7 @@ struct ZoneMember
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string widgetName;
-    string modifiers;
+    string modifier;
     bool isModifier;
 
 
@@ -517,7 +517,7 @@ struct ZoneMember
     bool shouldToggle;
     double delayAmount;
     
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, double amount) : widgetName(widget), actionName(action), params(prams), modifiers(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
+    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, double amount) : widgetName(widget), actionName(action), params(prams), modifier(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
     ZoneMember(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
@@ -603,7 +603,7 @@ private:
     map<string, vector<unique_ptr<ActionWrapper>>> actions_;
     map<string, vector<ZoneMember>> defaultZoneMembers_;
     
-    void GetModifiers(string &modifiers, string &touchModifiers);
+    void GetModifiers(string &modifier, string &touchModifier);
     void LogInput(double value);
 
 public:
@@ -1873,20 +1873,20 @@ public:
         }
     }
 
-    string GetModifiers()
+    string GetModifier()
     {
-        string modifiers = "";
+        string modifier = "";
         
         if(isShift_)
-            modifiers += Shift + "+";
+            modifier += Shift + "+";
         if(isOption_)
-            modifiers += Option + "+";
+            modifier += Option + "+";
         if(isControl_)
-            modifiers +=  Control + "+";
+            modifier +=  Control + "+";
         if(isAlt_)
-            modifiers += Alt + "+";
+            modifier += Alt + "+";
         
-        return modifiers;
+        return modifier;
     }
     
     void OnTrackSelection()

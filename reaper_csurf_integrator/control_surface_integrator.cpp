@@ -197,7 +197,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifiers, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifier, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -237,7 +237,7 @@ static void GetWidgetNameAndModifiers(string line, string &widgetName, string &m
     
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
-    modifiers = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
+    modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
 }
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
@@ -308,15 +308,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 {
                     actionName = tokens[1];
 
-                    // GAW -- the first token is the Widget name, possibly decorated with modifiers
+                    // GAW -- the first token is the Widget name, possibly decorated with modifier
                     string widgetName = "";
-                    string modifiers = "";
+                    string modifier = "";
                     bool isPressRelease = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isInverted, shouldToggle, delayAmount);
+                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     
                     
@@ -328,7 +328,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                    
-                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifiers, isModifier, isPressRelease, isInverted, shouldToggle, delayAmount));
+                    zoneMembers.push_back(ZoneMember(widgetName, actionName, params, modifier, isModifier, isPressRelease, isInverted, shouldToggle, delayAmount));
                 }
             }
         }
@@ -413,15 +413,15 @@ static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
                 {
                     actionName = tokens[1];
                     
-                    // GAW -- the first token is the Widget name, possibly decorated with modifiers
+                    // GAW -- the first token is the Widget name, possibly decorated with modifier
                     string widgetName = "";
-                    string modifiers = "";
+                    string modifier = "";
                     bool isPressRelease = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifiers, isPressRelease, isInverted, shouldToggle, delayAmount);
+                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     if(widgetTemplates.count(widgetName) < 1)
                         widgetTemplates[widgetName] = new WidgetActionTemplate(widgetName);
@@ -433,10 +433,10 @@ static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                     
-                    if(widgetTemplates[widgetName]->actionTemplates.count(modifiers) < 1)
-                        widgetTemplates[widgetName]->actionTemplates[modifiers] = new ActionsForModiferTemplate(modifiers);
+                    if(widgetTemplates[widgetName]->actionTemplates.count(modifier) < 1)
+                        widgetTemplates[widgetName]->actionTemplates[modifier] = new ActionsForModiferTemplate(modifier);
                     
-                    widgetTemplates[widgetName]->actionTemplates[modifiers]->members.push_back(new ZoneMember(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
+                    widgetTemplates[widgetName]->actionTemplates[modifier]->members.push_back(new ZoneMember(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
                 }
             }
         }
@@ -1438,26 +1438,26 @@ void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ActionsForModifier* WidgetActionBroker::GetActionsForModifier(Widget* widget)
 {
-    string modifiers = "";
+    string modifier = "";
     
     if( ! widget->GetIsModifier())
-        modifiers = surface_->GetPage()->GetModifiers();
+        modifier = surface_->GetPage()->GetModifier();
     
-    string touchModifiers = modifiers;
+    string touchModifier = modifier;
     
     if(widget->GetNavigator() != nullptr)
     {
         if(widget->GetNavigator()->GetIsFaderTouched())
-            touchModifiers += "TrackTouch+";
+            touchModifier += "TrackTouch+";
         
         if(widget->GetNavigator()->GetIsRotaryTouched())
-            touchModifiers += "RotaryTouch+";
+            touchModifier += "RotaryTouch+";
     }
     
-    if(actionsForModifier_.count(touchModifiers) > 0)
-        return actionsForModifier_[touchModifiers];
-    else if(actionsForModifier_.count(modifiers) > 0)
-        return actionsForModifier_[modifiers];
+    if(actionsForModifier_.count(touchModifier) > 0)
+        return actionsForModifier_[touchModifier];
+    else if(actionsForModifier_.count(modifier) > 0)
+        return actionsForModifier_[modifier];
     else if(actionsForModifier_.count("") > 0)
         return actionsForModifier_[""];
     else
@@ -1505,7 +1505,7 @@ void ZoneTemplate::SetAsDefault(ControlSurface*  surface)
     
     for(auto member : zoneMembers)
         if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            widgetActions[widget][member.modifiers].push_back(member);
+            widgetActions[widget][member.modifier].push_back(member);
     
     for(auto [widget, modifierActions] : widgetActions)
         for(auto [modifier, actions] : modifierActions)
@@ -1529,7 +1529,7 @@ void ZoneTemplate::SetAsDefault(ControlSurface*  surface, int channelNum, Naviga
             member.widgetName = regex_replace(member.widgetName, regex("[|]"), to_string(channelNum + 1));
             
             if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-                widgetActions[widget][member.modifiers].push_back(member);
+                widgetActions[widget][member.modifier].push_back(member);
         }
     
     for(auto [widget, modifierActions] : widgetActions)
@@ -1565,7 +1565,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
         {
             Action* action = TheManager->GetAction(widget, member.actionName, member.params);
             member.SetProperties(widget, action);
-            widgetActions[widget][member.modifiers].push_back(action);
+            widgetActions[widget][member.modifier].push_back(action);
         }
     
     for(auto [widget, modifierActions] : widgetActions)
@@ -1603,7 +1603,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
             {
                 Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator);
                 member.SetProperties(widget, action);
-                widgetActions[widget][member.modifiers].push_back(action);
+                widgetActions[widget][member.modifier].push_back(action);
             }
         }
     
@@ -1634,7 +1634,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int 
             {
                 Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator, slotindex);
                 member.SetProperties(widget, action);
-                widgetActions[widget][member.modifiers].push_back(action);
+                widgetActions[widget][member.modifier].push_back(action);
             }
         }
     
@@ -1674,40 +1674,40 @@ void ZoneMember::SetProperties(Widget* widget, Action* action)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* Widget::GetTrack()
 {
-    string modifiers = surface_->GetPage()->GetModifiers();
+    string modifier = surface_->GetPage()->GetModifier();
     
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        return actions_[modifiers][0]->GetTrack();
+    if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+        return actions_[modifier][0]->GetTrack();
     else
         return nullptr;
 }
 
 int Widget::GetSlotIndex()
 {
-    string modifiers = surface_->GetPage()->GetModifiers();
+    string modifier = surface_->GetPage()->GetModifier();
     
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        return actions_[modifiers][0]->GetSlotIndex();
+    if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+        return actions_[modifier][0]->GetSlotIndex();
     else
         return 0;
 }
 
 int Widget::GetParamIndex()
 {
-    string modifiers = surface_->GetPage()->GetModifiers();
+    string modifier = surface_->GetPage()->GetModifier();
     
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        return actions_[modifiers][0]->GetParamIndex();
+    if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+        return actions_[modifier][0]->GetParamIndex();
     else
         return 0;
 }
 
 Navigator* Widget::GetNavigator()
 {
-    string modifiers = surface_->GetPage()->GetModifiers();
+    string modifier = surface_->GetPage()->GetModifier();
     
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        return actions_[modifiers][0]->GetNavigator();
+    if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+        return actions_[modifier][0]->GetNavigator();
     else
         return nullptr;
 }
@@ -1722,7 +1722,7 @@ void Widget::Deactivate(string modifier)
         {
             Action* action = TheManager->GetAction(this, member.actionName, member.params);
             member.SetProperties(this, action);
-            widgetActions[member.modifiers].push_back(action);
+            widgetActions[member.modifier].push_back(action);
         }
     }
     else
@@ -1738,30 +1738,28 @@ void Widget::Deactivate(string modifier)
 
 void Widget::RequestUpdate()
 {
-    
-    // GAW TBD -- same with track touched etc,
-    string modifiers = "";
+    string modifier = "";
     if( ! isModifier_ )
-        modifiers = surface_->GetPage()->GetModifiers();
+        modifier = surface_->GetPage()->GetModifier();
 
-    if(actions_.count(modifiers) > 0 && actions_[modifiers].size() > 0)
-        actions_[modifiers][0]->RequestUpdate();
+    if(actions_.count(modifier) > 0 && actions_[modifier].size() > 0)
+        actions_[modifier][0]->RequestUpdate();
 }
 
-void Widget::GetModifiers(string &modifiers, string &touchModifiers)
+void Widget::GetModifiers(string &modifier, string &touchModifier)
 {      
     if( ! isModifier_)
-        modifiers = surface_->GetPage()->GetModifiers();
+        modifier = surface_->GetPage()->GetModifier();
     
-    touchModifiers = modifiers;
+    touchModifier = modifier;
     
     if(GetNavigator() != nullptr)
     {
         if(GetNavigator()->GetIsFaderTouched())
-            touchModifiers += "TrackTouch+";
+            touchModifier += "TrackTouch+";
         
         if(GetNavigator()->GetIsRotaryTouched())
-            touchModifiers += "RotaryTouch+";
+            touchModifier += "RotaryTouch+";
     }
 }
 
@@ -1780,16 +1778,16 @@ void Widget::LogInput(double value)
 void Widget::DoAction(double value)
 {
     LogInput(value);
-    string modifiers = "";
-    string touchModifiers = "";
-    GetModifiers(modifiers, touchModifiers);
+    string modifier = "";
+    string touchModifier = "";
+    GetModifiers(modifier, touchModifier);
     
-    if(actions_.count(touchModifiers) > 0)
-        for(int i = 0; i < actions_[touchModifiers].size(); i++)
-            actions_[touchModifiers][i]->DoAction(value, this);
-    else if(actions_.count(modifiers) > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoAction(value, this);
+    if(actions_.count(touchModifier) > 0)
+        for(int i = 0; i < actions_[touchModifier].size(); i++)
+            actions_[touchModifier][i]->DoAction(value, this);
+    else if(actions_.count(modifier) > 0)
+        for(int i = 0; i < actions_[modifier].size(); i++)
+            actions_[modifier][i]->DoAction(value, this);
     else if(actions_.count("") > 0)
         for(int i = 0; i < actions_[""].size(); i++)
             actions_[""][i]->DoAction(value, this);
@@ -1798,16 +1796,16 @@ void Widget::DoAction(double value)
 void Widget::DoRelativeAction(double delta)
 {
     LogInput(delta);
-    string modifiers = "";
-    string touchModifiers = "";
-    GetModifiers(modifiers, touchModifiers);
+    string modifier = "";
+    string touchModifier = "";
+    GetModifiers(modifier, touchModifier);
 
-    if(actions_.count(touchModifiers) > 0)
-        for(int i = 0; i < actions_[touchModifiers].size(); i++)
-            actions_[touchModifiers][i]->DoRelativeAction(delta, this);
-    else if(actions_.count(modifiers) > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoRelativeAction(delta, this);
+    if(actions_.count(touchModifier) > 0)
+        for(int i = 0; i < actions_[touchModifier].size(); i++)
+            actions_[touchModifier][i]->DoRelativeAction(delta, this);
+    else if(actions_.count(modifier) > 0)
+        for(int i = 0; i < actions_[modifier].size(); i++)
+            actions_[modifier][i]->DoRelativeAction(delta, this);
     else if(actions_.count("") > 0)
         for(int i = 0; i < actions_[""].size(); i++)
             actions_[""][i]->DoRelativeAction(delta, this);
@@ -1816,16 +1814,16 @@ void Widget::DoRelativeAction(double delta)
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
 {
     LogInput(accelerationIndex);
-    string modifiers = "";
-    string touchModifiers = "";
-    GetModifiers(modifiers, touchModifiers);
+    string modifier = "";
+    string touchModifier = "";
+    GetModifiers(modifier, touchModifier);
 
-    if(actions_.count(touchModifiers) > 0)
-        for(int i = 0; i < actions_[touchModifiers].size(); i++)
-            actions_[touchModifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
-    else if(actions_.count(modifiers) > 0)
-        for(int i = 0; i < actions_[modifiers].size(); i++)
-            actions_[modifiers][i]->DoRelativeAction(accelerationIndex, delta, this);
+    if(actions_.count(touchModifier) > 0)
+        for(int i = 0; i < actions_[touchModifier].size(); i++)
+            actions_[touchModifier][i]->DoRelativeAction(accelerationIndex, delta, this);
+    else if(actions_.count(modifier) > 0)
+        for(int i = 0; i < actions_[modifier].size(); i++)
+            actions_[modifier][i]->DoRelativeAction(accelerationIndex, delta, this);
     else if(actions_.count("") > 0)
         for(int i = 0; i < actions_[""].size(); i++)
             actions_[""][i]->DoRelativeAction(accelerationIndex, delta, this);
@@ -3006,7 +3004,7 @@ struct ActionLineItem
     string navigator = "";
     string widgetName = "";
     Widget* widget = nullptr;
-    string modifiers = "";
+    string modifier = "";
     string allModifiers = "";
     string actionName = "";
     Action* action = nullptr;
@@ -4107,18 +4105,18 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             actionLineItem.isHold = isHold;
                             
                             if(actionLineItem.isShift)
-                                actionLineItem.modifiers += "Shift+";
+                                actionLineItem.modifier += "Shift+";
                             
                             if(actionLineItem.isOption)
-                                actionLineItem.modifiers += "Option+";
+                                actionLineItem.modifier += "Option+";
                             
                             if(actionLineItem.isControl)
-                                actionLineItem.modifiers += "Control+";
+                                actionLineItem.modifier += "Control+";
                             
                             if(actionLineItem.isAlt)
-                                actionLineItem.modifiers += "Altt+";
+                                actionLineItem.modifier += "Altt+";
                             
-                            actionLineItem.allModifiers = actionLineItem.modifiers;
+                            actionLineItem.allModifiers = actionLineItem.modifier;
                             
                             if(actionLineItem.isToggle)
                                 actionLineItem.allModifiers += "Toggle+";
@@ -4151,7 +4149,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                             //zonesInThisFile[zoneIndex]->AddAction(actionLineItem, currentFXIndex);
                             //zonesInThisFile[zoneIndex]->Activate(currentFXIndex);
                             
-                            string lineString = actionLineItem.modifiers + actionLineItem.widgetName + " " + actionLineItem.actionName;
+                            string lineString = actionLineItem.modifier + actionLineItem.widgetName + " " + actionLineItem.actionName;
                             
                             if(actionLineItem.param != "")
                                 lineString += " " + actionLineItem.param;
