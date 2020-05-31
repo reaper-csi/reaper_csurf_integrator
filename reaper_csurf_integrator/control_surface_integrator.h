@@ -522,6 +522,7 @@ struct ZoneMember
     ZoneMember(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
     void SetProperties(Widget* widget, Action* action);
+    void SetProperties(Action* action);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -540,7 +541,7 @@ struct WidgetActionTemplate
 {
     string widgetName = "";
     bool isModifier = false;
-    map<string, ActionsForModiferTemplate*> actionTemplates;
+    vector<ActionsForModiferTemplate*> actionTemplates;
     
     WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
 };
@@ -599,11 +600,24 @@ private:
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     
+    
+    
+    
     // modifers->Action
     map<string, vector<unique_ptr<ActionWrapper>>> actions_;
     map<string, vector<ZoneMember>> defaultZoneMembers_;
     
     void GetModifiers(string &modifier, string &touchModifier);
+    
+    
+    
+    
+    WidgetActionBroker* currentWidgetActionBroker_ = nullptr;
+    
+    
+    
+    
+    
     void LogInput(double value);
 
 public:
@@ -646,6 +660,11 @@ public:
         
         for(auto action : actions)
             actions_[modifier].push_back(make_unique<ActionWrapper>(action));
+    }
+    
+    void Activate(WidgetActionBroker* currentWidgetActionBroker)
+    {
+        currentWidgetActionBroker_ = currentWidgetActionBroker;
     }
     
     void SetAsDefault(string modifier, vector<ZoneMember> zoneMembers)
