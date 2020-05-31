@@ -51,6 +51,7 @@ const string MidiSurfaceToken = "MidiSurface";
 const string OSCSurfaceToken = "OSCSurface";
 const string EuConSurfaceToken = "EuConSurface";
 const string PageToken = "Page";
+
 const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
@@ -340,33 +341,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionWrapper
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Action* action_;
-    
-public:
-    ActionWrapper(Action* action) : action_(action) {}
-    
-    ~ActionWrapper()
-    {
-        if(action_ != nullptr)
-            delete action_;
-    }
-    
-    Navigator* GetNavigator() { return action_->GetNavigator(); }
-    MediaTrack* GetTrack() { return action_->GetTrack(); }
-    int GetSlotIndex() { return action_->GetSlotIndex(); }
-    int GetParamIndex() { return action_->GetParamIndex(); }
-    
-    void DoAction(double value, Widget* sender) { action_->DoAction(value, sender); }
-    void DoRelativeAction(double value, Widget* sender) { action_->DoRelativeAction(value, sender); }
-    void DoRelativeAction(int accelerationIndex, double value, Widget* sender) { action_->DoRelativeAction(accelerationIndex, value, sender); }
-    void RequestUpdate() { action_->RequestUpdate(); }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ActionsForModifier
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -446,22 +420,24 @@ class WidgetActionBroker
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    ControlSurface* const surface_ = nullptr;
+    Widget* const widget_ = nullptr;
+    Navigator* const navigator_ = nullptr;
     map<string, ActionsForModifier*> actionsForModifier_;
     
 public:
-    WidgetActionBroker(ControlSurface* surface, vector<ActionsForModifier*> actionsForModifier) : surface_(surface)
-    {
-        for(int i = 0; i < actionsForModifier.size(); i++)
-            actionsForModifier_[actionsForModifier[i]->GetModifier()] = actionsForModifier[i];
-    }
-    
+    WidgetActionBroker(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
+
     ~WidgetActionBroker()
     {
         // GAW TBD -- delete modifierActions
     }
+   
+    void AddActionsForModifer(ActionsForModifier* actionsForModifier)
+    {
+        actionsForModifier_[actionsForModifier->GetModifier()] = actionsForModifier;
+    }
     
-    ActionsForModifier* GetActionsForModifier(Widget* widget);
+    ActionsForModifier* GetActionsForModifier();
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -473,7 +449,11 @@ private:
     int const slotIndex_ = 0;
     
     vector<Zone> includedZones_;
-    map<Widget*, vector<string>> widgets_;
+    vector<Widget*> widgets_;
+
+    
+    map<Widget*, vector<string>> widgetsMap_;
+    
     
 public:
     Zone() {}
@@ -490,9 +470,15 @@ public:
         DAW::TrackFX_Show(track_, slotIndex_, 2);
     }
     
+    // GAW TBD -- remove
     void AddWidget(Widget* widget, string modifier)
     {
-        widgets_[widget].push_back(modifier);
+        widgetsMap_[widget].push_back(modifier);
+    }
+    
+    void AddWidget(Widget* widget)
+    {
+        widgets_.push_back(widget);
     }
     
     void AddZone(Zone zone)
@@ -502,14 +488,9 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ZoneMember
+struct ActionTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    string widgetName;
-    string modifier;
-    bool isModifier;
-
-
     string actionName;
     vector<string> params;
     bool supportsRelease;
@@ -517,11 +498,8 @@ struct ZoneMember
     bool shouldToggle;
     double delayAmount;
     
-    ZoneMember(string widget, string action, vector<string> prams, string modifierString, bool isModifierKey, bool isPR, bool isI, bool shouldT, double amount) : widgetName(widget), actionName(action), params(prams), modifier(modifierString), isModifier(isModifierKey), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
+    ActionTemplate(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
-    ZoneMember(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
-    
-    void SetProperties(Widget* widget, Action* action);
     void SetProperties(Action* action);
 };
 
@@ -530,7 +508,7 @@ struct ActionsForModiferTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string modifier = "";
-    vector<ZoneMember*> members;
+    vector<ActionTemplate*> members;
     
     ActionsForModiferTemplate(string modifierStr) : modifier(modifierStr) {}
 };
@@ -541,7 +519,7 @@ struct WidgetActionTemplate
 {
     string widgetName = "";
     bool isModifier = false;
-    vector<ActionsForModiferTemplate*> actionTemplates;
+    vector<ActionsForModiferTemplate*> actionsForModifiersTemplates;
     
     WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
 };
@@ -550,9 +528,9 @@ struct WidgetActionTemplate
 struct ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    vector<ZoneMember> zoneMembers;
+    vector<ActionTemplate> zoneMembers;
     
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ZoneMember> zoneMemberVector)
+    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ActionTemplate> zoneMemberVector)
     : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
 
     
@@ -582,8 +560,6 @@ struct ZoneTemplate
     
     
     
-    void  SetAsDefault(ControlSurface*  surface);
-    void  SetAsDefault(ControlSurface*  surface, int channel, Navigator* navigator);
     
     Zone  Activate(ControlSurface*  surface);
     Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
@@ -600,24 +576,9 @@ private:
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     
-    
-    
-    
-    // modifers->Action
-    map<string, vector<unique_ptr<ActionWrapper>>> actions_;
-    map<string, vector<ZoneMember>> defaultZoneMembers_;
-    
-    void GetModifiers(string &modifier, string &touchModifier);
-    
-    
-    
-    
     WidgetActionBroker* currentWidgetActionBroker_ = nullptr;
-    
-    
-    
-    
-    
+    WidgetActionBroker* defaultWidgetActionBroker_ = nullptr;
+
     void LogInput(double value);
 
 public:
@@ -631,17 +592,13 @@ public:
     virtual void SilentSetValue(string displayText);
     
     
-
     // GAW TBD -- This is needed only for EuCon, ses if there is a better way
     MediaTrack* GetTrack();
     int GetSlotIndex();
     int GetParamIndex();
 
     
-
-    Navigator* GetNavigator();
-    void Deactivate(string modifier);
-    
+    void Deactivate();
     void RequestUpdate();
     void DoAction(double value);
     void DoRelativeAction(double delta);
@@ -653,27 +610,15 @@ public:
     void ClearCache();
     void Clear();
     void ForceClear();
-
-    void Activate(string modifier, vector<Action*> actions)
-    {
-        actions_[modifier].clear();
-        
-        for(auto action : actions)
-            actions_[modifier].push_back(make_unique<ActionWrapper>(action));
-    }
-    
+   
     void Activate(WidgetActionBroker* currentWidgetActionBroker)
     {
         currentWidgetActionBroker_ = currentWidgetActionBroker;
     }
     
-    void SetAsDefault(string modifier, vector<ZoneMember> zoneMembers)
+    void MakeCurrentDefault()
     {
-        if(defaultZoneMembers_.count(modifier) > 0)
-            defaultZoneMembers_[modifier].clear();
-        
-        for(auto member : zoneMembers)
-            defaultZoneMembers_[modifier].push_back(member);
+        defaultWidgetActionBroker_ = currentWidgetActionBroker_;
     }
     
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
@@ -1048,10 +993,10 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
 
-    void SetZoneAsDefault(string zoneName)
+    void MakeCurrentDefault()
     {
-        if(zoneTemplates_.count(zoneName) > 0)
-            zoneTemplates_[zoneName]->SetAsDefault(this);
+        for(auto widget : widgets_)
+            widget->MakeCurrentDefault();
     }
     
     void GoZone(string zoneName)
