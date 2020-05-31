@@ -197,7 +197,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndModifiers(string line, string &widgetName, string &modifier, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -316,11 +316,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
-                    
-                    
-                    
-                    
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     bool isModifier = (actionName == Shift || actionName == Option || actionName == Control || actionName == Alt);
                     
@@ -345,8 +341,9 @@ static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
 {
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
-    map<string, WidgetActionTemplate*> widgetTemplates;
-     
+    
+    map<string, map<string, vector<ZoneMember*>>> widgetActions;
+    
     string zoneName = "";
     string zoneAlias = "";
     string navigatorName = "";
@@ -387,14 +384,31 @@ static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
                 else if(tokens[0] == "ZoneEnd")
                 {
                     vector<WidgetActionTemplate*> widgetActionTemplates;
-                    
-                    for(auto [widgetName, actionTemplate] : widgetTemplates)
-                        widgetActionTemplates.push_back(actionTemplate);
+
+                    for(auto [widgetName, modifierActions] : widgetActions)
+                    {
+                        WidgetActionTemplate* widgetActionTemplate = new WidgetActionTemplate(widgetName);
+                        
+                        if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
+                            widgetActionTemplate->isModifier = true;
+
+                        for(auto [modifier, actions] : modifierActions)
+                        {
+                            ActionsForModiferTemplate* modifierTemplate = new ActionsForModiferTemplate(modifier);
+                            
+                            for(auto action : actions)
+                                modifierTemplate->members.push_back(action);
+                            
+                            widgetActionTemplate->actionTemplates.push_back(modifierTemplate);
+                        }
+                        
+                        widgetActionTemplates.push_back(widgetActionTemplate);
+                    }
                     
                     surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
                     
                     includedZones.clear();
-                    widgetTemplates.clear();
+                    widgetActions.clear();
                 }
                 
                 else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator")
@@ -421,22 +435,13 @@ static void ProcessZoneFileNew(string filePath, ControlSurface* surface)
                     bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndModifiers(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
-                    
-                    if(widgetTemplates.count(widgetName) < 1)
-                        widgetTemplates[widgetName] = new WidgetActionTemplate(widgetName);
-
-                    if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
-                        widgetTemplates[widgetName]->isModifier = true;
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     vector<string> params;
                     for(int j = 2; j < tokens.size(); j++)
                         params.push_back(tokens[j]);
                     
-                    if(widgetTemplates[widgetName]->actionTemplates.count(modifier) < 1)
-                        widgetTemplates[widgetName]->actionTemplates[modifier] = new ActionsForModiferTemplate(modifier);
-                    
-                    widgetTemplates[widgetName]->actionTemplates[modifier]->members.push_back(new ZoneMember(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
+                    widgetActions[widgetName][modifier].push_back(new ZoneMember(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
                 }
             }
         }
@@ -1559,6 +1564,29 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
     }
     
     map<Widget*, map<string, vector<Action*>>> widgetActions;
+
+    for(auto  widgetActionTemplate :  widgetActionTemplates)
+    {
+        if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
+        {
+            if(widgetActionTemplate->isModifier)
+                widget->SetIsModifier();
+            
+            for(auto actionTemplate : widgetActionTemplate->actionTemplates)
+            {
+                for(auto member : actionTemplate->members)
+                {
+                    Action* action = TheManager->GetAction(widget, member->actionName, member->params);
+                    member->SetProperties(action);
+                    widgetActions[widget][member->modifier].push_back(action);
+                }
+            }
+        }
+    }
+    
+    
+    
+    
     
     for(auto member : zoneMembers)
         if(Widget* widget = surface->GetWidgetByName(member.widgetName))
@@ -1574,6 +1602,8 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
             widget->Activate(modifier, actions);
             zone.AddWidget(widget, modifier);
         }
+    
+    
     
     return zone;
 }
@@ -1651,6 +1681,21 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneMember
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ZoneMember::SetProperties(Action* action)
+{
+    if(supportsRelease)
+        action->SetSupportsRelease();
+    
+    if(isInverted)
+        action->SetIsInverted();
+    
+    if(shouldToggle)
+        action->SetShouldToggle();
+    
+    if(delayAmount != 0.0)
+        action->SetDelayAmount(delayAmount * 1000.0);
+}
+
 void ZoneMember::SetProperties(Widget* widget, Action* action)
 {
     if(isModifier)
@@ -2270,7 +2315,10 @@ void ControlSurface::InitZones(string zoneFolder)
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
         for(auto zoneFilename : zoneFilesToProcess)
+        {
             ProcessZoneFile(zoneFilename, this);
+            ProcessZoneFileNew(zoneFilename, this);
+        }
     }
     catch (exception &e)
     {
