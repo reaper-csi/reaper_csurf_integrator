@@ -448,7 +448,6 @@ private:
     MediaTrack* const track_= nullptr;
     int const slotIndex_ = 0;
     
-    vector<Zone> includedZones_;
     vector<Widget*> widgets_;
     
 public:
@@ -469,11 +468,6 @@ public:
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
-    }
-    
-    void AddZone(Zone zone)
-    {
-        includedZones_.push_back(zone);
     }
 };
 

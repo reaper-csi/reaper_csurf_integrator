@@ -1383,9 +1383,6 @@ void Zone::Deactivate()
     
     for(auto widget : widgets_)
         widget->Deactivate();
-    
-    for(auto includedZone : includedZones_)
-        includedZone.Deactivate();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1439,19 +1436,53 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
 
 void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate)
 {
-    Zone zone;
-    
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, zone, this);
+            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, parentZone, this);
     
     string nav = navigator;
     
     if(nav == "ParentZone")
         nav = parentZoneTemplate->navigator;
     
-    if(nav == "")
-        parentZone.AddZone(Activate(surface));
+    if(nav == "" || nav == "SelectedTrackNavigator" || nav == "MasterTrackNavigator" || nav == "FocusedFXNavigator")
+    {
+        for(auto  widgetActionTemplate :  widgetActionTemplates)
+        {
+            if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
+            {
+                if(widgetActionTemplate->isModifier)
+                    widget->SetIsModifier();
+                
+                WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
+                
+                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+                {
+                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
+                    broker->AddActionsForModifer(actionsForModifier);
+                    
+                    for(auto member : actionsForModifierTemplate->members)
+                    {
+                        Action* action = nullptr;
+                        if(nav == "")
+                            action = TheManager->GetAction(widget, member->actionName, member->params);
+                        else if(nav == "SelectedTrackNavigator")
+                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                        else if(nav == "FocusedFXNavigator")
+                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
+                        else if(nav == "MasterTrackNavigator")
+                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
+                        member->SetProperties(action);
+                        actionsForModifier->AddAction(action);
+                    }
+                }
+                
+                parentZone.AddWidget(widget);
+                widget->Activate(broker);
+            }
+        }
+
+    }
     else if(nav == "TrackNavigator")
     {
         for(int i = 0; i < surface->GetNumChannels(); i++)
