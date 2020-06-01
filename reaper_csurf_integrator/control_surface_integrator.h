@@ -450,10 +450,6 @@ private:
     
     vector<Zone> includedZones_;
     vector<Widget*> widgets_;
-
-    
-    map<Widget*, vector<string>> widgetsMap_;
-    
     
 public:
     Zone() {}
@@ -468,12 +464,6 @@ public:
     void CloseFXWindow()
     {
         DAW::TrackFX_Show(track_, slotIndex_, 2);
-    }
-    
-    // GAW TBD -- remove
-    void AddWidget(Widget* widget, string modifier)
-    {
-        widgetsMap_[widget].push_back(modifier);
     }
     
     void AddWidget(Widget* widget)
@@ -528,23 +518,12 @@ struct WidgetActionTemplate
 struct ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    vector<ActionTemplate> zoneMembers;
-    
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<ActionTemplate> zoneMemberVector)
-    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones), zoneMembers(zoneMemberVector) {}
-
-    
-    
-    
-    
     string navigator = "";
     string name = "";
     string alias = "";
     string sourceFilePath = "";
     vector<string> includedZoneTemplates;
     vector<WidgetActionTemplate*> widgetActionTemplates;
-
-    
     
     ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<WidgetActionTemplate*> &templates)
     : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones)
@@ -552,17 +531,9 @@ struct ZoneTemplate
         for(auto widgetActionTemplate : templates)
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
-
-    
-    
-    
-    
-    
-    
-    
     
     Zone  Activate(ControlSurface*  surface);
-    Zone  Activate(ControlSurface*  surface, int channel, Navigator* navigator);
+    void  ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate);
     Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
 };
 
@@ -2138,7 +2109,7 @@ public:
                     
                     DAW::ShowConsoleMsg(("\n\tFXParam " + to_string(j) + " \"" + string(fxParamName)+ "\"").c_str());
                     
-                    /* Uncomment this and comment the line above if you want to show steo sizes
+                    /* Uncomment this and comment the line above if you want to show step sizes
                     double stepOut = 0;
                     double smallstepOut = 0;
                     double largestepOut = 0;

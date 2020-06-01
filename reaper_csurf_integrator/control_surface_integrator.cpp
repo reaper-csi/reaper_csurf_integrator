@@ -239,104 +239,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
     
     modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
 }
-/*
-static void ProcessZoneFile(string filePath, ControlSurface* surface)
-{
-    vector<string> includedZones;
-    bool isInIncludedZonesSection = false;
-    
-    vector<ActionTemplate> zoneMembers;
 
-    string zoneName = "";
-    string zoneAlias = "";
-    string navigatorName = "";
-    string actionName = "";
-    int lineNumber = 0;
-    
-    try
-    {
-        ifstream file(filePath);
-        
-        for (string line; getline(file, line) ; )
-        {
-            surface->AddZoneFileLine(filePath, line);  // store in the raw map for EditMode
-            
-            line = regex_replace(line, regex(TabChars), " ");
-            line = regex_replace(line, regex(CRLFChars), "");
-            
-            line = line.substr(0, line.find("//")); // remove trailing commewnts
-            
-            lineNumber++;
-            
-            // Trim leading and trailing spaces
-            line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
-            
-            if(line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
-                continue;
-            
-            vector<string> tokens(GetTokens(line));
-            
-            if(tokens.size() > 0)
-            {
-                if(tokens[0] == "Zone")
-                {
-                    zoneName = tokens[1];
-                    zoneAlias = tokens.size() > 2 ? tokens[2] : tokens[1];
-                }
-                
-                else if(tokens[0] == "ZoneEnd")
-                {
-                    surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, zoneMembers));
-
-                    includedZones.clear();
-                    zoneMembers.clear();
-                }
-                
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator")
-                    navigatorName = tokens[0];
-                
-                else if(tokens[0] == "IncludedZones")
-                    isInIncludedZonesSection = true;
-                
-                else if(tokens[0] == "IncludedZonesEnd")
-                    isInIncludedZonesSection = false;
-
-                else if(tokens.size() == 1 && isInIncludedZonesSection)
-                    includedZones.push_back(tokens[0]);
-                
-                else
-                {
-                    actionName = tokens[1];
-
-                    // GAW -- the first token is the Widget name, possibly decorated with modifier
-                    string widgetName = "";
-                    string modifier = "";
-                    bool isPressRelease = false;
-                    bool isInverted = false;
-                    bool shouldToggle = false;
-                    double delayAmount = 0.0;
-                    
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
-                    
-                    bool isModifier = (actionName == Shift || actionName == Option || actionName == Control || actionName == Alt);
-                    
-                    vector<string> params;
-                    for(int j = 2; j < tokens.size(); j++)
-                        params.push_back(tokens[j]);
-                   
-                    zoneMembers.push_back(ActionTemplate(widgetName, actionName, params, modifier, isModifier, isPressRelease, isInverted, shouldToggle, delayAmount));
-                }
-            }
-        }
-    }
-    catch (exception &e)
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
-        DAW::ShowConsoleMsg(buffer);
-    }
-}
-*/
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
     vector<string> includedZones;
@@ -1488,27 +1391,13 @@ void Zone::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 Zone ZoneTemplate::Activate(ControlSurface*  surface)
 {
     Zone zone;
     
-    for(auto includedZoneTemplate : includedZoneTemplates)
-    {
-        if(includedZoneTemplate == "Channel")
-        {
-            if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            {
-                if(zoneTemplate->navigator == "")
-                    zone.AddZone(zoneTemplate->Activate(surface));
-                else if(zoneTemplate->navigator == "TrackNavigator")
-                    for(int i = 0; i < surface->GetNumChannels(); i++)
-                        zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
-            }
-        }
-        else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface));
-    }
+    for(auto includedZoneTemplateStr : includedZoneTemplates)
+        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
+            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, zone, this);
 
     for(auto  widgetActionTemplate :  widgetActionTemplates)
     {
@@ -1536,39 +1425,141 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
             widget->Activate(broker);
         }
     }
-    
-    
-    
-    /*
-    
-    for(auto member : zoneMembers)
-        if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-        {
-            Action* action = TheManager->GetAction(widget, member.actionName, member.params);
-            member.SetProperties(widget, action);
-            widgetActions[widget][member.modifier].push_back(action);
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    
-    */
-    
+
     return zone;
 }
 
-Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator* navigator)
+void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate)
 {
     Zone zone;
+    
+    string nav = navigator;
+    
+    if(nav == "ParentZone")
+        nav = parentZoneTemplate->navigator;
+    
+    if(nav == "")
+        parentZone.AddZone(Activate(surface));
+    else if(nav == "TrackNavigator")
+    {
+        for(int i = 0; i < surface->GetNumChannels(); i++)
+        {
+            string channelNumStr = to_string(i + 1);
+
+            for(auto  widgetActionTemplate :  widgetActionTemplates)
+            {
+                string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
+
+                if(Widget* widget = surface->GetWidgetByName(widgetName))
+                {
+                    if(widgetActionTemplate->isModifier)
+                        widget->SetIsModifier();
+                    
+                    WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
+                    
+                    for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+                    {
+                        ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
+                        broker->AddActionsForModifer(actionsForModifier);
+                        
+                        for(auto member : actionsForModifierTemplate->members)
+                        {
+                            Action* action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetNavigatorForChannel(i));
+                            member->SetProperties(action);
+                            actionsForModifier->AddAction(action);
+                        }
+                    }
+                    
+                    zone.AddWidget(widget);
+                    widget->Activate(broker);
+                }
+            }
+        }
+    }
+    
+    
     /*
+     {
+     if(includedZoneTemplate == "Channel")
+     {
+     if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+     {
+     if(zoneTemplate->navigator == "")
+     zone.AddZone(zoneTemplate->Activate(surface));
+     else if(zoneTemplate->navigator == "TrackNavigator")
+     for(int i = 0; i < surface->GetNumChannels(); i++)
+     zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
+     }
+     }
+     else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
+     zone.AddZone(zoneTemplate->Activate(surface));
+     }
+     */
+
+    
+    
+    
+    
+    /*
+    
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
             zone.AddZone(zoneTemplate->Activate(surface, channelNum, navigator));
     
+    if(navigator != nullptr)
+    {
+        
+        
+        
+        for(auto  widgetActionTemplate :  widgetActionTemplates)
+        {
+            string channelNumStr = to_string(channelNum + 1);
+            
+            /*
+            for(int i = 0; i < member.params.size(); i++)
+                member.params[i] = regex_replace(member.params[i], regex("[|]"), channelNumStr);
+            
+            member.widgetName = regex_replace(member.widgetName, regex("[|]"), channelNumStr);
+            member.actionName = regex_replace(member.actionName, regex("[|]"), channelNumStr);
+*/
+            
+   /*
+            if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
+            {
+                if(widgetActionTemplate->isModifier)
+                    widget->SetIsModifier();
+                
+                WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
+                
+                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+                {
+                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
+                    broker->AddActionsForModifer(actionsForModifier);
+                    
+                    for(auto member : actionsForModifierTemplate->members)
+                    {
+                        Action* action = TheManager->GetAction(widget, member->actionName, member->params);
+                        member->SetProperties(action);
+                        actionsForModifier->AddAction(action);
+                    }
+                }
+                
+                zone.AddWidget(widget);
+                widget->Activate(broker);
+            }
+        }
+
+        
+        
+        
+        
+    }
+    
+    
+    /*
+    
+    
+    /*
     map<Widget*, map<string, vector<Action*>>> widgetActions;
     
     if(navigator != nullptr)
@@ -1597,7 +1588,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, int channelNum, Navigator*
             zone.AddWidget(widget, modifier);
         }
     */
-    return zone;
+   
 }
 
 Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
@@ -1652,6 +1643,11 @@ void ActionTemplate::SetProperties(Action* action)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+// GAW TBD remove if possible
+
 MediaTrack* Widget::GetTrack()
 {
     if(currentWidgetActionBroker_ != nullptr)
@@ -1676,6 +1672,11 @@ int Widget::GetParamIndex()
         return 0;
 }
 
+
+
+
+
+
 void Widget::Deactivate()
 {
     if(defaultWidgetActionBroker_ != nullptr)
@@ -1691,29 +1692,15 @@ void Widget::Deactivate()
 
 void Widget::RequestUpdate()
 {
-    if(currentWidgetActionBroker_ != nullptr)
-        if(ActionsForModifier* actionsForModifier = currentWidgetActionBroker_->GetActionsForModifier())
-            actionsForModifier->RequestUpdate();
-}
-
-void Widget::LogInput(double value)
-{
-    if( TheManager->GetSurfaceInMonitor())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
-        DAW::ShowConsoleMsg(buffer);
-    }
-    
-    GetSurface()->GetPage()->InputReceived(this, value);
+    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
+            currentWidgetActionBroker_->GetActionsForModifier()->RequestUpdate();
 }
 
 void Widget::DoAction(double value)
 {
     LogInput(value);
     
-    if(currentWidgetActionBroker_ != nullptr)
-        if(currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
+    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
             currentWidgetActionBroker_->GetActionsForModifier()->DoAction(this, value);
 }
 
@@ -1721,8 +1708,7 @@ void Widget::DoRelativeAction(double delta)
 {
     LogInput(delta);
     
-    if(currentWidgetActionBroker_ != nullptr)
-        if(currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
+    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
             currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(this, delta);
 }
 
@@ -1730,8 +1716,7 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
 {
     LogInput(accelerationIndex);
     
-    if(currentWidgetActionBroker_ != nullptr)
-        if(currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
+    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
             currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(this, accelerationIndex, delta);
 }
 
@@ -1781,6 +1766,18 @@ void Widget::ClearCache()
 {
     for(auto processor : feedbackProcessors_)
         processor->ClearCache();
+}
+
+void Widget::LogInput(double value)
+{
+    if( TheManager->GetSurfaceInMonitor())
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
+        DAW::ShowConsoleMsg(buffer);
+    }
+    
+    GetSurface()->GetPage()->InputReceived(this, value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
