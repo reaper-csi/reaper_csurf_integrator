@@ -1481,7 +1481,6 @@ void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &
                 widget->Activate(broker);
             }
         }
-
     }
     else if(nav == "TrackNavigator")
     {
@@ -1524,119 +1523,6 @@ void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &
             }
         }
     }
-    
-    
-    /*
-     {
-     if(includedZoneTemplate == "Channel")
-     {
-     if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-     {
-     if(zoneTemplate->navigator == "")
-     zone.AddZone(zoneTemplate->Activate(surface));
-     else if(zoneTemplate->navigator == "TrackNavigator")
-     for(int i = 0; i < surface->GetNumChannels(); i++)
-     zone.AddZone(zoneTemplate->Activate(surface, i, surface->GetNavigatorForChannel(i)));
-     }
-     }
-     else if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-     zone.AddZone(zoneTemplate->Activate(surface));
-     }
-     */
-
-    
-    
-    
-    
-    /*
-    
-    for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface, channelNum, navigator));
-    
-    if(navigator != nullptr)
-    {
-        
-        
-        
-        for(auto  widgetActionTemplate :  widgetActionTemplates)
-        {
-            string channelNumStr = to_string(channelNum + 1);
-            
-            /*
-            for(int i = 0; i < member.params.size(); i++)
-                member.params[i] = regex_replace(member.params[i], regex("[|]"), channelNumStr);
-            
-            member.widgetName = regex_replace(member.widgetName, regex("[|]"), channelNumStr);
-            member.actionName = regex_replace(member.actionName, regex("[|]"), channelNumStr);
-*/
-            
-   /*
-            if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
-            {
-                if(widgetActionTemplate->isModifier)
-                    widget->SetIsModifier();
-                
-                WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
-                
-                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
-                {
-                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                    broker->AddActionsForModifer(actionsForModifier);
-                    
-                    for(auto member : actionsForModifierTemplate->members)
-                    {
-                        Action* action = TheManager->GetAction(widget, member->actionName, member->params);
-                        member->SetProperties(action);
-                        actionsForModifier->AddAction(action);
-                    }
-                }
-                
-                zone.AddWidget(widget);
-                widget->Activate(broker);
-            }
-        }
-
-        
-        
-        
-        
-    }
-    
-    
-    /*
-    
-    
-    /*
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-    
-    if(navigator != nullptr)
-        for(auto member : zoneMembers)
-        {
-            string channelNumStr = to_string(channelNum + 1);
-            
-            for(int i = 0; i < member.params.size(); i++)
-                member.params[i] = regex_replace(member.params[i], regex("[|]"), channelNumStr);
-            
-            member.widgetName = regex_replace(member.widgetName, regex("[|]"), channelNumStr);
-            member.actionName = regex_replace(member.actionName, regex("[|]"), channelNumStr);
-
-            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            {
-                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator);
-                member.SetProperties(widget, action);
-                widgetActions[widget][member.modifier].push_back(action);
-            }
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    */
-   
 }
 
 Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
