@@ -1415,7 +1415,15 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
                 
                 for(auto member : actionsForModifierTemplate->members)
                 {
-                    Action* action = TheManager->GetAction(widget, member->actionName, member->params);
+                    Action* action = nullptr;
+                    if(navigator == "")
+                        action = TheManager->GetAction(widget, member->actionName, member->params);
+                    else if(navigator == "SelectedTrackNavigator")
+                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                    else if(navigator == "FocusedFXNavigator")
+                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
+                    else if(navigator == "MasterTrackNavigator")
+                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
                     member->SetProperties(action);
                     actionsForModifier->AddAction(action);
                 }
@@ -1432,6 +1440,10 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
 void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate)
 {
     Zone zone;
+    
+    for(auto includedZoneTemplateStr : includedZoneTemplates)
+        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
+            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, zone, this);
     
     string nav = navigator;
     
@@ -1464,13 +1476,18 @@ void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &
                         
                         for(auto member : actionsForModifierTemplate->members)
                         {
-                            Action* action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetNavigatorForChannel(i));
+                            for(int j = 0; j < member->params.size(); j++)
+                                member->params[j] = regex_replace(member->params[j], regex("[|]"), channelNumStr);
+                            
+                            string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
+
+                            Action* action = TheManager->GetAction(widget, actionName, member->params, surface->GetNavigatorForChannel(i));
                             member->SetProperties(action);
                             actionsForModifier->AddAction(action);
                         }
                     }
                     
-                    zone.AddWidget(widget);
+                    parentZone.AddWidget(widget);
                     widget->Activate(broker);
                 }
             }
