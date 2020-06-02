@@ -512,23 +512,26 @@ struct WidgetActionTemplate
 struct ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    string navigator = "";
+    vector<Navigator*> navigators;
     string name = "";
     string alias = "";
     string sourceFilePath = "";
     vector<string> includedZoneTemplates;
     vector<WidgetActionTemplate*> widgetActionTemplates;
     
-    ZoneTemplate(string navigatorType, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<WidgetActionTemplate*> &templates)
-    : navigator(navigatorType), name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones)
+    ZoneTemplate(vector<Navigator*> &navigatorList, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<WidgetActionTemplate*> &templates)
+    : name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones)
     {
+        for(auto navigator : navigatorList)
+            navigators.push_back(navigator);
+
         for(auto widgetActionTemplate : templates)
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
-    Zone  Activate(ControlSurface*  surface);
-    void  ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate);
-    Zone  Activate(ControlSurface*  surface, Navigator* navigator, int slotindex);
+    void  Activate(ControlSurface*  surface, Zone &zone);
+    void  Activate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate);
+    void  Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -967,7 +970,10 @@ public:
     void GoZone(string zoneName)
     {
         if(zoneTemplates_.count(zoneName) > 0)
-            zoneTemplates_[zoneName]->Activate(this);
+        {
+            Zone zone;
+            zoneTemplates_[zoneName]->Activate(this, zone);
+        }
     }
     
     ZoneTemplate* GetZoneTemplate(string zoneName)
