@@ -1406,41 +1406,53 @@ void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
             includedZoneTemplate->Activate(surface, zone, this);
 
-    for(auto  widgetActionTemplate :  widgetActionTemplates)
+    int index = 0;
+    do
     {
-        if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
+        string channelNumStr = to_string(index + 1);
+        
+        for(auto  widgetActionTemplate :  widgetActionTemplates)
         {
-            if(widgetActionTemplate->isModifier)
-                widget->SetIsModifier();
+            string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
             
-            WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
-            
-            for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+            if(Widget* widget = surface->GetWidgetByName(widgetName))
             {
-                ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                broker->AddActionsForModifer(actionsForModifier);
+                if(widgetActionTemplate->isModifier)
+                    widget->SetIsModifier();
                 
-                for(auto member : actionsForModifierTemplate->members)
+                WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
+                
+                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
                 {
-                    Action* action = nullptr;
-                    if(navigators.size() == 0)
-                        action = TheManager->GetAction(widget, member->actionName, member->params);
-                    else if(navigators.size() == 1)
-                          action = TheManager->GetAction(widget, member->actionName, member->params, navigators[0]);
-                    else
-                    {
-                        
-                    }
+                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
+                    broker->AddActionsForModifer(actionsForModifier);
                     
-                    member->SetProperties(action);
-                    actionsForModifier->AddAction(action);
+                    for(auto member : actionsForModifierTemplate->members)
+                    {
+                        string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
+                        vector<string> memberParams;
+                        for(int j = 0; j < member->params.size(); j++)
+                            memberParams.push_back(regex_replace(member->params[j], regex("[|]"), channelNumStr));
+                        
+                        Action* action = nullptr;
+                        if(navigators.size() == 0)
+                            action = TheManager->GetAction(widget, actionName, memberParams);
+                        else
+                              action = TheManager->GetAction(widget, actionName, memberParams, navigators[index]);
+                        
+                        member->SetProperties(action);
+                        actionsForModifier->AddAction(action);
+                    }
                 }
+                
+                zone.AddWidget(widget);
+                widget->Activate(broker);
             }
-            
-            zone.AddWidget(widget);
-            widget->Activate(broker);
         }
-    }
+        
+        index++;
+        
+    } while (index < navigators.size());
 }
 
 void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, ZoneTemplate* parentZoneTemplate)
