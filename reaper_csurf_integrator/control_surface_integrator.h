@@ -530,7 +530,6 @@ struct ZoneTemplate
     }
     
     void  Activate(ControlSurface*  surface, Zone &zone);
-    void  Activate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate);
     void  Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex);
 };
 

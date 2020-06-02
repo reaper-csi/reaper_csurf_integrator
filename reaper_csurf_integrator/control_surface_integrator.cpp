@@ -1404,7 +1404,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, zone, this);
+            includedZoneTemplate->Activate(surface, zone);
 
     int index = 0;
     do
@@ -1438,7 +1438,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
                         if(navigators.size() == 0)
                             action = TheManager->GetAction(widget, actionName, memberParams);
                         else
-                              action = TheManager->GetAction(widget, actionName, memberParams, navigators[index]);
+                            action = TheManager->GetAction(widget, actionName, memberParams, navigators[index]);
                         
                         member->SetProperties(action);
                         actionsForModifier->AddAction(action);
@@ -1453,63 +1453,6 @@ void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
         index++;
         
     } while (index < navigators.size());
-}
-
-void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, ZoneTemplate* parentZoneTemplate)
-{
-    for(auto includedZoneTemplateStr : includedZoneTemplates)
-        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, zone, this);
-    /*
-    string nav = navigator;
-    
-    if(nav == "ParentNavigator")
-        nav = parentZoneTemplate->navigator;
-    
-    if(nav == "" || nav == "SelectedTrackNavigator" || nav == "MasterTrackNavigator" || nav == "FocusedFXNavigator")
-        Activate(surface, zone);
-    else if(nav == "TrackNavigator")
-    {
-        for(int i = 0; i < surface->GetNumChannels(); i++)
-        {
-            string channelNumStr = to_string(i + 1);
-
-            for(auto  widgetActionTemplate :  widgetActionTemplates)
-            {
-                string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
-
-                if(Widget* widget = surface->GetWidgetByName(widgetName))
-                {
-                    if(widgetActionTemplate->isModifier)
-                        widget->SetIsModifier();
-                    
-                    WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
-                    
-                    for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
-                    {
-                        ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                        broker->AddActionsForModifer(actionsForModifier);
-                        
-                        for(auto member : actionsForModifierTemplate->members)
-                        {
-                            for(int j = 0; j < member->params.size(); j++)
-                                member->params[j] = regex_replace(member->params[j], regex("[|]"), channelNumStr);
-                            
-                            string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
-
-                            Action* action = TheManager->GetAction(widget, actionName, member->params, surface->GetNavigatorForChannel(i));
-                            member->SetProperties(action);
-                            actionsForModifier->AddAction(action);
-                        }
-                    }
-                    
-                    zone.AddWidget(widget);
-                    widget->Activate(broker);
-                }
-            }
-        }
-    }
-     */
 }
 
 void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex)
@@ -1566,7 +1509,7 @@ void ActionTemplate::SetProperties(Action* action)
 
 
 
-// GAW TBD remove if possible
+// GAW TBD remove these 3 if possible
 
 MediaTrack* Widget::GetTrack()
 {
