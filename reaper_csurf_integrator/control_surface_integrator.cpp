@@ -308,7 +308,19 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         widgetActionTemplates.push_back(widgetActionTemplate);
                     }
                     
-                    surface->AddZoneTemplate(new ZoneTemplate(navigatorName, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
+                    vector<Navigator*> navigators;
+
+                    if(navigatorName == "SelectedTrackNavigator")
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                    else if(navigatorName == "FocusedFXNavigator")
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
+                    else if(navigatorName == "MasterTrackNavigator")
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
+                    else if(navigatorName == "TrackNavigator")
+                        for(int i = 0; i < surface->GetNumChannels(); i++)
+                            navigators.push_back(surface->GetNavigatorForChannel(i));
+                    
+                    surface->AddZoneTemplate(new ZoneTemplate(navigators, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
                     
                     includedZones.clear();
                     widgetActions.clear();
@@ -1388,13 +1400,11 @@ void Zone::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Zone ZoneTemplate::Activate(ControlSurface*  surface)
+void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
 {
-    Zone zone;
-    
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, zone, this);
+            includedZoneTemplate->Activate(surface, zone, this);
 
     for(auto  widgetActionTemplate :  widgetActionTemplates)
     {
@@ -1413,14 +1423,15 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
                 for(auto member : actionsForModifierTemplate->members)
                 {
                     Action* action = nullptr;
-                    if(navigator == "")
+                    if(navigators.size() == 0)
                         action = TheManager->GetAction(widget, member->actionName, member->params);
-                    else if(navigator == "SelectedTrackNavigator")
-                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
-                    else if(navigator == "FocusedFXNavigator")
-                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
-                    else if(navigator == "MasterTrackNavigator")
-                        action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
+                    else if(navigators.size() == 1)
+                          action = TheManager->GetAction(widget, member->actionName, member->params, navigators[0]);
+                    else
+                    {
+                        
+                    }
+                    
                     member->SetProperties(action);
                     actionsForModifier->AddAction(action);
                 }
@@ -1430,58 +1441,21 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface)
             widget->Activate(broker);
         }
     }
-
-    return zone;
 }
 
-void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &parentZone, ZoneTemplate* parentZoneTemplate)
+void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, ZoneTemplate* parentZoneTemplate)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->ActivateIncludedZoneTemplate(surface, parentZone, this);
-    
+            includedZoneTemplate->Activate(surface, zone, this);
+    /*
     string nav = navigator;
     
-    if(nav == "ParentZone")
+    if(nav == "ParentNavigator")
         nav = parentZoneTemplate->navigator;
     
     if(nav == "" || nav == "SelectedTrackNavigator" || nav == "MasterTrackNavigator" || nav == "FocusedFXNavigator")
-    {
-        for(auto  widgetActionTemplate :  widgetActionTemplates)
-        {
-            if(Widget* widget = surface->GetWidgetByName(widgetActionTemplate->widgetName))
-            {
-                if(widgetActionTemplate->isModifier)
-                    widget->SetIsModifier();
-                
-                WidgetActionBroker* broker = new WidgetActionBroker(widget, nullptr);
-                
-                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
-                {
-                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                    broker->AddActionsForModifer(actionsForModifier);
-                    
-                    for(auto member : actionsForModifierTemplate->members)
-                    {
-                        Action* action = nullptr;
-                        if(nav == "")
-                            action = TheManager->GetAction(widget, member->actionName, member->params);
-                        else if(nav == "SelectedTrackNavigator")
-                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
-                        else if(nav == "FocusedFXNavigator")
-                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
-                        else if(nav == "MasterTrackNavigator")
-                            action = TheManager->GetAction(widget, member->actionName, member->params, surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
-                        member->SetProperties(action);
-                        actionsForModifier->AddAction(action);
-                    }
-                }
-                
-                parentZone.AddWidget(widget);
-                widget->Activate(broker);
-            }
-        }
-    }
+        Activate(surface, zone);
     else if(nav == "TrackNavigator")
     {
         for(int i = 0; i < surface->GetNumChannels(); i++)
@@ -1517,17 +1491,17 @@ void ZoneTemplate::ActivateIncludedZoneTemplate(ControlSurface*  surface, Zone &
                         }
                     }
                     
-                    parentZone.AddWidget(widget);
+                    zone.AddWidget(widget);
                     widget->Activate(broker);
                 }
             }
         }
     }
+     */
 }
 
-Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int slotindex)
+void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex)
 {
-    Zone zone(navigator->GetTrack(), slotindex);
     /*
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
@@ -1553,7 +1527,7 @@ Zone ZoneTemplate::Activate(ControlSurface*  surface, Navigator* navigator, int 
             zone.AddWidget(widget, modifier);
         }
     */
-    return zone;
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2038,18 +2012,20 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
-    
+    /*
     if(shouldMapSelectedTrackFX_)
         if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
             if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
             {
-                Zone zone = zoneTemplate->Activate(surface_, navigator, fxSlot);
+                Zone zone(navigator->GetTrack(), fxSlot);
+                zoneTemplate->Activate(surface_, zone, navigator, fxSlot);
                 
                 if(shouldShowFXWindows_)
                     DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
          
                 activeSelectedTrackFXZones_.push_back(zone);
             }
+     */
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()
