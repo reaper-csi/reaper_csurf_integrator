@@ -558,13 +558,10 @@ public:
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
-    
-    // GAW TBD -- This is needed only for EuCon, ses if there is a better way
     MediaTrack* GetTrack();
     int GetSlotIndex();
     int GetParamIndex();
-
-    
+    Navigator* GetNavigator();
     void Deactivate();
     void RequestUpdate();
     void DoAction(double value);
@@ -972,6 +969,15 @@ public:
         {
             Zone zone;
             zoneTemplates_[zoneName]->Activate(this, zone);
+        }
+    }
+    
+    void GoZone(string zoneName, Widget* widget)
+    {
+        if(zoneTemplates_.count(zoneName) > 0)
+        {
+            Zone zone;
+            zoneTemplates_[zoneName]->Activate(this, zone, widget->GetNavigator(), widget->GetSlotIndex());
         }
     }
     
