@@ -1506,11 +1506,6 @@ void ActionTemplate::SetProperties(Action* action)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-// GAW TBD remove these 3 if possible
-
 MediaTrack* Widget::GetTrack()
 {
     if(currentWidgetActionBroker_ != nullptr)
@@ -1535,10 +1530,13 @@ int Widget::GetParamIndex()
         return 0;
 }
 
-
-
-
-
+Navigator* Widget::GetNavigator()
+{
+    if(currentWidgetActionBroker_ != nullptr)
+        return currentWidgetActionBroker_->GetActionsForModifier()->GetNavigator();
+    else
+        return nullptr;
+}
 
 void Widget::Deactivate()
 {
@@ -2805,8 +2803,6 @@ static ControlSurface* currentSurface = nullptr;
 static Widget* currentWidget = nullptr;
 static Action* currentAction = nullptr;
 static string trackNavigatorName = "";
-
-//static vector<ZoneOld*> zonesInThisFile;
 
 static string newZoneFilename = "";
 static string newZoneName = "";

@@ -359,14 +359,23 @@ public:
 class GoZone : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    string zonetype_ = "";
+    
 public:
-    GoZone(Widget* widget, vector<string> params) : ActionWithStringParam(widget, params) {}
+    GoZone(Widget* widget, vector<string> params) : ActionWithStringParam(widget, params)
+    {
+        if(params.size() > 1)
+            zonetype_ = params[1];
+    }
 
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetSurface()->GoZone(param_);
+        if(zonetype_ == "FXSlot")
+            GetSurface()->GoZone(param_, sender);
+        else
+            GetSurface()->GoZone(param_);
     }
 };
 
