@@ -1796,63 +1796,6 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// SendsActivationManager
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ControlSurface::ToggleMapSends()
-{
-    shouldMapSends_ = ! shouldMapSends_;
-    
-    if( ! shouldMapSends_)
-    {
-        for(auto zone : activeSendZones_)
-            zone->Deactivate();
-        
-        activeSendZones_.clear();
-    }
-    
-    GetPage()->OnTrackSelection();
-}
-
-void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
-{
-    for(auto zone : activeSendZones_)
-        zone->Deactivate();
-    
-    activeSendZones_.clear();
-    
-    MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
-    
-    if(selectedTrack == nullptr)
-        return;
-    
-    int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
-    
-    for(int i = 0; i < numSends_; i++)
-    {
-        string zoneName = "Send" + to_string(i + 1);
-        
-        if(shouldMapSends_ && zones.count(zoneName) > 0)
-        {
-            /*
-            Zone* zone =  zones[zoneName];
-            zone->SetIndex(i);
-            
-            if(i < numTrackSends)
-            {
-                zone->Activate();
-                activeSendZones_.push_back(zone);
-            }
-            else
-            {
-                surface_->ActivateNoActionForZone(zone->GetName());
-                activeSendZones_.push_back(zone);
-            }
-             */
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FXActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::ToggleMapSelectedTrackFX()
@@ -2024,7 +1967,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), options_(options)
 {
     
     for(int i = 0; i < numChannels; i++)
@@ -2058,6 +2001,60 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
         return navigators_[channelNum];
     else
         return nullptr;
+}
+
+void ControlSurface::ToggleMapSends()
+{
+    shouldMapSends_ = ! shouldMapSends_;
+    
+    if( ! shouldMapSends_)
+    {
+        for(auto zone : activeSendZones_)
+            zone->Deactivate();
+        
+        activeSendZones_.clear();
+    }
+    
+    GetPage()->OnTrackSelection();
+}
+
+void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
+{
+    for(auto zone : activeSendZones_)
+        zone->Deactivate();
+    
+    activeSendZones_.clear();
+    
+    MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    
+    if(selectedTrack == nullptr)
+        return;
+    
+    int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
+    
+    for(int i = 0; i < numSends_; i++)
+    {
+        string zoneName = "Send" + to_string(i + 1);
+        
+        if(shouldMapSends_ && zones.count(zoneName) > 0)
+        {
+            /*
+             Zone* zone =  zones[zoneName];
+             zone->SetIndex(i);
+             
+             if(i < numTrackSends)
+             {
+             zone->Activate();
+             activeSendZones_.push_back(zone);
+             }
+             else
+             {
+             surface_->ActivateNoActionForZone(zone->GetName());
+             activeSendZones_.push_back(zone);
+             }
+             */
+        }
+    }
 }
 
 void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string value)
@@ -2396,7 +2393,7 @@ void EuCon_ControlSurface::InitializeEuCon()
         InitializeEuConWithParameters = (void (*)(int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
     if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(numChannels_, numSends_, numFX_, options_);
+        InitializeEuConWithParameters(numChannels_, numSends_, fxActivationManager_->GetNumFXSlots(), options_);
 }
 
 Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
