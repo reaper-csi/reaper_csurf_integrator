@@ -310,6 +310,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     vector<Navigator*> navigators;
 
+                    if(navigatorName == "")
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetDefaultNavigator());
                     if(navigatorName == "SelectedTrackNavigator")
                         navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     else if(navigatorName == "FocusedFXNavigator")
@@ -905,7 +907,7 @@ void Manager::Init()
                         if(tokens.size() == 14 || tokens.size() == 15)
                         {
                             if(tokens[10] == "AutoMapSends")
-                                surface->GetSendsActivationManager()->SetShouldMapSends(true);
+                                surface->SetShouldMapSends(true);
                             
                             if(tokens[11] == "AutoMapFX")
                                 surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
@@ -1086,11 +1088,6 @@ Action::Action(Widget* widget, vector<string> params): widget_(widget), navigato
 }
 
 Action::Action(Widget* widget, vector<string> params, Navigator* navigator): widget_(widget), navigator_(navigator)
-{
-    SetParams(params);
-}
-
-Action::Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex): widget_(widget), navigator_(navigator), slotIndex_(slotIndex), paramIndex_(paramIndex)
 {
     SetParams(params);
 }
@@ -1391,25 +1388,32 @@ ActionsForModifier* WidgetActionBroker::GetActionsForModifier()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Deactivate()
 {
-    DAW::TrackFX_Show(track_, slotIndex_, 2);
-    
+    if(MediaTrack* track = navigator_->GetTrack())
+        DAW::TrackFX_Show(track, slotIndex_, 2);
+
     for(auto widget : widgets_)
         widget->Deactivate();
+    
+    // GAW TDB Leaving Zone
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
+void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &zones)
 {
+    // GAW TDB Loading Zone
+  
+    //Zone* zone = 
+    
+    
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, zone);
+            includedZoneTemplate->Activate(surface, zones);
 
-    int index = 0;
-    do
+    for(int i = 0; i < navigators.size(); i++)
     {
-        string channelNumStr = to_string(index + 1);
+        string channelNumStr = to_string(i + 1);
         
         for(auto  widgetActionTemplate :  widgetActionTemplates)
         {
@@ -1438,25 +1442,27 @@ void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone)
                         if(navigators.size() == 0)
                             action = TheManager->GetAction(widget, actionName, memberParams);
                         else
-                            action = TheManager->GetAction(widget, actionName, memberParams, navigators[index]);
+                            action = TheManager->GetAction(widget, actionName, memberParams, navigators[i]);
                         
                         member->SetProperties(action);
                         actionsForModifier->AddAction(action);
                     }
                 }
                 
-                zone.AddWidget(widget);
+                //zone.AddWidget(widget);
                 widget->Activate(broker);
             }
         }
-        
-        index++;
-        
-    } while (index < navigators.size());
+    }
+    
+    
+    
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &zones, int slotindex)
 {
+    // GAW TDB Loading Zone
+
     /*
     for(auto includedZoneTemplate : includedZoneTemplates)
         if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
@@ -1792,7 +1798,7 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // SendsActivationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void SendsActivationManager::ToggleMapSends()
+void ControlSurface::ToggleMapSends()
 {
     shouldMapSends_ = ! shouldMapSends_;
     
@@ -1804,24 +1810,24 @@ void SendsActivationManager::ToggleMapSends()
         activeSendZones_.clear();
     }
     
-    surface_->GetPage()->OnTrackSelection();
+    GetPage()->OnTrackSelection();
 }
 
-void SendsActivationManager::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
+void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
     for(auto zone : activeSendZones_)
         zone->Deactivate();
     
     activeSendZones_.clear();
     
-    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
     
     int numTrackSends = DAW::GetTrackNumSends(selectedTrack, 0);
     
-    for(int i = 0; i < numSendSlots_; i++)
+    for(int i = 0; i < numSends_; i++)
     {
         string zoneName = "Send" + to_string(i + 1);
         
@@ -1942,7 +1948,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
    for(auto activeZone : activeSelectedTrackFXZones_)
-       activeZone.Deactivate();
+       activeZone->Deactivate();
     
     activeSelectedTrackFXZones_.clear();
     
@@ -1965,20 +1971,17 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
-    /*
+    
     if(shouldMapSelectedTrackFX_)
         if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
-            if(zoneTemplate->navigator != "FocusedFXTrackNavigator")
+            if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
             {
-                Zone zone(navigator->GetTrack(), fxSlot);
-                zoneTemplate->Activate(surface_, zone, navigator, fxSlot);
+                zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot);
                 
                 if(shouldShowFXWindows_)
                     DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
-         
-                activeSelectedTrackFXZones_.push_back(zone);
             }
-     */
+    
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()
@@ -2021,7 +2024,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), sendsActivationManager_(new SendsActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this)), numChannels_(numChannels), numSends_(numSends), numFX_(numFX), options_(options)
 {
     
     for(int i = 0; i < numChannels; i++)
@@ -2354,7 +2357,7 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options)
 {
     // EuCon takes care of managing navigation, so we just blast everything always
-    sendsActivationManager_->SetShouldMapSends(true);
+    SetShouldMapSends(true);
     fxActivationManager_->SetShouldMapSelectedTrackFX(true);
     fxActivationManager_->SetShouldMapSelectedTrackFXMenus(true);
     fxActivationManager_->SetShouldMapFocusedFX(true);

@@ -51,14 +51,14 @@ public:
     
     void RequestUpdate() override
     {
-        UpdateWidgetValue(GetSurface()->GetSendsActivationManager()->GetShouldMapSends());
+        UpdateWidgetValue(GetSurface()->GetShouldMapSends());
     }
     
     void Do(double value, Widget* sender) override
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetSurface()->GetSendsActivationManager()->ToggleMapSends();
+        GetSurface()->ToggleMapSends();
     }
 };
 
@@ -370,12 +370,10 @@ public:
 
     void Do(double value, Widget* sender) override
     {
-        if(value == 0.0) return; // ignore button releases
+        if(value == 0.0)
+            return; // ignore button releases
 
-        if(zonetype_ == "FXSlot")
-            GetSurface()->GoZone(param_, sender);
-        else
-            GetSurface()->GoZone(param_);
+        GetSurface()->GoZone(param_);
     }
 };
 
