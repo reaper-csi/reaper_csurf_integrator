@@ -819,7 +819,7 @@ class FXActivationManager
 {
 private:
     ControlSurface* const surface_ = nullptr;
-    int numFXSlots_ = 0;
+    int const numFXSlots_ = 0;
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
@@ -831,13 +831,12 @@ private:
     bool shouldShowFXWindows_ = false;
     
 public:
-    FXActivationManager(ControlSurface* surface) : surface_(surface) {}
+    FXActivationManager(ControlSurface* surface, int numFXSlots) : surface_(surface), numFXSlots_(numFXSlots) {}
     
     bool GetShouldMapSelectedTrackFXMenus() { return shouldMapSelectedTrackFXMenus_; }
     bool GetShouldMapSelectedTrackFX() { return shouldMapSelectedTrackFX_; }
     bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
     int  GetNumFXSlots() { return numFXSlots_; }
-    void SetNumFXSlots(int numFXSlots) { numFXSlots_ = numFXSlots; }
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
     void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
@@ -884,57 +883,26 @@ class ControlSurface
 protected:
     ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
 
-    string zoneFolder_ = "";
-    int numChannels_ = 0;
-    int numSends_ = 0;
-    int numFX_ = 0;
-    int options_ = 0;
-
-    bool shouldMapSends_ = false;
-
-
-    vector<Zone*> activeSendZones_;
-    vector<Zone*> GetActiveZones() { return activeSendZones_; }
-    
-
-    
-    map<int, Navigator*> navigators_;
-
-    vector<Zone*> activeZones_;
-    
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
     string const name_;
+    string zoneFolder_ = "";
+    int numChannels_ = 0;
+    int numSends_ = 0;
+    int options_ = 0;
+
+    map<int, Navigator*> navigators_;
+    
     vector<Widget*> widgets_;
     map<string, Widget*> widgetsByName_;
 
+    vector<Zone*> activeZones_;
+
+    bool shouldMapSends_ = false;
+    vector<Zone*> activeSendZones_;
+    
     FXActivationManager* const fxActivationManager_;
 
-    
-    
-    
-    /*
-     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     class SendsActivationManager
-     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     {
-     private:
-     ControlSurface* const surface_;
-     int numSendSlots_ = 0;
-     
-     public:
-     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
-     
-     int GetNumSendSlots() { return numSendSlots_; }
-     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-     
-     };
-     */
-
-    
-    
-    
-    
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
 
     void InitZones(string zoneFolder);
@@ -959,7 +927,6 @@ public:
     
     int GetNumChannels() { return numChannels_; }
     int GetNumSends() { return numSends_; }
-    int GetNumFX() { return numFX_; }
 
     bool GetShouldMapSends() { return shouldMapSends_; }
     void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
