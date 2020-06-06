@@ -212,7 +212,6 @@ private:
 protected:
     Action(Widget* widget, vector<string> params);
     Action(Widget* widget, vector<string> params, Navigator* navigator);
-    Action(Widget* widget, vector<string> params, Navigator* navigator, int slotIndex, int paramIndex);
 
     Widget* const widget_;
     Navigator* const navigator_;
@@ -445,24 +444,39 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    MediaTrack* const track_= nullptr;
-    int const slotIndex_ = 0;
+    Navigator* const navigator_= nullptr;
+    string const name_ = "";
+    string const alias_ = "";
+    string const sourceFilePath_ = "";
+
+    int slotIndex_ = 0;
     
     vector<Widget*> widgets_;
     
 public:
-    Zone() {}
-    Zone(MediaTrack* track, int slotIndex) : track_(track), slotIndex_(slotIndex) {}
+    //Zone() {}
+    Zone(Navigator* navigator, string name, string alias, string path) : navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(path) {}
+    
+    Navigator* GetNavigator() { return navigator_; }
+    string GetName() { return name_; }
+    string GetAlias() { return alias_; }
+    string GetPath() { return sourceFilePath_; }
+    
+    void SetSlotIndex(int index) { slotIndex_ = index; }
+    int GetSlotIndex() { return slotIndex_; }
+
     void Deactivate();
     
     void OpenFXWindow()
     {
-        DAW::TrackFX_Show(track_, slotIndex_, 3);
+        if(MediaTrack* track = navigator_->GetTrack())
+            DAW::TrackFX_Show(track, slotIndex_, 3);
     }
     
     void CloseFXWindow()
     {
-        DAW::TrackFX_Show(track_, slotIndex_, 2);
+        if(MediaTrack* track = navigator_->GetTrack())
+            DAW::TrackFX_Show(track, slotIndex_, 2);
     }
     
     void AddWidget(Widget* widget)
@@ -529,8 +543,8 @@ struct ZoneTemplate
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
-    void  Activate(ControlSurface*  surface, Zone &zone);
-    void  Activate(ControlSurface*  surface, Zone &zone, Navigator* navigator, int slotindex);
+    void  Activate(ControlSurface*  surface, vector<Zone*> &zones);
+    void  Activate(ControlSurface*  surface, vector<Zone*> &zones, int slotindex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -800,30 +814,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendsActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* const surface_;
-    int numSendSlots_ = 0;
-    bool shouldMapSends_ = false;
-    vector<Zone*> activeSendZones_;
-    
-public:
-    SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
-    
-    bool GetShouldMapSends() { return shouldMapSends_; }
-    void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
-    int GetNumSendSlots() { return numSendSlots_; }
-    void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
-    vector<Zone*> GetActiveZones() { return activeSendZones_; }
-    
-    void ToggleMapSends();
-    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
-
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FXActivationManager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -833,7 +823,7 @@ private:
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
-    vector<Zone> activeSelectedTrackFXZones_;
+    vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
@@ -868,10 +858,10 @@ public:
         
         if(shouldShowFXWindows_ == true)
             for(auto zone : activeSelectedTrackFXZones_)
-                zone.OpenFXWindow();
+                zone->OpenFXWindow();
         else
             for(auto zone : activeSelectedTrackFXZones_)
-                zone.CloseFXWindow();
+                zone->CloseFXWindow();
     }
     
     void TrackFXListChanged()
@@ -900,8 +890,18 @@ protected:
     int numFX_ = 0;
     int options_ = 0;
 
+    bool shouldMapSends_ = false;
+
+
+    vector<Zone*> activeSendZones_;
+    vector<Zone*> GetActiveZones() { return activeSendZones_; }
+    
+
+    
     map<int, Navigator*> navigators_;
 
+    vector<Zone*> activeZones_;
+    
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
     string const name_;
@@ -909,8 +909,32 @@ protected:
     map<string, Widget*> widgetsByName_;
 
     FXActivationManager* const fxActivationManager_;
-    SendsActivationManager* const sendsActivationManager_ = nullptr;
 
+    
+    
+    
+    /*
+     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     class SendsActivationManager
+     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     {
+     private:
+     ControlSurface* const surface_;
+     int numSendSlots_ = 0;
+     
+     public:
+     SendsActivationManager(ControlSurface* surface) : surface_(surface) {}
+     
+     int GetNumSendSlots() { return numSendSlots_; }
+     void SetNumSendSlots(int numSendSlots) { numSendSlots_ = numSendSlots; }
+     
+     };
+     */
+
+    
+    
+    
+    
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
 
     void InitZones(string zoneFolder);
@@ -937,10 +961,15 @@ public:
     int GetNumSends() { return numSends_; }
     int GetNumFX() { return numFX_; }
 
+    bool GetShouldMapSends() { return shouldMapSends_; }
+    void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
+    void ToggleMapSends();
+    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
+    
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
-    SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
+    //SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -965,22 +994,15 @@ public:
     
     void GoZone(string zoneName)
     {
+        // GAW TBD -- if "Home, use activeZones_, if Sends use activeSendsZones_, else hand off to FXActivationManager
+        
+        
+        
+        
         if(zoneTemplates_.count(zoneName) > 0)
-        {
-            Zone zone;
-            zoneTemplates_[zoneName]->Activate(this, zone);
-        }
+            zoneTemplates_[zoneName]->Activate(this, activeZones_);
     }
-    
-    void GoZone(string zoneName, Widget* widget)
-    {
-        if(zoneTemplates_.count(zoneName) > 0)
-        {
-            Zone zone;
-            zoneTemplates_[zoneName]->Activate(this, zone, widget->GetNavigator(), widget->GetSlotIndex());
-        }
-    }
-    
+
     ZoneTemplate* GetZoneTemplate(string zoneName)
     {
         if(zoneTemplates_.count(zoneName) > 0)
@@ -1322,10 +1344,11 @@ private:
     Navigator* const masterTrackNavigator_ = nullptr;
     Navigator* const selectedTrackNavigator_ = nullptr;
     Navigator* const focusedFXNavigator_ = nullptr;
-    
+    Navigator* const defaultNavigator_ = nullptr;
+
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages),
-    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)) {}
+    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_)) {}
     
     Page* GetPage() { return page_; }
     bool GetSynchPages() { return synchPages_; }
@@ -1335,6 +1358,7 @@ public:
     Navigator* GetMasterTrackNavigator() { return masterTrackNavigator_; }
     Navigator* GetSelectedTrackNavigator() { return selectedTrackNavigator_; }
     Navigator* GetFocusedFXNavigator() { return focusedFXNavigator_; }
+    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
 
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     
