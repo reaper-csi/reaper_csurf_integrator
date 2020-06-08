@@ -16,7 +16,7 @@ class ActionWithIntParam : public Action
 protected:
     int param_ = 0;
     
-    ActionWithIntParam(Widget* widget, vector<string> params) : Action(widget, params)
+    ActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
     {
         if(params.size() > 0)
             param_= atol(params[0].c_str());
@@ -30,7 +30,7 @@ class ActionWithStringParam : public Action
 protected:
     string param_ = "";
     
-    ActionWithStringParam(Widget* widget, vector<string> params) : Action(widget, params)
+    ActionWithStringParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
     {
         if(params.size() > 0)
             param_ = params[0];
@@ -46,7 +46,7 @@ private:
     string commandStr_ = "";
     
 public:
-    ReaperAction(Widget* widget, vector<string> params) : Action(widget, params)
+    ReaperAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
     {
         if(params.size() > 0)
         {
@@ -81,13 +81,12 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    TrackAction(Widget* widget, vector<string> params) : Action(widget, params) {}
-    TrackAction(Widget* widget, vector<string> params, Navigator* navigator) : Action(widget, params, navigator) {}
+    TrackAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
 public:
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetTrack())
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
             RequestTrackUpdate(track);
         else
              ClearWidget();
@@ -95,7 +94,7 @@ public:
     
     virtual void DoAction(double value, Widget* sender) override
     {
-        if(MediaTrack* track = GetTrack())
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
             Action::DoAction(value, sender);
     }
 };
@@ -105,23 +104,9 @@ class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int sendIndex_ = 0;
     int paramIndex_ = 0;
-    bool shouldUseLocalIndex_ = false;
     
-    TrackSendAction(Widget* widget, vector<string> params) : TrackAction(widget, params)
-    {
-        if(params.size() > 0)
-        {
-            if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
-            {
-                shouldUseLocalIndex_ = true;
-                paramIndex_ = atol(params[0].c_str());
-            }
-        }
-    }
-    
-    TrackSendAction(Widget* widget, vector<string> params, Navigator* navigator, int sendIndex) : TrackAction(widget, params, navigator), sendIndex_(sendIndex)
+    TrackSendAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
     {
         if(params.size() > 0)
         {
@@ -138,13 +123,7 @@ class TrackActionWithIntParam : public TrackAction
 protected:
     int param_ = 0;
 
-    TrackActionWithIntParam(Widget* widget, vector<string> params) : TrackAction(widget, params)
-    {
-        if(params.size() > 0)
-            param_= atol(params[0].c_str());
-    }
-    
-    TrackActionWithIntParam(Widget* widget, vector<string> params, Navigator* navigator) : TrackAction(widget, params, navigator)
+    TrackActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
     {
         if(params.size() > 0)
             param_= atol(params[0].c_str());
@@ -156,29 +135,11 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int fxIndex_ = 0;
     int fxParamIndex_ = 0;
     string fxParamDisplayName_ = "";
 
-    FXAction(Widget* widget, vector<string> params) : TrackAction(widget, params)
+    FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
     {
-        if(params.size() > 0)
-            fxParamIndex_ = atol(params[0].c_str());
-        
-        if(params.size() > 1)
-            fxParamDisplayName_ = params[1];
-        
-        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
-        {
-            shouldUseDisplayStyle_ = true;
-            displayStyle_ = atol(params[2].c_str());
-        }
-    }
-    
-    FXAction(Widget* widget, vector<string> params, Navigator* navigator, int index) : TrackAction(widget, params, navigator)
-    {
-        fxIndex_ = index;
-      
         if(params.size() > 0)
             fxParamIndex_ = atol(params[0].c_str());
         
@@ -206,15 +167,15 @@ public:
         double max = 0.0;
         double retVal = 0.0;
         
-        if(MediaTrack* track = GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, GetSlotIndex(), fxParamIndex_, &min, &max);
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+            retVal = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), fxParamIndex_, &min, &max);
         
         return retVal;
     }
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = GetTrack())
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
             if(shouldUseDisplayStyle_)
                 UpdateWidgetValue(displayStyle_, GetCurrentValue());
