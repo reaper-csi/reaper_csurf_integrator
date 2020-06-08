@@ -93,6 +93,7 @@ class EuCon_ControlSurface;
 class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
+class Zone;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -210,13 +211,11 @@ private:
     bool supportsTrackColor_ = false;
     
 protected:
-    Action(Widget* widget, vector<string> params);
-    Action(Widget* widget, vector<string> params, Navigator* navigator);
+    Action(Widget* widget, Zone* zone, vector<string> params);
 
-    Widget* const widget_;
-    Navigator* const navigator_;
+    Widget* const widget_ = nullptr;
+    Zone* const zone_ = nullptr;
     
-    int slotIndex_ = 0;
     int paramIndex_ = 0;
     
     double rangeMinimum_ = 0.0;
@@ -242,7 +241,6 @@ protected:
     double deferredValue_ = 0.0;
     Widget* deferredSender_ = nullptr;
     
-    void SetParams(vector<string> params);
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value, Widget* sender) {}
     virtual void Do(double value, Widget* sender) {}
@@ -256,9 +254,6 @@ public:
     Page* GetPage();
     ControlSurface* GetSurface();
     TrackNavigationManager* GetTrackNavigationManager();
-    Navigator* GetNavigator() { return navigator_; }
-    MediaTrack* GetTrack() { return navigator_->GetTrack(); }
-    int GetSlotIndex() { return slotIndex_; }
     int GetParamIndex() { return paramIndex_; }
     virtual string GetDisplayName() { return ""; }
     
@@ -333,7 +328,7 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    NoAction(Widget* widget, vector<string> params) : Action(widget, params) {}
+    NoAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
     virtual ~NoAction() {}
     
     virtual void RequestUpdate() {  ClearWidget(); }
@@ -357,23 +352,7 @@ public:
         if(actions_.size() > 0)
             actions_[0]->RequestUpdate();
     }
-
-    MediaTrack* GetTrack()
-    {
-        if(actions_.size() > 0)
-            return actions_[0]->GetTrack();
-        else
-            return nullptr;
-    }
-    
-    int GetSlotIndex()
-    {
-        if(actions_.size() > 0)
-            return actions_[0]->GetSlotIndex();
-        else
-            return 0;
-    }
-    
+   
     int GetParamIndex()
     {
         if(actions_.size() > 0)
@@ -381,15 +360,7 @@ public:
         else
             return 0;
     }
-    
-    Navigator* GetNavigator()
-    {
-        if(actions_.size() > 0)
-            return actions_[0]->GetNavigator();
-        else
-            return nullptr;
-    }
-    
+       
     void AddAction(Action* action)
     {
         actions_.push_back(action);
@@ -420,17 +391,19 @@ class WidgetActionBroker
 {
 private:
     Widget* const widget_ = nullptr;
-    Navigator* const navigator_ = nullptr;
+    Zone* const zone_ = nullptr;
     map<string, ActionsForModifier*> actionsForModifier_;
     
 public:
-    WidgetActionBroker(Widget* widget, Navigator* navigator) : widget_(widget), navigator_(navigator) {}
+    WidgetActionBroker(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
 
     ~WidgetActionBroker()
     {
         // GAW TBD -- delete modifierActions
     }
    
+    Zone* GetZone() { return zone_; }
+    
     void AddActionsForModifer(ActionsForModifier* actionsForModifier)
     {
         actionsForModifier_[actionsForModifier->GetModifier()] = actionsForModifier;
@@ -444,19 +417,21 @@ class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    ControlSurface* const surface_ = nullptr;
     Navigator* const navigator_= nullptr;
+    vector<Zone*> const *activeZones_;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-
+        
     int slotIndex_ = 0;
-    
+
     vector<Widget*> widgets_;
-    
+
 public:
-    //Zone() {}
-    Zone(Navigator* navigator, string name, string alias, string path) : navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(path) {}
+    Zone(ControlSurface* surface, Navigator* navigator, vector<Zone*> *activeZones, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), activeZones_(activeZones), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     
+    ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
     string GetName() { return name_; }
     string GetAlias() { return alias_; }
@@ -543,8 +518,8 @@ struct ZoneTemplate
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
-    void  Activate(ControlSurface*  surface, vector<Zone*> &zones);
-    void  Activate(ControlSurface*  surface, vector<Zone*> &zones, int slotindex);
+    void  Activate(ControlSurface* surface, vector<Zone*> *activeZones);
+    void  Activate(ControlSurface* surface, vector<Zone*> *activeZones, int slotindex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -961,13 +936,17 @@ public:
     
     void GoZone(string zoneName)
     {
-        // GAW TBD -- if "Home, use activeZones_, if Sends use activeSendsZones_, else hand off to FXActivationManager
-        
-        
-        
-        
         if(zoneTemplates_.count(zoneName) > 0)
-            zoneTemplates_[zoneName]->Activate(this, activeZones_);
+        {
+            // GAW TBD -- if "Home, use activeZones_, if Sends use activeSendsZones_, else hand off to FXActivationManager
+
+            if(zoneName == "Home")
+                zoneTemplates_[zoneName]->Activate(this, &activeZones_);
+        }
+        
+        
+        
+        
     }
 
     ZoneTemplate* GetZoneTemplate(string zoneName)
@@ -1874,9 +1853,8 @@ class Manager
 private:
     CSurfIntegrator* const CSurfIntegrator_;
     
-    map<string, function<Action*(Widget* widget, vector<string>)>> actions_;
-    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator)>> actionsWithNavigator_;
-    map<string, function<Action*(Widget* widget, vector<string>, Navigator* navigator, int slotIndex)>> actionsWithNavigatorAndIndex_;
+    map<string, function<Action*(Widget* widget, Zone* zone, vector<string>)>> actions_;
+
 
     vector <Page*> pages_;
     
@@ -1895,8 +1873,6 @@ private:
     double *timeOffsPtr_ = nullptr;
     
     void InitActionsDictionary();
-    void InitActionsWithNavigatorDictionary();
-    void InitActionsWithNavigatorAndIndexDictionary();
 
     double GetPrivateProfileDouble(string key)
     {
@@ -1913,8 +1889,6 @@ public:
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionsDictionary();
-        InitActionsWithNavigatorDictionary();
-        InitActionsWithNavigatorAndIndexDictionary();
 
         int size = 0;
         int index = projectconfig_var_getoffs("projtimemode", &size);
@@ -1964,30 +1938,14 @@ public:
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
 
-    Action* GetAction(Widget* widget, string actionName, vector<string> params)
+    Action* GetAction(string actionName, Widget* widget, Zone* zone, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
-            return actions_[actionName](widget, params);
+            return actions_[actionName](widget, zone, params);
         else
-            return actions_["NoAction"](widget, params);;
+            return actions_["NoAction"](widget, zone, params);;
     }
-    
-    Action* GetAction(Widget* widget, string actionName, vector<string> params, Navigator* navigator)
-    {
-        if(actionsWithNavigator_.count(actionName) > 0)
-            return actionsWithNavigator_[actionName](widget, params, navigator);
-        else
-            return actions_["NoAction"](widget, params);;
-    }
-    
-    Action* GetAction(Widget* widget, string actionName, vector<string> params, Navigator* navigator, int index)
-    {
-        if(actionsWithNavigatorAndIndex_.count(actionName) > 0)
-            return actionsWithNavigatorAndIndex_[actionName](widget, params, navigator, index);
-        else
-            return actions_["NoAction"](widget, params);;
-    }
-    
+   
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
