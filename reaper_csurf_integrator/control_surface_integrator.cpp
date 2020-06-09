@@ -1423,6 +1423,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
         }
     }
 }
+
 void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
@@ -1450,38 +1451,26 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
 
 void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> *activeZones, int slotindex)
 {
-    // GAW TDB Loading Zone
-
-    /*
-    for(auto includedZoneTemplate : includedZoneTemplates)
-        if(ZoneTemplate* zoneTemplate = surface->GetZoneTemplate(includedZoneTemplate))
-            zone.AddZone(zoneTemplate->Activate(surface, navigator, slotindex));
+    for(auto includedZoneTemplateStr : includedZoneTemplates)
+        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
+            includedZoneTemplate->Activate(surface, activeZones);
     
-    map<Widget*, map<string, vector<Action*>>> widgetActions;
-    
-    if(navigator != nullptr)
-        for(auto member : zoneMembers)
-        {
-            if(Widget* widget = surface->GetWidgetByName(member.widgetName))
-            {
-                Action* action = TheManager->GetAction(widget, member.actionName, member.params, navigator, slotindex);
-                member.SetProperties(widget, action);
-                widgetActions[widget][member.modifier].push_back(action);
-            }
-        }
-    
-    for(auto [widget, modifierActions] : widgetActions)
-        for(auto [modifier, actions] : modifierActions)
-        {
-            widget->Activate(modifier, actions);
-            zone.AddWidget(widget, modifier);
-        }
-    */
-
+    if(navigators.size() == 1)
+    {
+        surface->LoadingZone(name);
+        
+        Zone* zone = new Zone(surface, navigators[0], activeZones, name, alias, sourceFilePath);
+        
+        zone->SetSlotIndex(slotindex);
+        
+        ProcessWidgetActionTemplates(surface, zone, "");
+        
+        activeZones->push_back(zone);
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ZoneMember
+// ActionTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ActionTemplate::SetProperties(Action* action)
 {
@@ -2035,16 +2024,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string value)
 {
     if(TheManager->GetSurfaceOutMonitor())
-    {
-        string displayString = "";
-        
-        //if(widget)
-            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
-        //else
-            displayString = "OUT->" + name_ + " " + address + " " + value + "\n";
-        
-        DAW::ShowConsoleMsg(displayString.c_str());
-    }
+        DAW::ShowConsoleMsg(("OUT->" + name_ + " " + address + " " + value + "\n").c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2100,16 +2080,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
         midiOutput_->SendMsg(midiMessage, -1);
     
     if(TheManager->GetSurfaceOutMonitor())
-    {
-        string displayString = "";
-        
-        //f(Widget* widget = feedbackProcessor->GetWidget())
-            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " SysEx\n";
-        //else
-            displayString = "OUT->" + name_ + " SysEx\n";
-        
-        DAW::ShowConsoleMsg(displayString.c_str());
-    }
+        DAW::ShowConsoleMsg(("OUT->" + name_ + " SysEx\n").c_str());
 }
 
 void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third)
@@ -2119,15 +2090,8 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
     
     if(TheManager->GetSurfaceOutMonitor())
     {
-        string displayString = "";
-        
-        //if(Widget* widget = feedbackProcessor->GetWidget())
-            //displayString = widget->GetCurrentZoneActionDisplay(name_);
-        //else
-            displayString = "OUT->" + name_;
-        
         char buffer[250];
-        snprintf(buffer, sizeof(buffer), "%s  %02x  %02x  %02x \n", displayString.c_str(), first, second, third);
+        snprintf(buffer, sizeof(buffer), "%s  %02x  %02x  %02x \n", ("OUT->" + name_).c_str(), first, second, third);
         DAW::ShowConsoleMsg(buffer);
     }
 }
@@ -2190,16 +2154,7 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
     if(TheManager->GetSurfaceOutMonitor())
     {
         if(TheManager->GetSurfaceOutMonitor())
-        {
-            string displayString = "";
-            
-            //if(Widget* widget = feedbackProcessor->GetWidget())
-                //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + oscAddress + " " + to_string(value) + "\n";
-            //else
-                displayString = "OUT->" + name_ + " " + oscAddress + " " + to_string(value) + "\n";
-            
-            DAW::ShowConsoleMsg(displayString.c_str());
-        }
+            DAW::ShowConsoleMsg(("OUT->" + name_ + " " + oscAddress + " " + to_string(value) + "\n").c_str());
     }
 }
 
@@ -2471,16 +2426,7 @@ void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackPro
         HandleReaperMessageWthString(address.c_str(), value.c_str());
     
     if(TheManager->GetSurfaceOutMonitor())
-    {
-        string displayString = "";
-        
-        //if(Widget* widget = feedbackProcessor->GetWidget())
-            //displayString = widget->GetCurrentZoneActionDisplay(name_) + " " + address + " " + value + "\n";
-        //else
-            displayString = "OUT-> " + name_ + " " + address + " " + value + "\n";
-        
-        DAW::ShowConsoleMsg(displayString.c_str());
-    }
+        DAW::ShowConsoleMsg(("OUT-> " + name_ + " " + address + " " + value + "\n").c_str());
 }
 
 void EuCon_ControlSurface::SendEuConMessage(string address, string value)
