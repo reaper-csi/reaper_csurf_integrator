@@ -518,6 +518,8 @@ struct ZoneTemplate
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
+    void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr);
+    
     void  Activate(ControlSurface* surface, vector<Zone*> *activeZones);
     void  Activate(ControlSurface* surface, vector<Zone*> *activeZones, int slotindex);
 };
@@ -550,7 +552,7 @@ public:
     MediaTrack* GetTrack();
     int GetSlotIndex();
     int GetParamIndex();
-    Navigator* GetNavigator();
+
     void Deactivate();
     void RequestUpdate();
     void DoAction(double value);
@@ -823,7 +825,7 @@ public:
     void ToggleMapSelectedTrackFXMenu();
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXSlotToWidgets(int slot);
+    void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
     void MapFocusedFXToWidgets();
     
     void ToggleShowFXWindows()
@@ -911,7 +913,6 @@ public:
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
-    //SendsActivationManager* GetSendsActivationManager() { return sendsActivationManager_; }
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -928,25 +929,32 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
 
-    void MakeCurrentDefault()
+    void MakeHomeDefault()
     {
-        for(auto widget : widgets_)
-            widget->MakeCurrentDefault();
+        if(zoneTemplates_.count("Home") > 0)
+        {
+            vector<Zone*> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
+            
+            zoneTemplates_["Home"]->Activate(this, &dummyZones);
+        
+            for(auto widget : widgets_)
+                widget->MakeCurrentDefault();
+        }
     }
     
     void GoZone(string zoneName)
     {
         if(zoneTemplates_.count(zoneName) > 0)
         {
-            // GAW TBD -- if "Home, use activeZones_, if Sends use activeSendsZones_, else hand off to FXActivationManager
-
             if(zoneName == "Home")
+            {
+                // GAW TDB, just deactivate all active Zones (including FXActivationManager) - "Home" is defalut
+            }
+            else
+            {
                 zoneTemplates_[zoneName]->Activate(this, &activeZones_);
+            }
         }
-        
-        
-        
-        
     }
 
     ZoneTemplate* GetZoneTemplate(string zoneName)
