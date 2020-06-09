@@ -1386,6 +1386,43 @@ void Zone::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr)
+{
+    for(auto  widgetActionTemplate :  widgetActionTemplates)
+    {
+        string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
+        
+        if(Widget* widget = surface->GetWidgetByName(widgetName))
+        {
+            if(widgetActionTemplate->isModifier)
+                widget->SetIsModifier();
+            
+            WidgetActionBroker* broker = new WidgetActionBroker(widget, zone);
+            
+            for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+            {
+                ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
+                broker->AddActionsForModifer(actionsForModifier);
+                
+                for(auto member : actionsForModifierTemplate->members)
+                {
+                    string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
+                    vector<string> memberParams;
+                    for(int j = 0; j < member->params.size(); j++)
+                        memberParams.push_back(regex_replace(member->params[j], regex("[|]"), channelNumStr));
+                    
+                    Action* action = TheManager->GetAction(actionName, widget, zone, memberParams);
+                    
+                    member->SetProperties(action);
+                    actionsForModifier->AddAction(action);
+                }
+            }
+            
+            zone->AddWidget(widget);
+            widget->Activate(broker);
+        }
+    }
+}
 void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
@@ -1405,41 +1442,8 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
         
         Zone* zone = new Zone(surface, navigators[i], activeZones, newZoneName, alias, sourceFilePath);
 
-        for(auto  widgetActionTemplate :  widgetActionTemplates)
-        {
-            string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
-            
-            if(Widget* widget = surface->GetWidgetByName(widgetName))
-            {
-                if(widgetActionTemplate->isModifier)
-                    widget->SetIsModifier();
-                
-                WidgetActionBroker* broker = new WidgetActionBroker(widget, zone);
-                
-                for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
-                {
-                    ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                    broker->AddActionsForModifer(actionsForModifier);
-                    
-                    for(auto member : actionsForModifierTemplate->members)
-                    {
-                        string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
-                        vector<string> memberParams;
-                        for(int j = 0; j < member->params.size(); j++)
-                            memberParams.push_back(regex_replace(member->params[j], regex("[|]"), channelNumStr));
-                        
-                        Action* action = TheManager->GetAction(actionName, widget, zone, memberParams);
-                        
-                        member->SetProperties(action);
-                        actionsForModifier->AddAction(action);
-                    }
-                }
-                
-                zone->AddWidget(widget);
-                widget->Activate(broker);
-            }
-        }
-        
+        ProcessWidgetActionTemplates(surface, zone, channelNumStr);
+
         activeZones->push_back(zone);
     }
 }
@@ -1519,14 +1523,6 @@ int Widget::GetParamIndex()
         return currentWidgetActionBroker_->GetActionsForModifier()->GetParamIndex();
     else
         return 0;
-}
-
-Navigator* Widget::GetNavigator()
-{
-    if(currentWidgetActionBroker_ != nullptr)
-        return currentWidgetActionBroker_->GetZone()->GetNavigator();
-    else
-        return nullptr;
 }
 
 void Widget::Deactivate()
@@ -1875,41 +1871,35 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-   for(auto activeZone : activeSelectedTrackFXZones_)
-       activeZone->Deactivate();
-    
-    activeSelectedTrackFXZones_.clear();
-    
-    if(MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-        for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
-            MapSelectedTrackFXSlotToWidgets(i);
+    if(shouldMapSelectedTrackFX_)
+    {
+       for(auto activeZone : activeSelectedTrackFXZones_)
+           activeZone->Deactivate();
+        
+        activeSelectedTrackFXZones_.clear();
+        
+        if(MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+            for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
+                MapSelectedTrackFXSlotToWidgets(selectedTrack, i);
+    }
 }
 
-void FXActivationManager::MapSelectedTrackFXSlotToWidgets(int fxSlot)
+void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int fxSlot)
 {
-    MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
-    Navigator* navigator = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator();
-    
-    if(selectedTrack == nullptr || navigator == nullptr)
-        return;
-    
-    if(fxSlot >= DAW::TrackFX_GetCount(selectedTrack))
-        return;
-    
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
     
-    if(shouldMapSelectedTrackFX_)
-        if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
-            if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-            {
-                zoneTemplate->Activate(surface_, &activeSelectedTrackFXZones_, fxSlot);
-                
-                if(shouldShowFXWindows_)
-                    DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
-            }
-    
+    if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
+    {
+        if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
+        {
+            zoneTemplate->Activate(surface_, &activeSelectedTrackFXZones_, fxSlot);
+            
+            if(shouldShowFXWindows_)
+                DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
+        }
+    }
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()
@@ -2065,8 +2055,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder
     ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
     InitHardwiredWidgets();
     InitZones(zoneFolder);
-    GoZone("Home");
-    MakeCurrentDefault();
+    MakeHomeDefault();
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }
@@ -2152,8 +2141,7 @@ void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
     
     InitHardwiredWidgets();
     InitZones(zoneFolder);
-    GoZone("Home");
-    MakeCurrentDefault();
+    MakeHomeDefault();
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }
@@ -2433,8 +2421,7 @@ void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetI
     
     InitHardwiredWidgets();
     InitZones(zoneFolder_);
-    GoZone("Home");
-    MakeCurrentDefault();
+    MakeHomeDefault();
     ForceClearAllWidgets();
     GetPage()->ForceRefreshTimeDisplay();
 }

@@ -134,7 +134,8 @@ public:
 
         int fxSlot = param_ - 1 < 0 ? 0 : param_ - 1;
         
-        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(fxSlot);
+        if(MediaTrack* selectedTrack = GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+            GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, fxSlot);
     }
 };
 
