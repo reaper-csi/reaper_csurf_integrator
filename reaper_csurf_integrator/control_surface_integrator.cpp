@@ -1369,6 +1369,12 @@ ActionsForModifier* WidgetActionBroker::GetActionsForModifier()
         return nullptr;
 }
 
+void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
+{
+    if(GetActionsForModifier() && zone_->GetNavigator() != nullptr && zone_->GetNavigator()->GetTrack() != nullptr)
+        GetActionsForModifier()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1493,10 +1499,7 @@ void ActionTemplate::SetProperties(Action* action)
 void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(currentWidgetActionBroker_ != nullptr)
-    {
-        Zone *zone = currentWidgetActionBroker_->GetZone();
-        DAW::TrackFX_GetFormattedParamValue(zone->GetNavigator()->GetTrack(), zone->GetSlotIndex(), currentWidgetActionBroker_->GetActionsForModifier()->GetParamIndex(), buffer, bufferSize);
-    }
+        currentWidgetActionBroker_->GetFormattedFXParamValue(buffer, bufferSize);
 }
 
 void Widget::Deactivate()
