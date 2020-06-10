@@ -353,12 +353,11 @@ public:
             actions_[0]->RequestUpdate();
     }
    
-    int GetParamIndex()
+    void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
     {
-        if(actions_.size() > 0)
-            return actions_[0]->GetParamIndex();
-        else
-            return 0;
+        int paramIndex = actions_.size() > 0 ? actions_[0]->GetParamIndex() : 0;
+        
+        DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
     }
        
     void AddAction(Action* action)
@@ -410,6 +409,7 @@ public:
     }
     
     ActionsForModifier* GetActionsForModifier();
+    void GetFormattedFXParamValue(char *buffer, int bufferSize);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
