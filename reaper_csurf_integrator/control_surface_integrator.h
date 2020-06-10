@@ -549,9 +549,7 @@ public:
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
-    MediaTrack* GetTrack();
-    int GetSlotIndex();
-    int GetParamIndex();
+    void GetFormattedFXParamValue(char *buffer, int bufferSize);
 
     void Deactivate();
     void RequestUpdate();
@@ -923,7 +921,7 @@ public:
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
-    virtual void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex) {}
+    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) {}
   
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
@@ -1254,7 +1252,7 @@ public:
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
-    virtual void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex) override;
+    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) override;
 
     virtual void RequestUpdate() override
     {
@@ -1630,10 +1628,10 @@ public:
             surface->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
     }
 
-    void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+    void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
     {
         for(auto surface : surfaces_)
-            surface->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
+            surface->GetFormattedFXParamValue(address, buffer, bufferSize);
     }
     
    /*
@@ -2123,10 +2121,10 @@ public:
             pages_[currentPageIndex_]->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
     }
 
-    void ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+    void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
     {
         if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
+            pages_[currentPageIndex_]->GetFormattedFXParamValue(address, buffer, bufferSize);
     }
     
     //int repeats = 0;

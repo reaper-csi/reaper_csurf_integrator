@@ -1490,28 +1490,13 @@ void ActionTemplate::SetProperties(Action* action)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-MediaTrack* Widget::GetTrack()
+void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(currentWidgetActionBroker_ != nullptr)
-        return currentWidgetActionBroker_->GetZone()->GetNavigator()->GetTrack();
-    else
-        return nullptr;
-}
-
-int Widget::GetSlotIndex()
-{
-    if(currentWidgetActionBroker_ != nullptr)
-        return currentWidgetActionBroker_->GetZone()->GetSlotIndex();
-    else
-        return 0;
-}
-
-int Widget::GetParamIndex()
-{
-    if(currentWidgetActionBroker_ != nullptr)
-        return currentWidgetActionBroker_->GetActionsForModifier()->GetParamIndex();
-    else
-        return 0;
+    {
+        Zone *zone = currentWidgetActionBroker_->GetZone();
+        DAW::TrackFX_GetFormattedParamValue(zone->GetNavigator()->GetTrack(), zone->GetSlotIndex(), currentWidgetActionBroker_->GetActionsForModifier()->GetParamIndex(), buffer, bufferSize);
+    }
 }
 
 void Widget::Deactivate()
@@ -2269,10 +2254,10 @@ void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bo
         TheManager->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
 }
 
-void HandleEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
 {
     if(TheManager)
-        TheManager->ReceiveEuConParamQuery(address, track, fxSlot, fxParamIndex);
+        TheManager->GetFormattedFXParamValue(address, buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2307,8 +2292,8 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     if( ! plugin_register("API_HandleEuConGetMeterValues", (void *)::HandleEuConGetMeterValues))
         LOG::InitializationFailure("HandleEuConGetMeterValues failed to register");
     
-    if( ! plugin_register("API_HandleEuConParamQuery", (void *)::HandleEuConParamQuery))
-        LOG::InitializationFailure("HandleEuConParamQuery failed to register");
+    if( ! plugin_register("API_GetFormattedFXParamValue", (void *)::GetFormattedFXParamValue))
+        LOG::InitializationFailure("GetFormattedFXParamValue failed to register");
     
     InitializeEuCon();
 }
@@ -2485,20 +2470,10 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
     }
 }
 
-void EuCon_ControlSurface::ReceiveEuConParamQuery(const char* address, MediaTrack* *track, int *fxSlot, int *fxParamIndex)
+void EuCon_ControlSurface::GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
 {
-    string name(address);
-    
-    if(widgetsByName_.count(name) > 0)
-    {
-        Widget* widget =  widgetsByName_[name];
-        
-        if((*track = widget->GetTrack()) != nullptr)
-        {
-            *fxSlot = widget->GetSlotIndex();
-            *fxParamIndex = widget->GetParamIndex();
-        }
-    }
+    if(widgetsByName_.count(address) > 0)
+        widgetsByName_[address]->GetFormattedFXParamValue(buffer, bufferSize);
 }
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
