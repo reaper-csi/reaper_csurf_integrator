@@ -218,6 +218,10 @@ protected:
     
     int paramIndex_ = 0;
     
+    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
+    Widget* displayWidget_ = nullptr;
+    double timeSilentlySet_ = 0.0;
+  
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
     
@@ -1045,8 +1049,6 @@ public:
     
     void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, MIDI_event_ex_t* midiMessage);
     void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third);
-
-    bool hasSetGlobalSysEx_ = false;
 
     virtual void HandleExternalInput() override
     {

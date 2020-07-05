@@ -1078,6 +1078,14 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Action::Action(Widget* widget, Zone* zone, vector<string> params): widget_(widget), zone_(zone)
 {
+    if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
+        for(auto widget : GetSurface()->GetWidgets())
+            if(widget->GetName() == params[1])
+            {
+                displayWidget_ = widget;
+                break;
+            }
+
     if(params.size() > 0)
     {
         SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
@@ -1459,7 +1467,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> *activeZones
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones);
+            includedZoneTemplate->Activate(surface, activeZones, slotindex);
     
     if(navigators.size() == 1)
     {
