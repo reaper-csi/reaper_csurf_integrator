@@ -488,6 +488,7 @@ public:
         
         int val = (1+((valueInt*11)>>7)) | (displayMode << 4); // display modes -- 0x00 = line (e.g. pan), 0x01 = boost/cut (e.g. eq), 0x02 = fill from right (e.g. level), 0x03 = center fill (e.g. Q)
         
+        // GAW TBD -- fix this -- something like if (! display && value == centre)
         //if(displayMode) // Should light up lower middle light
         //val |= 0x40;
         
@@ -623,9 +624,11 @@ public:
             char data[BUFSZ];
         } midiSysExData;
         
-        if( ! surface->hasSetGlobalSysEx_)
+        static bool hasSetGlobalSysEx_;
+        
+        if( ! hasSetGlobalSysEx_)
         {
-            surface->hasSetGlobalSysEx_ = true;
+            hasSetGlobalSysEx_ = true;
             
             midiSysExData.evt.frame_offset=0;
             midiSysExData.evt.size=0;

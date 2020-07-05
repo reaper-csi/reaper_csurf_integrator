@@ -1189,11 +1189,6 @@ public:
 class CycleTrackAutoMode : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
-    Widget* displayWidget_ = nullptr;
-    double timeSilentlySet_ = 0.0;
-  
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -1213,16 +1208,7 @@ protected:
     }
     
 public:
-    CycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : GetSurface()->GetWidgets())
-                if(widget->GetName() == params[1])
-                {
-                    displayWidget_ = widget;
-                    break;
-                }
-    }
+    CycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
     
     virtual void DoAction(double value, Widget* sender) override
     {
@@ -1262,11 +1248,6 @@ public:
 class EuConCycleTrackAutoMode : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
-    Widget* displayWidget_ = nullptr;
-    double timeSilentlySet_ = 0.0;
-    
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
@@ -1286,16 +1267,7 @@ protected:
     }
     
 public:
-    EuConCycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-            for(auto widget : GetSurface()->GetWidgets())
-                if(widget->GetName() == params[1])
-                {
-                    displayWidget_ = widget;
-                    break;
-                }
-    }
+    EuConCycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
     
     virtual void DoAction(double value, Widget* sender) override
     {
