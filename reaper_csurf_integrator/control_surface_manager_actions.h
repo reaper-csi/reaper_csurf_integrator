@@ -17,7 +17,7 @@ public:
     TogglePin(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -33,7 +33,7 @@ class ToggleLearnMode  : public Action
 public:
     ToggleLearnMode(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -53,7 +53,7 @@ public:
         UpdateWidgetValue(GetSurface()->GetShouldMapSends());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -73,7 +73,7 @@ public:
         UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -93,7 +93,7 @@ public:
         UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -113,7 +113,7 @@ public:
         UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -128,7 +128,7 @@ class GoFXSlot  : public ActionWithIntParam
 public:
     GoFXSlot(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -146,7 +146,7 @@ class MapSelectedTrackSendsToWidgets  : public Action
 public:
     MapSelectedTrackSendsToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -162,7 +162,7 @@ class MapSelectedTrackFXToWidgets  : public Action
 public:
     MapSelectedTrackFXToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -177,7 +177,7 @@ class MapSelectedTrackFXToMenu  : public Action
 public:
     MapSelectedTrackFXToMenu(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -192,7 +192,7 @@ class MapFocusedFXToWidgets  : public Action
 public:
     MapFocusedFXToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -207,7 +207,7 @@ class SelectTrackRelative : public ActionWithIntParam
 public:
     SelectTrackRelative(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -247,7 +247,7 @@ public:
         UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShowFXWindows());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -267,7 +267,7 @@ public:
         UpdateWidgetValue(GetTrackNavigationManager()->GetScrollLink());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -282,7 +282,7 @@ class ForceScrollLink : public Action
 public:
     ForceScrollLink(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -302,7 +302,7 @@ public:
         UpdateWidgetValue(GetTrackNavigationManager()->GetVCAMode());
     }
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -317,7 +317,7 @@ class CycleTimeDisplayModes : public Action
 public:
     CycleTimeDisplayModes(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -332,7 +332,7 @@ class GoNextPage : public Action
 public:
     GoNextPage(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -347,7 +347,7 @@ class GoPage : public ActionWithStringParam
 public:
     GoPage(Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
 
@@ -368,7 +368,7 @@ public:
             zonetype_ = params[1];
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0)
             return; // ignore button releases
@@ -389,7 +389,7 @@ public:
         UpdateWidgetValue(DAW::AnyTrackSolo(nullptr));
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -404,7 +404,7 @@ class TrackBank : public ActionWithIntParam
 public:
     TrackBank(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
     
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
@@ -424,7 +424,7 @@ public:
         UpdateWidgetValue(GetPage()->GetShift());
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         GetPage()->SetShift(value);
     }
@@ -442,7 +442,7 @@ public:
         UpdateWidgetValue(GetPage()->GetOption());
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         GetPage()->SetOption(value);
     }
@@ -460,7 +460,7 @@ public:
         UpdateWidgetValue(GetPage()->GetControl());
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         GetPage()->SetControl(value);
     }
@@ -478,7 +478,7 @@ public:
         UpdateWidgetValue(GetPage()->GetAlt());
     }
 
-    void Do(double value, Widget* sender) override
+    void Do(double value) override
     {
         GetPage()->SetAlt(value);
     }

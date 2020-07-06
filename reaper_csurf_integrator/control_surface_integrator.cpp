@@ -1207,7 +1207,7 @@ void Action::UpdateWidgetValue(string value)
     }
 }
 
-void Action::DoAction(double value, Widget* sender)
+void Action::DoAction(double value)
 {
     if(steppedValues_.size() > 0 && value != 0.0)
     {
@@ -1219,16 +1219,16 @@ void Action::DoAction(double value, Widget* sender)
         else
             steppedValuesIndex_++;
         
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
     }
     else
-        DoRangeBoundAction(value, sender);
+        DoRangeBoundAction(value);
 }
 
-void Action::DoRelativeAction(double delta, Widget* sender)
+void Action::DoRelativeAction(double delta)
 {
     if(steppedValues_.size() > 0)
-        DoAcceleratedSteppedValueAction(0, delta, sender);
+        DoAcceleratedSteppedValueAction(0, delta);
     else
     {
         if(deltaValue_ != 0.0)
@@ -1239,16 +1239,16 @@ void Action::DoRelativeAction(double delta, Widget* sender)
                 delta = -deltaValue_;
         }
         
-        DoRangeBoundAction(lastValue_ + delta, sender);
+        DoRangeBoundAction(lastValue_ + delta);
     }
 }
 
-void Action::DoRelativeAction(int accelerationIndex, double delta, Widget* sender)
+void Action::DoRelativeAction(int accelerationIndex, double delta)
 {
     if(steppedValues_.size() > 0)
-        DoAcceleratedSteppedValueAction(accelerationIndex, delta, sender);
+        DoAcceleratedSteppedValueAction(accelerationIndex, delta);
     else if(acceleratedDeltaValues_.size() > 0)
-        DoAcceleratedDeltaValueAction(accelerationIndex, delta, sender);
+        DoAcceleratedDeltaValueAction(accelerationIndex, delta);
     else
     {
         if(deltaValue_ != 0.0)
@@ -1259,11 +1259,11 @@ void Action::DoRelativeAction(int accelerationIndex, double delta, Widget* sende
                 delta = -deltaValue_;
         }
         
-        DoRangeBoundAction(lastValue_ + delta, sender);
+        DoRangeBoundAction(lastValue_ + delta);
     }
 }
 
-void Action::DoRangeBoundAction(double value, Widget* sender)
+void Action::DoRangeBoundAction(double value)
 {
     if(delayAmount_ != 0.0)
     {
@@ -1271,13 +1271,11 @@ void Action::DoRangeBoundAction(double value, Widget* sender)
         {
             delayStartTime_ = 0.0;
             deferredValue_ = 0.0;
-            deferredSender_ = nullptr;
         }
         else
         {
             delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
             deferredValue_ = value;
-            deferredSender_ = sender;
         }
     }
     else
@@ -1291,11 +1289,11 @@ void Action::DoRangeBoundAction(double value, Widget* sender)
         if(value < rangeMinimum_)
             value = rangeMinimum_;
         
-        Do(value, sender);
+        Do(value);
     }
 }
 
-void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta, Widget* sender)
+void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta)
 {
     if(delta > 0)
     {
@@ -1321,7 +1319,7 @@ void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta
         if(steppedValuesIndex_ > steppedValues_.size() - 1)
             steppedValuesIndex_ = steppedValues_.size() - 1;
         
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
     }
     else if(delta < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
     {
@@ -1333,19 +1331,19 @@ void Action::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta
         if(steppedValuesIndex_ < 0 )
             steppedValuesIndex_ = 0;
         
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_], sender);
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
     }
 }
 
-void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta, Widget* sender)
+void Action::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta)
 {
     accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
     accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
     
     if(delta > 0.0)
-        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex], sender);
+        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex]);
     else
-        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex], sender);
+        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1538,7 +1536,7 @@ void Widget::DoAction(double value)
     LogInput(value);
     
     if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoAction(this, value);
+            currentWidgetActionBroker_->GetActionsForModifier()->DoAction(value);
 }
 
 void Widget::DoRelativeAction(double delta)
@@ -1546,7 +1544,7 @@ void Widget::DoRelativeAction(double delta)
     LogInput(delta);
     
     if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(this, delta);
+            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(delta);
 }
 
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
@@ -1554,7 +1552,7 @@ void Widget::DoRelativeAction(int accelerationIndex, double delta)
     LogInput(accelerationIndex);
     
     if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(this, accelerationIndex, delta);
+            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(accelerationIndex, delta);
 }
 
 void Widget::SilentSetValue(string displayText)

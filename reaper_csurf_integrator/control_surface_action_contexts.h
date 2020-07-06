@@ -69,7 +69,7 @@ public:
         UpdateWidgetValue(DAW::GetToggleCommandState(commandId_));
     }
     
-    virtual void Do(double value, Widget* sender) override
+    virtual void Do(double value) override
     {
         if(value != 0)
             DAW::SendCommandMessage(commandId_);
@@ -92,10 +92,10 @@ public:
              ClearWidget();
     }
     
-    virtual void DoAction(double value, Widget* sender) override
+    virtual void DoAction(double value) override
     {
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
-            Action::DoAction(value, sender);
+            Action::DoAction(value);
     }
 };
 
