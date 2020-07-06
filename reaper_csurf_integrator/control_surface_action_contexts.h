@@ -14,12 +14,12 @@ class ActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int param_ = 0;
+    int intParam_ = 0;
     
     ActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
     {
         if(params.size() > 0)
-            param_= atol(params[0].c_str());
+            intParam_= atol(params[0].c_str());
     }
 };
 
@@ -28,12 +28,12 @@ class ActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    string param_ = "";
+    string stringParam_ = "";
     
     ActionWithStringParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
     {
         if(params.size() > 0)
-            param_ = params[0];
+            stringParam_ = params[0];
     }
 };
 
@@ -121,12 +121,12 @@ class TrackActionWithIntParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int param_ = 0;
+    int intParam_ = 0;
 
     TrackActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
     {
         if(params.size() > 0)
-            param_= atol(params[0].c_str());
+            intParam_= atol(params[0].c_str());
     }
 };
 
@@ -135,13 +135,13 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    int fxParamIndex_ = 0;
+    int paramIndex_ = 0;
     string fxParamDisplayName_ = "";
 
     FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
     {
         if(params.size() > 0)
-            fxParamIndex_ = atol(params[0].c_str());
+            paramIndex_ = atol(params[0].c_str());
         
         if(params.size() > 1)
             fxParamDisplayName_ = params[1];
@@ -168,7 +168,7 @@ public:
         double retVal = 0.0;
         
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), fxParamIndex_, &min, &max);
+            retVal = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), paramIndex_, &min, &max);
         
         return retVal;
     }

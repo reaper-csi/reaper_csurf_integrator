@@ -1079,12 +1079,16 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 Action::Action(Widget* widget, Zone* zone, vector<string> params): widget_(widget), zone_(zone)
 {
     if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
+    {
         for(auto widget : GetSurface()->GetWidgets())
+        {
             if(widget->GetName() == params[1])
             {
                 displayWidget_ = widget;
                 break;
             }
+        }
+    }
 
     if(params.size() > 0)
     {
