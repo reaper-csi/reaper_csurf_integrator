@@ -243,14 +243,13 @@ protected:
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
-    Widget* deferredSender_ = nullptr;
     
     virtual void RequestTrackUpdate(MediaTrack* track) {}
-    virtual void Do(string value, Widget* sender) {}
-    virtual void Do(double value, Widget* sender) {}
-    void DoRangeBoundAction(double value, Widget* sender);
-    void DoAcceleratedSteppedValueAction(int accelerationIndex, double value, Widget* sender);
-    void DoAcceleratedDeltaValueAction(int accelerationIndex, double value, Widget* sender);
+    virtual void Do(string value) {}
+    virtual void Do(double value) {}
+    void DoRangeBoundAction(double value);
+    void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
+    void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
     
 public:
     virtual ~Action() {}
@@ -269,9 +268,9 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
-    virtual void DoAction(double value, Widget* sender);
-    virtual void DoRelativeAction(double value, Widget* sender);
-    virtual void DoRelativeAction(int accelerationIndex, double value, Widget* sender);
+    virtual void DoAction(double value);
+    virtual void DoRelativeAction(double value);
+    virtual void DoRelativeAction(int accelerationIndex, double value);
     virtual double GetCurrentValue() { return 0.0; }
     virtual void RequestUpdate();
     void ClearWidget();
@@ -281,15 +280,14 @@ public:
     
     void PerformDeferredActions()
     {
-        if(deferredSender_ != nullptr && delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
+        if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
         {
             double savedDelayAmount = delayAmount_;
             delayAmount_ = 0.0;
-            DoAction(deferredValue_, deferredSender_);
+            DoAction(deferredValue_);
             delayAmount_ = savedDelayAmount;
             delayStartTime_ = 0.0;
             deferredValue_ = 0.0;
-            deferredSender_ = nullptr;
         }
     }
     
@@ -369,22 +367,22 @@ public:
         actions_.push_back(action);
     }
     
-    void DoAction(Widget* widget, double value)
+    void DoAction(double value)
     {
         for(auto action : actions_)
-            action->DoAction(value, widget);
+            action->DoAction(value);
     }
     
-    void DoRelativeAction(Widget* widget, double delta)
+    void DoRelativeAction(double delta)
     {
         for(auto action : actions_)
-            action->DoRelativeAction(delta, widget);
+            action->DoRelativeAction(delta);
     }
     
-    void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
+    void DoRelativeAction(int accelerationIndex, double delta)
     {
         for(auto action : actions_)
-            action->DoRelativeAction(accelerationIndex, delta, widget);
+            action->DoRelativeAction(accelerationIndex, delta);
     }
 };
 
