@@ -19,7 +19,7 @@ public:
     virtual void Do(double value, Widget* sender) override
     {
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
-            DAW::TrackFX_SetParam(track, zone_->GetSlotIndex(), fxParamIndex_, value);
+            DAW::TrackFX_SetParam(track, zone_->GetSlotIndex(), paramIndex_, value);
     }
 };
 
@@ -35,13 +35,13 @@ public:
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
             double min, max = 0;
-            double value = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), fxParamIndex_, &min, &max);
+            double value = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), paramIndex_, &min, &max);
             value +=  relativeValue;
             
             if(value < min) value = min;
             if(value > max) value = max;
             
-            DAW::TrackFX_SetParam(track, zone_->GetSlotIndex(), fxParamIndex_, value);
+            DAW::TrackFX_SetParam(track, zone_->GetSlotIndex(), paramIndex_, value);
         }
     }
 };
@@ -184,7 +184,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        UpdateWidgetValue(param_, panToNormalized(pan));
+        UpdateWidgetValue(intParam_, panToNormalized(pan));
     }
     
 public:
@@ -230,7 +230,7 @@ class TrackPanWidth : public TrackActionWithIntParam
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        UpdateWidgetValue(param_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        UpdateWidgetValue(intParam_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
 public:
@@ -504,7 +504,7 @@ public:
     {
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
-            int param = param_ - 1 < 0 ? 0 : param_ - 1;
+            int param = intParam_ - 1 < 0 ? 0 : intParam_ - 1;
             
             char fxName[BUFSZ];
             
@@ -545,7 +545,7 @@ public:
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
             char fxParamValue[128];
-            DAW::TrackFX_GetFormattedParamValue(track, zone_->GetSlotIndex(), fxParamIndex_, fxParamValue, sizeof(fxParamValue));
+            DAW::TrackFX_GetFormattedParamValue(track, zone_->GetSlotIndex(), paramIndex_, fxParamValue, sizeof(fxParamValue));
             UpdateWidgetValue(string(fxParamValue));
         }
         else
@@ -648,7 +648,7 @@ class FixedTextDisplay : public ActionWithStringParam
 protected:
     void RequestUpdate() override
     {
-        UpdateWidgetValue(param_);
+        UpdateWidgetValue(stringParam_);
     }
     
 public:
@@ -1155,7 +1155,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        DAW::SetGlobalAutomationOverride(param_);
+        DAW::SetGlobalAutomationOverride(intParam_);
     }
 };
 
@@ -1170,7 +1170,7 @@ public:
     {
         if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
         {
-            if(param_ == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
+            if(intParam_ == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
                 UpdateWidgetValue(1.0);
             else
                 UpdateWidgetValue(0.0);
@@ -1181,7 +1181,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        DAW::SetAutomationMode(param_, true);
+        DAW::SetAutomationMode(intParam_, true);
     }
 };
 
@@ -1355,7 +1355,7 @@ public:
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        UpdateWidgetValue(volToNormalized(DAW::Track_GetPeakInfo(track, param_)));
+        UpdateWidgetValue(volToNormalized(DAW::Track_GetPeakInfo(track, intParam_)));
     }
 };
 
@@ -1407,7 +1407,7 @@ public:
         
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
-            if(DAW::TrackFX_GetNamedConfigParm(track, fxParamIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
+            if(DAW::TrackFX_GetNamedConfigParm(track, paramIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
                 UpdateWidgetValue(-atof(buffer)/20.0);
             else
                 UpdateWidgetValue(0.0);
