@@ -204,14 +204,44 @@ private:
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
 
-    
-    
-    
-    
-    
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
+    
+    int intParam_ = 0;
 
+    string stringParam_ = "";
+
+    int paramIndex_ = 0;
+    
+    string fxParamDisplayName_ = "";
+
+    
+    
+    int commandId_ = 0;
+    string commandStr_ = "";
+
+    
+    double rangeMinimum_ = 0.0;
+    double rangeMaximum_ = 1.0;
+    
+    
+    double deltaValue_ = 0.0;
+    vector<double> acceleratedDeltaValues_;
+    vector<int> acceleratedTickValues_;
+    int accumulatedIncTicks_ = 0;
+    int accumulatedDecTicks_ = 0;
+
+    
+    bool supportsRelease_ = false;
+    bool isInverted_ = false;
+    bool shouldToggle_ = false;
+    double delayAmount_ = 0.0;
+    double delayStartTime_ = 0.0;
+    double deferredValue_ = 0.0;
+
+    bool shouldUseDisplayStyle_ = false;
+    int displayStyle_ = 0;
+    
     bool supportsRGB_ = false;
     vector<rgb_color> RGBValues_;
     int currentRGBIndex_ = 0;
@@ -224,26 +254,25 @@ protected:
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
     
-    
-    
-    
-    
-    
-    
-    
-    int intParam_ = 0;
+    int GetIntParam() { return intParam_; }
+    string GetStringParam() { return stringParam_; }
+    string GetFxParamDisplayName() { return fxParamDisplayName_; }
+    int GetCommandId() { return commandId_; }
+    string GetCommandString() { return commandStr_; }
+    bool GetShouldUseDisplayStyle() { return shouldUseDisplayStyle_; }
+    int GetDisplayStyle() { return displayStyle_; }
 
     
-    string stringParam_ = "";
+    
+    
 
     
-    int commandId_ = 0;
-    string commandStr_ = "";
 
     
-    int paramIndex_ = 0;
+
+
     
-    string fxParamDisplayName_ = "";
+    
 
     
     
@@ -257,27 +286,13 @@ protected:
     // CycleTrackAutoMode and EuConCycleTrackAutoMode
     //////////////////////////////////////////////////
     
-    double rangeMinimum_ = 0.0;
-    double rangeMaximum_ = 1.0;
     
     vector<double> steppedValues_;
     int steppedValuesIndex_ = 0;
 
-    double deltaValue_ = 0.0;
-    vector<double> acceleratedDeltaValues_;
-    vector<int> acceleratedTickValues_;
-    int accumulatedIncTicks_ = 0;
-    int accumulatedDecTicks_ = 0;
     
-    bool shouldUseDisplayStyle_ = false;
-    int displayStyle_ = 0;
     
-    bool supportsRelease_ = false;
-    bool isInverted_ = false;
-    bool shouldToggle_ = false;
-    double delayAmount_ = 0.0;
-    double delayStartTime_ = 0.0;
-    double deferredValue_ = 0.0;
+    
     
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value) {}

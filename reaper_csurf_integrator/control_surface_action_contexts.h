@@ -34,13 +34,13 @@ public:
 
     virtual void RequestUpdate() override
     {
-        UpdateWidgetValue(DAW::GetToggleCommandState(commandId_));
+        UpdateWidgetValue(DAW::GetToggleCommandState(GetCommandId()));
     }
     
     virtual void Do(double value) override
     {
         if(value != 0)
-            DAW::SendCommandMessage(commandId_);
+            DAW::SendCommandMessage(GetCommandId());
     }
 };
 
@@ -90,11 +90,11 @@ class FXAction : public TrackAction
 public:
     FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
     
-    virtual string GetDisplayName() override { return fxParamDisplayName_; }
+    virtual string GetDisplayName() override { return GetFxParamDisplayName(); }
 
     virtual string GetAlias() override
     {
-        return fxParamDisplayName_;
+        return GetFxParamDisplayName();
     }
 
     virtual double GetCurrentValue() override
@@ -104,7 +104,7 @@ public:
         double retVal = 0.0;
         
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), paramIndex_, &min, &max);
+            retVal = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), &min, &max);
         
         return retVal;
     }
@@ -113,8 +113,8 @@ public:
     {
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
-            if(shouldUseDisplayStyle_)
-                UpdateWidgetValue(displayStyle_, GetCurrentValue());
+            if(GetShouldUseDisplayStyle())
+                UpdateWidgetValue(GetDisplayStyle(), GetCurrentValue());
             else
                 UpdateWidgetValue(GetCurrentValue());
         }

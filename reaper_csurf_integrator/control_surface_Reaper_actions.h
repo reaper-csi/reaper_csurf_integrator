@@ -19,7 +19,7 @@ public:
     virtual void Do(double value) override
     {
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), paramIndex_, value);
+            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), value);
     }
 };
 
@@ -35,13 +35,13 @@ public:
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
             double min, max = 0;
-            double value = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), paramIndex_, &min, &max);
+            double value = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), &min, &max);
             value +=  relativeValue;
             
             if(value < min) value = min;
             if(value > max) value = max;
             
-            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), paramIndex_, value);
+            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), value);
         }
     }
 };
@@ -180,7 +180,7 @@ protected:
     {
         double vol, pan = 0.0;
         DAW::GetTrackUIVolPan(track, &vol, &pan);
-        UpdateWidgetValue(intParam_, panToNormalized(pan));
+        UpdateWidgetValue(GetIntParam(), panToNormalized(pan));
     }
     
 public:
@@ -222,7 +222,7 @@ class TrackPanWidth : public TrackActionWithIntParam
 protected:
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        UpdateWidgetValue(intParam_, panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        UpdateWidgetValue(GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
     }
     
 public:
@@ -480,7 +480,7 @@ public:
     {
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
-            int param = intParam_ - 1 < 0 ? 0 : intParam_ - 1;
+            int param = GetIntParam() - 1 < 0 ? 0 : GetIntParam() - 1;
             
             char fxName[BUFSZ];
             
@@ -521,7 +521,7 @@ public:
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
             char fxParamValue[128];
-            DAW::TrackFX_GetFormattedParamValue(track, GetZone()->GetSlotIndex(), paramIndex_, fxParamValue, sizeof(fxParamValue));
+            DAW::TrackFX_GetFormattedParamValue(track, GetZone()->GetSlotIndex(), GetParamIndex(), fxParamValue, sizeof(fxParamValue));
             UpdateWidgetValue(string(fxParamValue));
         }
         else
@@ -624,7 +624,7 @@ class FixedTextDisplay : public ActionWithStringParam
 protected:
     void RequestUpdate() override
     {
-        UpdateWidgetValue(stringParam_);
+        UpdateWidgetValue(GetStringParam());
     }
     
 public:
@@ -1131,7 +1131,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        DAW::SetGlobalAutomationOverride(intParam_);
+        DAW::SetGlobalAutomationOverride(GetIntParam());
     }
 };
 
@@ -1146,7 +1146,7 @@ public:
     {
         if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
         {
-            if(intParam_ == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
+            if(GetIntParam() == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
                 UpdateWidgetValue(1.0);
             else
                 UpdateWidgetValue(0.0);
@@ -1157,7 +1157,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        DAW::SetAutomationMode(intParam_, true);
+        DAW::SetAutomationMode(GetIntParam(), true);
     }
 };
 
@@ -1331,7 +1331,7 @@ public:
 
     void RequestTrackUpdate(MediaTrack* track) override
     {
-        UpdateWidgetValue(volToNormalized(DAW::Track_GetPeakInfo(track, intParam_)));
+        UpdateWidgetValue(volToNormalized(DAW::Track_GetPeakInfo(track, GetIntParam())));
     }
 };
 
@@ -1383,7 +1383,7 @@ public:
         
         if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
-            if(DAW::TrackFX_GetNamedConfigParm(track, paramIndex_, "GainReduction_dB", buffer, sizeof(buffer)))
+            if(DAW::TrackFX_GetNamedConfigParm(track, GetParamIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
                 UpdateWidgetValue(-atof(buffer)/20.0);
             else
                 UpdateWidgetValue(0.0);
