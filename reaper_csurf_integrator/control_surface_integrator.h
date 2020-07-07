@@ -201,6 +201,14 @@ class Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Widget* const widget_ = nullptr;
+    Zone* const zone_ = nullptr;
+
+    
+    
+    
+    
+    
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
 
@@ -213,8 +221,13 @@ private:
 protected:
     Action(Widget* widget, Zone* zone, vector<string> params);
 
-    Widget* const widget_ = nullptr;
-    Zone* const zone_ = nullptr;
+    Widget* GetWidget() { return widget_; }
+    Zone* GetZone() { return zone_; }
+    
+    
+    
+    
+    
     
     
     
