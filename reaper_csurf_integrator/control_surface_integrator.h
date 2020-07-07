@@ -216,7 +216,25 @@ protected:
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
     
+    
+    
+    int intParam_ = 0;
+
+    
+    string stringParam_ = "";
+
+    
+    int commandId_ = 0;
+    string commandStr_ = "";
+
+    
     int paramIndex_ = 0;
+    
+    string fxParamDisplayName_ = "";
+
+    
+    
+    
     
     //////////////////////////////////////////////////
     // CycleTrackAutoMode and EuConCycleTrackAutoMode
@@ -225,7 +243,7 @@ protected:
     double timeSilentlySet_ = 0.0;
     // CycleTrackAutoMode and EuConCycleTrackAutoMode
     //////////////////////////////////////////////////
-  
+    
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
     
