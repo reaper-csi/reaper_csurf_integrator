@@ -16,7 +16,6 @@ class TogglePin  : public TrackAction
 public:
     TogglePin(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 
-    
     void Do(double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -359,14 +358,8 @@ public:
 class GoZone : public ActionWithStringParam
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-    string zonetype_ = "";
-    
 public:
-    GoZone(Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(widget, zone, params)
-    {
-        if(params.size() > 1)
-            zonetype_ = params[1];
-    }
+    GoZone(Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(widget, zone, params) {}
 
     void Do(double value) override
     {

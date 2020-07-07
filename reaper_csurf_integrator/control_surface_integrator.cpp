@@ -1078,6 +1078,8 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Action::Action(Widget* widget, Zone* zone, vector<string> params): widget_(widget), zone_(zone)
 {
+    //////////////////////////////////////////////////
+    // CycleTrackAutoMode and EuConCycleTrackAutoMode
     if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
     {
         for(auto widget : GetSurface()->GetWidgets())
@@ -1089,6 +1091,46 @@ Action::Action(Widget* widget, Zone* zone, vector<string> params): widget_(widge
             }
         }
     }
+    // CycleTrackAutoMode and EuConCycleTrackAutoMode
+    //////////////////////////////////////////////////
+
+    
+    
+    //////////////////////////////////////////////////
+    // TrackVolumeDB and TrackSendVolumeDB
+    rangeMinimum_ = -144.0;
+    rangeMaximum_ = 24.0;
+    
+    
+    // TrackVolumeDB and TrackSendVolumeDB
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent and
+    rangeMinimum_ = -100.0;
+    rangeMaximum_ = 100.0;
+    
+    
+    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // TrackPanPercent
+    rangeMinimum_ = -100.0;
+    rangeMaximum_ = 100.0;
+    
+    
+    // TrackPanPercent
+    //////////////////////////////////////////////////
+    
+    
+
+    
+    
+    
+    
 
     if(params.size() > 0)
     {
