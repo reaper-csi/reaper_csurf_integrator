@@ -131,7 +131,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        int fxSlot = intParam_ - 1 < 0 ? 0 : intParam_ - 1;
+        int fxSlot = GetIntParam() - 1 < 0 ? 0 : GetIntParam() - 1;
         
         if(MediaTrack* selectedTrack = GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
             GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, fxSlot);
@@ -221,7 +221,7 @@ public:
                     break;
                 }
             
-            trackIndex += intParam_;
+            trackIndex += GetIntParam();
             
             if(trackIndex < 0)
                 trackIndex = 0;
@@ -270,7 +270,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        GetTrackNavigationManager()->ToggleScrollLink(intParam_);
+        GetTrackNavigationManager()->ToggleScrollLink(GetIntParam());
     }
 };
 
@@ -350,7 +350,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
 
-        TheManager->GoToPage(stringParam_);
+        TheManager->GoToPage(GetStringParam());
     }
 };
 
@@ -366,7 +366,7 @@ public:
         if(value == 0.0)
             return; // ignore button releases
 
-        GetSurface()->GoZone(stringParam_);
+        GetSurface()->GoZone(GetStringParam());
     }
 };
 
@@ -401,7 +401,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        TheManager->AdjustTrackBank(GetPage(), intParam_);
+        TheManager->AdjustTrackBank(GetPage(), GetIntParam());
     }
 };
 
