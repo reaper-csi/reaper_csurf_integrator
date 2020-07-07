@@ -13,56 +13,24 @@
 class ActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    int intParam_ = 0;
-    
-    ActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
-    {
-        if(params.size() > 0)
-            intParam_= atol(params[0].c_str());
-    }
+public:
+    ActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    string stringParam_ = "";
-    
-    ActionWithStringParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
-    {
-        if(params.size() > 0)
-            stringParam_ = params[0];
-    }
+public:
+    ActionWithStringParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int commandId_ = 0;
-    string commandStr_ = "";
-    
 public:
-    ReaperAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)
-    {
-        if(params.size() > 0)
-        {
-            commandStr_ = params[0];
-            
-            commandId_ =  atol(commandStr_.c_str());
-            
-            if(commandId_ == 0) // unsuccessful conversion to number
-            {
-                commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
-                
-                if(commandId_ == 0) // can't find it
-                    commandId_ = 65535; // no-op
-            }
-        }
-    }
+    ReaperAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     virtual void RequestUpdate() override
     {
@@ -103,57 +71,25 @@ public:
 class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    int paramIndex_ = 0;
-    
-    TrackSendAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        if(params.size() > 0)
-        {
-            if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
-                paramIndex_ = atol(params[0].c_str());
-        }
-    }
+public:
+    TrackSendAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackActionWithIntParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    int intParam_ = 0;
-
-    TrackActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        if(params.size() > 0)
-            intParam_= atol(params[0].c_str());
-    }
+public:
+    TrackActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    int paramIndex_ = 0;
-    string fxParamDisplayName_ = "";
-
-    FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        if(params.size() > 0)
-            paramIndex_ = atol(params[0].c_str());
-        
-        if(params.size() > 1)
-            fxParamDisplayName_ = params[1];
-        
-        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
-        {
-            shouldUseDisplayStyle_ = true;
-            displayStyle_ = atol(params[2].c_str());
-        }
-    }
-    
 public:
+    FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
+    
     virtual string GetDisplayName() override { return fxParamDisplayName_; }
 
     virtual string GetAlias() override
