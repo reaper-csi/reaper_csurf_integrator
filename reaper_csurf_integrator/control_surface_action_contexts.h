@@ -54,7 +54,7 @@ protected:
 public:
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
             RequestTrackUpdate(track);
         else
              ClearWidget();
@@ -62,7 +62,7 @@ public:
     
     virtual void DoAction(double value) override
     {
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
             Action::DoAction(value);
     }
 };
@@ -103,15 +103,15 @@ public:
         double max = 0.0;
         double retVal = 0.0;
         
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, zone_->GetSlotIndex(), paramIndex_, &min, &max);
+        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
+            retVal = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), paramIndex_, &min, &max);
         
         return retVal;
     }
     
     virtual void RequestUpdate() override
     {
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
         {
             if(shouldUseDisplayStyle_)
                 UpdateWidgetValue(displayStyle_, GetCurrentValue());
