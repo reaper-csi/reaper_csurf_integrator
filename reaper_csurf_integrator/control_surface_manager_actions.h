@@ -20,7 +20,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
             GetTrackNavigationManager()->TogglePin(track);
     }
 };
