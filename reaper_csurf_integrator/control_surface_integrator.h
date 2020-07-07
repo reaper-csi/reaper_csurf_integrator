@@ -218,9 +218,13 @@ protected:
     
     int paramIndex_ = 0;
     
+    //////////////////////////////////////////////////
+    // CycleTrackAutoMode and EuConCycleTrackAutoMode
     map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
     Widget* displayWidget_ = nullptr;
     double timeSilentlySet_ = 0.0;
+    // CycleTrackAutoMode and EuConCycleTrackAutoMode
+    //////////////////////////////////////////////////
   
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
