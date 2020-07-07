@@ -162,11 +162,7 @@ protected:
     }
     
 public:
-    TrackVolumeDB(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        rangeMinimum_ = -144.0;
-        rangeMaximum_ = 24.0;
-    }
+    TrackVolumeDB(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)  {}
     
     void Do(double value) override
     {
@@ -210,11 +206,7 @@ protected:
     }
     
 public:
-    TrackPanPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        rangeMinimum_ = -100.0;
-        rangeMaximum_ = 100.0;
-    }
+    TrackPanPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)  {}
     
     void Do(double value) override
     {
@@ -254,11 +246,7 @@ protected:
     }
     
 public:
-    TrackPanWidthPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        rangeMinimum_ = -100.0;
-        rangeMaximum_ = 100.0;
-    }
+    TrackPanWidthPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
     
     void Do(double value) override
     {
@@ -278,11 +266,7 @@ protected:
     }
     
 public:
-    TrackPanLPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        rangeMinimum_ = -100.0;
-        rangeMaximum_ = 100.0;
-    }
+    TrackPanLPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -305,11 +289,7 @@ protected:
     }
     
 public:
-    TrackPanRPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params)
-    {
-        rangeMinimum_ = -100.0;
-        rangeMaximum_ = 100.0;
-    }
+    TrackPanRPercent(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
     
     void Do(double value) override
     {
@@ -360,11 +340,7 @@ protected:
     }
     
 public:
-    TrackSendVolumeDB(Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(widget, zone, params)
-    {
-        rangeMinimum_ = -144.0;
-        rangeMaximum_ = 24.0;
-    }
+    TrackSendVolumeDB(Widget* widget, Zone* zone, vector<string> params) : TrackSendAction(widget, zone, params) {}
 
     void Do(double value) override
     {
