@@ -94,6 +94,7 @@ class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
 class Zone;
+class Action;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,6 +204,7 @@ class ActionContext
 private:
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
+    Action* const action_ = nullptr;
     
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
@@ -251,7 +253,6 @@ private:
     bool supportsTrackColor_ = false;
     
 protected:
-    ActionContext(Widget* widget, Zone* zone, vector<string> params);
     
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
@@ -268,15 +269,28 @@ protected:
     
     
     
+    
+    
+    
+    
+    
     virtual void RequestTrackUpdate(MediaTrack* track) {}
     virtual void Do(string value) {}
     virtual void Do(double value) {}
+    
+    
+    
+    
+    
+    
+    
     
     void DoRangeBoundAction(double value);
     void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
     
 public:
+    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params) {}
     virtual ~ActionContext() {}
     
     Page* GetPage();
@@ -298,7 +312,16 @@ public:
     virtual void DoRelativeAction(int accelerationIndex, double value);
     virtual double GetCurrentValue() { return 0.0; }
     
+    
+    
+    
+    
     virtual void RequestUpdate();
+    
+    
+    
+    
+    
     
     void ClearWidget();
     void UpdateWidgetValue(double value);
@@ -437,9 +460,11 @@ protected:
     
     
     
-    virtual void RequestTrackUpdate(MediaTrack* track) {}
-    virtual void Do(string value) {}
+
     virtual void Do(double value) {}
+    
+    
+    
     void DoRangeBoundAction(double value);
     void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
@@ -466,7 +491,15 @@ public:
     virtual void DoRelativeAction(double value);
     virtual void DoRelativeAction(int accelerationIndex, double value);
     virtual double GetCurrentValue() { return 0.0; }
+    
+    
+    
+    
     virtual void RequestUpdate();
+    
+    
+    
+    
     void ClearWidget();
     void UpdateWidgetValue(double value);
     void UpdateWidgetValue(int param, double value);
@@ -2148,6 +2181,16 @@ public:
             return actionsOld_["NoAction"](widget, zone, params);;
     }
    
+  
+    ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
+    {
+        if(actions_.count(actionName) > 0)
+            return ActionContext(actions_[actionName], widget, zone, params);
+        else
+            return ActionContext(actions_["NoAction"], widget, zone, params);
+    }
+
+    
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
