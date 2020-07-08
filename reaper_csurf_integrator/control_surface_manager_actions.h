@@ -10,12 +10,12 @@
 #include "control_surface_integrator.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TogglePin  : public TrackAction
+class TogglePin  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     TogglePin() {}
-    TogglePin(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
+    TogglePin(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -127,12 +127,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoFXSlot  : public ActionWithIntParam
+class GoFXSlot  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     GoFXSlot() {}
-    GoFXSlot(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
+    GoFXSlot(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -211,12 +211,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectTrackRelative : public ActionWithIntParam
+class SelectTrackRelative : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     SelectTrackRelative() {}
-    SelectTrackRelative(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
+    SelectTrackRelative(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -268,12 +268,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleScrollLink : public ActionWithIntParam
+class ToggleScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     ToggleScrollLink() {}
-    ToggleScrollLink(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
+    ToggleScrollLink(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void RequestUpdate() override
     {
@@ -358,12 +358,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoPage : public ActionWithStringParam
+class GoPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     GoPage() {}
-    GoPage(Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(widget, zone, params) {}
+    GoPage(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -374,12 +374,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class GoZone : public ActionWithStringParam
+class GoZone : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     GoZone() {}
-    GoZone(Widget* widget, Zone* zone, vector<string> params) : ActionWithStringParam(widget, zone, params) {}
+    GoZone(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
@@ -412,12 +412,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class TrackBank : public ActionWithIntParam
+class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     TrackBank() {}
-    TrackBank(Widget* widget, Zone* zone, vector<string> params) : ActionWithIntParam(widget, zone, params) {}
+    TrackBank(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     void Do(double value) override
     {
