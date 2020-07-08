@@ -1163,6 +1163,153 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ActionContext
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params): action_(action), widget_(widget), zone_(zone)
+{
+    /*
+     //////////////////////////////////////////////////
+     // CycleTrackAutoMode and EuConCycleTrackAutoMode
+     
+     if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
+     {
+     for(auto widget : GetSurface()->GetWidgets())
+     {
+     if(widget->GetName() == params[1])
+     {
+     displayWidget_ = widget;
+     break;
+     }
+     }
+     }
+     
+     // CycleTrackAutoMode and EuConCycleTrackAutoMode
+     //////////////////////////////////////////////////
+     */
+    
+    
+    //////////////////////////////////////////////////
+    // TrackVolumeDB and TrackSendVolumeDB
+    
+    rangeMinimum_ = -144.0;
+    rangeMaximum_ = 24.0;
+    
+    // TrackVolumeDB and TrackSendVolumeDB
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent
+    
+    rangeMinimum_ = -100.0;
+    rangeMaximum_ = 100.0;
+    
+    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // ActionWithIntParam
+    
+    if(params.size() > 0)
+        intParam_= atol(params[0].c_str());
+    
+    // ActionWithIntParam
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // ActionWithStringParam
+    
+    if(params.size() > 0)
+        stringParam_ = params[0];
+    
+    // ActionWithStringParam
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // ReaperAction
+    
+    if(params.size() > 0)
+    {
+        commandStr_ = params[0];
+        
+        commandId_ =  atol(commandStr_.c_str());
+        
+        if(commandId_ == 0) // unsuccessful conversion to number
+        {
+            commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
+            
+            if(commandId_ == 0) // can't find it
+                commandId_ = 65535; // no-op
+        }
+    }
+    
+    // ReaperAction
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // TrackSendAction
+    
+    if(params.size() > 0)
+    {
+        if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
+            paramIndex_ = atol(params[0].c_str());
+    }
+    
+    // TrackSendAction
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // TrackActionWithIntParam
+    
+    if(params.size() > 0)
+        intParam_= atol(params[0].c_str());
+    
+    // TrackActionWithIntParam
+    //////////////////////////////////////////////////
+    
+    
+    //////////////////////////////////////////////////
+    // FXAction
+    
+    if(params.size() > 0)
+        paramIndex_ = atol(params[0].c_str());
+    
+    if(params.size() > 1)
+        fxParamDisplayName_ = params[1];
+    
+    if(params.size() > 2 && params[2] != "[" && params[2] != "{")
+    {
+        shouldUseDisplayStyle_ = true;
+        displayStyle_ = atol(params[2].c_str());
+    }
+    
+    // FXAction
+    //////////////////////////////////////////////////
+    
+    
+    
+    
+    
+    
+    
+    
+    if(params.size() > 0)
+    {
+        SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
+        SetSteppedValues(params, deltaValue_, acceleratedDeltaValues_, rangeMinimum_, rangeMaximum_, steppedValues_, acceleratedTickValues_);
+    }
+    
+    if(acceleratedTickValues_.size() < 1)
+        acceleratedTickValues_.push_back(10);
+
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Action::Action(Widget* widget, Zone* zone, vector<string> params): widget_(widget), zone_(zone)
