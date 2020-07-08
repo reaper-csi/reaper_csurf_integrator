@@ -1309,6 +1309,266 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
 
 }
 
+Page* ActionContext::GetPage()
+{
+    return widget_->GetSurface()->GetPage();
+}
+
+ControlSurface* ActionContext::GetSurface()
+{
+    return widget_->GetSurface();
+}
+
+TrackNavigationManager* ActionContext::GetTrackNavigationManager()
+{
+    return GetPage()->GetTrackNavigationManager();
+}
+
+MediaTrack* ActionContext::GetTrack()
+{
+    return zone_->GetNavigator()->GetTrack();
+}
+
+int ActionContext::GetSlotIndex()
+{
+    return zone_->GetSlotIndex();
+}
+
+void ActionContext::RequestUpdate()
+{
+    if(supportsRGB_)
+        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+    
+    // GAW TBD -- add the this pointer
+    action_->RequestUpdate();
+}
+
+void ActionContext::ClearWidget()
+{
+    widget_->Clear();
+}
+
+void ActionContext::UpdateWidgetValue(double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(value);
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void ActionContext::UpdateWidgetValue(int param, double value)
+{
+    value = isInverted_ == false ? value : 1.0 - value;
+    
+    SetSteppedValueIndex(value);
+    
+    lastValue_ = value;
+    
+    widget_->UpdateValue(param, value);
+    
+    currentRGBIndex_ = value == 0 ? 0 : 1;
+    
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void ActionContext::UpdateWidgetValue(string value)
+{
+    widget_->UpdateValue(value);
+    
+    if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->UpdateRGBValue(r, g, b);
+        }
+    }
+}
+
+void ActionContext::DoAction(double value)
+{
+    if(steppedValues_.size() > 0 && value != 0.0)
+    {
+        if(steppedValuesIndex_ == steppedValues_.size() - 1)
+        {
+            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
+                steppedValuesIndex_ = 0;
+        }
+        else
+            steppedValuesIndex_++;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+    }
+    else
+        DoRangeBoundAction(value);
+}
+
+void ActionContext::DoRelativeAction(double delta)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(0, delta);
+    else
+    {
+        if(deltaValue_ != 0.0)
+        {
+            if(delta > 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta);
+    }
+}
+
+void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
+{
+    if(steppedValues_.size() > 0)
+        DoAcceleratedSteppedValueAction(accelerationIndex, delta);
+    else if(acceleratedDeltaValues_.size() > 0)
+        DoAcceleratedDeltaValueAction(accelerationIndex, delta);
+    else
+    {
+        if(deltaValue_ != 0.0)
+        {
+            if(delta >= 0.0)
+                delta = deltaValue_;
+            else if(delta < 0.0)
+                delta = -deltaValue_;
+        }
+        
+        DoRangeBoundAction(lastValue_ + delta);
+    }
+}
+
+void ActionContext::DoRangeBoundAction(double value)
+{
+    if(delayAmount_ != 0.0)
+    {
+        if(value == 0.0)
+        {
+            delayStartTime_ = 0.0;
+            deferredValue_ = 0.0;
+        }
+        else
+        {
+            delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
+            deferredValue_ = value;
+        }
+    }
+    else
+    {
+        if(shouldToggle_ && value != 0.0)
+            value = ! GetCurrentValue();
+        
+        if(value > rangeMaximum_)
+            value = rangeMaximum_;
+        
+        if(value < rangeMinimum_)
+            value = rangeMinimum_;
+        
+        // GAW TBD -- add the this pointer
+        action_->Do(value);
+    }
+}
+
+void ActionContext::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta)
+{
+    if(delta > 0)
+    {
+        accumulatedIncTicks_++;
+        accumulatedDecTicks_ = accumulatedDecTicks_ - 1 < 0 ? 0 : accumulatedDecTicks_ - 1;
+    }
+    else if(delta < 0)
+    {
+        accumulatedDecTicks_++;
+        accumulatedIncTicks_ = accumulatedIncTicks_ - 1 < 0 ? 0 : accumulatedIncTicks_ - 1;
+    }
+    
+    accelerationIndex = accelerationIndex > acceleratedTickValues_.size() - 1 ? acceleratedTickValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(delta > 0 && accumulatedIncTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_++;
+        
+        if(steppedValuesIndex_ > steppedValues_.size() - 1)
+            steppedValuesIndex_ = steppedValues_.size() - 1;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+    }
+    else if(delta < 0 && accumulatedDecTicks_ >= acceleratedTickValues_[accelerationIndex])
+    {
+        accumulatedIncTicks_ = 0;
+        accumulatedDecTicks_ = 0;
+        
+        steppedValuesIndex_--;
+        
+        if(steppedValuesIndex_ < 0 )
+            steppedValuesIndex_ = 0;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+    }
+}
+
+void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double delta)
+{
+    accelerationIndex = accelerationIndex > acceleratedDeltaValues_.size() - 1 ? acceleratedDeltaValues_.size() - 1 : accelerationIndex;
+    accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
+    
+    if(delta > 0.0)
+        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex]);
+    else
+        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex]);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1471,6 +1731,12 @@ TrackNavigationManager* Action::GetTrackNavigationManager()
 }
 
 void Action::RequestUpdate()
+{
+    if(supportsRGB_)
+        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
+}
+
+void Action::RequestUpdate(ActionContext* context)
 {
     if(supportsRGB_)
         widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
