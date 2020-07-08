@@ -14,6 +14,7 @@ class ActionWithIntParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    ActionWithIntParam() {}
     ActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 };
 
@@ -22,6 +23,7 @@ class ActionWithStringParam : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    ActionWithStringParam() {}
     ActionWithStringParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 };
 
@@ -30,6 +32,7 @@ class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    ReaperAction() {}
     ReaperAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     virtual void RequestUpdate() override
@@ -49,6 +52,7 @@ class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    TrackAction() {}
     TrackAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
 public:
@@ -72,6 +76,7 @@ class TrackSendAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    TrackSendAction() {}
     TrackSendAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 };
 
@@ -80,6 +85,7 @@ class TrackActionWithIntParam : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    TrackActionWithIntParam() {}
     TrackActionWithIntParam(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
 };
 
@@ -88,8 +94,9 @@ class FXAction : public TrackAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    FXAction() {}
     FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
-    
+
     virtual string GetDisplayName() override { return GetFxParamDisplayName(); }
 
     virtual string GetAlias() override
