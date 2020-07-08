@@ -202,9 +202,9 @@ class ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
+    Action* const action_ = nullptr;
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
-    Action* const action_ = nullptr;
     
     double lastValue_ = 0.0;
     string lastStringValue_ = "";
@@ -274,9 +274,6 @@ protected:
     
     
     
-    virtual void RequestTrackUpdate(MediaTrack* track) {}
-    virtual void Do(string value) {}
-    virtual void Do(double value) {}
     
     
     
@@ -290,7 +287,7 @@ protected:
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
     
 public:
-    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params) {}
+    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params);
     virtual ~ActionContext() {}
     
     Page* GetPage();
@@ -307,17 +304,15 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
     
-    virtual void DoAction(double value);
-    virtual void DoRelativeAction(double value);
-    virtual void DoRelativeAction(int accelerationIndex, double value);
-    virtual double GetCurrentValue() { return 0.0; }
+    void DoAction(double value);
+    void DoRelativeAction(double value);
+    void DoRelativeAction(int accelerationIndex, double value);
+    double GetCurrentValue() { return 0.0; }
     
     
     
     
-    
-    virtual void RequestUpdate();
-    
+
     
     
     
@@ -550,18 +545,6 @@ public:
             steppedValuesIndex_ = index;
         }
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class NoAction : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    NoAction() {}
-    NoAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    virtual ~NoAction() {}
-    
-    virtual void RequestUpdate() {  ClearWidget(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
