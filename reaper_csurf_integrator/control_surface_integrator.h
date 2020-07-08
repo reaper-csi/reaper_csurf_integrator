@@ -252,11 +252,14 @@ private:
     
     bool supportsTrackColor_ = false;
     
-protected:
-    
+public:
+    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params);
+    virtual ~ActionContext() {}
+
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
-    
+    int GetSlotIndex();
+
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
     string GetFxParamDisplayName() { return fxParamDisplayName_; }
@@ -265,8 +268,7 @@ protected:
     bool GetShouldUseDisplayStyle() { return shouldUseDisplayStyle_; }
     int GetDisplayStyle() { return displayStyle_; }
 
-    
-    
+    MediaTrack* GetTrack();
     
     
     
@@ -286,15 +288,11 @@ protected:
     void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
     
-public:
-    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params);
-    virtual ~ActionContext() {}
     
     Page* GetPage();
     ControlSurface* GetSurface();
     TrackNavigationManager* GetTrackNavigationManager();
     int GetParamIndex() { return paramIndex_; }
-    virtual string GetDisplayName() { return ""; }
     
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
@@ -314,7 +312,8 @@ public:
     
 
     
-    
+    void RequestUpdate();
+
     
     
     
@@ -456,7 +455,6 @@ protected:
     
     
 
-    virtual void Do(double value) {}
     
     
     
@@ -472,7 +470,6 @@ public:
     ControlSurface* GetSurface();
     TrackNavigationManager* GetTrackNavigationManager();
     int GetParamIndex() { return paramIndex_; }
-    virtual string GetDisplayName() { return ""; }
     
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
@@ -486,14 +483,18 @@ public:
     virtual void DoRelativeAction(double value);
     virtual void DoRelativeAction(int accelerationIndex, double value);
     virtual double GetCurrentValue() { return 0.0; }
-    
+    virtual double GetCurrentValue(ActionContext* context) { return 0.0; }
+
     
     
     
     virtual void RequestUpdate();
+    virtual void Do(double value) {}
+
     
-    
-    
+    virtual void RequestUpdate(ActionContext* context);
+    virtual void Do(ActionContext* context, double value) {}
+
     
     void ClearWidget();
     void UpdateWidgetValue(double value);
