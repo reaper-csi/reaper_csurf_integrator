@@ -51,24 +51,9 @@ public:
 class TrackAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
+public:
     TrackAction() {}
     TrackAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-public:
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            RequestTrackUpdate(track);
-        else
-             ClearWidget();
-    }
-    
-    virtual void DoAction(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            Action::DoAction(value);
-    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,12 +75,12 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXAction : public TrackAction
+class FXAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     FXAction() {}
-    FXAction(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
+    FXAction(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
 
     virtual string GetDisplayName() override { return GetFxParamDisplayName(); }
 
