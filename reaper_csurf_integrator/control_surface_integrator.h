@@ -68,19 +68,19 @@ extern Manager* TheManager;
 
 struct CSIWidgetInfo
 {
-    std::string group = "General";
+    string group = "General";
     int channelNumber = 0;
     int sendNumber = 0;
     bool isVisible = true;
-    std::string name = "";
-    std::string control = "";
-    std::string FB_Processor = "";
+    string name = "";
+    string control = "";
+    string FB_Processor = "";
     
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, true) {}
+    CSIWidgetInfo(string aName, string aControl, string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, true) {}
     
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
+    CSIWidgetInfo(string aName, string aControl, string aFB_Processor, string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
     
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
+    CSIWidgetInfo(string aName, string aControl, string aFB_Processor, string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
 class Zone;
-class Action;
+class ActionContext;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -195,6 +195,17 @@ public:
     virtual string GetName() override { return "FocusedFXNavigator"; }
     
     virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~Action() {}
+    
+    virtual void RequestUpdate(ActionContext* context) {}
+    virtual void Do(ActionContext* context, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -386,27 +397,27 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual ~Action() {}
-    
-    virtual void RequestUpdate(ActionContext* context) {}
-    virtual void Do(ActionContext* context, double value) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionsForModifier
+class ActionBundle
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string const modifier_ = "";
+    string modifier_ = "";
     vector<ActionContext> actionContexts_;
     
 public:
-    ActionsForModifier(string modifier) : modifier_(modifier) {}
+    ActionBundle(string modifier) : modifier_(modifier) {}
+    ActionBundle() : ActionBundle("") {}
     
+    ActionBundle& operator=(ActionBundle &bundle)
+    {
+        this->modifier_ = bundle.modifier_;
+        
+        for(auto context : bundle.actionContexts_)
+            this->AddActionContext(context);
+        
+        return *this;
+    }
+
     string GetModifier() { return modifier_; }
         
     void RequestUpdate()
@@ -414,14 +425,7 @@ public:
         if(actionContexts_.size() > 0)
             actionContexts_[0].RequestUpdate();
     }
-   
-    void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
-    {
-        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0].GetParamIndex() : 0;
-        
-        DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
-    }
-       
+    
     void AddActionContext(ActionContext context)
     {
         actionContexts_.push_back(context);
@@ -444,6 +448,15 @@ public:
         for(auto context : actionContexts_)
             context.DoRelativeAction(accelerationIndex, delta);
     }
+    
+    
+    
+    void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
+    {
+        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0].GetParamIndex() : 0;
+        
+        DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -451,26 +464,31 @@ class WidgetActionBroker
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    Widget* const widget_ = nullptr;
-    Zone* const zone_ = nullptr;
-    map<string, ActionsForModifier*> actionsForModifier_;
+    Widget* widget_ = nullptr;
+    Zone* zone_ = nullptr;
+    map<string, ActionBundle> actionBundles_;
+    ActionBundle defaultBundle_;
     
 public:
     WidgetActionBroker(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
-
-    ~WidgetActionBroker()
-    {
-        // GAW TBD -- delete modifierActions
-    }
    
-    Zone* GetZone() { return zone_; }
-    
-    void AddActionsForModifer(ActionsForModifier* actionsForModifier)
+    WidgetActionBroker& operator=(WidgetActionBroker &broker)
     {
-        actionsForModifier_[actionsForModifier->GetModifier()] = actionsForModifier;
+        this->widget_ = broker.widget_;
+        this->zone_ = broker.zone_;
+
+        for(auto [key, actionBundle] : broker.actionBundles_)
+            this->AddActionBundle(actionBundle);
+        
+        return *this;
+    }
+
+    void AddActionBundle(ActionBundle actionBundle)
+    {
+        actionBundles_[actionBundle.GetModifier()] = actionBundle;
     }
     
-    ActionsForModifier* GetActionsForModifier();
+    ActionBundle &GetActionBundle();
     void GetFormattedFXParamValue(char *buffer, int bufferSize);
 };
 
@@ -539,13 +557,13 @@ struct ActionTemplate
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ActionsForModiferTemplate
+struct ActionBundleTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string modifier = "";
     vector<ActionTemplate*> members;
     
-    ActionsForModiferTemplate(string modifierStr) : modifier(modifierStr) {}
+    ActionBundleTemplate(string modifierStr) : modifier(modifierStr) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -554,7 +572,7 @@ struct WidgetActionTemplate
 {
     string widgetName = "";
     bool isModifier = false;
-    vector<ActionsForModiferTemplate*> actionsForModifiersTemplates;
+    vector<ActionBundleTemplate*> actionBundleTemplates;
     
     WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
 };
@@ -596,13 +614,16 @@ private:
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     
-    WidgetActionBroker* currentWidgetActionBroker_ = nullptr;
-    WidgetActionBroker* defaultWidgetActionBroker_ = nullptr;
+    WidgetActionBroker currentWidgetActionBroker_;
+    WidgetActionBroker defaultWidgetActionBroker_;
 
     void LogInput(double value);
 
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) { }
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this, nullptr)), defaultWidgetActionBroker_(WidgetActionBroker(this, nullptr))
+    {
+    }
+    
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
@@ -626,7 +647,7 @@ public:
     void Clear();
     void ForceClear();
    
-    void Activate(WidgetActionBroker* currentWidgetActionBroker)
+    void Activate(WidgetActionBroker currentWidgetActionBroker)
     {
         currentWidgetActionBroker_ = currentWidgetActionBroker;
     }

@@ -297,12 +297,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
 
                         for(auto [modifier, actions] : modifierActions)
                         {
-                            ActionsForModiferTemplate* modifierTemplate = new ActionsForModiferTemplate(modifier);
+                            ActionBundleTemplate* modifierTemplate = new ActionBundleTemplate(modifier);
                             
                             for(auto action : actions)
                                 modifierTemplate->members.push_back(action);
                             
-                            widgetActionTemplate->actionsForModifiersTemplates.push_back(modifierTemplate);
+                            widgetActionTemplate->actionBundleTemplates.push_back(modifierTemplate);
                         }
                         
                         widgetActionTemplates.push_back(widgetActionTemplate);
@@ -1480,7 +1480,7 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ActionsForModifier* WidgetActionBroker::GetActionsForModifier()
+ActionBundle &WidgetActionBroker::GetActionBundle()
 {
     string modifier = "";
     
@@ -1489,31 +1489,32 @@ ActionsForModifier* WidgetActionBroker::GetActionsForModifier()
     
     string touchModifier = modifier;
     
-    Navigator* navigator = zone_->GetNavigator();
-    
-    if(navigator != nullptr)
+    if(zone_)
     {
-        if(navigator->GetIsFaderTouched())
-            touchModifier += "TrackTouch+";
+        Navigator* navigator = zone_->GetNavigator();
         
-        if(navigator->GetIsRotaryTouched())
-            touchModifier += "RotaryTouch+";
+        if(navigator != nullptr)
+        {
+            if(navigator->GetIsFaderTouched())
+                touchModifier += "TrackTouch+";
+            
+            if(navigator->GetIsRotaryTouched())
+                touchModifier += "RotaryTouch+";
+        }
     }
     
-    if(actionsForModifier_.count(touchModifier) > 0)
-        return actionsForModifier_[touchModifier];
-    else if(actionsForModifier_.count(modifier) > 0)
-        return actionsForModifier_[modifier];
-    else if(actionsForModifier_.count("") > 0)
-        return actionsForModifier_[""];
+    if(actionBundles_.count(touchModifier) > 0)
+        return actionBundles_[touchModifier];
+    else if(actionBundles_.count(modifier) > 0)
+        return actionBundles_[modifier];
     else
-        return nullptr;
+        return defaultBundle_;
 }
 
 void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
-    if(GetActionsForModifier() && zone_->GetNavigator() != nullptr && zone_->GetNavigator()->GetTrack() != nullptr)
-        GetActionsForModifier()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+    //if(GetActionsForModifier() && zone_->GetNavigator() != nullptr && zone_->GetNavigator()->GetTrack() != nullptr)
+        //GetActionsForModifier()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1544,12 +1545,12 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
             if(widgetActionTemplate->isModifier)
                 widget->SetIsModifier();
             
-            WidgetActionBroker* broker = new WidgetActionBroker(widget, zone);
+            WidgetActionBroker broker = WidgetActionBroker(widget, zone);
             
-            for(auto actionsForModifierTemplate : widgetActionTemplate->actionsForModifiersTemplates)
+            for(auto actionsForModifierTemplate : widgetActionTemplate->actionBundleTemplates)
             {
-                ActionsForModifier* actionsForModifier = new ActionsForModifier(actionsForModifierTemplate->modifier);
-                broker->AddActionsForModifer(actionsForModifier);
+                ActionBundle actionBundle = ActionBundle(actionsForModifierTemplate->modifier);
+                broker.AddActionBundle(actionBundle);
                 
                 for(auto member : actionsForModifierTemplate->members)
                 {
@@ -1561,7 +1562,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
 
                     member->SetProperties(context);
-                    actionsForModifier->AddActionContext(context);
+                    actionBundle.AddActionContext(context);
                 }
             }
             
@@ -1639,51 +1640,38 @@ void ActionTemplate::SetProperties(ActionContext &context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
-    if(currentWidgetActionBroker_ != nullptr)
-        currentWidgetActionBroker_->GetFormattedFXParamValue(buffer, bufferSize);
+    currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
 }
 
 void Widget::Deactivate()
 {
-    if(defaultWidgetActionBroker_ != nullptr)
-    {
-        if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_ != defaultWidgetActionBroker_)
-        {
-            // GAW TBD -- delete currentWidgetActionBroker_
-        }
-        
-        currentWidgetActionBroker_ = defaultWidgetActionBroker_;
-    }
+    currentWidgetActionBroker_ = defaultWidgetActionBroker_;
 }
 
 void Widget::RequestUpdate()
 {
-    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->RequestUpdate();
+    currentWidgetActionBroker_.GetActionBundle().RequestUpdate();
 }
 
 void Widget::DoAction(double value)
 {
     LogInput(value);
     
-    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoAction(value);
+    currentWidgetActionBroker_.GetActionBundle().DoAction(value);
 }
 
 void Widget::DoRelativeAction(double delta)
 {
     LogInput(delta);
-    
-    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(delta);
+
+    currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(delta);
 }
 
 void Widget::DoRelativeAction(int accelerationIndex, double delta)
 {
     LogInput(accelerationIndex);
-    
-    if(currentWidgetActionBroker_ != nullptr && currentWidgetActionBroker_->GetActionsForModifier() != nullptr)
-            currentWidgetActionBroker_->GetActionsForModifier()->DoRelativeAction(accelerationIndex, delta);
+
+    currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(accelerationIndex, delta);
 }
 
 void Widget::SilentSetValue(string displayText)
