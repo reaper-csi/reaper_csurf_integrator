@@ -14,7 +14,10 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual void RequestUpdate(ActionContext* context) override {  context->ClearWidget(); }
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        context->ClearWidget();
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,25 +46,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            double min, max = 0.0;
+            double currentValue = DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
+            
             if(context->GetShouldUseDisplayStyle())
-                context->UpdateWidgetValue(context->GetDisplayStyle(), GetCurrentValue(context));
+                context->UpdateWidgetValue(context->GetDisplayStyle(), currentValue);
             else
-                context->UpdateWidgetValue(GetCurrentValue(context));
+                context->UpdateWidgetValue(currentValue);
         }
         else
             context->ClearWidget();
-    }
-
-    double GetCurrentValue(ActionContext* context)
-    {
-        double min = 0.0;
-        double max = 0.0;
-        double retVal = 0.0;
-        
-        if(MediaTrack* track = context->GetTrack())
-            retVal = DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
-        
-        return retVal;
     }
 };
 
