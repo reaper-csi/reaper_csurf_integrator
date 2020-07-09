@@ -805,7 +805,6 @@ void Manager::InitActionsDictionary()
     actionsOld_["TrackPanLPercent"] =                   [](Widget* widget, Zone* zone, vector<string> params) { return new TrackPanLPercent(widget, zone, params); };
     actionsOld_["TrackPanRPercent"] =                   [](Widget* widget, Zone* zone, vector<string> params) { return new TrackPanRPercent(widget, zone, params); };
     actionsOld_["TogglePin"] =                          [](Widget* widget, Zone* zone, vector<string> params) { return new TogglePin(widget, zone, params); };
-    actionsOld_["FXNameDisplay"] =                      [](Widget* widget, Zone* zone, vector<string> params) { return new FXNameDisplay(widget, zone, params); };
     actionsOld_["TrackNameDisplay"] =                   [](Widget* widget, Zone* zone, vector<string> params) { return new TrackNameDisplay(widget, zone, params); };
     actionsOld_["TrackVolumeDisplay"] =                 [](Widget* widget, Zone* zone, vector<string> params) { return new TrackVolumeDisplay(widget, zone, params); };
     actionsOld_["TrackPanDisplay"] =                    [](Widget* widget, Zone* zone, vector<string> params) { return new TrackPanDisplay(widget, zone, params); };
@@ -894,7 +893,6 @@ void Manager::InitActionsDictionary()
     actions_["TrackPanLPercent"] =                  new TrackPanLPercent();
     actions_["TrackPanRPercent"] =                  new TrackPanRPercent();
     actions_["TogglePin"] =                         new TogglePin();
-    actions_["FXNameDisplay"] =                     new FXNameDisplay();
     actions_["TrackNameDisplay"] =                  new TrackNameDisplay();
     actions_["TrackVolumeDisplay"] =                new TrackVolumeDisplay();
     actions_["TrackPanDisplay"] =                   new TrackPanDisplay();
