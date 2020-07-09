@@ -154,7 +154,7 @@ public:
             context->UpdateWidgetValue(VAL2DB(vol));
         }
         else
-            ClearWidget();
+            context->ClearWidget();
     }
     
     void Do(ActionContext* context, double value) override
@@ -175,7 +175,7 @@ public:
         {
             double vol, pan = 0.0;
             DAW::GetTrackUIVolPan(track, &vol, &pan);
-            context->UpdateWidgetValue(GetIntParam(), panToNormalized(pan));
+            context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(pan));
         }
         else
             context->ClearWidget();
@@ -220,7 +220,7 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+            context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
         else
             context->ClearWidget();
     }
@@ -336,7 +336,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, GetZone()->GetSlotIndex(), &vol, &pan);
+            DAW::GetTrackSendUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
             context->UpdateWidgetValue(VAL2DB(vol));
         }
         else
@@ -393,7 +393,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             bool mute = false;
-            DAW::GetTrackSendUIMute(track, GetZone()->GetSlotIndex(), &mute);
+            DAW::GetTrackSendUIMute(track, context->GetSlotIndex(), &mute);
             context->UpdateWidgetValue(mute);
         }
         else
@@ -1346,7 +1346,7 @@ public:
         
         if(MediaTrack* track = context->GetTrack())
         {
-            if(DAW::TrackFX_GetNamedConfigParm(track, GetParamIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
+            if(DAW::TrackFX_GetNamedConfigParm(track, context->GetParamIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
                 context->UpdateWidgetValue(-atof(buffer)/20.0);
             else
                 context->UpdateWidgetValue(0.0);

@@ -235,14 +235,14 @@ class ToggleScrollLink : public Action
 public:
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(GetTrackNavigationManager()->GetScrollLink());
+        context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetScrollLink());
     }
     
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetTrackNavigationManager()->ToggleScrollLink(GetIntParam());
+        context->GetTrackNavigationManager()->ToggleScrollLink(context->GetIntParam());
     }
 };
 
@@ -312,7 +312,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        TheManager->GoToPage(GetStringParam());
+        TheManager->GoToPage(context->GetStringParam());
     }
 };
 
@@ -326,7 +326,7 @@ public:
         if(value == 0.0)
             return; // ignore button releases
         
-        context->GetSurface()->GoZone(GetStringParam());
+        context->GetSurface()->GoZone(context->GetStringParam());
     }
 };
 
