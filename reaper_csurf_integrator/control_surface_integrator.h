@@ -367,75 +367,6 @@ public:
             steppedValuesIndex_ = index;
         }
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* const widget_ = nullptr;
-    Zone* const zone_ = nullptr;
-    
-    double lastValue_ = 0.0;
-    string lastStringValue_ = "";
-    
-    int intParam_ = 0;
-    
-    string stringParam_ = "";
-    
-    int paramIndex_ = 0;
-    
-    string fxParamDisplayName_ = "";
-    
-    
-    
-    int commandId_ = 0;
-    string commandStr_ = "";
-    
-    
-    double rangeMinimum_ = 0.0;
-    double rangeMaximum_ = 1.0;
-    
-    vector<double> steppedValues_;
-    int steppedValuesIndex_ = 0;
-    
-    double deltaValue_ = 0.0;
-    vector<double> acceleratedDeltaValues_;
-    vector<int> acceleratedTickValues_;
-    int accumulatedIncTicks_ = 0;
-    int accumulatedDecTicks_ = 0;
-    
-    
-    bool supportsRelease_ = false;
-    bool isInverted_ = false;
-    bool shouldToggle_ = false;
-    double delayAmount_ = 0.0;
-    double delayStartTime_ = 0.0;
-    double deferredValue_ = 0.0;
-    
-    bool shouldUseDisplayStyle_ = false;
-    int displayStyle_ = 0;
-    
-    bool supportsRGB_ = false;
-    vector<rgb_color> RGBValues_;
-    int currentRGBIndex_ = 0;
-    
-    bool supportsTrackColor_ = false;
-    
-protected:
-    Action(Widget* widget, Zone* zone, vector<string> params);
-    
-    Widget* GetWidget() { return widget_; }
-    Zone* GetZone() { return zone_; }
-    
-    int GetIntParam() { return intParam_; }
-    string GetStringParam() { return stringParam_; }
-    string GetFxParamDisplayName() { return fxParamDisplayName_; }
-    int GetCommandId() { return commandId_; }
-    string GetCommandString() { return commandStr_; }
-    bool GetShouldUseDisplayStyle() { return shouldUseDisplayStyle_; }
-    int GetDisplayStyle() { return displayStyle_; }
     
     
     
@@ -448,104 +379,21 @@ protected:
      // CycleTrackAutoMode and EuConCycleTrackAutoMode
      //////////////////////////////////////////////////
      */
-    
-    
-    
-    
-    
-    
 
     
     
     
-    void DoRangeBoundAction(double value);
-    void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
-    void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
-    
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
 public:
-    Action() {}
     virtual ~Action() {}
     
-    Page* GetPage();
-    ControlSurface* GetSurface();
-    TrackNavigationManager* GetTrackNavigationManager();
-    int GetParamIndex() { return paramIndex_; }
-    
-    virtual string GetAlias() { return ""; }
-    bool GetSupportsRGB() { return supportsRGB_; }
-    
-    void SetSupportsRelease() { supportsRelease_ = true; }
-    void SetIsInverted() { isInverted_ = true; }
-    void SetShouldToggle() { shouldToggle_ = true; }
-    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
-    
-    virtual void DoAction(double value);
-    virtual void DoRelativeAction(double value);
-    virtual void DoRelativeAction(int accelerationIndex, double value);
-    virtual double GetCurrentValue() { return 0.0; }
-    virtual double GetCurrentValue(ActionContext* context) { return 0.0; }
-
-    
-    
-    
-    virtual void RequestUpdate();
-    virtual void Do(double value) {}
-
-    
-    virtual void RequestUpdate(ActionContext* context);
+    virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
-
-    
-    void ClearWidget();
-    void UpdateWidgetValue(double value);
-    void UpdateWidgetValue(int param, double value);
-    void UpdateWidgetValue(string value);
-    
-    void PerformDeferredActions()
-    {
-        if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
-        {
-            double savedDelayAmount = delayAmount_;
-            delayAmount_ = 0.0;
-            DoAction(deferredValue_);
-            delayAmount_ = savedDelayAmount;
-            delayStartTime_ = 0.0;
-            deferredValue_ = 0.0;
-        }
-    }
-    
-    void SetCurrentRGB(rgb_color newColor)
-    {
-        supportsRGB_ = true;
-        RGBValues_[currentRGBIndex_] = newColor;
-    }
-    
-    rgb_color GetCurrentRGB()
-    {
-        rgb_color blankColor;
-        
-        if(RGBValues_.size() > 0 && currentRGBIndex_ < RGBValues_.size())
-            return RGBValues_[currentRGBIndex_];
-        else return blankColor;
-    }
-    
-    void SetSteppedValueIndex(double value)
-    {
-        if(steppedValues_.size() > 0)
-        {
-            int index = 0;
-            double delta = 100000000.0;
-            
-            for(int i = 0; i < steppedValues_.size(); i++)
-                if(abs(steppedValues_[i] - value) < delta)
-                {
-                    delta = abs(steppedValues_[i] - value);
-                    index = i;
-                }
-            
-            steppedValuesIndex_ = index;
-        }
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

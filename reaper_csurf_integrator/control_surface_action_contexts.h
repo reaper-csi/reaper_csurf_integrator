@@ -49,10 +49,10 @@ public:
                 context->UpdateWidgetValue(GetCurrentValue(context));
         }
         else
-            ClearWidget();
+            context->ClearWidget();
     }
 
-    virtual double GetCurrentValue(ActionContext* context) override
+    double GetCurrentValue(ActionContext* context)
     {
         double min = 0.0;
         double max = 0.0;
