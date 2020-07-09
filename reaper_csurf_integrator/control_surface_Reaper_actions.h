@@ -19,22 +19,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), value);
     }
-
-    
-    
-    
-    
-    FXParam() {}
-    FXParam(Widget* widget, Zone* zone, vector<string> params) : FXAction(widget, zone, params) {}
-
-    virtual void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), value);
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,32 +40,6 @@ public:
             DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), value);
         }
     }
-    
-    
-    
-    
-    
-
-    FXParamRelative() {}
-    FXParamRelative(Widget* widget, Zone* zone, vector<string> params) : FXAction(widget, zone, params) {}
-
-    virtual void Do(double relativeValue) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double min, max = 0;
-            double value = DAW::TrackFX_GetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), &min, &max);
-            value +=  relativeValue;
-            
-            if(value < min) value = min;
-            if(value > max) value = max;
-            
-            DAW::TrackFX_SetParam(track, GetZone()->GetSlotIndex(), GetParamIndex(), value);
-        }
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,50 +76,6 @@ public:
             if(MediaTrack* track = context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
                 DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-        
-        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-        {
-            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
-            {
-                double min = 0.0;
-                double max = 0.0;
-                double value = DAW::TrackFX_GetParam(track, fxSlotNum, fxParamNum, &min, &max);
-
-                UpdateWidgetValue(value);
-            }
-        }
-    }
-    
-    FocusedFXParam() {}
-    FocusedFXParam(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-
-        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
-                DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,36 +100,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            UpdateWidgetValue(volToNormalized(vol));
-        }
-        else
-            ClearWidget();
-    }
-    
-    TrackVolume() {}
-    TrackVolume(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,31 +119,6 @@ public:
                 DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
         }
     }
-
-    
-    
-    
-    
-    
-    SoftTakeover7BitTrackVolume() {}
-    SoftTakeover7BitTrackVolume(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double trackVolume, trackPan = 0.0;
-            DAW::GetTrackUIVolPan(track, &trackVolume, &trackPan);
-            trackVolume = volToNormalized(trackVolume);
-            
-            if( fabs(value - trackVolume) < 0.025) // GAW -- Magic number -- ne touche pas
-                DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
-        }
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,31 +138,6 @@ public:
                 DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
         }
     }
-
-    
-    
-    
-    
-    
-    
-    SoftTakeover14BitTrackVolume() {}
-    SoftTakeover14BitTrackVolume(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double trackVolume, trackPan = 0.0;
-            DAW::GetTrackUIVolPan(track, &trackVolume, &trackPan);
-            trackVolume = volToNormalized(trackVolume);
-            
-            if( fabs(value - trackVolume) < 0.0025) // GAW -- Magic number -- ne touche pas
-                DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(value), false), NULL);
-        }
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,36 +162,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            UpdateWidgetValue(VAL2DB(vol));
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackVolumeDB() {}
-    TrackVolumeDB(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)  {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -382,38 +186,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            UpdateWidgetValue(GetIntParam(), panToNormalized(pan));
-        }
-        else
-            ClearWidget();
-
-    }
-    
-    TrackPan() {}
-    TrackPan(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -438,36 +210,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
     }
-
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            UpdateWidgetValue(pan * 100.0);
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackPanPercent() {}
-    TrackPanPercent(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params)  {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
-    }
-    
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -488,34 +230,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
-        else
-            ClearWidget();
-    }
-    
-
-    TrackPanWidth() {}
-    TrackPanWidth(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -531,39 +245,11 @@ public:
             context->ClearWidget();
     }
     
-    
     void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_OnWidthChange(track, value / 100.0, false);
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
-        else
-            ClearWidget();
-    }
-    
-
-    TrackPanWidthPercent() {}
-    TrackPanWidthPercent(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            DAW::CSurf_OnWidthChange(track, value / 100.0, false);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -587,36 +273,6 @@ public:
             DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL") * 100.0);
-        else
-            ClearWidget();
-    }
-    
-
-    TrackPanLPercent() {}
-    TrackPanLPercent(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double panFromPercent = value / 100.0;
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -640,36 +296,6 @@ public:
             DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR") * 100.0);
-        else
-            ClearWidget();
-    }
-    
-
-    TrackPanRPercent() {}
-    TrackPanRPercent(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double panFromPercent = value / 100.0;
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -698,41 +324,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "D_VOL", &volume);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, GetZone()->GetSlotIndex(), &vol, &pan);
-            UpdateWidgetValue(volToNormalized(vol));
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackSendVolume() {}
-    TrackSendVolume(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, GetZone()->GetSlotIndex(), normalizedToVol(value), false);
-            
-            DAW::GetSetTrackSendInfo(GetZone()->GetNavigator()->GetTrack(), 0, GetZone()->GetSlotIndex(), "D_VOL", &volume);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -762,42 +353,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "D_VOL", &volume);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, GetZone()->GetSlotIndex(), &vol, &pan);
-            UpdateWidgetValue(VAL2DB(vol));
-        }
-        else
-            ClearWidget();
-
-    }
-    
-
-    TrackSendVolumeDB() {}
-    TrackSendVolumeDB(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, GetZone()->GetSlotIndex(), DB2VAL(value), false);
-            
-            DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "D_VOL", &volume);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -826,41 +381,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "D_PAN", &pan);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, GetZone()->GetSlotIndex(), &vol, &pan);
-            UpdateWidgetValue(panToNormalized(pan));
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackSendPan() {}
-    TrackSendPan(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double pan = DAW::CSurf_OnSendPanChange(track, GetZone()->GetSlotIndex(), normalizedToPan(value), false);
-            
-            DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "D_PAN", &pan);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -892,44 +412,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "B_MUTE", &isMuted);
         }
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool mute = false;
-            DAW::GetTrackSendUIMute(track, GetZone()->GetSlotIndex(), &mute);
-            UpdateWidgetValue(mute);
-        }
-        else
-            ClearWidget();
-
-    }
-
-    TrackSendMute() {}
-    TrackSendMute(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "B_MUTE");
-            
-            DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "B_MUTE", &isMuted);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -956,39 +438,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "B_PHASE", &reversed);
         }
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "B_PHASE"));
-        else
-            ClearWidget();
-    }
-    
-
-    TrackSendInvertPolarity() {}
-    TrackSendInvertPolarity(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "B_PHASE");
-            
-            DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "B_PHASE", &reversed);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1025,50 +474,6 @@ public:
             DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "I_SENDMODE", &mode);
         }
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            if(DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "I_SENDMODE") == 0)
-                UpdateWidgetValue(0);
-            else
-                UpdateWidgetValue(1);
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackSendPrePost() {}
-    TrackSendPrePost(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            int mode = DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "I_SENDMODE");
-            
-            if(mode == 0)
-                mode = 3; // switch to post FX
-            else
-                mode = 0; // switch to post fader
-            
-            DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "I_SENDMODE", &mode);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1083,27 +488,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    FXParamNameDisplay() {}
-    FXParamNameDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(GetFxParamDisplayName());
-        else
-             ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1122,31 +506,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    FXParamValueDisplay() {}
-    FXParamValueDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    virtual void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            char fxParamValue[128];
-            DAW::TrackFX_GetFormattedParamValue(track, GetZone()->GetSlotIndex(), GetParamIndex(), fxParamValue, sizeof(fxParamValue));
-            UpdateWidgetValue(string(fxParamValue));
-        }
-        else
-             ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1172,38 +531,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    FocusedFXParamNameDisplay() {}
-    FocusedFXParamNameDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    virtual void RequestUpdate() override
-    {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-        
-        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-        {
-            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
-            {
-                char fxParamName[128];
-                DAW::TrackFX_GetParamName(track, fxSlotNum, fxParamNum, fxParamName, sizeof(fxParamName));
-                UpdateWidgetValue(string(fxParamName));
-            }
-        }
-        else
-             ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1229,37 +556,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    FocusedFXParamValueDisplay() {}
-    FocusedFXParamValueDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    virtual void RequestUpdate() override
-    {
-        int trackNum = 0;
-        int fxSlotNum = 0;
-        int fxParamNum = 0;
-        
-        if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-        {
-            if(MediaTrack* track = GetTrackNavigationManager()->GetTrackFromId(trackNum))
-            {
-                char fxParamValue[128];
-                DAW::TrackFX_GetFormattedParamValue(track, fxSlotNum, fxParamNum, fxParamValue, sizeof(fxParamValue));
-                UpdateWidgetValue(string(fxParamValue));
-           }
-        }
-        else
-             ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1280,34 +576,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            string sendTrackName = "";
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, GetZone()->GetSlotIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
-                sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
-            UpdateWidgetValue(sendTrackName);
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackSendNameDisplay() {}
-    TrackSendNameDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1326,32 +594,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            char trackVolume[128];
-            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, GetZone()->GetSlotIndex(), "D_VOL")));
-            UpdateWidgetValue(string(trackVolume));
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackSendVolumeDisplay() {}
-    TrackSendVolumeDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1363,23 +605,6 @@ public:
     {
         context->UpdateWidgetValue(context->GetStringParam());
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetStringParam());
-    }
-    
-
-    FixedTextDisplay() {}
-    FixedTextDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1391,24 +616,6 @@ public:
     {
         context->UpdateWidgetValue(0);
     }
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(0);
-    }
-    
-
-    FixedRGBColourDisplay() {}
-    FixedRGBColourDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1439,43 +646,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            char buf[BUFSZ];
-
-            if(GetSurface()->GetIsEuConFXAreaFocused())
-            {
-                if(track == GetTrackNavigationManager()->GetSelectedTrack())
-                    DAW::GetTrackName(track, buf, sizeof(buf));
-                else
-                    buf[0] = 0;
-            }
-            else
-            {
-                DAW::GetTrackName(track, buf, sizeof(buf));
-            }
-            
-            UpdateWidgetValue(string(buf));
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackNameDisplay() {}
-    TrackNameDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1494,34 +664,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            char trackVolume[128];
-            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
-            UpdateWidgetValue(string(trackVolume));
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackVolumeDisplay() {}
-    TrackVolumeDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1579,74 +721,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool left = false;
-            
-            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
-            
-            if(panVal < 0)
-            {
-                left = true;
-                panVal = -panVal;
-            }
-            
-            int panIntVal = int(panVal * 100.0);
-            string trackPan = "";
-            
-            if(left)
-            {
-                if(panIntVal == 100)
-                    trackPan += "<";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += "< ";
-                else
-                    trackPan += "<  ";
-                
-                trackPan += to_string(panIntVal);
-            }
-            else
-            {
-                trackPan += "   ";
-                
-                trackPan += to_string(panIntVal);
-                
-                if(panIntVal == 100)
-                    trackPan += ">";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += " >";
-                else
-                    trackPan += "  >";
-            }
-            
-            if(panIntVal == 0)
-                trackPan = "  <C>  ";
-            
-            UpdateWidgetValue(string(trackPan));
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackPanDisplay() {}
-    TrackPanDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1684,53 +758,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool reversed = false;
-            
-            double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
-            
-            if(widthVal < 0)
-            {
-                reversed = true;
-                widthVal = -widthVal;
-            }
-            
-            int widthIntVal = int(widthVal * 100.0);
-            string trackPanWidth = "";
-            
-            if(reversed)
-                trackPanWidth += "Rev ";
-            
-            trackPanWidth += to_string(widthIntVal);
-            
-            if(widthIntVal == 0)
-                trackPanWidth = " <Mno> ";
-            
-            UpdateWidgetValue(string(trackPanWidth));
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackPanWidthDisplay() {}
-    TrackPanWidthDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1744,25 +771,6 @@ public:
         
         DAW::CSurf_OnRew(1);
     }
-
-    
-    
-    
-    
-    Rewind() { }
-    Rewind(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::CSurf_OnRew(1);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1776,26 +784,6 @@ public:
         
         DAW::CSurf_OnFwd(1);
     }
-
-    
-    
-    
-    
-    
-    FastForward() { }
-    FastForward(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::CSurf_OnFwd(1);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1818,35 +806,6 @@ public:
         
         DAW::CSurf_OnPlay();
     }
-
-    
-    
-    
-    
-    
-    Play() { }
-    Play(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void RequestUpdate() override
-    {
-        int playState = DAW::GetPlayState();
-        if(playState == 1 || playState == 2 || playState == 5 || playState == 6) // playing or paused or recording or paused whilst recording
-            playState = 1;
-        else playState = 0;
-        UpdateWidgetValue(playState);
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::CSurf_OnPlay();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1870,35 +829,6 @@ public:
         
         DAW::CSurf_OnStop();
     }
-
-    
-    
-    
-    
-    
-    Stop() { }
-    Stop(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void RequestUpdate() override
-    {
-        int stopState = DAW::GetPlayState();
-        if(stopState == 0 || stopState == 2 || stopState == 6) // stopped or paused or paused whilst recording
-            stopState = 1;
-        else stopState = 0;
-        
-        UpdateWidgetValue(stopState);
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::CSurf_OnStop();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1922,36 +852,6 @@ public:
         
         DAW::CSurf_OnRecord();
     }
-
-    
-    
-    
-    
-    
-    Record() { }
-    Record(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void RequestUpdate() override
-    {
-        int recordState = DAW::GetPlayState();
-        if(recordState == 5 || recordState == 6) // recording or paused whilst recording
-            recordState = 1;
-        else recordState = 0;
-        
-        UpdateWidgetValue(recordState);
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::CSurf_OnRecord();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1966,25 +866,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             context->GetTrackNavigationManager()->ToggleVCASpill(track);
     }
-
-    
-    
-    
-    
-    
-    TrackToggleVCASpill() {}
-    TrackToggleVCASpill(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            GetTrackNavigationManager()->ToggleVCASpill(track);
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2010,37 +891,6 @@ public:
             context->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            ClearWidget();
-    }
-    
-    
-    TrackSelect() {}
-    TrackSelect(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            DAW::CSurf_SetSurfaceSelected(track, DAW::CSurf_OnSelectedChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SELECTED")), NULL);
-            GetPage()->OnTrackSelectionBySurface(track);
-        }
-    }
-
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2066,41 +916,6 @@ public:
             context->GetPage()->OnTrackSelectionBySurface(track);
         }
     }
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            ClearWidget();
-    }
-    
-    
-    TrackUniqueSelect() {}
-    TrackUniqueSelect(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            DAW::SetOnlyTrackSelected(track);
-            GetPage()->OnTrackSelectionBySurface(track);
-        }
-    }
-
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2165,78 +980,6 @@ public:
         if(lowestTrack != nullptr)
             context->GetPage()->OnTrackSelectionBySurface(lowestTrack);
     }
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"));
-        else
-            ClearWidget();
-    }
-    
-    
-    TrackRangeSelect() {}
-    TrackRangeSelect(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    virtual void Do(double value) override
-    {
-        // GAW TBD  fix highest track bug
-        
-        if(value == 0.0) return; // ignore button releases
-        
-        int currentlySelectedCount = 0;
-        int selectedTrackIndex = 0;
-        int trackIndex = 0;
-        
-        
-        for(int i = 1; i <= GetTrackNavigationManager()->GetNumTracks(); i++)
-        {
-            MediaTrack* currentTrack = GetTrackNavigationManager()->GetTrackFromId(i);
-            
-            if(currentTrack == nullptr)
-                continue;
-            
-            if(currentTrack == GetZone()->GetNavigator()->GetTrack())
-                trackIndex = i;
-            
-            if(DAW::GetMediaTrackInfo_Value(currentTrack, "I_SELECTED"))
-            {
-                selectedTrackIndex = i;
-                currentlySelectedCount++;
-            }
-        }
-        
-        if(currentlySelectedCount != 1)
-            return;
-        
-        int lowerBound = trackIndex < selectedTrackIndex ? trackIndex : selectedTrackIndex;
-        int upperBound = trackIndex > selectedTrackIndex ? trackIndex : selectedTrackIndex;
-        
-        for(int i = lowerBound; i <= upperBound; i++)
-        {
-            MediaTrack* currentTrack = GetTrackNavigationManager()->GetTrackFromId(i);
-            
-            if(currentTrack == nullptr)
-                continue;
-            
-            DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
-        }
-        
-        MediaTrack* lowestTrack = GetTrackNavigationManager()->GetTrackFromId(lowerBound);
-        
-        if(lowestTrack != nullptr)
-            GetPage()->OnTrackSelectionBySurface(lowestTrack);
-    }
-
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2261,38 +1004,6 @@ public:
             DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
         }
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "I_RECARM"));
-        else
-            ClearWidget();
-    }
-    
-
-    TrackRecordArm() {}
-    TrackRecordArm(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            DAW::CSurf_SetSurfaceRecArm(track, DAW::CSurf_OnRecArmChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_RECARM")), NULL);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2323,50 +1034,6 @@ public:
             DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! mute), NULL);
         }
     }
-
-    
-    
-    
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool mute = false;
-            DAW::GetTrackUIMute(track, &mute);
-            UpdateWidgetValue(mute);
-        }
-        else
-            ClearWidget();
-    }
-    
-
-    TrackMute() {}
-    TrackMute(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            bool mute = false;
-            DAW::GetTrackUIMute(track, &mute);
-            DAW::CSurf_SetSurfaceMute(track, DAW::CSurf_OnMuteChange(track, ! mute), NULL);
-        }
-    }
-    
-    
-    
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2391,38 +1058,6 @@ public:
             DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
         }
     }
-
-    
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "I_SOLO"));
-        else
-            ClearWidget();
-    }
-    
-
-    TrackSolo() {}
-    TrackSolo(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            DAW::CSurf_SetSurfaceSolo(track, DAW::CSurf_OnSoloChange(track, ! DAW::GetMediaTrackInfo_Value(track, "I_SOLO")), NULL);
-        }
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2434,24 +1069,6 @@ public:
     {
         context->GetZone()->GetNavigator()->SetIsFaderTouched(value == 0 ? false : true);
     }
-
-    
-    
-    
-    
-    
-    SetFaderTouch() {}
-    SetFaderTouch(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        GetZone()->GetNavigator()->SetIsFaderTouched(value == 0 ? false : true);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2463,21 +1080,6 @@ public:
     {
         context->GetZone()->GetNavigator()->SetIsRotaryTouched(value == 0 ? false : true);
     }
-
-    
-    
-    
-    
-    SetRotaryTouch() {}
-    SetRotaryTouch(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        GetZone()->GetNavigator()->SetIsRotaryTouched(value == 0 ? false : true);
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2496,30 +1098,6 @@ public:
         
         DAW::SetGlobalAutomationOverride(context->GetIntParam());
     }
-    
-    
-    
-    
-    
-    GlobalAutoMode() {}
-    GlobalAutoMode(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(DAW::GetGlobalAutomationOverride());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::SetGlobalAutomationOverride(GetIntParam());
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2544,39 +1122,6 @@ public:
         
         DAW::SetAutomationMode(context->GetIntParam(), true);
     }
-
-    
-    
-    
-    
-    
-    
-    TrackAutoMode() {}
-    TrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
-        {
-            if(GetIntParam() == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
-                UpdateWidgetValue(1.0);
-            else
-                UpdateWidgetValue(0.0);
-        }
-    }
-    
-    virtual void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::SetAutomationMode(GetIntParam(), true);
-    }
-    
-    
-    
-    
-    
-    
 };
 
 
@@ -2706,23 +1251,6 @@ public:
     {
         context->UpdateWidgetValue(0);
     }
-
-    
-    
-    
-    
-    TimeDisplay() { }
-    TimeDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(0);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2734,21 +1262,6 @@ public:
     {
         context->GetSurface()->UpdateTimeDisplay();
     }
-
-    
-    
-    
-    
-    EuConTimeDisplay() { }
-    EuConTimeDisplay(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) { }
-
-    void RequestUpdate() override
-    {
-        GetSurface()->UpdateTimeDisplay();
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2767,31 +1280,6 @@ public:
         
         DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
     }
-
-    
-    
-    
-    
-    
-    CycleTimeline() {}
-    CycleTimeline(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(DAW::GetSetRepeatEx(nullptr, -1));
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        DAW::GetSetRepeatEx(nullptr, ! DAW::GetSetRepeatEx(nullptr, -1));
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2806,27 +1294,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    TrackOutputMeter() {}
-    TrackOutputMeter(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            UpdateWidgetValue(volToNormalized(DAW::Track_GetPeakInfo(track, GetIntParam())));
-        else
-            ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2845,32 +1312,6 @@ public:
         else
             context->ClearWidget();
     }
-    
-    
-
-    
-    
-    
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double lrVol = (DAW::Track_GetPeakInfo(track, 0) + DAW::Track_GetPeakInfo(track, 1)) / 2.0;
-            
-            UpdateWidgetValue(volToNormalized(lrVol));
-        }
-        else
-            ClearWidget();
-    }
-
-
-    TrackOutputMeterAverageLR() {}
-    TrackOutputMeterAverageLR(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2892,30 +1333,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    TrackOutputMeterMaxPeakLR() {}
-    TrackOutputMeterMaxPeakLR(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-    
-    void RequestUpdate() override
-    {
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            double lVol = DAW::Track_GetPeakInfo(track, 0);
-            double rVol = DAW::Track_GetPeakInfo(track, 1);
-            
-            double lrVol =  lVol > rVol ? lVol : rVol;
-            
-            UpdateWidgetValue(volToNormalized(lrVol));
-        }
-        else
-            ClearWidget();
-    }
-
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2937,35 +1354,6 @@ public:
         else
             context->ClearWidget();
     }
-
-    
-    
-    
-    
-    
-    
-    FXGainReductionMeter() {}
-    FXGainReductionMeter(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        char buffer[BUFSZ];
-        
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-        {
-            if(DAW::TrackFX_GetNamedConfigParm(track, GetParamIndex(), "GainReduction_dB", buffer, sizeof(buffer)))
-                UpdateWidgetValue(-atof(buffer)/20.0);
-            else
-                UpdateWidgetValue(0.0);
-        }
-        else
-             ClearWidget();
-    }
-    
-    
-    
-    
-    
 };
 
 #endif /* control_surface_Reaper_actions_h */
