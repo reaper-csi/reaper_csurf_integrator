@@ -21,24 +21,6 @@ public:
         if(MediaTrack* track = context->GetTrack())
             context->GetTrackNavigationManager()->TogglePin(track);
     }
-
-
-    
-    TogglePin() {}
-    TogglePin(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        if(MediaTrack* track = GetZone()->GetNavigator()->GetTrack())
-            GetTrackNavigationManager()->TogglePin(track);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,22 +34,6 @@ public:
         
         context->GetPage()->ToggleEditMode();
     }
-
-    
-    
-    ToggleLearnMode() {}
-    ToggleLearnMode(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        GetPage()->ToggleEditMode();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,27 +52,6 @@ public:
         
         context->GetSurface()->ToggleMapSends();
     }
-
-    
-    
-    ToggleMapSelectedTrackSends() {}
-    ToggleMapSelectedTrackSends(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetSurface()->GetShouldMapSends());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->ToggleMapSends();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -125,30 +70,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFX();
     }
-
-    
-    
-    
-    
-    ToggleMapSelectedTrackFX() {}
-    ToggleMapSelectedTrackFX(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFX();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,29 +88,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
     }
-
-    
-    
-    
-    
-    ToggleMapSelectedTrackFXMenu() {}
-    ToggleMapSelectedTrackFXMenu(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,30 +106,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->ToggleMapFocusedFX();
     }
-
-    
-    
-    
-    
-    ToggleMapFocusedFX() {}
-    ToggleMapFocusedFX(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->ToggleMapFocusedFX();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -248,27 +122,6 @@ public:
         if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
             context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, fxSlot);
     }
-
-    
-    
-    
-    
-    GoFXSlot() {}
-    GoFXSlot(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        int fxSlot = GetIntParam() - 1 < 0 ? 0 : GetIntParam() - 1;
-        
-        if(MediaTrack* selectedTrack = GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, fxSlot);
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -283,24 +136,6 @@ public:
         // GAW TBD
         //context->GetSurface()->GetSendsActivationManager()->MapSelectedTrackSendsToWidgets(slotIndex_);
     }
-    
-    
-    
-    
-    MapSelectedTrackSendsToWidgets() {}
-    MapSelectedTrackSendsToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        // GAW TBD
-        //GetSurface()->GetSendsActivationManager()->MapSelectedTrackSendsToWidgets(slotIndex_);
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,23 +149,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
     }
-
-    
-    
-    
-    
-    MapSelectedTrackFXToWidgets() {}
-    MapSelectedTrackFXToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,23 +162,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToMenu();
     }
-
-    
-    
-    
-    
-    MapSelectedTrackFXToMenu() {}
-    MapSelectedTrackFXToMenu(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToMenu();
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -374,24 +175,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->MapFocusedFXToWidgets();
     }
-
-    
-    
-    
-    
-    MapFocusedFXToWidgets() {}
-    MapFocusedFXToWidgets(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-       GetSurface()->GetFXActivationManager()->MapFocusedFXToWidgets();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -425,45 +208,6 @@ public:
             DAW::SetOnlyTrackSelected(context->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
         }
     }
-
-    
-    
-    
-    SelectTrackRelative() {}
-    SelectTrackRelative(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        if(1 == DAW::CountSelectedTracks(nullptr))
-        {
-            int trackIndex = 0;
-            
-            for(int i = 0; i <= GetTrackNavigationManager()->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
-                {
-                    trackIndex = i;
-                    break;
-                }
-            
-            trackIndex += GetIntParam();
-            
-            if(trackIndex < 0)
-                trackIndex = 0;
-            
-            if(trackIndex > GetTrackNavigationManager()->GetNumTracks())
-                trackIndex = GetTrackNavigationManager()->GetNumTracks();
-            
-            DAW::SetOnlyTrackSelected(GetTrackNavigationManager()->GetTrackFromId(trackIndex));
-        }
-    }
-    
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -473,7 +217,7 @@ class SetShowFXWindows : public Action
 public:
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShowFXWindows());
+        context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShowFXWindows());
     }
     
     void Do(ActionContext* context, double value) override
@@ -482,30 +226,6 @@ public:
         
         context->GetSurface()->GetFXActivationManager()->ToggleShowFXWindows();
     }
-
-    
-    
-    
-    
-    SetShowFXWindows() {}
-    SetShowFXWindows(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetSurface()->GetFXActivationManager()->GetShowFXWindows());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetSurface()->GetFXActivationManager()->ToggleShowFXWindows();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,30 +244,6 @@ public:
         
         context->GetTrackNavigationManager()->ToggleScrollLink(GetIntParam());
     }
-
-    
-    
-    
-    
-    ToggleScrollLink() {}
-    ToggleScrollLink(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetTrackNavigationManager()->GetScrollLink());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        GetTrackNavigationManager()->ToggleScrollLink(GetIntParam());
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -561,24 +257,6 @@ public:
         
         context->GetTrackNavigationManager()->ForceScrollLink();
     }
-
-    
-    
-    
-    
-    ForceScrollLink() {}
-    ForceScrollLink(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        GetTrackNavigationManager()->ForceScrollLink();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -588,7 +266,7 @@ class ToggleVCAMode : public Action
 public:
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(GetTrackNavigationManager()->GetVCAMode());
+        context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetVCAMode());
     }
     
     void Do(ActionContext* context, double value) override
@@ -597,29 +275,6 @@ public:
         
         context->GetTrackNavigationManager()->ToggleVCAMode();
     }
-
-    
-    
-    
-    
-    ToggleVCAMode() {}
-    ToggleVCAMode(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetTrackNavigationManager()->GetVCAMode());
-    }
-    
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        GetTrackNavigationManager()->ToggleVCAMode();
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -633,24 +288,6 @@ public:
         
         TheManager->NextTimeDisplayMode();
     }
-
-    
-    
-    
-    CycleTimeDisplayModes() {}
-    CycleTimeDisplayModes(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        TheManager->NextTimeDisplayMode();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -664,25 +301,6 @@ public:
         
         TheManager->NextPage();
     }
-
-    
-    
-    
-    
-    GoNextPage() {}
-    GoNextPage(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        TheManager->NextPage();
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -696,24 +314,6 @@ public:
         
         TheManager->GoToPage(GetStringParam());
     }
-
-    
-    
-    
-    GoPage() {}
-    GoPage(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-
-        TheManager->GoToPage(GetStringParam());
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,23 +328,6 @@ public:
         
         context->GetSurface()->GoZone(GetStringParam());
     }
-
-    
-    
-    
-    GoZone() {}
-    GoZone(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0)
-            return; // ignore button releases
-
-        GetSurface()->GoZone(GetStringParam());
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -763,31 +346,6 @@ public:
         
         DAW::SoloAllTracks(0);
     }
-
-    
-    
-    
-    
-    
-    ClearAllSolo() {}
-    ClearAllSolo(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(DAW::AnyTrackSolo(nullptr));
-    }
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        DAW::SoloAllTracks(0);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -801,25 +359,6 @@ public:
         
         TheManager->AdjustTrackBank(context->GetPage(), context->GetIntParam());
     }
-
-    
-    
-    
-    
-    TrackBank() {}
-    TrackBank(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void Do(double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        TheManager->AdjustTrackBank(GetPage(), GetIntParam());
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -836,28 +375,6 @@ public:
     {
         context->GetPage()->SetShift(value);
     }
-
-    
-    
-    
-    
-    SetShift() {}
-    SetShift(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetPage()->GetShift());
-    }
-
-    void Do(double value) override
-    {
-        GetPage()->SetShift(value);
-    }
-    
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -874,27 +391,6 @@ public:
     {
         context->GetPage()->SetOption(value);
     }
-
-    
-    
-    
-    
-    
-    SetOption() {}
-    SetOption(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetPage()->GetOption());
-    }
-
-    void Do(double value) override
-    {
-        GetPage()->SetOption(value);
-    }
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -911,27 +407,6 @@ public:
     {
         context->GetPage()->SetControl(value);
     }
-
-    
-    
-    
-    
-    SetControl() {}
-    SetControl(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetPage()->GetControl());
-    }
-
-    void Do(double value) override
-    {
-        GetPage()->SetControl(value);
-    }
-    
-    
-    
-    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -948,28 +423,6 @@ public:
     {
         context->GetPage()->SetAlt(value);
     }
-
-    
-    
-    
-    
-    SetAlt() {}
-    SetAlt(Widget* widget, Zone* zone, vector<string> params) : Action(widget, zone, params) {}
-
-    void RequestUpdate() override
-    {
-        UpdateWidgetValue(GetPage()->GetAlt());
-    }
-
-    void Do(double value) override
-    {
-        GetPage()->SetAlt(value);
-    }
-    
-    
-    
-    
-    
 };
 
 #endif /* control_surface_manager_actions_h */

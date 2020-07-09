@@ -554,7 +554,7 @@ class ActionsForModifier
 {
 private:
     string const modifier_ = "";
-    vector<Action*> actions_;
+    vector<ActionContext> actionContexts_;
     
 public:
     ActionsForModifier(string modifier) : modifier_(modifier) {}
@@ -563,38 +563,38 @@ public:
         
     void RequestUpdate()
     {
-        if(actions_.size() > 0)
-            actions_[0]->RequestUpdate();
+        if(actionContexts_.size() > 0)
+            actionContexts_[0].RequestUpdate();
     }
    
     void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
     {
-        int paramIndex = actions_.size() > 0 ? actions_[0]->GetParamIndex() : 0;
+        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0].GetParamIndex() : 0;
         
         DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
     }
        
-    void AddAction(Action* action)
+    void AddActionContext(ActionContext context)
     {
-        actions_.push_back(action);
+        actionContexts_.push_back(context);
     }
     
     void DoAction(double value)
     {
-        for(auto action : actions_)
-            action->DoAction(value);
+        for(auto context : actionContexts_)
+            context.DoAction(value);
     }
     
     void DoRelativeAction(double delta)
     {
-        for(auto action : actions_)
-            action->DoRelativeAction(delta);
+        for(auto context : actionContexts_)
+            context.DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
-        for(auto action : actions_)
-            action->DoRelativeAction(accelerationIndex, delta);
+        for(auto context : actionContexts_)
+            context.DoRelativeAction(accelerationIndex, delta);
     }
 };
 
@@ -687,7 +687,7 @@ struct ActionTemplate
     
     ActionTemplate(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
-    void SetProperties(Action* action);
+    void SetProperties(ActionContext &context);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2070,8 +2070,6 @@ class Manager
 {
 private:
     CSurfIntegrator* const CSurfIntegrator_;
-    
-    map<string, function<Action*(Widget* widget, Zone* zone, vector<string>)>> actionsOld_;
 
     map<string, Action*> actions_;
 
@@ -2156,16 +2154,7 @@ public:
     int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
-
-    Action* GetAction(string actionName, Widget* widget, Zone* zone, vector<string> params)
-    {
-        if(actionsOld_.count(actionName) > 0)
-            return actionsOld_[actionName](widget, zone, params);
-        else
-            return actionsOld_["NoAction"](widget, zone, params);;
-    }
    
-  
     ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
@@ -2174,7 +2163,6 @@ public:
             return ActionContext(actions_["NoAction"], widget, zone, params);
     }
 
-    
     void OnTrackSelection(MediaTrack *track)
     {
         if(pages_.size() > 0)
