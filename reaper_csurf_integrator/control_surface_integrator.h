@@ -499,7 +499,6 @@ class Zone
 private:
     ControlSurface* const surface_ = nullptr;
     Navigator* const navigator_= nullptr;
-    vector<Zone*> const *activeZones_;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
@@ -509,7 +508,7 @@ private:
     vector<Widget*> widgets_;
 
 public:
-    Zone(ControlSurface* surface, Navigator* navigator, vector<Zone*> *activeZones, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), activeZones_(activeZones), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     
     ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
@@ -620,10 +619,7 @@ private:
     void LogInput(double value);
 
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this, nullptr)), defaultWidgetActionBroker_(WidgetActionBroker(this, nullptr))
-    {
-    }
-    
+    Widget(ControlSurface* surface, string name);    
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
@@ -944,12 +940,15 @@ protected:
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
     string const name_;
+    Zone* const defaultZone_ = nullptr;
+
     string zoneFolder_ = "";
     int numChannels_ = 0;
     int numSends_ = 0;
     int options_ = 0;
 
     map<int, Navigator*> navigators_;
+    
     
     vector<Widget*> widgets_;
     map<string, Widget*> widgetsByName_;
@@ -994,6 +993,9 @@ public:
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
+    Zone* GetDefaultZone() { return defaultZone_; }
+    
+    
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1029,7 +1031,7 @@ public:
         {
             if(zoneName == "Home")
             {
-                // GAW TDB, just deactivate all active Zones (including FXActivationManager) - "Home" is defalut
+                // GAW TDB, just deactivate all active Zones (including FXActivationManager) - "Home" is default
             }
             else
             {
@@ -1672,7 +1674,7 @@ public:
     bool GetAlt() { return isAlt_; }
 
     Navigator* GetDefaultNavigator() { return defaultNavigator_; }
-
+    
     void InitializeEuCon()
     {
         for(auto surface : surfaces_)
