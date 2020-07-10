@@ -1489,18 +1489,15 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
     
     string touchModifier = modifier;
     
-    if(zone_)
+    Navigator* navigator = zone_->GetNavigator();
+    
+    if(navigator != nullptr)
     {
-        Navigator* navigator = zone_->GetNavigator();
+        if(navigator->GetIsFaderTouched())
+            touchModifier += "TrackTouch+";
         
-        if(navigator != nullptr)
-        {
-            if(navigator->GetIsFaderTouched())
-                touchModifier += "TrackTouch+";
-            
-            if(navigator->GetIsRotaryTouched())
-                touchModifier += "RotaryTouch+";
-        }
+        if(navigator->GetIsRotaryTouched())
+            touchModifier += "RotaryTouch+";
     }
     
     if(actionBundles_.count(touchModifier) > 0)
@@ -1550,7 +1547,6 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
             for(auto actionsForModifierTemplate : widgetActionTemplate->actionBundleTemplates)
             {
                 ActionBundle actionBundle = ActionBundle(actionsForModifierTemplate->modifier);
-                broker.AddActionBundle(actionBundle);
                 
                 for(auto member : actionsForModifierTemplate->members)
                 {
@@ -1564,6 +1560,8 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     member->SetProperties(context);
                     actionBundle.AddActionContext(context);
                 }
+                
+                broker.AddActionBundle(actionBundle);
             }
             
             zone->AddWidget(widget);
@@ -1589,7 +1587,7 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
         
         surface->LoadingZone(newZoneName);
         
-        Zone* zone = new Zone(surface, navigators[i], activeZones, newZoneName, alias, sourceFilePath);
+        Zone* zone = new Zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
 
         ProcessWidgetActionTemplates(surface, zone, channelNumStr);
 
@@ -1607,7 +1605,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> *activeZones
     {
         surface->LoadingZone(name);
         
-        Zone* zone = new Zone(surface, navigators[0], activeZones, name, alias, sourceFilePath);
+        Zone* zone = new Zone(surface, navigators[0], name, alias, sourceFilePath);
         
         zone->SetSlotIndex(slotindex);
         
@@ -1638,6 +1636,8 @@ void ActionTemplate::SetProperties(ActionContext &context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this, GetSurface()->GetDefaultZone())), defaultWidgetActionBroker_(WidgetActionBroker(this, GetSurface()->GetDefaultZone())) {}
+
 void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
@@ -2048,9 +2048,8 @@ void FXActivationManager::MapFocusedFXToWidgets()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), options_(options)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), options_(options), defaultZone_(new Zone(this, GetPage()->GetDefaultNavigator(), "Default", "Default", ""))
 {
-    
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->AddNavigator();
 }
