@@ -1480,6 +1480,15 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget)
+{
+    zone_ = widget->GetSurface()->GetDefaultZone();
+    
+    vector<string> memberParams;
+   
+    defaultBundle_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
+}
+
 ActionBundle &WidgetActionBroker::GetActionBundle()
 {
     string modifier = "";
@@ -1510,8 +1519,8 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
 
 void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
-    //if(GetActionsForModifier() && zone_->GetNavigator() != nullptr && zone_->GetNavigator()->GetTrack() != nullptr)
-        //GetActionsForModifier()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+    if(zone_->GetNavigator()->GetTrack() != nullptr)
+        GetActionBundle().GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1636,8 +1645,6 @@ void ActionTemplate::SetProperties(ActionContext &context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this, GetSurface()->GetDefaultZone())), defaultWidgetActionBroker_(WidgetActionBroker(this, GetSurface()->GetDefaultZone())) {}
-
 void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
