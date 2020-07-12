@@ -606,8 +606,8 @@ struct ZoneTemplate
     
     void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr);
     
-    void  Activate(ControlSurface* surface, vector<Zone> &activeZones);
-    void  Activate(ControlSurface* surface, vector<Zone> &activeZones, int slotindex, bool shouldShowWindows);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -884,10 +884,10 @@ private:
     bool shouldMapSelectedTrackFX_ = false;
     bool shouldMapSelectedTrackFXMenus_ = false;
     bool shouldMapFocusedFX_ = false;
-    vector<Zone> activeSelectedTrackFXZones_;
-    vector<Zone> activeSelectedTrackFXMenuZones_;
-    vector<Zone> activeSelectedTrackFXMenuFXZones_;
-    vector<Zone> activeFocusedFXZones_;
+    vector<Zone*> activeSelectedTrackFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuZones_;
+    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
+    vector<Zone*> activeFocusedFXZones_;
     
     bool shouldShowFXWindows_ = false;
     
@@ -918,10 +918,10 @@ public:
         
         if(shouldShowFXWindows_ == true)
             for(auto zone : activeSelectedTrackFXZones_)
-                zone.OpenFXWindow();
+                zone->OpenFXWindow();
         else
             for(auto zone : activeSelectedTrackFXZones_)
-                zone.CloseFXWindow();
+                zone->CloseFXWindow();
     }
     
     void TrackFXListChanged()
@@ -960,7 +960,7 @@ protected:
     vector<Widget*> widgets_;
     map<string, Widget*> widgetsByName_;
 
-    vector<Zone> activeZones_;
+    vector<Zone*> activeZones_;
 
     bool shouldMapSends_ = false;
     vector<Zone*> activeSendZones_;
@@ -1023,7 +1023,7 @@ public:
     {
         if(zoneTemplates_.count("Home") > 0)
         {
-            vector<Zone> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
+            vector<Zone*> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
             
             zoneTemplates_["Home"]->Activate(this, dummyZones);
         

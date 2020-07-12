@@ -1579,7 +1579,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone> &activeZones)
+void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
@@ -1596,15 +1596,15 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone> &activeZones)
         
         surface->LoadingZone(newZoneName);
         
-        Zone zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
+        Zone* zone = new Zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
 
-        ProcessWidgetActionTemplates(surface, &zone, channelNumStr);
+        ProcessWidgetActionTemplates(surface, zone, channelNumStr);
 
         activeZones.push_back(zone);
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone> &activeZones, int slotIndex, bool shouldShowWindows)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowWindows)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
@@ -1614,18 +1614,18 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone> &activeZones,
     {
         surface->LoadingZone(name);
         
-        Zone zone(surface, navigators[0], name, alias, sourceFilePath);
+        Zone* zone = new Zone(surface, navigators[0], name, alias, sourceFilePath);
         
-        zone.SetSlotIndex(slotIndex);
+        zone->SetSlotIndex(slotIndex);
         
-        ProcessWidgetActionTemplates(surface, &zone, "");
+        ProcessWidgetActionTemplates(surface, zone, "");
         
         if(shouldShowWindows)
         {
             if(MediaTrack* track = navigators[0]->GetTrack())
             {
                 DAW::TrackFX_Show(track, slotIndex, 3);
-                zone.SetHwnd(DAW::TrackFX_GetFloatingWindow(track, slotIndex));
+                zone->SetHwnd(DAW::TrackFX_GetFloatingWindow(track, slotIndex));
             }
         }
 
@@ -1937,7 +1937,7 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
             //surface_->LoadingZone(zone->GetName());
-            zone.Deactivate();
+            zone->Deactivate();
         }
 
         activeSelectedTrackFXMenuZones_.clear();
@@ -1949,12 +1949,12 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
     for(auto zone : activeSelectedTrackFXMenuZones_)
-        zone.Deactivate();
+        zone->Deactivate();
     
     activeSelectedTrackFXMenuZones_.clear();
     
     for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        zone.Deactivate();
+        zone->Deactivate();
     
     activeSelectedTrackFXMenuFXZones_.clear();
     
@@ -1996,7 +1996,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
     if(shouldMapSelectedTrackFX_)
     {
        for(auto activeZone : activeSelectedTrackFXZones_)
-           activeZone.Deactivate();
+           activeZone->Deactivate();
         
         activeSelectedTrackFXZones_.clear();
         
@@ -2033,7 +2033,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     for(auto zone : activeFocusedFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone.Deactivate();
+        zone->Deactivate();
     }
     
     activeFocusedFXZones_.clear();
