@@ -601,8 +601,8 @@ struct ZoneTemplate
     
     void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr);
     
-    void  Activate(ControlSurface* surface, vector<Zone*> *activeZones);
-    void  Activate(ControlSurface* surface, vector<Zone*> *activeZones, int slotindex);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1020,7 +1020,7 @@ public:
         {
             vector<Zone*> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
             
-            zoneTemplates_["Home"]->Activate(this, &dummyZones);
+            zoneTemplates_["Home"]->Activate(this, dummyZones);
         
             for(auto widget : widgets_)
                 widget->MakeCurrentDefault();
@@ -1037,7 +1037,7 @@ public:
             }
             else
             {
-                zoneTemplates_[zoneName]->Activate(this, &activeZones_);
+                zoneTemplates_[zoneName]->Activate(this, activeZones_);
             }
         }
     }
