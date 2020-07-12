@@ -1579,7 +1579,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
+void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
@@ -1600,11 +1600,11 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> *activeZones)
 
         ProcessWidgetActionTemplates(surface, zone, channelNumStr);
 
-        activeZones->push_back(zone);
+        activeZones.push_back(zone);
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> *activeZones, int slotindex)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotindex)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
@@ -1620,7 +1620,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> *activeZones
         
         ProcessWidgetActionTemplates(surface, zone, "");
         
-        activeZones->push_back(zone);
+        activeZones.push_back(zone);
     }
 }
 
@@ -2007,7 +2007,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTr
     {
         if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
         {
-            zoneTemplate->Activate(surface_, &activeSelectedTrackFXZones_, fxSlot);
+            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot);
             
             if(shouldShowFXWindows_)
                 DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
