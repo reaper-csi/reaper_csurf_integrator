@@ -1528,9 +1528,9 @@ void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Deactivate()
 {
-    if(MediaTrack* track = navigator_->GetTrack())
-        DAW::TrackFX_Show(track, slotIndex_, 2);
-
+    if(hwnd_ != nullptr && IsWindow(hwnd_))
+        DestroyWindow(hwnd_);
+        
     for(auto widget : widgets_)
         widget->Deactivate();
     
@@ -1604,11 +1604,11 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotindex)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowWindows)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, slotindex);
+            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowWindows);
     
     if(navigators.size() == 1)
     {
@@ -1616,10 +1616,19 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         Zone* zone = new Zone(surface, navigators[0], name, alias, sourceFilePath);
         
-        zone->SetSlotIndex(slotindex);
+        zone->SetSlotIndex(slotIndex);
         
         ProcessWidgetActionTemplates(surface, zone, "");
         
+        if(shouldShowWindows)
+        {
+            if(MediaTrack* track = navigators[0]->GetTrack())
+            {
+                DAW::TrackFX_Show(track, slotIndex, 3);
+                zone->SetHwnd(DAW::TrackFX_GetFloatingWindow(track, slotIndex));
+            }
+        }
+
         activeZones.push_back(zone);
     }
 }
@@ -2006,12 +2015,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTr
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-        {
-            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot);
-            
-            if(shouldShowFXWindows_)
-                DAW::TrackFX_Show(selectedTrack, fxSlot, 3);
-        }
+            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, shouldShowFXWindows_);            
     }
 }
 

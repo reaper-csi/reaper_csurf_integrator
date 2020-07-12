@@ -504,8 +504,10 @@ private:
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-        
+    
     int slotIndex_ = 0;
+    
+    HWND hwnd_ = nullptr;
 
     vector<Widget*> widgets_;
 
@@ -520,7 +522,10 @@ public:
     
     void SetSlotIndex(int index) { slotIndex_ = index; }
     int GetSlotIndex() { return slotIndex_; }
-
+    
+    void SetHwnd(HWND hwnd) { hwnd_ = hwnd; }
+    HWND GetHwnd() { return hwnd_; }
+    
     void Deactivate();
     
     void OpenFXWindow()
@@ -602,7 +607,7 @@ struct ZoneTemplate
     void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr);
     
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
