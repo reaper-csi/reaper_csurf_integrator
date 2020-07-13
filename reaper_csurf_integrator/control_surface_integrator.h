@@ -473,12 +473,14 @@ public:
     WidgetActionBroker(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
     WidgetActionBroker(Widget* widget);
 
-    WidgetActionBroker& operator=(WidgetActionBroker &broker)
+    WidgetActionBroker& operator=(WidgetActionBroker &otherBroker)
     {
-        this->widget_ = broker.widget_;
-        this->zone_ = broker.zone_;
+        this->widget_ = otherBroker.widget_;
+        this->zone_ = otherBroker.zone_;
 
-        for(auto [key, actionBundle] : broker.actionBundles_)
+        actionBundles_.clear();
+        
+        for(auto [key, actionBundle] : otherBroker.actionBundles_)
             this->AddActionBundle(actionBundle);
         
         return *this;
