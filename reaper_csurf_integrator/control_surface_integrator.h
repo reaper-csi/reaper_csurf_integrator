@@ -412,6 +412,8 @@ public:
     {
         this->modifier_ = bundle.modifier_;
         
+        actionContexts_.clear();
+        
         for(auto context : bundle.actionContexts_)
             this->AddActionContext(context);
         
