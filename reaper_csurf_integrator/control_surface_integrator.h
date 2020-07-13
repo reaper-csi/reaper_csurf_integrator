@@ -1023,6 +1023,12 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
 
+    void Deactivate(Zone* zone)
+    {
+        zone->Deactivate();
+        delete zone;
+    }
+    
     void MakeHomeDefault()
     {
         if(zoneTemplates_.count("Home") > 0)

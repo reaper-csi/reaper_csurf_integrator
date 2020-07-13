@@ -1939,7 +1939,7 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
             //surface_->LoadingZone(zone->GetName());
-            zone->Deactivate();
+            surface_->Deactivate(zone);
         }
 
         activeSelectedTrackFXMenuZones_.clear();
@@ -1951,13 +1951,13 @@ void FXActivationManager::ToggleMapSelectedTrackFXMenu()
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
     for(auto zone : activeSelectedTrackFXMenuZones_)
-        zone->Deactivate();
-    
+        surface_->Deactivate(zone);
+
     activeSelectedTrackFXMenuZones_.clear();
     
     for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        zone->Deactivate();
-    
+        surface_->Deactivate(zone);
+
     activeSelectedTrackFXMenuFXZones_.clear();
     
     MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
@@ -1997,9 +1997,9 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
     if(shouldMapSelectedTrackFX_)
     {
-       for(auto activeZone : activeSelectedTrackFXZones_)
-           activeZone->Deactivate();
-        
+       for(auto zone : activeSelectedTrackFXZones_)
+           surface_->Deactivate(zone);
+
         activeSelectedTrackFXZones_.clear();
         
         if(MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
@@ -2035,7 +2035,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     for(auto zone : activeFocusedFXZones_)
     {
         surface_->LoadingZone("Home");
-        zone->Deactivate();
+        surface_->Deactivate(zone);
     }
     
     activeFocusedFXZones_.clear();
@@ -2103,8 +2103,8 @@ void ControlSurface::ToggleMapSends()
     if( ! shouldMapSends_)
     {
         for(auto zone : activeSendZones_)
-            zone->Deactivate();
-        
+            Deactivate(zone);
+
         activeSendZones_.clear();
     }
     
@@ -2114,8 +2114,8 @@ void ControlSurface::ToggleMapSends()
 void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
 {
     for(auto zone : activeSendZones_)
-        zone->Deactivate();
-    
+        Deactivate(zone);
+
     activeSendZones_.clear();
     
     MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
