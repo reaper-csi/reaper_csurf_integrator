@@ -1534,6 +1534,8 @@ void Zone::Deactivate()
     for(auto widget : widgets_)
         widget->Deactivate();
     
+    widgets_.clear();
+    
     // GAW TDB Leaving Zone - if needed
 }
 
