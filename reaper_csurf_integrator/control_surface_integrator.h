@@ -1070,7 +1070,7 @@ public:
         if(zoneTemplates_.count(zoneTemplate->name) > 0)
         {
             char buffer[250];
-            snprintf(buffer, sizeof(buffer), "There is already a Zone named: %s -- please check for duplicate zone defintions.\n", zoneTemplate->name.c_str());
+            snprintf(buffer, sizeof(buffer), "%s already has a Zone named: %s -- please check for duplicate zone defintions.\n", name_.c_str(), zoneTemplate->name.c_str());
             DAW::ShowConsoleMsg(buffer);
         }
         else
