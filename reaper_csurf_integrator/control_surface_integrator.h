@@ -1067,7 +1067,14 @@ public:
    
     void AddZoneTemplate(ZoneTemplate* zoneTemplate)
     {
-        zoneTemplates_[zoneTemplate->name] = zoneTemplate;
+        if(zoneTemplates_.count(zoneTemplate->name) > 0)
+        {
+            char buffer[250];
+            snprintf(buffer, sizeof(buffer), "There is already a Zone named: %s -- please check for duplicate zone defintions.\n", zoneTemplate->name.c_str());
+            DAW::ShowConsoleMsg(buffer);
+        }
+        else
+            zoneTemplates_[zoneTemplate->name] = zoneTemplate;
     }
 
     void AddZoneFileLine(string fileName, string line)
