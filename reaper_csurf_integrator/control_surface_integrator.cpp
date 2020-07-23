@@ -1510,6 +1510,8 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
         return actionBundles_[touchModifier];
     else if(actionBundles_.count(modifier) > 0)
         return actionBundles_[modifier];
+    else if(actionBundles_.count("") > 0)
+        return actionBundles_[""];
     else
         return defaultBundle_;
 }
