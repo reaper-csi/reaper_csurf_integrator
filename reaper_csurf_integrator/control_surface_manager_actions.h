@@ -133,8 +133,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        // GAW TBD
-        //context->GetSurface()->GetSendsActivationManager()->MapSelectedTrackSendsToWidgets(slotIndex_);
+        context->GetSurface()->MapSelectedTrackSendsToWidgets();
     }
 };
 

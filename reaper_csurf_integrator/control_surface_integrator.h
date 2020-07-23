@@ -451,8 +451,6 @@ public:
             context.DoRelativeAction(accelerationIndex, delta);
     }
     
-    
-    
     void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
     {
         int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0].GetParamIndex() : 0;
@@ -999,7 +997,7 @@ public:
     bool GetShouldMapSends() { return shouldMapSends_; }
     void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
     void ToggleMapSends();
-    void MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones);
+    void MapSelectedTrackSendsToWidgets();
     
     Navigator* GetNavigatorForChannel(int channelNum);
     

@@ -1245,10 +1245,7 @@ int ActionContext::GetSlotIndex()
 }
 
 void ActionContext::RequestUpdate()
-{
-    if(supportsRGB_)
-        widget_->UpdateRGBValue(RGBValues_[0].r, RGBValues_[0].g, RGBValues_[0].b);
-    
+{   
     action_->RequestUpdate(this);
 }
 
@@ -1266,7 +1263,7 @@ void ActionContext::UpdateWidgetValue(double value)
     lastValue_ = value;
     
     widget_->UpdateValue(value);
-    
+
     if(supportsRGB_)
     {
         currentRGBIndex_ = value == 0 ? 0 : 1;
@@ -1606,11 +1603,11 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowWindows)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowFXWindows)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowWindows);
+            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowFXWindows);
     
     if(navigators.size() == 1)
     {
@@ -1622,7 +1619,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         ProcessWidgetActionTemplates(surface, zone, "");
         
-        if(shouldShowWindows)
+        if(shouldShowFXWindows)
         {
             if(MediaTrack* track = navigators[0]->GetTrack())
             {
@@ -2111,7 +2108,7 @@ void ControlSurface::ToggleMapSends()
     GetPage()->OnTrackSelection();
 }
 
-void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
+void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
     for(auto zone : activeSendZones_)
         Deactivate(zone);
@@ -2129,8 +2126,20 @@ void ControlSurface::MapSelectedTrackSendsToWidgets(map<string, Zone*> &zones)
     {
         string zoneName = "Send" + to_string(i + 1);
         
-        if(shouldMapSends_ && zones.count(zoneName) > 0)
+        if(shouldMapSends_)
         {
+            /*
+            if(ZoneTemplate* zoneTemplate = GetZoneTemplate(zoneName))
+            {
+                if(i < numTrackSends && zoneTemplate->navigators.size() == 1)
+                    zoneTemplate->Activate(this, activeSendZones_, i, false);
+
+                
+            }
+*/
+            
+            
+            
             /*
              Zone* zone =  zones[zoneName];
              zone->SetIndex(i);
