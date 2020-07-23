@@ -129,6 +129,7 @@ public:
 
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
+    virtual int GetSendNum() { return 0; }
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() {}
     virtual void DecBias() {}
@@ -190,6 +191,24 @@ public:
     
     virtual string GetName() override { return "SelectedTrackNavigator"; }
     
+    virtual MediaTrack* GetTrack() override;
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendNavigator : public Navigator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int const sendNum_ = 0;
+    
+public:
+    SendNavigator(Page*  page, int sendNum) : Navigator(page), sendNum_(sendNum) {}
+    virtual ~SendNavigator() {}
+    
+    virtual string GetName() override { return "SendNavigator"; }
+    
+    virtual int GetSendNum() override { return sendNum_; }
+
     virtual MediaTrack* GetTrack() override;
 };
 
@@ -1418,8 +1437,6 @@ public:
     Navigator* GetDefaultNavigator() { return defaultNavigator_; }
 
     void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
-    
-    Navigator* AddNavigator();
     void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
@@ -1468,6 +1485,13 @@ public:
         }
     }
 
+    Navigator* AddNavigator()
+    {
+        int channelNum = navigators_.size();
+        navigators_.push_back(new TrackNavigator(page_, this, channelNum));
+        return navigators_[channelNum];
+    }
+    
     MediaTrack* GetTrackFromChannel(int channelNumber)
     {
         int trackNumber = channelNumber + trackOffset_;
@@ -1656,6 +1680,25 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SendNavigationManager
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    Page* const page_ = nullptr;
+    vector<Navigator*> navigators_;
+
+public:
+    SendNavigationManager(Page* page) : page_(page) {}
+    
+    Navigator* AddNavigator()
+    {
+        int sendNum = navigators_.size();
+        navigators_.push_back(new SendNavigator(page_, sendNum));
+        return navigators_[sendNum];
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1674,16 +1717,17 @@ private:
     double altPressedTime_ = 0;
 
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
-    
+    SendNavigationManager* const sendNavigationManager_ = nullptr;
+
     Navigator* defaultNavigator_ = nullptr;
     
 public:
-    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), defaultNavigator_(new Navigator(this)) { }
+    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), sendNavigationManager_(new SendNavigationManager(this)), defaultNavigator_(new Navigator(this)) { }
     
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
-    vector<ControlSurface*> &GetSurfaces() { return surfaces_; }
-    
+    SendNavigationManager* GetSendNavigationManager() { return sendNavigationManager_; }
+
     void OpenEditModeWindow();
     void ToggleEditMode();
     void InputReceived(Widget* widget, double value);
