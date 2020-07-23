@@ -1477,10 +1477,8 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget)
+WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget), zone_(widget->GetSurface()->GetDefaultZone())
 {
-    zone_ = widget->GetSurface()->GetDefaultZone();
-    
     vector<string> memberParams;
    
     defaultBundle_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
