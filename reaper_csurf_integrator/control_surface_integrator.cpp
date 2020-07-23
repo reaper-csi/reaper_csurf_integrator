@@ -319,8 +319,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     else if(navigatorName == "MasterTrackNavigator")
                         navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
                     else if(navigatorName == "TrackNavigator")
+                    {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
+                    }
+                    else if(navigatorName == "SendNavigator")
+                    {
+                        for(int i = 0; i < surface->GetNumSends(); i++)
+                            navigators.push_back(surface->GetPage()->GetSendNavigationManager()->AddNavigator());
+                    }
                     
                     surface->AddZoneTemplate(new ZoneTemplate(navigators, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
                     
@@ -987,6 +994,14 @@ MediaTrack* SelectedTrackNavigator::GetTrack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// SendNavigator
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+MediaTrack* SendNavigator::GetTrack()
+{
+    return page_->GetTrackNavigationManager()->GetSelectedTrack();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FocusedFXNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* FocusedFXNavigator::GetTrack()
@@ -1004,13 +1019,6 @@ MediaTrack* FocusedFXNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigationManager
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Navigator* TrackNavigationManager::AddNavigator()
-{
-    int channelNum = navigators_.size();
-    navigators_.push_back(new TrackNavigator(page_, this, channelNum));
-    return navigators_[channelNum];
-}
-
 void TrackNavigationManager::ForceScrollLink()
 {
     // Make sure selected track is visble on the control surface
@@ -3624,8 +3632,8 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             hasEdits = false;
             
-            for(auto surface : currentPage->GetSurfaces())
-                AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
+            //for(auto surface : currentPage->GetSurfaces())
+                //AddComboBoxEntry(hwndDlg, 0, surface->GetSourceFileName().c_str(), IDC_COMBO_SurfaceName);
             
             SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceName), CB_SETCURSEL, 0, 0);
 
@@ -4099,7 +4107,7 @@ static WDL_DLGRET dlgProcLearn(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                                 ClearSubZones();
                                 ClearActions();
                                 
-                                currentSurface = currentPage->GetSurfaces()[index];
+                               // currentSurface = currentPage->GetSurfaces()[index];
                                 
                                 for(auto widget : currentSurface->GetWidgets())
                                     SendDlgItemMessage(hwndDlg, IDC_LIST_WidgetNames, LB_ADDSTRING, 0, (LPARAM)widget->GetName().c_str());
