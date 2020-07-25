@@ -1252,6 +1252,11 @@ int ActionContext::GetSlotIndex()
     return zone_->GetSlotIndex();
 }
 
+int ActionContext::GetSendIndex()
+{
+    return zone_->GetNavigator()->GetSendNum();
+}
+
 void ActionContext::RequestUpdate()
 {   
     action_->RequestUpdate(this);
