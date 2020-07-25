@@ -393,7 +393,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             bool mute = false;
-            DAW::GetTrackSendUIMute(track, context->GetSlotIndex(), &mute);
+            DAW::GetTrackSendUIMute(track, context->GetSendIndex(), &mute);
             context->UpdateWidgetValue(mute);
         }
         else
@@ -407,9 +407,9 @@ public:
         
         if(MediaTrack* track = context->GetTrack())
         {
-            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "B_MUTE");
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, context->GetSendIndex(), "B_MUTE");
             
-            DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "B_MUTE", &isMuted);
+            DAW::GetSetTrackSendInfo(track, 0, context->GetSendIndex(), "B_MUTE", &isMuted);
         }
     }
 };

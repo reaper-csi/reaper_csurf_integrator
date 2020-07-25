@@ -289,6 +289,7 @@ public:
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
     int GetSlotIndex();
+    int GetSendIndex();
 
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
