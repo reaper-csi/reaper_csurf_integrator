@@ -335,7 +335,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     widgetActions.clear();
                 }
                 
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator")
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator" || tokens[0] == "SendNavigator")
                     navigatorName = tokens[0];
                 
                 else if(tokens[0] == "IncludedZones")
