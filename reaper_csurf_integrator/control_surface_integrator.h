@@ -545,15 +545,15 @@ public:
     void SetSlotIndex(int index) { slotIndex_ = index; }
     int GetSlotIndex() { return slotIndex_; }
     
-    void SetHwnd(HWND hwnd) { hwnd_ = hwnd; }
-    HWND GetHwnd() { return hwnd_; }
-    
     void Deactivate();
     
     void OpenFXWindow()
     {
         if(MediaTrack* track = navigator_->GetTrack())
+        {
             DAW::TrackFX_Show(track, slotIndex_, 3);
+            hwnd_ = DAW::TrackFX_GetFloatingWindow(track, slotIndex_);
+        }
     }
     
     void CloseFXWindow()
@@ -923,9 +923,6 @@ public:
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
     void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
-    //void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
-    //void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
-    //void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
     void ToggleMapSelectedTrackFX();
     void ToggleMapFocusedFX();
     void ToggleMapSelectedTrackFXMenu();

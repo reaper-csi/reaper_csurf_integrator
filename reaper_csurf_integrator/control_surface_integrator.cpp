@@ -1627,13 +1627,8 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
         
         if(shouldShowFXWindows)
-        {
             if(MediaTrack* track = navigators[0]->GetTrack())
-            {
-                DAW::TrackFX_Show(track, slotIndex, 3);
-                zone->SetHwnd(DAW::TrackFX_GetFloatingWindow(track, slotIndex));
-            }
-        }
+                zone->OpenFXWindow();
 
         activeZones.push_back(zone);
     }
@@ -1915,16 +1910,17 @@ void FXActivationManager::ToggleMapSelectedTrackFX()
     {
         for(auto selectedZone : activeSelectedTrackFXZones_)
         {
-            //surface_->LoadingZone(selectedZone.zone->GetName());
-            //selectedZone.zone->Deactivate();
+            surface_->LoadingZone(selectedZone->GetName());
+            selectedZone->Deactivate();
         }
         
-        //for(auto selectedZone : activeSelectedTrackFXZones_)
-            //DAW::TrackFX_Show(selectedZone.track, selectedZone.zone->GetIndex(), 2);
-        //activeSelectedTrackFXZones_.clear();
+        for(auto selectedZone : activeSelectedTrackFXZones_)
+            selectedZone->CloseFXWindow();
+        
+        activeSelectedTrackFXZones_.clear();
     }
-    
-    surface_->GetPage()->OnTrackSelection();
+    else
+        surface_->GetPage()->OnTrackSelection();
 }
 
 void FXActivationManager::ToggleMapFocusedFX()
