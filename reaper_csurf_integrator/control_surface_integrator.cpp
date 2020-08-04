@@ -822,6 +822,7 @@ void Manager::InitActionsDictionary()
     
     actions_["FXParam"] =                           new FXParam();
     actions_["FXParamRelative"] =                   new FXParamRelative();
+    actions_["FXNameDisplay"] =                     new FXNameDisplay();
     actions_["FXParamNameDisplay"] =                new FXParamNameDisplay();
     actions_["FXParamValueDisplay"] =               new FXParamValueDisplay();
     actions_["FXGainReductionMeter"] =              new FXGainReductionMeter();
@@ -895,29 +896,14 @@ void Manager::Init()
                     {
                         ControlSurface* surface = nullptr;
                         
-                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 14)
+                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
-                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[14], outPort));
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[10], outPort));
                         else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
                             surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
 
                         currentPage->AddSurface(surface);
-                        
-                        if(tokens.size() == 14 || tokens.size() == 15)
-                        {
-                            if(tokens[10] == "AutoMapSends")
-                                surface->SetShouldMapSends(true);
-                            
-                            if(tokens[11] == "AutoMapFX")
-                                surface->GetFXActivationManager()->SetShouldMapSelectedTrackFX(true);
-                            
-                            if(tokens[12] == "AutoMapFXMenu")
-                                surface->GetFXActivationManager()->SetShouldMapSelectedTrackFXMenus(true);
-                            
-                            if(tokens[13] == "AutoMapFocusedFX")
-                                surface->GetFXActivationManager()->SetShouldMapFocusedFX(true);
-                        }
                     }
                 }
             }
@@ -1974,32 +1960,24 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     
     if(selectedTrack == nullptr)
         return;
-    
+   
     int numTrackFX = DAW::TrackFX_GetCount(selectedTrack);
     
     for(int i = 0; i < numFXSlots_; i ++)
     {
         string zoneName = "FXMenu" + to_string(i + 1);
         
-        //if(shouldMapSelectedTrackFXMenus_ && surface_->GetZones().count(zoneName) > 0)
-        //{
-        /*
-         ZoneOld* zone =  surface_->GetZones()[zoneName];
-         zone->SetIndex(i);
-         
-         if(i < numTrackFX)
-         {
-         surface_->LoadingZone(zone->GetName());
-         zone->Activate();
-         activeSelectedTrackFXMenuZones_.push_back(zone);
-         }
-         else
-         {
-         surface_->ActivateNoActionForZone(zone->GetName());
-         activeSelectedTrackFXMenuZones_.push_back(zone);
-         }
-         */
-        //}
+        if(shouldMapSelectedTrackFXMenus_)
+        {
+            if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(zoneName))
+            {
+                 if(i < numTrackFX)
+                     zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, i, false);
+                //else
+                     //zoneTemplate->ActivateNoActionForZone(zone->GetName());
+            }
+
+        }
     }
 }
 
@@ -2432,12 +2410,6 @@ void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options)
 : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options)
 {
-    // EuCon takes care of managing navigation, so we just blast everything always
-    SetShouldMapSends(true);
-    fxActivationManager_->SetShouldMapSelectedTrackFX(true);
-    fxActivationManager_->SetShouldMapSelectedTrackFXMenus(true);
-    fxActivationManager_->SetShouldMapFocusedFX(true);
-    
     fxActivationManager_->SetShouldShowFXWindows(true);
     
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
