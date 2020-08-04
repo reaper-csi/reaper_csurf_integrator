@@ -176,10 +176,6 @@ struct SurfaceLine
     int numSends = 0;
     int numFX = 0;
     int options = 0;
-    bool autoMapSends = false;
-    bool autoMapFX = false;
-    bool autoMapFXMenu = false;
-    bool autoMapFocusedFX = false;
     
     // for OSC
     string remoteDeviceIP = "";
@@ -222,11 +218,6 @@ static bool followMCP = true;
 static bool synchPages = false;
 static bool trackColouring = false;
 static bool useScrollLink = false;
-
-static bool autoMapSends = false;
-static bool autoMapFX = false;
-static bool autoMapFXMenu = false;
-static bool autoMapFocusedFX = false;
 
 static vector<PageLine*> pages;
 
@@ -413,26 +404,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-                
-                if(autoMapSends)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
-                
-                if(autoMapFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
-                
-                if(autoMapFXMenu)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
-                
-                if(autoMapFocusedFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
             }
             else
             {
@@ -512,26 +483,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
                         
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
-                            autoMapSends = true;
-                        else
-                            autoMapSends = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
-                            autoMapFX = true;
-                        else
-                            autoMapFX = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
-                            autoMapFXMenu = true;
-                        else
-                            autoMapFXMenu = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
-                            autoMapFocusedFX = true;
-                        else
-                            autoMapFocusedFX = false;
-                        
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -595,26 +546,6 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRING, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-                
-                if(autoMapSends)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapSends, BST_UNCHECKED);
-                
-                if(autoMapFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFX, BST_UNCHECKED);
-                
-                if(autoMapFXMenu)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFXMenu, BST_UNCHECKED);
-                
-                if(autoMapFocusedFX)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_AutoMapFocusedFX, BST_UNCHECKED);
             }
             else
             {
@@ -694,26 +625,6 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_SurfaceTemplate, templateFilename, sizeof(templateFilename));
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapSends))
-                            autoMapSends = true;
-                        else
-                            autoMapSends = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFX))
-                            autoMapFX = true;
-                        else
-                            autoMapFX = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFXMenu))
-                            autoMapFXMenu = true;
-                        else
-                            autoMapFXMenu = false;
-                        
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_AutoMapFocusedFX))
-                            autoMapFocusedFX = true;
-                        else
-                            autoMapFocusedFX = false;
                         
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
@@ -904,10 +815,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
                                     surface->options = options;
-                                    surface->autoMapSends = autoMapSends;
-                                    surface->autoMapFX = autoMapFX;
-                                    surface->autoMapFXMenu = autoMapFXMenu;
-                                    surface->autoMapFocusedFX = autoMapFocusedFX;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
@@ -940,10 +847,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
                                     surface->options = options;
-                                    surface->autoMapSends = autoMapSends;
-                                    surface->autoMapFX = autoMapFX;
-                                    surface->autoMapFXMenu = autoMapFXMenu;
-                                    surface->autoMapFocusedFX = autoMapFocusedFX;
                                     
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
@@ -1028,10 +931,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 numSends = pages[pageIndex]->surfaces[index]->numSends;
                                 numFX = pages[pageIndex]->surfaces[index]->numFX;
                                 options = pages[pageIndex]->surfaces[index]->options;
-                                autoMapSends = pages[pageIndex]->surfaces[index]->autoMapSends;
-                                autoMapFX = pages[pageIndex]->surfaces[index]->autoMapFX;
-                                autoMapFXMenu = pages[pageIndex]->surfaces[index]->autoMapFXMenu;
-                                autoMapFocusedFX = pages[pageIndex]->surfaces[index]->autoMapFocusedFX;
  
 
                                 dlgResult = false;
@@ -1056,10 +955,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->numSends = numSends;
                                     pages[pageIndex]->surfaces[index]->numFX = numFX;
                                     pages[pageIndex]->surfaces[index]->options = options;
-                                    pages[pageIndex]->surfaces[index]->autoMapSends = autoMapSends;
-                                    pages[pageIndex]->surfaces[index]->autoMapFX =autoMapFX;
-                                    pages[pageIndex]->surfaces[index]->autoMapFXMenu = autoMapFXMenu;
-                                    pages[pageIndex]->surfaces[index]->autoMapFocusedFX = autoMapFocusedFX;
                                 }
                             }
                         }
@@ -1163,7 +1058,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->type = tokens[0];
                         surface->name = tokens[1];
                         
-                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 14 || tokens.size() == 15))
+                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 10 || tokens.size() == 11))
                         {
                             surface->inPort = atoi(tokens[2].c_str());
                             surface->outPort = atoi(tokens[3].c_str());
@@ -1173,13 +1068,9 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             surface->numSends = atoi(tokens[7].c_str());
                             surface->numFX = atoi(tokens[8].c_str());
                             surface->options = atoi(tokens[9].c_str());
-                            surface->autoMapSends = tokens[10] == "AutoMapSends" ? true : false;
-                            surface->autoMapFX = tokens[11] == "AutoMapFX" ? true : false;
-                            surface->autoMapFXMenu = tokens[12] == "AutoMapFXMenu" ? true : false;
-                            surface->autoMapFocusedFX = tokens[13] == "AutoMapFocusedFX" ? true : false;
 
-                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
-                                surface->remoteDeviceIP = tokens[14];
+                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                                surface->remoteDeviceIP = tokens[10];
                         }
                         else if(surface->type == EuConSurfaceToken && tokens.size() == 7 )
                         {
@@ -1258,10 +1149,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += to_string(surface->numSends) + " " ;
                             line += to_string(surface->numFX) + " " ;
                             line += to_string(surface->options) + " " ;
-                            line += surface->autoMapSends == true ? "AutoMapSends " : "NoAutoMapSends ";
-                            line += surface->autoMapFX == true ? "AutoMapFX " : "NoAutoMapFX ";
-                            line += surface->autoMapFXMenu == true ? "AutoMapFXMenu " : "NoAutoMapFXMenu ";
-                            line += surface->autoMapFocusedFX == true ? "AutoMapFocusedFX " : "NoAutoMapFocusedFX ";
                             
                             if(surface->type == OSCSurfaceToken)
                                 line += " " + surface->remoteDeviceIP;
