@@ -626,10 +626,10 @@ struct ZoneTemplate
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
-    void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr);
+    void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction);
     
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows, bool shouldUseNoAction);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

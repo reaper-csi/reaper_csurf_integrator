@@ -1538,7 +1538,7 @@ void Zone::Deactivate()
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr)
+void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction)
 {
     for(auto  widgetActionTemplate :  widgetActionTemplates)
     {
@@ -1562,10 +1562,18 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     for(int j = 0; j < member->params.size(); j++)
                         memberParams.push_back(regex_replace(member->params[j], regex("[|]"), channelNumStr));
                     
-                    ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
-
-                    member->SetProperties(context);
-                    actionBundle.AddActionContext(context);
+                    if(shouldUseNoAction)
+                    {
+                        ActionContext context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
+                        member->SetProperties(context);
+                        actionBundle.AddActionContext(context);
+                    }
+                    else
+                    {
+                        ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
+                        member->SetProperties(context);
+                        actionBundle.AddActionContext(context);
+                    }
                 }
                 
                 broker.AddActionBundle(actionBundle);
@@ -1596,17 +1604,17 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
         
         Zone* zone = new Zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
 
-        ProcessWidgetActionTemplates(surface, zone, channelNumStr);
+        ProcessWidgetActionTemplates(surface, zone, channelNumStr, false);
 
         activeZones.push_back(zone);
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowFXWindows)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowFXWindows, bool shouldUseNoAction)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowFXWindows);
+            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowFXWindows, shouldUseNoAction);
     
     if(navigators.size() == 1)
     {
@@ -1616,7 +1624,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         zone->SetSlotIndex(slotIndex);
         
-        ProcessWidgetActionTemplates(surface, zone, "");
+        ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
         
         if(shouldShowFXWindows)
         {
@@ -1972,9 +1980,9 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
             if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(zoneName))
             {
                  if(i < numTrackFX)
-                     zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, i, false);
-                //else
-                     //zoneTemplate->ActivateNoActionForZone(zone->GetName());
+                     zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, i, false, false);
+                else
+                    zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, i, false, true);
             }
 
         }
@@ -2005,7 +2013,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTr
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, shouldShowFXWindows_);            
+            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, shouldShowFXWindows_, false);
     }
 }
 
