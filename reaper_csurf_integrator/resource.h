@@ -40,16 +40,12 @@
 #define IDC_LIST_ZoneComponents         1040
 #define IDC_EDIT_OSCRemoteDeviceIP      1041
 #define IDC_LIST_WidgetNames            1041
-#define IDC_CHECK_AutoMapSends          1042
 #define IDC_LIST_ActionNames            1042
 #define IDC_EDIT_OSCOutPort             1043
 #define IDC_LIST_IncludedZones          1043
-#define IDC_CHECK_AutoMapFX             1044
 #define IDC_EDIT_OSCInPort              1045
 #define IDC_LIST_Zones                  1045
-#define IDC_CHECK_AutoMapFXMenu         1046
 #define IDC_COMBO_Navigator             1046
-#define IDC_CHECK_AutoMapFocusedFX      1047
 #define IDC_COMBO_SurfaceName           1048
 #define IDC_STATIC_Alias                1049
 #define IDC_EDIT_WidgetName             1050

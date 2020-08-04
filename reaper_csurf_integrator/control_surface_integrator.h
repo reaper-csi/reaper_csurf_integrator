@@ -903,9 +903,9 @@ class FXActivationManager
 private:
     ControlSurface* const surface_ = nullptr;
     int const numFXSlots_ = 0;
-    bool shouldMapSelectedTrackFX_ = false;
-    bool shouldMapSelectedTrackFXMenus_ = false;
-    bool shouldMapFocusedFX_ = false;
+    bool shouldMapSelectedTrackFX_ = true;
+    bool shouldMapSelectedTrackFXMenus_ = true;
+    bool shouldMapFocusedFX_ = true;
     vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
@@ -923,9 +923,9 @@ public:
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
     void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
-    void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
-    void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
-    void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
+    //void SetShouldMapSelectedTrackFX(bool shouldMapSelectedTrackFX) { shouldMapSelectedTrackFX_ = shouldMapSelectedTrackFX; }
+    //void SetShouldMapSelectedTrackFXMenus(bool shouldMapSelectedTrackFXMenus) { shouldMapSelectedTrackFXMenus_ = shouldMapSelectedTrackFXMenus; }
+    //void SetShouldMapFocusedFX(bool shouldMapFocusedFX) { shouldMapFocusedFX_ = shouldMapFocusedFX; }
     void ToggleMapSelectedTrackFX();
     void ToggleMapFocusedFX();
     void ToggleMapSelectedTrackFXMenu();
@@ -984,7 +984,7 @@ protected:
 
     vector<Zone*> activeZones_;
 
-    bool shouldMapSends_ = false;
+    bool shouldMapSends_ = true;
     vector<Zone*> activeSendZones_;
     
     FXActivationManager* const fxActivationManager_;
@@ -1015,7 +1015,6 @@ public:
     int GetNumSends() { return numSends_; }
 
     bool GetShouldMapSends() { return shouldMapSends_; }
-    void SetShouldMapSends(bool shouldMapSends) { shouldMapSends_ = shouldMapSends;  }
     void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets();
     
