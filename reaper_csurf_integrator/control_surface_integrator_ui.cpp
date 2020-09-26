@@ -12,14 +12,29 @@ extern string GetLineEnding();
 
 const string Control_Surface_Integrator = "Control Surface Integrator";
 
-extern int g_registered_command;
+extern int g_registered_command_toggle_show_surface_input;
+extern int g_registered_command_toggle_show_surface_output;
+extern int g_registered_command_toggle_show_FX_params;
 
 bool hookCommandProc(int command, int flag)
 {
-    if (g_registered_command && command == g_registered_command && TheManager != nullptr)
+    if(TheManager != nullptr)
     {
-        //TheManager->OpenLearnModeWindow();
-        return true;
+        if (command == g_registered_command_toggle_show_surface_input)
+        {
+            TheManager->ToggleSurfaceInDisplay();
+            return true;
+        }
+        else if (command == g_registered_command_toggle_show_surface_output)
+        {
+            TheManager->ToggleSurfaceOutDisplay();
+            return true;
+        }
+        else if (command == g_registered_command_toggle_show_FX_params)
+        {
+            TheManager->ToggleFXParamDisplay();
+            return true;
+        }
     }
     return false;
 }

@@ -2054,9 +2054,9 @@ public:
     
     void Init();
 
-    void ToggleFXParamDisplay(bool value) { fxMonitor_ = ! fxMonitor_;  }
-    void ToggleSurfaceInDisplay(bool value) { surfaceInMonitor_ = ! surfaceInMonitor_;  }
-    void ToggleSurfaceOutDisplay(bool value) { surfaceOutMonitor_ = ! surfaceOutMonitor_;  }
+    void ToggleFXParamDisplay() { fxMonitor_ = ! fxMonitor_;  }
+    void ToggleSurfaceInDisplay() { surfaceInMonitor_ = ! surfaceInMonitor_;  }
+    void ToggleSurfaceOutDisplay() { surfaceOutMonitor_ = ! surfaceOutMonitor_;  }
     
     bool GetFXMonitor() { return fxMonitor_;  }
     bool GetSurfaceInMonitor() { return surfaceInMonitor_;  }
