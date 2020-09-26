@@ -1609,15 +1609,6 @@ public:
         return false;
     }
     
-    void ClearTouchStates()
-    {
-        for(auto navigator : navigators_)
-        {
-            navigator->SetIsFaderTouched(false);
-            navigator->SetIsRotaryTouched(false);
-        }
-    }
-    
     void EnterPage()
     {
         /*
