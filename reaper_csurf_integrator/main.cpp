@@ -4,7 +4,7 @@
 #include "reaper_plugin_functions.h"
 #include "resource.h"
 
-gaccel_register_t acreg_show_input=
+gaccel_register_t acreg_show_input =
 {
     {FCONTROL|FALT|FVIRTKEY, '1', 0},
     "CSI Toggle Show Input from Surfaces"
@@ -12,7 +12,7 @@ gaccel_register_t acreg_show_input=
 
 int g_registered_command_toggle_show_surface_input = 0;
 
-gaccel_register_t acreg_show_output=
+gaccel_register_t acreg_show_output =
 {
     {FCONTROL|FALT|FVIRTKEY, '2', 0},
     "CSI Toggle Show Output to Surfaces"
@@ -20,13 +20,21 @@ gaccel_register_t acreg_show_output=
 
 int g_registered_command_toggle_show_surface_output = 0;
 
-gaccel_register_t acreg_show_FX_params=
+gaccel_register_t acreg_show_FX_params =
 {
     {FCONTROL|FALT|FVIRTKEY, '3', 0},
     "CSI Toggle Show Params when FX inserted"
 };
 
 int g_registered_command_toggle_show_FX_params = 0;
+
+gaccel_register_t acreg_write_FX_params =
+{
+    {FCONTROL|FALT|FVIRTKEY, '4', 0},
+    "CSI Toggle Write Params to /CSI/Zones/ZoneRawFXFiles when FX inserted"
+};
+
+int g_registered_command_toggle_write_FX_params = 0;
 
 
 extern bool hookCommandProc(int command, int flag);
@@ -78,7 +86,7 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
         
         acreg_show_output.accel.cmd = g_registered_command_toggle_show_surface_output = reaper_plugin_info->Register("command_id", (void*)"CSI Toggle Show Output to Surfaces");
         
-        if (!g_registered_command_toggle_show_surface_input)
+        if (!g_registered_command_toggle_show_surface_output)
             return 0; // failed getting a command id, fail!
         
         reaper_plugin_info->Register("gaccel", &acreg_show_output);
@@ -86,13 +94,19 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
         
         acreg_show_FX_params.accel.cmd = g_registered_command_toggle_show_FX_params = reaper_plugin_info->Register("command_id", (void*)"CSI Toggle Show Params when FX inserted");
         
-        if (!g_registered_command_toggle_show_surface_input)
+        if (!g_registered_command_toggle_show_FX_params)
             return 0; // failed getting a command id, fail!
         
         reaper_plugin_info->Register("gaccel", &acreg_show_FX_params);
         
-
+        acreg_write_FX_params.accel.cmd = g_registered_command_toggle_write_FX_params = reaper_plugin_info->Register("command_id", (void*)"CSI Toggle Write Params to /CSI/Zones/ZoneRawFXFiles when FX inserted");
         
+        if (!g_registered_command_toggle_write_FX_params)
+            return 0; // failed getting a command id, fail!
+        
+        reaper_plugin_info->Register("gaccel", &acreg_write_FX_params);
+        
+
         reaper_plugin_info->Register("hookcommand", (void*)hookCommandProc);
         
       

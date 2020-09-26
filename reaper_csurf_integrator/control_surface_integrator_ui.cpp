@@ -15,6 +15,7 @@ const string Control_Surface_Integrator = "Control Surface Integrator";
 extern int g_registered_command_toggle_show_surface_input;
 extern int g_registered_command_toggle_show_surface_output;
 extern int g_registered_command_toggle_show_FX_params;
+extern int g_registered_command_toggle_write_FX_params;
 
 bool hookCommandProc(int command, int flag)
 {
@@ -32,7 +33,12 @@ bool hookCommandProc(int command, int flag)
         }
         else if (command == g_registered_command_toggle_show_FX_params)
         {
-            TheManager->ToggleFXParamDisplay();
+            TheManager->ToggleFXParamsDisplay();
+            return true;
+        }
+        else if (command == g_registered_command_toggle_write_FX_params)
+        {
+            TheManager->ToggleFXParamsWrite();
             return true;
         }
     }
