@@ -219,8 +219,8 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
                 modifierSlots[2] = Control + "+";
             else if(modifier_tokens[i] == Alt)
                 modifierSlots[3] = Alt + "+";
-            else if(modifier_tokens[i] == "TrackTouch")
-                modifierSlots[4] = "TrackTouch+";
+            else if(modifier_tokens[i] == "FaderTouch")
+                modifierSlots[4] = "FaderTouch+";
             else if(modifier_tokens[i] == "RotaryTouch")
                 modifierSlots[5] = "RotaryTouch+";
 
@@ -234,7 +234,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
                 delayAmount = 1.0;
         }
     }
-    
+
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
     modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
@@ -803,7 +803,7 @@ void Manager::InitActionsDictionary()
     actions_["TrackRecordArm"] =                    new TrackRecordArm();
     actions_["TrackMute"] =                         new TrackMute();
     actions_["TrackSolo"] =                         new TrackSolo();
-    actions_["TrackTouch"] =                        new SetFaderTouch();
+    actions_["FaderTouch"] =                        new SetFaderTouch();
     actions_["RotaryTouch"] =                       new SetRotaryTouch();
     actions_["TrackPan"] =                          new TrackPan();
     actions_["TrackPanPercent"] =                   new TrackPanPercent();
@@ -1016,8 +1016,6 @@ void TrackNavigationManager::ForceScrollLink()
             if(selectedTrack == navigator->GetTrack())
                 return;
         
-        ClearTouchStates();
-        
         for(int i = 0; i < tracks_.size(); i++)
             if(selectedTrack == tracks_[i])
                 trackOffset_ = i;
@@ -1052,9 +1050,7 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
     
     if(numTracks <= navigators_.size())
         return;
- 
-    ClearTouchStates();
-    
+   
     trackOffset_ += amount;
     
     if(trackOffset_ <  0)
@@ -1182,6 +1178,9 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     
     if(params.size() > 0)
         paramIndex_ = atol(params[0].c_str());
+    
+    
+    // GAW TBD -- if params size > 0, make alias the actual FX reported name
     
     if(params.size() > 1)
         fxParamDisplayName_ = params[1];
@@ -1497,7 +1496,7 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
     if(navigator != nullptr)
     {
         if(navigator->GetIsFaderTouched())
-            touchModifier += "TrackTouch+";
+            touchModifier += "FaderTouch+";
         
         if(navigator->GetIsRotaryTouched())
             touchModifier += "RotaryTouch+";
