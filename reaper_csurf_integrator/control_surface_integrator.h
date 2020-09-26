@@ -42,6 +42,8 @@
 #include "udp.hh"
 #endif
 
+extern string GetLineEnding();
+
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 
 const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
@@ -1995,10 +1997,11 @@ private:
     map<string, map<string, int>> fxParamIndices_;
     
     int currentPageIndex_ = 0;
-    bool surfaceInMonitor_ = false;
-    bool surfaceOutMonitor_ = false;
-    bool fxMonitor_ = false;
-    
+    bool surfaceInDisplay_ = false;
+    bool surfaceOutDisplay_ = false;
+    bool fxParamsDisplay_ = false;
+    bool fxParamsWrite_ = false;
+
     bool shouldRun_ = true;
     
     int *timeModePtr_ = nullptr;
@@ -2040,9 +2043,9 @@ public:
     
     void Shutdown()
     {
-        fxMonitor_ = false;
-        surfaceInMonitor_ = false;
-        surfaceOutMonitor_ = false;
+        fxParamsDisplay_ = false;
+        surfaceInDisplay_ = false;
+        surfaceOutDisplay_ = false;
        
         // GAW -- IMPORTANT
         // We want to stop polling and zero out all Widgets before shutting down
@@ -2054,13 +2057,13 @@ public:
     
     void Init();
 
-    void ToggleFXParamDisplay() { fxMonitor_ = ! fxMonitor_;  }
-    void ToggleSurfaceInDisplay() { surfaceInMonitor_ = ! surfaceInMonitor_;  }
-    void ToggleSurfaceOutDisplay() { surfaceOutMonitor_ = ! surfaceOutMonitor_;  }
-    
-    bool GetFXMonitor() { return fxMonitor_;  }
-    bool GetSurfaceInMonitor() { return surfaceInMonitor_;  }
-    bool GetSurfaceOutMonitor() { return surfaceOutMonitor_;  }
+    void ToggleSurfaceInDisplay() { surfaceInDisplay_ = ! surfaceInDisplay_;  }
+    void ToggleSurfaceOutDisplay() { surfaceOutDisplay_ = ! surfaceOutDisplay_;  }
+    void ToggleFXParamsDisplay() { fxParamsDisplay_ = ! fxParamsDisplay_;  }
+    void ToggleFXParamsWrite() { fxParamsWrite_ = ! fxParamsWrite_;  }
+
+    bool GetSurfaceInDisplay() { return surfaceInDisplay_;  }
+    bool GetSurfaceOutDisplay() { return surfaceOutDisplay_;  }
     
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
     double GetFaderMinDB() { return GetPrivateProfileDouble("sliderminv"); }
@@ -2171,27 +2174,48 @@ public:
         for(auto & page : pages_)
             page->TrackFXListChanged(track);
         
-        if(fxMonitor_)
+        if(fxParamsDisplay_ || fxParamsWrite_)
         {
             char fxName[BUFSZ];
             char fxParamName[BUFSZ];
             
+            ofstream fxFile;
+            
             for(int i = 0; i < DAW::TrackFX_GetCount(track); i++)
             {
                 DAW::TrackFX_GetFXName(track, i, fxName, sizeof(fxName));
-                DAW::ShowConsoleMsg(("Zone \"" + string(fxName) + "\"").c_str());
                 
-                DAW::ShowConsoleMsg("\n\n\tSelectedTrackNavigator\n");
+                if(fxParamsDisplay_)
+                    DAW::ShowConsoleMsg(("Zone \"" + string(fxName) + "\"").c_str());
+                
+                if(fxParamsWrite_)
+                {
+                    string fxNameNoBadChars(fxName);
+                    fxNameNoBadChars = regex_replace(fxNameNoBadChars, regex(BadFileChars), "_");
+
+                    fxFile.open(string(DAW::GetResourcePath()) + "/CSI/Zones/ZoneRawFXFiles/" + fxNameNoBadChars + ".txt");
+                    
+                    if(fxFile.is_open())
+                        fxFile << "Zone \"" + string(fxName) + "\"" + GetLineEnding();
+                }
+
+                if(fxParamsDisplay_)
+                    DAW::ShowConsoleMsg("\n\n\tSelectedTrackNavigator\n");
+                
+                if(fxParamsWrite_ && fxFile.is_open())
+                    fxFile << "\tSelectedTrackNavigator" + GetLineEnding();
 
                 for(int j = 0; j < DAW::TrackFX_GetNumParams(track, i); j++)
                 {
                     DAW::TrackFX_GetParamName(track, i, j, fxParamName, sizeof(fxParamName));
-                    
-                    
-                    
-                    DAW::ShowConsoleMsg(("\n\tFXParam " + to_string(j) + " \"" + string(fxParamName)+ "\"").c_str());
-                    
-                    /* Uncomment this and comment the line above if you want to show step sizes
+
+                    if(fxParamsDisplay_)
+                        DAW::ShowConsoleMsg(("\n\tFXParam " + to_string(j) + " \"" + string(fxParamName) + "\"").c_str());
+  
+                    if(fxParamsWrite_ && fxFile.is_open())
+                        fxFile <<  "\tFXParam " + to_string(j) + " \"" + string(fxParamName)+ "\"" + GetLineEnding();
+                        
+                    /* step sizes
                     double stepOut = 0;
                     double smallstepOut = 0;
                     double largestepOut = 0;
@@ -2202,7 +2226,14 @@ public:
                     */
                 }
                 
-                DAW::ShowConsoleMsg("\nZoneEnd\n\n");
+                if(fxParamsDisplay_)
+                    DAW::ShowConsoleMsg("\nZoneEnd\n\n");
+
+                if(fxParamsWrite_ && fxFile.is_open())
+                {
+                    fxFile << "ZoneEnd";
+                    fxFile.close();
+                }
             }
         }
     }
