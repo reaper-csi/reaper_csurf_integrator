@@ -1739,7 +1739,7 @@ void Widget::ClearCache()
 
 void Widget::LogInput(double value)
 {
-    if( TheManager->GetSurfaceInMonitor())
+    if( TheManager->GetSurfaceInDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
@@ -2152,7 +2152,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
 
 void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string value)
 {
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
         DAW::ShowConsoleMsg(("OUT->" + name_ + " " + address + " " + value + "\n").c_str());
 }
 
@@ -2194,7 +2194,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
         
     }
     
-    if( ! isMapped && TheManager->GetSurfaceInMonitor())
+    if( ! isMapped && TheManager->GetSurfaceInDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
@@ -2208,7 +2208,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
     if(midiOutput_)
         midiOutput_->SendMsg(midiMessage, -1);
     
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
         DAW::ShowConsoleMsg(("OUT->" + name_ + " SysEx\n").c_str());
 }
 
@@ -2217,7 +2217,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
     if(midiOutput_)
         midiOutput_->Send(first, second, third, -1);
     
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "%s  %02x  %02x  %02x \n", ("OUT->" + name_).c_str(), first, second, third);
@@ -2244,7 +2244,7 @@ void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
     if(CSIMessageGeneratorsByOSCMessage_.count(message) > 0)
         CSIMessageGeneratorsByOSCMessage_[message]->ProcessOSCMessage(message, value);
     
-    if(TheManager->GetSurfaceInMonitor())
+    if(TheManager->GetSurfaceInDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), message.c_str(), value);
@@ -2266,7 +2266,7 @@ void OSC_ControlSurface::LoadingZone(string zoneName)
         outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
         DAW::ShowConsoleMsg((zoneName + "->" + "LoadingZone---->" + name_ + "\n").c_str());
 }
 
@@ -2280,9 +2280,9 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
         outSocket_->sendPacket(packetWriter_.packetData(), packetWriter_.packetSize());
     }
     
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
     {
-        if(TheManager->GetSurfaceOutMonitor())
+        if(TheManager->GetSurfaceOutDisplay())
             DAW::ShowConsoleMsg(("OUT->" + name_ + " " + oscAddress + " " + to_string(value) + "\n").c_str());
     }
 }
@@ -2548,7 +2548,7 @@ void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackPro
     if(HandleReaperMessageWthString)
         HandleReaperMessageWthString(address.c_str(), value.c_str());
     
-    if(TheManager->GetSurfaceOutMonitor())
+    if(TheManager->GetSurfaceOutDisplay())
         DAW::ShowConsoleMsg(("OUT-> " + name_ + " " + address + " " + value + "\n").c_str());
 }
 
@@ -2697,7 +2697,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
     else if(CSIMessageGeneratorsByMessage_.count(address) > 0)
         CSIMessageGeneratorsByMessage_[address]->ProcessMessage(address, value);
         
-    if(TheManager->GetSurfaceInMonitor())
+    if(TheManager->GetSurfaceInDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), address.c_str(), value);
