@@ -49,6 +49,12 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
         }
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
+        /*
+        CONTROL         "CSI Toggle Show Input from Surfaces"
+        CONTROL         "CSI Toggle Show Output to Surfaces"
+        CONTROL         "CSI Toggle Show Params when FX inserted"
+         */
+        
         
         acreg.accel.cmd = g_registered_command = reaper_plugin_info->Register("command_id", (void*)"CSIEditMode");
         

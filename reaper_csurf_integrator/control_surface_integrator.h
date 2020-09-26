@@ -1715,12 +1715,6 @@ public:
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     SendNavigationManager* GetSendNavigationManager() { return sendNavigationManager_; }
-
-    void OpenEditModeWindow();
-    void ToggleEditMode();
-    void InputReceived(Widget* widget, double value);
-    void ActionPerformed(Action* action);
-    void UpdateEditModeWindow();
     
     bool GetShift() { return isShift_; }
     bool GetOption() { return isOption_; }
@@ -1862,8 +1856,6 @@ public:
         
         for(auto surface : surfaces_)
             surface->RequestUpdate();
-        
-        UpdateEditModeWindow();
     }
 
     void ForceClearAllWidgets()
@@ -1994,7 +1986,7 @@ class Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    CSurfIntegrator* const CSurfIntegrator_;
+    CSurfIntegrator* const CSurfIntegrator_ = nullptr;
 
     map<string, Action*> actions_;
 
@@ -2062,9 +2054,9 @@ public:
     
     void Init();
 
-    void SetFXMonitor(bool value) { fxMonitor_ = value;  }
-    void SetSurfaceInMonitor(bool value) { surfaceInMonitor_ = value;  }
-    void SetSurfaceOutMonitor(bool value) { surfaceOutMonitor_ = value;  }
+    void ToggleFXParamDisplay(bool value) { fxMonitor_ = ! fxMonitor_;  }
+    void ToggleSurfaceInDisplay(bool value) { surfaceInMonitor_ = ! surfaceInMonitor_;  }
+    void ToggleSurfaceOutDisplay(bool value) { surfaceOutMonitor_ = ! surfaceOutMonitor_;  }
     
     bool GetFXMonitor() { return fxMonitor_;  }
     bool GetSurfaceInMonitor() { return surfaceInMonitor_;  }
@@ -2172,12 +2164,6 @@ public:
             return pages_[currentPageIndex_]->GetTouchState(track, touchedControl);
         else
             return false;
-    }
-    
-    void OpenLearnModeWindow()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->OpenEditModeWindow();
     }
     
     void TrackFXListChanged(MediaTrack* track)

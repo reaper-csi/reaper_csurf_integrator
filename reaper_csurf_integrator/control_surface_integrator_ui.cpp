@@ -18,7 +18,7 @@ bool hookCommandProc(int command, int flag)
 {
     if (g_registered_command && command == g_registered_command && TheManager != nullptr)
     {
-        TheManager->OpenLearnModeWindow();
+        //TheManager->OpenLearnModeWindow();
         return true;
     }
     return false;
