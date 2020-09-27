@@ -991,7 +991,7 @@ protected:
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
 
     void InitZones(string zoneFolder);
-    map<string, vector<string>> zoneFileLines_;
+
     map<string, ZoneTemplate*> zoneTemplates_;
     
     virtual void InitHardwiredWidgets()
@@ -1093,11 +1093,6 @@ public:
             zoneTemplates_[zoneTemplate->name] = zoneTemplate;
     }
 
-    void AddZoneFileLine(string fileName, string line)
-    {
-        zoneFileLines_[fileName].push_back(line);
-    }
-    
     virtual void RequestUpdate()
     {
         for(auto widget : widgets_)
