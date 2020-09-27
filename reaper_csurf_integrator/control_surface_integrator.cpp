@@ -89,7 +89,6 @@ void ShutdownMidiIO()
         input->midiInput_->stop();
 }
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC I/O Manager
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -359,7 +358,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     vector<string> params;
-                    for(int i = 2; i < tokens.size(); i++)
+                    for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
                     widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
@@ -1061,9 +1060,64 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params): action_(action), widget_(widget), zone_(zone)
 {
+    string actionName = "";
     
     if(params.size() > 0)
-        int blah = 0;
+        actionName = params[0];
+    
+    // Action with int param
+    if(params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
+    {
+        intParam_= atol(params[1].c_str());
+        paramIndex_ = atol(params[1].c_str());
+    }
+    
+    // Action with string param
+    if(params.size() > 1)
+        stringParam_ = params[1];
+    
+    if(actionName == "TrackVolumeDB" || actionName == "TrackSendVolumeDB")
+    {
+        rangeMinimum_ = -144.0;
+        rangeMaximum_ = 24.0;
+    }
+    
+    if(actionName == "TrackPanPercent" || actionName == "TrackPanWidthPercent" || actionName == "TrackPanLPercent" || actionName == "TrackPanRPercent")
+    {
+        rangeMinimum_ = -100.0;
+        rangeMaximum_ = 100.0;
+    }
+   
+    if(actionName == "Reaper" && params.size() > 1)
+    {
+        commandStr_ = params[1];
+        
+        commandId_ =  atol(commandStr_.c_str());
+        
+        if(commandId_ == 0) // unsuccessful conversion to number
+        {
+            commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
+            
+            if(commandId_ == 0) // can't find it
+                commandId_ = 65535; // no-op
+        }
+    }
+    
+    if(actionName == "FXParam" && params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
+    {
+        paramIndex_ = atol(params[1].c_str());
+    
+        // GAW TBD -- if params size == 2, make alias the actual FX reported name
+        
+        if(params.size() > 2)
+            fxParamDisplayName_ = params[2];
+        
+        if(params.size() > 3 && params[3] != "[" && params[3] != "{")
+        {
+            shouldUseDisplayStyle_ = true;
+            displayStyle_ = atol(params[3].c_str());
+        }
+    }
     
     /*
      //////////////////////////////////////////////////
@@ -1084,116 +1138,7 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
      // CycleTrackAutoMode and EuConCycleTrackAutoMode
      //////////////////////////////////////////////////
      */
-    
-    
-    //////////////////////////////////////////////////
-    // TrackVolumeDB and TrackSendVolumeDB
-    
-    rangeMinimum_ = -144.0;
-    rangeMaximum_ = 24.0;
-    
-    // TrackVolumeDB and TrackSendVolumeDB
-    //////////////////////////////////////////////////
-    
-    
-    //////////////////////////////////////////////////
-    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent
-    
-    rangeMinimum_ = -100.0;
-    rangeMaximum_ = 100.0;
-    
-    // TrackPanPercent and TrackPanWidthPercent and TrackPanLPercent and TrackPanRPercent
-    //////////////////////////////////////////////////
-    
-    
-    //////////////////////////////////////////////////
-    // ActionWithIntParam
-    
-    if(params.size() > 0)
-        intParam_= atol(params[0].c_str());
-    
-    // ActionWithIntParam
-    //////////////////////////////////////////////////
-    
-    //////////////////////////////////////////////////
-    // TrackActionWithIntParam
-    
-    if(params.size() > 0)
-        intParam_= atol(params[0].c_str());
-    
-    // TrackActionWithIntParam
-    //////////////////////////////////////////////////
 
-    
-    //////////////////////////////////////////////////
-    // ActionWithStringParam
-    
-    if(params.size() > 0)
-        stringParam_ = params[0];
-    
-    // ActionWithStringParam
-    //////////////////////////////////////////////////
-    
-    
-    //////////////////////////////////////////////////
-    // ReaperAction
-    
-    if(params.size() > 0)
-    {
-        commandStr_ = params[0];
-        
-        commandId_ =  atol(commandStr_.c_str());
-        
-        if(commandId_ == 0) // unsuccessful conversion to number
-        {
-            commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
-            
-            if(commandId_ == 0) // can't find it
-                commandId_ = 65535; // no-op
-        }
-    }
-    
-    // ReaperAction
-    //////////////////////////////////////////////////
-    
-    
-    //////////////////////////////////////////////////
-    // TrackSendAction
-    
-    if(params.size() > 0)
-    {
-        if(isdigit(params[0][0])) // C++ 11 says empty strings can be queried without catastrophe :)
-            paramIndex_ = atol(params[0].c_str());
-    }
-    
-    // TrackSendAction
-    //////////////////////////////////////////////////
-    
-    
-    
-    
-    //////////////////////////////////////////////////
-    // FXAction
-    
-    if(params.size() > 0)
-        paramIndex_ = atol(params[0].c_str());
-    
-    
-    // GAW TBD -- if params size > 0, make alias the actual FX reported name
-    
-    if(params.size() > 1)
-        fxParamDisplayName_ = params[1];
-    
-    if(params.size() > 2 && params[2] != "[" && params[2] != "{")
-    {
-        shouldUseDisplayStyle_ = true;
-        displayStyle_ = atol(params[2].c_str());
-    }
-    
-    // FXAction
-    //////////////////////////////////////////////////
-    
-    
     
     
     
