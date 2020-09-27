@@ -258,9 +258,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
         ifstream file(filePath);
         
         for (string line; getline(file, line) ; )
-        {
-            surface->AddZoneFileLine(filePath, line);  // store in the raw map for EditMode
-            
+        {           
             line = regex_replace(line, regex(TabChars), " ");
             line = regex_replace(line, regex(CRLFChars), "");
             
@@ -280,11 +278,11 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
             {
                 if(tokens[0] == "Zone")
                 {
-                    zoneName = tokens[1];
-                    zoneAlias = tokens.size() > 2 ? tokens[2] : tokens[1];
+                    zoneName = tokens.size() > 1 ? tokens[1] : "";
+                    zoneAlias = tokens.size() > 2 ? tokens[2] : zoneName;
                 }
                 
-                else if(tokens[0] == "ZoneEnd")
+                else if(tokens[0] == "ZoneEnd" && zoneName != "")
                 {
                     vector<WidgetActionTemplate*> widgetActionTemplates;
 
@@ -347,15 +345,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
                     includedZones.push_back(tokens[0]);
                 
-                else
+                else if(tokens.size() > 1)
                 {
                     actionName = tokens[1];
                     
-                    // GAW -- the first token is the Widget name, possibly decorated with modifier
                     string widgetName = "";
                     string modifier = "";
-                    
-                    
                     bool isPressRelease = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
@@ -364,8 +359,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
                     
                     vector<string> params;
-                    for(int j = 2; j < tokens.size(); j++)
-                        params.push_back(tokens[j]);
+                    for(int i = 2; i < tokens.size(); i++)
+                        params.push_back(tokens[i]);
                     
                     widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
                 }
@@ -1066,6 +1061,10 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params): action_(action), widget_(widget), zone_(zone)
 {
+    
+    if(params.size() > 0)
+        int blah = 0;
+    
     /*
      //////////////////////////////////////////////////
      // CycleTrackAutoMode and EuConCycleTrackAutoMode
@@ -1116,6 +1115,15 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     // ActionWithIntParam
     //////////////////////////////////////////////////
     
+    //////////////////////////////////////////////////
+    // TrackActionWithIntParam
+    
+    if(params.size() > 0)
+        intParam_= atol(params[0].c_str());
+    
+    // TrackActionWithIntParam
+    //////////////////////////////////////////////////
+
     
     //////////////////////////////////////////////////
     // ActionWithStringParam
@@ -1162,14 +1170,6 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     //////////////////////////////////////////////////
     
     
-    //////////////////////////////////////////////////
-    // TrackActionWithIntParam
-    
-    if(params.size() > 0)
-        intParam_= atol(params[0].c_str());
-    
-    // TrackActionWithIntParam
-    //////////////////////////////////////////////////
     
     
     //////////////////////////////////////////////////
