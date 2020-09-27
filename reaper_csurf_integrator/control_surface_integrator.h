@@ -249,11 +249,8 @@ private:
     
     string fxParamDisplayName_ = "";
     
-    
-    
     int commandId_ = 0;
     string commandStr_ = "";
-    
     
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
@@ -266,7 +263,6 @@ private:
     vector<int> acceleratedTickValues_;
     int accumulatedIncTicks_ = 0;
     int accumulatedDecTicks_ = 0;
-    
     
     bool supportsRelease_ = false;
     bool isInverted_ = false;
@@ -303,24 +299,9 @@ public:
 
     MediaTrack* GetTrack();
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
     void DoRangeBoundAction(double value);
     void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
-    
     
     Page* GetPage();
     ControlSurface* GetSurface();
@@ -340,16 +321,7 @@ public:
     void DoRelativeAction(int accelerationIndex, double value);
     double GetCurrentValue() { return 0.0; }
     
-    
-    
-    
-
-    
     void RequestUpdate();
-
-    
-    
-    
     void ClearWidget();
     void UpdateWidgetValue(double value);
     void UpdateWidgetValue(int param, double value);
@@ -1021,7 +993,6 @@ public:
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     Zone* GetDefaultZone() { return defaultZone_; }
-    
     
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
