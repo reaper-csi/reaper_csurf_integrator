@@ -1106,10 +1106,8 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     if(actionName == "FXParam" && params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
     {
         paramIndex_ = atol(params[1].c_str());
-    
-        // GAW TBD -- if params size == 2, make alias the actual FX reported name
         
-        if(params.size() > 2)
+        if(params.size() > 2 && isalpha(params[2][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
             fxParamDisplayName_ = params[2];
         
         if(params.size() > 3 && params[3] != "[" && params[3] != "{")
@@ -1475,7 +1473,7 @@ void Zone::Deactivate()
     
     widgets_.clear();
     
-    // GAW TDB Leaving Zone - if needed
+    // GAW TBD Leaving Zone - if needed
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1502,8 +1500,8 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                 {
                     string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
                     vector<string> memberParams;
-                    for(int j = 0; j < member->params.size(); j++)
-                        memberParams.push_back(regex_replace(member->params[j], regex("[|]"), channelNumStr));
+                    for(int i = 0; i < member->params.size(); i++)
+                        memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));
                     
                     if(shouldUseNoAction)
                     {
