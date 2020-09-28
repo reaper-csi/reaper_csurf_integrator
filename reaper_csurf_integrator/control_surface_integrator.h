@@ -291,12 +291,25 @@ public:
 
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
-    string GetFxParamDisplayName() { return fxParamDisplayName_; }
     int GetCommandId() { return commandId_; }
     string GetCommandString() { return commandStr_; }
     bool GetShouldUseDisplayStyle() { return shouldUseDisplayStyle_; }
     int GetDisplayStyle() { return displayStyle_; }
 
+    string GetFxParamDisplayName()
+    {
+        if(fxParamDisplayName_ != "")
+            return fxParamDisplayName_;
+        else if(MediaTrack* track = GetTrack())
+        {
+            char fxParamName[BUFSZ];
+            DAW::TrackFX_GetParamName(track, GetSlotIndex(), paramIndex_, fxParamName, sizeof(fxParamName));
+            return fxParamName;
+        }
+
+        return "";
+    }
+    
     MediaTrack* GetTrack();
     
     void DoRangeBoundAction(double value);
