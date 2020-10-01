@@ -1065,10 +1065,15 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     if(params.size() > 0)
         actionName = params[0];
     
-    // Action with int param
-    if(params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
+    // Action with int param, could include leading minus sign
+    if(params.size() > 1 && (isdigit(params[1][0]) ||  params[1][0] == '-'))  // C++ 11 says empty strings can be queried without catastrophe :)
     {
         intParam_= atol(params[1].c_str());
+    }
+    
+    // Action with param index, must be positive
+    if(params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
+    {
         paramIndex_ = atol(params[1].c_str());
     }
     
@@ -1090,13 +1095,13 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
    
     if(actionName == "Reaper" && params.size() > 1)
     {
-        commandStr_ = params[1];
-        
-        commandId_ =  atol(commandStr_.c_str());
-        
-        if(commandId_ == 0) // unsuccessful conversion to number
+        if (isdigit(params[1][0]))
         {
-            commandId_ = DAW::NamedCommandLookup(commandStr_.c_str()); // look up by string
+            commandId_ =  atol(params[1].c_str());
+        }
+        else // look up by string
+        {
+            commandId_ = DAW::NamedCommandLookup(params[1].c_str());
             
             if(commandId_ == 0) // can't find it
                 commandId_ = 65535; // no-op
