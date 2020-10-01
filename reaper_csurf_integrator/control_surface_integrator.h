@@ -250,7 +250,6 @@ private:
     string fxParamDisplayName_ = "";
     
     int commandId_ = 0;
-    string commandStr_ = "";
     
     double rangeMinimum_ = 0.0;
     double rangeMaximum_ = 1.0;
@@ -292,23 +291,8 @@ public:
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
     int GetCommandId() { return commandId_; }
-    string GetCommandString() { return commandStr_; }
     bool GetShouldUseDisplayStyle() { return shouldUseDisplayStyle_; }
     int GetDisplayStyle() { return displayStyle_; }
-
-    string GetFxParamDisplayName()
-    {
-        if(fxParamDisplayName_ != "")
-            return fxParamDisplayName_;
-        else if(MediaTrack* track = GetTrack())
-        {
-            char fxParamName[BUFSZ];
-            DAW::TrackFX_GetParamName(track, GetSlotIndex(), paramIndex_, fxParamName, sizeof(fxParamName));
-            return fxParamName;
-        }
-
-        return "";
-    }
     
     MediaTrack* GetTrack();
     
@@ -340,6 +324,20 @@ public:
     void UpdateWidgetValue(int param, double value);
     void UpdateWidgetValue(string value);
     
+    string GetFxParamDisplayName()
+    {
+        if(fxParamDisplayName_ != "")
+            return fxParamDisplayName_;
+        else if(MediaTrack* track = GetTrack())
+        {
+            char fxParamName[BUFSZ];
+            DAW::TrackFX_GetParamName(track, GetSlotIndex(), paramIndex_, fxParamName, sizeof(fxParamName));
+            return fxParamName;
+        }
+        
+        return "";
+    }
+
     void PerformDeferredActions()
     {
         if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
