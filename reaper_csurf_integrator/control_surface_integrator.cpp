@@ -1961,10 +1961,10 @@ void FXActivationManager::MapFocusedFXToWidgets()
 {
     int trackNumber = 0;
     int itemNumber = 0;
-    int fxIndex = 0;
+    int fxSlot = 0;
     MediaTrack* focusedTrack = nullptr;
     
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1)
+    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxSlot) == 1)
         if(trackNumber > 0)
             focusedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     
@@ -1979,18 +1979,13 @@ void FXActivationManager::MapFocusedFXToWidgets()
     if(shouldMapFocusedFX_ && focusedTrack)
     {
         char FXName[BUFSZ];
-        DAW::TrackFX_GetFXName(focusedTrack, fxIndex, FXName, sizeof(FXName));
-        /*
-        if(surface_->GetZones().count(FXName) > 0 && surface_->GetZones()[FXName]->GetHasFocusedFXTrackNavigator())
+        DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
+        
+        if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
         {
-            ZoneOld* zone = surface_->GetZones()[FXName];
-            zone->SetIndex(fxIndex);
-            
-            surface_->LoadingZone(FXName);
-            zone->Activate();
-            activeFocusedFXZones_.push_back(zone);
+            if(zoneTemplate->navigators.size() == 1 && zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
+                zoneTemplate->Activate(surface_, activeFocusedFXZones_, fxSlot, true, false);
         }
-        */
     }
 }
 
@@ -2662,7 +2657,7 @@ void EuCon_ControlSurface::UpdateTimeDisplay()
 {
     double playPosition = (GetPlayState() & 1 ) ? GetPlayPosition() : GetCursorPosition();
     
-    if(previousPP != playPosition) // GAW :) Yeah I know shouldn't compare FP values, but the worst you get is an extra upadate or two, meh.
+    if(previousPP != playPosition) // GAW :) Yeah I know shouldn't compare FP values, but the worst you get is an extra update or two, meh.
     {
         previousPP = playPosition;
 
