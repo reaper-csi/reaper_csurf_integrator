@@ -499,7 +499,7 @@ static double strToDouble(string valueStr)
     return strtod(valueStr.c_str(), nullptr);
 }
 
-static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface)
 {
     if(tokens.size() < 2)
         return;
@@ -658,7 +658,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
     }
 }
 
-static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  OSC_ControlSurface* surface)
 {
     if(tokens.size() < 2)
         return;
@@ -668,7 +668,7 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     if(! widget)
         return;
     
-    widgets.push_back(widget);
+    surface->AddWidget(widget);
 
     vector<vector<string>> tokenLines;
 
@@ -699,7 +699,7 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     }
 }
 
-static void ProcessWidgetFile(string filePath, ControlSurface* surface, vector<Widget*> &widgets)
+static void ProcessWidgetFile(string filePath, ControlSurface* surface)
 {
     int lineNumber = 0;
     
@@ -722,9 +722,9 @@ static void ProcessWidgetFile(string filePath, ControlSurface* surface, vector<W
             if(tokens.size() > 0 && tokens[0] == "Widget")
             {
                 if(filePath[filePath.length() - 3] == 'm')
-                    ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface, widgets);
+                    ProcessMidiWidget(lineNumber, file, tokens, (Midi_ControlSurface*)surface);
                 if(filePath[filePath.length() - 3] == 'o')
-                    ProcessOSCWidget(lineNumber, file, tokens, (OSC_ControlSurface*)surface, widgets);
+                    ProcessOSCWidget(lineNumber, file, tokens, (OSC_ControlSurface*)surface);
             }
         }
     }
@@ -2104,7 +2104,7 @@ void ControlSurface::SurfaceOutMonitor(Widget* widget, string address, string va
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
-    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this, widgets_);
+    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this);
     InitHardwiredWidgets();
     InitZones(zoneFolder);
     MakeHomeDefault();
@@ -2173,7 +2173,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
-    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this, widgets_);
+    ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this);
     
     InitHardwiredWidgets();
     InitZones(zoneFolder);
