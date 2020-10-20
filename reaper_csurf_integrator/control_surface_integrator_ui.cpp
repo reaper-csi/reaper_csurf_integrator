@@ -451,7 +451,7 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         case CBN_SELCHANGE:
                         {
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
-                            if(index >= 0)
+                            if(index >= 0 && !editMode)
                             {
                                 char buffer[BUFSZ];
                                 
@@ -594,7 +594,7 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         case CBN_SELCHANGE:
                         {
                             int index = (int)SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_GETCURSEL, 0, 0);
-                            if(index >= 0)
+                            if(index >= 0 && !editMode)
                             {
                                 char buffer[BUFSZ];
                                 
