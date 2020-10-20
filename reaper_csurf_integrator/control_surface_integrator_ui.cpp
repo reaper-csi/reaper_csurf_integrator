@@ -261,8 +261,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             if(editMode)
             {
-                editMode = false;
-                
                 SetDlgItemText(hwndDlg, IDC_EDIT_PageName, name);
                 
                 if(followMCP)
@@ -412,7 +410,6 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
             
             if(editMode)
             {
-                editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
@@ -551,7 +548,6 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
             if(editMode)
             {
-                editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
@@ -685,7 +681,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
             
             if(editMode)
             {
-                editMode = false;
                 SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name);
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
@@ -917,8 +912,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 synchPages = pages[index]->synchPages;
                                 useScrollLink = pages[index]->useScrollLink;
                                 trackColouring = pages[index]->trackColouring;
+                                
                                 dlgResult = false;
                                 editMode = true;
+                                
                                 DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_Page), hwndDlg, dlgProcPage);
                                 if(dlgResult == IDOK)
                                 {
@@ -932,6 +929,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, index, 0);
                                 }
+                                
+                                editMode = false;
                             }
                         }
                         break ;
@@ -977,6 +976,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->numFX = numFX;
                                     pages[pageIndex]->surfaces[index]->options = options;
                                 }
+                                
+                                editMode = false;
                             }
                         }
                         break ;
