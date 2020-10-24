@@ -1313,9 +1313,6 @@ private:
     vector<Widget*> generalWidgets_;
     map<int, WidgetGroup*> channelGroups_;
     
-    WDL_Mutex mutex_;
-    list<MarshalledFunctionCall*> workQueue_;
-
     Widget* InitializeEuConWidget(CSIWidgetInfo &widgetInfo);
     
     map<int, PeakInfo> peakInfo_;
@@ -1348,7 +1345,6 @@ public:
     virtual void UpdateTimeDisplay() override;
     virtual void ReceiveEuConMessage(string address, double value) override;
     virtual void ReceiveEuConMessage(string address, string value) override;
-    virtual void HandleExternalInput() override;
     virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
