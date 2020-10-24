@@ -1008,10 +1008,8 @@ public:
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
-    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) {}
     virtual void UpdateTimeDisplay() {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
-    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) {}
   
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
@@ -1331,7 +1329,7 @@ public:
     virtual bool GetIsEuConFXAreaFocused() override { return isEuConFXAreaFocused_; }
 
     virtual void InitializeEuCon() override;
-    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) override;
+    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems);
     void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value);
     void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value, int param);
     void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value);
@@ -1340,7 +1338,7 @@ public:
     virtual void UpdateTimeDisplay() override;
     virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
-    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) override;
+    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
 
     virtual void RequestUpdate() override
     {
@@ -1696,22 +1694,10 @@ public:
             surface->InitializeEuCon();
     }
     
-    void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
-    {
-        for(auto surface : surfaces_)
-            surface->InitializeEuConWidgets(widgetInfoItems);
-    }
-    
     void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
     {
         for(auto surface : surfaces_)
             surface->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
-    }
-
-    void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
-    {
-        for(auto surface : surfaces_)
-            surface->GetFormattedFXParamValue(address, buffer, bufferSize);
     }
     
    /*
@@ -2191,22 +2177,10 @@ public:
             pages_[currentPageIndex_]->InitializeEuCon();
     }
     
-    void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuConWidgets(widgetInfoItems);
-    }
-       
     void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
-    }
-
-    void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->GetFormattedFXParamValue(address, buffer, bufferSize);
     }
     
     //int repeats = 0;

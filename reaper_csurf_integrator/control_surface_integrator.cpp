@@ -2254,10 +2254,9 @@ void EuConRequestsInitialization()
         TheManager->InitializeEuCon();
 }
 
-void InitializeEuConWidgets(vector<CSIWidgetInfo> *assemblyInfoItems)
+void InitializeEuConWidgets(EuCon_ControlSurface* surface, vector<CSIWidgetInfo> *assemblyInfoItems)
 {
-    if(TheManager)
-        TheManager->InitializeEuConWidgets(assemblyInfoItems);
+    surface->InitializeEuConWidgets(assemblyInfoItems);
 }
 
 void HandleEuConMessageWithDouble(EuCon_ControlSurface* surface, const char *address, double value)
@@ -2276,10 +2275,9 @@ void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bo
         TheManager->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
 }
 
-void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
+void GetFormattedFXParamValue(EuCon_ControlSurface* surface, const char* address, char *buffer, int bufferSize)
 {
-    if(TheManager)
-        TheManager->GetFormattedFXParamValue(address, buffer, bufferSize);
+    surface->GetFormattedFXParamValue(address, buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
