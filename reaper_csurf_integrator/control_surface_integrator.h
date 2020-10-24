@@ -1009,11 +1009,7 @@ public:
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
     virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems) {}
-    virtual void ReceiveEuConMessage(string oscAddress, double value) {}
-    virtual void ReceiveEuConMessage(string oscAddress, string value) {}
     virtual void UpdateTimeDisplay() {}
-    virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
-    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) {}
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
     virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) {}
   
@@ -1341,12 +1337,8 @@ public:
     void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value);
     void SendEuConMessage(string address, string value);
     void HandleEuConMessage(string address, double value);
-    void HandleEuConMessage(string address, string value);
     virtual void UpdateTimeDisplay() override;
-    virtual void ReceiveEuConMessage(string address, double value) override;
-    virtual void ReceiveEuConMessage(string address, string value) override;
-    virtual void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
-    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible) override;
+    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
     virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
     virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize) override;
 
@@ -1708,24 +1700,6 @@ public:
     {
         for(auto surface : surfaces_)
             surface->InitializeEuConWidgets(widgetInfoItems);
-    }
-    
-    void ReceiveEuConMessage(string oscAddress, double value)
-    {
-        for(auto surface : surfaces_)
-            surface->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    void ReceiveEuConMessage(string oscAddress, string value)
-    {
-        for(auto surface : surfaces_)
-            surface->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
-    {
-        for(auto surface : surfaces_)
-            surface->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
     }
     
     void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
@@ -2222,25 +2196,7 @@ public:
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->InitializeEuConWidgets(widgetInfoItems);
     }
-    
-    void ReceiveEuConMessage(string oscAddress, double value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    void ReceiveEuConMessage(string oscAddress, string value)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConMessage(oscAddress, value);
-    }
-    
-    void ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
-    }
-    
+       
     void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
     {
         if(pages_.size() > 0)
