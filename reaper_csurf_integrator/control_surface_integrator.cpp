@@ -2269,7 +2269,7 @@ void HandleEuConGroupVisibilityChange(EuCon_ControlSurface* surface, const char 
     surface->HandleEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
 }
 
-void HandleEuConGetMeterValues(EuCon_ControlSurface* surface, int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+void HandleEuConGetMeterValues(EuCon_ControlSurface* surface, int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip)
 {
     surface->HandleEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
 }
@@ -2435,14 +2435,14 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
         HandleReaperMessageWthString(address.c_str(), value.c_str());
 }
 
-void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip)
 {
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
     {
         float left = VAL2DB(DAW::Track_GetPeakInfo(track, 0));
         float right = VAL2DB(DAW::Track_GetPeakInfo(track, 1));
         
-        oLevel = (left + right) / 2.0;
+        *oLevel = (left + right) / 2.0;
        
         float max = left > right ? left : right;
         
@@ -2469,14 +2469,14 @@ void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float& oL
             peakInfo_[id].isClipping = false;
         }
         
-        oPeak = peakInfo_[id].peakValue;
-        oLegClip = peakInfo_[id].isClipping;
+        *oPeak = peakInfo_[id].peakValue;
+        *oLegClip = peakInfo_[id].isClipping;
     }
     else
     {
-        oLevel = -144.0;
-        oPeak = -144.0;
-        oLegClip = false;
+        *oLevel = -144.0;
+        *oPeak = -144.0;
+        *oLegClip = false;
     }
 }
 
