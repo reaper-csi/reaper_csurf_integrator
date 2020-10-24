@@ -1335,7 +1335,7 @@ public:
     void SendEuConMessage(string address, string value);
     void HandleEuConMessage(string address, double value);
     void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
-    void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip);
+    void HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip);
     void HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
     virtual void UpdateTimeDisplay() override;
     
