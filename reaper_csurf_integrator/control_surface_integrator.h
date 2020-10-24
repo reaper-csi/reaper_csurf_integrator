@@ -1009,8 +1009,7 @@ public:
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
     virtual void UpdateTimeDisplay() {}
-    virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) {}
-  
+
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
@@ -1335,11 +1334,11 @@ public:
     void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value);
     void SendEuConMessage(string address, string value);
     void HandleEuConMessage(string address, double value);
+    void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
+    void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip);
+    void HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
     virtual void UpdateTimeDisplay() override;
-    virtual void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
-    virtual void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip) override;
-    virtual void GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
-
+    
     virtual void RequestUpdate() override
     {
         for(auto widget : generalWidgets_)
@@ -1692,12 +1691,6 @@ public:
     {
         for(auto surface : surfaces_)
             surface->InitializeEuCon();
-    }
-    
-    void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
-    {
-        for(auto surface : surfaces_)
-            surface->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
     }
     
    /*
@@ -2175,12 +2168,6 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->InitializeEuCon();
-    }
-    
-    void ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
     }
     
     //int repeats = 0;
