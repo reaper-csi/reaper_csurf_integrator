@@ -2247,63 +2247,6 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 // For EuCon
-/////////////////////////////////////////////////////////////////////////////
-class MarshalledFunctionCall
-/////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    EuCon_ControlSurface* surface_ = nullptr;
-    MarshalledFunctionCall(EuCon_ControlSurface * surface) : surface_(surface) {}
-    
-public:
-    virtual void Execute() {}
-    virtual ~MarshalledFunctionCall() {}
-};
-
-/////////////////////////////////////////////////////////////////////////////
-class Marshalled_Double : public MarshalledFunctionCall
-/////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string address_ = "";
-    double value_ = 0;
-public:
-    Marshalled_Double(EuCon_ControlSurface* surface, string address, double value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
-    virtual ~Marshalled_Double() {}
-    
-    virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
-};
-
-/////////////////////////////////////////////////////////////////////////////
-class Marshalled_String : public MarshalledFunctionCall
-/////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string address_ = "";
-    string  value_ = "";
-    
-public:
-    Marshalled_String(EuCon_ControlSurface* surface, string address, string value) : MarshalledFunctionCall(surface), address_(address), value_(value)  { }
-    virtual ~Marshalled_String() {}
-    
-    virtual void Execute() override { surface_->HandleEuConMessage(address_, value_); }
-};
-
-/////////////////////////////////////////////////////////////////////////////
-class Marshalled_VisibilityChange : public MarshalledFunctionCall
-/////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string groupName_ = "";
-    int  channelNumber_ = 0;
-    bool isVisible_ = false;
-    
-public:
-    Marshalled_VisibilityChange(EuCon_ControlSurface* surface, string groupName, int channelNumber, bool isVisible) : MarshalledFunctionCall(surface), groupName_(groupName), channelNumber_(channelNumber), isVisible_(isVisible)  { }
-    virtual ~Marshalled_VisibilityChange() {}
-    
-    virtual void Execute() override { surface_->HandleEuConGroupVisibilityChange(groupName_, channelNumber_, isVisible_); }
-};
 
 void EuConRequestsInitialization()
 {
@@ -2559,23 +2502,17 @@ void EuCon_ControlSurface::GetFormattedFXParamValue(const char* address, char *b
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
 {
-    mutex_.Enter();
-    workQueue_.push_front(new Marshalled_Double(this, address, value));
-    mutex_.Leave();
+    HandleEuConMessage(address, value);
 }
 
 void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
 {
-    mutex_.Enter();
-    workQueue_.push_front(new Marshalled_String(this, address, value));
-    mutex_.Leave();
+    HandleEuConMessage(address, value);
 }
 
 void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
 {
-    mutex_.Enter();
-    workQueue_.push_front(new Marshalled_VisibilityChange(this, groupName, channelNumber, isVisible));
-    mutex_.Leave();
+    HandleEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
 }
 
 void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
@@ -2610,25 +2547,6 @@ void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, in
     
     else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
         channelGroups_[channelNumber]->SetIsVisible(isVisible);
-}
-
-void EuCon_ControlSurface::HandleExternalInput()
-{
-    if(! workQueue_.empty())
-    {
-        mutex_.Enter();
-        list<MarshalledFunctionCall*> localWorkQueue = workQueue_;
-        workQueue_.clear();
-        mutex_.Leave();
-        
-        while(! localWorkQueue.empty())
-        {
-            MarshalledFunctionCall *pCall = localWorkQueue.back();
-            localWorkQueue.pop_back();
-            pCall->Execute();
-            delete pCall;
-        }
-    }
 }
 
 void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
