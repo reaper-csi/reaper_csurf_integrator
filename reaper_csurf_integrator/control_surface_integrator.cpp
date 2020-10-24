@@ -2269,15 +2269,14 @@ void HandleEuConGroupVisibilityChange(EuCon_ControlSurface* surface, const char 
     surface->HandleEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
 }
 
-void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+void HandleEuConGetMeterValues(EuCon_ControlSurface* surface, int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
 {
-    if(TheManager)
-        TheManager->ReceiveEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
+    surface->HandleEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
 }
 
-void GetFormattedFXParamValue(EuCon_ControlSurface* surface, const char* address, char *buffer, int bufferSize)
+void HandleEuConGetFormattedFXParamValue(EuCon_ControlSurface* surface, const char* address, char *buffer, int bufferSize)
 {
-    surface->GetFormattedFXParamValue(address, buffer, bufferSize);
+    surface->HandleEuConGetFormattedFXParamValue(address, buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2303,8 +2302,8 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     if( ! plugin_register("API_HandleEuConGetMeterValues", (void *)::HandleEuConGetMeterValues))
         LOG::InitializationFailure("HandleEuConGetMeterValues failed to register");
     
-    if( ! plugin_register("API_GetFormattedFXParamValue", (void *)::GetFormattedFXParamValue))
-        LOG::InitializationFailure("GetFormattedFXParamValue failed to register");
+    if( ! plugin_register("API_HandleEuConGetFormattedFXParamValue", (void *)::HandleEuConGetFormattedFXParamValue))
+        LOG::InitializationFailure("HandleEuConGetFormattedFXParamValue failed to register");
     
     InitializeEuCon();
 }
@@ -2436,7 +2435,7 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
         HandleReaperMessageWthString(address.c_str(), value.c_str());
 }
 
-void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
+void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
 {
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
     {
@@ -2481,7 +2480,7 @@ void EuCon_ControlSurface::ReceiveEuConGetMeterValues(int id, int iLeg, float& o
     }
 }
 
-void EuCon_ControlSurface::GetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
+void EuCon_ControlSurface::HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
 {
     if(widgetsByName_.count(address) > 0)
         widgetsByName_[address]->GetFormattedFXParamValue(buffer, bufferSize);
