@@ -2260,22 +2260,14 @@ void InitializeEuConWidgets(vector<CSIWidgetInfo> *assemblyInfoItems)
         TheManager->InitializeEuConWidgets(assemblyInfoItems);
 }
 
-void HandleEuConMessageWithDouble(const char *address, double value)
+void HandleEuConMessageWithDouble(EuCon_ControlSurface* surface, const char *address, double value)
 {
-    if(TheManager)
-        TheManager->ReceiveEuConMessage(string(address), value);
+    surface->HandleEuConMessage(string(address), value);
 }
 
-void HandleEuConMessageWithString(const char *address, const char *value)
+void HandleEuConGroupVisibilityChange(EuCon_ControlSurface* surface, const char *groupName, int channelNumber, bool isVisible)
 {
-    if(TheManager)
-        TheManager->ReceiveEuConMessage(string(address), string(value));
-}
-
-void HandleEuConGroupVisibilityChange(const char *groupName, int channelNumber, bool isVisible)
-{
-    if(TheManager)
-        TheManager->ReceiveEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
+    surface->HandleEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
 }
 
 void HandleEuConGetMeterValues(int id, int iLeg, float& oLevel, float& oPeak, bool& oLegClip)
@@ -2307,9 +2299,6 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
     if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)::HandleEuConMessageWithDouble))
         LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
     
-    if( ! plugin_register("API_HandleEuConMessageWithString", (void *)::HandleEuConMessageWithString))
-        LOG::InitializationFailure("HandleEuConMessageWithString failed to register");
-    
     if( ! plugin_register("API_HandleEuConGroupVisibilityChange", (void *)::HandleEuConGroupVisibilityChange))
         LOG::InitializationFailure("HandleEuConGroupVisibilityChange failed to register");
     
@@ -2324,13 +2313,13 @@ EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Pag
 
 void EuCon_ControlSurface::InitializeEuCon()
 {
-    static void (*InitializeEuConWithParameters)(int numChannels, int numSends, int numFX, int panOptions) = nullptr;
+    static void (*InitializeEuConWithParameters)(EuCon_ControlSurface* surface, int numChannels, int numSends, int numFX, int panOptions) = nullptr;
 
     if(g_reaper_plugin_info && InitializeEuConWithParameters == nullptr)
-        InitializeEuConWithParameters = (void (*)(int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
+        InitializeEuConWithParameters = (void (*)(EuCon_ControlSurface*, int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
     if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(numChannels_, numSends_, fxActivationManager_->GetNumFXSlots(), options_);
+        InitializeEuConWithParameters(this, numChannels_, numSends_, fxActivationManager_->GetNumFXSlots(), options_);
 }
 
 Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
@@ -2500,21 +2489,6 @@ void EuCon_ControlSurface::GetFormattedFXParamValue(const char* address, char *b
         widgetsByName_[address]->GetFormattedFXParamValue(buffer, bufferSize);
 }
 
-void EuCon_ControlSurface::ReceiveEuConMessage(string address, double value)
-{
-    HandleEuConMessage(address, value);
-}
-
-void EuCon_ControlSurface::ReceiveEuConMessage(string address, string value)
-{
-    HandleEuConMessage(address, value);
-}
-
-void EuCon_ControlSurface::ReceiveEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
-{
-    HandleEuConGroupVisibilityChange(groupName, channelNumber, isVisible);
-}
-
 void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
 {
     if(groupName == "FX")
@@ -2564,11 +2538,6 @@ void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
         snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), address.c_str(), value);
         DAW::ShowConsoleMsg(buffer);
     }
-}
-
-void EuCon_ControlSurface::HandleEuConMessage(string address, string value)
-{
-    // GAW TBD
 }
 
 void EuCon_ControlSurface::UpdateTimeDisplay()
