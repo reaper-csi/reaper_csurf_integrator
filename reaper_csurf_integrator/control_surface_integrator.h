@@ -1570,6 +1570,28 @@ public:
             }
         }
 
+        if(MediaTrack* selectedTrack = GetSelectedTrack())
+        {
+            if(track == selectedTrack)
+            {
+                if(touchedControl == 0)
+                    return GetSelectedTrackNavigator()->GetIsFaderTouched();
+                else
+                    return GetSelectedTrackNavigator()->GetIsRotaryTouched();
+            }
+        }
+        
+        if(MediaTrack* focusedFXTrack = GetFocusedFXNavigator()->GetTrack())
+        {
+            if(track == focusedFXTrack)
+            {
+                if(touchedControl == 0)
+                    return GetFocusedFXNavigator()->GetIsFaderTouched();
+                else
+                    return GetFocusedFXNavigator()->GetIsRotaryTouched();
+            }
+        }
+
         return false;
     }
     
