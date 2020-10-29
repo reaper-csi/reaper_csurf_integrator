@@ -106,6 +106,7 @@ class Action
 public:
     virtual ~Action() {}
     
+    virtual string GetName() { return "Action"; }
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
 };
