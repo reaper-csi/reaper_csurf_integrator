@@ -33,7 +33,7 @@ public:
         surface->AddCSIMessageGenerator(release->midi_message[0] * 0x10000 + release->midi_message[1] * 0x100 + release->midi_message[2], this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         widget_->DoAction(midiMessage->IsEqualTo(press_) ? 1 : 0);
     }
@@ -54,7 +54,7 @@ public:
         surface->AddCSIMessageGenerator(press->midi_message[0] * 0x10000 + press->midi_message[1] * 0x100, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         widget_->DoAction(1); // Doesn't matter what value was sent, just do it
     }
@@ -71,7 +71,7 @@ public:
         surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         widget_->DoAction(int14ToNormalized(midiMessage->midi_message[2], midiMessage->midi_message[1]));
     }
@@ -88,7 +88,7 @@ public:
         surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         widget_->DoAction(midiMessage->midi_message[2] / 127.0);
     }
@@ -194,7 +194,7 @@ public:
         }
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         int val = midiMessage->midi_message[2];
         
@@ -218,7 +218,7 @@ public:
         surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
         
@@ -242,7 +242,7 @@ public:
         surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = 1.0 / 64.0;
         
@@ -264,7 +264,7 @@ public:
         surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
     }
     
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) override
     {
         double value = 1.0 / 64.0;
         

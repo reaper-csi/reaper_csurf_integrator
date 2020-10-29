@@ -681,6 +681,14 @@ class CSIMessageGenerator
 protected:
     Widget* const widget_;
     CSIMessageGenerator(Widget* widget) : widget_(widget) {}
+    
+public:
+    CSIMessageGenerator(ControlSurface* surface, Widget* widget, string message);
+
+    void ProcessMessage(double value)
+    {
+        widget_->DoAction(value);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -692,35 +700,7 @@ protected:
     
 public:
     virtual ~Midi_CSIMessageGenerator() {}
-    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class OSC_CSIMessageGenerator : public CSIMessageGenerator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message);
-    virtual ~OSC_CSIMessageGenerator() {}
-    
-    virtual void ProcessOSCMessage(string message, double value)
-    {
-        widget_->DoAction(value);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EuCon_CSIMessageGenerator : public CSIMessageGenerator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    EuCon_CSIMessageGenerator(EuCon_ControlSurface* surface, Widget* widget, string message);
-    virtual ~EuCon_CSIMessageGenerator() {}
-    
-    virtual void ProcessMessage(string message, double value)
-    {
-        widget_->DoAction(value);
-    }
+    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -728,6 +708,9 @@ class FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
+    double lastDoubleValue_ = 0.0;
+    string lastStringValue_ = "";
+
     bool mustForce_ = false;
     bool isSilent_ = false;
     bool shouldRefresh_ = false;
@@ -747,7 +730,12 @@ public:
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
     virtual void ForceRGBValue(int r, int g, int b) {}
-    virtual void ClearCache() {}
+  
+    virtual void ClearCache()
+    {
+        lastDoubleValue_ = 0.0;
+        lastStringValue_ = "";
+    }
 
     virtual void ForceValue(string displayText)
     {
@@ -817,8 +805,6 @@ class OSC_FeedbackProcessor : public FeedbackProcessor
 protected:
     OSC_ControlSurface* const surface_ = nullptr;
     string oscAddress_ = "";
-    double lastDoubleValue_ = 0.0;
-    string lastStringValue_ = "";
     
 public:
     
@@ -832,12 +818,6 @@ public:
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
     virtual void SilentSetValue(string value) override;
-
-    virtual void ClearCache() override
-    {
-        lastDoubleValue_ = 0.0;
-        lastStringValue_ = "";
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -847,8 +827,6 @@ class EuCon_FeedbackProcessor : public FeedbackProcessor
 protected:
     EuCon_ControlSurface* const surface_ = nullptr;
     string address_ = "";
-    double lastDoubleValue_ = 0.0;
-    string lastStringValue_ = "";
     
 public:
     
@@ -862,11 +840,6 @@ public:
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
     virtual void SilentSetValue(string value) override;
-    virtual void ClearCache() override
-    {
-        lastDoubleValue_ = 0.0;
-        lastStringValue_ = "";
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -954,13 +927,14 @@ protected:
     string const name_;
     Zone* const defaultZone_ = nullptr;
 
+    map<string, CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
+    
     string zoneFolder_ = "";
     int numChannels_ = 0;
     int numSends_ = 0;
     int options_ = 0;
 
     map<int, Navigator*> navigators_;
-    
     
     vector<Widget*> widgets_;
     map<string, Widget*> widgetsByName_;
@@ -1092,6 +1066,11 @@ public:
         widgets_.push_back(widget);
         widgetsByName_[widget->GetName()] = widget;
     }
+    
+    void AddCSIMessageGenerator(string message, CSIMessageGenerator* messageGenerator)
+    {
+        CSIMessageGeneratorsByMessage_[message] = messageGenerator;
+    }
 
     Widget* GetWidgetByName(string name)
     {
@@ -1122,7 +1101,7 @@ private:
     string templateFilename_ = "";
     midi_Input* midiInput_ = nullptr;
     midi_Output* midiOutput_ = nullptr;
-    map<int, vector<Midi_CSIMessageGenerator*>> CSIMessageGeneratorsByMidiMessage_;
+    map<int, vector<Midi_CSIMessageGenerator*>> Midi_CSIMessageGeneratorsByMessage_;
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
    
@@ -1157,7 +1136,7 @@ public:
     
     void AddCSIMessageGenerator(int message, Midi_CSIMessageGenerator* messageGenerator)
     {
-        CSIMessageGeneratorsByMidiMessage_[message].push_back(messageGenerator);
+        Midi_CSIMessageGeneratorsByMessage_[message].push_back(messageGenerator);
     }
 };
 
@@ -1171,7 +1150,6 @@ private:
     oscpkt::UdpSocket* const outSocket_ = nullptr;
     oscpkt::PacketReader packetReader_;
     oscpkt::PacketWriter packetWriter_;
-    map<string, OSC_CSIMessageGenerator*> CSIMessageGeneratorsByOSCMessage_;
     
     void InitWidgets(string templateFilename, string zoneFolder);
     void ProcessOSCMessage(string message, double value);
@@ -1218,11 +1196,6 @@ public:
                 }
             }
         }
-    }
-
-    void AddCSIMessageGenerator(string message, OSC_CSIMessageGenerator* messageGenerator)
-    {
-        CSIMessageGeneratorsByOSCMessage_[message] = messageGenerator;
     }
 };
 
@@ -1300,8 +1273,6 @@ private:
     bool isEuConFXAreaFocused_ = false;
     double previousPP = 0.0;
     
-    map<string, EuCon_CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
-
     vector<Widget*> generalWidgets_;
     map<int, WidgetGroup*> channelGroups_;
     
@@ -1352,11 +1323,6 @@ public:
     virtual void ForceRefreshTimeDisplay() override
     {
         previousPP = 0.5;
-    }
-
-    void AddCSIMessageGenerator(string message, EuCon_CSIMessageGenerator* messageGenerator)
-    {
-        CSIMessageGeneratorsByMessage_[message] = messageGenerator;
     }
 };
 

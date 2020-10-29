@@ -709,7 +709,7 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     for(auto tokenLine : tokenLines)
     {
         if(tokenLine.size() > 1 && tokenLine[0] == "Control")
-            new OSC_CSIMessageGenerator(surface, widget, tokenLine[1]);
+            new CSIMessageGenerator(surface, widget, tokenLine[1]);
         else if(tokenLine.size() > 1 && tokenLine[0] == "FB_Processor")
             widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, widget, tokenLine[1]));
     }
@@ -1717,18 +1717,10 @@ void Widget::LogInput(double value)
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// OSC_CSIMessageGenerator : public CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-OSC_CSIMessageGenerator::OSC_CSIMessageGenerator(OSC_ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(widget)
-{
-    surface->AddCSIMessageGenerator(message, this);
-}
-
+// CSIMessageGenerator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// EuCon_CSIMessageGenerator : public CSIMessageGenerator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_CSIMessageGenerator::EuCon_CSIMessageGenerator(EuCon_ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(widget)
+CSIMessageGenerator::CSIMessageGenerator(ControlSurface* surface, Widget* widget, string message) : widget_(widget)
 {
     surface->AddCSIMessageGenerator(message, this);
 }
@@ -2139,23 +2131,23 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     bool isMapped = false;
     
     // At this point we don't know how much of the message comprises the key, so try all three
-    if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
+    if(Midi_CSIMessageGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]) > 0)
     {
         isMapped = true;
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
-            generator->ProcessMidiMessage(evt);
+        for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
+            generator->ProcessMessage(evt);
     }
-    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
+    else if(Midi_CSIMessageGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
     {
         isMapped = true;
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
-            generator->ProcessMidiMessage(evt);
+        for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
+            generator->ProcessMessage(evt);
     }
-    else if(CSIMessageGeneratorsByMidiMessage_.count(evt->midi_message[0] * 0x10000) > 0)
+    else if(Midi_CSIMessageGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
     {
         isMapped = true;
-        for( auto generator : CSIMessageGeneratorsByMidiMessage_[evt->midi_message[0] * 0x10000])
-            generator->ProcessMidiMessage(evt);
+        for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000])
+            generator->ProcessMessage(evt);
         
     }
     
@@ -2206,8 +2198,8 @@ void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 
 void OSC_ControlSurface::ProcessOSCMessage(string message, double value)
 {
-    if(CSIMessageGeneratorsByOSCMessage_.count(message) > 0)
-        CSIMessageGeneratorsByOSCMessage_[message]->ProcessOSCMessage(message, value);
+    if(CSIMessageGeneratorsByMessage_.count(message) > 0)
+        CSIMessageGeneratorsByMessage_[message]->ProcessMessage(value);
     
     if(TheManager->GetSurfaceInDisplay())
     {
@@ -2351,7 +2343,7 @@ Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
             return nullptr;
         
         if(widgetInfo.control != "")
-            new EuCon_CSIMessageGenerator(this, widget, widgetInfo.control);
+            new CSIMessageGenerator(this, widget, widgetInfo.control);
        
         if(widgetInfo.FB_Processor != "")
         {
@@ -2549,7 +2541,7 @@ void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
     else if(address == "LayoutChanged")
         DAW::MarkProjectDirty(nullptr);
     else if(CSIMessageGeneratorsByMessage_.count(address) > 0)
-        CSIMessageGeneratorsByMessage_[address]->ProcessMessage(address, value);
+        CSIMessageGeneratorsByMessage_[address]->ProcessMessage(value);
         
     if(TheManager->GetSurfaceInDisplay())
     {
