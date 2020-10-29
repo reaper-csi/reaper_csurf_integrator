@@ -14,6 +14,8 @@ class TogglePin  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "TogglePin"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -28,6 +30,8 @@ class ToggleMapSelectedTrackSends  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleMapSelectedTrackSends"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetSurface()->GetShouldMapSends());
@@ -46,6 +50,8 @@ class ToggleMapSelectedTrackFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleMapSelectedTrackFX"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
@@ -64,6 +70,8 @@ class ToggleMapSelectedTrackFXMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleMapSelectedTrackFXMenu"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
@@ -82,6 +90,8 @@ class ToggleMapFocusedFX  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleMapFocusedFX"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
@@ -100,6 +110,8 @@ class GoFXSlot  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "GoFXSlot"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -116,6 +128,8 @@ class MapSelectedTrackSendsToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "MapSelectedTrackSendsToWidgets"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -129,6 +143,8 @@ class MapSelectedTrackFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "MapSelectedTrackFXToWidgets"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -142,6 +158,8 @@ class MapSelectedTrackFXToMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "MapSelectedTrackFXToMenu"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -155,6 +173,8 @@ class MapFocusedFXToWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "MapFocusedFXToWidgets"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -168,6 +188,8 @@ class SelectTrackRelative : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SelectTrackRelative"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -201,6 +223,8 @@ class SetShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SetShowFXWindows"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShowFXWindows());
@@ -219,6 +243,8 @@ class ToggleScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleScrollLink"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetScrollLink());
@@ -237,6 +263,8 @@ class ForceScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ForceScrollLink"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -250,6 +278,8 @@ class ToggleVCAMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ToggleVCAMode"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetVCAMode());
@@ -268,6 +298,8 @@ class CycleTimeDisplayModes : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "CycleTimeDisplayModes"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -281,6 +313,8 @@ class GoNextPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "GoNextPage"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -294,6 +328,8 @@ class GoPage : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "GoPage"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -307,6 +343,8 @@ class GoZone : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "GoZone"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0)
@@ -321,6 +359,8 @@ class ClearAllSolo : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ClearAllSolo"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(DAW::AnyTrackSolo(nullptr));
@@ -339,6 +379,8 @@ class TrackBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "TrackBank"; }
+
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
@@ -352,6 +394,8 @@ class SetShift : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SetShift"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetPage()->GetShift());
@@ -368,6 +412,8 @@ class SetOption : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SetOption"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetPage()->GetOption());
@@ -384,6 +430,8 @@ class SetControl : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SetControl"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetPage()->GetControl());
@@ -400,6 +448,8 @@ class SetAlt : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "SetAlt"; }
+
     void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(context->GetPage()->GetAlt());
