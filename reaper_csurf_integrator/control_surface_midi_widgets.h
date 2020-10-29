@@ -830,6 +830,87 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class QConLiteDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int offset_ = 0;
+    int displayType_ = 0x14;
+    int displayRow_ = 0x12;
+    int channel_ = 0;
+    string lastStringSent_ = "";
+    
+public:
+    virtual ~QConLiteDisplay_Midi_FeedbackProcessor() {}
+    QConLiteDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayUpperLower, int displayType, int displayRow, int channel) : Midi_FeedbackProcessor(surface, widget), offset_(displayUpperLower * 28), displayType_(displayType), displayRow_(displayRow), channel_(channel) { }
+    
+    virtual void ClearCache() override
+    {
+        lastStringSent_ = " ";
+    }
+    
+    virtual void UpdateValue(string displayText) override
+    {
+        if(shouldRefresh_)
+        {
+            double now = DAW::GetCurrentNumberOfMilliseconds();
+            
+            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
+                lastRefreshed_ = now;
+            else
+                return;
+        }
+        else if( ! mustForce_ && ! isSilent_)
+        {
+            if(displayText == lastStringSent_) // no changes since last send
+                return;
+        }
+        
+        if(! isSilent_)
+            lastStringSent_ = displayText;
+        
+        int pad = 7;
+        const char* text = displayText.c_str();
+        
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayRow_;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_ * 7 + offset_;
+        
+        int l = strlen(text);
+        if (pad < l)
+            l = pad;
+        if (l > 200)
+            l = 200;
+        
+        int cnt = 0;
+        while (cnt < l)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+            cnt++;
+        }
+        
+        while (cnt++ < pad)
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = ' ';
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
 char m_mackie_lasttime[10];
 int m_mackie_lasttime_mode;
 DWORD m_mcu_timedisp_lastforce, m_mcu_meter_lastrun;
