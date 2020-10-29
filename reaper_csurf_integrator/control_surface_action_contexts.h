@@ -14,6 +14,8 @@ class NoAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "NoAction"; }
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         context->ClearWidget();
@@ -25,6 +27,8 @@ class ReaperAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "ReaperAction"; }
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         context->UpdateWidgetValue(DAW::GetToggleCommandState(context->GetCommandId()));
@@ -42,6 +46,8 @@ class FXAction : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
+    virtual string GetName() override { return "FXAction"; }
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
