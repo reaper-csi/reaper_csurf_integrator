@@ -233,7 +233,15 @@ public:
         else
             return false;
     }
-
+    
+    static bool TrackFX_EndParamEdit(MediaTrack* track, int fx, int param)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::TrackFX_EndParamEdit(track, fx, param);
+        else
+            return false;
+    }
+    
     static bool GetTrackName(MediaTrack* track, char* buf, int buf_sz)
     {
         if(ValidatePtr(track, "MediaTrack*"))
