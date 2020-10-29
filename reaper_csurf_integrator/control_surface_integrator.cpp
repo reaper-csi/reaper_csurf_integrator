@@ -814,6 +814,7 @@ void Manager::InitActionsDictionary()
     actions_["TrackOutputMeterMaxPeakLR"] =         new TrackOutputMeterMaxPeakLR();
     
     actions_["FXParam"] =                           new FXParam();
+    actions_["FXParamTouch"] =                      new FXParamTouch();
     actions_["FXParamRelative"] =                   new FXParamRelative();
     actions_["FXNameDisplay"] =                     new FXNameDisplay();
     actions_["FXParamNameDisplay"] =                new FXParamNameDisplay();
@@ -1120,6 +1121,11 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
             shouldUseDisplayStyle_ = true;
             displayStyle_ = atol(params[3].c_str());
         }
+    }
+    
+    if(actionName == "FXParamTouch" && params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
+    {
+        paramIndex_ = atol(params[1].c_str());
     }
     
     /*
