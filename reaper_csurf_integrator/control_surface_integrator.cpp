@@ -554,7 +554,9 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             new EncoderPlain_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         else if(widgetClass == "EncoderPlainReverse" && size == 4)
             new EncoderPlainReverse_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
-        
+        else if(widgetClass == "Touch" && size == 7)
+            new Touch_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])), new MIDI_event_ex_t(strToHex(tokenLines[i][4]), strToHex(tokenLines[i][5]), strToHex(tokenLines[i][6])));
+
         // Feedback Processors
         FeedbackProcessor* feedbackProcessor = nullptr;
 
@@ -703,6 +705,8 @@ static void ProcessOSCWidget(int &lineNumber, ifstream &surfaceTemplateFile, vec
     {
         if(tokenLine.size() > 1 && tokenLine[0] == "Control")
             new CSIMessageGenerator(surface, widget, tokenLine[1]);
+        else if(tokenLine.size() > 1 && tokenLine[0] == "Touch")
+            new Touch_CSIMessageGenerator(surface, widget, tokenLine[1]);
         else if(tokenLine.size() > 1 && tokenLine[0] == "FB_Processor")
             widget->AddFeedbackProcessor(new OSC_FeedbackProcessor(surface, widget, tokenLine[1]));
     }
@@ -787,8 +791,8 @@ void Manager::InitActionsDictionary()
     actions_["ToggleMapFocusedFX"] =                new ToggleMapFocusedFX();
     actions_["MapFocusedFXToWidgets"] =             new MapFocusedFXToWidgets();
     actions_["GoFXSlot"] =                          new GoFXSlot();
-    //actio["CycleTrackAutoMode"] =                 new CycleTrackAutoMode();
-    //actio["EuConCycleTrackAutoMode"] =            new EuConCycleTrackAutoMode();
+    //actions_["CycleTrackAutoMode"] =                 new CycleTrackAutoMode();
+    //actions_["EuConCycleTrackAutoMode"] =            new EuConCycleTrackAutoMode();
     actions_["GlobalAutoMode"] =                    new GlobalAutoMode();
     actions_["FocusedFXParam"] =                    new FocusedFXParam();
     actions_["FocusedFXParamNameDisplay"] =         new FocusedFXParamNameDisplay();
@@ -1590,42 +1594,6 @@ void ActionTemplate::SetProperties(ActionContext &context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Widget::GetFormattedFXParamValue(char *buffer, int bufferSize)
-{
-    currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
-}
-
-void Widget::Deactivate()
-{
-    currentWidgetActionBroker_ = defaultWidgetActionBroker_;
-}
-
-void Widget::RequestUpdate()
-{
-    currentWidgetActionBroker_.GetActionBundle().RequestUpdate();
-}
-
-void Widget::DoAction(double value)
-{
-    LogInput(value);
-    
-    currentWidgetActionBroker_.GetActionBundle().DoAction(value);
-}
-
-void Widget::DoRelativeAction(double delta)
-{
-    LogInput(delta);
-
-    currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(delta);
-}
-
-void Widget::DoRelativeAction(int accelerationIndex, double delta)
-{
-    LogInput(accelerationIndex);
-
-    currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(accelerationIndex, delta);
-}
-
 void Widget::SilentSetValue(string displayText)
 {
     for(auto processor : feedbackProcessors_)
@@ -2102,19 +2070,19 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     {
         isMapped = true;
         for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100 + evt->midi_message[2]])
-            generator->ProcessMessage(evt);
+            generator->ProcessMidiMessage(evt);
     }
     else if(Midi_CSIMessageGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100) > 0)
     {
         isMapped = true;
         for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000 + evt->midi_message[1] * 0x100])
-            generator->ProcessMessage(evt);
+            generator->ProcessMidiMessage(evt);
     }
     else if(Midi_CSIMessageGeneratorsByMessage_.count(evt->midi_message[0] * 0x10000) > 0)
     {
         isMapped = true;
         for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000])
-            generator->ProcessMessage(evt);
+            generator->ProcessMidiMessage(evt);
         
     }
     
@@ -2311,7 +2279,10 @@ Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
         
         if(widgetInfo.control != "")
             new CSIMessageGenerator(this, widget, widgetInfo.control);
-       
+        
+        if(widgetInfo.touch != "")
+            new Touch_CSIMessageGenerator(this, widget, widgetInfo.touch);
+        
         if(widgetInfo.FB_Processor != "")
         {
             if(widgetInfo.FB_Processor.find("FaderDB") != string::npos)
