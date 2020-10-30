@@ -70,19 +70,24 @@ extern Manager* TheManager;
 
 struct CSIWidgetInfo
 {
-    string group = "General";
+    std::string group = "General";
     int channelNumber = 0;
     int sendNumber = 0;
     bool isVisible = true;
-    string name = "";
-    string control = "";
-    string FB_Processor = "";
+    std::string name = "";
+    std::string control = "";
+    std::string FB_Processor = "";
+    std::string touch = "";
     
-    CSIWidgetInfo(string aName, string aControl, string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, true) {}
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, 0, true) {}
     
-    CSIWidgetInfo(string aName, string aControl, string aFB_Processor, string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
     
-    CSIWidgetInfo(string aName, string aControl, string aFB_Processor, string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aTouchName, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aTouchName, aGroup, aChannelNumber, 0, isVisible) {}
+    
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
+    
+    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aTouchName, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), touch(aTouchName), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,6 +114,7 @@ public:
     virtual string GetName() { return "Action"; }
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
+    virtual void Touch(ActionContext* context, double value) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,19 +123,31 @@ class Navigator
 {
 protected:
     Page* const page_ = nullptr;
-    bool isFaderTouched_ = false;
-    bool isRotaryTouched_ = false;
+    bool isVolumeTouched_ = false;
+    bool isPanTouched_ = false;
+    bool isPanWidthTouched_ = false;
+    bool isPanLeftTouched_ = false;
+    bool isPanRightTouched_ = false;
 
 public:
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
-    void SetIsFaderTouched(bool isFaderTouched) { isFaderTouched_ = isFaderTouched;  }
-    bool GetIsFaderTouched() { return isFaderTouched_;  }
+    void SetIsVolumeTouched(bool isVolumeTouched) { isVolumeTouched_ = isVolumeTouched;  }
+    bool GetIsVolumeTouched() { return isVolumeTouched_;  }
     
-    void SetIsRotaryTouched(bool isRotaryTouched) { isRotaryTouched_ = isRotaryTouched; }
-    bool GetIsRotaryTouched() { return isRotaryTouched_;  }
-
+    void SetIsPanTouched(bool isPanTouched) { isPanTouched_ = isPanTouched; }
+    bool GetIsPanTouched() { return isPanTouched_;  }
+    
+    void SetIsPanWidthTouched(bool isPanWidthTouched) { isPanWidthTouched_ = isPanWidthTouched; }
+    bool GetIsPanWidthTouched() { return isPanWidthTouched_;  }
+    
+    void SetIsPanLeftTouched(bool isPanLeftTouched) { isPanLeftTouched_ = isPanLeftTouched; }
+    bool GetIsPanLeftTouched() { return isPanLeftTouched_;  }
+    
+    void SetIsPanRightTouched(bool isPanRightTouched) { isPanRightTouched_ = isPanRightTouched; }
+    bool GetIsPanRightTouched() { return isPanRightTouched_;  }
+    
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
     virtual int GetSendNum() { return 0; }
@@ -323,6 +341,11 @@ public:
     void UpdateWidgetValue(int param, double value);
     void UpdateWidgetValue(string value);
     
+    void DoTouch(double value)
+    {
+        action_->Touch(this, value);
+    }
+    
     string GetFxParamDisplayName()
     {
         if(fxParamDisplayName_ != "")
@@ -441,6 +464,12 @@ public:
     {
         for(auto context : actionContexts_)
             context.DoAction(value);
+    }
+    
+    void DoTouch(double value)
+    {
+        for(auto context : actionContexts_)
+            context.DoTouch(value);
     }
     
     void DoRelativeAction(double delta)
@@ -640,13 +669,6 @@ public:
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
     
-    void GetFormattedFXParamValue(char *buffer, int bufferSize);
-
-    void Deactivate();
-    void RequestUpdate();
-    void DoAction(double value);
-    void DoRelativeAction(double delta);
-    void DoRelativeAction(int accelerationIndex, double delta);
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -654,7 +676,50 @@ public:
     void ClearCache();
     void Clear();
     void ForceClear();
+
+    void GetFormattedFXParamValue(char *buffer, int bufferSize)
+    {
+        currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
+    }
+    
+    void Deactivate()
+    {
+        currentWidgetActionBroker_ = defaultWidgetActionBroker_;
+    }
+    
+    void RequestUpdate()
+    {
+        currentWidgetActionBroker_.GetActionBundle().RequestUpdate();
+    }
+    
+    void DoAction(double value)
+    {
+        LogInput(value);
+        
+        currentWidgetActionBroker_.GetActionBundle().DoAction(value);
+    }
+    
+    void DoRelativeAction(double delta)
+    {
+        LogInput(delta);
+        
+        currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(delta);
+    }
+    
+    void DoRelativeAction(int accelerationIndex, double delta)
+    {
+        LogInput(accelerationIndex);
+        
+        currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(accelerationIndex, delta);
+    }
    
+    void DoTouch(double value)
+    {
+        LogInput(value);
+        
+        currentWidgetActionBroker_.GetActionBundle().DoTouch(value);
+    }
+    
     void Activate(WidgetActionBroker currentWidgetActionBroker)
     {
         currentWidgetActionBroker_ = currentWidgetActionBroker;
@@ -681,10 +746,25 @@ protected:
     
 public:
     CSIMessageGenerator(ControlSurface* surface, Widget* widget, string message);
-
-    void ProcessMessage(double value)
+    virtual ~CSIMessageGenerator() {}
+    
+    virtual void ProcessMessage(double value)
     {
         widget_->DoAction(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class Touch_CSIMessageGenerator : CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    Touch_CSIMessageGenerator(ControlSurface* surface, Widget* widget, string message) : CSIMessageGenerator(surface, widget, message) {}
+    virtual ~Touch_CSIMessageGenerator() {}
+    
+    virtual void ProcessMessage(double value) override
+    {
+        widget_->DoTouch(value);
     }
 };
 
@@ -697,7 +777,7 @@ protected:
     
 public:
     virtual ~Midi_CSIMessageGenerator() {}
-    virtual void ProcessMessage(const MIDI_event_ex_t* midiMessage) {}
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1513,48 +1593,38 @@ public:
     
     bool GetIsControlTouched(MediaTrack* track, int touchedControl)
     {
-        if(track == masterTrackNavigator_->GetTrack())
-        {
-            if(touchedControl == 0)
-                return masterTrackNavigator_->GetIsFaderTouched();
-            else
-                return masterTrackNavigator_->GetIsRotaryTouched();
-        }
+        if(track == GetMasterTrackNavigator()->GetTrack())
+            return GetIsNavigatorTouched(GetMasterTrackNavigator(), touchedControl);
         
         for(auto navigator : navigators_)
-        {
             if(track == navigator->GetTrack())
-            {
-                if(touchedControl == 0)
-                    return navigator->GetIsFaderTouched();
-                else
-                    return navigator->GetIsRotaryTouched();
-            }
-        }
-
+                return GetIsNavigatorTouched(navigator, touchedControl);
+ 
         if(MediaTrack* selectedTrack = GetSelectedTrack())
-        {
-            if(track == selectedTrack)
-            {
-                if(touchedControl == 0)
-                    return GetSelectedTrackNavigator()->GetIsFaderTouched();
-                else
-                    return GetSelectedTrackNavigator()->GetIsRotaryTouched();
-            }
-        }
+             if(track == selectedTrack)
+                return GetIsNavigatorTouched(GetSelectedTrackNavigator(), touchedControl);
         
         if(MediaTrack* focusedFXTrack = GetFocusedFXNavigator()->GetTrack())
-        {
             if(track == focusedFXTrack)
-            {
-                if(touchedControl == 0)
-                    return GetFocusedFXNavigator()->GetIsFaderTouched();
-                else
-                    return GetFocusedFXNavigator()->GetIsRotaryTouched();
-            }
-        }
+                return GetIsNavigatorTouched(GetFocusedFXNavigator(), touchedControl);
 
         return false;
+    }
+    
+    bool GetIsNavigatorTouched(Navigator* navigator,  int touchedControl)
+    {
+        if(touchedControl == 0)
+            return navigator->GetIsVolumeTouched();
+        else if(touchedControl == 1)
+            return navigator->GetIsPanTouched();
+        else if(touchedControl == 2)
+            return navigator->GetIsPanWidthTouched();
+        else if(touchedControl == 3)
+            return navigator->GetIsPanLeftTouched();
+        else if(touchedControl == 4)
+            return navigator->GetIsPanRightTouched();
+        else
+            return false;
     }
     
     void EnterPage()
