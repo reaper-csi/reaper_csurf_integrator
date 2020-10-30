@@ -196,11 +196,11 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isPressRelease, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isInverted, bool &shouldToggle, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
-    vector<string> modifierSlots = { "", "", "", "", "", "" };
+    vector<string> modifierSlots = { "", "", "", ""};
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -218,13 +218,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
                 modifierSlots[2] = Control + "+";
             else if(modifier_tokens[i] == Alt)
                 modifierSlots[3] = Alt + "+";
-            else if(modifier_tokens[i] == "FaderTouch")
-                modifierSlots[4] = "FaderTouch+";
-            else if(modifier_tokens[i] == "RotaryTouch")
-                modifierSlots[5] = "RotaryTouch+";
 
-            else if(modifier_tokens[i] == "PR")
-                isPressRelease = true;
             else if(modifier_tokens[i] == "Invert")
                 isInverted = true;
             else if(modifier_tokens[i] == "Toggle")
@@ -236,7 +230,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
 
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
-    modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifierSlots[4] + modifierSlots[5];
+    modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
@@ -350,18 +344,17 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     string widgetName = "";
                     string modifier = "";
-                    bool isPressRelease = false;
                     bool isInverted = false;
                     bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isPressRelease, isInverted, shouldToggle, delayAmount);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isInverted, shouldToggle, delayAmount);
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isPressRelease, isInverted, shouldToggle, delayAmount));
+                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isInverted, shouldToggle, delayAmount));
                 }
             }
         }
@@ -812,8 +805,6 @@ void Manager::InitActionsDictionary()
     actions_["TrackRecordArm"] =                    new TrackRecordArm();
     actions_["TrackMute"] =                         new TrackMute();
     actions_["TrackSolo"] =                         new TrackSolo();
-    actions_["FaderTouch"] =                        new SetFaderTouch();
-    actions_["RotaryTouch"] =                       new SetRotaryTouch();
     actions_["TrackPan"] =                          new TrackPan();
     actions_["TrackPanPercent"] =                   new TrackPanPercent();
     actions_["TrackPanWidth"] =                     new TrackPanWidth();
@@ -830,7 +821,6 @@ void Manager::InitActionsDictionary()
     actions_["TrackOutputMeterMaxPeakLR"] =         new TrackOutputMeterMaxPeakLR();
     
     actions_["FXParam"] =                           new FXParam();
-    actions_["FXParamTouch"] =                      new FXParamTouch();
     actions_["FXParamRelative"] =                   new FXParamRelative();
     actions_["FXNameDisplay"] =                     new FXNameDisplay();
     actions_["FXParamNameDisplay"] =                new FXParamNameDisplay();
@@ -1137,11 +1127,6 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
             shouldUseDisplayStyle_ = true;
             displayStyle_ = atol(params[3].c_str());
         }
-    }
-    
-    if(actionName == "FXParamTouch" && params.size() > 1 && isdigit(params[1][0]))  // C++ 11 says empty strings can be queried without catastrophe :)
-    {
-        paramIndex_ = atol(params[1].c_str());
     }
     
     /*
@@ -1458,22 +1443,7 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
     if( ! widget_->GetIsModifier())
         modifier = widget_->GetSurface()->GetPage()->GetModifier();
     
-    string touchModifier = modifier;
-    
-    Navigator* navigator = zone_->GetNavigator();
-    
-    if(navigator != nullptr)
-    {
-        if(navigator->GetIsFaderTouched())
-            touchModifier += "FaderTouch+";
-        
-        if(navigator->GetIsRotaryTouched())
-            touchModifier += "RotaryTouch+";
-    }
-    
-    if(actionBundles_.count(touchModifier) > 0)
-        return actionBundles_[touchModifier];
-    else if(actionBundles_.count(modifier) > 0)
+    if(actionBundles_.count(modifier) > 0)
         return actionBundles_[modifier];
     else if(actionBundles_.count("") > 0)
         return actionBundles_[""];
@@ -1607,9 +1577,6 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ActionTemplate::SetProperties(ActionContext &context)
 {
-    if(supportsRelease)
-        context.SetSupportsRelease();
-    
     if(isInverted)
         context.SetIsInverted();
     
@@ -1617,7 +1584,7 @@ void ActionTemplate::SetProperties(ActionContext &context)
         context.SetShouldToggle();
     
     if(delayAmount != 0.0)
-        context.SetDelayAmount(delayAmount * 1000.0);
+        context.SetDelayAmount(delayAmount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

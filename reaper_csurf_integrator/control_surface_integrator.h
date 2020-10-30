@@ -264,7 +264,6 @@ private:
     int accumulatedIncTicks_ = 0;
     int accumulatedDecTicks_ = 0;
     
-    bool supportsRelease_ = false;
     bool isInverted_ = false;
     bool shouldToggle_ = false;
     double delayAmount_ = 0.0;
@@ -309,10 +308,9 @@ public:
     virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
     
-    void SetSupportsRelease() { supportsRelease_ = true; }
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
-    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount; }
+    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
     
     void DoAction(double value);
     void DoRelativeAction(double value);
@@ -560,12 +558,11 @@ struct ActionTemplate
 {
     string actionName;
     vector<string> params;
-    bool supportsRelease;
     bool isInverted;
     bool shouldToggle;
     double delayAmount;
     
-    ActionTemplate(string action, vector<string> prams, bool isPR, bool isI, bool shouldT, double amount) : actionName(action), params(prams), supportsRelease(isPR), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
+    ActionTemplate(string action, vector<string> prams, bool isI, bool shouldT, double amount) : actionName(action), params(prams), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
     void SetProperties(ActionContext &context);
 };
