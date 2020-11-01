@@ -26,86 +26,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackSends  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "ToggleMapSelectedTrackSends"; }
-
-    void RequestUpdate(ActionContext* context) override
-    {
-        context->UpdateWidgetValue(context->GetSurface()->GetShouldMapSends());
-    }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->ToggleMapSends();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackFX  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "ToggleMapSelectedTrackFX"; }
-
-    void RequestUpdate(ActionContext* context) override
-    {
-        context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFX());
-    }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFX();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapSelectedTrackFXMenu  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "ToggleMapSelectedTrackFXMenu"; }
-
-    void RequestUpdate(ActionContext* context) override
-    {
-        context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapSelectedTrackFXMenus());
-    }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->GetFXActivationManager()->ToggleMapSelectedTrackFXMenu();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleMapFocusedFX  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "ToggleMapFocusedFX"; }
-
-    void RequestUpdate(ActionContext* context) override
-    {
-        context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShouldMapFocusedFX());
-    }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->GetFXActivationManager()->ToggleMapFocusedFX();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GoFXSlot  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -219,7 +139,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SetShowFXWindows : public Action
+class ToggleShowFXWindows : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
