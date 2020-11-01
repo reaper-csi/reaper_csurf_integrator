@@ -216,24 +216,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendNavigator : public Navigator
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    int const sendNum_ = 0;
-    
-public:
-    SendNavigator(Page*  page, int sendNum) : Navigator(page), sendNum_(sendNum) {}
-    virtual ~SendNavigator() {}
-    
-    virtual string GetName() override { return "SendNavigator"; }
-    
-    virtual int GetSendNum() override { return sendNum_; }
-
-    virtual MediaTrack* GetTrack() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FocusedFXNavigator : public Navigator
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -559,6 +541,7 @@ public:
     int GetSlotIndex() { return slotIndex_; }
     
     void Deactivate();
+    void DeactivateAndCloseWindows();
     
     void OpenFXWindow()
     {
@@ -641,6 +624,7 @@ struct ZoneTemplate
     void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction);
     
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int maxNum);
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows, bool shouldUseNoAction);
 };
 
@@ -939,9 +923,6 @@ class FXActivationManager
 private:
     ControlSurface* const surface_ = nullptr;
     int const numFXSlots_ = 0;
-    bool shouldMapSelectedTrackFX_ = true;
-    bool shouldMapSelectedTrackFXMenus_ = true;
-    bool shouldMapFocusedFX_ = true;
     vector<Zone*> activeSelectedTrackFXZones_;
     vector<Zone*> activeSelectedTrackFXMenuZones_;
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
@@ -952,21 +933,16 @@ private:
 public:
     FXActivationManager(ControlSurface* surface, int numFXSlots) : surface_(surface), numFXSlots_(numFXSlots) {}
     
-    bool GetShouldMapSelectedTrackFXMenus() { return shouldMapSelectedTrackFXMenus_; }
-    bool GetShouldMapSelectedTrackFX() { return shouldMapSelectedTrackFX_; }
-    bool GetShouldMapFocusedFX() { return shouldMapFocusedFX_; }
     int  GetNumFXSlots() { return numFXSlots_; }
     bool GetShowFXWindows() { return shouldShowFXWindows_; }
     
     void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
-    void ToggleMapSelectedTrackFX();
-    void ToggleMapFocusedFX();
-    void ToggleMapSelectedTrackFXMenu();
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
     void MapFocusedFXToWidgets();
-    
+    void TrackFXListChanged();
+   
     void ToggleShowFXWindows()
     {
         shouldShowFXWindows_ = ! shouldShowFXWindows_;
@@ -977,18 +953,6 @@ public:
         else
             for(auto zone : activeSelectedTrackFXZones_)
                 zone->CloseFXWindow();
-    }
-    
-    void TrackFXListChanged()
-    {
-        if(shouldMapSelectedTrackFX_)
-            MapSelectedTrackFXToWidgets();
-        
-        if(shouldMapFocusedFX_)
-            MapFocusedFXToWidgets();
-        
-        if(shouldMapSelectedTrackFXMenus_)
-            MapSelectedTrackFXToMenu();
     }
 };
 
@@ -1018,7 +982,6 @@ protected:
 
     vector<Zone*> activeZones_;
 
-    bool shouldMapSends_ = true;
     vector<Zone*> activeSendZones_;
     
     FXActivationManager* const fxActivationManager_;
@@ -1048,8 +1011,6 @@ public:
     int GetNumChannels() { return numChannels_; }
     int GetNumSends() { return numSends_; }
 
-    bool GetShouldMapSends() { return shouldMapSends_; }
-    void ToggleMapSends();
     void MapSelectedTrackSendsToWidgets();
     
     Navigator* GetNavigatorForChannel(int channelNum);
@@ -1065,13 +1026,7 @@ public:
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
-
-    void Deactivate(Zone* zone)
-    {
-        zone->Deactivate();
-        delete zone;
-    }
-    
+   
     void MakeHomeDefault()
     {
         if(zoneTemplates_.count("Home") > 0)
@@ -1686,25 +1641,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SendNavigationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Page* const page_ = nullptr;
-    vector<Navigator*> navigators_;
-
-public:
-    SendNavigationManager(Page* page) : page_(page) {}
-    
-    Navigator* AddNavigator()
-    {
-        int sendNum = navigators_.size();
-        navigators_.push_back(new SendNavigator(page_, sendNum));
-        return navigators_[sendNum];
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Page
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1723,16 +1659,14 @@ private:
     double altPressedTime_ = 0;
 
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
-    SendNavigationManager* const sendNavigationManager_ = nullptr;
 
     Navigator* defaultNavigator_ = nullptr;
     
 public:
-    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), sendNavigationManager_(new SendNavigationManager(this)), defaultNavigator_(new Navigator(this)) { }
+    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), defaultNavigator_(new Navigator(this)) { }
     
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
-    SendNavigationManager* GetSendNavigationManager() { return sendNavigationManager_; }
     
     bool GetShift() { return isShift_; }
     bool GetOption() { return isOption_; }
