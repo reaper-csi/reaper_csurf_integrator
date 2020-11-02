@@ -53,6 +53,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             double min, max = 0.0;
+            
             double currentValue = DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
             
             if(context->GetShouldUseDisplayStyle())
@@ -62,6 +63,16 @@ public:
         }
         else
             context->ClearWidget();
+    }
+    
+    virtual double GetCurrentValue(ActionContext* context) override
+    {
+        double min, max = 0.0;
+        
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
+        else
+            return 0.0;
     }
 };
 

@@ -73,7 +73,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FocusedFXParam : public Action
+class FocusedFXParam : public FXAction
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
@@ -517,7 +517,7 @@ public:
         
         if(MediaTrack* track = context->GetTrack())
         {
-             bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex(), "B_MUTE");
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex(), "B_MUTE");
             
             DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "B_MUTE", &isMuted);
         }
