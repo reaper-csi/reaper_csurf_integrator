@@ -115,6 +115,7 @@ public:
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
     virtual void Touch(ActionContext* context, double value) {}
+    virtual double GetCurrentValue(ActionContext* context) { return 0.0; }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +316,6 @@ public:
     void DoAction(double value);
     void DoRelativeAction(double value);
     void DoRelativeAction(int accelerationIndex, double value);
-    double GetCurrentValue() { return 0.0; }
     
     void RequestUpdate();
     void ClearWidget();
@@ -342,19 +342,6 @@ public:
         return "";
     }
 
-    void PerformDeferredActions()
-    {
-        if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
-        {
-            double savedDelayAmount = delayAmount_;
-            delayAmount_ = 0.0;
-            DoAction(deferredValue_);
-            delayAmount_ = savedDelayAmount;
-            delayStartTime_ = 0.0;
-            deferredValue_ = 0.0;
-        }
-    }
-    
     void SetCurrentRGB(rgb_color newColor)
     {
         supportsRGB_ = true;

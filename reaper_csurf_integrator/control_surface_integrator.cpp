@@ -1342,32 +1342,16 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
 
 void ActionContext::DoRangeBoundAction(double value)
 {
-    if(delayAmount_ != 0.0)
-    {
-        if(value == 0.0)
-        {
-            delayStartTime_ = 0.0;
-            deferredValue_ = 0.0;
-        }
-        else
-        {
-            delayStartTime_ = DAW::GetCurrentNumberOfMilliseconds();
-            deferredValue_ = value;
-        }
-    }
-    else
-    {
-        if(shouldToggle_ && value != 0.0)
-            value = ! GetCurrentValue();
-        
-        if(value > rangeMaximum_)
-            value = rangeMaximum_;
-        
-        if(value < rangeMinimum_)
-            value = rangeMinimum_;
-        
-        action_->Do(this, value);
-    }
+    if(shouldToggle_ && value == 1.0)
+        value = ! action_->GetCurrentValue(this);
+    
+    if(value > rangeMaximum_)
+        value = rangeMaximum_;
+    
+    if(value < rangeMinimum_)
+        value = rangeMinimum_;
+    
+    action_->Do(this, value);
 }
 
 void ActionContext::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta)
@@ -1430,6 +1414,8 @@ WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget), zone_(
 {
     vector<string> memberParams;
    
+    memberParams.push_back("NoAction");
+    
     defaultBundle_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
 }
 
