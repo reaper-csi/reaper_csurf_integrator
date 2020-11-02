@@ -298,6 +298,7 @@ public:
     MediaTrack* GetTrack();
     
     void DoRangeBoundAction(double value);
+    void DoSteppedValueAction(double value);
     void DoAcceleratedSteppedValueAction(int accelerationIndex, double value);
     void DoAcceleratedDeltaValueAction(int accelerationIndex, double value);
     
