@@ -1286,7 +1286,7 @@ void ActionContext::UpdateWidgetValue(string value)
 
 void ActionContext::DoAction(double value)
 {
-    if(steppedValues_.size() > 0 && value != 0.0)
+    if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages
     {
         if(steppedValuesIndex_ == steppedValues_.size() - 1)
         {
@@ -1305,7 +1305,7 @@ void ActionContext::DoAction(double value)
 void ActionContext::DoRelativeAction(double delta)
 {
     if(steppedValues_.size() > 0)
-        DoAcceleratedSteppedValueAction(0, delta);
+        DoSteppedValueAction(delta);
     else
     {
         if(deltaValue_ != 0.0)
@@ -1352,6 +1352,28 @@ void ActionContext::DoRangeBoundAction(double value)
         value = rangeMinimum_;
     
     action_->Do(this, value);
+}
+
+void ActionContext::DoSteppedValueAction(double delta)
+{
+    if(delta > 0)
+    {
+        steppedValuesIndex_++;
+        
+        if(steppedValuesIndex_ > steppedValues_.size() - 1)
+            steppedValuesIndex_ = steppedValues_.size() - 1;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+    }
+    else
+    {
+        steppedValuesIndex_--;
+        
+        if(steppedValuesIndex_ < 0 )
+            steppedValuesIndex_ = 0;
+        
+        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+    }
 }
 
 void ActionContext::DoAcceleratedSteppedValueAction(int accelerationIndex, double delta)
