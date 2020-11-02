@@ -1559,15 +1559,17 @@ public:
         if(touchedControl == 0)
             return navigator->GetIsVolumeTouched();
         else if(touchedControl == 1)
-            return navigator->GetIsPanTouched();
+        {
+            if(navigator->GetIsPanTouched() || navigator->GetIsPanLeftTouched())
+                return true;
+        }
         else if(touchedControl == 2)
-            return navigator->GetIsPanWidthTouched();
-        else if(touchedControl == 3)
-            return navigator->GetIsPanLeftTouched();
-        else if(touchedControl == 4)
-            return navigator->GetIsPanRightTouched();
-        else
-            return false;
+        {
+            if(navigator->GetIsPanWidthTouched() || navigator->GetIsPanRightTouched())
+                return true;
+        }
+
+        return false;
     }
     
     void EnterPage()
