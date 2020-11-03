@@ -116,6 +116,14 @@ public:
     virtual void Do(ActionContext* context, double value) {}
     virtual void Touch(ActionContext* context, double value) {}
     virtual double GetCurrentValue(ActionContext* context) { return 0.0; }
+    
+    int GetPanMode(MediaTrack* track)
+    {
+        double pan1, pan2 = 0.0;
+        int panMode = 0;
+        DAW::GetTrackUIPan(track, &pan1, &pan2, &panMode);
+        return panMode;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

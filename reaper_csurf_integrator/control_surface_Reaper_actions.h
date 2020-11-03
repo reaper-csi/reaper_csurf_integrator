@@ -235,9 +235,12 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(pan));
+            if(GetPanMode(track) != 6)
+            {
+                double vol, pan = 0.0;
+                DAW::GetTrackUIVolPan(track, &vol, &pan);
+                context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(pan));
+            }
         }
         else
             context->ClearWidget();
@@ -246,7 +249,10 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        {
+            if(GetPanMode(track) != 6)
+                DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, normalizedToPan(value), false), NULL);
+        }
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -266,9 +272,12 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double vol, pan = 0.0;
-            DAW::GetTrackUIVolPan(track, &vol, &pan);
-            context->UpdateWidgetValue(pan * 100.0);
+            if(GetPanMode(track) != 6)
+            {
+                double vol, pan = 0.0;
+                DAW::GetTrackUIVolPan(track, &vol, &pan);
+                context->UpdateWidgetValue(pan * 100.0);
+            }
         }
         else
             context->ClearWidget();
@@ -277,7 +286,8 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
+            if(GetPanMode(track) != 6)
+                DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, value / 100.0, false), NULL);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -296,7 +306,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        {
+            if(GetPanMode(track) != 6)
+                context->UpdateWidgetValue(context->GetIntParam(), panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH")));
+        }
         else
             context->ClearWidget();
     }
@@ -304,7 +317,8 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
+            if(GetPanMode(track) != 6)
+                DAW::CSurf_OnWidthChange(track, normalizedToPan(value), false);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -323,7 +337,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
+        {
+            if(GetPanMode(track) != 6)
+                context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_WIDTH") * 100.0);
+        }
         else
             context->ClearWidget();
     }
@@ -331,7 +348,8 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::CSurf_OnWidthChange(track, value / 100.0, false);
+            if(GetPanMode(track) != 6)
+                DAW::CSurf_OnWidthChange(track, value / 100.0, false);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -350,7 +368,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL")));
+        {
+            if(GetPanMode(track) == 6)
+                context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL")));
+        }
         else
             context->ClearWidget();
     }
@@ -359,8 +380,11 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double pan = normalizedToPan(value);
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
+            if(GetPanMode(track) == 6)
+            {
+                double pan = normalizedToPan(value);
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
+            }
         }
     }
     
@@ -380,7 +404,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL") * 100.0);
+        {
+            if(GetPanMode(track) == 6)
+                context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL") * 100.0);
+        }
         else
             context->ClearWidget();
     }
@@ -389,8 +416,11 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double panFromPercent = value / 100.0;
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
+            if(GetPanMode(track) == 6)
+            {
+                double panFromPercent = value / 100.0;
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panFromPercent);
+            }
         }
     }
     
@@ -410,7 +440,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR")));
+        {
+            if(GetPanMode(track) == 6)
+                context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR")));
+        }
         else
             context->ClearWidget();
     }
@@ -419,8 +452,11 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double pan = normalizedToPan(value);
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
+            if(GetPanMode(track) == 6)
+            {
+                double pan = normalizedToPan(value);
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
+            }
         }
     }
     
@@ -440,7 +476,10 @@ public:
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
-            context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR") * 100.0);
+        {
+            if(GetPanMode(track) == 6)
+                context->UpdateWidgetValue(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR") * 100.0);
+        }
         else
             context->ClearWidget();
     }
@@ -449,8 +488,11 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double panFromPercent = value / 100.0;
-            DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
+            if(GetPanMode(track) == 6)
+            {
+                double panFromPercent = value / 100.0;
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panFromPercent);
+            }
         }
     }
     
