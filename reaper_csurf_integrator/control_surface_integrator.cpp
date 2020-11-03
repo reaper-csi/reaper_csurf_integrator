@@ -814,7 +814,9 @@ void Manager::InitActionsDictionary()
     actions_["TrackPanPercent"] =                   new TrackPanPercent();
     actions_["TrackPanWidth"] =                     new TrackPanWidth();
     actions_["TrackPanWidthPercent"] =              new TrackPanWidthPercent();
+    actions_["TrackPanL"] =                         new TrackPanL();
     actions_["TrackPanLPercent"] =                  new TrackPanLPercent();
+    actions_["TrackPanR"] =                         new TrackPanR();
     actions_["TrackPanRPercent"] =                  new TrackPanRPercent();
     actions_["TogglePin"] =                         new TogglePin();
     actions_["TrackNameDisplay"] =                  new TrackNameDisplay();
