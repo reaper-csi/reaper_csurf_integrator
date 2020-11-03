@@ -334,6 +334,14 @@ public:
             return false;
     }
     
+    static bool GetTrackUIPan(MediaTrack* track, double* pan1Out, double* pan2Out, int* panmodeOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackUIPan(track, pan1Out, pan2Out, panmodeOut);
+        else
+            return false;
+    }
+
     static void CSurf_SetSurfaceVolume(MediaTrack* track, double volume, IReaperControlSurface* ignoresurf)
     {
         if(ValidatePtr(track, "MediaTrack*"))
