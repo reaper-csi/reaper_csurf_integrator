@@ -341,12 +341,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanL : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackPanL"; }
+    
+    void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL")));
+        else
+            context->ClearWidget();
+    }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double pan = normalizedToPan(value);
+            DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
+        }
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPanLPercent : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual string GetName() override { return "TrackPanLPercent"; }
-
+    
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
@@ -371,12 +401,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanR : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackPanR"; }
+    
+    void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            context->UpdateWidgetValue(panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR")));
+        else
+            context->ClearWidget();
+    }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double pan = normalizedToPan(value);
+            DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
+        }
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        context->GetZone()->GetNavigator()->SetIsPanRightTouched(value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackPanRPercent : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual string GetName() override { return "TrackPanRPercent"; }
-
+    
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
