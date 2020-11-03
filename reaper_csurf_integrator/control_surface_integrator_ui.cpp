@@ -686,11 +686,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
 
-                if(options == 1)
-                    CheckDlgButton(hwndDlg, IDC_RADIO1, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_RADIO2, BST_CHECKED);
-
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
@@ -728,11 +723,6 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
                         numFX = atoi(buf);
-
-                        if (IsDlgButtonChecked(hwndDlg, IDC_RADIO1))
-                            options = 01;
-                        else
-                            options = 02;
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
 

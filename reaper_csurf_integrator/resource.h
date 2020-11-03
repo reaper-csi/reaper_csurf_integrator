@@ -37,8 +37,6 @@
 #define IDC_EDIT_NumChannels            1085
 #define IDC_EDIT_NumSends               1086
 #define IDC_EDIT_NumFX                  1087
-#define IDC_RADIO1                      1088
-#define IDC_RADIO2                      1089
 
 // Next default values for new objects
 // 

@@ -421,8 +421,8 @@ public:
         
     void RequestUpdate()
     {
-        if(actionContexts_.size() > 0)
-            actionContexts_[0].RequestUpdate();
+        for(auto context : actionContexts_)
+            context.RequestUpdate();
     }
     
     void AddActionContext(ActionContext context)
@@ -1912,6 +1912,7 @@ private:
     int *timeMode2Ptr_ = nullptr;
     int *measOffsPtr_ = nullptr;
     double *timeOffsPtr_ = nullptr;
+    int *projectPanModePtr_ = nullptr;
     
     void InitActionsDictionary();
 
@@ -1943,6 +1944,9 @@ public:
         
         index = projectconfig_var_getoffs("projtimeoffs", &size);
         timeOffsPtr_ = (double *)projectconfig_var_addr(nullptr, index);
+        
+        index = projectconfig_var_getoffs("panmode", &size);
+        projectPanModePtr_ = (int*)projectconfig_var_addr(nullptr, index);
     }
     
     void Shutdown()
@@ -1978,6 +1982,7 @@ public:
     int *GetTimeMode2Ptr() { return timeMode2Ptr_; }
     int *GetMeasOffsPtr() { return measOffsPtr_; }
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
+    int GetProjectPanMode() { return *projectPanModePtr_; }
    
     ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
     {
