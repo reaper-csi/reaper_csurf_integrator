@@ -411,8 +411,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
             double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             context->UpdateWidgetValue(volToNormalized(vol));
         }
         else
@@ -441,8 +442,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
             double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             context->UpdateWidgetValue(VAL2DB(vol));
         }
         else
@@ -472,8 +474,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
             double vol, pan = 0.0;
-            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             context->UpdateWidgetValue(panToNormalized(pan));
         }
         else
@@ -502,8 +505,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
             bool mute = false;
-            DAW::GetTrackSendUIMute(track, context->GetParamIndex(), &mute);
+            DAW::GetTrackSendUIMute(track, context->GetParamIndex() + numHardwareSends, &mute);
             context->UpdateWidgetValue(mute);
         }
         else
