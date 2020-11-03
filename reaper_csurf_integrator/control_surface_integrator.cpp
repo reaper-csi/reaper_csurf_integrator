@@ -2199,8 +2199,10 @@ void EuCon_ControlSurface::InitializeEuCon()
     if(g_reaper_plugin_info && InitializeEuConWithParameters == nullptr)
         InitializeEuConWithParameters = (void (*)(EuCon_ControlSurface*, int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
 
+    int panOptions = TheManager->GetProjectPanMode() == 6 ? 2 : 1;
+    
     if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(this, numChannels_, numSends_, fxActivationManager_->GetNumFXSlots(), options_);
+        InitializeEuConWithParameters(this, numChannels_, numSends_, fxActivationManager_->GetNumFXSlots(), panOptions);
 }
 
 Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
