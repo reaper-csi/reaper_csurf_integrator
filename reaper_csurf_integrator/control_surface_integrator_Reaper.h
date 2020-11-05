@@ -348,20 +348,20 @@ public:
             ::CSurf_SetSurfaceVolume(track, volume, ignoresurf);
     }
     
-    static double CSurf_OnSendVolumeChange(MediaTrack* track, int sendIndex, double volume, bool relative)
+    static bool SetTrackSendUIPan(MediaTrack* track, int send_idx, double pan, int isend)
     {
         if(ValidatePtr(track, "MediaTrack*"))
-            return ::CSurf_OnSendVolumeChange(track, sendIndex, volume, relative);
+            return ::SetTrackSendUIPan(track, send_idx, pan, isend);
         else
-            return 0.0;
+            return false;
     }
-
-    static double CSurf_OnSendPanChange(MediaTrack* track, int send_index, double pan, bool relative)
+    
+    static bool SetTrackSendUIVol(MediaTrack* track, int send_idx, double vol, int isend)
     {
         if(ValidatePtr(track, "MediaTrack*"))
-            return ::CSurf_OnSendPanChange(track, send_index, pan, relative);
+            return ::SetTrackSendUIVol(track, send_idx, vol, isend);
         else
-            return 0.0;
+            return false;
     }
     
     static int GetTrackNumSends(MediaTrack* track, int category)

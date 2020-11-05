@@ -836,6 +836,7 @@ void Manager::InitActionsDictionary()
     actions_["TrackSendVolume"] =                   new TrackSendVolume();
     actions_["TrackSendVolumeDB"] =                 new TrackSendVolumeDB();
     actions_["TrackSendPan"] =                      new TrackSendPan();
+    actions_["TrackSendPanPercent"] =               new TrackSendPanPercent();
     actions_["TrackSendMute"] =                     new TrackSendMute();
     actions_["TrackSendInvertPolarity"] =           new TrackSendInvertPolarity();
     actions_["TrackSendPrePost"] =                  new TrackSendPrePost();
@@ -1345,7 +1346,7 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
 void ActionContext::DoRangeBoundAction(double value)
 {
     if(shouldToggle_ && value == 1.0)
-        value = ! action_->GetCurrentValue(this);
+        value = ! lastValue_;
     
     if(value > rangeMaximum_)
         value = rangeMaximum_;

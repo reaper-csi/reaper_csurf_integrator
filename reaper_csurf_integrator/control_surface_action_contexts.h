@@ -64,16 +64,6 @@ public:
         else
             context->ClearWidget();
     }
-    
-    virtual double GetCurrentValue(ActionContext* context) override
-    {
-        double min, max = 0.0;
-        
-        if(MediaTrack* track = context->GetTrack())
-            return DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
-        else
-            return 0.0;
-    }
 };
 
 #endif /* control_surface_action_contexts_h */
