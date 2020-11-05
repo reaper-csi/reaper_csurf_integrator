@@ -115,7 +115,6 @@ public:
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
     virtual void Touch(ActionContext* context, double value) {}
-    virtual double GetCurrentValue(ActionContext* context) { return 0.0; }
     
     int GetPanMode(MediaTrack* track)
     {

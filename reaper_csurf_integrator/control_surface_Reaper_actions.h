@@ -526,9 +526,23 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, context->GetParamIndex(), normalizedToVol(value), false);
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, normalizedToVol(value), 0);
+        }
+    }
+    
+    void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            double vol, pan = 0.0;
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             
-            DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "D_VOL", &volume);
+            if(value == 0)
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, vol, 1);
+            else
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, vol, 0);
         }
     }
 };
@@ -558,9 +572,23 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double volume = DAW::CSurf_OnSendVolumeChange(track, context->GetParamIndex(), DB2VAL(value), false);
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, DB2VAL(value), 0);
+        }
+    }
+    
+    void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            double vol, pan = 0.0;
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             
-            DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "D_VOL", &volume);
+            if(value == 0)
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, vol, 1);
+            else
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() + numHardwareSends, vol, 0);
         }
     }
 };
@@ -571,7 +599,7 @@ class TrackSendPan : public Action
 {
 public:
     virtual string GetName() override { return "TrackSendPan"; }
-
+    
     void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
@@ -589,9 +617,68 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double pan = DAW::CSurf_OnSendPanChange(track, context->GetParamIndex(), normalizedToPan(value), false);
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, normalizedToPan(value), 0);
+        }
+    }
+    
+    void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            double vol, pan = 0.0;
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             
-            DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "D_PAN", &pan);
+            if(value == 0)
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, pan, 1);
+            else
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, pan, 0);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPanPercent : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackSendPanPercent"; }
+    
+    void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            double vol, pan = 0.0;
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
+            context->UpdateWidgetValue(pan * 100.0);
+        }
+        else
+            context->ClearWidget();
+    }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, value / 100.0, 0);
+        }
+    }
+    
+    void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+            double vol, pan = 0.0;
+            DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
+            
+            if(value == 0)
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, pan, 1);
+            else
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() + numHardwareSends, pan, 0);
         }
     }
 };
@@ -614,7 +701,6 @@ public:
         }
         else
             context->ClearWidget();
-        
     }
     
     void Do(ActionContext* context, double value) override
