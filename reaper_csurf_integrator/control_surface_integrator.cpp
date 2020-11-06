@@ -1354,6 +1354,8 @@ void ActionContext::DoRangeBoundAction(double value)
     if(value < rangeMinimum_)
         value = rangeMinimum_;
     
+    lastValue_ = value;
+    
     action_->Do(this, value);
 }
 
