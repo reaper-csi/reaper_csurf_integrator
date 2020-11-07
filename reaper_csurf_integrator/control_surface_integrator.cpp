@@ -1285,7 +1285,7 @@ void ActionContext::UpdateWidgetValue(string value)
     }
 }
 
-void ActionContext::DoAction(double value)
+void ActionContext::DoPressAction(int value)
 {
     if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages -- this version of stepped values is only for switches
     {
@@ -1301,6 +1301,11 @@ void ActionContext::DoAction(double value)
     }
     else
         DoRangeBoundAction(value);
+}
+
+void ActionContext::DoAction(double value)
+{
+    DoRangeBoundAction(value);
 }
 
 void ActionContext::DoRelativeAction(double delta)

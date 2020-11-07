@@ -321,6 +321,7 @@ public:
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
     
+    void DoPressAction(int value);
     void DoAction(double value);
     void DoRelativeAction(double value);
     void DoRelativeAction(int accelerationIndex, double value);
@@ -432,6 +433,12 @@ public:
     void AddActionContext(ActionContext context)
     {
         actionContexts_.push_back(context);
+    }
+    
+    void DoPressAction(int value)
+    {
+        for(auto context : actionContexts_)
+            context.DoPressAction(value);
     }
     
     void DoAction(double value)
@@ -666,6 +673,13 @@ public:
     void RequestUpdate()
     {
         currentWidgetActionBroker_.GetActionBundle().RequestUpdate();
+    }
+    
+    void DoPressAction(int value)
+    {
+        LogInput(value);
+        
+        currentWidgetActionBroker_.GetActionBundle().DoPressAction(value);
     }
     
     void DoAction(double value)
