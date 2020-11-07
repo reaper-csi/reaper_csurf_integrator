@@ -1287,7 +1287,7 @@ void ActionContext::UpdateWidgetValue(string value)
 
 void ActionContext::DoAction(double value)
 {
-    if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages
+    if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages -- this version of stepped values is only for switches
     {
         if(steppedValuesIndex_ == steppedValues_.size() - 1)
         {
