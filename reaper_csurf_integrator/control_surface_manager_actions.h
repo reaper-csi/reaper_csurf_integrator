@@ -145,9 +145,14 @@ class ToggleShowFXWindows : public Action
 public:
     virtual string GetName() override { return "SetShowFXWindows"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetSurface()->GetFXActivationManager()->GetShowFXWindows();
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetSurface()->GetFXActivationManager()->GetShowFXWindows());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -165,9 +170,14 @@ class ToggleScrollLink : public Action
 public:
     virtual string GetName() override { return "ToggleScrollLink"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetTrackNavigationManager()->GetScrollLink();
+    }
+    
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetScrollLink());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -200,9 +210,14 @@ class ToggleVCAMode : public Action
 public:
     virtual string GetName() override { return "ToggleVCAMode"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetTrackNavigationManager()->GetVCAMode();
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetTrackNavigationManager()->GetVCAMode());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -281,9 +296,14 @@ class ClearAllSolo : public Action
 public:
     virtual string GetName() override { return "ClearAllSolo"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return DAW::AnyTrackSolo(nullptr);
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(DAW::AnyTrackSolo(nullptr));
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -316,9 +336,14 @@ class SetShift : public Action
 public:
     virtual string GetName() override { return "SetShift"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetPage()->GetShift();
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetPage()->GetShift());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -334,9 +359,14 @@ class SetOption : public Action
 public:
     virtual string GetName() override { return "SetOption"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetPage()->GetOption();
+    }
+    
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetPage()->GetOption());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -352,9 +382,14 @@ class SetControl : public Action
 public:
     virtual string GetName() override { return "SetControl"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetPage()->GetControl();
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetPage()->GetControl());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override
@@ -370,9 +405,14 @@ class SetAlt : public Action
 public:
     virtual string GetName() override { return "SetAlt"; }
 
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return context->GetPage()->GetAlt();
+    }
+
     void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(context->GetPage()->GetAlt());
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     void Do(ActionContext* context, double value) override

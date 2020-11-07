@@ -115,6 +115,7 @@ public:
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
     virtual void Touch(ActionContext* context, double value) {}
+    virtual double GetCurrentNormalizedValue(ActionContext* context) { return 0.0; }
     
     int GetPanMode(MediaTrack* track)
     {
@@ -247,7 +248,6 @@ private:
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
     
-    double lastValue_ = 0.0;
     string lastStringValue_ = "";
     
     int intParam_ = 0;
@@ -367,20 +367,17 @@ public:
     
     void SetSteppedValueIndex(double value)
     {
-        if(steppedValues_.size() > 0)
-        {
-            int index = 0;
-            double delta = 100000000.0;
-            
-            for(int i = 0; i < steppedValues_.size(); i++)
-                if(abs(steppedValues_[i] - value) < delta)
-                {
-                    delta = abs(steppedValues_[i] - value);
-                    index = i;
-                }
-            
-            steppedValuesIndex_ = index;
-        }
+        int index = 0;
+        double delta = 100000000.0;
+        
+        for(int i = 0; i < steppedValues_.size(); i++)
+            if(abs(steppedValues_[i] - value) < delta)
+            {
+                delta = abs(steppedValues_[i] - value);
+                index = i;
+            }
+        
+        steppedValuesIndex_ = index;
     }
     
     

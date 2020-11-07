@@ -29,9 +29,14 @@ class ReaperAction : public Action
 public:
     virtual string GetName() override { return "ReaperAction"; }
     
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        return DAW::GetToggleCommandState(context->GetCommandId());
+    }
+
     virtual void RequestUpdate(ActionContext* context) override
     {
-        context->UpdateWidgetValue(DAW::GetToggleCommandState(context->GetCommandId()));
+        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
     virtual void Do(ActionContext* context, double value) override
@@ -48,13 +53,23 @@ class FXAction : public Action
 public:
     virtual string GetName() override { return "FXAction"; }
     
-    virtual void RequestUpdate(ActionContext* context) override
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
         {
             double min, max = 0.0;
             
-            double currentValue = DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
+            return DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
+        }
+        else
+            return 0.0;
+    }
+
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double currentValue = GetCurrentNormalizedValue(context);
             
             if(context->GetShouldUseDisplayStyle())
                 context->UpdateWidgetValue(context->GetDisplayStyle(), currentValue);

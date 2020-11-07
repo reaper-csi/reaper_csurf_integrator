@@ -1210,9 +1210,8 @@ void ActionContext::UpdateWidgetValue(double value)
 {
     value = isInverted_ == false ? value : 1.0 - value;
     
-    SetSteppedValueIndex(value);
-    
-    lastValue_ = value;
+    if(steppedValues_.size() > 0)
+        SetSteppedValueIndex(value);
     
     widget_->UpdateValue(value);
 
@@ -1240,9 +1239,8 @@ void ActionContext::UpdateWidgetValue(int param, double value)
 {
     value = isInverted_ == false ? value : 1.0 - value;
     
-    SetSteppedValueIndex(value);
-    
-    lastValue_ = value;
+    if(steppedValues_.size() > 0)
+        SetSteppedValueIndex(value);
     
     widget_->UpdateValue(param, value);
     
@@ -1310,17 +1308,7 @@ void ActionContext::DoRelativeAction(double delta)
     if(steppedValues_.size() > 0)
         DoSteppedValueAction(delta);
     else
-    {
-        if(deltaValue_ != 0.0)
-        {
-            if(delta > 0.0)
-                delta = deltaValue_;
-            else if(delta < 0.0)
-                delta = -deltaValue_;
-        }
-        
-        DoRangeBoundAction(lastValue_ + delta);
-    }
+        DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) + delta);
 }
 
 void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
@@ -1330,31 +1318,19 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
     else if(acceleratedDeltaValues_.size() > 0)
         DoAcceleratedDeltaValueAction(accelerationIndex, delta);
     else
-    {
-        if(deltaValue_ != 0.0)
-        {
-            if(delta >= 0.0)
-                delta = deltaValue_;
-            else if(delta < 0.0)
-                delta = -deltaValue_;
-        }
-        
-        DoRangeBoundAction(lastValue_ + delta);
-    }
+        DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) + delta);
 }
 
 void ActionContext::DoRangeBoundAction(double value)
 {
     if(shouldToggle_ && value == 1.0)
-        value = ! lastValue_;
+        value = ! action_->GetCurrentNormalizedValue(this);
     
     if(value > rangeMaximum_)
         value = rangeMaximum_;
     
     if(value < rangeMinimum_)
         value = rangeMinimum_;
-    
-    lastValue_ = value;
     
     action_->Do(this, value);
 }
@@ -1429,9 +1405,9 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
     accelerationIndex = accelerationIndex < 0 ? 0 : accelerationIndex;
     
     if(delta > 0.0)
-        DoRangeBoundAction(lastValue_ + acceleratedDeltaValues_[accelerationIndex]);
+        DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) + acceleratedDeltaValues_[accelerationIndex]);
     else
-        DoRangeBoundAction(lastValue_ - acceleratedDeltaValues_[accelerationIndex]);
+        DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) - acceleratedDeltaValues_[accelerationIndex]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
