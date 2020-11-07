@@ -220,12 +220,19 @@ public:
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
         int val = midiMessage->midi_message[2];
+
+        double delta = (midiMessage->midi_message[2] & 0x3f) / 63.0;
         
+        if (midiMessage->midi_message[2] & 0x40)
+            delta = -delta;
+        
+        delta = delta / 2.0;
+
         if(accelerationIndicesForIncrement_.count(val) > 0)
-            widget_->DoRelativeAction(accelerationIndicesForIncrement_[val], 0.001);
+            widget_->DoRelativeAction(accelerationIndicesForIncrement_[val], delta);
         
         else if(accelerationIndicesForDecrement_.count(val) > 0)
-            widget_->DoRelativeAction(accelerationIndicesForDecrement_[val], -0.001);
+            widget_->DoRelativeAction(accelerationIndicesForDecrement_[val], delta);
     }
 };
 
@@ -243,14 +250,14 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        double value = (midiMessage->midi_message[2] & 0x3f) / 63.0;
+        double delta = (midiMessage->midi_message[2] & 0x3f) / 63.0;
         
         if (midiMessage->midi_message[2] & 0x40)
-            value = -value;
+            delta = -delta;
         
-        value = value / 2.0;
+        delta = delta / 2.0;
 
-        widget_->DoRelativeAction(value);
+        widget_->DoRelativeAction(delta);
     }
 };
 
@@ -267,12 +274,12 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        double value = 1.0 / 64.0;
+        double delta = 1.0 / 64.0;
         
         if (midiMessage->midi_message[2] & 0x40)
-            value = -value;
+            delta = -delta;
         
-        widget_->DoRelativeAction(value);
+        widget_->DoRelativeAction(delta);
     }
 };
 
@@ -289,12 +296,12 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        double value = 1.0 / 64.0;
+        double delta = 1.0 / 64.0;
         
         if (! (midiMessage->midi_message[2] & 0x40))
-            value = -value;
+            delta = -delta;
         
-        widget_->DoRelativeAction(value);
+        widget_->DoRelativeAction(delta);
     }
 };
 
