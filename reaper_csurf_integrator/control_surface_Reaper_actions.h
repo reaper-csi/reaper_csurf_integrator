@@ -136,8 +136,8 @@ public:
             DAW::GetTrackUIVolPan(track, &vol, &pan);
             return volToNormalized(vol);
         }
-
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -569,8 +569,8 @@ public:
             DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             return volToNormalized(vol);
         }
-
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -668,8 +668,8 @@ public:
             DAW::GetTrackSendUIVolPan(track, context->GetParamIndex() + numHardwareSends, &vol, &pan);
             return panToNormalized(pan);
         }
-
-        return 0.0;
+        else
+            return 0.0;
     }
     
     virtual void RequestUpdate(ActionContext* context) override
@@ -766,8 +766,8 @@ public:
             DAW::GetTrackSendUIMute(track, context->GetParamIndex() + numHardwareSends, &mute);
             return mute;
         }
-
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -802,8 +802,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex(), "B_PHASE");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -838,8 +838,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex(), "I_SENDMODE");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1352,8 +1352,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetMediaTrackInfo_Value(track, "I_SELECTED");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1387,8 +1387,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetMediaTrackInfo_Value(track, "I_SELECTED");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1422,8 +1422,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetMediaTrackInfo_Value(track, "I_SELECTED");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1496,8 +1496,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetMediaTrackInfo_Value(track, "I_RECARM");
-
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1534,8 +1534,8 @@ public:
             DAW::GetTrackUIMute(track, &mute);
             return mute;
         }
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1570,8 +1570,8 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
             return DAW::GetMediaTrackInfo_Value(track, "I_SOLO");
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -1634,8 +1634,8 @@ public:
             else
                 return 0.0;
         }
-        
-        return 0.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
