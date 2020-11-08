@@ -140,20 +140,6 @@ public:
 
     static bool ValidateTrackPtr(MediaTrack* track) { return ValidatePtr(track, "MediaTrack*"); }
     
-    static HWND TrackFX_GetFloatingWindow(MediaTrack* track, int index)
-    {
-        if(ValidatePtr(track, "MediaTrack*"))
-            return ::TrackFX_GetFloatingWindow(track, index);
-        else
-            return nullptr;
-    }
-
-    static void TrackFX_Show(MediaTrack* track, int index, int showFlag)
-    {
-        if(ValidatePtr(track, "MediaTrack*"))
-            ::TrackFX_Show(track, index, showFlag);
-    }
-
     static int TrackFX_GetCount(MediaTrack* track)
     {
         if(ValidatePtr(track, "MediaTrack*"))
