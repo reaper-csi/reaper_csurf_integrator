@@ -759,7 +759,6 @@ static void ProcessWidgetFile(string filePath, ControlSurface* surface)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Manager::InitActionsDictionary()
 {    
-    actions_["SelectTrackRelative"] =               new SelectTrackRelative();
     actions_["TrackAutoMode"] =                     new TrackAutoMode();
     actions_["GlobalAutoMode"] =                    new GlobalAutoMode();
     actions_["TimeDisplay"] =                       new TimeDisplay();
