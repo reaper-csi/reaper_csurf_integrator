@@ -522,8 +522,6 @@ private:
     string const sourceFilePath_ = "";
     
     int slotIndex_ = 0;
-    
-    HWND hwnd_ = nullptr;
 
     vector<Widget*> widgets_;
 
@@ -540,22 +538,6 @@ public:
     int GetSlotIndex() { return slotIndex_; }
     
     void Deactivate();
-    void DeactivateAndCloseWindows();
-    
-    void OpenFXWindow()
-    {
-        if(MediaTrack* track = navigator_->GetTrack())
-        {
-            DAW::TrackFX_Show(track, slotIndex_, 3);
-            hwnd_ = DAW::TrackFX_GetFloatingWindow(track, slotIndex_);
-        }
-    }
-    
-    void CloseFXWindow()
-    {
-        if(MediaTrack* track = navigator_->GetTrack())
-            DAW::TrackFX_Show(track, slotIndex_, 2);
-    }
     
     void AddWidget(Widget* widget)
     {
@@ -624,7 +606,7 @@ struct ZoneTemplate
     
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int maxNum);
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldShowWindows, bool shouldUseNoAction);
+    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldUseNoAction);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -934,32 +916,15 @@ private:
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
-    bool shouldShowFXWindows_ = false;
-    
 public:
     FXActivationManager(ControlSurface* surface, int numFXSlots) : surface_(surface), numFXSlots_(numFXSlots) {}
     
     int  GetNumFXSlots() { return numFXSlots_; }
-    bool GetShowFXWindows() { return shouldShowFXWindows_; }
-    
-    void SetShouldShowFXWindows(bool shouldShowFXWindows) { shouldShowFXWindows_ = shouldShowFXWindows; }
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
     void MapFocusedFXToWidgets();
     void TrackFXListChanged();
-   
-    void ToggleShowFXWindows()
-    {
-        shouldShowFXWindows_ = ! shouldShowFXWindows_;
-        
-        if(shouldShowFXWindows_ == true)
-            for(auto zone : activeSelectedTrackFXZones_)
-                zone->OpenFXWindow();
-        else
-            for(auto zone : activeSelectedTrackFXZones_)
-                zone->CloseFXWindow();
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1052,7 +1017,7 @@ public:
         {
             if(zoneName == "Home")
             {
-                // GAW TDB, just deactivate all active Zones (including FXActivationManager) - "Home" is default
+                // GAW TBD, just deactivate all active Zones (including FXActivationManager) - "Home" is default
             }
             else
             {

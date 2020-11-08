@@ -139,31 +139,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ToggleShowFXWindows : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "SetShowFXWindows"; }
-
-    virtual double GetCurrentNormalizedValue(ActionContext* context) override
-    {
-        return context->GetSurface()->GetFXActivationManager()->GetShowFXWindows();
-    }
-
-    void RequestUpdate(ActionContext* context) override
-    {
-        context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
-    }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->GetFXActivationManager()->ToggleShowFXWindows();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ToggleScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

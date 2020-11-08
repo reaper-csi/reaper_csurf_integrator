@@ -774,7 +774,6 @@ void Manager::InitActionsDictionary()
     actions_["Stop"] =                              new Stop();
     actions_["Record"] =                            new Record();
     actions_["CycleTimeline"] =                     new CycleTimeline();
-    actions_["ToggleShowFXWindows"] =               new ToggleShowFXWindows();
     actions_["ToggleScrollLink"] =                  new ToggleScrollLink();
     actions_["ForceScrollLink"] =                   new ForceScrollLink();
     actions_["ToggleVCAMode"] =                     new ToggleVCAMode();
@@ -1461,19 +1460,6 @@ void Zone::Deactivate()
     // GAW TBD Leaving Zone - if needed
 }
 
-void Zone::DeactivateAndCloseWindows()
-{
-    if(hwnd_ != nullptr && IsWindow(hwnd_))
-        DestroyWindow(hwnd_);
-    
-    for(auto widget : widgets_)
-        widget->Deactivate();
-    
-    widgets_.clear();
-    
-    // GAW TBD Leaving Zone - if needed
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1579,11 +1565,11 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
     }
 }
 
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldShowFXWindows, bool shouldUseNoAction)
+void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldUseNoAction)
 {
     for(auto includedZoneTemplateStr : includedZoneTemplates)
         if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldShowFXWindows, shouldUseNoAction);
+            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldUseNoAction);
     
     if(navigators.size() == 1)
     {
@@ -1594,10 +1580,6 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         zone->SetSlotIndex(slotIndex);
         
         ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
-        
-        if(shouldShowFXWindows)
-            if(MediaTrack* track = navigators[0]->GetTrack())
-                zone->OpenFXWindow();
         
         activeZones.push_back(zone);
     }
@@ -1826,7 +1808,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 {
     for(auto zone : activeSelectedTrackFXMenuZones_)
     {
-        zone->DeactivateAndCloseWindows();
+        zone->Deactivate();
         delete zone;
     }
 
@@ -1845,7 +1827,7 @@ void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
    for(auto zone : activeSelectedTrackFXZones_)
    {
-       zone->DeactivateAndCloseWindows();
+       zone->Deactivate();
        delete zone;
    }
 
@@ -1865,7 +1847,7 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTr
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, shouldShowFXWindows_, false);
+            zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, false);
     }
 }
 
@@ -1895,7 +1877,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-            zoneTemplate->Activate(surface_, activeFocusedFXZones_, fxSlot, true, false);
+            zoneTemplate->Activate(surface_, activeFocusedFXZones_, fxSlot, false);
     }
 }
 
@@ -2153,8 +2135,6 @@ void HandleEuConGetFormattedFXParamValue(EuCon_ControlSurface* surface, const ch
 EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options)
 : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options)
 {
-    fxActivationManager_->SetShouldShowFXWindows(true);
-    
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
 
