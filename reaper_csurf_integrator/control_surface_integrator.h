@@ -925,6 +925,58 @@ public:
     void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
     void MapFocusedFXToWidgets();
     void TrackFXListChanged();
+    
+    void DeactivateAllFXZones()
+    {
+        DeactivateSelectedTrackFXZones();
+        DeactivateSelectedTrackFXMenuZones();
+        DeactivateSelectedTrackFXMenuFXZones();
+        DeactivateFocusedFXZones();
+    }
+    
+    void DeactivateSelectedTrackFXZones()
+    {
+        for(auto zone : activeSelectedTrackFXZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeSelectedTrackFXZones_.clear();
+    }
+    
+    void DeactivateSelectedTrackFXMenuZones()
+    {
+        for(auto zone : activeSelectedTrackFXMenuZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeSelectedTrackFXMenuZones_.clear();
+    }
+    
+    void DeactivateSelectedTrackFXMenuFXZones()
+    {
+        for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeSelectedTrackFXMenuFXZones_.clear();
+    }
+    
+    void DeactivateFocusedFXZones()
+    {
+        for(auto zone : activeFocusedFXZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeFocusedFXZones_.clear();
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1017,13 +1069,37 @@ public:
         {
             if(zoneName == "Home")
             {
-                // GAW TBD, just deactivate all active Zones (including FXActivationManager) - "Home" is default
+                DeactivateActiveZones();
+                DeactivateSendsZones();
+                fxActivationManager_->DeactivateAllFXZones();
             }
             else
             {
                 zoneTemplates_[zoneName]->Activate(this, activeZones_);
             }
         }
+    }
+    
+    void DeactivateSendsZones()
+    {
+        for(auto zone : activeSendZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeSendZones_.clear();
+    }
+
+    void DeactivateActiveZones()
+    {
+        for(auto zone : activeZones_)
+        {
+            zone->Deactivate();
+            delete zone;
+        }
+        
+        activeZones_.clear();
     }
 
     ZoneTemplate* GetZoneTemplate(string zoneName)
