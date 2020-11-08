@@ -797,7 +797,6 @@ void Manager::InitActionsDictionary()
     actions_["FocusedFXParam"] =                    new FocusedFXParam();
     actions_["FocusedFXParamNameDisplay"] =         new FocusedFXParamNameDisplay();
     actions_["FocusedFXParamValueDisplay"] =        new FocusedFXParamValueDisplay();
-
     actions_["TrackVolume"] =                       new TrackVolume();
     actions_["SoftTakeover7BitTrackVolume"] =       new SoftTakeover7BitTrackVolume();
     actions_["SoftTakeover14BitTrackVolume"] =      new SoftTakeover14BitTrackVolume();
@@ -825,7 +824,6 @@ void Manager::InitActionsDictionary()
     actions_["TrackOutputMeter"] =                  new TrackOutputMeter();
     actions_["TrackOutputMeterAverageLR"] =         new TrackOutputMeterAverageLR();
     actions_["TrackOutputMeterMaxPeakLR"] =         new TrackOutputMeterMaxPeakLR();
-    
     actions_["FXParam"] =                           new FXParam();
     actions_["FXParamRelative"] =                   new FXParamRelative();
     actions_["FXNameDisplay"] =                     new FXNameDisplay();
@@ -1806,13 +1804,8 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void FXActivationManager::MapSelectedTrackFXToMenu()
 {
-    for(auto zone : activeSelectedTrackFXMenuZones_)
-    {
-        zone->Deactivate();
-        delete zone;
-    }
-
-    activeSelectedTrackFXMenuZones_.clear();
+    DeactivateSelectedTrackFXMenuZones();
+    DeactivateSelectedTrackFXMenuFXZones();
     
     if(MediaTrack* track = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
@@ -1825,13 +1818,7 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
 
 void FXActivationManager::MapSelectedTrackFXToWidgets()
 {
-   for(auto zone : activeSelectedTrackFXZones_)
-   {
-       zone->Deactivate();
-       delete zone;
-   }
-
-    activeSelectedTrackFXZones_.clear();
+    DeactivateSelectedTrackFXZones();
     
     if(MediaTrack* selectedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
@@ -1862,14 +1849,7 @@ void FXActivationManager::MapFocusedFXToWidgets()
         if(trackNumber > 0)
             focusedTrack = surface_->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     
-    for(auto zone : activeFocusedFXZones_)
-    {
-        surface_->LoadingZone("Home");
-        zone->Deactivate();
-        delete zone;
-    }
-    
-    activeFocusedFXZones_.clear();
+    DeactivateFocusedFXZones();
     
     char FXName[BUFSZ];
     DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
@@ -1926,13 +1906,7 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
-    for(auto zone : activeSendZones_)
-    {
-        zone->Deactivate();
-        delete zone;
-    }
-
-    activeSendZones_.clear();
+    DeactivateSendsZones();
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
