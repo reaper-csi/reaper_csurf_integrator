@@ -104,41 +104,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SelectTrackRelative : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "SelectTrackRelative"; }
-
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0) return; // ignore button releases
-        
-        if(1 == DAW::CountSelectedTracks(nullptr))
-        {
-            int trackIndex = 0;
-            
-            for(int i = 0; i <= context->GetTrackNavigationManager()->GetNumTracks(); i++)
-                if(DAW::GetMediaTrackInfo_Value(context->GetTrackNavigationManager()->GetTrackFromId(i), "I_SELECTED"))
-                {
-                    trackIndex = i;
-                    break;
-                }
-            
-            trackIndex += context->GetIntParam();
-            
-            if(trackIndex < 0)
-                trackIndex = 0;
-            
-            if(trackIndex > context->GetTrackNavigationManager()->GetNumTracks())
-                trackIndex = context->GetTrackNavigationManager()->GetNumTracks();
-            
-            DAW::SetOnlyTrackSelected(context->GetTrackNavigationManager()->GetTrackFromId(trackIndex));
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ToggleScrollLink : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
