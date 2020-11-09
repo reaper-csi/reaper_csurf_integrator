@@ -294,7 +294,7 @@ public:
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
     int GetSlotIndex();
-    int GetSendIndex();
+    string GetName();
 
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
@@ -314,7 +314,6 @@ public:
     TrackNavigationManager* GetTrackNavigationManager();
     int GetParamIndex() { return paramIndex_; }
     
-    virtual string GetAlias() { return ""; }
     bool GetSupportsRGB() { return supportsRGB_; }
     
     void SetIsInverted() { isInverted_ = true; }
@@ -530,14 +529,20 @@ public:
     
     ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
-    string GetName() { return name_; }
-    string GetAlias() { return alias_; }
     string GetPath() { return sourceFilePath_; }
     
     void SetSlotIndex(int index) { slotIndex_ = index; }
     int GetSlotIndex() { return slotIndex_; }
     
     void Deactivate();
+    
+    string GetName()
+    {
+        if(alias_ != "")
+            return alias_;
+        else
+            return name_;
+    }
     
     void AddWidget(Widget* widget)
     {
