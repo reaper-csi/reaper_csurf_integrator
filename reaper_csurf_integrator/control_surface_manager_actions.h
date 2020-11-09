@@ -36,10 +36,8 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        int fxSlot = context->GetIntParam() - 1 < 0 ? 0 : context->GetIntParam() - 1;
-        
         if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, fxSlot);
+            context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, context->GetSlotIndex());
     }
 };
 
