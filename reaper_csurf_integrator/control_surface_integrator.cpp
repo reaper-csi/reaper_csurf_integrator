@@ -1112,19 +1112,28 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
         }
     }
     
-    if(actionName == "FXParam")
+    if(actionName == "FXParam" && params.size() > 1 && isdigit(params[1][0])) // C++ 11 says empty strings can be queried without catastrophe :)
     {
-        if(params.size() > 1 && isdigit(params[1][0])) // C++ 11 says empty strings can be queried without catastrophe :)
-            paramIndex_ = atol(params[1].c_str());
+        paramIndex_ = atol(params[1].c_str());
+    }
+    
+    if(actionName == "FXParamValueDisplay" && params.size() > 1 && isdigit(params[1][0]))
+    {
+        paramIndex_ = atol(params[1].c_str());
         
-        if(params.size() > 2 && params[2] != "{" && params[2] != "[")
-            fxParamDisplayName_ = params[2];
-        
-        if(params.size() > 3 && params[3] != "[" && params[3] != "{")
+        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
         {
             shouldUseDisplayStyle_ = true;
             displayStyle_ = atol(params[3].c_str());
         }
+    }
+    
+    if(actionName == "FXParamNameDisplay" && params.size() > 1 && isdigit(params[1][0]))
+    {
+        paramIndex_ = atol(params[1].c_str());
+        
+        if(params.size() > 2 && params[2] != "{" && params[2] != "[")
+            fxParamDisplayName_ = params[2];
     }
     
     /*
