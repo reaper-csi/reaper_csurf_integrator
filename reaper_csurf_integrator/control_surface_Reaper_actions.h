@@ -879,18 +879,42 @@ class FXNameDisplay : public Action
 {
 public:
     virtual string GetName() override { return "FXNameDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            context->UpdateWidgetValue(context->GetName());
+        else
+            context->GetWidget()->Clear();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class FXMenuNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "FXMenuNameDisplay"; }
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            int slot = context->GetSlotIndex() - 1 < 0 ? 0 : context->GetSlotIndex() - 1;
-            
             char fxName[BUFSZ];
             
-            DAW::TrackFX_GetFXName(track, slot, fxName, sizeof(fxName));
+            DAW::TrackFX_GetFXName(track, context->GetSlotIndex(), fxName, sizeof(fxName));
             
-            context->UpdateWidgetValue(fxName);
+            string name = "NoMap";
+            
+            if(ZoneTemplate* zoneTemplate = context->GetSurface()->GetZoneTemplate(fxName))
+            {
+                if(zoneTemplate->alias != "")
+                    name = zoneTemplate->alias;
+                else
+                    name = zoneTemplate->name;
+            }
+            
+            context->UpdateWidgetValue(name);
         }
         else
             context->GetWidget()->Clear();

@@ -272,7 +272,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 if(tokens[0] == "Zone")
                 {
                     zoneName = tokens.size() > 1 ? tokens[1] : "";
-                    zoneAlias = tokens.size() > 2 ? tokens[2] : zoneName;
+                    zoneAlias = tokens.size() > 2 ? tokens[2] : "";
                 }
                 
                 else if(tokens[0] == "ZoneEnd" && zoneName != "")
@@ -826,6 +826,7 @@ void Manager::InitActionsDictionary()
     actions_["FXParam"] =                           new FXParam();
     actions_["FXParamRelative"] =                   new FXParamRelative();
     actions_["FXNameDisplay"] =                     new FXNameDisplay();
+    actions_["FXMenuNameDisplay"] =                 new FXMenuNameDisplay();
     actions_["FXParamNameDisplay"] =                new FXParamNameDisplay();
     actions_["FXParamValueDisplay"] =               new FXParamValueDisplay();
     actions_["FXGainReductionMeter"] =              new FXGainReductionMeter();
@@ -1187,9 +1188,9 @@ int ActionContext::GetSlotIndex()
     return zone_->GetSlotIndex();
 }
 
-int ActionContext::GetSendIndex()
+string ActionContext::GetName()
 {
-    return zone_->GetNavigator()->GetSendNum();
+    return zone_->GetName();
 }
 
 void ActionContext::RequestUpdate()
