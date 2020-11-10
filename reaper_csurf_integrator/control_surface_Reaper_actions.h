@@ -256,7 +256,7 @@ public:
         {
             if(GetPanMode(track) != 6)
             {
-                if(context->GetParameterToggleState() == false)
+                if(context->GetWidget()->GetIsToggled() == false)
                 {
                     double vol, pan = 0.0;
                     DAW::GetTrackUIVolPan(track, &vol, &pan);
@@ -267,7 +267,7 @@ public:
             }
             else
             {
-                if(context->GetParameterToggleState() == false)
+                if(context->GetWidget()->GetIsToggled() == false)
                     return panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL"));
                 else
                     return panToNormalized(DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR"));
@@ -283,7 +283,7 @@ public:
         {
             int displayMode = 0;
             
-            if(GetPanMode(track) != 6 && context->GetParameterToggleState())
+            if(GetPanMode(track) != 6 && context->GetWidget()->GetIsToggled())
                 displayMode = 1;
             
             context->UpdateWidgetValue(displayMode, GetCurrentNormalizedValue(context));
@@ -300,14 +300,14 @@ public:
             
             if(GetPanMode(track) != 6)
             {
-                if(context->GetParameterToggleState() == false)
+                if(context->GetWidget()->GetIsToggled() == false)
                     DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, pan, false), NULL);
                 else
                     DAW::CSurf_OnWidthChange(track, pan, false);
             }
             else
             {               
-                if(context->GetParameterToggleState() == false)
+                if(context->GetWidget()->GetIsToggled() == false)
                     DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &pan);
                 else
                     DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &pan);
