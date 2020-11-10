@@ -285,6 +285,8 @@ private:
     vector<rgb_color> RGBValues_;
     int currentRGBIndex_ = 0;
     
+    bool parameterToggleState_ = false;
+    
     bool supportsTrackColor_ = false;
     
 public:
@@ -319,6 +321,9 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
+    
+    void ToggleParameterState() { parameterToggleState_ = ! parameterToggleState_; }
+    bool GetParameterToggleState() { return parameterToggleState_; }
     
     void DoPressAction(int value);
     void DoAction(double value);
@@ -450,6 +455,12 @@ public:
     {
         for(auto context : actionContexts_)
             context.DoTouch(value);
+    }
+    
+    void DoToggle()
+    {
+        for(auto context : actionContexts_)
+            context.ToggleParameterState();
     }
     
     void DoRelativeAction(double delta)
@@ -695,6 +706,11 @@ public:
         LogInput(value);
         
         currentWidgetActionBroker_.GetActionBundle().DoTouch(value);
+    }
+    
+    void DoToggle()
+    {       
+        currentWidgetActionBroker_.GetActionBundle().DoToggle();
     }
     
     void Activate(WidgetActionBroker currentWidgetActionBroker)

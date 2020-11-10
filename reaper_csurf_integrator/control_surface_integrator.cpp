@@ -561,6 +561,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             new EncoderPlainReverse_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         else if(widgetClass == "Touch" && size == 7)
             new Touch_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])), new MIDI_event_ex_t(strToHex(tokenLines[i][4]), strToHex(tokenLines[i][5]), strToHex(tokenLines[i][6])));
+        else if(widgetClass == "Toggle" && size == 4)
+            new Toggle_Midi_CSIMessageGenerator(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
 
         // Feedback Processors
         FeedbackProcessor* feedbackProcessor = nullptr;
@@ -807,6 +809,7 @@ void Manager::InitActionsDictionary()
     actions_["TrackRecordArm"] =                    new TrackRecordArm();
     actions_["TrackMute"] =                         new TrackMute();
     actions_["TrackSolo"] =                         new TrackSolo();
+    actions_["MCUTrackPan"] =                       new MCUTrackPan();
     actions_["TrackPan"] =                          new TrackPan();
     actions_["TrackPanPercent"] =                   new TrackPanPercent();
     actions_["TrackPanWidth"] =                     new TrackPanWidth();
