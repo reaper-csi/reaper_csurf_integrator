@@ -79,7 +79,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        widget_->DoToggle();
+        widget_->Toggle();
     }
 };
 
