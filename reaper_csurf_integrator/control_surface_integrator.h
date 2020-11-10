@@ -159,7 +159,7 @@ public:
     
     virtual string GetName() { return "Navigator"; }
     virtual MediaTrack* GetTrack() { return nullptr; }
-    virtual int GetSendNum() { return 0; }
+    virtual string GetChannelNumString() { return ""; }
     virtual bool GetIsChannelPinned() { return false; }
     virtual void IncBias() {}
     virtual void DecBias() {}
@@ -194,6 +194,8 @@ public:
     virtual void UnpinChannel() override;
     
     virtual string GetName() override { return "TrackNavigator"; }
+    
+    virtual string GetChannelNumString() override { return to_string(channelNum_ + 1); }
     
     virtual MediaTrack* GetTrack() override;
 };
@@ -1060,6 +1062,14 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
    
+    bool GetIsWidgetToggled(string widgetName)
+    {
+        if(widgetsByName_.count(widgetName) > 0)
+            return widgetsByName_[widgetName]->GetIsToggled();
+        else
+            return false;
+    }
+    
     void MakeHomeDefault()
     {
         if(zoneTemplates_.count("Home") > 0)
