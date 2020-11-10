@@ -285,8 +285,6 @@ private:
     vector<rgb_color> RGBValues_;
     int currentRGBIndex_ = 0;
     
-    bool parameterToggleState_ = false;
-    
     bool supportsTrackColor_ = false;
     
 public:
@@ -321,9 +319,6 @@ public:
     void SetIsInverted() { isInverted_ = true; }
     void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
-    
-    void ToggleParameterState() { parameterToggleState_ = ! parameterToggleState_; }
-    bool GetParameterToggleState() { return parameterToggleState_; }
     
     void DoPressAction(int value);
     void DoAction(double value);
@@ -455,12 +450,6 @@ public:
     {
         for(auto context : actionContexts_)
             context.DoTouch(value);
-    }
-    
-    void DoToggle()
-    {
-        for(auto context : actionContexts_)
-            context.ToggleParameterState();
     }
     
     void DoRelativeAction(double delta)
@@ -635,11 +624,13 @@ private:
     vector<FeedbackProcessor*> feedbackProcessors_;
     bool isModifier_ = false;
     
+    bool isToggled_ = false;
+    
     WidgetActionBroker currentWidgetActionBroker_;
     WidgetActionBroker defaultWidgetActionBroker_;
 
     void LogInput(double value);
-
+    
 public:
     Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this)), defaultWidgetActionBroker_(WidgetActionBroker(this)) {}
     virtual ~Widget() {};
@@ -649,6 +640,9 @@ public:
     bool GetIsModifier() { return isModifier_; }
     void SetIsModifier() { isModifier_ = true; }
     virtual void SilentSetValue(string displayText);
+    
+    void Toggle() { isToggled_ = ! isToggled_; }
+    bool GetIsToggled() { return isToggled_; }
     
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
@@ -706,11 +700,6 @@ public:
         LogInput(value);
         
         currentWidgetActionBroker_.GetActionBundle().DoTouch(value);
-    }
-    
-    void DoToggle()
-    {       
-        currentWidgetActionBroker_.GetActionBundle().DoToggle();
     }
     
     void Activate(WidgetActionBroker currentWidgetActionBroker)
