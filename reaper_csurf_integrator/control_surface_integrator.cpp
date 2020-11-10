@@ -821,6 +821,7 @@ void Manager::InitActionsDictionary()
     actions_["TogglePin"] =                         new TogglePin();
     actions_["TrackNameDisplay"] =                  new TrackNameDisplay();
     actions_["TrackVolumeDisplay"] =                new TrackVolumeDisplay();
+    actions_["MCUTrackPanDisplay"] =                new MCUTrackPanDisplay();
     actions_["TrackPanDisplay"] =                   new TrackPanDisplay();
     actions_["TrackPanWidthDisplay"] =              new TrackPanWidthDisplay();
     actions_["TrackOutputMeter"] =                  new TrackOutputMeter();

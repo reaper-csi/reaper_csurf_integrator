@@ -1274,7 +1274,7 @@ class TrackPanWidthDisplay : public Action
 {
 public:
     virtual string GetName() override { return "TrackPanWidthDisplay"; }
-
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
@@ -1301,6 +1301,103 @@ public:
                 trackPanWidth = " <Mno> ";
             
             context->UpdateWidgetValue(string(trackPanWidth));
+        }
+        else
+            context->ClearWidget();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MCUTrackPanDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "MCUTrackPanDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetPanMode(track) != 6 && context->GetSurface()->GetIsWidgetToggled("Rotary" + context->GetZone()->GetNavigator()->GetChannelNumString()))
+            {
+                bool reversed = false;
+                
+                double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
+                
+                if(widthVal < 0)
+                {
+                    reversed = true;
+                    widthVal = -widthVal;
+                }
+                
+                int widthIntVal = int(widthVal * 100.0);
+                string trackPanWidth = "";
+                
+                if(reversed)
+                    trackPanWidth += "Rev ";
+                
+                trackPanWidth += to_string(widthIntVal);
+                
+                if(widthIntVal == 0)
+                    trackPanWidth = " <Mno> ";
+                
+                context->UpdateWidgetValue(string(trackPanWidth));
+            }
+            else
+            {
+                bool left = false;
+                
+                double panVal = 0.0;
+                
+                if(GetPanMode(track) != 6)
+                    panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
+                else
+                {
+                    if(context->GetSurface()->GetIsWidgetToggled("Rotary" + context->GetZone()->GetNavigator()->GetChannelNumString()) == false)
+                        panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL");
+                    else
+                        panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR");
+                }
+                
+                if(panVal < 0)
+                {
+                    left = true;
+                    panVal = -panVal;
+                }
+                
+                int panIntVal = int(panVal * 100.0);
+                string trackPan = "";
+                
+                if(left)
+                {
+                    if(panIntVal == 100)
+                        trackPan += "<";
+                    else if(panIntVal < 100 && panIntVal > 9)
+                        trackPan += "< ";
+                    else
+                        trackPan += "<  ";
+                    
+                    trackPan += to_string(panIntVal);
+                }
+                else
+                {
+                    trackPan += "   ";
+                    
+                    trackPan += to_string(panIntVal);
+                    
+                    if(panIntVal == 100)
+                        trackPan += ">";
+                    else if(panIntVal < 100 && panIntVal > 9)
+                        trackPan += " >";
+                    else
+                        trackPan += "  >";
+                }
+                
+                if(panIntVal == 0)
+                    trackPan = "  <C>  ";
+                
+                context->UpdateWidgetValue(string(trackPan));
+            }
         }
         else
             context->ClearWidget();
