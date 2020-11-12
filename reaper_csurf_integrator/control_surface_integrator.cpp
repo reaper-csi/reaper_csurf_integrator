@@ -1208,7 +1208,14 @@ string ActionContext::GetName()
 }
 
 void ActionContext::RequestUpdate()
-{   
+{
+    if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
+    {
+        action_->Do(this, deferredValue_);
+        delayStartTime_ = 0.0;
+        deferredValue_ = 0.0;
+    }
+    
     action_->RequestUpdate(this);
 }
 
@@ -1298,20 +1305,36 @@ void ActionContext::UpdateWidgetValue(string value)
 
 void ActionContext::DoPressAction(int value)
 {
-    if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages -- this version of stepped values is only for switches
+    if(delayAmount_ != 0.0)
     {
-        if(steppedValuesIndex_ == steppedValues_.size() - 1)
+        if(value == 0.0)
         {
-            if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
-                steppedValuesIndex_ = 0;
+            deferredValue_ = 0.0;
+            delayStartTime_ = 0.0;
         }
         else
-            steppedValuesIndex_++;
-        
-        DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+        {
+            deferredValue_ = value;
+            delayStartTime_ =  DAW::GetCurrentNumberOfMilliseconds();
+        }
     }
     else
-        DoRangeBoundAction(value);
+    {
+        if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages
+        {
+            if(steppedValuesIndex_ == steppedValues_.size() - 1)
+            {
+                if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
+                    steppedValuesIndex_ = 0;
+            }
+            else
+                steppedValuesIndex_++;
+            
+            DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
+        }
+        else
+            DoRangeBoundAction(value);
+    }
 }
 
 void ActionContext::DoAction(double value)
@@ -1438,7 +1461,7 @@ WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget), zone_(
     defaultBundle_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
 }
 
-ActionBundle &WidgetActionBroker::GetActionBundle()
+ActionContextBundle* WidgetActionBroker::GetActionBundle()
 {
     string modifier = "";
     
@@ -1446,17 +1469,17 @@ ActionBundle &WidgetActionBroker::GetActionBundle()
         modifier = widget_->GetSurface()->GetPage()->GetModifier();
     
     if(actionBundles_.count(modifier) > 0)
-        return actionBundles_[modifier];
+        return &actionBundles_[modifier];
     else if(actionBundles_.count("") > 0)
-        return actionBundles_[""];
+        return &actionBundles_[""];
     else
-        return defaultBundle_;
+        return &defaultBundle_;
 }
 
 void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(zone_->GetNavigator()->GetTrack() != nullptr)
-        GetActionBundle().GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+        GetActionBundle()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1490,7 +1513,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
             
             for(auto actionsForModifierTemplate : widgetActionTemplate->actionBundleTemplates)
             {
-                ActionBundle actionBundle = ActionBundle(actionsForModifierTemplate->modifier);
+                ActionContextBundle actionContextBundle = ActionContextBundle(actionsForModifierTemplate->modifier);
                 
                 for(auto member : actionsForModifierTemplate->members)
                 {
@@ -1501,19 +1524,19 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     
                     if(shouldUseNoAction)
                     {
-                        ActionContext context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
+                        ActionContext* context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
                         member->SetProperties(context);
-                        actionBundle.AddActionContext(context);
+                        actionContextBundle.AddActionContext(context);
                     }
                     else
                     {
-                        ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
+                        ActionContext* context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
                         member->SetProperties(context);
-                        actionBundle.AddActionContext(context);
+                        actionContextBundle.AddActionContext(context);
                     }
                 }
                 
-                broker.AddActionBundle(actionBundle);
+                broker.AddActionBundle(actionContextBundle);
             }
             
             zone->AddWidget(widget);
@@ -1600,16 +1623,16 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ActionTemplate::SetProperties(ActionContext &context)
+void ActionTemplate::SetProperties(ActionContext* context)
 {
     if(isInverted)
-        context.SetIsInverted();
+        context->SetIsInverted();
     
     if(shouldToggle)
-        context.SetShouldToggle();
+        context->SetShouldToggle();
     
     if(delayAmount != 0.0)
-        context.SetDelayAmount(delayAmount);
+        context->SetDelayAmount(delayAmount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
