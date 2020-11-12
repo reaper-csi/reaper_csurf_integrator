@@ -400,18 +400,18 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionBundle
+class ActionContextBundle
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     string modifier_ = "";
-    vector<ActionContext> actionContexts_;
+    vector<ActionContext*> actionContexts_;
     
 public:
-    ActionBundle(string modifier) : modifier_(modifier) {}
-    ActionBundle() : ActionBundle("") {}
+    ActionContextBundle(string modifier) : modifier_(modifier) {}
+    ActionContextBundle() : ActionContextBundle("") {}
     
-    ActionBundle& operator=(ActionBundle &bundle)
+    ActionContextBundle& operator=(ActionContextBundle &bundle)
     {
         this->modifier_ = bundle.modifier_;
         
@@ -428,10 +428,10 @@ public:
     void RequestUpdate()
     {
         for(auto context : actionContexts_)
-            context.RequestUpdate();
+            context->RequestUpdate();
     }
     
-    void AddActionContext(ActionContext context)
+    void AddActionContext(ActionContext* context)
     {
         actionContexts_.push_back(context);
     }
@@ -439,36 +439,36 @@ public:
     void DoPressAction(int value)
     {
         for(auto context : actionContexts_)
-            context.DoPressAction(value);
+            context->DoPressAction(value);
     }
     
     void DoAction(double value)
     {
         for(auto context : actionContexts_)
-            context.DoAction(value);
+            context->DoAction(value);
     }
     
     void DoTouch(double value)
     {
         for(auto context : actionContexts_)
-            context.DoTouch(value);
+            context->DoTouch(value);
     }
     
     void DoRelativeAction(double delta)
     {
         for(auto context : actionContexts_)
-            context.DoRelativeAction(delta);
+            context->DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         for(auto context : actionContexts_)
-            context.DoRelativeAction(accelerationIndex, delta);
+            context->DoRelativeAction(accelerationIndex, delta);
     }
     
     void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
     {
-        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0].GetParamIndex() : 0;
+        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0]->GetParamIndex() : 0;
         
         DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
     }
@@ -481,8 +481,8 @@ class WidgetActionBroker
 private:
     Widget* widget_ = nullptr;
     Zone* zone_ = nullptr;
-    map<string, ActionBundle> actionBundles_;
-    ActionBundle defaultBundle_;
+    map<string, ActionContextBundle> actionBundles_;
+    ActionContextBundle defaultBundle_;
     
 public:
     WidgetActionBroker(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
@@ -501,12 +501,12 @@ public:
         return *this;
     }
 
-    void AddActionBundle(ActionBundle actionBundle)
+    void AddActionBundle(ActionContextBundle actionBundle)
     {
         actionBundles_[actionBundle.GetModifier()] = actionBundle;
     }
     
-    ActionBundle &GetActionBundle();
+    ActionContextBundle* GetActionBundle();
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize);
 };
@@ -564,7 +564,7 @@ struct ActionTemplate
     
     ActionTemplate(string action, vector<string> prams, bool isI, bool shouldT, double amount) : actionName(action), params(prams), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
     
-    void SetProperties(ActionContext &context);
+    void SetProperties(ActionContext* context);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -666,42 +666,42 @@ public:
     
     void RequestUpdate()
     {
-        currentWidgetActionBroker_.GetActionBundle().RequestUpdate();
+        currentWidgetActionBroker_.GetActionBundle()->RequestUpdate();
     }
     
     void DoPressAction(int value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle().DoPressAction(value);
+        currentWidgetActionBroker_.GetActionBundle()->DoPressAction(value);
     }
     
     void DoAction(double value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle().DoAction(value);
+        currentWidgetActionBroker_.GetActionBundle()->DoAction(value);
     }
     
     void DoRelativeAction(double delta)
     {
         LogInput(delta);
         
-        currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(delta);
+        currentWidgetActionBroker_.GetActionBundle()->DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        currentWidgetActionBroker_.GetActionBundle().DoRelativeAction(accelerationIndex, delta);
+        currentWidgetActionBroker_.GetActionBundle()->DoRelativeAction(accelerationIndex, delta);
     }
    
     void DoTouch(double value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle().DoTouch(value);
+        currentWidgetActionBroker_.GetActionBundle()->DoTouch(value);
     }
     
     void Activate(WidgetActionBroker currentWidgetActionBroker)
@@ -2063,12 +2063,12 @@ public:
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
     int GetProjectPanMode() { return *projectPanModePtr_; }
    
-    ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
+    ActionContext* GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
-            return ActionContext(actions_[actionName], widget, zone, params);
+            return new ActionContext(actions_[actionName], widget, zone, params);
         else
-            return ActionContext(actions_["NoAction"], widget, zone, params);
+            return new ActionContext(actions_["NoAction"], widget, zone, params);
     }
 
     void OnTrackSelection(MediaTrack *track)
