@@ -423,6 +423,7 @@ public:
             this->AddActionContext(context);
         
         bundle.actionContexts_.clear();
+        bundle.modifier_ = "";
         
         return *this;
     }
