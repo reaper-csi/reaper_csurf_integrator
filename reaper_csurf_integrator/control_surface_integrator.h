@@ -415,10 +415,14 @@ public:
     {
         this->modifier_ = bundle.modifier_;
         
+        for(auto context : actionContexts_)
+            delete context;
         actionContexts_.clear();
         
         for(auto context : bundle.actionContexts_)
             this->AddActionContext(context);
+        
+        bundle.actionContexts_.clear();
         
         return *this;
     }
