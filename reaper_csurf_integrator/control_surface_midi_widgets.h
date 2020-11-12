@@ -257,6 +257,56 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MFT_AcceleratedEncoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<int, int> accelerationIndicesForIncrement_;
+    map<int, int> accelerationIndicesForDecrement_;
+    
+public:
+    virtual ~MFT_AcceleratedEncoder_Midi_CSIMessageGenerator() {}
+    MFT_AcceleratedEncoder_Midi_CSIMessageGenerator(Midi_ControlSurface* surface, Widget* widget, MIDI_event_ex_t* message, vector<string> params) : Midi_CSIMessageGenerator(widget)
+    {
+        surface->AddCSIMessageGenerator(message->midi_message[0] * 0x10000 + message->midi_message[1] * 0x100, this);
+    
+        accelerationIndicesForDecrement_[0x3f] = 0;
+        accelerationIndicesForDecrement_[0x3e] = 1;
+        accelerationIndicesForDecrement_[0x3d] = 2;
+        accelerationIndicesForDecrement_[0x3c] = 3;
+        accelerationIndicesForDecrement_[0x3b] = 4;
+        accelerationIndicesForDecrement_[0x3a] = 5;
+        accelerationIndicesForDecrement_[0x39] = 6;
+        accelerationIndicesForDecrement_[0x38] = 7;
+        accelerationIndicesForDecrement_[0x36] = 8;
+        accelerationIndicesForDecrement_[0x33] = 9;
+        accelerationIndicesForDecrement_[0x2f] = 10;
+
+        accelerationIndicesForIncrement_[0x41] = 0;
+        accelerationIndicesForIncrement_[0x42] = 1;
+        accelerationIndicesForIncrement_[0x43] = 2;
+        accelerationIndicesForIncrement_[0x44] = 3;
+        accelerationIndicesForIncrement_[0x45] = 4;
+        accelerationIndicesForIncrement_[0x46] = 5;
+        accelerationIndicesForIncrement_[0x47] = 6;
+        accelerationIndicesForIncrement_[0x48] = 7;
+        accelerationIndicesForIncrement_[0x4a] = 8;
+        accelerationIndicesForIncrement_[0x4d] = 9;
+        accelerationIndicesForIncrement_[0x51] = 10;
+    }
+    
+    virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
+    {
+        int val = midiMessage->midi_message[2];
+        
+        if(accelerationIndicesForIncrement_.count(val) > 0)
+            widget_->DoRelativeAction(accelerationIndicesForIncrement_[val], 0.001);
+        
+        else if(accelerationIndicesForDecrement_.count(val) > 0)
+            widget_->DoRelativeAction(accelerationIndicesForDecrement_[val], -0.001);
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Encoder_Midi_CSIMessageGenerator : public Midi_CSIMessageGenerator
