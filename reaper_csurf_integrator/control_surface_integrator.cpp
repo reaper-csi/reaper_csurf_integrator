@@ -288,12 +288,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
 
                         for(auto [modifier, actions] : modifierActions)
                         {
-                            ActionBundleTemplate* modifierTemplate = new ActionBundleTemplate(modifier);
+                            ActionContextTemplate* actionContextTemplate = new ActionContextTemplate(modifier);
                             
                             for(auto action : actions)
-                                modifierTemplate->members.push_back(action);
+                                actionContextTemplate->members.push_back(action);
                             
-                            widgetActionTemplate->actionBundleTemplates.push_back(modifierTemplate);
+                            widgetActionTemplate->actionContextTemplates.push_back(actionContextTemplate);
                         }
                         
                         widgetActionTemplates.push_back(widgetActionTemplate);
@@ -1452,34 +1452,34 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-WidgetActionBroker::WidgetActionBroker(Widget* widget) : widget_(widget), zone_(widget->GetSurface()->GetDefaultZone())
+WidgetContext::WidgetContext(Widget* widget) : widget_(widget), zone_(widget->GetSurface()->GetDefaultZone())
 {
     vector<string> memberParams;
    
     memberParams.push_back("NoAction");
     
-    defaultBundle_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
+    defaultActionContext_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
 }
 
-ActionContextBundle* WidgetActionBroker::GetActionBundle()
+ActionContextList* WidgetContext::GetActionContext()
 {
     string modifier = "";
     
     if( ! widget_->GetIsModifier())
         modifier = widget_->GetSurface()->GetPage()->GetModifier();
     
-    if(actionBundles_.count(modifier) > 0)
-        return &actionBundles_[modifier];
-    else if(actionBundles_.count("") > 0)
-        return &actionBundles_[""];
+    if(actionContextDictionary_.count(modifier) > 0)
+        return &actionContextDictionary_[modifier];
+    else if(actionContextDictionary_.count("") > 0)
+        return &actionContextDictionary_[""];
     else
-        return &defaultBundle_;
+        return &defaultActionContext_;
 }
 
-void WidgetActionBroker::GetFormattedFXParamValue(char *buffer, int bufferSize)
+void WidgetContext::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(zone_->GetNavigator()->GetTrack() != nullptr)
-        GetActionBundle()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+        GetActionContext()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1509,13 +1509,13 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
             if(widgetActionTemplate->isModifier)
                 widget->SetIsModifier();
             
-            WidgetActionBroker broker = WidgetActionBroker(widget, zone);
+            WidgetContext widgetContext = WidgetContext(widget, zone);
             
-            for(auto actionsForModifierTemplate : widgetActionTemplate->actionBundleTemplates)
+            for(auto aTemplate : widgetActionTemplate->actionContextTemplates)
             {
-                ActionContextBundle actionContextBundle = ActionContextBundle(actionsForModifierTemplate->modifier);
+                ActionContextList actionContextList = ActionContextList(aTemplate->modifier);
                 
-                for(auto member : actionsForModifierTemplate->members)
+                for(auto member : aTemplate->members)
                 {
                     string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
                     vector<string> memberParams;
@@ -1526,21 +1526,21 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     {
                         ActionContext* context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
                         member->SetProperties(context);
-                        actionContextBundle.AddActionContext(context);
+                        actionContextList.AddActionContext(context);
                     }
                     else
                     {
                         ActionContext* context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
                         member->SetProperties(context);
-                        actionContextBundle.AddActionContext(context);
+                        actionContextList.AddActionContext(context);
                     }
                 }
                 
-                broker.AddActionBundle(actionContextBundle);
+                widgetContext.AddActionContextList(actionContextList);
             }
             
             zone->AddWidget(widget);
-            widget->Activate(broker);
+            widget->Activate(widgetContext);
         }
     }
 }

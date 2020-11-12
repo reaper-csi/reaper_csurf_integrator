@@ -400,7 +400,7 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionContextBundle
+class ActionContextList
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
@@ -408,10 +408,10 @@ private:
     vector<ActionContext*> actionContexts_;
     
 public:
-    ActionContextBundle(string modifier) : modifier_(modifier) {}
-    ActionContextBundle() : ActionContextBundle("") {}
+    ActionContextList(string modifier) : modifier_(modifier) {}
+    ActionContextList() : ActionContextList("") {}
     
-    ActionContextBundle& operator=(ActionContextBundle &bundle)
+    ActionContextList& operator=(ActionContextList &bundle)
     {
         this->modifier_ = bundle.modifier_;
         
@@ -428,7 +428,10 @@ public:
         return *this;
     }
 
-    string GetModifier() { return modifier_; }
+    string GetModifier()
+    {
+        return modifier_;
+    }
         
     void RequestUpdate()
     {
@@ -480,38 +483,38 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetActionBroker
+class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     Widget* widget_ = nullptr;
     Zone* zone_ = nullptr;
-    map<string, ActionContextBundle> actionBundles_;
-    ActionContextBundle defaultBundle_;
+    map<string, ActionContextList> actionContextDictionary_;
+    ActionContextList defaultActionContext_;
     
 public:
-    WidgetActionBroker(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
-    WidgetActionBroker(Widget* widget);
+    WidgetContext(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
+    WidgetContext(Widget* widget);
 
-    WidgetActionBroker& operator=(WidgetActionBroker &otherBroker)
+    WidgetContext& operator=(WidgetContext &otherContext)
     {
-        this->widget_ = otherBroker.widget_;
-        this->zone_ = otherBroker.zone_;
+        this->widget_ = otherContext.widget_;
+        this->zone_ = otherContext.zone_;
 
-        actionBundles_.clear();
+        actionContextDictionary_.clear();
         
-        for(auto [key, actionBundle] : otherBroker.actionBundles_)
-            this->AddActionBundle(actionBundle);
+        for(auto [key, actionContextsForModifier] : otherContext.actionContextDictionary_)
+            this->AddActionContextList(actionContextsForModifier);
         
         return *this;
     }
 
-    void AddActionBundle(ActionContextBundle actionBundle)
+    void AddActionContextList(ActionContextList actionContextList)
     {
-        actionBundles_[actionBundle.GetModifier()] = actionBundle;
+        actionContextDictionary_[actionContextList.GetModifier()] = actionContextList;
     }
     
-    ActionContextBundle* GetActionBundle();
+    ActionContextList* GetActionContext();
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize);
 };
@@ -573,13 +576,13 @@ struct ActionTemplate
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ActionBundleTemplate
+struct ActionContextTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     string modifier = "";
     vector<ActionTemplate*> members;
     
-    ActionBundleTemplate(string modifierStr) : modifier(modifierStr) {}
+    ActionContextTemplate(string modifierStr) : modifier(modifierStr) {}
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -588,7 +591,7 @@ struct WidgetActionTemplate
 {
     string widgetName = "";
     bool isModifier = false;
-    vector<ActionBundleTemplate*> actionBundleTemplates;
+    vector<ActionContextTemplate*> actionContextTemplates;
     
     WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
 };
@@ -633,13 +636,13 @@ private:
     
     bool isToggled_ = false;
     
-    WidgetActionBroker currentWidgetActionBroker_;
-    WidgetActionBroker defaultWidgetActionBroker_;
+    WidgetContext currentWidgetContext_;
+    WidgetContext defaultWidgetContext_;
 
     void LogInput(double value);
     
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetActionBroker_(WidgetActionBroker(this)), defaultWidgetActionBroker_(WidgetActionBroker(this)) {}
+    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetContext_(WidgetContext(this)), defaultWidgetContext_(WidgetContext(this)) {}
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
@@ -661,62 +664,62 @@ public:
 
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
-        currentWidgetActionBroker_.GetFormattedFXParamValue(buffer, bufferSize);
+        currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
     
     void Deactivate()
     {
-        currentWidgetActionBroker_ = defaultWidgetActionBroker_;
+        currentWidgetContext_ = defaultWidgetContext_;
     }
     
     void RequestUpdate()
     {
-        currentWidgetActionBroker_.GetActionBundle()->RequestUpdate();
+        currentWidgetContext_.GetActionContext()->RequestUpdate();
     }
     
     void DoPressAction(int value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle()->DoPressAction(value);
+        currentWidgetContext_.GetActionContext()->DoPressAction(value);
     }
     
     void DoAction(double value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle()->DoAction(value);
+        currentWidgetContext_.GetActionContext()->DoAction(value);
     }
     
     void DoRelativeAction(double delta)
     {
         LogInput(delta);
         
-        currentWidgetActionBroker_.GetActionBundle()->DoRelativeAction(delta);
+        currentWidgetContext_.GetActionContext()->DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        currentWidgetActionBroker_.GetActionBundle()->DoRelativeAction(accelerationIndex, delta);
+        currentWidgetContext_.GetActionContext()->DoRelativeAction(accelerationIndex, delta);
     }
    
     void DoTouch(double value)
     {
         LogInput(value);
         
-        currentWidgetActionBroker_.GetActionBundle()->DoTouch(value);
+        currentWidgetContext_.GetActionContext()->DoTouch(value);
     }
     
-    void Activate(WidgetActionBroker currentWidgetActionBroker)
+    void Activate(WidgetContext currentWidgetActionBroker)
     {
-        currentWidgetActionBroker_ = currentWidgetActionBroker;
+        currentWidgetContext_ = currentWidgetActionBroker;
     }
     
     void MakeCurrentDefault()
     {
-        defaultWidgetActionBroker_ = currentWidgetActionBroker_;
+        defaultWidgetContext_ = currentWidgetContext_;
     }
     
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
