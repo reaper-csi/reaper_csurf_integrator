@@ -1322,17 +1322,20 @@ void ActionContext::DoPressAction(int value)
     }
     else
     {
-        if(steppedValues_.size() > 0 && value != 0.0) // ignore release messages
+        if(steppedValues_.size() > 0)
         {
-            if(steppedValuesIndex_ == steppedValues_.size() - 1)
+            if(value != 0.0) // ignore release messages
             {
-                if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
-                    steppedValuesIndex_ = 0;
+                if(steppedValuesIndex_ == steppedValues_.size() - 1)
+                {
+                    if(steppedValues_[0] < steppedValues_[steppedValuesIndex_]) // GAW -- only wrap if 1st value is lower
+                        steppedValuesIndex_ = 0;
+                }
+                else
+                    steppedValuesIndex_++;
+                
+                DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
             }
-            else
-                steppedValuesIndex_++;
-            
-            DoRangeBoundAction(steppedValues_[steppedValuesIndex_]);
         }
         else
             DoRangeBoundAction(value);
