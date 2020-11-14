@@ -651,7 +651,7 @@ public:
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
     
-    void InitializeFeedbackProcessors(int options);
+    void InitializeFeedbackProcessors();
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -788,7 +788,7 @@ protected:
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
-    virtual void Initialize(int options) {}
+    virtual void Initialize() {}
     Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void UpdateValue(double value) {}
@@ -1198,17 +1198,6 @@ public:
         if(widgetsByName_.count("OnFXFocus") > 0)
             widgetsByName_["OnFXFocus"]->DoAction(1.0);
     }
-    
-    void GoToSleep()
-    {
-        int milliseconds = 1000;
-        
-#ifdef _WIN32
-        Sleep(milliseconds);
-#else
-        usleep(milliseconds * 1000);
-#endif
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1223,7 +1212,7 @@ private:
     
     // special processing for MCU meters
     bool hasMCUMeters_ = false;
-    int displayType_ = 0x14;
+    int displayType_ = 0x10;
     bool areMCUMetersInitialized_ = false;
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
@@ -1234,12 +1223,6 @@ private:
     {
         if(hasMCUMeters_ && areMCUMetersInitialized_ == false)
         {
-            if(options_ & 0x01)
-            {
-                MessageBox(g_hwnd, "Preparing to intilialize MCU meters", "MCU Meter init", MB_OK);
-                GoToSleep();
-            }
-
             // Enable meter mode for signal LED and lower display
             struct
             {
@@ -1261,10 +1244,7 @@ private:
             SendMidiMessage(&midiSysExData.evt);
 
             for(auto widget : widgets_)
-                widget->InitializeFeedbackProcessors(options_);
-            
-            if(options_ & 0x01)
-                GoToSleep();
+                widget->InitializeFeedbackProcessors();
             
             areMCUMetersInitialized_ = true;
         }
