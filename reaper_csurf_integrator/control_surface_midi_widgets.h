@@ -718,11 +718,8 @@ public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
     MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber) {}
     
-    virtual void Initialize(int options) override
+    virtual void Initialize() override
     {
-        if(options & 0x01)
-            surface_->GoToSleep();
-        
         // Enable meter mode for signal LED and lower display
         struct
         {
@@ -762,7 +759,7 @@ class MCUDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 private:
     int offset_ = 0;
-    int displayType_ = 0x14;
+    int displayType_ = 0x10;
     int displayRow_ = 0x12;
     int channel_ = 0;
     string lastStringSent_ = "";
