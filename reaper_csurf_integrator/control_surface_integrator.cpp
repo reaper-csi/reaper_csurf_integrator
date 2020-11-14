@@ -1637,10 +1637,10 @@ void ActionTemplate::SetProperties(ActionContext* context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Widget::InitializeFeedbackProcessors()
+void Widget::InitializeFeedbackProcessors(int options)
 {
     for(auto feedbackProcessor : feedbackProcessors_)
-        feedbackProcessor->Initialize();
+        feedbackProcessor->Initialize(options);
 }
 
 void Widget::SilentSetValue(string displayText)
