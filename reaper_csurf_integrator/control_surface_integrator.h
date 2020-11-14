@@ -1246,6 +1246,17 @@ private:
             for(auto widget : widgets_)
                 widget->InitializeFeedbackProcessors();
             
+            if(options_ & 0x01)
+            {
+                int milliseconds = 1000;
+                
+                #ifdef _WIN32
+                    Sleep(milliseconds);
+                #else
+                    usleep(milliseconds * 1000);
+                #endif
+            }
+            
             areMCUMetersInitialized_ = true;
         }
     }
