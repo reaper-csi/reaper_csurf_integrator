@@ -716,34 +716,16 @@ private:
 
 public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
-    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber)
-    {    
+    MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber) {}
+    
+    virtual void Initialize() override
+    {
         // Enable meter mode for signal LED and lower display
         struct
         {
             MIDI_event_ex_t evt;
             char data[BUFSZ];
         } midiSysExData;
-        
-        static bool hasSetGlobalSysEx_;
-        
-        if( ! hasSetGlobalSysEx_)
-        {
-            hasSetGlobalSysEx_ = true;
-            
-            midiSysExData.evt.frame_offset=0;
-            midiSysExData.evt.size=0;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-
-            SendMidiMessage(&midiSysExData.evt);
-        }
         
         midiSysExData.evt.frame_offset=0;
         midiSysExData.evt.size=0;

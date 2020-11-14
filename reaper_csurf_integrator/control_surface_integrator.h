@@ -275,7 +275,6 @@ private:
     int accumulatedDecTicks_ = 0;
     
     bool isInverted_ = false;
-    bool shouldToggle_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
@@ -319,7 +318,6 @@ public:
     bool GetSupportsRGB() { return supportsRGB_; }
     
     void SetIsInverted() { isInverted_ = true; }
-    void SetShouldToggle() { shouldToggle_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
     
     void DoPressAction(int value);
@@ -567,10 +565,9 @@ struct ActionTemplate
     string actionName;
     vector<string> params;
     bool isInverted;
-    bool shouldToggle;
     double delayAmount;
     
-    ActionTemplate(string action, vector<string> prams, bool isI, bool shouldT, double amount) : actionName(action), params(prams), isInverted(isI), shouldToggle(shouldT), delayAmount(amount) {}
+    ActionTemplate(string action, vector<string> prams, bool inverted, double amount) : actionName(action), params(prams), isInverted(inverted), delayAmount(amount) {}
     
     void SetProperties(ActionContext* context);
 };
@@ -654,6 +651,7 @@ public:
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
     
+    void InitializeFeedbackProcessors();
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -790,6 +788,7 @@ protected:
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
+    virtual void Initialize() {}
     Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void UpdateValue(double value) {}
@@ -1017,7 +1016,7 @@ protected:
     int numChannels_ = 0;
     int numSends_ = 0;
     int options_ = 0;
-
+    
     map<int, Navigator*> navigators_;
     
     vector<Widget*> widgets_;
@@ -1054,18 +1053,19 @@ public:
     int GetNumChannels() { return numChannels_; }
     int GetNumSends() { return numSends_; }
 
-    void MapSelectedTrackSendsToWidgets();
-    
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
     Zone* GetDefaultZone() { return defaultZone_; }
+
+    virtual void SetHasMCUMeters(int displayType) {}
     
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
     virtual void UpdateTimeDisplay() {}
-
+    void MapSelectedTrackSendsToWidgets();
+    
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
@@ -1210,24 +1210,67 @@ private:
     midi_Output* midiOutput_ = nullptr;
     map<int, vector<Midi_CSIMessageGenerator*>> Midi_CSIMessageGeneratorsByMessage_;
     
+    // special processing for MCU meters
+    bool hasMCUMeters_ = false;
+    int displayType_ = 0x14;
+    bool areMCUMetersInitialized_ = false;
+    
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
    
     void InitWidgets(string templateFilename, string zoneFolder);
+
+    virtual void Initialize()
+    {
+        if(hasMCUMeters_ && areMCUMetersInitialized_ == false)
+        {
+            // Enable meter mode for signal LED and lower display
+            struct
+            {
+                MIDI_event_ex_t evt;
+                char data[BUFSZ];
+            } midiSysExData;
+            
+            midiSysExData.evt.frame_offset=0;
+            midiSysExData.evt.size=0;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+            
+            SendMidiMessage(&midiSysExData.evt);
+
+            for(auto widget : widgets_)
+                widget->InitializeFeedbackProcessors();
+            
+            areMCUMetersInitialized_ = true;
+        }
+    }
 
 public:
     Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int options, midi_Input* midiInput, midi_Output* midiOutput)
     : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename, zoneFolder);
+        Initialize();
     }
     
     virtual ~Midi_ControlSurface() {}
     
     virtual string GetSourceFileName() override { return "/CSI/Surfaces/Midi/" + templateFilename_; }
     
-    void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, MIDI_event_ex_t* midiMessage);
-    void SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third);
+    void SendMidiMessage(MIDI_event_ex_t* midiMessage);
+    void SendMidiMessage(int first, int second, int third);
 
+    virtual void SetHasMCUMeters(int displayType) override
+    {
+        hasMCUMeters_ = true;
+        displayType_ = displayType;
+    }
+    
     virtual void HandleExternalInput() override
     {
         if(midiInput_)
@@ -1734,7 +1777,7 @@ private:
     double controlPressedTime_ = 0;
     bool isAlt_ = false;
     double altPressedTime_ = 0;
-
+    
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
 
     Navigator* defaultNavigator_ = nullptr;
