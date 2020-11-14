@@ -196,7 +196,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isInverted, double &delayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -220,7 +220,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
                 modifierSlots[3] = Alt + "+";
 
             else if(modifier_tokens[i] == "InvertFB")
-                isInverted = true;
+                isFeedbackInverted = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
         }
@@ -347,16 +347,16 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     string widgetName = "";
                     string modifier = "";
-                    bool isInverted = false;
+                    bool isFeedbackInverted = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isInverted, delayAmount);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, delayAmount);
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isInverted, delayAmount));
+                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isFeedbackInverted, delayAmount));
                 }
             }
         }
@@ -1231,7 +1231,7 @@ void ActionContext::UpdateWidgetValue(double value)
     if(steppedValues_.size() > 0)
         SetSteppedValueIndex(value);
 
-    value = isInverted_ == false ? value : 1.0 - value;
+    value = isFeedbackInverted_ == false ? value : 1.0 - value;
    
     widget_->UpdateValue(value);
 
@@ -1260,7 +1260,7 @@ void ActionContext::UpdateWidgetValue(int param, double value)
     if(steppedValues_.size() > 0)
         SetSteppedValueIndex(value);
 
-    value = isInverted_ == false ? value : 1.0 - value;
+    value = isFeedbackInverted_ == false ? value : 1.0 - value;
         
     widget_->UpdateValue(param, value);
     
@@ -1627,8 +1627,8 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ActionTemplate::SetProperties(ActionContext* context)
 {
-    if(isInverted)
-        context->SetIsInverted();
+    if(isFeedbackInverted)
+        context->SetIsFeedbackInverted();
     
     if(delayAmount != 0.0)
         context->SetDelayAmount(delayAmount);

@@ -274,7 +274,7 @@ private:
     int accumulatedIncTicks_ = 0;
     int accumulatedDecTicks_ = 0;
     
-    bool isInverted_ = false;
+    bool isFeedbackInverted_ = false;
     double delayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
@@ -317,7 +317,7 @@ public:
     
     bool GetSupportsRGB() { return supportsRGB_; }
     
-    void SetIsInverted() { isInverted_ = true; }
+    void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
     void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
     
     void DoPressAction(int value);
@@ -564,10 +564,10 @@ struct ActionTemplate
 {
     string actionName;
     vector<string> params;
-    bool isInverted;
+    bool isFeedbackInverted;
     double delayAmount;
     
-    ActionTemplate(string action, vector<string> prams, bool inverted, double amount) : actionName(action), params(prams), isInverted(inverted), delayAmount(amount) {}
+    ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), delayAmount(amount) {}
     
     void SetProperties(ActionContext* context);
 };
