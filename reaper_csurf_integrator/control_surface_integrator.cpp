@@ -196,7 +196,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isInverted, bool &shouldToggle, double &delayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isInverted, double &delayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -219,10 +219,8 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
             else if(modifier_tokens[i] == Alt)
                 modifierSlots[3] = Alt + "+";
 
-            else if(modifier_tokens[i] == "Invert")
+            else if(modifier_tokens[i] == "InvertFB")
                 isInverted = true;
-            else if(modifier_tokens[i] == "Toggle")
-                shouldToggle = true;
             else if(modifier_tokens[i] == "Hold")
                 delayAmount = 1.0;
         }
@@ -350,16 +348,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     string widgetName = "";
                     string modifier = "";
                     bool isInverted = false;
-                    bool shouldToggle = false;
                     double delayAmount = 0.0;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isInverted, shouldToggle, delayAmount);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isInverted, delayAmount);
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isInverted, shouldToggle, delayAmount));
+                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isInverted, delayAmount));
                 }
             }
         }
@@ -619,6 +616,8 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             
             if(size == 3 && feedbackProcessor != nullptr)
                 feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][2]));
+            
+            surface->SetHasMCUMeters(displayType);
         }
         else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && (size == 2 || size == 3))
         {
@@ -1213,9 +1212,10 @@ void ActionContext::RequestUpdate()
 {
     if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
     {
-        action_->Do(this, deferredValue_);
         delayStartTime_ = 0.0;
         deferredValue_ = 0.0;
+
+        DoRangeBoundAction(deferredValue_);
     }
     
     action_->RequestUpdate(this);
@@ -1228,11 +1228,11 @@ void ActionContext::ClearWidget()
 
 void ActionContext::UpdateWidgetValue(double value)
 {
-    value = isInverted_ == false ? value : 1.0 - value;
-    
     if(steppedValues_.size() > 0)
         SetSteppedValueIndex(value);
-    
+
+    value = isInverted_ == false ? value : 1.0 - value;
+   
     widget_->UpdateValue(value);
 
     if(supportsRGB_)
@@ -1257,11 +1257,11 @@ void ActionContext::UpdateWidgetValue(double value)
 
 void ActionContext::UpdateWidgetValue(int param, double value)
 {
-    value = isInverted_ == false ? value : 1.0 - value;
-    
     if(steppedValues_.size() > 0)
         SetSteppedValueIndex(value);
-    
+
+    value = isInverted_ == false ? value : 1.0 - value;
+        
     widget_->UpdateValue(param, value);
     
     currentRGBIndex_ = value == 0 ? 0 : 1;
@@ -1367,9 +1367,6 @@ void ActionContext::DoRelativeAction(int accelerationIndex, double delta)
 
 void ActionContext::DoRangeBoundAction(double value)
 {
-    if(shouldToggle_ && value == 1.0)
-        value = ! action_->GetCurrentNormalizedValue(this);
-    
     if(value > rangeMaximum_)
         value = rangeMaximum_;
     
@@ -1633,9 +1630,6 @@ void ActionTemplate::SetProperties(ActionContext* context)
     if(isInverted)
         context->SetIsInverted();
     
-    if(shouldToggle)
-        context->SetShouldToggle();
-    
     if(delayAmount != 0.0)
         context->SetDelayAmount(delayAmount);
 }
@@ -1643,6 +1637,12 @@ void ActionTemplate::SetProperties(ActionContext* context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Widget::InitializeFeedbackProcessors()
+{
+    for(auto feedbackProcessor : feedbackProcessors_)
+        feedbackProcessor->Initialize();
+}
+
 void Widget::SilentSetValue(string displayText)
 {
     for(auto processor : feedbackProcessors_)
@@ -1714,7 +1714,7 @@ CSIMessageGenerator::CSIMessageGenerator(ControlSurface* surface, Widget* widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
-    surface_->SendMidiMessage(this, midiMessage);
+    surface_->SendMidiMessage(midiMessage);
 }
 
 void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
@@ -1735,7 +1735,7 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
     lastMessageSent_->midi_message[0] = first;
     lastMessageSent_->midi_message[1] = second;
     lastMessageSent_->midi_message[2] = third;
-    surface_->SendMidiMessage(this, first, second, third);
+    surface_->SendMidiMessage(first, second, third);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2012,7 +2012,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
     }
 }
 
-void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, MIDI_event_ex_t* midiMessage)
+void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
     if(midiOutput_)
         midiOutput_->SendMsg(midiMessage, -1);
@@ -2021,7 +2021,7 @@ void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProces
         DAW::ShowConsoleMsg(("OUT->" + name_ + " SysEx\n").c_str());
 }
 
-void Midi_ControlSurface::SendMidiMessage(Midi_FeedbackProcessor* feedbackProcessor, int first, int second, int third)
+void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 {
     if(midiOutput_)
         midiOutput_->Send(first, second, third, -1);
