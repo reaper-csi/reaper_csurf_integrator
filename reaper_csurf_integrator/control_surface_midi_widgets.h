@@ -718,30 +718,6 @@ public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
     MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber) {}
     
-    virtual void Initialize() override
-    {
-        // Enable meter mode for signal LED and lower display
-        struct
-        {
-            MIDI_event_ex_t evt;
-            char data[BUFSZ];
-        } midiSysExData;
-        
-        midiSysExData.evt.frame_offset=0;
-        midiSysExData.evt.size=0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x20;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channelNumber_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x05; // signal LED and display VU
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-
-        SendMidiMessage(&midiSysExData.evt);
-    }
-    
     virtual void UpdateValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off

@@ -651,7 +651,6 @@ public:
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
     
-    void InitializeFeedbackProcessors();
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -788,7 +787,6 @@ protected:
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
-    virtual void Initialize() {}
     Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void UpdateValue(double value) {}
@@ -1212,41 +1210,23 @@ private:
     
     // special processing for MCU meters
     bool hasMCUMeters_ = false;
-    int displayType_ = 0x10;
-    bool areMCUMetersInitialized_ = false;
+    int displayType_ = 0x14;
     
     void ProcessMidiMessage(const MIDI_event_ex_t* evt);
    
     void InitWidgets(string templateFilename, string zoneFolder);
 
+    void InitializeMCU();
+    void InitializeMCUXT();
+    
     virtual void Initialize()
     {
-        if(hasMCUMeters_ && areMCUMetersInitialized_ == false)
+        if(hasMCUMeters_)
         {
-            // Enable meter mode for signal LED and lower display
-            struct
-            {
-                MIDI_event_ex_t evt;
-                char data[BUFSZ];
-            } midiSysExData;
-            
-            midiSysExData.evt.frame_offset=0;
-            midiSysExData.evt.size=0;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x66;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x21;
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // vertical
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
-            
-            SendMidiMessage(&midiSysExData.evt);
-
-            for(auto widget : widgets_)
-                widget->InitializeFeedbackProcessors();
-            
-            areMCUMetersInitialized_ = true;
+            if(displayType_ == 0x14)
+                InitializeMCU();
+            else
+                InitializeMCUXT();
         }
     }
 
