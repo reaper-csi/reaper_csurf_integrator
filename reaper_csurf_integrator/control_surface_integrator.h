@@ -1255,7 +1255,6 @@ public:
     : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename, zoneFolder);
-        Initialize();
     }
     
     virtual ~Midi_ControlSurface() {}

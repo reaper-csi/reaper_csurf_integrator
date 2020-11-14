@@ -1972,6 +1972,7 @@ void Midi_ControlSurface::InitWidgets(string templateFilename, string zoneFolder
 {
     ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/Midi/" + templateFilename, this);
     InitHardwiredWidgets();
+    Initialize();
     InitZones(zoneFolder);
     MakeHomeDefault();
     ForceClearAllWidgets();
