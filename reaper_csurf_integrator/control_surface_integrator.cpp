@@ -1454,7 +1454,7 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-WidgetContext::WidgetContext(Widget* widget) : widget_(widget), zone_(widget->GetSurface()->GetDefaultZone())
+WidgetContext::WidgetContext(Widget* widget, Zone* zone) : widget_(widget), zone_(zone)
 {
     vector<string> memberParams;
    
@@ -1637,6 +1637,10 @@ void ActionTemplate::SetProperties(ActionContext* context)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name),
+                currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())),
+                defaultWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
+
 void Widget::SilentSetValue(string displayText)
 {
     for(auto processor : feedbackProcessors_)

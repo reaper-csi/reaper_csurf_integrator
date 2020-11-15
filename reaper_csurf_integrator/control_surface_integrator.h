@@ -491,8 +491,7 @@ private:
     ActionContextList defaultActionContext_;
     
 public:
-    WidgetContext(Widget* widget, Zone* zone) : widget_(widget), zone_(zone) {}
-    WidgetContext(Widget* widget);
+    WidgetContext(Widget* widget, Zone* zone);
 
     WidgetContext& operator=(WidgetContext &otherContext)
     {
@@ -639,7 +638,7 @@ private:
     void LogInput(double value);
     
 public:
-    Widget(ControlSurface* surface, string name) : surface_(surface), name_(name), currentWidgetContext_(WidgetContext(this)), defaultWidgetContext_(WidgetContext(this)) {}
+    Widget(ControlSurface* surface, string name);
     virtual ~Widget() {};
     
     ControlSurface* GetSurface() { return surface_; }
