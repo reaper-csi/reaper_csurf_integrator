@@ -1457,7 +1457,7 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector<ActionContext*>& WidgetContext::GetActionContexts()
+vector<ActionContext>& WidgetContext::GetActionContexts()
 {
     string modifier = "";
     
@@ -1476,7 +1476,7 @@ void WidgetContext::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(zone_->GetNavigator()->GetTrack() != nullptr)
     {
-        int paramIndex = GetActionContexts().size() > 0 ? GetActionContexts()[0]->GetParamIndex() : 0;
+        int paramIndex = GetActionContexts().size() > 0 ? GetActionContexts()[0].GetParamIndex() : 0;
         
         DAW::TrackFX_GetFormattedParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), paramIndex, buffer, bufferSize);
     }    
@@ -1522,14 +1522,14 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     
                     if(shouldUseNoAction)
                     {
-                        ActionContext* context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
-                        member->SetProperties(*context);
+                        ActionContext context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
+                        member->SetProperties(context);
                         widgetContext.AddActionContext(aTemplate->modifier, context);
                     }
                     else
                     {
-                        ActionContext* context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
-                        member->SetProperties(*context);
+                        ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
+                        member->SetProperties(context);
                         widgetContext.AddActionContext(aTemplate->modifier, context);
                     }
                 }

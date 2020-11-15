@@ -405,10 +405,10 @@ class WidgetContext
 private:
     Widget* widget_ = nullptr;
     Zone* zone_ = nullptr;
-    map<string, vector<ActionContext*>> actionContextDictionary_;
-    vector<ActionContext*> defaultContexts_;
+    map<string, vector<ActionContext>> actionContextDictionary_;
+    vector<ActionContext> defaultContexts_;
     
-    vector<ActionContext*>& GetActionContexts();
+    vector<ActionContext>& GetActionContexts();
 
 public:
     WidgetContext(Widget* widget, Zone* zone)  : widget_(widget), zone_(zone) {}
@@ -419,14 +419,6 @@ public:
     {
         this->widget_ = otherContext.widget_;
         this->zone_ = otherContext.zone_;
-
-        // GAW TBD, this cures a memory leak, however, right now it may cause a crash.
-        // There is a need to deactivate a widget -- we need a way to send widgets "Home" selectively
-        // This would generate new contexts and all works out
-        
-        //for(auto [modifier, actionContexts] : actionContextDictionary_)
-            //for(auto context : actionContexts)
-                //delete context;
         
         actionContextDictionary_.clear();
         
@@ -437,48 +429,51 @@ public:
         return *this;
     }
     
-    void AddActionContext(string modifier, ActionContext* actionContext)
+    void AddActionContext(string modifier, ActionContext actionContext)
     {
         actionContextDictionary_[modifier].push_back(actionContext);
     }
     
     void RequestUpdate()
     {
-        for(auto context : GetActionContexts())
-            context->RunDeferredActions();
+        for(auto &context : GetActionContexts())
+            context.RunDeferredActions();
 
         if(GetActionContexts().size() > 0)
-            GetActionContexts()[0]->RequestUpdate();
+        {
+            ActionContext& context = GetActionContexts()[0];
+            context.RequestUpdate();
+        }
     }
     
     void DoPressAction(int value)
     {
-        for(auto context : GetActionContexts())
-            context->DoPressAction(value);
+        for(auto &context : GetActionContexts())
+            context.DoPressAction(value);
     }
     
     void DoAction(double value)
     {
-        for(auto context : GetActionContexts())
-            context->DoAction(value);
+        for(auto &context : GetActionContexts())
+            context.DoAction(value);
     }
     
     void DoTouch(double value)
     {
-        for(auto context : GetActionContexts())
-            context->DoTouch(value);
+        for(auto &context : GetActionContexts())
+            context.DoTouch(value);
     }
     
     void DoRelativeAction(double delta)
     {
-        for(auto context : GetActionContexts())
-            context->DoRelativeAction(delta);
+        for(auto &context : GetActionContexts())
+            context.DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
-        for(auto context : GetActionContexts())
-            context->DoRelativeAction(accelerationIndex, delta);
+        for(auto &context : GetActionContexts())
+            context.DoRelativeAction(accelerationIndex, delta);
     }
 };
 
@@ -2058,12 +2053,12 @@ public:
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
     int GetProjectPanMode() { return *projectPanModePtr_; }
    
-    ActionContext* GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
+    ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
     {
         if(actions_.count(actionName) > 0)
-            return new ActionContext(actions_[actionName], widget, zone, params);
+            return ActionContext(actions_[actionName], widget, zone, params);
         else
-            return new ActionContext(actions_["NoAction"], widget, zone, params);
+            return ActionContext(actions_["NoAction"], widget, zone, params);
     }
 
     void OnTrackSelection(MediaTrack *track)
