@@ -419,6 +419,14 @@ public:
         this->widget_ = otherContext.widget_;
         this->zone_ = otherContext.zone_;
 
+        // GAW TBD, this cures a memory leak, however, right now it may cause a crash.
+        // There is a need to deactivate a widget -- we need a way to send widgets "Home" selectively
+        // This would generate new contexts and all works out
+        
+        //for(auto [modifier, actionContexts] : actionContextDictionary_)
+            //for(auto context : actionContexts)
+                //delete context;
+        
         actionContextDictionary_.clear();
         
         for(auto [modifier, actionContexts] : otherContext.actionContextDictionary_)
@@ -617,11 +625,6 @@ public:
         currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
     
-    void Deactivate()
-    {
-        currentWidgetContext_ = defaultWidgetContext_;
-    }
-    
     void RequestUpdate()
     {
         currentWidgetContext_.RequestUpdate();
@@ -662,9 +665,14 @@ public:
         currentWidgetContext_.DoTouch(value);
     }
     
-    void Activate(WidgetContext currentWidgetActionBroker)
+    void Activate(WidgetContext currentWidgetContext)
     {
-        currentWidgetContext_ = currentWidgetActionBroker;
+        currentWidgetContext_ = currentWidgetContext;
+    }
+    
+    void Deactivate()
+    {
+        currentWidgetContext_ = defaultWidgetContext_;
     }
     
     void MakeCurrentDefault()
