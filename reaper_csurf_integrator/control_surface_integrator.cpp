@@ -1208,7 +1208,7 @@ string ActionContext::GetName()
     return zone_->GetName();
 }
 
-void ActionContext::RequestUpdate()
+void ActionContext::RunDeferredActions()
 {
     if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
     {
@@ -1217,7 +1217,10 @@ void ActionContext::RequestUpdate()
         delayStartTime_ = 0.0;
         deferredValue_ = 0.0;
     }
-    
+}
+
+void ActionContext::RequestUpdate()
+{
     action_->RequestUpdate(this);
 }
 
