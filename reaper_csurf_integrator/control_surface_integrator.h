@@ -512,7 +512,7 @@ public:
         actionContextDictionary_[actionContextList.GetModifier()] = actionContextList;
     }
     
-    ActionContextList* GetActionContext();
+    ActionContextList& GetActionContext();
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize);
 };
@@ -671,42 +671,42 @@ public:
     
     void RequestUpdate()
     {
-        currentWidgetContext_.GetActionContext()->RequestUpdate();
+        currentWidgetContext_.GetActionContext().RequestUpdate();
     }
     
     void DoPressAction(int value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext()->DoPressAction(value);
+        currentWidgetContext_.GetActionContext().DoPressAction(value);
     }
     
     void DoAction(double value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext()->DoAction(value);
+        currentWidgetContext_.GetActionContext().DoAction(value);
     }
     
     void DoRelativeAction(double delta)
     {
         LogInput(delta);
         
-        currentWidgetContext_.GetActionContext()->DoRelativeAction(delta);
+        currentWidgetContext_.GetActionContext().DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        currentWidgetContext_.GetActionContext()->DoRelativeAction(accelerationIndex, delta);
+        currentWidgetContext_.GetActionContext().DoRelativeAction(accelerationIndex, delta);
     }
    
     void DoTouch(double value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext()->DoTouch(value);
+        currentWidgetContext_.GetActionContext().DoTouch(value);
     }
     
     void Activate(WidgetContext currentWidgetActionBroker)
