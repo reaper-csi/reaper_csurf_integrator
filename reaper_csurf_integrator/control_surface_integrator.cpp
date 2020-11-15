@@ -1454,16 +1454,7 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-WidgetContext::WidgetContext(Widget* widget, Zone* zone) : widget_(widget), zone_(zone)
-{
-    vector<string> memberParams;
-   
-    memberParams.push_back("NoAction");
-    
-    defaultActionContext_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
-}
-
-ActionContextList& WidgetContext::GetActionContext()
+vector<ActionContext*>& WidgetContext::GetActionContexts()
 {
     string modifier = "";
     
@@ -1475,13 +1466,17 @@ ActionContextList& WidgetContext::GetActionContext()
     else if(actionContextDictionary_.count("") > 0)
         return actionContextDictionary_[""];
     else
-        return defaultActionContext_;
+        return defaultContexts_;
 }
 
 void WidgetContext::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(zone_->GetNavigator()->GetTrack() != nullptr)
-        GetActionContext().GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+    {
+        int paramIndex = GetActionContexts().size() > 0 ? GetActionContexts()[0]->GetParamIndex() : 0;
+        
+        DAW::TrackFX_GetFormattedParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), paramIndex, buffer, bufferSize);
+    }    
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1515,8 +1510,6 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
             
             for(auto aTemplate : widgetActionTemplate->actionContextTemplates)
             {
-                ActionContextList actionContextList = ActionContextList(aTemplate->modifier);
-                
                 for(auto member : aTemplate->members)
                 {
                     string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
@@ -1527,18 +1520,16 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     if(shouldUseNoAction)
                     {
                         ActionContext* context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
-                        member->SetProperties(context);
-                        actionContextList.AddActionContext(context);
+                        member->SetProperties(*context);
+                        widgetContext.AddActionContext(aTemplate->modifier, context);
                     }
                     else
                     {
                         ActionContext* context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
-                        member->SetProperties(context);
-                        actionContextList.AddActionContext(context);
+                        member->SetProperties(*context);
+                        widgetContext.AddActionContext(aTemplate->modifier, context);
                     }
                 }
-                
-                widgetContext.AddActionContextList(actionContextList);
             }
             
             zone->AddWidget(widget);
@@ -1625,13 +1616,13 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ActionTemplate::SetProperties(ActionContext* context)
+void ActionTemplate::SetProperties(ActionContext& context)
 {
     if(isFeedbackInverted)
-        context->SetIsFeedbackInverted();
+        context.SetIsFeedbackInverted();
     
     if(delayAmount != 0.0)
-        context->SetDelayAmount(delayAmount);
+        context.SetDelayAmount(delayAmount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
