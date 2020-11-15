@@ -326,6 +326,7 @@ public:
     void DoRelativeAction(int accelerationIndex, double value);
     
     void RequestUpdate();
+    void RunDeferredActions();
     void ClearWidget();
     void UpdateWidgetValue(double value);
     void UpdateWidgetValue(int param, double value);
@@ -444,7 +445,10 @@ public:
     void RequestUpdate()
     {
         for(auto context : GetActionContexts())
-            context->RequestUpdate();
+            context->RunDeferredActions();
+
+        if(GetActionContexts().size() > 0)
+            GetActionContexts()[0]->RequestUpdate();
     }
     
     void DoPressAction(int value)
