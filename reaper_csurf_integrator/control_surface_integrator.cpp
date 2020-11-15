@@ -1212,10 +1212,10 @@ void ActionContext::RequestUpdate()
 {
     if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
     {
+        DoRangeBoundAction(deferredValue_);
+        
         delayStartTime_ = 0.0;
         deferredValue_ = 0.0;
-
-        DoRangeBoundAction(deferredValue_);
     }
     
     action_->RequestUpdate(this);
