@@ -654,7 +654,7 @@ public:
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(context->GetTrack())
-            context->UpdateWidgetValue(volToNormalized(GetCurrentNormalizedValue(context)));
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
         else
             context->ClearWidget();
     }
