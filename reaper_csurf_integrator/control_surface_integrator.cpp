@@ -1463,7 +1463,7 @@ WidgetContext::WidgetContext(Widget* widget) : widget_(widget), zone_(widget->Ge
     defaultActionContext_.AddActionContext(TheManager->GetActionContext("NoAction", widget, zone_, memberParams));
 }
 
-ActionContextList* WidgetContext::GetActionContext()
+ActionContextList& WidgetContext::GetActionContext()
 {
     string modifier = "";
     
@@ -1471,17 +1471,17 @@ ActionContextList* WidgetContext::GetActionContext()
         modifier = widget_->GetSurface()->GetPage()->GetModifier();
     
     if(actionContextDictionary_.count(modifier) > 0)
-        return &actionContextDictionary_[modifier];
+        return actionContextDictionary_[modifier];
     else if(actionContextDictionary_.count("") > 0)
-        return &actionContextDictionary_[""];
+        return actionContextDictionary_[""];
     else
-        return &defaultActionContext_;
+        return defaultActionContext_;
 }
 
 void WidgetContext::GetFormattedFXParamValue(char *buffer, int bufferSize)
 {
     if(zone_->GetNavigator()->GetTrack() != nullptr)
-        GetActionContext()->GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
+        GetActionContext().GetFormattedFXParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), buffer, bufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
