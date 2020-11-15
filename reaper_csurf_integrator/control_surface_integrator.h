@@ -398,100 +398,21 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ActionContextList
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    string modifier_ = "";
-    vector<ActionContext*> actionContexts_;
-    
-public:
-    ActionContextList(string modifier) : modifier_(modifier) {}
-    ActionContextList() : ActionContextList("") {}
-    
-    ActionContextList& operator=(ActionContextList &bundle)
-    {
-        this->modifier_ = bundle.modifier_;
-        
-        for(auto context : actionContexts_)
-            delete context;
-        actionContexts_.clear();
-        
-        for(auto context : bundle.actionContexts_)
-            this->AddActionContext(context);
-        
-        bundle.actionContexts_.clear();
-        bundle.modifier_ = "";
-        
-        return *this;
-    }
-
-    string GetModifier()
-    {
-        return modifier_;
-    }
-        
-    void RequestUpdate()
-    {
-        for(auto context : actionContexts_)
-            context->RequestUpdate();
-    }
-    
-    void AddActionContext(ActionContext* context)
-    {
-        actionContexts_.push_back(context);
-    }
-    
-    void DoPressAction(int value)
-    {
-        for(auto context : actionContexts_)
-            context->DoPressAction(value);
-    }
-    
-    void DoAction(double value)
-    {
-        for(auto context : actionContexts_)
-            context->DoAction(value);
-    }
-    
-    void DoTouch(double value)
-    {
-        for(auto context : actionContexts_)
-            context->DoTouch(value);
-    }
-    
-    void DoRelativeAction(double delta)
-    {
-        for(auto context : actionContexts_)
-            context->DoRelativeAction(delta);
-    }
-    
-    void DoRelativeAction(int accelerationIndex, double delta)
-    {
-        for(auto context : actionContexts_)
-            context->DoRelativeAction(accelerationIndex, delta);
-    }
-    
-    void GetFormattedFXParamValue(MediaTrack* track, int slotIndex, char *buffer, int bufferSize)
-    {
-        int paramIndex = actionContexts_.size() > 0 ? actionContexts_[0]->GetParamIndex() : 0;
-        
-        DAW::TrackFX_GetFormattedParamValue(track, slotIndex, paramIndex, buffer, bufferSize);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class WidgetContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
     Widget* widget_ = nullptr;
     Zone* zone_ = nullptr;
-    map<string, ActionContextList> actionContextDictionary_;
-    ActionContextList defaultActionContext_;
+    map<string, vector<ActionContext*>> actionContextDictionary_;
+    vector<ActionContext*> defaultContexts_;
     
+    vector<ActionContext*>& GetActionContexts();
+
 public:
-    WidgetContext(Widget* widget, Zone* zone);
+    WidgetContext(Widget* widget, Zone* zone)  : widget_(widget), zone_(zone) {}
+    
+    void GetFormattedFXParamValue(char *buffer, int bufferSize);
 
     WidgetContext& operator=(WidgetContext &otherContext)
     {
@@ -500,20 +421,53 @@ public:
 
         actionContextDictionary_.clear();
         
-        for(auto [key, actionContextsForModifier] : otherContext.actionContextDictionary_)
-            this->AddActionContextList(actionContextsForModifier);
+        for(auto [modifier, actionContexts] : otherContext.actionContextDictionary_)
+            for(auto context : actionContexts)
+                this->AddActionContext(modifier, context);
         
         return *this;
     }
-
-    void AddActionContextList(ActionContextList actionContextList)
+    
+    void AddActionContext(string modifier, ActionContext* actionContext)
     {
-        actionContextDictionary_[actionContextList.GetModifier()] = actionContextList;
+        actionContextDictionary_[modifier].push_back(actionContext);
     }
     
-    ActionContextList& GetActionContext();
+    void RequestUpdate()
+    {
+        for(auto context : GetActionContexts())
+            context->RequestUpdate();
+    }
     
-    void GetFormattedFXParamValue(char *buffer, int bufferSize);
+    void DoPressAction(int value)
+    {
+        for(auto context : GetActionContexts())
+            context->DoPressAction(value);
+    }
+    
+    void DoAction(double value)
+    {
+        for(auto context : GetActionContexts())
+            context->DoAction(value);
+    }
+    
+    void DoTouch(double value)
+    {
+        for(auto context : GetActionContexts())
+            context->DoTouch(value);
+    }
+    
+    void DoRelativeAction(double delta)
+    {
+        for(auto context : GetActionContexts())
+            context->DoRelativeAction(delta);
+    }
+    
+    void DoRelativeAction(int accelerationIndex, double delta)
+    {
+        for(auto context : GetActionContexts())
+            context->DoRelativeAction(accelerationIndex, delta);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -568,7 +522,7 @@ struct ActionTemplate
     
     ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), delayAmount(amount) {}
     
-    void SetProperties(ActionContext* context);
+    void SetProperties(ActionContext& context);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -670,42 +624,42 @@ public:
     
     void RequestUpdate()
     {
-        currentWidgetContext_.GetActionContext().RequestUpdate();
+        currentWidgetContext_.RequestUpdate();
     }
     
     void DoPressAction(int value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext().DoPressAction(value);
+        currentWidgetContext_.DoPressAction(value);
     }
     
     void DoAction(double value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext().DoAction(value);
+        currentWidgetContext_.DoAction(value);
     }
     
     void DoRelativeAction(double delta)
     {
         LogInput(delta);
         
-        currentWidgetContext_.GetActionContext().DoRelativeAction(delta);
+        currentWidgetContext_.DoRelativeAction(delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        currentWidgetContext_.GetActionContext().DoRelativeAction(accelerationIndex, delta);
+        currentWidgetContext_.DoRelativeAction(accelerationIndex, delta);
     }
    
     void DoTouch(double value)
     {
         LogInput(value);
         
-        currentWidgetContext_.GetActionContext().DoTouch(value);
+        currentWidgetContext_.DoTouch(value);
     }
     
     void Activate(WidgetContext currentWidgetActionBroker)
