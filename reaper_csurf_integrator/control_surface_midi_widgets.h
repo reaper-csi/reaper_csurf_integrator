@@ -751,16 +751,7 @@ public:
     
     virtual void SetValue(string displayText) override
     {
-        if(shouldRefresh_)
-        {
-            double now = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
-                lastRefreshed_ = now;
-            else
-                return;
-        }
-        else if( ! mustForce_ )
+        if( ! mustForce_ )
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
@@ -829,16 +820,7 @@ public:
         
     virtual void SetValue(string displayText) override
     {
-        if(shouldRefresh_)
-        {
-            double now = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
-                lastRefreshed_ = now;
-            else
-                return;
-        }
-        else if( ! mustForce_)
+        if( ! mustForce_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
@@ -909,16 +891,7 @@ public:
     
     virtual void SetValue(string displayText) override
     {
-        if(shouldRefresh_)
-        {
-            double now = DAW::GetCurrentNumberOfMilliseconds();
-            
-            if( now > lastRefreshed_ + refreshInterval_) // time to refresh
-                lastRefreshed_ = now;
-            else
-                return;
-        }
-        else if( ! mustForce_)
+        if( ! mustForce_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;

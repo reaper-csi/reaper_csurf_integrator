@@ -566,12 +566,9 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         // Feedback Processors
         FeedbackProcessor* feedbackProcessor = nullptr;
 
-        if(widgetClass == "FB_TwoState" && (size == 7 || size == 8))
+        if(widgetClass == "FB_TwoState" && size == 7)
         {
             feedbackProcessor = new TwoState_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])), new MIDI_event_ex_t(strToHex(tokenLines[i][4]), strToHex(tokenLines[i][5]), strToHex(tokenLines[i][6])));
-            
-            if(size == 8)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][7]));
         }
         else if(widgetClass == "FB_NovationLaunchpadMiniRGB7Bit" && size == 4)
         {
@@ -585,7 +582,7 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         {
             feedbackProcessor = new FaderportRGB7Bit_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         }
-        else if(size == 4 || size== 5)
+        else if(size == 4)
         {
             if(widgetClass == "FB_Fader14Bit")
                 feedbackProcessor = new Fader14Bit_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
@@ -597,9 +594,6 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
                 feedbackProcessor = new VUMeter_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
             else if(widgetClass == "FB_GainReductionMeter")
                 feedbackProcessor = new GainReductionMeter_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
-            
-            if(size == 5 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][4]));
         }
         else if((widgetClass == "FB_MCUTimeDisplay" || widgetClass == "FB_QConProXMasterVUMeter") && size == 1)
         {
@@ -608,18 +602,15 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             else if(widgetClass == "FB_QConProXMasterVUMeter")
                 feedbackProcessor = new QConProXMasterVUMeter_Midi_FeedbackProcessor(surface, widget);
         }
-        else if((widgetClass == "FB_MCUVUMeter" || widgetClass == "FB_MCUXTVUMeter") && (size == 2 || size == 3))
+        else if((widgetClass == "FB_MCUVUMeter" || widgetClass == "FB_MCUXTVUMeter") && size == 2)
         {
             int displayType = widgetClass == "FB_MCUVUMeter" ? 0x14 : 0x15;
             
             feedbackProcessor = new MCUVUMeter_Midi_FeedbackProcessor(surface, widget, displayType, stoi(tokenLines[i][1]));
             
-            if(size == 3 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][2]));
-            
             surface->SetHasMCUMeters(displayType);
         }
-        else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && (size == 2 || size == 3))
+        else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && size == 2)
         {
             if(widgetClass == "FB_MCUDisplayUpper")
                 feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, widget, 0, 0x14, 0x12, stoi(tokenLines[i][1]));
@@ -629,34 +620,25 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
                 feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, widget, 0, 0x15, 0x12, stoi(tokenLines[i][1]));
             else if(widgetClass == "FB_MCUXTDisplayLower")
                 feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, widget, 1, 0x15, 0x12, stoi(tokenLines[i][1]));
-
-            if(size == 3 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][2]));
         }
         
-        else if((widgetClass == "FB_C4DisplayUpper" || widgetClass == "FB_C4DisplayLower") && (size == 3 || size == 4))
+        else if((widgetClass == "FB_C4DisplayUpper" || widgetClass == "FB_C4DisplayLower") && size == 3)
         {
             if(widgetClass == "FB_C4DisplayUpper")
                 feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, widget, 0, 0x17, stoi(tokenLines[i][1]) + 0x30, stoi(tokenLines[i][2]));
             else if(widgetClass == "FB_C4DisplayLower")
                 feedbackProcessor = new MCUDisplay_Midi_FeedbackProcessor(surface, widget, 1, 0x17, stoi(tokenLines[i][1]) + 0x30, stoi(tokenLines[i][2]));
-            
-            if(size == 4 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][3]));
         }
         
-        else if((widgetClass == "FB_FP8Display" || widgetClass == "FB_FP16Display") && (size == 2 || size == 3))
+        else if((widgetClass == "FB_FP8Display" || widgetClass == "FB_FP16Display") && size == 2)
         {
             if(widgetClass == "FB_FP8Display")
                 feedbackProcessor = new FPDisplay_Midi_FeedbackProcessor(surface, widget, 0x02, stoi(tokenLines[i][1]));
             else if(widgetClass == "FB_FP16Display")
                 feedbackProcessor = new FPDisplay_Midi_FeedbackProcessor(surface, widget, 0x16, stoi(tokenLines[i][1]));
-            
-            if(size == 3 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][2]));
         }
         
-        else if((widgetClass == "FB_QConLiteDisplayUpper" || widgetClass == "FB_QConLiteDisplayUpperMid" || widgetClass == "FB_QConLiteDisplayLowerMid" || widgetClass == "FB_QConLiteDisplayLower") && (size == 2 || size == 3))
+        else if((widgetClass == "FB_QConLiteDisplayUpper" || widgetClass == "FB_QConLiteDisplayUpperMid" || widgetClass == "FB_QConLiteDisplayLowerMid" || widgetClass == "FB_QConLiteDisplayLower") && size == 2)
         {
             if(widgetClass == "FB_QConLiteDisplayUpper")
                 feedbackProcessor = new QConLiteDisplay_Midi_FeedbackProcessor(surface, widget, 0, 0x14, 0x12, stoi(tokenLines[i][1]));
@@ -666,9 +648,6 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
                 feedbackProcessor = new QConLiteDisplay_Midi_FeedbackProcessor(surface, widget, 2, 0x14, 0x12, stoi(tokenLines[i][1]));
             else if(widgetClass == "FB_QConLiteDisplayLower")
                 feedbackProcessor = new QConLiteDisplay_Midi_FeedbackProcessor(surface, widget, 3, 0x14, 0x12, stoi(tokenLines[i][1]));
-            
-            if(size == 3 && feedbackProcessor != nullptr)
-                feedbackProcessor->SetRefreshInterval(strToDouble(tokenLines[i][2]));
         }
 
         
@@ -1716,11 +1695,6 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 {
     if(mustForce_ || first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
     {
-        ForceMidiMessage(first, second, third);
-    }
-    else if(shouldRefresh_ && DAW::GetCurrentNumberOfMilliseconds() > lastRefreshed_ + refreshInterval_)
-    {
-        lastRefreshed_ = DAW::GetCurrentNumberOfMilliseconds();
         ForceMidiMessage(first, second, third);
     }
 }
