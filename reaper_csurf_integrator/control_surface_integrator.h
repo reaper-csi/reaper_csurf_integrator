@@ -275,7 +275,7 @@ private:
     int accumulatedDecTicks_ = 0;
     
     bool isFeedbackInverted_ = false;
-    double delayAmount_ = 0.0;
+    double holdDelayAmount_ = 0.0;
     double delayStartTime_ = 0.0;
     double deferredValue_ = 0.0;
     
@@ -318,7 +318,7 @@ public:
     bool GetSupportsRGB() { return supportsRGB_; }
     
     void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
-    void SetDelayAmount(double delayAmount) { delayAmount_ = delayAmount * 1000.0; } // delayAmount is specified in seconds, delayAmount_ is in milliseconds
+    void SetHoldDelayAmount(double holdDelayAmount) { holdDelayAmount_ = holdDelayAmount * 1000.0; } // holdDelayAmount is specified in seconds, holdDelayAmount_ is in milliseconds
     
     void DoPressAction(int value);
     void DoAction(double value);
@@ -525,9 +525,9 @@ struct ActionTemplate
     string actionName;
     vector<string> params;
     bool isFeedbackInverted;
-    double delayAmount;
+    double holdDelayAmount;
     
-    ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), delayAmount(amount) {}
+    ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), holdDelayAmount(amount) {}
     
     void SetProperties(ActionContext& context);
 };
@@ -764,34 +764,42 @@ protected:
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
 
-    bool mustForce_ = false;
     Widget* const widget_ = nullptr;
     
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
-    virtual void SetValue(double value) {}
-    virtual void SetValue(int param, double value) {}
-    virtual void SetValue(string value) {}
     virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
     virtual void ForceRGBValue(int r, int g, int b) {}
-  
+    virtual void ForceValue(string value) {}
+    
+    virtual void SetValue(double value)
+    {
+        if(lastDoubleValue_ != value)
+            ForceValue(value);
+    }
+    
+    virtual void SetValue(int param, double value)
+    {
+        if(lastDoubleValue_ != value)
+            ForceValue(value);
+    }
+    
+    virtual void SetValue(string value)
+    {
+        if(lastStringValue_ != value)
+            ForceValue(value);
+    }
+
     virtual void ClearCache()
     {
         lastDoubleValue_ = 0.0;
         lastStringValue_ = "";
     }
-
-    virtual void ForceValue(string displayText)
-    {
-        mustForce_ = true;
-        SetValue(displayText);
-        mustForce_ = false;
-    }
-        
+    
     virtual void Clear()
     {
         SetValue(0.0);
@@ -849,10 +857,7 @@ public:
     
     OSC_FeedbackProcessor(OSC_ControlSurface* surface, Widget* widget, string oscAddress) : FeedbackProcessor(widget), surface_(surface), oscAddress_(oscAddress) {}
     ~OSC_FeedbackProcessor() {}
-    
-    virtual void SetValue(double value) override;
-    virtual void SetValue(int param, double value) override;
-    virtual void SetValue(string value) override;
+
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
@@ -870,10 +875,7 @@ public:
     
     EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, Widget* widget, string address) : FeedbackProcessor(widget), surface_(surface), address_(address) {}
     ~EuCon_FeedbackProcessor() {}
-    
-    virtual void SetValue(double value) override;
-    virtual void SetValue(int param, double value) override;
-    virtual void SetValue(string value) override;
+
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
