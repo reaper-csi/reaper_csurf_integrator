@@ -1635,6 +1635,15 @@ Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(
                 currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())),
                 defaultWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
 
+Widget::~Widget()
+{
+    for(auto feedbackProcessor :feedbackProcessors_)
+    {
+        delete feedbackProcessor;
+        feedbackProcessor = nullptr;
+    }
+};
+
 void Widget::SilentSetValue(string displayText)
 {
     for(auto processor : feedbackProcessors_)

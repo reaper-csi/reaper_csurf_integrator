@@ -540,6 +540,15 @@ struct ActionContextTemplate
     vector<ActionTemplate*> members;
     
     ActionContextTemplate(string modifierStr) : modifier(modifierStr) {}
+    
+    ~ActionContextTemplate()
+    {
+        for(auto actionTemplate : members)
+        {
+            delete actionTemplate;
+            actionTemplate = nullptr;
+        }
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -551,6 +560,15 @@ struct WidgetActionTemplate
     vector<ActionContextTemplate*> actionContextTemplates;
     
     WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
+    
+    ~WidgetActionTemplate()
+    {
+        for(auto actionContextTemplate : actionContextTemplates)
+        {
+            delete actionContextTemplate;
+            actionContextTemplate = nullptr;
+        }
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -574,6 +592,15 @@ struct ZoneTemplate
             widgetActionTemplates.push_back(widgetActionTemplate);
     }
     
+    ~ZoneTemplate()
+    {
+        for(auto widgetActionTemplate : widgetActionTemplates)
+        {
+            delete widgetActionTemplate;
+            widgetActionTemplate = nullptr;
+        }
+    }
+    
     void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction);
     
     void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
@@ -589,8 +616,8 @@ private:
     ControlSurface* const surface_;
     string const name_;
     vector<FeedbackProcessor*> feedbackProcessors_;
-    bool isModifier_ = false;
     
+    bool isModifier_ = false;
     bool isToggled_ = false;
     
     WidgetContext currentWidgetContext_;
@@ -600,13 +627,13 @@ private:
     
 public:
     Widget(ControlSurface* surface, string name);
-    virtual ~Widget() {};
+    ~Widget();
     
     ControlSurface* GetSurface() { return surface_; }
     string GetName() { return name_; }
     bool GetIsModifier() { return isModifier_; }
     void SetIsModifier() { isModifier_ = true; }
-    virtual void SilentSetValue(string displayText);
+    void SilentSetValue(string displayText);
     
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
@@ -896,6 +923,30 @@ private:
 public:
     FXActivationManager(ControlSurface* surface, int numFXSlots) : surface_(surface), numFXSlots_(numFXSlots) {}
     
+    ~FXActivationManager()
+    {
+        for(auto zone : activeSelectedTrackFXZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+        for(auto zone : activeSelectedTrackFXMenuZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+        for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+        for(auto zone : activeFocusedFXZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+    }
+    
     int  GetNumFXSlots() { return numFXSlots_; }
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
@@ -1000,7 +1051,41 @@ protected:
     }
     
 public:
-    virtual ~ControlSurface() {};
+    virtual ~ControlSurface()
+    {
+        delete defaultZone_;
+        delete fxActivationManager_;
+
+        for(auto [key, messageGenerator] : CSIMessageGeneratorsByMessage_)
+        {
+            delete messageGenerator;
+            messageGenerator = nullptr;
+        }
+        
+        for(auto widget : widgets_)
+        {
+            delete widget;
+            widget = nullptr;
+        }
+
+        for(auto zone : activeZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+        
+        for(auto zone: activeSendZones_)
+        {
+            delete zone;
+            zone = nullptr;
+        }
+        
+        for(auto [key, zoneTemplate] : zoneTemplates_)
+        {
+            delete zoneTemplate;
+            zoneTemplate = nullptr;
+        }
+    };
     
     Page* GetPage() { return page_; }
     string GetName() { return name_; }
@@ -1310,6 +1395,15 @@ private:
     map<string, WidgetGroup*> subGroups_;
     
 public:
+    ~WidgetGroup()
+    {
+        for(auto [key, group] : subGroups_)
+        {
+            delete group;
+            group = nullptr;
+        }
+    }
+    
     void SetIsVisible(bool isVisible)
     {
         isVisible_ = isVisible;
@@ -1380,7 +1474,15 @@ protected:
     
 public:
     EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
-    virtual ~EuCon_ControlSurface() {}
+    
+    virtual ~EuCon_ControlSurface()
+    {
+        for(auto [key, group] : channelGroups_)
+        {
+            delete group;
+            group = nullptr;
+        }
+    }
     
     virtual string GetSourceFileName() override { return "EuCon"; }
     
@@ -1440,6 +1542,20 @@ private:
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages),
     masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_)) {}
+    
+    ~TrackNavigationManager()
+    {
+        for(auto navigator : navigators_)
+        {
+            delete navigator;
+            navigator = nullptr;
+        }
+        
+        delete masterTrackNavigator_;
+        delete selectedTrackNavigator_;
+        delete focusedFXNavigator_;
+        delete defaultNavigator_;
+    }
     
     Page* GetPage() { return page_; }
     bool GetSynchPages() { return synchPages_; }
@@ -1732,7 +1848,7 @@ public:
             surface = nullptr;
         }
         
-        delete trackNavigationManager_;      
+        delete trackNavigationManager_;
         delete defaultNavigator_;
     }
     
@@ -2014,6 +2130,12 @@ public:
         {
             delete page;
             page = nullptr;
+        }
+        
+        for(auto [key, action] : actions_)
+        {
+            delete action;
+            action = nullptr;
         }
     }
     
