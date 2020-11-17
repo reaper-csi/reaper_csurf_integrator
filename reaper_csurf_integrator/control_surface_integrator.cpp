@@ -196,7 +196,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &delayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &holdDelayAmount)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -222,7 +222,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
             else if(modifier_tokens[i] == "InvertFB")
                 isFeedbackInverted = true;
             else if(modifier_tokens[i] == "Hold")
-                delayAmount = 1.0;
+                holdDelayAmount = 1.0;
         }
     }
 
@@ -348,15 +348,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     string widgetName = "";
                     string modifier = "";
                     bool isFeedbackInverted = false;
-                    double delayAmount = 0.0;
+                    double holdDelayAmount = 0.0;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, delayAmount);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, holdDelayAmount);
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isFeedbackInverted, delayAmount));
+                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isFeedbackInverted, holdDelayAmount));
                 }
             }
         }
@@ -1189,7 +1189,7 @@ string ActionContext::GetName()
 
 void ActionContext::RunDeferredActions()
 {
-    if(delayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + delayAmount_))
+    if(holdDelayAmount_ != 0.0 && delayStartTime_ != 0.0 && DAW::GetCurrentNumberOfMilliseconds() > (delayStartTime_ + holdDelayAmount_))
     {
         DoRangeBoundAction(deferredValue_);
         
@@ -1289,7 +1289,7 @@ void ActionContext::UpdateWidgetValue(string value)
 
 void ActionContext::DoPressAction(int value)
 {
-    if(delayAmount_ != 0.0)
+    if(holdDelayAmount_ != 0.0)
     {
         if(value == 0.0)
         {
@@ -1603,8 +1603,8 @@ void ActionTemplate::SetProperties(ActionContext& context)
     if(isFeedbackInverted)
         context.SetIsFeedbackInverted();
     
-    if(delayAmount != 0.0)
-        context.SetDelayAmount(delayAmount);
+    if(holdDelayAmount != 0.0)
+        context.SetHoldDelayAmount(holdDelayAmount);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1693,10 +1693,8 @@ void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 
 void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 {
-    if(mustForce_ || first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
-    {
+    if(first != lastMessageSent_->midi_message[0] || second != lastMessageSent_->midi_message[1] || third != lastMessageSent_->midi_message[2])
         ForceMidiMessage(first, second, third);
-    }
 }
 
 void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
@@ -1710,24 +1708,6 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void OSC_FeedbackProcessor::SetValue(double value)
-{
-    if(lastDoubleValue_ != value)
-        ForceValue(value);
-}
-
-void OSC_FeedbackProcessor::SetValue(int param, double value)
-{
-    if(lastDoubleValue_ != value)
-        ForceValue(value);
-}
-
-void OSC_FeedbackProcessor::SetValue(string value)
-{
-    if(lastStringValue_ != value)
-        ForceValue(value);
-}
-
 void OSC_FeedbackProcessor::ForceValue(double value)
 {
     lastDoubleValue_ = value;
@@ -1749,24 +1729,6 @@ void OSC_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessor::SetValue(double value)
-{
-    if(lastDoubleValue_ != value)
-        ForceValue(value);
-}
-
-void EuCon_FeedbackProcessor::SetValue(int param, double value)
-{
-    if(lastDoubleValue_ != value)
-        ForceValue(param, value);
-}
-
-void EuCon_FeedbackProcessor::SetValue(string value)
-{
-    if(lastStringValue_ != value)
-        ForceValue(value);
-}
-
 void EuCon_FeedbackProcessor::ForceValue(double value)
 {
     lastDoubleValue_ = value;
