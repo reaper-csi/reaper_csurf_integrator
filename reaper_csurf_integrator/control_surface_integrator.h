@@ -1724,6 +1724,18 @@ private:
 public:
     Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), defaultNavigator_(new Navigator(this)) { }
     
+    ~Page()
+    {
+        for(auto surface: surfaces_)
+        {
+            delete surface;
+            surface = nullptr;
+        }
+        
+        delete trackNavigationManager_;      
+        delete defaultNavigator_;
+    }
+    
     string GetName() { return name_; }
     TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     
@@ -1996,7 +2008,15 @@ private:
     }
     
 public:
-    ~Manager() {};
+    ~Manager()
+    {
+        for(auto page : pages_)
+        {
+            delete page;
+            page = nullptr;
+        }
+    }
+    
     Manager(CSurfIntegrator* CSurfIntegrator) : CSurfIntegrator_(CSurfIntegrator)
     {
         InitActionsDictionary();
