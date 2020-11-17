@@ -765,16 +765,12 @@ protected:
     string lastStringValue_ = "";
 
     bool mustForce_ = false;
-    bool shouldRefresh_ = false;
-    double refreshInterval_ = 0.0;
-    double lastRefreshed_ = 0.0;
     Widget* const widget_ = nullptr;
     
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
-    void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
     virtual void SetValue(double value) {}
     virtual void SetValue(int param, double value) {}
     virtual void SetValue(string value) {}
