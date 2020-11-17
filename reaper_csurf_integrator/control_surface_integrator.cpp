@@ -1644,34 +1644,28 @@ Widget::~Widget()
     }
 };
 
-void Widget::SilentSetValue(string displayText)
-{
-    for(auto processor : feedbackProcessors_)
-        processor->SilentSetValue(displayText);
-}
-
 void  Widget::UpdateValue(double value)
 {
     for(auto processor : feedbackProcessors_)
-        processor->UpdateValue(value);
+        processor->SetValue(value);
 }
 
 void  Widget::UpdateValue(int mode, double value)
 {
     for(auto processor : feedbackProcessors_)
-        processor->UpdateValue(mode, value);
+        processor->SetValue(mode, value);
 }
 
 void  Widget::UpdateValue(string value)
 {
     for(auto processor : feedbackProcessors_)
-        processor->UpdateValue(value);
+        processor->SetValue(value);
 }
 
 void  Widget::UpdateRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
-        processor->UpdateRGBValue(r, g, b);
+        processor->SetRGBValue(r, g, b);
 }
 
 void  Widget::Clear()
@@ -1742,19 +1736,19 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void OSC_FeedbackProcessor::UpdateValue(double value)
+void OSC_FeedbackProcessor::SetValue(double value)
 {
     if(lastDoubleValue_ != value)
         ForceValue(value);
 }
 
-void OSC_FeedbackProcessor::UpdateValue(int param, double value)
+void OSC_FeedbackProcessor::SetValue(int param, double value)
 {
     if(lastDoubleValue_ != value)
         ForceValue(value);
 }
 
-void OSC_FeedbackProcessor::UpdateValue(string value)
+void OSC_FeedbackProcessor::SetValue(string value)
 {
     if(lastStringValue_ != value)
         ForceValue(value);
@@ -1778,27 +1772,22 @@ void OSC_FeedbackProcessor::ForceValue(string value)
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
-void OSC_FeedbackProcessor::SilentSetValue(string value)
-{
-    surface_->SendOSCMessage(this, oscAddress_, value);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessor::UpdateValue(double value)
+void EuCon_FeedbackProcessor::SetValue(double value)
 {
     if(lastDoubleValue_ != value)
         ForceValue(value);
 }
 
-void EuCon_FeedbackProcessor::UpdateValue(int param, double value)
+void EuCon_FeedbackProcessor::SetValue(int param, double value)
 {
     if(lastDoubleValue_ != value)
         ForceValue(param, value);
 }
 
-void EuCon_FeedbackProcessor::UpdateValue(string value)
+void EuCon_FeedbackProcessor::SetValue(string value)
 {
     if(lastStringValue_ != value)
         ForceValue(value);
@@ -1819,11 +1808,6 @@ void EuCon_FeedbackProcessor::ForceValue(int param, double value)
 void EuCon_FeedbackProcessor::ForceValue(string value)
 {
     lastStringValue_ = value;
-    surface_->SendEuConMessage(this, address_, value);
-}
-
-void EuCon_FeedbackProcessor::SilentSetValue(string value)
-{
     surface_->SendEuConMessage(this, address_, value);
 }
 

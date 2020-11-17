@@ -391,11 +391,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
     
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         if(value == 0.0)
         {
@@ -455,7 +455,7 @@ public:
         SendMidiMessage(&midiSysExData.evt);
     }
     
-    virtual void UpdateRGBValue(int r, int g, int b) override
+    virtual void SetRGBValue(int r, int g, int b) override
     {
         if(r == lastR && g == lastG && b == lastB)
             return;
@@ -489,7 +489,7 @@ public:
         SendMidiMessage(0x93, midiFeedbackMessage1_->midi_message[1], b / 2);
     }
 
-    virtual void UpdateRGBValue(int r, int g, int b) override
+    virtual void SetRGBValue(int r, int g, int b) override
     {
         if(r == lastR_ && g == lastG_ && b == lastB_)
             return;
@@ -509,11 +509,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
     
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         int volint = value * 16383.0;
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
@@ -522,11 +522,11 @@ public:
     virtual void ForceValue(int displayMode, double value) override
     {
         mustForce_ = true;
-        UpdateValue(displayMode, value);
+        SetValue(displayMode, value);
         mustForce_ = false;
     }
 
-    virtual void UpdateValue(int displayMode, double value) override
+    virtual void SetValue(int displayMode, double value) override
     {
         int volint = value * 16383.0;
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], volint&0x7f, (volint>>7)&0x7f);
@@ -544,11 +544,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
 
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
     }
@@ -556,11 +556,11 @@ public:
     virtual void ForceValue(int displayMode, double value) override
     {
         mustForce_ = true;
-        UpdateValue(displayMode, value);
+        SetValue(displayMode, value);
         mustForce_ = false;
     }
     
-    virtual void UpdateValue(int displayMode, double value) override
+    virtual void SetValue(int displayMode, double value) override
     {
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], value * 127.0);
     }
@@ -577,11 +577,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
 
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         int displayMode = 0;
         
@@ -599,11 +599,11 @@ public:
     virtual void ForceValue(int displayMode, double value) override
     {
         mustForce_ = true;
-        UpdateValue(displayMode, value);
+        SetValue(displayMode, value);
         mustForce_ = false;
     }
 
-    virtual void UpdateValue(int displayMode, double value) override
+    virtual void SetValue(int displayMode, double value) override
     {
         int valueInt = value * 127;
         
@@ -627,11 +627,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
 
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         double dB = VAL2DB(normalizedToVol(value)) + 2.5;
         
@@ -661,11 +661,11 @@ public:
     virtual void ForceValue(double value) override
     {
         mustForce_ = true;
-        UpdateValue(value);
+        SetValue(value);
         mustForce_ = false;
     }
     
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], fabs(1.0 - value) * 127.0);
     }
@@ -686,11 +686,11 @@ public:
     virtual void ForceValue(int param, double value) override
     {
         mustForce_ = true;
-        UpdateValue(param, value);
+        SetValue(param, value);
         mustForce_ = false;
     }
     
-    virtual void UpdateValue(int param, double value) override
+    virtual void SetValue(int param, double value) override
     {
         //Master Channel:
         //Master Level 1 : 0xd1, 0x0L
@@ -718,7 +718,7 @@ public:
     virtual ~MCUVUMeter_Midi_FeedbackProcessor() {}
     MCUVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channelNumber) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channelNumber_(channelNumber) {}
     
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         //D0 yx    : update VU meter, y=channel, x=0..d=volume, e=clip on, f=clip off
         int midiValue = value * 0x0f;
@@ -749,7 +749,7 @@ public:
         lastStringSent_ = " ";
     }
     
-    virtual void UpdateValue(string displayText) override
+    virtual void SetValue(string displayText) override
     {
         if(shouldRefresh_)
         {
@@ -760,14 +760,13 @@ public:
             else
                 return;
         }
-        else if( ! mustForce_ && ! isSilent_)
+        else if( ! mustForce_ )
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
         }
         
-        if(! isSilent_)
-            lastStringSent_ = displayText;
+        lastStringSent_ = displayText;
         
         int pad = 7;
         const char* text = displayText.c_str();
@@ -828,7 +827,7 @@ public:
         lastStringSent_ = " ";
     }
         
-    virtual void UpdateValue(string displayText) override
+    virtual void SetValue(string displayText) override
     {
         if(shouldRefresh_)
         {
@@ -839,14 +838,13 @@ public:
             else
                 return;
         }
-        else if( ! mustForce_ && ! isSilent_)
+        else if( ! mustForce_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
         }
         
-        if(! isSilent_)
-            lastStringSent_ = displayText;
+        lastStringSent_ = displayText;
 
         const char* text = displayText.c_str();
     
@@ -909,7 +907,7 @@ public:
         lastStringSent_ = " ";
     }
     
-    virtual void UpdateValue(string displayText) override
+    virtual void SetValue(string displayText) override
     {
         if(shouldRefresh_)
         {
@@ -920,14 +918,13 @@ public:
             else
                 return;
         }
-        else if( ! mustForce_ && ! isSilent_)
+        else if( ! mustForce_)
         {
             if(displayText == lastStringSent_) // no changes since last send
                 return;
         }
         
-        if(! isSilent_)
-            lastStringSent_ = displayText;
+        lastStringSent_ = displayText;
         
         int pad = 7;
         const char* text = displayText.c_str();
@@ -981,7 +978,7 @@ class MCU_TimeDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 public:
     MCU_TimeDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget) : Midi_FeedbackProcessor(surface, widget) {}
     
-    virtual void UpdateValue(double value) override
+    virtual void SetValue(double value) override
     {
         
 #ifndef timeGetTime
@@ -1342,7 +1339,7 @@ public:
         SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], rgbVal);
     }
 
-    virtual void UpdateRGBValue(int r, int g, int b) override
+    virtual void SetRGBValue(int r, int g, int b) override
     {
         if(r == lastR && g == lastG && b == lastB)
             return;

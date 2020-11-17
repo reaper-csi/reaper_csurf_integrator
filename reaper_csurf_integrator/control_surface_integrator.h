@@ -765,7 +765,6 @@ protected:
     string lastStringValue_ = "";
 
     bool mustForce_ = false;
-    bool isSilent_ = false;
     bool shouldRefresh_ = false;
     double refreshInterval_ = 0.0;
     double lastRefreshed_ = 0.0;
@@ -776,10 +775,10 @@ public:
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
     void SetRefreshInterval(double refreshInterval) { shouldRefresh_ = true; refreshInterval_ = refreshInterval * 1000.0; }
-    virtual void UpdateValue(double value) {}
-    virtual void UpdateValue(int param, double value) {}
-    virtual void UpdateValue(string value) {}
-    virtual void UpdateRGBValue(int r, int g, int b) {}
+    virtual void SetValue(double value) {}
+    virtual void SetValue(int param, double value) {}
+    virtual void SetValue(string value) {}
+    virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
     virtual void ForceRGBValue(int r, int g, int b) {}
@@ -793,25 +792,16 @@ public:
     virtual void ForceValue(string displayText)
     {
         mustForce_ = true;
-        UpdateValue(displayText);
+        SetValue(displayText);
         mustForce_ = false;
     }
-    
-    virtual void SilentSetValue(string displayText)
-    {
-        isSilent_ = true;
-        mustForce_ = true;
-        UpdateValue(displayText);
-        mustForce_ = false;
-        isSilent_ = false;
-    }
-    
+        
     virtual void Clear()
     {
-        UpdateValue(0.0);
-        UpdateValue(0, 0.0);
-        UpdateValue("");
-        UpdateRGBValue(0, 0, 0);
+        SetValue(0.0);
+        SetValue(0, 0.0);
+        SetValue("");
+        SetRGBValue(0, 0, 0);
     }
     
     virtual void ForceClear()
@@ -864,13 +854,12 @@ public:
     OSC_FeedbackProcessor(OSC_ControlSurface* surface, Widget* widget, string oscAddress) : FeedbackProcessor(widget), surface_(surface), oscAddress_(oscAddress) {}
     ~OSC_FeedbackProcessor() {}
     
-    virtual void UpdateValue(double value) override;
-    virtual void UpdateValue(int param, double value) override;
-    virtual void UpdateValue(string value) override;
+    virtual void SetValue(double value) override;
+    virtual void SetValue(int param, double value) override;
+    virtual void SetValue(string value) override;
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
-    virtual void SilentSetValue(string value) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -886,13 +875,12 @@ public:
     EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, Widget* widget, string address) : FeedbackProcessor(widget), surface_(surface), address_(address) {}
     ~EuCon_FeedbackProcessor() {}
     
-    virtual void UpdateValue(double value) override;
-    virtual void UpdateValue(int param, double value) override;
-    virtual void UpdateValue(string value) override;
+    virtual void SetValue(double value) override;
+    virtual void SetValue(int param, double value) override;
+    virtual void SetValue(string value) override;
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
-    virtual void SilentSetValue(string value) override;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
