@@ -116,7 +116,8 @@ public:
     virtual void Do(ActionContext* context, double value) {}
     virtual void Touch(ActionContext* context, double value) {}
     virtual double GetCurrentNormalizedValue(ActionContext* context) { return 0.0; }
-    
+    virtual double GetCurrentDBValue(ActionContext* context) { return 0.0; }
+
     int GetPanMode(MediaTrack* track)
     {
         double pan1, pan2 = 0.0;
@@ -331,6 +332,8 @@ public:
     void UpdateWidgetValue(double value);
     void UpdateWidgetValue(int param, double value);
     void UpdateWidgetValue(string value);
+    void ForceWidgetValue(double value);
+
     
     void DoTouch(double value)
     {
@@ -642,6 +645,10 @@ public:
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
     void UpdateRGBValue(int r, int g, int b);
+    void ForceValue(double value);
+    void ForceValue(int mode, double value);
+    void ForceValue(string value);
+    void ForceRGBValue(int r, int g, int b);
     void ClearCache();
     void Clear();
     void ForceClear();

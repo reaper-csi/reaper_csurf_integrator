@@ -1287,6 +1287,35 @@ void ActionContext::UpdateWidgetValue(string value)
     }
 }
 
+void ActionContext::ForceWidgetValue(double value)
+{
+    if(steppedValues_.size() > 0)
+        SetSteppedValueIndex(value);
+    
+    value = isFeedbackInverted_ == false ? value : 1.0 - value;
+    
+    widget_->ForceValue(value);
+
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = value == 0 ? 0 : 1;
+        widget_->ForceRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
+    {
+        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
+        {
+            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
+            
+            int r = (*rgb_colour >> 0) & 0xff;
+            int g = (*rgb_colour >> 8) & 0xff;
+            int b = (*rgb_colour >> 16) & 0xff;
+            
+            widget_->ForceRGBValue(r, g, b);
+        }
+    }
+}
+
 void ActionContext::DoPressAction(int value)
 {
     if(holdDelayAmount_ != 0.0)
@@ -1645,6 +1674,30 @@ void  Widget::UpdateRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
         processor->SetRGBValue(r, g, b);
+}
+
+void  Widget::ForceValue(double value)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->ForceValue(value);
+}
+
+void  Widget::ForceValue(int mode, double value)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->ForceValue(mode, value);
+}
+
+void  Widget::ForceValue(string value)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->ForceValue(value);
+}
+
+void  Widget::ForceRGBValue(int r, int g, int b)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->ForceRGBValue(r, g, b);
 }
 
 void  Widget::Clear()
