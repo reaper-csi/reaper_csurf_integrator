@@ -219,14 +219,22 @@ class TrackVolumeDB : public Action
 public:
     virtual string GetName() override { return "TrackVolumeDB"; }
     
-    virtual void RequestUpdate(ActionContext* context) override
+    virtual double GetCurrentDBValue(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
         {
             double vol, pan = 0.0;
             DAW::GetTrackUIVolPan(track, &vol, &pan);
-            context->UpdateWidgetValue(VAL2DB(vol));
+            return VAL2DB(vol);
         }
+        else
+            return 0.0;
+    }
+
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentDBValue(context));
         else
             context->ClearWidget();
     }
@@ -234,7 +242,12 @@ public:
     virtual void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
+        {
+            if(DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == 1 || DAW::GetGlobalAutomationOverride() == 1) // read mode
+                context->ForceWidgetValue(GetCurrentDBValue(context));
+            else
+                DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
+        }
     }
     
     virtual void Touch(ActionContext* context, double value) override
