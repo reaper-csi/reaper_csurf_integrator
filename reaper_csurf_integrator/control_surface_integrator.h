@@ -321,7 +321,6 @@ public:
     void SetIsFeedbackInverted() { isFeedbackInverted_ = true; }
     void SetHoldDelayAmount(double holdDelayAmount) { holdDelayAmount_ = holdDelayAmount * 1000.0; } // holdDelayAmount is specified in seconds, holdDelayAmount_ is in milliseconds
     
-    void DoPressAction(int value);
     void DoAction(double value);
     void DoRelativeAction(double value);
     void DoRelativeAction(int accelerationIndex, double value);
@@ -447,12 +446,6 @@ public:
             ActionContext& context = GetActionContexts()[0];
             context.RequestUpdate();
         }
-    }
-    
-    void DoPressAction(int value)
-    {
-        for(auto &context : GetActionContexts())
-            context.DoPressAction(value);
     }
     
     void DoAction(double value)
@@ -661,13 +654,6 @@ public:
     void RequestUpdate()
     {
         currentWidgetContext_.RequestUpdate();
-    }
-    
-    void DoPressAction(int value)
-    {
-        LogInput(value);
-        
-        currentWidgetContext_.DoPressAction(value);
     }
     
     void DoAction(double value)
