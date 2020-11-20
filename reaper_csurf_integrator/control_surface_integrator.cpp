@@ -329,7 +329,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     widgetActions.clear();
                 }
                 
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "ParentNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
                     navigatorName = tokens[0];
                 
                 else if(tokens[0] == "IncludedZones")
@@ -1316,7 +1316,7 @@ void ActionContext::ForceWidgetValue(double value)
     }
 }
 
-void ActionContext::DoPressAction(int value)
+void ActionContext::DoAction(double value)
 {
     if(holdDelayAmount_ != 0.0)
     {
@@ -1351,11 +1351,6 @@ void ActionContext::DoPressAction(int value)
         else
             DoRangeBoundAction(value);
     }
-}
-
-void ActionContext::DoAction(double value)
-{
-    DoRangeBoundAction(value);
 }
 
 void ActionContext::DoRelativeAction(double delta)

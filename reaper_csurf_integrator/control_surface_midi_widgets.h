@@ -35,7 +35,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        widget_->DoPressAction(midiMessage->IsEqualTo(press_) ? 1 : 0);
+        widget_->DoAction(midiMessage->IsEqualTo(press_) ? 1 : 0);
     }
 };
 
@@ -100,7 +100,7 @@ public:
     
     virtual void ProcessMidiMessage(const MIDI_event_ex_t* midiMessage) override
     {
-        widget_->DoPressAction(1); // Doesn't matter what value was sent, just do it
+        widget_->DoAction(1); // Doesn't matter what value was sent, just do it
     }
 };
 
