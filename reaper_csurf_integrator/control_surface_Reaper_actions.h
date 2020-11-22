@@ -243,9 +243,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            if(DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == 1 || DAW::GetGlobalAutomationOverride() == 1) // read mode
-                context->ForceWidgetValue(GetCurrentDBValue(context));
-            else
+            //if(DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE") == 1 || DAW::GetGlobalAutomationOverride() == 1) // read mode
+                //context->ForceWidgetValue(GetCurrentDBValue(context));
+            //else
                 DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(value), false), NULL);
         }
     }
