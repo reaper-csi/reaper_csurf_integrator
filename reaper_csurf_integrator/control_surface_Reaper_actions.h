@@ -1839,9 +1839,9 @@ public:
 
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        if(MediaTrack* selectedTrack = context->GetTrackNavigationManager()->GetSelectedTrack())
+        if(MediaTrack* track = context->GetTrack())
         {
-            if(context->GetIntParam() == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
+            if(context->GetIntParam() == DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE"))
                 return 1.0;
             else
                 return 0.0;
@@ -1857,130 +1857,39 @@ public:
     
     virtual void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
+        if(value == 0.0)
+            return; // ignore button releases
         
-        DAW::SetAutomationMode(context->GetIntParam(), true);
+        int mode = context->GetIntParam();
+        
+        if(MediaTrack* track = context->GetTrack())
+            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &mode);
     }
 };
 
-
-
-/*
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CycleTrackAutoMode : public TrackAction
+class CycleTrackAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-protected:
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
-            if(track == selectedTrack)
-                SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
-        
-        if(autoModes_.count(steppedValuesIndex_) > 0)
-            UpdateWidgetValue(autoModes_[steppedValuesIndex_]);
-        
-        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime)
-        {
-            if(displayWidget_ != nullptr)
-                displayWidget_->UpdateValue("   ");
-            timeSilentlySet_ = 0;
-        }
-    }
-    
 public:
-    CycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
-    
-    virtual void DoAction(double value) override
+    virtual string GetName() override { return "CycleTrackAutoMode"; }
+
+    virtual void RequestUpdate(ActionContext* context) override
     {
-        if(value)
-            Do(value);
+        context->SetAutoModeIndex();
+     
+        context->UpdateWidgetValue(context->GetAutoModeDisplayName());
     }
     
-    virtual void Do(double value) override
+    virtual void Do(ActionContext* context, double value) override
     {
-        MediaTrack* track = GetZone()->GetNavigator()->GetTrack();
+        if(value == 0.0)
+            return;
         
-        if(track != nullptr && steppedValues_.size() > 0)
-        {
-            if(timeSilentlySet_ != 0)
-            {
-                if(steppedValuesIndex_ == steppedValues_.size() - 1)
-                        steppedValuesIndex_ = 0;
-                else
-                    steppedValuesIndex_++;
-            }
-
-            DAW::SetOnlyTrackSelected(track);
-            
-            int autoMode = steppedValues_[steppedValuesIndex_];
-            
-            DAW::SetAutomationMode(autoMode, true);
-            
-            if(displayWidget_ != nullptr && autoModes_.count(autoMode) > 0)
-                displayWidget_->SilentSetValue(autoModes_[autoMode]);
-
-            timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
-        }
+        context->NextAutoMode();
     }
 };
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EuConCycleTrackAutoMode : public TrackAction
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    void RequestTrackUpdate(MediaTrack* track) override
-    {
-        if(MediaTrack* selectedTrack = GetTrackNavigationManager()->GetSelectedTrack())
-            if(track == selectedTrack)
-                SetSteppedValueIndex(DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"));
-        
-        if(autoModes_.count(steppedValuesIndex_) > 0)
-            UpdateWidgetValue(autoModes_[steppedValuesIndex_]);
-        
-        if(timeSilentlySet_ != 0 && DAW::GetCurrentNumberOfMilliseconds() - timeSilentlySet_ > TempDisplayTime / 2)
-        {
-            if(displayWidget_ != nullptr)
-                displayWidget_->UpdateValue("   ");
-            timeSilentlySet_ = 0;
-        }
-    }
-    
-public:
-    EuConCycleTrackAutoMode(Widget* widget, Zone* zone, vector<string> params) : TrackAction(widget, zone, params) {}
-    
-    virtual void DoAction(double value) override
-    {
-        if(value)
-            Do(value);
-    }
-    
-    virtual void Do(double value) override
-    {
-        MediaTrack* track = GetZone()->GetNavigator()->GetTrack();
-        
-        if(track != nullptr && steppedValues_.size() > 0)
-        {
-            if(steppedValuesIndex_ == steppedValues_.size() - 1)
-                steppedValuesIndex_ = 0;
-            else
-                steppedValuesIndex_++;
-           
-            DAW::SetOnlyTrackSelected(track);
-            
-            int autoMode = steppedValues_[steppedValuesIndex_];
-            
-            DAW::SetAutomationMode(autoMode, true);
-            
-            if(displayWidget_ != nullptr && autoModes_.count(autoMode) > 0)
-                displayWidget_->SilentSetValue(autoModes_[autoMode]);
-            
-            timeSilentlySet_ = DAW::GetCurrentNumberOfMilliseconds();
-        }
-    }
-};
-*/
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TimeDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

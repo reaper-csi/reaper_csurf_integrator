@@ -289,10 +289,14 @@ private:
     
     bool supportsTrackColor_ = false;
     
+    vector<double> autoModes_ = { 0.0, 1.0, 3.0, 2.0, 4.0, 5.0 };
+    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Write", "Touch", "Latch", "LtchPre" };
+    int autoModeIndex_ = 0;
+    
 public:
     ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params);
     virtual ~ActionContext() {}
-
+    
     Widget* GetWidget() { return widget_; }
     Zone* GetZone() { return zone_; }
     int GetSlotIndex();
@@ -333,6 +337,13 @@ public:
     void UpdateWidgetValue(string value);
     void ForceWidgetValue(double value);
 
+    void SetAutoModeIndex();
+    void NextAutoMode();
+
+    string GetAutoModeDisplayName()
+    {
+        return autoModeDisplayNames__[autoModeIndex_];
+    }
     
     void DoTouch(double value)
     {
@@ -382,8 +393,6 @@ public:
         
         steppedValuesIndex_ = index;
     }
-    
-    
     
     /*
      //////////////////////////////////////////////////
