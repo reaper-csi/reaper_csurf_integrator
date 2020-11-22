@@ -489,11 +489,6 @@ static int strToHex(string valueStr)
     return strtol(valueStr.c_str(), nullptr, 16);
 }
 
-static double strToDouble(string valueStr)
-{
-    return strtod(valueStr.c_str(), nullptr);
-}
-
 static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, vector<string> tokens,  Midi_ControlSurface* surface)
 {
     if(tokens.size() < 2)
@@ -773,8 +768,7 @@ void Manager::InitActionsDictionary()
     actions_["MapSelectedTrackFXToMenu"] =          new MapSelectedTrackFXToMenu();
     actions_["MapFocusedFXToWidgets"] =             new MapFocusedFXToWidgets();
     actions_["GoFXSlot"] =                          new GoFXSlot();
-    //actions_["CycleTrackAutoMode"] =                 new CycleTrackAutoMode();
-    //actions_["EuConCycleTrackAutoMode"] =            new EuConCycleTrackAutoMode();
+    actions_["CycleTrackAutoMode"] =                new CycleTrackAutoMode();
     actions_["FocusedFXParam"] =                    new FocusedFXParam();
     actions_["FocusedFXParamNameDisplay"] =         new FocusedFXParamNameDisplay();
     actions_["FocusedFXParamValueDisplay"] =        new FocusedFXParamValueDisplay();
@@ -1199,7 +1193,7 @@ void ActionContext::RunDeferredActions()
 }
 
 void ActionContext::RequestUpdate()
-{
+{   
     action_->RequestUpdate(this);
 }
 
@@ -1272,7 +1266,12 @@ void ActionContext::UpdateWidgetValue(string value)
 {
     widget_->UpdateValue(value);
     
-    if(supportsTrackColor_)
+    if(supportsRGB_)
+    {
+        currentRGBIndex_ = 1;
+        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
+    }
+    else if(supportsTrackColor_)
     {
         if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
         {
@@ -1455,6 +1454,38 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
         DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) + acceleratedDeltaValues_[accelerationIndex]);
     else
         DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) - acceleratedDeltaValues_[accelerationIndex]);
+}
+
+void ActionContext::SetAutoModeIndex()
+{
+    if(MediaTrack* track = GetTrack())
+    {
+        double autoMode = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+        
+        for(int i = 0; i < autoModes_.size(); i++)
+        {
+            if(autoModes_[i] == autoMode)
+            {
+                autoModeIndex_ = i;
+                break;
+            }
+        }
+    }
+}
+
+void ActionContext::NextAutoMode()
+{
+    if(MediaTrack* track = GetTrack())
+    {
+        autoModeIndex_++;
+        
+        if(autoModeIndex_ > autoModes_.size() - 1)
+            autoModeIndex_ = 0;
+        
+        int autoMode = autoModes_[autoModeIndex_];
+        
+        DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoMode);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
