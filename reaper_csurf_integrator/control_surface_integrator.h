@@ -289,8 +289,8 @@ private:
     
     bool supportsTrackColor_ = false;
     
-    vector<double> autoModes_ = { 0.0, 1.0, 3.0, 2.0, 4.0, 5.0 };
-    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Write", "Touch", "Latch", "LtchPre" };
+    vector<double> autoModes_ = { 0.0, 1.0, 2.0, 4.0, 5.0 };
+    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Latch", "LtchPre" };
     int autoModeIndex_ = 0;
     
 public:
@@ -373,7 +373,7 @@ public:
     {
         int globalOverride = DAW::GetGlobalAutomationOverride();
 
-        if(globalOverride > 0) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
+        if(globalOverride > -1) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
         {
             if(globalOverride == 2) // CSI reverses touch and write
                 globalOverride = 3;
