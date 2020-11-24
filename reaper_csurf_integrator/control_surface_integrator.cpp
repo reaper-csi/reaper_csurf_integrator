@@ -1456,38 +1456,6 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
         DoRangeBoundAction(action_->GetCurrentNormalizedValue(this) - acceleratedDeltaValues_[accelerationIndex]);
 }
 
-void ActionContext::SetAutoModeIndex()
-{
-    if(MediaTrack* track = GetTrack())
-    {
-        double autoMode = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-        
-        for(int i = 0; i < autoModes_.size(); i++)
-        {
-            if(autoModes_[i] == autoMode)
-            {
-                autoModeIndex_ = i;
-                break;
-            }
-        }
-    }
-}
-
-void ActionContext::NextAutoMode()
-{
-    if(MediaTrack* track = GetTrack())
-    {
-        autoModeIndex_++;
-        
-        if(autoModeIndex_ > autoModes_.size() - 1)
-            autoModeIndex_ = 0;
-        
-        int autoMode = autoModes_[autoModeIndex_];
-        
-        DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoMode);
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // WidgetActionBroker
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
