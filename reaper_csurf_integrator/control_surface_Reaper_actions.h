@@ -1814,7 +1814,10 @@ public:
 
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        return DAW::GetGlobalAutomationOverride();
+        if(context->GetIntParam() == DAW::GetGlobalAutomationOverride())
+            return 1.0;
+        else
+            return 0.0;
     }
 
     virtual void RequestUpdate(ActionContext* context) override

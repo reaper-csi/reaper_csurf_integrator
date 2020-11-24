@@ -337,11 +337,52 @@ public:
     void UpdateWidgetValue(string value);
     void ForceWidgetValue(double value);
 
-    void SetAutoModeIndex();
-    void NextAutoMode();
-
+    void SetAutoModeIndex()
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            double autoMode = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+            
+            for(int i = 0; i < autoModes_.size(); i++)
+            {
+                if(autoModes_[i] == autoMode)
+                {
+                    autoModeIndex_ = i;
+                    break;
+                }
+            }
+        }
+    }
+    
+    void NextAutoMode()
+    {
+        if(MediaTrack* track = GetTrack())
+        {
+            autoModeIndex_++;
+            
+            if(autoModeIndex_ > autoModes_.size() - 1)
+                autoModeIndex_ = 0;
+            
+            int autoMode = autoModes_[autoModeIndex_];
+            
+            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoMode);
+        }
+    }
+    
     string GetAutoModeDisplayName()
     {
+        int globalOverride = DAW::GetGlobalAutomationOverride();
+
+        if(globalOverride > 0) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
+        {
+            if(globalOverride == 2) // CSI reverses touch and write
+                globalOverride = 3;
+            else if(globalOverride == 3)
+                globalOverride = 2;
+            
+            return autoModeDisplayNames__[globalOverride];
+        }
+        
         return autoModeDisplayNames__[autoModeIndex_];
     }
     
@@ -1196,7 +1237,12 @@ public:
     void ClearCache()
     {
         for(auto widget : widgets_)
+        {
+            widget->UpdateValue(0.0);
+            widget->UpdateValue(0, 0.0);
+            widget->UpdateValue("");
             widget->ClearCache();
+        }
     }
     
     void AddWidget(Widget* widget)
@@ -1856,7 +1902,7 @@ public:
             surface->InitializeEuCon();
     }
     
-   /*
+    /*
     int repeats = 0;
     
     void Run()
@@ -1871,8 +1917,6 @@ public:
         for(auto surface : surfaces_)
             surface->RequestUpdate();
         
-        UpdateEditModeWindow();
-
          repeats++;
          
          if(repeats > 50)
@@ -1905,12 +1949,6 @@ public:
                  ShowDuration(surface->GetName(), "Request Update", duration);
              }
              
-             start = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
-             UpdateEditModeWindow();
-             duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count() - start;
-             totalDuration += duration;
-             ShowDuration("Update Edit Mode Window", duration);
-             
              char msgBuffer[250];
              
              sprintf(msgBuffer, "Total duration = %d\n\n\n", totalDuration);
@@ -1934,8 +1972,7 @@ public:
         sprintf(msgBuffer, "%s - %s - %d microseconds\n", surface.c_str(), item.c_str(), duration);
         DAW::ShowConsoleMsg(msgBuffer);
     }
-    
-*/
+    */
 
 
     void Run()
@@ -2069,6 +2106,9 @@ public:
     void LeavePage()
     {
         trackNavigationManager_->LeavePage();
+        
+        for(auto surface : surfaces_)
+            surface->ClearCache();
     }
 };
 
