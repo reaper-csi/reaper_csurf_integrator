@@ -1313,9 +1313,10 @@ public:
         lastG = g;
         lastB = b;
         
-        int rgbVal = GetColorIntFromRGB(r, g, b);
-        
-        SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], rgbVal);
+        if((r == 177 || r == 181) && g == 31) // this sets the different MFT modes
+            SendMidiMessage(r, g, b);
+        else
+            SendMidiMessage(midiFeedbackMessage1_->midi_message[0], midiFeedbackMessage1_->midi_message[1], GetColorIntFromRGB(r, g, b));
     }
 
     virtual void SetRGBValue(int r, int g, int b) override
