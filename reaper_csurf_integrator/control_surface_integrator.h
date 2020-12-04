@@ -289,8 +289,7 @@ private:
     
     bool supportsTrackColor_ = false;
     
-    vector<double> autoModes_ = { 0.0, 1.0, 2.0, 4.0, 5.0 };
-    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Latch", "LtchPre" };
+    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
     int autoModeIndex_ = 0;
     
 public:
@@ -340,32 +339,22 @@ public:
     void SetAutoModeIndex()
     {
         if(MediaTrack* track = GetTrack())
-        {
-            double autoMode = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-            
-            for(int i = 0; i < autoModes_.size(); i++)
-            {
-                if(autoModes_[i] == autoMode)
-                {
-                    autoModeIndex_ = i;
-                    break;
-                }
-            }
-        }
+            autoModeIndex_ = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
     }
     
     void NextAutoMode()
     {
         if(MediaTrack* track = GetTrack())
         {
-            autoModeIndex_++;
+            if(autoModeIndex_ == 2) // skip over write mode when cycling
+                autoModeIndex_ += 2;
+            else
+                autoModeIndex_++;
             
-            if(autoModeIndex_ > autoModes_.size() - 1)
+            if(autoModeIndex_ > autoModeDisplayNames__.size() - 1)
                 autoModeIndex_ = 0;
-            
-            int autoMode = autoModes_[autoModeIndex_];
-            
-            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoMode);
+    
+            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoModeIndex_);
         }
     }
     
@@ -374,16 +363,9 @@ public:
         int globalOverride = DAW::GetGlobalAutomationOverride();
 
         if(globalOverride > -1) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
-        {
-            if(globalOverride == 2) // CSI reverses touch and write
-                globalOverride = 3;
-            else if(globalOverride == 3)
-                globalOverride = 2;
-            
             return autoModeDisplayNames__[globalOverride];
-        }
-        
-        return autoModeDisplayNames__[autoModeIndex_];
+        else
+            return autoModeDisplayNames__[autoModeIndex_];
     }
     
     void DoTouch(double value)
