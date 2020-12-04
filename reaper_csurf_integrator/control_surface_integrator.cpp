@@ -756,6 +756,7 @@ void Manager::InitActionsDictionary()
     actions_["CycleTimeDisplayModes"] =             new CycleTimeDisplayModes();
     actions_["NextPage"] =                          new GoNextPage();
     actions_["GoPage"] =                            new GoPage();
+    actions_["PageNameDisplay"] =                   new PageNameDisplay();
     actions_["GoZone"] =                            new GoZone();
     actions_["TrackBank"] =                         new TrackBank();
     actions_["ClearAllSolo"] =                      new ClearAllSolo();
@@ -798,6 +799,8 @@ void Manager::InitActionsDictionary()
     actions_["MCUTrackPanDisplay"] =                new MCUTrackPanDisplay();
     actions_["TrackPanDisplay"] =                   new TrackPanDisplay();
     actions_["TrackPanWidthDisplay"] =              new TrackPanWidthDisplay();
+    actions_["TrackPanLeftDisplay"] =               new TrackPanLeftDisplay();
+    actions_["TrackPanRightDisplay"] =              new TrackPanRightDisplay();
     actions_["TrackOutputMeter"] =                  new TrackOutputMeter();
     actions_["TrackOutputMeterAverageLR"] =         new TrackOutputMeterAverageLR();
     actions_["TrackOutputMeterMaxPeakLR"] =         new TrackOutputMeterMaxPeakLR();
@@ -817,6 +820,8 @@ void Manager::InitActionsDictionary()
     actions_["TrackSendPrePost"] =                  new TrackSendPrePost();
     actions_["TrackSendNameDisplay"] =              new TrackSendNameDisplay();
     actions_["TrackSendVolumeDisplay"] =            new TrackSendVolumeDisplay();
+    actions_["TrackSendPanDisplay"] =               new TrackSendPanDisplay();
+    actions_["TrackSendPrePostDisplay"] =           new TrackSendPrePostDisplay();
 }
 
 void Manager::Init()
