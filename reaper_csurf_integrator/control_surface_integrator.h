@@ -416,20 +416,74 @@ public:
         
         steppedValuesIndex_ = index;
     }
-    
-    /*
-     //////////////////////////////////////////////////
-     // CycleTrackAutoMode and EuConCycleTrackAutoMode
-     map<int, string> autoModes_ = { {0, "Trim"}, {1, "Read"}, {2, "Touch"}, {3, "Write"}, {4, "Latch"}, {5, "LtchPre"}  };
-     Widget* displayWidget_ = nullptr;
-     double timeSilentlySet_ = 0.0;
-     // CycleTrackAutoMode and EuConCycleTrackAutoMode
-     //////////////////////////////////////////////////
-     */
 
+    string GetPanValueString(double panVal)
+    {
+        bool left = false;
+        
+        if(panVal < 0)
+        {
+            left = true;
+            panVal = -panVal;
+        }
+        
+        int panIntVal = int(panVal * 100.0);
+        string trackPanValueString = "";
+        
+        if(left)
+        {
+            if(panIntVal == 100)
+                trackPanValueString += "<";
+            else if(panIntVal < 100 && panIntVal > 9)
+                trackPanValueString += "< ";
+            else
+                trackPanValueString += "<  ";
+            
+            trackPanValueString += to_string(panIntVal);
+        }
+        else
+        {
+            trackPanValueString += "   ";
+            
+            trackPanValueString += to_string(panIntVal);
+            
+            if(panIntVal == 100)
+                trackPanValueString += ">";
+            else if(panIntVal < 100 && panIntVal > 9)
+                trackPanValueString += " >";
+            else
+                trackPanValueString += "  >";
+        }
+        
+        if(panIntVal == 0)
+            trackPanValueString = "  <C>  ";
+
+        return trackPanValueString;
+    }
     
-    
-    
+    string GetPanWidthValueString(double widthVal)
+    {
+        bool reversed = false;
+        
+        if(widthVal < 0)
+        {
+            reversed = true;
+            widthVal = -widthVal;
+        }
+        
+        int widthIntVal = int(widthVal * 100.0);
+        string trackPanWidthString = "";
+        
+        if(reversed)
+            trackPanWidthString += "Rev ";
+        
+        trackPanWidthString += to_string(widthIntVal);
+        
+        if(widthIntVal == 0)
+            trackPanWidthString = " <Mno> ";
+
+        return trackPanWidthString;
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
