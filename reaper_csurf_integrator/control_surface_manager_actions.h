@@ -202,12 +202,25 @@ class GoPage : public Action
 {
 public:
     virtual string GetName() override { return "GoPage"; }
-
+    
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
         TheManager->GoToPage(context->GetStringParam());
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class PageNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "PageNameDisplay"; }
+    
+    void RequestUpdate(ActionContext* context) override
+    {
+        context->UpdateWidgetValue(context->GetPage()->GetName());
     }
 };
 

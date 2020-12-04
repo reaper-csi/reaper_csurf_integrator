@@ -1145,6 +1145,57 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPanDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackSendPanDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double panVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
+        }
+        else
+            context->ClearWidget();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendPrePostDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackSendPrePostDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+
+            context->UpdateWidgetValue(prePostValueString);
+        }
+        else
+            context->ClearWidget();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FixedTextDisplay : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1233,48 +1284,9 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            bool left = false;
-            
             double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
             
-            if(panVal < 0)
-            {
-                left = true;
-                panVal = -panVal;
-            }
-            
-            int panIntVal = int(panVal * 100.0);
-            string trackPan = "";
-            
-            if(left)
-            {
-                if(panIntVal == 100)
-                    trackPan += "<";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += "< ";
-                else
-                    trackPan += "<  ";
-                
-                trackPan += to_string(panIntVal);
-            }
-            else
-            {
-                trackPan += "   ";
-                
-                trackPan += to_string(panIntVal);
-                
-                if(panIntVal == 100)
-                    trackPan += ">";
-                else if(panIntVal < 100 && panIntVal > 9)
-                    trackPan += " >";
-                else
-                    trackPan += "  >";
-            }
-            
-            if(panIntVal == 0)
-                trackPan = "  <C>  ";
-            
-            context->UpdateWidgetValue(string(trackPan));
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -1292,28 +1304,49 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            bool reversed = false;
-            
             double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
             
-            if(widthVal < 0)
-            {
-                reversed = true;
-                widthVal = -widthVal;
-            }
+            context->UpdateWidgetValue(context->GetPanWidthValueString(widthVal));
+        }
+        else
+            context->ClearWidget();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanLeftDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackPanLeftDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL");
             
-            int widthIntVal = int(widthVal * 100.0);
-            string trackPanWidth = "";
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
+        }
+        else
+            context->ClearWidget();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackPanRightDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackPanRightDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR");
             
-            if(reversed)
-                trackPanWidth += "Rev ";
-            
-            trackPanWidth += to_string(widthIntVal);
-            
-            if(widthIntVal == 0)
-                trackPanWidth = " <Mno> ";
-            
-            context->UpdateWidgetValue(string(trackPanWidth));
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -1333,33 +1366,12 @@ public:
         {
             if(GetPanMode(track) != 6 && context->GetSurface()->GetIsWidgetToggled("Rotary" + context->GetZone()->GetNavigator()->GetChannelNumString()))
             {
-                bool reversed = false;
-                
                 double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
-                
-                if(widthVal < 0)
-                {
-                    reversed = true;
-                    widthVal = -widthVal;
-                }
-                
-                int widthIntVal = int(widthVal * 100.0);
-                string trackPanWidth = "";
-                
-                if(reversed)
-                    trackPanWidth += "Rev ";
-                
-                trackPanWidth += to_string(widthIntVal);
-                
-                if(widthIntVal == 0)
-                    trackPanWidth = " <Mno> ";
-                
-                context->UpdateWidgetValue(string(trackPanWidth));
+
+                context->UpdateWidgetValue(context->GetPanWidthValueString(widthVal));
             }
             else
             {
-                bool left = false;
-                
                 double panVal = 0.0;
                 
                 if(GetPanMode(track) != 6)
@@ -1372,44 +1384,7 @@ public:
                         panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR");
                 }
                 
-                if(panVal < 0)
-                {
-                    left = true;
-                    panVal = -panVal;
-                }
-                
-                int panIntVal = int(panVal * 100.0);
-                string trackPan = "";
-                
-                if(left)
-                {
-                    if(panIntVal == 100)
-                        trackPan += "<";
-                    else if(panIntVal < 100 && panIntVal > 9)
-                        trackPan += "< ";
-                    else
-                        trackPan += "<  ";
-                    
-                    trackPan += to_string(panIntVal);
-                }
-                else
-                {
-                    trackPan += "   ";
-                    
-                    trackPan += to_string(panIntVal);
-                    
-                    if(panIntVal == 100)
-                        trackPan += ">";
-                    else if(panIntVal < 100 && panIntVal > 9)
-                        trackPan += " >";
-                    else
-                        trackPan += "  >";
-                }
-                
-                if(panIntVal == 0)
-                    trackPan = "  <C>  ";
-                
-                context->UpdateWidgetValue(string(trackPan));
+                context->UpdateWidgetValue(context->GetPanValueString(panVal));
             }
         }
         else
