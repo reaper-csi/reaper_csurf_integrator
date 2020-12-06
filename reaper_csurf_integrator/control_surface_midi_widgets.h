@@ -812,12 +812,13 @@ class FPDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 private:
     int displayType_ = 0x02;
+    int displayRow_ = 0x00;
     int channel_ = 0;
     string lastStringSent_ = " ";
     
 public:
     virtual ~FPDisplay_Midi_FeedbackProcessor() {}
-    FPDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channel) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channel_(channel) { }
+    FPDisplay_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int displayType, int channel, int displayRow) : Midi_FeedbackProcessor(surface, widget), displayType_(displayType), channel_(channel), displayRow_(displayRow) { }
     
     virtual void ClearCache() override
     {
@@ -854,7 +855,7 @@ public:
         // <SysExHdr> 12, xx, yy, zz, tx,tx,tx,... F7
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x12;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = channel_;                // xx channel_ id
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;                    // yy line number 0-3
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayRow_;             // yy line number 0-3
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x0000000;               // zz alignment flag 0000000=centre, see manual for other setups.
         
         int length = strlen(text);
