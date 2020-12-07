@@ -1136,32 +1136,6 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
             fxParamDisplayName_ = params[2];
     }
     
-    /*
-     //////////////////////////////////////////////////
-     // CycleTrackAutoMode and EuConCycleTrackAutoMode
-     
-     if(params.size() > 1 && params[1].size() > 0 && isalpha(params[1].at(0)))
-     {
-     for(auto widget : GetSurface()->GetWidgets())
-     {
-     if(widget->GetName() == params[1])
-     {
-     displayWidget_ = widget;
-     break;
-     }
-     }
-     }
-     
-     // CycleTrackAutoMode and EuConCycleTrackAutoMode
-     //////////////////////////////////////////////////
-     */
-
-    
-    
-    
-    
-    
-    
     if(params.size() > 0)
     {
         SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
