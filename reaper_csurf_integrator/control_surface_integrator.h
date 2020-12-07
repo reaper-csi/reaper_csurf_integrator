@@ -1113,6 +1113,8 @@ protected:
         // Add the "hardwired" widgets
         AddWidget(new Widget(this, "OnTrackSelection"));
         AddWidget(new Widget(this, "OnFXFocus"));
+        AddWidget(new Widget(this, "OnPageEnter"));
+        AddWidget(new Widget(this, "OnPageLeave"));
     }
     
 public:
@@ -1310,6 +1312,18 @@ public:
     {
         if(widgetsByName_.count("OnFXFocus") > 0)
             widgetsByName_["OnFXFocus"]->DoAction(1.0);
+    }
+    
+    void OnPageEnter()
+    {
+        if(widgetsByName_.count("OnPageEnter") > 0)
+            widgetsByName_["OnPageEnter"]->DoAction(1.0);
+    }
+    
+    void OnPageLeave()
+    {
+        if(widgetsByName_.count("OnPageLeave") > 0)
+            widgetsByName_["OnPageLeave"]->DoAction(1.0);
     }
 };
 
@@ -2137,6 +2151,9 @@ public:
         
         for(auto surface : surfaces_)
             surface->ClearCache();
+        
+        for(auto surface : surfaces_)
+            surface->OnPageEnter();
     }
     
     void LeavePage()
@@ -2144,7 +2161,10 @@ public:
         trackNavigationManager_->LeavePage();
         
         for(auto surface : surfaces_)
-            surface->ClearCache();
+            surface->OnPageLeave();
+
+        for(auto surface : surfaces_)
+            surface->ClearCache();        
     }
 };
 
