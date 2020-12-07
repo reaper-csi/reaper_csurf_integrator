@@ -860,7 +860,11 @@ public:
         
         int length = strlen(text);
         
-        if (length > 200) length = 200;
+        if(displayRow_ == 0x02 && length > 5)
+            length = 5;
+        
+        if (length > 20)
+            length = 20;
         
         int count = 0;
         
