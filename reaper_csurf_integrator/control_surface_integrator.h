@@ -1115,6 +1115,7 @@ protected:
         AddWidget(new Widget(this, "OnFXFocus"));
         AddWidget(new Widget(this, "OnPageEnter"));
         AddWidget(new Widget(this, "OnPageLeave"));
+        AddWidget(new Widget(this, "OnInitialization"));
     }
     
 public:
@@ -1324,6 +1325,12 @@ public:
     {
         if(widgetsByName_.count("OnPageLeave") > 0)
             widgetsByName_["OnPageLeave"]->DoAction(1.0);
+    }
+    
+    void OnInitialization()
+    {
+        if(widgetsByName_.count("OnInitialization") > 0)
+            widgetsByName_["OnInitialization"]->DoAction(1.0);
     }
 };
 
@@ -2165,6 +2172,12 @@ public:
 
         for(auto surface : surfaces_)
             surface->ClearCache();        
+    }
+    
+    void OnInitialization()
+    {
+        for(auto surface : surfaces_)
+            surface->OnInitialization();
     }
 };
 
