@@ -590,12 +590,13 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             else if(widgetClass == "FB_GainReductionMeter")
                 feedbackProcessor = new GainReductionMeter_Midi_FeedbackProcessor(surface, widget, new MIDI_event_ex_t(strToHex(tokenLines[i][1]), strToHex(tokenLines[i][2]), strToHex(tokenLines[i][3])));
         }
-        else if((widgetClass == "FB_MCUTimeDisplay" || widgetClass == "FB_QConProXMasterVUMeter") && size == 1)
+        else if(widgetClass == "FB_MCUTimeDisplay" && size == 1)
         {
-            if(widgetClass == "FB_MCUTimeDisplay")
-                feedbackProcessor = new MCU_TimeDisplay_Midi_FeedbackProcessor(surface, widget);
-            else if(widgetClass == "FB_QConProXMasterVUMeter")
-                feedbackProcessor = new QConProXMasterVUMeter_Midi_FeedbackProcessor(surface, widget);
+            feedbackProcessor = new MCU_TimeDisplay_Midi_FeedbackProcessor(surface, widget);
+        }
+        else if(widgetClass == "FB_QConProXMasterVUMeter" && size == 2)
+        {
+            feedbackProcessor = new QConProXMasterVUMeter_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]));
         }
         else if((widgetClass == "FB_MCUVUMeter" || widgetClass == "FB_MCUXTVUMeter") && size == 2)
         {
