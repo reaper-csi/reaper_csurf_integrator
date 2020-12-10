@@ -668,12 +668,13 @@ class QConProXMasterVUMeter_Midi_FeedbackProcessor : public Midi_FeedbackProcess
 private:
     double minDB_ = 0.0;
     double maxDB_ = 24.0;
+    int param_ = 0;
     
 public:
     virtual ~QConProXMasterVUMeter_Midi_FeedbackProcessor() {}
-    QConProXMasterVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget) : Midi_FeedbackProcessor(surface, widget) { }
+    QConProXMasterVUMeter_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int param) : Midi_FeedbackProcessor(surface, widget), param_(param) { }
     
-    virtual void SetValue(int param, double value) override
+    virtual void SetValue(double value) override
     {
         //Master Channel:
         //Master Level 1 : 0xd1, 0x0L
@@ -683,10 +684,10 @@ public:
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
         
         int midiValue = value * 0x0d;
-        SendMidiMessage(0xd1, (param << 4) | midiValue, 0);
+        SendMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
     }
 
-    virtual void ForceValue(int param, double value) override
+    virtual void ForceValue(double value) override
     {
         //Master Channel:
         //Master Level 1 : 0xd1, 0x0L
@@ -696,7 +697,7 @@ public:
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
         
         int midiValue = value * 0x0d;
-        ForceMidiMessage(0xd1, (param << 4) | midiValue, 0);
+        ForceMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
     }
 };
 
