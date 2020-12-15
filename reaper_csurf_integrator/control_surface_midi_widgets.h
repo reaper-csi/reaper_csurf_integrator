@@ -683,7 +683,11 @@ public:
         //Master Level 2 : 0xd1, 0x1L
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
         
-        int midiValue = (value * 0x0d) - 2;
+        int midiValue = value * 0x0f;
+        
+        if(midiValue > 0x0d)
+            midiValue = 0x0d;
+        
         SendMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
     }
 
@@ -696,7 +700,11 @@ public:
         //Master Level 2 : 0xd1, 0x1L
         //L = 0x0 – 0xD = Meter level 0% thru 100% (does not affect peak indicator)
         
-        int midiValue = (value * 0x0d) - 2;
+        int midiValue = value * 0x0f;
+        
+        if(midiValue > 0x0d)
+            midiValue = 0x0d;
+        
         ForceMidiMessage(0xd1, (param_ << 4) | midiValue, 0);
     }
 };
