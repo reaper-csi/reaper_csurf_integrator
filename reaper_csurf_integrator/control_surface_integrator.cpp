@@ -756,6 +756,7 @@ void Manager::InitActionsDictionary()
 {    
     actions_["TrackAutoMode"] =                     new TrackAutoMode();
     actions_["GlobalAutoMode"] =                    new GlobalAutoMode();
+    actions_["TrackAutoModeDisplay"] =              new TrackAutoModeDisplay();
     actions_["TimeDisplay"] =                       new TimeDisplay();
     actions_["EuConTimeDisplay"] =                  new EuConTimeDisplay();
     actions_["NoAction"] =                          new NoAction();
