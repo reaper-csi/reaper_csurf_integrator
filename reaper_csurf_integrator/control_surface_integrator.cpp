@@ -1141,6 +1141,11 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
             fxParamDisplayName_ = params[2];
     }
     
+    if(actionName == "MCUTrackPanDisplay"&& params.size() > 1)
+    {
+        SetAssociatedWidget(GetSurface()->GetWidgetByName(params[1]));
+    }
+    
     if(params.size() > 0)
     {
         SetRGB(params, supportsRGB_, supportsTrackColor_, RGBValues_);
