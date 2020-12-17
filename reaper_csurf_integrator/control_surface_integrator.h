@@ -251,6 +251,8 @@ private:
     Widget* const widget_ = nullptr;
     Zone* const zone_ = nullptr;
     
+    Widget* associatedWidget_ = nullptr;
+    
     string lastStringValue_ = "";
     
     int intParam_ = 0;
@@ -300,6 +302,9 @@ public:
     Zone* GetZone() { return zone_; }
     int GetSlotIndex();
     string GetName();
+
+    void SetAssociatedWidget(Widget* widget) { associatedWidget_ = widget; }
+    Widget* GetAssociatedWidget() { return associatedWidget_; }
 
     int GetIntParam() { return intParam_; }
     string GetStringParam() { return stringParam_; }
@@ -1181,14 +1186,6 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
    
-    bool GetIsWidgetToggled(string widgetName)
-    {
-        if(widgetsByName_.count(widgetName) > 0)
-            return widgetsByName_[widgetName]->GetIsToggled();
-        else
-            return false;
-    }
-    
     void MakeHomeDefault()
     {
         if(zoneTemplates_.count("Home") > 0)

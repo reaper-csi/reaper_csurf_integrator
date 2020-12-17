@@ -1364,7 +1364,7 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            if(GetPanMode(track) != 6 && context->GetSurface()->GetIsWidgetToggled("Rotary" + context->GetZone()->GetNavigator()->GetChannelNumString()))
+            if(GetPanMode(track) != 6 && context->GetAssociatedWidget() != nullptr && context->GetAssociatedWidget()->GetIsToggled() == true)
             {
                 double widthVal = DAW::GetMediaTrackInfo_Value(track, "D_WIDTH");
 
@@ -1378,7 +1378,7 @@ public:
                     panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
                 else
                 {
-                    if(context->GetSurface()->GetIsWidgetToggled("Rotary" + context->GetZone()->GetNavigator()->GetChannelNumString()) == false)
+                    if(context->GetAssociatedWidget() != nullptr && context->GetAssociatedWidget()->GetIsToggled() == false)
                         panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL");
                     else
                         panVal = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR");
