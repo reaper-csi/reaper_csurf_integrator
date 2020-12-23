@@ -606,6 +606,10 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
             
             surface->SetHasMCUMeters(displayType);
         }
+        else if(widgetClass == "FB_SCE24_Text" && size == 5)
+        {
+            feedbackProcessor = new SCE24_Text_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]), stoi(tokenLines[i][2]), stoi(tokenLines[i][3]), stoi(tokenLines[i][4]));
+        }
         else if((widgetClass == "FB_MCUDisplayUpper" || widgetClass == "FB_MCUDisplayLower" || widgetClass == "FB_MCUXTDisplayUpper" || widgetClass == "FB_MCUXTDisplayLower") && size == 2)
         {
             if(widgetClass == "FB_MCUDisplayUpper")
@@ -1126,10 +1130,10 @@ ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<
     {
         paramIndex_ = atol(params[1].c_str());
         
-        if(params.size() > 2 && params[2] != "[" && params[2] != "{")
+        if(params.size() > 2 && params[2] != "[" && params[2] != "{" && isdigit(params[2][0]))
         {
             shouldUseDisplayStyle_ = true;
-            displayStyle_ = atol(params[3].c_str());
+            displayStyle_ = atol(params[2].c_str());
         }
     }
     
