@@ -815,6 +815,108 @@ public:
     }
 };
 
+
+
+   // FB_SCE24_Text    01 01 05 06        //cell1, distyp1, item5, max characters 6
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Text_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    int cellNumber_ = 0;
+    int screenNumber_ = 0;
+    int itemNumber_ = 0;
+    int itemType_ = 01;
+    int itemStyle_ = 00;
+    int maxCharacters_ = 0;
+
+    string lastStringSent_ = "";
+    
+public:
+    virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
+    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int screenNumber, int itemNumber, int maxCharacters) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), screenNumber_(screenNumber), itemNumber_(itemNumber), maxCharacters_(maxCharacters) { }
+    
+    virtual void ClearCache() override
+    {
+        lastStringSent_ = " ";
+    }
+    
+    virtual void SetValue(string displayText) override
+    {
+        if(displayText != lastStringSent_) // changes since last send
+            ForceValue(displayText);
+    }
+    
+    virtual void ForceValue(string displayText) override
+    {
+        lastStringSent_ = displayText;
+
+        const char* text = displayText.c_str();
+        
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = screenNumber_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemType_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;
+
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // R Text
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // G Text
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // B Text
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // R Background
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // G Background
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // B Background
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+
+        int textLength = strlen(text);
+
+        if(textLength > maxCharacters_)
+            textLength = maxCharacters_;
+        
+        int cnt = 0;
+        
+        while (cnt < textLength)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+            cnt++;
+        }
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+
+
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FPDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
