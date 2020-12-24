@@ -829,7 +829,7 @@ private:
     int cellNumber_ = 0;
     int screenNumber_ = 0;
     int itemNumber_ = 0;
-    int itemType_ = 01;
+    int itemType_ = 01; // Text
     int itemStyle_ = 00;
     int maxCharacters_ = 0;
 
@@ -874,6 +874,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemType_;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved for sign
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;
 
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // R Text
