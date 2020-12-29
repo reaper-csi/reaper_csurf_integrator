@@ -829,11 +829,9 @@ private:
     int cellNumber_ = 0;
     int screenNumber_ = 0;
     int itemNumber_ = 0;
-    int itemType_ = 01; // Text
-    int itemStyle_ = 00;
     int maxCharacters_ = 0;
-
-    string lastStringSent_ = "";
+    rgb_color textColor_ = { 0xfe, 0xfe, 0xfe };
+    rgb_color textBackground_ { 0, 0, 0 };
     
 public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
@@ -841,18 +839,29 @@ public:
     
     virtual void ClearCache() override
     {
-        lastStringSent_ = " ";
+        lastStringValue_ = " ";
     }
     
     virtual void SetValue(string displayText) override
     {
-        if(displayText != lastStringSent_) // changes since last send
-            ForceValue(displayText);
+        if(displayText != lastStringValue_) // changes since last send
+            ForceValueAndColors(displayText, textColor_, textBackground_);
+    }
+    
+    virtual void SetValueAndColors(string displayText, rgb_color textColor, rgb_color textBackground) override
+    {
+        if(displayText != lastStringValue_) // changes since last send
+            ForceValueAndColors(displayText, textColor, textBackground);
     }
     
     virtual void ForceValue(string displayText) override
     {
-        lastStringSent_ = displayText;
+        ForceValueAndColors(displayText, textColor_, textBackground_);
+    }
+    
+    void ForceValueAndColors(string displayText, rgb_color textColor, rgb_color textBackground) override
+    {
+        lastStringValue_ = displayText;
 
         const char* text = displayText.c_str();
         
@@ -868,22 +877,22 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01; // Controller type
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = screenNumber_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemType_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved for sign
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = screenNumber_;   // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Text
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // Style
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // reserved for sign
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .mst
 
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // R Text
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // G Text
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f; // B Text
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor.r / 2;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // R Background
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // G Background
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x25; // B Background
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground.b / 2;
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
@@ -912,11 +921,6 @@ public:
         SendMidiMessage(&midiSysExData.evt);
     }
 };
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FPDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
