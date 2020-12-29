@@ -1274,8 +1274,11 @@ void ActionContext::UpdateWidgetValue(int param, double value)
 
 void ActionContext::UpdateWidgetValue(string value)
 {
-    widget_->UpdateValue(value);
-    
+    if(supportsRGB_ && RGBValues_.size() == 2 )
+        widget_->UpdateValueAndColors(value, RGBValues_[0], RGBValues_[1]);
+    else
+        widget_->UpdateValue(value);
+    /*
     if(supportsRGB_)
     {
         currentRGBIndex_ = 1;
@@ -1294,6 +1297,7 @@ void ActionContext::UpdateWidgetValue(string value)
             widget_->UpdateRGBValue(r, g, b);
         }
     }
+     */
 }
 
 void ActionContext::ForceWidgetValue(double value)
@@ -1674,6 +1678,12 @@ void  Widget::UpdateValue(string value)
         processor->SetValue(value);
 }
 
+void Widget::UpdateValueAndColors(string value, rgb_color textColor, rgb_color textBackground)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->SetValueAndColors(value, textColor, textBackground);
+}
+
 void  Widget::UpdateRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
@@ -1696,6 +1706,12 @@ void  Widget::ForceValue(string value)
 {
     for(auto processor : feedbackProcessors_)
         processor->ForceValue(value);
+}
+
+void Widget::ForceValueAndColors(string value, rgb_color textColor, rgb_color textBackground)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->ForceValueAndColors(value, textColor, textBackground);
 }
 
 void  Widget::ForceRGBValue(int r, int g, int b)
