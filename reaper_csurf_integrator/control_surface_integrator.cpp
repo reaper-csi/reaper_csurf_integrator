@@ -839,12 +839,19 @@ void Manager::InitActionsDictionary()
     actions_["TrackSendPan"] =                      new TrackSendPan();
     actions_["TrackSendPanPercent"] =               new TrackSendPanPercent();
     actions_["TrackSendMute"] =                     new TrackSendMute();
+    actions_["EuConTrackSendMute"] =                new EuConTrackSendMute();
     actions_["TrackSendInvertPolarity"] =           new TrackSendInvertPolarity();
+    actions_["EuConTrackSendInvertPolarity"] =      new EuConTrackSendInvertPolarity();
     actions_["TrackSendPrePost"] =                  new TrackSendPrePost();
+    actions_["EuConTrackSendPrePost"] =             new EuConTrackSendPrePost();
     actions_["TrackSendNameDisplay"] =              new TrackSendNameDisplay();
+    actions_["EuConTrackSendNameDisplay"] =         new EuConTrackSendNameDisplay();
     actions_["TrackSendVolumeDisplay"] =            new TrackSendVolumeDisplay();
+    actions_["EuConTrackSendVolumeDisplay"] =       new EuConTrackSendVolumeDisplay();
     actions_["TrackSendPanDisplay"] =               new TrackSendPanDisplay();
+    actions_["EuConTrackSendPanDisplay"] =          new EuConTrackSendPanDisplay();
     actions_["TrackSendPrePostDisplay"] =           new TrackSendPrePostDisplay();
+    actions_["EuConTrackSendPrePostDisplay"] =      new EuConTrackSendPrePostDisplay();
 }
 
 void Manager::Init()
