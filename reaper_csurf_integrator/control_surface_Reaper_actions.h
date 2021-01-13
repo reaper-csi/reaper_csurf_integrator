@@ -253,6 +253,8 @@ public:
     virtual void Touch(ActionContext* context, double value) override
     {
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
+        if(MediaTrack* track = context->GetTrack())
+            DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(GetCurrentDBValue(context)), false), NULL);
     }
 };
 
@@ -411,6 +413,15 @@ public:
     virtual void Touch(ActionContext* context, double value) override
     {
         context->GetZone()->GetNavigator()->SetIsPanTouched(value);
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetPanMode(track) != 6)
+            {
+                double vol, pan = 0.0;
+                DAW::GetTrackUIVolPan(track, &vol, &pan);
+                DAW::CSurf_SetSurfacePan(track, DAW::CSurf_OnPanChange(track, pan, false), NULL);
+            }
+        }
     }
 };
 
@@ -481,6 +492,11 @@ public:
     virtual void Touch(ActionContext* context, double value) override
     {
         context->GetZone()->GetNavigator()->SetIsPanWidthTouched(value);
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetPanMode(track) != 6)
+                DAW::CSurf_OnWidthChange(track, DAW::GetMediaTrackInfo_Value(track, "D_WIDTH"), false);
+        }
     }
 };
 
@@ -561,6 +577,14 @@ public:
     virtual void Touch(ActionContext* context, double value) override
     {
         context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value);
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetPanMode(track) == 6)
+            {
+                double panL = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANL");
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANL", &panL);
+            }
+        }
     }
 };
 
@@ -641,6 +665,14 @@ public:
     virtual void Touch(ActionContext* context, double value) override
     {
         context->GetZone()->GetNavigator()->SetIsPanRightTouched(value);
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetPanMode(track) == 6)
+            {
+                double panL = DAW::GetMediaTrackInfo_Value(track, "D_DUALPANR");
+                DAW::GetSetMediaTrackInfo(track, "D_DUALPANR", &panL);
+            }
+        }
     }
 };
 
