@@ -210,7 +210,7 @@ struct PageLine
     bool synchPages = false;
     bool useScrollLink = false;
     //bool trackColouring = false;
-    int startingChannel = 0;
+    int numChannels = 0;
     //int green = 0;
     //int blue = 0;
     vector<SurfaceLine*> surfaces;
@@ -916,8 +916,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 followMCP = pages[index]->followMCP;
                                 synchPages = pages[index]->synchPages;
                                 useScrollLink = pages[index]->useScrollLink;
-                                //trackColouring = pages[index]->trackColouring;
-                                
+
                                 dlgResult = false;
                                 editMode = true;
                                 
@@ -928,7 +927,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[index]->followMCP = followMCP;
                                     pages[index]->synchPages = synchPages;
                                     pages[index]->useScrollLink = useScrollLink;
-                                    //pages[index]->trackColouring = trackColouring;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                     for(auto* page :  pages)
                                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
@@ -1029,6 +1027,38 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
             
             ifstream iniFile(string(DAW::GetResourcePath()) + "/CSI/CSI.ini");
             
+            int numChannels = 0;
+            
+            for (string line; getline(iniFile, line) ; )
+            {
+                line = regex_replace(line, regex(TabChars), " ");
+                line = regex_replace(line, regex(CRLFChars), "");
+                
+                vector<string> tokens(GetTokens(line));
+                
+                if(tokens.size() > 4) // ignore comment lines and blank lines
+                {
+                    if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
+                    {
+                        if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
+                            numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
+                    }
+                    else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                    {
+                        if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
+                            numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
+                    }
+                    else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
+                    {
+                        if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
+                            numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
+                    }
+                }
+            }
+            
+            iniFile.clear();
+            iniFile.seekg(0);
+            
             for (string line; getline(iniFile, line) ; )
             {
                 line = regex_replace(line, regex(TabChars), " ");
@@ -1045,7 +1075,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     if(tokens[0] == PageToken)
                     {
-                        if(tokens.size() != 6)
+                        if( ! (tokens.size() == 11 || tokens.size() == 5))
                             continue;
  
                         PageLine* page = new PageLine();
@@ -1065,19 +1095,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             page->useScrollLink = true;
                         else
                             page->useScrollLink = false;
-                        
-                        
-                        /*
-                        if(tokens[5] == "UseTrackColoring")
-                            page->trackColouring = true;
-                        else
-                            page->trackColouring = false;
-                        */
-                        page->startingChannel = atoi(tokens[5].c_str());
-                        
-                        
-                        //page->green = atoi(tokens[8].c_str());
-                        //page->blue = atoi(tokens[9].c_str());
+                       
+                        page->numChannels = numChannels;
                         
                         pages.push_back(page);
                         
@@ -1150,14 +1169,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     else
                         line += "NoScrollLink ";
                     
-                    int numChannelsNeeded = 0;
+                    line += GetLineEnding();
                     
-                    for(auto surface : page->surfaces)
-                        if(numChannelsNeeded < (surface->channelOffset + surface->numChannels))
-                            numChannelsNeeded = surface->channelOffset + surface->numChannels;
-
-                    line += to_string(numChannelsNeeded) + GetLineEnding();
-
                     iniFile << line;
 
                     for(auto surface : page->surfaces)

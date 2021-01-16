@@ -68,6 +68,18 @@ const int TempDisplayTime = 1250;
 class Manager;
 extern Manager* TheManager;
 
+static vector<string> GetTokens(string line)
+{
+    vector<string> tokens;
+    
+    istringstream iss(line);
+    string token;
+    while (iss >> quoted(token))
+        tokens.push_back(token);
+    
+    return tokens;
+}
+
 struct CSIWidgetInfo
 {
     std::string group = "General";

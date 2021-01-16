@@ -166,18 +166,6 @@ static oscpkt::UdpSocket* GetOutputSocketForAddressAndPort(string surfaceName, s
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parsing
 //////////////////////////////////////////////////////////////////////////////////////////////
-static vector<string> GetTokens(string line)
-{
-    vector<string> tokens;
-    
-    istringstream iss(line);
-    string token;
-    while (iss >> quoted(token))
-        tokens.push_back(token);
-    
-    return tokens;
-}
-
 static void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
@@ -868,6 +856,38 @@ void Manager::Init()
     {
         ifstream iniFile(iniFilePath);
         
+        int numChannels = 0;
+    
+        for (string line; getline(iniFile, line) ; )
+        {
+            line = regex_replace(line, regex(TabChars), " ");
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            vector<string> tokens(GetTokens(line));
+            
+            if(tokens.size() > 4) // ignore comment lines and blank lines
+            {
+                if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
+                {
+                    if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
+                        numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
+                }
+                else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                {
+                    if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
+                        numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
+                }
+                else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
+                {
+                    if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
+                        numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
+                }
+            }
+        }
+        
+        iniFile.clear();
+        iniFile.seekg(0);
+        
         for (string line; getline(iniFile, line) ; )
         {
             line = regex_replace(line, regex(TabChars), " ");
@@ -879,10 +899,10 @@ void Manager::Init()
             {
                 if(tokens[0] == PageToken)
                 {
-                    if(tokens.size() != 6)
+                    if( ! (tokens.size() == 11  || tokens.size() == 5))
                         continue;
 
-                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseScrollLink" ? true : false, atoi(tokens[5].c_str()));
+                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseScrollLink" ? true : false, numChannels);
                     pages_.push_back(currentPage);
                 }
                 else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
