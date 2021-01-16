@@ -879,25 +879,11 @@ void Manager::Init()
             {
                 if(tokens[0] == PageToken)
                 {
-                    if(tokens.size() != 11)
+                    if(tokens.size() != 6)
                         continue;
-                    
-                    rgb_color pageColour;
-                    
-                    if(tokens[6] == "{" && tokens[10] == "}")
-                    {
-                        pageColour.r = atoi(tokens[7].c_str());
-                        pageColour.g = atoi(tokens[8].c_str());
-                        pageColour.b = atoi(tokens[9].c_str());
-                    }
 
-                    currentPage = new Page(tokens[1], pageColour, tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false);
+                    currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseScrollLink" ? true : false, atoi(tokens[5].c_str()));
                     pages_.push_back(currentPage);
-                    
-                    if(tokens[4] == "UseScrollLink")
-                        currentPage->GetTrackNavigationManager()->SetScrollLink(true);
-                    else
-                        currentPage->GetTrackNavigationManager()->SetScrollLink(false);
                 }
                 else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
                 {
@@ -1912,10 +1898,10 @@ void FXActivationManager::TrackFXListChanged()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), options_(options), defaultZone_(new Zone(this, GetPage()->GetDefaultNavigator(), "Default", "Default", ""))
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), defaultZone_(new Zone(this, GetPage()->GetDefaultNavigator(), "Default", "Default", ""))
 {
     for(int i = 0; i < numChannels; i++)
-        navigators_[i] = GetPage()->GetTrackNavigationManager()->AddNavigator();
+        navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
 }
 
 void ControlSurface::InitZones(string zoneFolder)
@@ -2150,8 +2136,8 @@ void HandleEuConGetFormattedFXParamValue(EuCon_ControlSurface* surface, const ch
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options)
-: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset)
+: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset)
 {
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");
