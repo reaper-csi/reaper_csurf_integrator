@@ -1086,7 +1086,7 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset);
 
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
@@ -1368,8 +1368,8 @@ private:
     }
 
 public:
-    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int options, midi_Input* midiInput, midi_Output* midiOutput)
-    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, midi_Input* midiInput, midi_Output* midiOutput)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1421,8 +1421,8 @@ private:
     void ProcessOSCMessage(string message, double value);
 
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int options, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
-    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, options), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1565,7 +1565,7 @@ protected:
     }
     
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int options);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset);
     
     virtual ~EuCon_ControlSurface()
     {
@@ -1632,8 +1632,12 @@ private:
     Navigator* const defaultNavigator_ = nullptr;
 
 public:
-    TrackNavigationManager(Page* page, bool followMCP, bool synchPages) : page_(page), followMCP_(followMCP), synchPages_(synchPages),
-    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_)) {}
+    TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
+    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_))
+    {
+        for(int i = 0; i < numChannels; i++)
+            navigators_.push_back(new TrackNavigator(page_, this, i));
+    }
     
     ~TrackNavigationManager()
     {
@@ -1659,7 +1663,6 @@ public:
     Navigator* GetFocusedFXNavigator() { return focusedFXNavigator_; }
     Navigator* GetDefaultNavigator() { return defaultNavigator_; }
 
-    void SetScrollLink(bool scrollLink) { scrollLink_ = scrollLink; }
     void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
@@ -1707,12 +1710,13 @@ public:
             vcaMode_ = true;
         }
     }
-
-    Navigator* AddNavigator()
+ 
+    Navigator* GetNavigatorForChannel(int channelNum)
     {
-        int channelNum = navigators_.size();
-        navigators_.push_back(new TrackNavigator(page_, this, channelNum));
-        return navigators_[channelNum];
+        if(channelNum < navigators_.size())
+            return navigators_[channelNum];
+        else
+            return nullptr;
     }
     
     MediaTrack* GetTrackFromChannel(int channelNumber)
@@ -1913,7 +1917,6 @@ class Page
 {
 private:
     string name_ = "";
-    rgb_color colour_;
     vector<ControlSurface*> surfaces_;
     
     bool isShift_ = false;
@@ -1930,7 +1933,7 @@ private:
     Navigator* defaultNavigator_ = nullptr;
     
 public:
-    Page(string name, rgb_color colour, bool followMCP, bool synchPages) : name_(name), colour_(colour), trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages)), defaultNavigator_(new Navigator(this)) { }
+    Page(string name, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : name_(name),  trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages, scrollLink, numChannels)), defaultNavigator_(new Navigator(this)) { }
     
     ~Page()
     {
