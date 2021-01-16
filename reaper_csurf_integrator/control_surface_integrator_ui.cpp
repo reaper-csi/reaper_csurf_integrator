@@ -209,10 +209,10 @@ struct PageLine
     bool followMCP = true;
     bool synchPages = false;
     bool useScrollLink = false;
-    bool trackColouring = false;
-    int red = 0;
-    int green = 0;
-    int blue = 0;
+    //bool trackColouring = false;
+    int startingChannel = 0;
+    //int green = 0;
+    //int blue = 0;
     vector<SurfaceLine*> surfaces;
 };
 
@@ -237,7 +237,7 @@ int options = 0;
 
 static bool followMCP = true;
 static bool synchPages = false;
-static bool trackColouring = false;
+//static bool trackColouring = false;
 static bool useScrollLink = false;
 
 static vector<PageLine*> pages;
@@ -277,15 +277,16 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                     CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_UNCHECKED);
-                
+                /*
                 if(trackColouring)
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_UNCHECKED);
+                 */
             }
             else
             {
-                CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED);
+                CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_CHECKED); // default is to follow Track Control Panel
             }
         }
             break;
@@ -296,14 +297,17 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
             {
                 case IDCHOOSECOLOUR:
                 {
+                    /*
                     int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
+
                     if (index >= 0)
                     {
-                        int colorOut = DAW::ColorToNative(pages[index]->red, pages[index]->green, pages[index]->blue);
+                        int colorOut = DAW::ColorToNative(pages[index]->startingChannel, pages[index]->green, pages[index]->blue);
                         
                         if(DAW::GR_SelectColor(hwndDlg, &colorOut))
-                            DAW::ColorFromNative(colorOut, &pages[index]->red, &pages[index]->green, &pages[index]->blue);
+                            DAW::ColorFromNative(colorOut, &pages[index]->startingChannel, &pages[index]->green, &pages[index]->blue);
                     }
+                    */
                 }
                     break;
 
@@ -334,12 +338,12 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                             useScrollLink = true;
                         else
                             useScrollLink = false;
-                        
+                        /*
                         if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
                             trackColouring = true;
                         else
                             trackColouring = false;
-                        
+                        */
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
@@ -792,7 +796,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 page->followMCP = followMCP;
                                 page->synchPages = synchPages;
                                 page->useScrollLink = useScrollLink;
-                                page->trackColouring = trackColouring;
+                                //page->trackColouring = trackColouring;
                                 pages.push_back(page);
                                 AddListEntry(hwndDlg, name, IDC_LIST_Pages);
                                 SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_SETCURSEL, pages.size() - 1, 0);
@@ -901,7 +905,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 followMCP = pages[index]->followMCP;
                                 synchPages = pages[index]->synchPages;
                                 useScrollLink = pages[index]->useScrollLink;
-                                trackColouring = pages[index]->trackColouring;
+                                //trackColouring = pages[index]->trackColouring;
                                 
                                 dlgResult = false;
                                 editMode = true;
@@ -913,7 +917,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[index]->followMCP = followMCP;
                                     pages[index]->synchPages = synchPages;
                                     pages[index]->useScrollLink = useScrollLink;
-                                    pages[index]->trackColouring = trackColouring;
+                                    //pages[index]->trackColouring = trackColouring;
                                     SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Pages), LB_RESETCONTENT, 0, 0);
                                     for(auto* page :  pages)
                                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
@@ -1051,14 +1055,18 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         else
                             page->useScrollLink = false;
                         
+                        
+                        /*
                         if(tokens[5] == "UseTrackColoring")
                             page->trackColouring = true;
                         else
                             page->trackColouring = false;
+                        */
+                        page->startingChannel = atoi(tokens[5].c_str());
                         
-                        page->red = atoi(tokens[7].c_str());
-                        page->green = atoi(tokens[8].c_str());
-                        page->blue = atoi(tokens[9].c_str());
+                        
+                        //page->green = atoi(tokens[8].c_str());
+                        //page->blue = atoi(tokens[9].c_str());
                         
                         pages.push_back(page);
                         
@@ -1130,19 +1138,19 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         line += "UseScrollLink ";
                     else
                         line += "NoScrollLink ";
-                    
+                    /*
                     if(page->trackColouring)
                         line += "UseTrackColoring ";
                     else
                         line += "NoTrackColoring ";
                     
                     line += "{ ";
-                    
-                    line += to_string(page->red) + " ";
-                    line += to_string(page->green) + " ";
-                    line += to_string(page->blue);
+                    */
+                    line += to_string(page->startingChannel) + " ";
+                    //line += to_string(page->green) + " ";
+                    //line += to_string(page->blue);
 
-                    line += " }" + GetLineEnding();
+                    //line += " }" + GetLineEnding();
 
                     iniFile << line;
 
