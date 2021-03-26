@@ -777,8 +777,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     case IDC_LIST_Pages:
                         if (HIWORD(wParam) == LBN_DBLCLK)
                         {
-                            // pretend we clicked the Edit button instead
+#ifdef WIN32
+                            // pretend we clicked the Edit button
                             SendMessage(GetDlgItem(hwndDlg, IDC_BUTTON_EditPage), BM_CLICK, 0, 0);
+#endif
                         }                       
                         else if (HIWORD(wParam) == LBN_SELCHANGE)
                         {
@@ -801,9 +803,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                     case IDC_LIST_Surfaces:
                         if (HIWORD(wParam) == LBN_DBLCLK)
-                        {                 
-                            // pretend we clicked the Edit button instead
+                        {
+#ifdef WIN32
+                            // pretend we clicked the Edit button
                             SendMessage(GetDlgItem(hwndDlg, IDC_BUTTON_EditSurface), BM_CLICK, 0, 0);
+#endif
                         }
                         break;
 
