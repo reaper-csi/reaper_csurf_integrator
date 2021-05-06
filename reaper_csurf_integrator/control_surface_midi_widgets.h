@@ -837,6 +837,29 @@ public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
     SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int screenNumber, int itemNumber, int maxCharacters) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), screenNumber_(screenNumber), itemNumber_(itemNumber), maxCharacters_(maxCharacters) { }
     
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property.size() == 0)
+                continue;
+            
+            if(property[0] == "Color" && property.size() > 3)
+            {
+                textColor_.r = stoi(property[1]);
+                textColor_.g = stoi(property[2]);
+                textColor_.b = stoi(property[3]);
+            }
+            
+            if(property[0] == "BackgroundColor" && property.size() > 3)
+            {
+                textBackground_.r = stoi(property[1]);
+                textBackground_.g = stoi(property[2]);
+                textBackground_.b = stoi(property[3]);
+            }
+        }
+    }
+    
     virtual void ClearCache() override
     {
         lastStringValue_ = " ";

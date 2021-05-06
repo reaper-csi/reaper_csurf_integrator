@@ -184,7 +184,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &holdDelayAmount)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &holdDelayAmount, bool &isProperty)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -211,6 +211,8 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
                 isFeedbackInverted = true;
             else if(modifier_tokens[i] == "Hold")
                 holdDelayAmount = 1.0;
+            else if(modifier_tokens[i] == "Property")
+                isProperty = true;
         }
     }
 
@@ -231,6 +233,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
     string navigatorName = "";
     string actionName = "";
     int lineNumber = 0;
+    
+    ActionTemplate* currentActionTemplate = nullptr;
     
     try
     {
@@ -263,6 +267,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens[0] == "ZoneEnd" && zoneName != "")
                 {
+                    currentActionTemplate = nullptr;
+                    
                     vector<WidgetActionTemplate*> widgetActionTemplates;
 
                     for(auto [widgetName, modifierActions] : widgetActions)
@@ -337,14 +343,24 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     string modifier = "";
                     bool isFeedbackInverted = false;
                     double holdDelayAmount = 0.0;
+                    bool isProperty = false;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, holdDelayAmount);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, holdDelayAmount, isProperty);
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
                         params.push_back(tokens[i]);
                     
-                    widgetActions[widgetName][modifier].push_back(new ActionTemplate(actionName, params, isFeedbackInverted, holdDelayAmount));
+                    if(isProperty)
+                    {
+                        if(currentActionTemplate != nullptr)
+                            currentActionTemplate->properties.push_back(params);
+                    }
+                    else
+                    {
+                        currentActionTemplate = new ActionTemplate(actionName, params, isFeedbackInverted, holdDelayAmount);
+                        widgetActions[widgetName][modifier].push_back(currentActionTemplate);
+                    }
                 }
             }
         }
@@ -1084,8 +1100,10 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params): action_(action), widget_(widget), zone_(zone)
+ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params, vector<vector<string>> properties): action_(action), widget_(widget), zone_(zone), properties_(properties)
 {
+    widget->SetProperties(properties);
+    
     string actionName = "";
     
     if(params.size() > 0)
@@ -1549,6 +1567,9 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     for(int i = 0; i < member->params.size(); i++)
                         memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));
                     
+                    
+                    
+                    /*
                     if(shouldUseNoAction)
                     {
                         ActionContext context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
@@ -1561,6 +1582,18 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                         member->SetProperties(context);
                         widgetContext.AddActionContext(aTemplate->modifier, context);
                     }
+                    */
+                    
+
+                    ActionContext context = TheManager->GetActionContext(shouldUseNoAction == true ? "NoAction" : actionName, widget, zone, memberParams, member->properties);
+                    
+                    if(member->isFeedbackInverted)
+                        context.SetIsFeedbackInverted();
+                    
+                    if(member->holdDelayAmount != 0.0)
+                        context.SetHoldDelayAmount(member->holdDelayAmount);
+                    
+                    widgetContext.AddActionContext(aTemplate->modifier, context);
                 }
             }
             
@@ -1648,14 +1681,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ActionTemplate::SetProperties(ActionContext& context)
-{
-    if(isFeedbackInverted)
-        context.SetIsFeedbackInverted();
-    
-    if(holdDelayAmount != 0.0)
-        context.SetHoldDelayAmount(holdDelayAmount);
-}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
@@ -1672,6 +1698,12 @@ Widget::~Widget()
         feedbackProcessor = nullptr;
     }
 };
+
+void Widget::SetProperties(vector<vector<string>> properties)
+{
+    for(auto processor : feedbackProcessors_)
+        processor->SetProperties(properties);
+}
 
 void  Widget::UpdateValue(double value)
 {
