@@ -306,8 +306,10 @@ private:
     vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
     int autoModeIndex_ = 0;
     
+    vector<vector<string>> properties_;
+    
 public:
-    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params);
+    ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params, vector<vector<string>> properties);
     virtual ~ActionContext() {}
     
     Widget* GetWidget() { return widget_; }
@@ -623,12 +625,11 @@ struct ActionTemplate
 {
     string actionName;
     vector<string> params;
+    vector<vector<string>> properties;
     bool isFeedbackInverted;
     double holdDelayAmount;
     
     ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), holdDelayAmount(amount) {}
-    
-    void SetProperties(ActionContext& context);
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -737,6 +738,7 @@ public:
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
     
+    void SetProperties(vector<vector<string>> properties);
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
@@ -868,6 +870,7 @@ public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
+    virtual void SetProperties(vector<vector<string>> properties) {}
     virtual void SetRGBValue(int r, int g, int b) {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
@@ -2308,12 +2311,12 @@ public:
     double *GetTimeOffsPtr() { return timeOffsPtr_; }
     int GetProjectPanMode() { return *projectPanModePtr_; }
    
-    ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params)
-    {
+    ActionContext GetActionContext(string actionName, Widget* widget, Zone* zone, vector<string> params, vector<vector<string>> properties)
+    {      
         if(actions_.count(actionName) > 0)
-            return ActionContext(actions_[actionName], widget, zone, params);
+            return ActionContext(actions_[actionName], widget, zone, params, properties);
         else
-            return ActionContext(actions_["NoAction"], widget, zone, params);
+            return ActionContext(actions_["NoAction"], widget, zone, params, properties);
     }
 
     void OnTrackSelection(MediaTrack *track)
