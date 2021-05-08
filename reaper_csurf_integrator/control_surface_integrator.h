@@ -588,19 +588,16 @@ private:
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-    
-    int slotIndex_ = 0;
+    int const slotIndex_ = 0;
 
     vector<Widget*> widgets_;
 
 public:
-    Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     
     ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
-    string GetPath() { return sourceFilePath_; }
-    
-    void SetSlotIndex(int index) { slotIndex_ = index; }
+    string GetPath() { return sourceFilePath_; }   
     int GetSlotIndex() { return slotIndex_; }
     
     void Deactivate();

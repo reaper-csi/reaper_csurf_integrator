@@ -1632,7 +1632,7 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
         
         surface->LoadingZone(newZoneName);
         
-        Zone* zone = new Zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
+        Zone* zone = new Zone(surface, navigators[i], 0, newZoneName, alias, sourceFilePath);
 
         ProcessWidgetActionTemplates(surface, zone, channelNumStr, false);
 
@@ -1657,9 +1657,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         surface->LoadingZone(newZoneName);
         
-        Zone* zone = new Zone(surface, navigators[i], newZoneName, alias, sourceFilePath);
-        
-        zone->SetSlotIndex(i);
+        Zone* zone = new Zone(surface, navigators[i], i, newZoneName, alias, sourceFilePath);
         
         if(i < maxNum)
             ProcessWidgetActionTemplates(surface, zone, zoneNumStr, false);
@@ -1680,9 +1678,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
     {
         surface->LoadingZone(name);
         
-        Zone* zone = new Zone(surface, navigators[0], name, alias, sourceFilePath);
-        
-        zone->SetSlotIndex(slotIndex);
+        Zone* zone = new Zone(surface, navigators[0], slotIndex, name, alias, sourceFilePath);
         
         ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
         
@@ -1962,7 +1958,7 @@ void FXActivationManager::TrackFXListChanged()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), defaultZone_(new Zone(this, GetPage()->GetDefaultNavigator(), "Default", "Default", ""))
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), defaultZone_(new Zone(this, GetPage()->GetDefaultNavigator(), 0, "Default", "Default", ""))
 {
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
