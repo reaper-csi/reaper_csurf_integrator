@@ -614,6 +614,14 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         {
             feedbackProcessor = new SCE24_Text_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]), stoi(tokenLines[i][2]), stoi(tokenLines[i][3]), stoi(tokenLines[i][4]));
         }
+        else if(widgetClass == "FB_SCE24_OLEDButton" && size == 3)
+        {
+            feedbackProcessor = new SCE24_OLEDButton_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]), stoi(tokenLines[i][2]));
+        }
+        else if(widgetClass == "FB_SCE24_LEDButton" && size == 2)
+        {
+            feedbackProcessor = new SCE24_LEDButton_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]));
+        }
         else if(widgetClass == "FB_SCE24_Ring" && size == 2)
         {
             feedbackProcessor = new SCE24_Ring_Midi_FeedbackProcessor(surface, widget, stoi(tokenLines[i][1]));
