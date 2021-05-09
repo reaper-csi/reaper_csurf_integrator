@@ -1642,7 +1642,15 @@ private:
     Navigator* const selectedTrackNavigator_ = nullptr;
     Navigator* const focusedFXNavigator_ = nullptr;
     Navigator* const defaultNavigator_ = nullptr;
-
+    
+    int sendSlot_ = 0;
+    int receiveSlot_ = 0;
+    int fxMenuSlot_ = 0;
+    
+    int maxSendSlot_ = 0;
+    int maxReceiveSlot_ = 0;
+    int maxFXMenuSlot_ = 0;
+    
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
     masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_))
@@ -1678,7 +1686,40 @@ public:
     void ForceScrollLink();
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
-
+    
+    void AdjustSendSlotBank(int amount)
+    {
+        sendSlot_ += amount;
+        
+        if(sendSlot_ < 0)
+            sendSlot_ = 0;
+        
+        if(sendSlot_ > maxSendSlot_)
+            sendSlot_ = maxSendSlot_;
+    }
+    
+    void AdjustReceiveSlotBank(int amount)
+    {
+        receiveSlot_ += amount;
+        
+        if(receiveSlot_ < 0)
+            receiveSlot_ = 0;
+        
+        if(receiveSlot_ > maxReceiveSlot_)
+            receiveSlot_ = maxReceiveSlot_;
+    }
+    
+    void AdjustFXMenuSlotBank(int amount)
+    {
+        fxMenuSlot_ += amount;
+        
+        if(fxMenuSlot_ < 0)
+            fxMenuSlot_ = 0;
+        
+        if(fxMenuSlot_ > maxFXMenuSlot_)
+            fxMenuSlot_ = maxFXMenuSlot_;
+    }
+    
     void IncChannelBias(MediaTrack* track, int channelNum)
     {
         for(int i = channelNum + 1; i < navigators_.size(); i++)
@@ -1785,6 +1826,9 @@ public:
             trackOffset_ = top;
 
         tracks_.clear();
+        maxSendSlot_ = 0;
+        maxReceiveSlot_ = 0;
+        maxFXMenuSlot_ = 0;
         
         // Clean up vcaSpillTracks
         vcaSpillTracks_.erase(remove_if(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), IsTrackPointerStale), vcaSpillTracks_.end());
@@ -1796,6 +1840,18 @@ public:
             
             if(DAW::IsTrackVisible(track, followMCP_))
             {
+                int maxSendSlot = DAW::GetTrackNumSends(track, 0) - 1;
+                if(maxSendSlot > maxSendSlot_)
+                    maxSendSlot_ = maxSendSlot;
+                
+                int maxReceiveSlot = DAW::GetTrackNumSends(track, -1) - 1;
+                if(maxReceiveSlot > maxReceiveSlot_)
+                    maxReceiveSlot_ = maxReceiveSlot;
+                
+                int maxFXMenuSlot = DAW::TrackFX_GetCount(track) - 1;
+                if(maxFXMenuSlot > maxFXMenuSlot_)
+                    maxFXMenuSlot_ = maxFXMenuSlot;
+                
                 if(vcaMode_)
                 {
                     int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_MASTER", 0, 0);
@@ -1815,6 +1871,15 @@ public:
             }
         }
 
+        if(sendSlot_ > maxSendSlot_)
+            sendSlot_ = maxSendSlot_;
+
+        if(receiveSlot_ > maxReceiveSlot_)
+            receiveSlot_ = maxReceiveSlot_;
+
+        if(fxMenuSlot_ > maxFXMenuSlot_)
+            fxMenuSlot_ = maxFXMenuSlot_;
+        
         for(auto navigator : navigators_)
         {
             if(navigator->GetIsChannelPinned())
@@ -2367,6 +2432,36 @@ public:
             for(auto page: pages_)
                 if(page->GetTrackNavigationManager()->GetSynchPages())
                     page->GetTrackNavigationManager()->AdjustTrackBank(amount);
+    }
+    
+    void AdjustSendSlotBank(Page* sendingPage, int amount)
+    {
+        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
+            sendingPage->GetTrackNavigationManager()->AdjustSendSlotBank(amount);
+        else
+            for(auto page: pages_)
+                if(page->GetTrackNavigationManager()->GetSynchPages())
+                    page->GetTrackNavigationManager()->AdjustSendSlotBank(amount);
+    }
+    
+    void AdjustReceiveSlotBank(Page* sendingPage, int amount)
+    {
+        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
+            sendingPage->GetTrackNavigationManager()->AdjustReceiveSlotBank(amount);
+        else
+            for(auto page: pages_)
+                if(page->GetTrackNavigationManager()->GetSynchPages())
+                    page->GetTrackNavigationManager()->AdjustReceiveSlotBank(amount);
+    }
+    
+    void AdjustFXMenuSlotBank(Page* sendingPage, int amount)
+    {
+        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
+            sendingPage->GetTrackNavigationManager()->AdjustFXMenuSlotBank(amount);
+        else
+            for(auto page: pages_)
+                if(page->GetTrackNavigationManager()->GetSynchPages())
+                    page->GetTrackNavigationManager()->AdjustFXMenuSlotBank(amount);
     }
     
     void NextPage()
