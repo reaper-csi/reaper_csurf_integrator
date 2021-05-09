@@ -47,12 +47,27 @@ class MapSelectedTrackSendsToWidgets  : public Action
 {
 public:
     virtual string GetName() override { return "MapSelectedTrackSendsToWidgets"; }
-
+    
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
         
         context->GetSurface()->MapSelectedTrackSendsToWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapSelectedTrackReceivesToWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "MapSelectedTrackReceivesToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        context->GetSurface()->MapSelectedTrackReceivesToWidgets();
     }
 };
 
