@@ -798,6 +798,9 @@ void Manager::InitActionsDictionary()
     actions_["PageNameDisplay"] =                   new PageNameDisplay();
     actions_["GoZone"] =                            new GoZone();
     actions_["TrackBank"] =                         new TrackBank();
+    actions_["SendSlotBank"] =                      new SendSlotBank();
+    actions_["ReceiveSlotBank"] =                   new ReceiveSlotBank();
+    actions_["FXMenuSlotBank"] =                    new FXMenuSlotBank();
     actions_["ClearAllSolo"] =                      new ClearAllSolo();
     actions_["Shift"] =                             new SetShift();
     actions_["Option"] =                            new SetOption();
