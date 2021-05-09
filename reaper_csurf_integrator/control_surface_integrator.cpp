@@ -311,6 +311,11 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         for(int i = 0; i < surface->GetNumSends(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
+                    else if(navigatorName == "ReceiveNavigator")
+                    {
+                        for(int i = 0; i < surface->GetNumReceives(); i++)
+                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                    }
                     else if(navigatorName == "FXMenuNavigator")
                     {
                         for(int i = 0; i < surface->GetFXActivationManager()->GetNumFXSlots(); i++)
@@ -807,6 +812,7 @@ void Manager::InitActionsDictionary()
     actions_["Control"] =                           new SetControl();
     actions_["Alt"] =                               new SetAlt();
     actions_["MapSelectedTrackSendsToWidgets"] =    new MapSelectedTrackSendsToWidgets();
+    actions_["MapSelectedTrackReceivesToWidgets"] = new MapSelectedTrackReceivesToWidgets();
     actions_["MapSelectedTrackFXToWidgets"] =       new MapSelectedTrackFXToWidgets();
     actions_["MapSelectedTrackFXToMenu"] =          new MapSelectedTrackFXToMenu();
     actions_["MapFocusedFXToWidgets"] =             new MapFocusedFXToWidgets();
@@ -1998,14 +2004,27 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
-    DeactivateSendsZones();
+    DeactivateZone(activeSelectedTrackSendsZones_);
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
         int numSends = DAW::GetTrackNumSends(track, 0);
         
         if(zoneTemplates_.count("Send") > 0)
-            zoneTemplates_["Send"]->Activate(this, activeSendZones_, numSends);
+            zoneTemplates_["Send"]->Activate(this, activeSelectedTrackSendsZones_, numSends);
+    }
+}
+
+void ControlSurface::MapSelectedTrackReceivesToWidgets()
+{
+    DeactivateZone(activeSelectedTrackReceivesZones_);
+    
+    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    {
+        int numReceives = DAW::GetTrackNumSends(track, -1);
+        
+        if(zoneTemplates_.count("Receive") > 0)
+            zoneTemplates_["Receive"]->Activate(this, activeSelectedTrackReceivesZones_, numReceives);
     }
 }
 

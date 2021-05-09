@@ -1119,8 +1119,9 @@ protected:
 
     vector<Zone*> activeZones_;
 
-    vector<Zone*> activeSendZones_;
-    
+    vector<Zone*> activeSelectedTrackSendsZones_;
+    vector<Zone*> activeSelectedTrackReceivesZones_;
+
     FXActivationManager* const fxActivationManager_;
 
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
@@ -1163,7 +1164,7 @@ public:
             zone = nullptr;
         }
         
-        for(auto zone: activeSendZones_)
+        for(auto zone: activeSelectedTrackSendsZones_)
         {
             delete zone;
             zone = nullptr;
@@ -1184,7 +1185,8 @@ public:
     
     int GetNumChannels() { return numChannels_; }
     int GetNumSends() { return numSends_; }
-
+    int GetNumReceives() { return numSends_; }
+    
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
@@ -1197,7 +1199,8 @@ public:
     virtual void InitializeEuCon() {}
     virtual void UpdateTimeDisplay() {}
     void MapSelectedTrackSendsToWidgets();
-    
+    void MapSelectedTrackReceivesToWidgets();
+
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
     virtual void ForceRefreshTimeDisplay() {}
@@ -1221,8 +1224,9 @@ public:
         {
             if(zoneName == "Home")
             {
-                DeactivateActiveZones();
-                DeactivateSendsZones();
+                DeactivateZone(activeZones_);
+                DeactivateZone(activeSelectedTrackSendsZones_);
+                DeactivateZone(activeSelectedTrackReceivesZones_);
                 fxActivationManager_->DeactivateAllFXZones();
             }
             else
@@ -1232,26 +1236,15 @@ public:
         }
     }
     
-    void DeactivateSendsZones()
+    void DeactivateZone(vector<Zone*> zones)
     {
-        for(auto zone : activeSendZones_)
+        for(auto zone : zones)
         {
             zone->Deactivate();
             delete zone;
         }
         
-        activeSendZones_.clear();
-    }
-
-    void DeactivateActiveZones()
-    {
-        for(auto zone : activeZones_)
-        {
-            zone->Deactivate();
-            delete zone;
-        }
-        
-        activeZones_.clear();
+        zones.clear();
     }
 
     ZoneTemplate* GetZoneTemplate(string zoneName)
@@ -1687,6 +1680,10 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
     
+    int GetSendSlot() { return sendSlot_; }
+    int GetReceiveSlot() { return receiveSlot_; }
+    int GetFXMenuSlot() { return fxMenuSlot_; }
+
     void AdjustSendSlotBank(int amount)
     {
         sendSlot_ += amount;
