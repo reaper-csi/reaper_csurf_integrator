@@ -877,6 +877,25 @@ void Manager::InitActionsDictionary()
     actions_["EuConTrackSendPanDisplay"] =          new EuConTrackSendPanDisplay();
     actions_["TrackSendPrePostDisplay"] =           new TrackSendPrePostDisplay();
     actions_["EuConTrackSendPrePostDisplay"] =      new EuConTrackSendPrePostDisplay();
+    actions_["TrackReceiveVolume"] =                new TrackReceiveVolume();
+    actions_["TrackReceiveVolumeDB"] =              new TrackReceiveVolumeDB();
+    actions_["TrackReceivePan"] =                   new TrackReceivePan();
+    actions_["TrackReceivePanPercent"] =            new TrackReceivePanPercent();
+    actions_["TrackReceiveMute"] =                  new TrackReceiveMute();
+    actions_["EuConTrackReceiveMute"] =             new EuConTrackReceiveMute();
+    actions_["TrackReceiveInvertPolarity"] =        new TrackReceiveInvertPolarity();
+    actions_["EuConTrackReceiveInvertPolarity"] =   new EuConTrackReceiveInvertPolarity();
+    actions_["TrackReceivePrePost"] =               new TrackReceivePrePost();
+    actions_["EuConTrackReceivePrePost"] =          new EuConTrackReceivePrePost();
+    actions_["TrackReceiveNameDisplay"] =           new TrackReceiveNameDisplay();
+    actions_["EuConTrackReceiveNameDisplay"] =      new EuConTrackReceiveNameDisplay();
+    actions_["TrackReceiveVolumeDisplay"] =         new TrackReceiveVolumeDisplay();
+    actions_["EuConTrackReceiveVolumeDisplay"] =    new EuConTrackReceiveVolumeDisplay();
+    actions_["TrackReceivePanDisplay"] =            new TrackReceivePanDisplay();
+    actions_["EuConTrackReceivePanDisplay"] =       new EuConTrackReceivePanDisplay();
+    actions_["TrackReceivePrePostDisplay"] =        new TrackReceivePrePostDisplay();
+    actions_["EuConTrackReceivePrePostDisplay"] =   new EuConTrackReceivePrePostDisplay();
+
 }
 
 void Manager::Init()
