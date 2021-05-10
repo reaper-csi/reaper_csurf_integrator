@@ -365,7 +365,7 @@ public:
         else
             return false;
     }
-
+    
     static bool GetTrackSendUIVolPan(MediaTrack* track, int send_index, double* volumeOut, double* panOut)
     {
         if(ValidatePtr(track, "MediaTrack*"))
@@ -373,7 +373,23 @@ public:
         else
             return false;
     }
-
+    
+    static bool GetTrackReceiveUIMute(MediaTrack* track, int send_index, bool* muteOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackReceiveUIMute(track, send_index, muteOut);
+        else
+            return false;
+    }
+    
+    static bool GetTrackReceiveUIVolPan(MediaTrack* track, int send_index, double* volumeOut, double* panOut)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::GetTrackReceiveUIVolPan(track, send_index, volumeOut, panOut);
+        else
+            return false;
+    }
+    
     static double Track_GetPeakInfo(MediaTrack* track, int channel)
     {
         if(ValidatePtr(track, "MediaTrack*"))

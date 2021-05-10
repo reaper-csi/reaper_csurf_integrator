@@ -686,24 +686,13 @@ public:
     }
 };
 
-
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSendVolume : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
     virtual string GetName() override { return "TrackSendVolume"; }
-
+    
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
@@ -716,7 +705,7 @@ public:
         else
             return 0.0;
     }
-
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(context->GetTrack())
@@ -756,7 +745,7 @@ class TrackSendVolumeDB : public Action
 {
 public:
     virtual string GetName() override { return "TrackSendVolumeDB"; }
-
+    
     virtual void RequestUpdate(ActionContext* context) override
     {
         if(MediaTrack* track = context->GetTrack())
@@ -1140,21 +1129,428 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveVolume : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceiveVolume"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
+            return volToNormalized(vol);
+        }
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, normalizedToVol(value), 0);
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
+            
+            if(value == 0)
+                DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, vol, 1);
+            else
+                DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, vol, 0);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveVolumeDB : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceiveVolumeDB"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            context->UpdateWidgetValue(VAL2DB(vol));
+        }
+        else
+            context->ClearWidget();
+        
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, DB2VAL(value), 0);
+        }
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            
+            if(value == 0)
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, vol, 1);
+            else
+                DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, vol, 0);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceivePan : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivePan"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
+            return panToNormalized(pan);
+        }
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, normalizedToPan(value), 0);
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
+            
+            if(value == 0)
+                DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, pan, 1);
+            else
+                DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, pan, 0);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceivePanPercent : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivePanPercent"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            context->UpdateWidgetValue(pan * 100.0);
+        }
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, value / 100.0, 0);
+    }
+    
+    virtual void Touch(ActionContext* context, double value) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double vol, pan = 0.0;
+            DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
+            
+            if(value == 0)
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, pan, 1);
+            else
+                DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, pan, 0);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveMute : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivMute"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool mute = false;
+            DAW::GetTrackReceiveUIMute(track, context->GetSlotIndex(), &mute);
+            return mute;
+        }
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "B_MUTE");
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "B_MUTE", &isMuted);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceiveMute : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceiveMute"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool mute = false;
+            DAW::GetTrackReceiveUIMute(track, context->GetParamIndex(), &mute);
+            return mute;
+        }
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool isMuted = ! DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "B_MUTE");
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "B_MUTE", &isMuted);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveInvertPolarity : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceiveInvertPolarity"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "B_PHASE");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "B_PHASE");
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "B_PHASE", &reversed);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceiveInvertPolarity : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceiveInvertPolarity"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "B_PHASE");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "B_PHASE");
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "B_PHASE", &reversed);
+        }
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceivePrePost : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivePrePost"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "I_SENDMODE");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetCurrentNormalizedValue(context) == 0)
+                context->UpdateWidgetValue(0);
+            else
+                context->UpdateWidgetValue(1);
+        }
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int mode = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "I_SENDMODE");
+            
+            if(mode == 0)
+                mode = 3; // switch to post FX
+            else
+                mode = 0; // switch to post fader
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "I_SENDMODE", &mode);
+        }
+    }
+};
 
-
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceivePrePost : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceivePrePost"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "I_SENDMODE");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            if(GetCurrentNormalizedValue(context) == 0)
+                context->UpdateWidgetValue(0);
+            else
+                context->UpdateWidgetValue(1);
+        }
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            int mode = DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "I_SENDMODE");
+            
+            if(mode == 0)
+                mode = 3; // switch to post FX
+            else
+                mode = 0; // switch to post fader
+            
+            DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "I_SENDMODE", &mode);
+        }
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FXNameDisplay : public Action
@@ -1293,20 +1689,6 @@ public:
             context->ClearWidget();
     }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSendNameDisplay : public Action
@@ -1494,17 +1876,191 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceiveNameDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            string receiveTrackName = "";
+            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
+            if(srcTrack)
+                receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(srcTrack, "P_NAME", NULL);
+            context->UpdateWidgetValue(receiveTrackName);
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceiveNameDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceiveNameDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            string receiveTrackName = "";
+            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+            if(srcTrack)
+                receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(srcTrack, "P_NAME", NULL);
+            context->UpdateWidgetValue(receiveTrackName);
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceiveVolumeDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceiveVolumeDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceiveVolumeDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceiveVolumeDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceivePanDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivePanDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double panVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceivePanDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceivePanDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            double panVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackReceivePrePostDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackReceivePrePostDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class EuConTrackReceivePrePostDisplay : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "EuConTrackReceivePrePostDisplay"; }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+        {
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
+        }
+        else
+            context->ClearWidget();
+    }
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FixedTextDisplay : public Action
