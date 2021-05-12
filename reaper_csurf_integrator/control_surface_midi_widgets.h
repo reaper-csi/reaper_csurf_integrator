@@ -1138,20 +1138,18 @@ public:
     
     virtual void ClearCache() override
     {
-        lastStringValue_ = " ";
+        lastDoubleValue_ = 0;
     }
     
-    virtual void SetValue(string displayText) override
+    virtual void SetValue(double value) override
     {
-        if(displayText != lastStringValue_) // changes since last send
-            ForceValue(displayText);
+        if(value != lastDoubleValue_) // changes since last send
+            ForceValue(value);
     }
     
-    void ForceValue(string displayText) override
+    void ForceValue(double value) override
     {
-        lastStringValue_ = displayText;
-        
-        const char* text = displayText.c_str();
+        lastDoubleValue_ = value;
         
         struct
         {
@@ -1174,24 +1172,28 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = value_;          // value
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor_.b;
+        rgb_color currentTextColor = value == 0 ? textColorOff_ : textColor_;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackground_.b;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextColor.r;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextColor.g;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextColor.b;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColorOff_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColorOff_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColorOff_.b;
+        rgb_color currentTextBackgroundColor = value == 0 ? textBackgroundOff_ : textBackground_;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackgroundOff_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackgroundOff_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textBackgroundOff_.b;
-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextBackgroundColor.r;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextBackgroundColor.g;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentTextBackgroundColor.b;
+        
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        
+        const char* text = text_.c_str();
         
         int textLength = strlen(text);
         
@@ -1222,7 +1224,6 @@ private:
     int itemStyle_ = 01;
     rgb_color color_ = { 0x7f, 0x7f, 0x7f };
     rgb_color colorOff_ = { 0, 0, 0 };
-    rgb_color blinkColor_ { 0, 0, 0 };
     
 public:
     virtual ~SCE24_LEDButton_Midi_FeedbackProcessor() {}
@@ -1251,12 +1252,6 @@ public:
                 colorOff_.r = stoi(property[1]) / 2;
                 colorOff_.g = stoi(property[2]) / 2;
                 colorOff_.b = stoi(property[3]) / 2;
-            }
-            else if(property[0] == "BlinkColor" && property.size() > 3)
-            {
-                blinkColor_.r = stoi(property[1]) / 2;
-                blinkColor_.g = stoi(property[2]) / 2;
-                blinkColor_.b = stoi(property[3]) / 2;
             }
         }
     }
@@ -1297,18 +1292,18 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = value;           // value
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.b;
+        rgb_color currentColor = value == 0 ? colorOff_ : color_;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = blinkColor_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = blinkColor_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = blinkColor_.b;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.r;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.g;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.b;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorOff_.r;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorOff_.g;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorOff_.b;
-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
