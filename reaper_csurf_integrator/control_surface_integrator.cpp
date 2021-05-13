@@ -2023,7 +2023,7 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
-    DeactivateZone(activeSelectedTrackSendsZones_);
+    DeactivateZones(activeSelectedTrackSendsZones_);
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
@@ -2036,7 +2036,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
 {
-    DeactivateZone(activeSelectedTrackReceivesZones_);
+    DeactivateZones(activeSelectedTrackReceivesZones_);
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
