@@ -1224,9 +1224,9 @@ public:
         {
             if(zoneName == "Home")
             {
-                DeactivateZone(activeZones_);
-                DeactivateZone(activeSelectedTrackSendsZones_);
-                DeactivateZone(activeSelectedTrackReceivesZones_);
+                DeactivateZones(activeZones_);
+                DeactivateZones(activeSelectedTrackSendsZones_);
+                DeactivateZones(activeSelectedTrackReceivesZones_);
                 fxActivationManager_->DeactivateAllFXZones();
             }
             else
@@ -1236,7 +1236,7 @@ public:
         }
     }
     
-    void DeactivateZone(vector<Zone*> zones)
+    void DeactivateZones(vector<Zone*> zones)
     {
         for(auto zone : zones)
         {
