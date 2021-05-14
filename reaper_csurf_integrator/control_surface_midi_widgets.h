@@ -1219,8 +1219,7 @@ class SCE24_LEDButton_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int cellNumber_ = 0;
-    int itemNumber_ = 0;
+    int cellNumber_ = 01;
     int itemStyle_ = 01;
     rgb_color color_ = { 0x7f, 0x7f, 0x7f };
     rgb_color colorOff_ = { 0, 0, 0 };
@@ -1254,6 +1253,8 @@ public:
                 colorOff_.b = stoi(property[3]) / 2;
             }
         }
+        
+        ForceValue(lastDoubleValue_);
     }
     
     virtual void ClearCache() override
@@ -1290,7 +1291,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = value;           // value
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         
         rgb_color currentColor = value == 0 ? colorOff_ : color_;
         
@@ -1298,9 +1299,9 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.g;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.b;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.r;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.g;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor.b;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
