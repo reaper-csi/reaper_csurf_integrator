@@ -265,34 +265,19 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     zoneAlias = tokens.size() > 2 ? tokens[2] : "";
                 }
                 
+                
+                
+                
+                
+                
+                
+                
                 else if(tokens[0] == "ZoneEnd" && zoneName != "")
                 {
                     currentActionTemplate = nullptr;
                     
-                    vector<WidgetActionTemplate*> widgetActionTemplates;
-
-                    for(auto [widgetName, modifierActions] : widgetActions)
-                    {
-                        WidgetActionTemplate* widgetActionTemplate = new WidgetActionTemplate(widgetName);
-                        
-                        if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
-                            widgetActionTemplate->isModifier = true;
-
-                        for(auto [modifier, actions] : modifierActions)
-                        {
-                            ActionContextTemplate* actionContextTemplate = new ActionContextTemplate(modifier);
-                            
-                            for(auto action : actions)
-                                actionContextTemplate->members.push_back(action);
-                            
-                            widgetActionTemplate->actionContextTemplates.push_back(actionContextTemplate);
-                        }
-                        
-                        widgetActionTemplates.push_back(widgetActionTemplate);
-                    }
-                    
                     vector<Navigator*> navigators;
-
+                    
                     if(navigatorName == "")
                         navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetDefaultNavigator());
                     if(navigatorName == "SelectedTrackNavigator")
@@ -322,11 +307,53 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
                     
-                    surface->AddZoneTemplate(new ZoneTemplate(navigators, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
                     
+                    Zone* zone = new Zone(surface, navigators[0], zoneName, zoneAlias, filePath);
+                    
+                    
+                    
+                    vector<WidgetActionTemplate*> widgetActionTemplates;
+
+                    for(auto [widgetName, modifierActions] : widgetActions)
+                    {
+                        WidgetActionTemplate* widgetActionTemplate = new WidgetActionTemplate(widgetName);
+                        
+                        if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
+                            widgetActionTemplate->isModifier = true;
+
+                        for(auto [modifier, actions] : modifierActions)
+                        {
+                            ActionContextTemplate* actionContextTemplate = new ActionContextTemplate(modifier);
+                            
+                            for(auto action : actions)
+                                actionContextTemplate->members.push_back(action);
+                            
+                            widgetActionTemplate->actionContextTemplates.push_back(actionContextTemplate);
+                        }
+                        
+                        widgetActionTemplates.push_back(widgetActionTemplate);
+                    }
+                    
+                    
+                    
+                    
+
+                    
+                    surface->AddZoneTemplate(new ZoneTemplate(navigators, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
+
                     includedZones.clear();
                     widgetActions.clear();
                 }
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 
                 else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
                     navigatorName = tokens[0];
@@ -1259,7 +1286,7 @@ int ActionContext::GetSlotIndex()
 
 string ActionContext::GetName()
 {
-    return zone_->GetName();
+    return zone_->GetNameOrAlias();
 }
 
 void ActionContext::RunDeferredActions()
@@ -1605,25 +1632,7 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                     string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
                     vector<string> memberParams;
                     for(int i = 0; i < member->params.size(); i++)
-                        memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));
-                    
-                    
-                    
-                    /*
-                    if(shouldUseNoAction)
-                    {
-                        ActionContext context = TheManager->GetActionContext("NoAction", widget, zone, memberParams);
-                        member->SetProperties(context);
-                        widgetContext.AddActionContext(aTemplate->modifier, context);
-                    }
-                    else
-                    {
-                        ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams);
-                        member->SetProperties(context);
-                        widgetContext.AddActionContext(aTemplate->modifier, context);
-                    }
-                    */
-                    
+                        memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));                  
 
                     ActionContext context = TheManager->GetActionContext(shouldUseNoAction == true ? "NoAction" : actionName, widget, zone, memberParams, member->properties);
                     
@@ -1634,10 +1643,15 @@ void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* z
                         context.SetHoldDelayAmount(member->holdDelayAmount);
                     
                     widgetContext.AddActionContext(aTemplate->modifier, context);
+                    
+                    zone->AddActionContext(widget, aTemplate->modifier, context);
                 }
             }
             
             zone->AddWidget(widget);
+            
+            
+            
             widget->Activate(widgetContext);
         }
     }
