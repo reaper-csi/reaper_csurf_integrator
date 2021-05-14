@@ -1662,9 +1662,9 @@ void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
         
         Zone* zone = new Zone(surface, navigators[i], 0, newZoneName, alias, sourceFilePath);
 
-        ProcessWidgetActionTemplates(surface, zone, channelNumStr, false);
-
         activeZones.push_back(zone);
+        
+        ProcessWidgetActionTemplates(surface, zone, channelNumStr, false);
     }
 }
 
@@ -1687,12 +1687,12 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         Zone* zone = new Zone(surface, navigators[i], i, newZoneName, alias, sourceFilePath);
         
+        activeZones.push_back(zone);
+        
         if(i < maxNum)
             ProcessWidgetActionTemplates(surface, zone, zoneNumStr, false);
         else
             ProcessWidgetActionTemplates(surface, zone, zoneNumStr, true);
-        
-        activeZones.push_back(zone);
     }
 }
 
@@ -1708,9 +1708,9 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
         
         Zone* zone = new Zone(surface, navigators[0], slotIndex, name, alias, sourceFilePath);
         
-        ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
-        
         activeZones.push_back(zone);
+        
+        ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
     }
 }
 
