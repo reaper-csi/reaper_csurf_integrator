@@ -591,10 +591,14 @@ private:
     int const slotIndex_ = 0;
 
     vector<Widget*> widgets_;
+    
+    map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
 
 public:
     Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     
+    Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+
     ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
     string GetPath() { return sourceFilePath_; }   
@@ -605,6 +609,11 @@ public:
     
     string GetName()
     {
+        return name_;
+    }
+    
+    string GetNameOrAlias()
+    {
         if(alias_ != "")
             return alias_;
         else
@@ -614,6 +623,11 @@ public:
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
+    }
+    
+    void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
+    {
+        actionContextDictionary_[widget][modifier].push_back(actionContext);
     }
 };
 
@@ -1124,7 +1138,9 @@ protected:
     void InitZones(string zoneFolder);
 
     map<string, ZoneTemplate*> zoneTemplates_;
-    
+
+    map<string, Zone*> zones_;
+
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
