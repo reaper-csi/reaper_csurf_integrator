@@ -599,6 +599,7 @@ public:
     Navigator* GetNavigator() { return navigator_; }
     string GetPath() { return sourceFilePath_; }   
     int GetSlotIndex() { return slotIndex_; }
+    vector<Widget*> &GetWidgets() { return widgets_; }
     
     void Deactivate();
     
@@ -718,7 +719,6 @@ private:
     bool isToggled_ = false;
     
     WidgetContext currentWidgetContext_;
-    WidgetContext defaultWidgetContext_;
 
     void LogInput(double value);
     
@@ -750,6 +750,10 @@ public:
     void Clear();
     void ForceClear();
 
+    void Deactivate();
+    
+    WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
+    
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
         currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
@@ -791,16 +795,6 @@ public:
     void Activate(WidgetContext currentWidgetContext)
     {
         currentWidgetContext_ = currentWidgetContext;
-    }
-    
-    void Deactivate()
-    {
-        currentWidgetContext_ = defaultWidgetContext_;
-    }
-    
-    void MakeCurrentDefault()
-    {
-        defaultWidgetContext_ = currentWidgetContext_;
     }
     
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
@@ -1103,8 +1097,9 @@ protected:
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
     string const name_;
-    Zone* const defaultZone_ = nullptr;
 
+    Zone* defaultZone_ = nullptr;
+    
     map<string, CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
     
     string zoneFolder_ = "";
@@ -1212,9 +1207,32 @@ public:
             vector<Zone*> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
             
             zoneTemplates_["Home"]->Activate(this, dummyZones);
+            
+            if(dummyZones.size() > 0)
+                defaultZone_ = dummyZones[0];
+        }
+    }
+    
+    void SendWidgetHome(Widget* widget)
+    {
+        bool wentHome = false;
         
-            for(auto widget : widgets_)
-                widget->MakeCurrentDefault();
+        if(defaultZone_ != nullptr)
+        {
+            for(auto defaultZoneWidget : defaultZone_->GetWidgets())
+            {
+                if(widget == defaultZoneWidget)
+                {
+                    widget->Activate(defaultZoneWidget->GetCurrentWidgetContext());
+                    wentHome = true;
+                    break;
+                }
+            }
+        }
+        
+        if(! wentHome)
+        {
+            widget->Activate(WidgetContext(widget, defaultZone_));
         }
     }
     

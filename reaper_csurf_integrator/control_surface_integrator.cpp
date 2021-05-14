@@ -1723,8 +1723,7 @@ void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name),
-                currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())),
-                defaultWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
+                currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
 
 Widget::~Widget()
 {
@@ -1817,6 +1816,11 @@ void Widget::ClearCache()
 {
     for(auto processor : feedbackProcessors_)
         processor->ClearCache();
+}
+
+void Widget::Deactivate()
+{
+    surface_->SendWidgetHome(this);
 }
 
 void Widget::LogInput(double value)
