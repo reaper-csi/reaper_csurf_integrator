@@ -589,10 +589,13 @@ private:
     string const alias_ = "";
     string const sourceFilePath_ = "";
     int const slotIndex_ = 0;
-
+    
     vector<Widget*> widgets_;
     
     map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
+    vector<ActionContext> defaultContexts_;
+    
+    vector<ActionContext>& GetActionContexts(Widget* widget);
 
 public:
     Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
@@ -628,6 +631,45 @@ public:
     void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
     {
         actionContextDictionary_[widget][modifier].push_back(actionContext);
+    }
+    
+    void RequestUpdate()
+    {
+        for(auto widget : widgets_)
+        {
+            for(auto &context : GetActionContexts(widget))
+                context.RunDeferredActions();
+            
+            if(GetActionContexts(widget).size() > 0)
+            {
+                ActionContext& context = GetActionContexts(widget)[0];
+                context.RequestUpdate();
+            }
+        }
+    }
+    
+    void DoAction(Widget* widget, double value)
+    {
+        for(auto &context : GetActionContexts(widget))
+            context.DoAction(value);
+    }
+    
+    void DoTouch(Widget* widget, double value)
+    {
+        for(auto &context : GetActionContexts(widget))
+            context.DoTouch(value);
+    }
+    
+    void DoRelativeAction(Widget* widget, double delta)
+    {
+        for(auto &context : GetActionContexts(widget))
+            context.DoRelativeAction(delta);
+    }
+    
+    void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
+    {
+        for(auto &context : GetActionContexts(widget))
+            context.DoRelativeAction(accelerationIndex, delta);
     }
 };
 
@@ -733,7 +775,8 @@ private:
     bool isToggled_ = false;
     
     WidgetContext currentWidgetContext_;
-
+    Zone* currentZone_ = nullptr;
+    
     void LogInput(double value);
     
 public:
@@ -764,6 +807,7 @@ public:
     void Clear();
     void ForceClear();
 
+    void SetZone(Zone* zone) { currentZone_ = zone; }
     void Deactivate();
     
     WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
@@ -775,7 +819,8 @@ public:
     
     void RequestUpdate()
     {
-        currentWidgetContext_.RequestUpdate();
+        if(currentZone_ != nullptr)
+            currentZone_->RequestUpdate();
     }
     
     void DoAction(double value)

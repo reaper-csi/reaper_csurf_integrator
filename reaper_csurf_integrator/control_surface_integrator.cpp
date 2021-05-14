@@ -1609,6 +1609,21 @@ void Zone::Deactivate()
     // GAW TBD Leaving Zone - if needed
 }
 
+vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
+{
+    string modifier = "";
+    
+    if( ! widget->GetIsModifier())
+        modifier = widget->GetSurface()->GetPage()->GetModifier();
+    
+    if(actionContextDictionary_[widget].count(modifier) > 0)
+        return actionContextDictionary_[widget][modifier];
+    else if(actionContextDictionary_[widget].count("") > 0)
+        return actionContextDictionary_[widget][""];
+    else
+        return defaultContexts_;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ZoneTemplate
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
