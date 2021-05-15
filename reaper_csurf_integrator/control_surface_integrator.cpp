@@ -1909,11 +1909,13 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
     
     if(MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
-            MapSelectedTrackFXSlotToWidgets(selectedTrack, i);
+            MapSelectedTrackFXSlotToWidgets(i);
 }
 
-void ControlSurface::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int fxSlot)
+void ControlSurface::MapSelectedTrackFXSlotToWidgets(int fxSlot)
 {
+    MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
@@ -1925,6 +1927,8 @@ void ControlSurface::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, 
             Zone* fxZone = new ZoneContext(zone, fxSlot);
             
             fxZone->Activate();
+            
+            activeSelectedTrackFXZones_.push_back(fxZone);
         }
     }
 }
