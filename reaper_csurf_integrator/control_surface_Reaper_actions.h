@@ -1585,14 +1585,9 @@ public:
             
             string name = "NoMap";
             
-            if(ZoneTemplate* zoneTemplate = context->GetSurface()->GetZoneTemplate(fxName))
-            {
-                if(zoneTemplate->alias != "")
-                    name = zoneTemplate->alias;
-                else
-                    name = zoneTemplate->name;
-            }
-            
+            if(Zone* zone = context->GetSurface()->GetZone(fxName))
+                name = zone->GetNameOrAlias();
+
             context->UpdateWidgetValue(name);
         }
         else
