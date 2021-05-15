@@ -834,28 +834,32 @@ public:
     {
         LogInput(value);
         
-        currentWidgetContext_.DoAction(value);
+        if(currentZone_ != nullptr)
+            currentZone_->DoAction(this, value);
     }
     
     void DoRelativeAction(double delta)
     {
         LogInput(delta);
         
-        currentWidgetContext_.DoRelativeAction(delta);
+        if(currentZone_ != nullptr)
+            currentZone_->DoRelativeAction(this, delta);
     }
     
     void DoRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        currentWidgetContext_.DoRelativeAction(accelerationIndex, delta);
+        if(currentZone_ != nullptr)
+            currentZone_->DoRelativeAction(this, accelerationIndex, delta);
     }
    
     void DoTouch(double value)
     {
         LogInput(value);
         
-        currentWidgetContext_.DoTouch(value);
+        if(currentZone_ != nullptr)
+            currentZone_->DoTouch(this, value);
     }
     
     void Activate(WidgetContext currentWidgetContext)
@@ -1270,14 +1274,12 @@ public:
    
     void MakeHomeDefault()
     {
-        if(zoneTemplates_.count("Home") > 0)
+        if(zonesByName_.count("Home") > 0)
         {
-            vector<Zone*> dummyZones; //  We don't want to put "Home" in any active Zones list - it is the default Zone and has Control Surface lifetime
-            
-            zoneTemplates_["Home"]->Activate(this, dummyZones);
-            
-            if(dummyZones.size() > 0)
-                homeZone_ = dummyZones[0];
+            homeZone_ = zonesByName_["Home"];
+        
+            for(auto widget : homeZone_->GetWidgets())
+                widget->SetZone(homeZone_);
         }
     }
     
@@ -1372,8 +1374,18 @@ public:
     
     virtual void RequestUpdate()
     {
-        for(auto widget : widgets_)
-            widget->RequestUpdate();
+        if(homeZone_ != nullptr)
+            homeZone_->RequestUpdate();
+        
+        
+        
+        //for(auto widget : widgets_)
+            //widget->RequestUpdate();
+        
+        
+        
+        
+        
     }
 
     virtual void ForceClearAllWidgets()
