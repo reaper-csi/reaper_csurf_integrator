@@ -530,9 +530,7 @@ private:
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
 
-    ControlSurface* GetSurface() { return surface_; }
     Navigator* GetNavigator() { return navigator_; }
-    string GetPath() { return sourceFilePath_; }   
     int GetSlotIndex() { return slotIndex_; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     
@@ -618,7 +616,6 @@ private:
     bool isModifier_ = false;
     bool isToggled_ = false;
     
-    //WidgetContext currentWidgetContext_;
     Zone* currentZone_ = nullptr;
     
     void LogInput(double value);
@@ -652,8 +649,6 @@ public:
     void ForceClear();
 
     void SetZone(Zone* zone) { currentZone_ = zone; }
-    
-    //WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
@@ -697,12 +692,7 @@ public:
         if(currentZone_ != nullptr)
             currentZone_->DoTouch(this, value);
     }
-    /*
-    void Activate(WidgetContext currentWidgetContext)
-    {
-        currentWidgetContext_ = currentWidgetContext;
-    }
-    */
+
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
@@ -1060,25 +1050,6 @@ public:
             delete widget;
             widget = nullptr;
         }
-
-        for(auto zone : activeZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-        
-        for(auto zone: activeSelectedTrackSendsZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-        /*
-        for(auto [key, zoneTemplate] : zoneTemplates_)
-        {
-            delete zoneTemplate;
-            zoneTemplate = nullptr;
-        }
-         */
     };
     
     Page* GetPage() { return page_; }
@@ -1115,8 +1086,7 @@ public:
         {
             homeZone_ = zonesByName_["Home"];
         
-            for(auto widget : homeZone_->GetWidgets())
-                widget->SetZone(homeZone_);
+            homeZone_->Activate();
         }
     }
     
@@ -1147,22 +1117,12 @@ public:
     
     void GoZone(string zoneName)
     {
-        /*
-        if(zoneTemplates_.count(zoneName) > 0)
+        if(zonesByName_.count(zoneName) > 0)
         {
-            if(zoneName == "Home")
-            {
-                DeactivateZones(activeZones_);
-                DeactivateZones(activeSelectedTrackSendsZones_);
-                DeactivateZones(activeSelectedTrackReceivesZones_);
-                fxActivationManager_->DeactivateAllFXZones();
-            }
-            else
-            {
-                zoneTemplates_[zoneName]->Activate(this, activeZones_);
-            }
+            zonesByName_[zoneName]->Activate();
+            
+            activeZones_.push_back(zonesByName_[zoneName]);
         }
-         */
     }
     
     void DeactivateZones(vector<Zone*> zones)
@@ -1170,27 +1130,7 @@ public:
         for(auto zone : zones)
             zone->Deactivate();
     }
-/*
-    ZoneTemplate* GetZoneTemplate(string zoneName)
-    {
-        if(zoneTemplates_.count(zoneName) > 0)
-            return zoneTemplates_[zoneName];
-        else
-            return nullptr;
-    }
-   
-    void AddZoneTemplate(ZoneTemplate* zoneTemplate)
-    {
-        if(zoneTemplates_.count(zoneTemplate->name) > 0)
-        {
-            char buffer[250];
-            snprintf(buffer, sizeof(buffer), "%s already has a Zone named: %s -- please check for duplicate zone defintions.\n", name_.c_str(), zoneTemplate->name.c_str());
-            DAW::ShowConsoleMsg(buffer);
-        }
-        else
-            zoneTemplates_[zoneTemplate->name] = zoneTemplate;
-    }
-*/
+
     void AddZone(Zone* zone)
     {
         zonesByName_[zone->GetName()] = zone;
@@ -1213,6 +1153,13 @@ public:
     
     virtual void RequestUpdate()
     {
+        
+        for(auto zone : activeZones_)
+            zone->RequestUpdate();
+        
+        
+        
+        
         if(homeZone_ != nullptr)
             homeZone_->RequestUpdate();
         
