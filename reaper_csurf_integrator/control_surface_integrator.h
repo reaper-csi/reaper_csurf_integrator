@@ -529,7 +529,8 @@ private:
 
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
-
+    Zone() {}
+    
     Navigator* GetNavigator() { return navigator_; }
     int GetSlotIndex() { return slotIndex_; }
     vector<Widget*> &GetWidgets() { return widgets_; }
@@ -602,6 +603,22 @@ public:
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(accelerationIndex, delta);
     }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class ZoneContext : public Zone
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    Zone* const zone_ = nullptr;
+    int const slotIndex_ = 0;
+    
+public:
+    ZoneContext(Zone* zone, int slotIndex) : Zone(), zone_(zone), slotIndex_(slotIndex) {}
+    
+    
+    
+    
+    
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -885,105 +902,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class FXActivationManager
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    ControlSurface* const surface_ = nullptr;
-    int const numFXSlots_ = 0;
-    vector<Zone*> activeSelectedTrackFXZones_;
-    vector<Zone*> activeSelectedTrackFXMenuZones_;
-    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
-    vector<Zone*> activeFocusedFXZones_;
-    
-public:
-    FXActivationManager(ControlSurface* surface, int numFXSlots) : surface_(surface), numFXSlots_(numFXSlots) {}
-    
-    ~FXActivationManager()
-    {
-        for(auto zone : activeSelectedTrackFXZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-        for(auto zone : activeSelectedTrackFXMenuZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-        for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-        for(auto zone : activeFocusedFXZones_)
-        {
-            delete zone;
-            zone = nullptr;
-        }
-    }
-    
-    int  GetNumFXSlots() { return numFXSlots_; }
-    void MapSelectedTrackFXToWidgets();
-    void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
-    void MapFocusedFXToWidgets();
-    void TrackFXListChanged();
-    
-    void DeactivateAllFXZones()
-    {
-        DeactivateSelectedTrackFXZones();
-        DeactivateSelectedTrackFXMenuZones();
-        DeactivateSelectedTrackFXMenuFXZones();
-        DeactivateFocusedFXZones();
-    }
-    
-    void DeactivateSelectedTrackFXZones()
-    {
-        for(auto zone : activeSelectedTrackFXZones_)
-        {
-            zone->Deactivate();
-            delete zone;
-        }
-        
-        activeSelectedTrackFXZones_.clear();
-    }
-    
-    void DeactivateSelectedTrackFXMenuZones()
-    {
-        for(auto zone : activeSelectedTrackFXMenuZones_)
-        {
-            zone->Deactivate();
-            delete zone;
-        }
-        
-        activeSelectedTrackFXMenuZones_.clear();
-    }
-    
-    void DeactivateSelectedTrackFXMenuFXZones()
-    {
-        for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        {
-            zone->Deactivate();
-            delete zone;
-        }
-        
-        activeSelectedTrackFXMenuFXZones_.clear();
-    }
-    
-    void DeactivateFocusedFXZones()
-    {
-        for(auto zone : activeFocusedFXZones_)
-        {
-            zone->Deactivate();
-            delete zone;
-        }
-        
-        activeFocusedFXZones_.clear();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -998,22 +916,26 @@ protected:
     
     map<string, CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
     
+    vector<Zone*> activeZones_;
+    
+    vector<Zone*> activeSelectedTrackSendsZones_;
+    vector<Zone*> activeSelectedTrackReceivesZones_;
+    
+    vector<Zone*> activeSelectedTrackFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuZones_;
+    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
+    vector<Zone*> activeFocusedFXZones_;
+    
     string zoneFolder_ = "";
     int numChannels_ = 0;
     int numSends_ = 0;
     int options_ = 0;
+    int const numFXSlots_ = 0;
     
     map<int, Navigator*> navigators_;
     
     vector<Widget*> widgets_;
     map<string, Widget*> widgetsByName_;
-
-    vector<Zone*> activeZones_;
-
-    vector<Zone*> activeSelectedTrackSendsZones_;
-    vector<Zone*> activeSelectedTrackReceivesZones_;
-
-    FXActivationManager* const fxActivationManager_;
 
     virtual void SurfaceOutMonitor(Widget* widget, string address, string value);
 
@@ -1036,9 +958,6 @@ protected:
 public:
     virtual ~ControlSurface()
     {
-        delete homeZone_;
-        delete fxActivationManager_;
-
         for(auto [key, messageGenerator] : CSIMessageGeneratorsByMessage_)
         {
             delete messageGenerator;
@@ -1062,9 +981,15 @@ public:
     int GetNumSends() { return numSends_; }
     int GetNumReceives() { return numSends_; }
     
-    Navigator* GetNavigatorForChannel(int channelNum);
+    int  GetNumFXSlots() { return numFXSlots_; }
+    void MapSelectedTrackFXToWidgets();
+    void MapSelectedTrackFXToMenu();
+    void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
+    void MapFocusedFXToWidgets();
+    void TrackFXListChanged();
     
-    FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
+    Navigator* GetNavigatorForChannel(int channelNum);
+
     Zone* GetDefaultZone() { return homeZone_; }
 
     virtual void SetHasMCUMeters(int displayType) {}
@@ -1129,6 +1054,8 @@ public:
     {
         for(auto zone : zones)
             zone->Deactivate();
+        
+        zones.clear();
     }
 
     void AddZone(Zone* zone)
@@ -2128,7 +2055,7 @@ public:
     void TrackFXListChanged(MediaTrack* track)
     {
         for(auto surface : surfaces_)
-            surface->GetFXActivationManager()->TrackFXListChanged();
+            surface->TrackFXListChanged();
     }
 
     void EnterPage()
