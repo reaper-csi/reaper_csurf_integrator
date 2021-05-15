@@ -1291,7 +1291,10 @@ MediaTrack* ActionContext::GetTrack()
 
 int ActionContext::GetSlotIndex()
 {
-    return zone_->GetSlotIndex();
+    if(widget_->GetCurrentZone() != nullptr)
+        return widget_->GetCurrentZone()->GetSlotIndex();
+    else
+        return 0;
 }
 
 string ActionContext::GetName()

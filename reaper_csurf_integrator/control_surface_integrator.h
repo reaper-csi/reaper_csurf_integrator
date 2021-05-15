@@ -634,37 +634,13 @@ public:
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
-    
+    virtual void RequestUpdate() override { zone_->RequestUpdate(); }
+    virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
+    virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
+    virtual void DoRelativeAction(Widget* widget, double delta) override { zone_->DoRelativeAction(widget, delta); }
+    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override { zone_->DoRelativeAction(widget, accelerationIndex, delta); }
+
     virtual void Activate() override;
-   
-    virtual void RequestUpdate() override
-    {
-        zone_->SetSlotIndex(slotNumber_);
-        zone_->RequestUpdate();
-    }
-    
-    virtual void DoAction(Widget* widget, double value) override
-    {
-        zone_->SetSlotIndex(slotNumber_);
-        zone_->DoAction(widget, value);
-    }
-    
-    virtual void DoTouch(Widget* widget, double value) override
-    {
-        zone_->SetSlotIndex(slotNumber_);
-        zone_->DoTouch(widget, value);
-    }
-    
-    virtual void DoRelativeAction(Widget* widget, double delta) override
-    {
-        zone_->SetSlotIndex(slotNumber_);
-        zone_->DoRelativeAction(widget, delta);
-    }
-    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override
-    {
-        zone_->SetSlotIndex(slotNumber_);
-        zone_->DoRelativeAction(widget, accelerationIndex, delta);
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -711,6 +687,7 @@ public:
     void Clear();
     void ForceClear();
 
+    Zone* GetCurrentZone() { return currentZone_;  }
     void SetZone(Zone* zone) { currentZone_ = zone; }
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
