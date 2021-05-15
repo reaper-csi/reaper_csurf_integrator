@@ -515,7 +515,6 @@ private:
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-    int const slotIndex_ = 0;
     
     vector<Widget*> widgets_;
     
@@ -530,24 +529,25 @@ private:
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
+    virtual ~Zone() {}
+
+    virtual Navigator* GetNavigator() { return navigator_; }
+    virtual int GetSlotIndex() { return 0; }
+    virtual vector<Widget*> &GetWidgets() { return widgets_; }
     
-    Navigator* GetNavigator() { return navigator_; }
-    int GetSlotIndex() { return slotIndex_; }
-    vector<Widget*> &GetWidgets() { return widgets_; }
+    virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
+    virtual void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
+    virtual void ResolveIncludedZones();
     
-    void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
-    void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
-    void ResolveIncludedZones();
+    virtual void Activate();
+    virtual void Deactivate();
     
-    void Activate();
-    void Deactivate();
-    
-    string GetName()
+    virtual string GetName()
     {
         return name_;
     }
     
-    string GetNameOrAlias()
+    virtual string GetNameOrAlias()
     {
         if(alias_ != "")
             return alias_;
@@ -555,17 +555,17 @@ public:
             return name_;
     }
     
-    void AddWidget(Widget* widget)
+    virtual void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
     }
     
-    void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
+    virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
     {
         actionContextDictionary_[widget][modifier].push_back(actionContext);
     }
     
-    void RequestUpdate()
+    virtual void RequestUpdate()
     {
         for(auto widget : widgets_)
         {
@@ -580,25 +580,25 @@ public:
         }
     }
     
-    void DoAction(Widget* widget, double value)
+    virtual void DoAction(Widget* widget, double value)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoAction(value);
     }
     
-    void DoTouch(Widget* widget, double value)
+    virtual void DoTouch(Widget* widget, double value)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoTouch(value);
     }
     
-    void DoRelativeAction(Widget* widget, double delta)
+    virtual void DoRelativeAction(Widget* widget, double delta)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(delta);
     }
     
-    void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
+    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(accelerationIndex, delta);
@@ -614,11 +614,26 @@ class ZoneContext : public Zone
     
 public:
     ZoneContext(Zone* zone, int slotIndex) : Zone(), zone_(zone), slotIndex_(slotIndex) {}
+    virtual ~ZoneContext() {}
     
+    virtual Navigator* GetNavigator() override { return zone_->GetNavigator(); }
+    virtual int GetSlotIndex() override { return slotIndex_; }
+    virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
     
-    
-    
-    
+    virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
+    virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
+    virtual void ResolveIncludedZones() override { zone_->ResolveIncludedZones(); }
+    virtual void Activate() override { zone_->Activate(); }
+    virtual void Deactivate() override { zone_->Deactivate(); }
+    virtual string GetName() override { return zone_->GetName(); }
+    virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
+    virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
+    virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
+    virtual void RequestUpdate() override { zone_->RequestUpdate();  }
+    virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
+    virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
+    virtual void DoRelativeAction(Widget* widget, double delta) override { zone_->DoRelativeAction(widget, delta); }
+    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override { zone_->DoRelativeAction(widget, accelerationIndex, delta); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1085,7 +1100,8 @@ public:
         for(auto zone : activeZones_)
             zone->RequestUpdate();
         
-        
+        for(auto zone : activeSelectedTrackFXZones_)
+            zone->RequestUpdate();
         
         
         if(homeZone_ != nullptr)
