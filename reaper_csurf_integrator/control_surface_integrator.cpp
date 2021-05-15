@@ -1916,6 +1916,9 @@ void ControlSurface::MapSelectedTrackFXSlotToWidgets(int fxSlot)
 {
     MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
+    if(selectedTrack == nullptr)
+        return;
+    
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
