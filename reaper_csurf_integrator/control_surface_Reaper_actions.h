@@ -19,7 +19,7 @@ public:
     virtual void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), value);
+            DAW::TrackFX_SetParam(track, context->GetSlotIndex(), context->GetParamIndex(), value);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -29,9 +29,9 @@ public:
             double min, max = 0;
             
             if(value == 0)
-                DAW::TrackFX_EndParamEdit(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex());
+                DAW::TrackFX_EndParamEdit(track, context->GetSlotIndex(), context->GetParamIndex());
             else
-                DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), DAW::TrackFX_GetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), &min, &max));
+                DAW::TrackFX_SetParam(track, context->GetSlotIndex(), context->GetParamIndex(), DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max));
         }
     }
 };
@@ -48,13 +48,13 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             double min, max = 0;
-            double value = DAW::TrackFX_GetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), &min, &max);
+            double value = DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max);
             value +=  relativeValue;
             
             if(value < min) value = min;
             if(value > max) value = max;
             
-            DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), value);
+            DAW::TrackFX_SetParam(track, context->GetSlotIndex(), context->GetParamIndex(), value);
         }
     }
     
@@ -65,9 +65,9 @@ public:
             double min, max = 0;
             
             if(value == 0)
-                DAW::TrackFX_EndParamEdit(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex());
+                DAW::TrackFX_EndParamEdit(track, context->GetSlotIndex(), context->GetParamIndex());
             else
-                DAW::TrackFX_SetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), DAW::TrackFX_GetParam(track, context->GetZone()->GetSlotIndex(), context->GetParamIndex(), &min, &max));
+                DAW::TrackFX_SetParam(track, context->GetSlotIndex(), context->GetParamIndex(), DAW::TrackFX_GetParam(track, context->GetSlotIndex(), context->GetParamIndex(), &min, &max));
         }
     }
 };
