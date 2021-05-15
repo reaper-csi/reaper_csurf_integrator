@@ -166,6 +166,21 @@ static oscpkt::UdpSocket* GetOutputSocketForAddressAndPort(string surfaceName, s
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parsing
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+struct ActionTemplate
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+    string actionName;
+    vector<string> params;
+    vector<vector<string>> properties;
+    bool isFeedbackInverted;
+    double holdDelayAmount;
+    
+    ActionTemplate(string action, vector<string> prams, bool isInverted, double amount) : actionName(action), params(prams), isFeedbackInverted(isInverted), holdDelayAmount(amount) {}
+};
+
 static void listZoneFiles(const string &path, vector<string> &results)
 {
     regex rx(".*\\.zon$");
@@ -315,6 +330,9 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             if(widget == nullptr)
                                 continue;
                             
+                            if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
+                                widget->SetIsModifier();
+                            
                             zone->AddWidget(widget);
                             
                             for(auto [modifier, actions] : modifierActions)
@@ -342,92 +360,6 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         surface->AddZone(zone);
                     }
-
-                      /*
-                    vector<WidgetActionTemplate*> widgetActionTemplates;
-
-                    for(auto [widgetName, modifierActions] : widgetActions)
-                    {
-                        WidgetActionTemplate* widgetActionTemplate = new WidgetActionTemplate(widgetName);
-                        
-                        if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
-                            widgetActionTemplate->isModifier = true;
-
-                        for(auto [modifier, actions] : modifierActions)
-                        {
-                            ActionContextTemplate* actionContextTemplate = new ActionContextTemplate(modifier);
-                            
-                            for(auto action : actions)
-                                actionContextTemplate->members.push_back(action);
-                            
-                            widgetActionTemplate->actionContextTemplates.push_back(actionContextTemplate);
-                        }
-                        
-                        widgetActionTemplates.push_back(widgetActionTemplate);
-                    }
-                    
-                    
-                  
-                    
-                    for(auto  widgetActionTemplate :  widgetActionTemplates)
-                    {
-                        string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
-                        
-                        if(Widget* widget = surface->GetWidgetByName(widgetName))
-                        {
-                            if(widgetActionTemplate->isModifier)
-                                widget->SetIsModifier();
-                            
-                            WidgetContext widgetContext = WidgetContext(widget, zone);
-                            
-                            for(auto aTemplate : widgetActionTemplate->actionContextTemplates)
-                            {
-                                for(auto member : aTemplate->members)
-                                {
-                                    string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
-                                    vector<string> memberParams;
-                                    for(int i = 0; i < member->params.size(); i++)
-                                        memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));
-                                    
-                                    ActionContext context = TheManager->GetActionContext(shouldUseNoAction == true ? "NoAction" : actionName, widget, zone, memberParams, member->properties);
-                                    
-                                    if(member->isFeedbackInverted)
-                                        context.SetIsFeedbackInverted();
-                                    
-                                    if(member->holdDelayAmount != 0.0)
-                                        context.SetHoldDelayAmount(member->holdDelayAmount);
-                                    
-                                    widgetContext.AddActionContext(aTemplate->modifier, context);
-                                    
-                                    zone->AddActionContext(widget, aTemplate->modifier, context);
-                                }
-                            }
-                            
-                            zone->AddWidget(widget);
-                            
-                            
-                            
-                            widget->Activate(widgetContext);
-                        }
-                    }
-
-                    */
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-
-                    
-                    //surface->AddZoneTemplate(new ZoneTemplate(navigators, zoneName, zoneAlias, filePath, includedZones, widgetActionTemplates));
                     
                     includedZones.clear();
                     widgetActions.clear();
