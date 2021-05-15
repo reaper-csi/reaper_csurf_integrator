@@ -671,13 +671,14 @@ public:
     {
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
-    
+
+    // GAW deprecated -- used only by EuCon (for now)
     void RequestUpdate()
     {
         if(currentZone_ != nullptr)
             currentZone_->RequestUpdate();
     }
-    
+ 
     void DoAction(double value)
     {
         LogInput(value);
@@ -984,7 +985,7 @@ public:
     int  GetNumFXSlots() { return numFXSlots_; }
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTrack, int slot);
+    void MapSelectedTrackFXSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     void TrackFXListChanged();
     
