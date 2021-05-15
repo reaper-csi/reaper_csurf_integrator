@@ -537,7 +537,8 @@ public:
     virtual int GetSlotIndex() { return slotIndex_; }
     virtual void SetSlotIndex(int slotIndex) { slotIndex_ = slotIndex; }
     virtual vector<Widget*> &GetWidgets() { return widgets_; }
-    
+    virtual vector<Zone*> &GetIncludedZones() { return includedZones_; }
+
     virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
     virtual void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
     virtual void ResolveIncludedZones();
@@ -628,13 +629,14 @@ public:
     virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
     virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
     virtual void ResolveIncludedZones() override { zone_->ResolveIncludedZones(); }
-    virtual void Activate() override { zone_->Activate(); }
     virtual void Deactivate() override { zone_->Deactivate(); }
     virtual string GetName() override { return zone_->GetName(); }
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
     
+    virtual void Activate() override;
+   
     virtual void RequestUpdate() override
     {
         zone_->SetSlotIndex(slotNumber_);
