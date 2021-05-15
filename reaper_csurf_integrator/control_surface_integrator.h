@@ -523,16 +523,19 @@ private:
     
     map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
     vector<ActionContext> defaultContexts_;
-    
-    vector<ActionContext>& GetActionContexts(Widget* widget);
 
+    int slotIndex_ = 0;
+    
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
     virtual ~Zone() {}
 
+    virtual vector<ActionContext>& GetActionContexts(Widget* widget);
+
     virtual Navigator* GetNavigator() { return navigator_; }
-    virtual int GetSlotIndex() { return 0; }
+    virtual int GetSlotIndex() { return slotIndex_; }
+    virtual void SetSlotIndex(int slotIndex) { slotIndex_ = slotIndex; }
     virtual vector<Widget*> &GetWidgets() { return widgets_; }
     
     virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
@@ -610,14 +613,16 @@ class ZoneContext : public Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     Zone* const zone_ = nullptr;
-    int const slotIndex_ = 0;
+    int const slotNumber_ = 0;
     
 public:
-    ZoneContext(Zone* zone, int slotIndex) : Zone(), zone_(zone), slotIndex_(slotIndex) {}
+    ZoneContext(Zone* zone, int slotNumber) : Zone(), zone_(zone), slotNumber_(slotNumber) {}
     virtual ~ZoneContext() {}
     
+    virtual vector<ActionContext>& GetActionContexts(Widget* widget) override { return zone_->GetActionContexts(widget); }
+
     virtual Navigator* GetNavigator() override { return zone_->GetNavigator(); }
-    virtual int GetSlotIndex() override { return slotIndex_; }
+    virtual int GetSlotIndex() override { return slotNumber_; }
     virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
     
     virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
@@ -629,11 +634,35 @@ public:
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
-    virtual void RequestUpdate() override { zone_->RequestUpdate();  }
-    virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
-    virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
-    virtual void DoRelativeAction(Widget* widget, double delta) override { zone_->DoRelativeAction(widget, delta); }
-    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override { zone_->DoRelativeAction(widget, accelerationIndex, delta); }
+    
+    virtual void RequestUpdate() override
+    {
+        zone_->SetSlotIndex(slotNumber_);
+        zone_->RequestUpdate();
+    }
+    
+    virtual void DoAction(Widget* widget, double value) override
+    {
+        zone_->SetSlotIndex(slotNumber_);
+        zone_->DoAction(widget, value);
+    }
+    
+    virtual void DoTouch(Widget* widget, double value) override
+    {
+        zone_->SetSlotIndex(slotNumber_);
+        zone_->DoTouch(widget, value);
+    }
+    
+    virtual void DoRelativeAction(Widget* widget, double delta) override
+    {
+        zone_->SetSlotIndex(slotNumber_);
+        zone_->DoRelativeAction(widget, delta);
+    }
+    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override
+    {
+        zone_->SetSlotIndex(slotNumber_);
+        zone_->DoRelativeAction(widget, accelerationIndex, delta);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1097,8 +1126,8 @@ public:
     virtual void RequestUpdate()
     {
         
-        for(auto zone : activeZones_)
-            zone->RequestUpdate();
+        //for(auto zone : activeZones_)
+            //zone->RequestUpdate();
         
         for(auto zone : activeSelectedTrackFXZones_)
             zone->RequestUpdate();
