@@ -592,6 +592,9 @@ private:
     
     vector<Widget*> widgets_;
     
+    vector<string> includedZoneNames_;
+    vector<Zone*> includedZones_;
+    
     map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
     vector<ActionContext> defaultContexts_;
     
@@ -608,6 +611,11 @@ public:
     int GetSlotIndex() { return slotIndex_; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     
+    void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
+    void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
+    void ResolveIncludedZones();
+    
+    void Activate();
     void Deactivate();
     
     string GetName()
@@ -808,7 +816,6 @@ public:
     void ForceClear();
 
     void SetZone(Zone* zone) { currentZone_ = zone; }
-    void Deactivate();
     
     WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
     
@@ -1157,7 +1164,7 @@ protected:
     Page* const page_;
     string const name_;
 
-    Zone* defaultZone_ = nullptr;
+    Zone* homeZone_ = nullptr;
     
     map<string, CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
     
@@ -1183,8 +1190,8 @@ protected:
     void InitZones(string zoneFolder);
 
     map<string, ZoneTemplate*> zoneTemplates_;
-
-    map<string, Zone*> zones_;
+    map<string, Zone*> zonesByName_;
+    vector<Zone*> zones_;
 
     virtual void InitHardwiredWidgets()
     {
@@ -1199,7 +1206,7 @@ protected:
 public:
     virtual ~ControlSurface()
     {
-        delete defaultZone_;
+        delete homeZone_;
         delete fxActivationManager_;
 
         for(auto [key, messageGenerator] : CSIMessageGeneratorsByMessage_)
@@ -1246,7 +1253,7 @@ public:
     Navigator* GetNavigatorForChannel(int channelNum);
     
     FXActivationManager* GetFXActivationManager() { return fxActivationManager_; }
-    Zone* GetDefaultZone() { return defaultZone_; }
+    Zone* GetDefaultZone() { return homeZone_; }
 
     virtual void SetHasMCUMeters(int displayType) {}
     
@@ -1270,7 +1277,7 @@ public:
             zoneTemplates_["Home"]->Activate(this, dummyZones);
             
             if(dummyZones.size() > 0)
-                defaultZone_ = dummyZones[0];
+                homeZone_ = dummyZones[0];
         }
     }
     
@@ -1278,13 +1285,14 @@ public:
     {
         bool wentHome = false;
         
-        if(defaultZone_ != nullptr)
+        if(homeZone_ != nullptr)
         {
-            for(auto defaultZoneWidget : defaultZone_->GetWidgets())
+            for(auto homeZoneWidget : homeZone_->GetWidgets())
             {
-                if(widget == defaultZoneWidget)
+                if(widget == homeZoneWidget)
                 {
-                    widget->Activate(defaultZoneWidget->GetCurrentWidgetContext());
+                    widget->SetZone(homeZone_);
+                    
                     wentHome = true;
                     break;
                 }
@@ -1293,7 +1301,8 @@ public:
         
         if(! wentHome)
         {
-            widget->Activate(WidgetContext(widget, defaultZone_));
+            widget->Clear();
+            widget->SetZone(nullptr);
         }
     }
     
@@ -1318,12 +1327,7 @@ public:
     void DeactivateZones(vector<Zone*> zones)
     {
         for(auto zone : zones)
-        {
             zone->Deactivate();
-            delete zone;
-        }
-        
-        zones.clear();
     }
 
     ZoneTemplate* GetZoneTemplate(string zoneName)
@@ -1346,6 +1350,26 @@ public:
             zoneTemplates_[zoneTemplate->name] = zoneTemplate;
     }
 
+    void AddZone(Zone* zone)
+    {
+        zonesByName_[zone->GetName()] = zone;
+        zones_.push_back(zone);
+    }
+    
+    Zone* GetZone(string name)
+    {
+        if(zonesByName_.count(name) > 0)
+            return zonesByName_[name];
+        else
+            return nullptr;
+    }
+    
+    void ResolveIncludedZones()
+    {
+        for(auto zone : zones_)
+            zone->ResolveIncludedZones();
+    }
+    
     virtual void RequestUpdate()
     {
         for(auto widget : widgets_)
