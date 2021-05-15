@@ -506,79 +506,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetContext
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    Widget* widget_ = nullptr;
-    Zone* zone_ = nullptr;
-    map<string, vector<ActionContext>> actionContextDictionary_;
-    vector<ActionContext> defaultContexts_;
-    
-    vector<ActionContext>& GetActionContexts();
-
-public:
-    WidgetContext(Widget* widget, Zone* zone)  : widget_(widget), zone_(zone) {}
-    
-    void GetFormattedFXParamValue(char *buffer, int bufferSize);
-
-    WidgetContext& operator=(WidgetContext &otherContext)
-    {
-        this->widget_ = otherContext.widget_;
-        this->zone_ = otherContext.zone_;
-        
-        actionContextDictionary_.clear();
-        
-        for(auto [modifier, actionContexts] : otherContext.actionContextDictionary_)
-            for(auto context : actionContexts)
-                this->AddActionContext(modifier, context);
-        
-        return *this;
-    }
-    
-    void AddActionContext(string modifier, ActionContext actionContext)
-    {
-        actionContextDictionary_[modifier].push_back(actionContext);
-    }
-    
-    void RequestUpdate()
-    {
-        for(auto &context : GetActionContexts())
-            context.RunDeferredActions();
-
-        if(GetActionContexts().size() > 0)
-        {
-            ActionContext& context = GetActionContexts()[0];
-            context.RequestUpdate();
-        }
-    }
-    
-    void DoAction(double value)
-    {
-        for(auto &context : GetActionContexts())
-            context.DoAction(value);
-    }
-    
-    void DoTouch(double value)
-    {
-        for(auto &context : GetActionContexts())
-            context.DoTouch(value);
-    }
-    
-    void DoRelativeAction(double delta)
-    {
-        for(auto &context : GetActionContexts())
-            context.DoRelativeAction(delta);
-    }
-    
-    void DoRelativeAction(int accelerationIndex, double delta)
-    {
-        for(auto &context : GetActionContexts())
-            context.DoRelativeAction(accelerationIndex, delta);
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -695,82 +622,6 @@ struct ActionTemplate
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ActionContextTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    string modifier = "";
-    vector<ActionTemplate*> members;
-    
-    ActionContextTemplate(string modifierStr) : modifier(modifierStr) {}
-    
-    ~ActionContextTemplate()
-    {
-        for(auto actionTemplate : members)
-        {
-            delete actionTemplate;
-            actionTemplate = nullptr;
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct WidgetActionTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    string widgetName = "";
-    bool isModifier = false;
-    vector<ActionContextTemplate*> actionContextTemplates;
-    
-    WidgetActionTemplate(string widgetNameStr) : widgetName(widgetNameStr) {}
-    
-    ~WidgetActionTemplate()
-    {
-        for(auto actionContextTemplate : actionContextTemplates)
-        {
-            delete actionContextTemplate;
-            actionContextTemplate = nullptr;
-        }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-struct ZoneTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    vector<Navigator*> navigators;
-    string name = "";
-    string alias = "";
-    string sourceFilePath = "";
-    vector<string> includedZoneTemplates;
-    vector<WidgetActionTemplate*> widgetActionTemplates;
-    
-    ZoneTemplate(vector<Navigator*> &navigatorList, string zoneName, string zoneAlias, string path, vector<string> includedZones, vector<WidgetActionTemplate*> &templates)
-    : name(zoneName), alias(zoneAlias), sourceFilePath(path), includedZoneTemplates(includedZones)
-    {
-        for(auto navigator : navigatorList)
-            navigators.push_back(navigator);
-
-        for(auto widgetActionTemplate : templates)
-            widgetActionTemplates.push_back(widgetActionTemplate);
-    }
-    
-    ~ZoneTemplate()
-    {
-        for(auto widgetActionTemplate : widgetActionTemplates)
-        {
-            delete widgetActionTemplate;
-            widgetActionTemplate = nullptr;
-        }
-    }
-    
-    void ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction);
-    
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones);
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int maxNum);
-    void  Activate(ControlSurface* surface, vector<Zone*> &activeZones, int slotindex, bool shouldUseNoAction);
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -782,7 +633,7 @@ private:
     bool isModifier_ = false;
     bool isToggled_ = false;
     
-    WidgetContext currentWidgetContext_;
+    //WidgetContext currentWidgetContext_;
     Zone* currentZone_ = nullptr;
     
     void LogInput(double value);
@@ -817,11 +668,11 @@ public:
 
     void SetZone(Zone* zone) { currentZone_ = zone; }
     
-    WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
+    //WidgetContext GetCurrentWidgetContext() { return currentWidgetContext_; }
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
-        currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
+        //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
     
     void RequestUpdate()
@@ -861,12 +712,12 @@ public:
         if(currentZone_ != nullptr)
             currentZone_->DoTouch(this, value);
     }
-    
+    /*
     void Activate(WidgetContext currentWidgetContext)
     {
         currentWidgetContext_ = currentWidgetContext;
     }
-    
+    */
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
@@ -1193,7 +1044,7 @@ protected:
 
     void InitZones(string zoneFolder);
 
-    map<string, ZoneTemplate*> zoneTemplates_;
+    //map<string, ZoneTemplate*> zoneTemplates_;
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
 
@@ -1236,12 +1087,13 @@ public:
             delete zone;
             zone = nullptr;
         }
-        
+        /*
         for(auto [key, zoneTemplate] : zoneTemplates_)
         {
             delete zoneTemplate;
             zoneTemplate = nullptr;
         }
+         */
     };
     
     Page* GetPage() { return page_; }
@@ -1310,6 +1162,7 @@ public:
     
     void GoZone(string zoneName)
     {
+        /*
         if(zoneTemplates_.count(zoneName) > 0)
         {
             if(zoneName == "Home")
@@ -1324,6 +1177,7 @@ public:
                 zoneTemplates_[zoneName]->Activate(this, activeZones_);
             }
         }
+         */
     }
     
     void DeactivateZones(vector<Zone*> zones)
@@ -1331,7 +1185,7 @@ public:
         for(auto zone : zones)
             zone->Deactivate();
     }
-
+/*
     ZoneTemplate* GetZoneTemplate(string zoneName)
     {
         if(zoneTemplates_.count(zoneName) > 0)
@@ -1351,7 +1205,7 @@ public:
         else
             zoneTemplates_[zoneTemplate->name] = zoneTemplate;
     }
-
+*/
     void AddZone(Zone* zone)
     {
         zonesByName_[zone->GetName()] = zone;

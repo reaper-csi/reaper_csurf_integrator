@@ -1647,34 +1647,6 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// WidgetContext
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector<ActionContext>& WidgetContext::GetActionContexts()
-{
-    string modifier = "";
-    
-    if( ! widget_->GetIsModifier())
-        modifier = widget_->GetSurface()->GetPage()->GetModifier();
-    
-    if(actionContextDictionary_.count(modifier) > 0)
-        return actionContextDictionary_[modifier];
-    else if(actionContextDictionary_.count("") > 0)
-        return actionContextDictionary_[""];
-    else
-        return defaultContexts_;
-}
-
-void WidgetContext::GetFormattedFXParamValue(char *buffer, int bufferSize)
-{
-    if(zone_->GetNavigator()->GetTrack() != nullptr)
-    {
-        int paramIndex = GetActionContexts().size() > 0 ? GetActionContexts()[0].GetParamIndex() : 0;
-        
-        DAW::TrackFX_GetFormattedParamValue(zone_->GetNavigator()->GetTrack(), zone_->GetSlotIndex(), paramIndex, buffer, bufferSize);
-    }    
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::ResolveIncludedZones()
@@ -1723,135 +1695,11 @@ vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
         return defaultContexts_;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ZoneTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ZoneTemplate::ProcessWidgetActionTemplates(ControlSurface* surface, Zone* zone, string channelNumStr, bool shouldUseNoAction)
-{
-    for(auto  widgetActionTemplate :  widgetActionTemplates)
-    {
-        string widgetName = regex_replace(widgetActionTemplate->widgetName, regex("[|]"), channelNumStr);
-        
-        if(Widget* widget = surface->GetWidgetByName(widgetName))
-        {
-            if(widgetActionTemplate->isModifier)
-                widget->SetIsModifier();
-            
-            WidgetContext widgetContext = WidgetContext(widget, zone);
-            
-            for(auto aTemplate : widgetActionTemplate->actionContextTemplates)
-            {
-                for(auto member : aTemplate->members)
-                {
-                    string actionName = regex_replace(member->actionName, regex("[|]"), channelNumStr);
-                    vector<string> memberParams;
-                    for(int i = 0; i < member->params.size(); i++)
-                        memberParams.push_back(regex_replace(member->params[i], regex("[|]"), channelNumStr));                  
-
-                    ActionContext context = TheManager->GetActionContext(shouldUseNoAction == true ? "NoAction" : actionName, widget, zone, memberParams, member->properties);
-                    
-                    if(member->isFeedbackInverted)
-                        context.SetIsFeedbackInverted();
-                    
-                    if(member->holdDelayAmount != 0.0)
-                        context.SetHoldDelayAmount(member->holdDelayAmount);
-                    
-                    widgetContext.AddActionContext(aTemplate->modifier, context);
-                    
-                    zone->AddActionContext(widget, aTemplate->modifier, context);
-                }
-            }
-            
-            zone->AddWidget(widget);
-            
-            
-            
-            widget->Activate(widgetContext);
-        }
-    }
-}
-
-void ZoneTemplate::Activate(ControlSurface* surface, vector<Zone*> &activeZones)
-{
-    for(auto includedZoneTemplateStr : includedZoneTemplates)
-        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones);
-
-    for(int i = 0; i < navigators.size(); i++)
-    {
-        string newZoneName = name;
-        
-        string channelNumStr = to_string(i + 1);
-
-        if(navigators.size() > 1)
-            newZoneName += channelNumStr;
-        
-        surface->LoadingZone(newZoneName);
-        
-        Zone* zone = new Zone(surface, navigators[i], 0, newZoneName, alias, sourceFilePath);
-
-        activeZones.push_back(zone);
-        
-        ProcessWidgetActionTemplates(surface, zone, channelNumStr, false);
-    }
-}
-
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int maxNum)
-{
-    for(auto includedZoneTemplateStr : includedZoneTemplates)
-        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, maxNum);
-    
-    for(int i = 0; i < navigators.size(); i++)
-    {
-        string newZoneName = name;
-        
-        string zoneNumStr = to_string(i + 1);
-        
-        if(navigators.size() > 1)
-            newZoneName += zoneNumStr;
-        
-        surface->LoadingZone(newZoneName);
-        
-        Zone* zone = new Zone(surface, navigators[i], i, newZoneName, alias, sourceFilePath);
-        
-        activeZones.push_back(zone);
-        
-        if(i < maxNum)
-            ProcessWidgetActionTemplates(surface, zone, zoneNumStr, false);
-        else
-            ProcessWidgetActionTemplates(surface, zone, zoneNumStr, true);
-    }
-}
-
-void ZoneTemplate::Activate(ControlSurface*  surface, vector<Zone*> &activeZones, int slotIndex, bool shouldUseNoAction)
-{
-    for(auto includedZoneTemplateStr : includedZoneTemplates)
-        if(ZoneTemplate* includedZoneTemplate = surface->GetZoneTemplate(includedZoneTemplateStr))
-            includedZoneTemplate->Activate(surface, activeZones, slotIndex, shouldUseNoAction);
-    
-    if(navigators.size() == 1)
-    {
-        surface->LoadingZone(name);
-        
-        Zone* zone = new Zone(surface, navigators[0], slotIndex, name, alias, sourceFilePath);
-        
-        activeZones.push_back(zone);
-        
-        ProcessWidgetActionTemplates(surface, zone, "", shouldUseNoAction);
-    }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// ActionTemplate
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name),
-                currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
+Widget::Widget(ControlSurface* surface, string name) : surface_(surface), name_(name) {}
+                //currentWidgetContext_(WidgetContext(this, GetSurface()->GetDefaultZone())) {}
 
 Widget::~Widget()
 {
@@ -2053,10 +1901,8 @@ void FXActivationManager::MapSelectedTrackFXToMenu()
     
     if(MediaTrack* track = surface_->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int numFX = DAW::TrackFX_GetCount(track);
-        
-        if(surface_->GetZoneTemplate("FXMenu") != nullptr)
-            surface_->GetZoneTemplate("FXMenu")->Activate(surface_, activeSelectedTrackFXMenuFXZones_, numFX);
+        if(surface_->GetZone("FXMenu") != nullptr)
+            surface_->GetZone("FXMenu")->Activate();
     }
 }
 
@@ -2074,12 +1920,13 @@ void FXActivationManager::MapSelectedTrackFXSlotToWidgets(MediaTrack* selectedTr
     char FXName[BUFSZ];
     
     DAW::TrackFX_GetFXName(selectedTrack, fxSlot, FXName, sizeof(FXName));
-    
+    /*
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && ! zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
             zoneTemplate->Activate(surface_, activeSelectedTrackFXZones_, fxSlot, false);
     }
+     */
 }
 
 void FXActivationManager::MapFocusedFXToWidgets()
@@ -2098,11 +1945,13 @@ void FXActivationManager::MapFocusedFXToWidgets()
     char FXName[BUFSZ];
     DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
     
+    /*
     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
     {
         if(zoneTemplate->navigators.size() == 1 && zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
             zoneTemplate->Activate(surface_, activeFocusedFXZones_, fxSlot, false);
     }
+     */
 }
 
 void FXActivationManager::TrackFXListChanged()
@@ -2156,10 +2005,8 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int numSends = DAW::GetTrackNumSends(track, 0);
-        
-        if(zoneTemplates_.count("Send") > 0)
-            zoneTemplates_["Send"]->Activate(this, activeSelectedTrackSendsZones_, numSends);
+        if(zonesByName_.count("Send") > 0)
+            zonesByName_["Send"]->Activate();
     }
 }
 
@@ -2169,10 +2016,8 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int numReceives = DAW::GetTrackNumSends(track, -1);
-        
-        if(zoneTemplates_.count("Receive") > 0)
-            zoneTemplates_["Receive"]->Activate(this, activeSelectedTrackReceivesZones_, numReceives);
+        if(zonesByName_.count("Receive") > 0)
+            zonesByName_["Receive"]->Activate();
     }
 }
 
