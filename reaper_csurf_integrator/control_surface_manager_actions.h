@@ -37,7 +37,7 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXSlotToWidgets(selectedTrack, context->GetSlotIndex());
+            context->GetSurface()->MapSelectedTrackFXSlotToWidgets(selectedTrack, context->GetSlotIndex());
     }
 };
 
@@ -82,7 +82,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToWidgets();
+        context->GetSurface()->MapSelectedTrackFXToWidgets();
     }
 };
 
@@ -97,7 +97,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetSurface()->GetFXActivationManager()->MapSelectedTrackFXToMenu();
+        context->GetSurface()->MapSelectedTrackFXToMenu();
     }
 };
 
@@ -112,7 +112,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetSurface()->GetFXActivationManager()->MapFocusedFXToWidgets();
+        context->GetSurface()->MapFocusedFXToWidgets();
     }
 };
 
