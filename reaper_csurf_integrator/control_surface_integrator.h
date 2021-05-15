@@ -527,9 +527,7 @@ private:
     
     vector<ActionContext>& GetActionContexts(Widget* widget);
 
-public:
-    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
-    
+public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
 
     ControlSurface* GetSurface() { return surface_; }

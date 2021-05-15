@@ -1894,7 +1894,7 @@ void FXActivationManager::TrackFXListChanged()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends), homeZone_(new Zone(this, GetPage()->GetDefaultNavigator(), 0, "Default", "Default", ""))
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), fxActivationManager_(new FXActivationManager(this, numFX)), numChannels_(numChannels), numSends_(numSends)
 {
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
