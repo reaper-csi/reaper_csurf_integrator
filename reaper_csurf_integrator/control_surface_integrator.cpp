@@ -1913,8 +1913,13 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        if(GetZone("FXMenu") != nullptr)
-            GetZone("FXMenu")->Activate();
+        for(int i = 0; i < numFXSlots_; i++)
+        {
+            string menuName = "FXMenu" + to_string(i + 1);
+         
+            if(GetZone(menuName) != nullptr)
+                GetZone(menuName)->Activate();
+        }
     }
 }
 

@@ -572,15 +572,18 @@ public:
     virtual void RequestUpdate()
     {
         for(auto widget : widgets_)
+            RequestUpdateWidget(widget);
+    }
+    
+    virtual void RequestUpdateWidget(Widget* widget)
+    {
+        for(auto &context : GetActionContexts(widget))
+            context.RunDeferredActions();
+        
+        if(GetActionContexts(widget).size() > 0)
         {
-            for(auto &context : GetActionContexts(widget))
-                context.RunDeferredActions();
-            
-            if(GetActionContexts(widget).size() > 0)
-            {
-                ActionContext& context = GetActionContexts(widget)[0];
-                context.RequestUpdate();
-            }
+            ActionContext& context = GetActionContexts(widget)[0];
+            context.RequestUpdate();
         }
     }
     
@@ -635,6 +638,7 @@ public:
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
     virtual void RequestUpdate() override { zone_->RequestUpdate(); }
+    virtual void RequestUpdateWidget(Widget* widget) override { zone_->RequestUpdateWidget(widget); }
     virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
     virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
     virtual void DoRelativeAction(Widget* widget, double delta) override { zone_->DoRelativeAction(widget, delta); }
@@ -1068,7 +1072,12 @@ public:
     
     void GoZone(string zoneName, double value)
     {
-        if(zonesByName_.count(zoneName) > 0)
+        if(zoneName == "Home")
+        {
+            if(homeZone_ != nullptr)
+                homeZone_->Activate();
+        }
+        else if(zonesByName_.count(zoneName) > 0)
         {
             Zone* zone = zonesByName_[zoneName];
             
@@ -1122,22 +1131,36 @@ public:
     
     virtual void RequestUpdate()
     {
+        vector<Widget*> usedWidgets;
+        
         for(auto zone : activeZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
+        }
         
         for(auto zone : activeSelectedTrackFXZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
+        }
         
         if(homeZone_ != nullptr)
-            homeZone_->RequestUpdate();
-        
-        
+        {
+            vector<Widget*> homeWidgetsCopy = homeZone_->GetWidgets();
+            vector<Widget*> homeWidgetsToUpdate;
 
+            for(auto widget : homeWidgetsCopy)
+            {
+                auto it = find(usedWidgets.begin(),usedWidgets.end(), widget);
+                
+                if (it == usedWidgets.end())
+                    homeWidgetsToUpdate.push_back(widget);
+            }
         
-        
-        
-        
-        
+            for(auto widget : homeWidgetsToUpdate)
+                homeZone_->RequestUpdateWidget(widget);
+        }
     }
 
     virtual void ForceClearAllWidgets()
