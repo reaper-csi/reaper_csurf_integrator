@@ -1895,8 +1895,23 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        if(zonesByName_.count("Send") > 0)
-            zonesByName_["Send"]->Activate();
+        int trackSendCount = DAW::GetTrackNumSends(track, 0);
+        
+        for(int i = 0; i < GetNumSends(); i++)
+        {
+            string menuName = "Send" + to_string(i + 1);
+            
+            if(i >= trackSendCount)
+                GetZone(menuName)->Deactivate();
+            else
+            {
+                Zone* fxZone = new ZoneContext(GetZone(menuName), i);
+                
+                fxZone->Activate();
+
+                activeSelectedTrackSendsZones_.push_back(fxZone);
+            }
+        }
     }
 }
 
@@ -1906,8 +1921,23 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        if(zonesByName_.count("Receive") > 0)
-            zonesByName_["Receive"]->Activate();
+        int trackReceiveCount = DAW::GetTrackNumSends(track, -1);
+
+        for(int i = 0; i < GetNumReceives(); i++)
+        {
+            string menuName = "Receive" + to_string(i + 1);
+            
+            if(i >= trackReceiveCount)
+                GetZone(menuName)->Deactivate();
+            else
+            {
+                Zone* fxZone = new ZoneContext(GetZone(menuName), i);
+                
+                fxZone->Activate();
+                
+                activeSelectedTrackReceivesZones_.push_back(fxZone);
+            }
+        }
     }
 }
 
@@ -1918,12 +1948,22 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        for(int i = 0; i < numFXSlots_; i++)
+        int trackFXCount = DAW::TrackFX_GetCount(track);
+        
+        for(int i = 0; i < GetNumFXSlots(); i++)
         {
             string menuName = "FXMenu" + to_string(i + 1);
-         
-            if(GetZone(menuName) != nullptr)
-                GetZone(menuName)->Activate();
+            
+            Zone* zone = GetZone(menuName);
+            
+            if(i >= trackFXCount)
+                zone->Deactivate();
+            else
+            {
+                zone->Activate();
+                
+                activeSelectedTrackFXMenuZones_.push_back(zone);
+            }
         }
     }
 }
@@ -1972,18 +2012,25 @@ void ControlSurface::MapFocusedFXToWidgets()
         if(trackNumber > 0)
             focusedTrack = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     
-    DeactivateZones(activeFocusedFXZones_);
-    
-    char FXName[BUFSZ];
-    DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
-    
-    /*
-     if(ZoneTemplate* zoneTemplate = surface_->GetZoneTemplate(FXName))
-     {
-     if(zoneTemplate->navigators.size() == 1 && zoneTemplate->navigators[0]->GetIsFocusedFXNavigator())
-     zoneTemplate->Activate(surface_, activeFocusedFXZones_, fxSlot, false);
-     }
-     */
+    if(focusedTrack)
+    {
+        DeactivateZones(activeFocusedFXZones_);
+        
+        char FXName[BUFSZ];
+        DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
+        
+        if(Zone* zone = GetZone(FXName))
+        {
+            if(zone->GetNavigator()->GetIsFocusedFXNavigator())
+            {
+                Zone* fxZone = new ZoneContext(zone, fxSlot);
+                
+                fxZone->Activate();
+                
+                activeFocusedFXZones_.push_back(fxZone);
+            }
+        }
+    }
 }
 
 void ControlSurface::TrackFXListChanged()
