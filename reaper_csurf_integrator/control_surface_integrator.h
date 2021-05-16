@@ -1147,7 +1147,37 @@ public:
             zone->RequestUpdate();
         }
         
+        for(auto zone : activeSelectedTrackSendsZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            zone->RequestUpdate();
+        }
+        
+        for(auto zone : activeSelectedTrackReceivesZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            zone->RequestUpdate();
+        }
+        
         for(auto zone : activeSelectedTrackFXZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            zone->RequestUpdate();
+        }
+        
+        for(auto zone : activeSelectedTrackFXMenuZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            zone->RequestUpdate();
+        }
+        
+        for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        {
+            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            zone->RequestUpdate();
+        }
+        
+        for(auto zone : activeFocusedFXZones_)
         {
             usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
