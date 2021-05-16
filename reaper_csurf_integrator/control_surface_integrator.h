@@ -1074,6 +1074,14 @@ public:
     {
         if(zoneName == "Home")
         {
+            DeactivateZones(activeZones_);
+            DeactivateZones(activeSelectedTrackSendsZones_);
+            DeactivateZones(activeSelectedTrackReceivesZones_);
+            DeactivateZones(activeSelectedTrackFXZones_);
+            DeactivateZones(activeSelectedTrackFXMenuZones_);
+            DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+            DeactivateZones(activeFocusedFXZones_);
+
             if(homeZone_ != nullptr)
                 homeZone_->Activate();
         }
