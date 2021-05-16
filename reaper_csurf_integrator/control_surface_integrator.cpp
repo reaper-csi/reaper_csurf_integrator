@@ -1981,6 +1981,17 @@ void ControlSurface::TrackFXListChanged()
     OnTrackSelection();
 }
 
+void ControlSurface::OnTrackSelection()
+{
+    if(widgetsByName_.count("OnTrackSelection") > 0)
+    {
+        if(page_->GetTrackNavigationManager()->GetSelectedTrack())
+            widgetsByName_["OnTrackSelection"]->DoAction(1.0);
+        else
+            widgetsByName_["OnTrackSelection"]->DoAction(0.0);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Midi_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
