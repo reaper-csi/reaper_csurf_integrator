@@ -248,10 +248,10 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0)
-            return; // ignore button releases
+        if(value == 0.0 && context->GetWidget()->GetName() != "OnTrackSelection")
+            return; // ignore button releases except for OnTrackSelection -- 0 means Track deselection
         
-        context->GetSurface()->GoZone(context->GetStringParam());
+        context->GetSurface()->GoZone(context->GetStringParam(), value);
     }
 };
 
