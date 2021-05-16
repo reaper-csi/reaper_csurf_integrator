@@ -320,7 +320,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         string newZoneName = zoneName;
                         
-                        if(zoneName == "FXMenu")
+                        if((zoneName == "Channel" && navigators.size() > 1) || zoneName == "Send" || zoneName == "Receive" || zoneName == "FXMenu")
                             newZoneName += numStr;
                                                
                         Zone* zone = new Zone(surface, navigators[i], newZoneName, zoneAlias, filePath);
@@ -1846,7 +1846,7 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numFXSlots_(numFX)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset) :  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
 {
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
