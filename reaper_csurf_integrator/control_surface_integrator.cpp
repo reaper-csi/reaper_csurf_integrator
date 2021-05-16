@@ -316,9 +316,14 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     for(int i = 0; i < navigators.size(); i++)
                     {
-                        string channelNumStr = to_string(i + 1);
+                        string numStr = to_string(i + 1);
                         
-                        Zone* zone = new Zone(surface, navigators[i], zoneName, zoneAlias, filePath);
+                        string newZoneName = zoneName;
+                        
+                        if(zoneName == "FXMenu")
+                            newZoneName += numStr;
+                                               
+                        Zone* zone = new Zone(surface, navigators[i], newZoneName, zoneAlias, filePath);
                         
                         for(auto zoneName : includedZones)
                             zone->AddIncludedZoneName(zoneName);
@@ -339,10 +344,10 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             {
                                 for(auto action : actions)
                                 {
-                                    string actionName = regex_replace(action->actionName, regex("[|]"), channelNumStr);
+                                    string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
                                     vector<string> memberParams;
                                     for(int j = 0; j < action->params.size(); j++)
-                                        memberParams.push_back(regex_replace(action->params[j], regex("[|]"), channelNumStr));
+                                        memberParams.push_back(regex_replace(action->params[j], regex("[|]"), numStr));
                                     
                                     ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
                                     
