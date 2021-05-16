@@ -1012,6 +1012,8 @@ public:
     void MapFocusedFXToWidgets();
     void TrackFXListChanged();
     
+    void OnTrackSelection();
+
     Navigator* GetNavigatorForChannel(int channelNum);
 
     Zone* GetDefaultZone() { return homeZone_; }
@@ -1064,13 +1066,29 @@ public:
         }
     }
     
-    void GoZone(string zoneName)
+    void GoZone(string zoneName, double value)
     {
         if(zonesByName_.count(zoneName) > 0)
         {
-            zonesByName_[zoneName]->Activate();
+            Zone* zone = zonesByName_[zoneName];
             
-            activeZones_.push_back(zonesByName_[zoneName]);
+            if(value == 1) // adding
+            {
+                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
+                
+                if ( it == activeZones_.end() )
+                {
+                    zone->Activate();
+                    activeZones_.push_back(zone);
+                }
+            }
+            else // removing
+            {
+                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
+                
+                if ( it != activeZones_.end() )
+                    activeZones_.erase(it);
+            }
         }
     }
     
@@ -1109,7 +1127,6 @@ public:
         
         for(auto zone : activeSelectedTrackFXZones_)
             zone->RequestUpdate();
-        
         
         if(homeZone_ != nullptr)
             homeZone_->RequestUpdate();
@@ -1157,12 +1174,6 @@ public:
             return widgetsByName_[name];
         else
             return nullptr;
-    }
-    
-    void OnTrackSelection()
-    {
-        if(widgetsByName_.count("OnTrackSelection") > 0)
-            widgetsByName_["OnTrackSelection"]->DoAction(1.0);
     }
     
     void OnFXFocus(MediaTrack* track, int fxIndex)
