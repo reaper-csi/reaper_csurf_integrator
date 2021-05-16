@@ -1074,7 +1074,7 @@ public:
         }
     }
     
-    void DeactivateZones(vector<Zone*> zones)
+    void DeactivateZones(vector<Zone*> &zones)
     {
         for(auto zone : zones)
             zone->Deactivate();
@@ -1104,9 +1104,8 @@ public:
     
     virtual void RequestUpdate()
     {
-        
-        //for(auto zone : activeZones_)
-            //zone->RequestUpdate();
+        for(auto zone : activeZones_)
+            zone->RequestUpdate();
         
         for(auto zone : activeSelectedTrackFXZones_)
             zone->RequestUpdate();
@@ -1116,9 +1115,7 @@ public:
             homeZone_->RequestUpdate();
         
         
-        
-        //for(auto widget : widgets_)
-            //widget->RequestUpdate();
+
         
         
         
