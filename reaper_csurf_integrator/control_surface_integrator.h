@@ -572,6 +572,9 @@ public:
     {
         for(auto widget : widgets_)
             RequestUpdateWidget(widget);
+        
+        for(auto zone : includedZones_)
+            zone->RequestUpdate();
     }
     
     virtual void RequestUpdateWidget(Widget* widget)
@@ -968,7 +971,6 @@ protected:
 
     void InitZones(string zoneFolder);
 
-    //map<string, ZoneTemplate*> zoneTemplates_;
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
 
@@ -1143,52 +1145,55 @@ public:
     
     virtual void RequestUpdate()
     {
-        vector<Widget*> usedWidgets;
+        //vector<Widget*> usedWidgets;
         
         for(auto zone : activeZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeSelectedTrackSendsZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeSelectedTrackReceivesZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeSelectedTrackFXZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeSelectedTrackFXMenuZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeSelectedTrackFXMenuFXZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         for(auto zone : activeFocusedFXZones_)
         {
-            usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
+            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
             zone->RequestUpdate();
         }
         
         if(homeZone_ != nullptr)
         {
+            homeZone_->RequestUpdate();
+            
+            /*
             vector<Widget*> homeWidgetsCopy = homeZone_->GetWidgets();
             vector<Widget*> homeWidgetsToUpdate;
 
@@ -1202,6 +1207,7 @@ public:
         
             for(auto widget : homeWidgetsToUpdate)
                 homeZone_->RequestUpdateWidget(widget);
+             */
         }
     }
 

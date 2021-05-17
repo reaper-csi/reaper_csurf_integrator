@@ -344,36 +344,45 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         }
                         for(auto [widgetName, modifierActions] : widgetActions)
                         {
-                            Widget* widget = surface->GetWidgetByName(widgetName);
-                            
-                            if(widget == nullptr)
-                                continue;
-                            
-                            if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
-                                widget->SetIsModifier();
-                            
-                            zone->AddWidget(widget);
-                            
-                            for(auto [modifier, actions] : modifierActions)
+                            for(int j = 0; j < navigators.size(); j++)
                             {
-                                for(auto action : actions)
+                                string surfaceWidgetName = widgetName;
+                                
+                                if(navigators.size() > 1)
+                                    surfaceWidgetName = regex_replace(surfaceWidgetName, regex("[|]"), to_string(j + 1));
+                                
+                                Widget* widget = surface->GetWidgetByName(surfaceWidgetName);
+                                
+                                if(widget == nullptr)
+                                    continue;
+                                
+                                if(actionName == Shift || actionName == Option || actionName == Control || actionName == Alt)
+                                    widget->SetIsModifier();
+                                
+                                zone->AddWidget(widget);
+                                
+                                for(auto [modifier, actions] : modifierActions)
                                 {
-                                    string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
-                                    vector<string> memberParams;
-                                    for(int j = 0; j < action->params.size(); j++)
-                                        memberParams.push_back(regex_replace(action->params[j], regex("[|]"), numStr));
-                                    
-                                    ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
-                                    
-                                    if(action->isFeedbackInverted)
-                                        context.SetIsFeedbackInverted();
-                                    
-                                    if(action->holdDelayAmount != 0.0)
-                                        context.SetHoldDelayAmount(action->holdDelayAmount);
-                                    
-                                    
-                                    zone->AddActionContext(widget, modifier, context);
+                                    for(auto action : actions)
+                                    {
+                                        string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
+                                        vector<string> memberParams;
+                                        for(int k = 0; k < action->params.size(); k++)
+                                            memberParams.push_back(regex_replace(action->params[k], regex("[|]"), numStr));
+                                        
+                                        ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
+                                        
+                                        if(action->isFeedbackInverted)
+                                            context.SetIsFeedbackInverted();
+                                        
+                                        if(action->holdDelayAmount != 0.0)
+                                            context.SetHoldDelayAmount(action->holdDelayAmount);
+                                        
+                                        
+                                        zone->AddActionContext(widget, modifier, context);
+                                    }
                                 }
+                            
                             }
                         }
                         
