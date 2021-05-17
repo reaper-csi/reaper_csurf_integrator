@@ -546,6 +546,8 @@ public:
     virtual void Activate();
     virtual void Deactivate();
     
+    virtual string GetClass() { return "Zone"; }
+    
     virtual string GetName()
     {
         return name_;
@@ -633,6 +635,7 @@ public:
     virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
     virtual void ResolveIncludedZones() override { zone_->ResolveIncludedZones(); }
     virtual void Deactivate() override { zone_->Deactivate(); }
+    virtual string GetClass() override { return "ZoneContext"; }
     virtual string GetName() override { return zone_->GetName(); }
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
@@ -1112,7 +1115,12 @@ public:
     void DeactivateZones(vector<Zone*> &zones)
     {
         for(auto zone : zones)
+        {
             zone->Deactivate();
+            
+            if(zone->GetClass() == "ZoneContext")
+                delete zone;
+        }
         
         zones.clear();
     }
