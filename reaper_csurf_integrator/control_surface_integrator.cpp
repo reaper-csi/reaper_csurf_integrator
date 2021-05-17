@@ -325,9 +325,23 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                                
                         Zone* zone = new Zone(surface, navigators[i], newZoneName, zoneAlias, filePath);
                         
-                        for(auto zoneName : includedZones)
-                            zone->AddIncludedZoneName(zoneName);
-                        
+                        for(auto includedZoneName : includedZones)
+                        {
+                            if(includedZoneName == "Channel" && surface->GetNumChannels() > 1)
+                                for(int j = 0; j < surface->GetNumChannels(); j++)
+                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                            else if(includedZoneName == "Send" && surface->GetNumSends() > 1)
+                                for(int j = 0; j < surface->GetNumSends(); j++)
+                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                            else if(includedZoneName == "Receive" && surface->GetNumReceives() > 1)
+                                for(int j = 0; j < surface->GetNumReceives(); j++)
+                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                            else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
+                                for(int j = 0; j < surface->GetNumFXSlots(); j++)
+                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                            else
+                                zone->AddIncludedZoneName(includedZoneName);
+                        }
                         for(auto [widgetName, modifierActions] : widgetActions)
                         {
                             Widget* widget = surface->GetWidgetByName(widgetName);
