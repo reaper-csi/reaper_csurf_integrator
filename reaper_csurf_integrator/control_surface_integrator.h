@@ -1128,22 +1128,6 @@ public:
         {
             for(auto widget : homeWidgets)
                 homeZone_->RequestUpdateWidget(widget);
-            
-            /*
-            vector<Widget*> homeWidgetsCopy = homeZone_->GetWidgets();
-            vector<Widget*> homeWidgetsToUpdate;
-
-            for(auto widget : homeWidgetsCopy)
-            {
-                auto it = find(usedWidgets.begin(),usedWidgets.end(), widget);
-                
-                if (it == usedWidgets.end())
-                    homeWidgetsToUpdate.push_back(widget);
-            }
-        
-            for(auto widget : homeWidgetsToUpdate)
-                homeZone_->RequestUpdateWidget(widget);
-             */
         }
     }
 

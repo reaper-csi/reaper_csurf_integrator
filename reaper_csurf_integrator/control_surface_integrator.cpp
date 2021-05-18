@@ -306,9 +306,6 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
                 else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
                     navigatorName = tokens[0];
             }
-                
-            else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
-                    navigatorName = tokens[0];
         }
     }
     catch (exception &e)
