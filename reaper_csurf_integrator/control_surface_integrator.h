@@ -543,7 +543,6 @@ public:
     virtual vector<Zone*> &GetIncludedZones() { return includedZones_; }
     virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
     virtual void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
-    virtual void ResolveIncludedZones();
     
     virtual string GetName()
     {
@@ -568,13 +567,13 @@ public:
         actionContextDictionary_[widget][modifier].push_back(actionContext);
     }
     
-    virtual void RequestUpdate()
+    virtual void RequestUpdate(vector<Widget*> &homeWidgets)
     {
         for(auto widget : widgets_)
             RequestUpdateWidget(widget);
         
         for(auto zone : includedZones_)
-            zone->RequestUpdate();
+            zone->RequestUpdate(homeWidgets);
     }
     
     virtual void RequestUpdateWidget(Widget* widget)
@@ -635,13 +634,12 @@ public:
     virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
     virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
     virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
-    virtual void ResolveIncludedZones() override { zone_->ResolveIncludedZones(); }
     virtual void Deactivate() override { zone_->Deactivate(); }
     virtual string GetName() override { return zone_->GetName(); }
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
-    virtual void RequestUpdate() override { zone_->RequestUpdate(); }
+    virtual void RequestUpdate(vector<Widget*> &homeWidgets) override { zone_->RequestUpdate(homeWidgets); }
     virtual void RequestUpdateWidget(Widget* widget) override { zone_->RequestUpdateWidget(widget); }
     virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
     virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
@@ -701,11 +699,12 @@ public:
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
 
-    // GAW deprecated -- used only by EuCon (for now)
     void RequestUpdate()
     {
+        vector<Widget*> homeWidgets; // dummy list to satisfy the protocol
+        
         if(currentZone_ != nullptr)
-            currentZone_->RequestUpdate();
+            currentZone_->RequestUpdate(homeWidgets);
     }
  
     void DoAction(double value)
@@ -971,6 +970,7 @@ protected:
 
     void InitZones(string zoneFolder);
 
+    map<string, string> zoneFilenames_;
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
 
@@ -1025,6 +1025,9 @@ public:
 
     virtual void SetHasMCUMeters(int displayType) {}
     
+    void LoadZone(string zoneName);
+    Zone* GetZone(string zoneName);
+    void GoZone(string zoneName, double value);
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1038,12 +1041,10 @@ public:
    
     void MakeHomeDefault()
     {
-        if(zonesByName_.count("Home") > 0)
-        {
-            homeZone_ = zonesByName_["Home"];
-        
+        homeZone_ = GetZone("Home");
+
+        if(homeZone_ != nullptr)
             homeZone_->Activate();
-        }
     }
     
     void SendWidgetHome(Widget* widget)
@@ -1071,45 +1072,6 @@ public:
         }
     }
     
-    void GoZone(string zoneName, double value)
-    {
-        if(zoneName == "Home")
-        {
-            DeactivateZones(activeZones_);
-            DeactivateZones(activeSelectedTrackSendsZones_);
-            DeactivateZones(activeSelectedTrackReceivesZones_);
-            DeactivateZones(activeSelectedTrackFXZones_);
-            DeactivateZones(activeSelectedTrackFXMenuZones_);
-            DeactivateZones(activeSelectedTrackFXMenuFXZones_);
-            DeactivateZones(activeFocusedFXZones_);
-
-            if(homeZone_ != nullptr)
-                homeZone_->Activate();
-        }
-        else if(zonesByName_.count(zoneName) > 0)
-        {
-            Zone* zone = zonesByName_[zoneName];
-            
-            if(value == 1) // adding
-            {
-                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
-                
-                if ( it == activeZones_.end() )
-                {
-                    zone->Activate();
-                    activeZones_.push_back(zone);
-                }
-            }
-            else // removing
-            {
-                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
-                
-                if ( it != activeZones_.end() )
-                    activeZones_.erase(it);
-            }
-        }
-    }
-    
     void DeactivateZones(vector<Zone*> &zones)
     {
         for(auto zone : zones)
@@ -1123,75 +1085,49 @@ public:
         zones.clear();
     }
 
+    void AddZoneFilename(string name, string filename)
+    {
+        zoneFilenames_[name] = filename;
+    }
+    
     void AddZone(Zone* zone)
     {
         zonesByName_[zone->GetName()] = zone;
         zones_.push_back(zone);
     }
-    
-    Zone* GetZone(string name)
-    {
-        if(zonesByName_.count(name) > 0)
-            return zonesByName_[name];
-        else
-            return nullptr;
-    }
-    
-    void ResolveIncludedZones()
-    {
-        for(auto zone : zones_)
-            zone->ResolveIncludedZones();
-    }
-    
+       
     virtual void RequestUpdate()
     {
-        //vector<Widget*> usedWidgets;
+        // GAW TBD make this way hipper -- use a class to store the zones with associated widgets, the active Zones delete the widgets they update so that at end we can just update what's left of the whole tree
+        // aka thst's what's left of Home that needs to be updated -- the other Home widgets have already been updated by other Zones, that's why the other active Zones deleted them --
+        // to avoid being clobbered by the Home zone update :)
+        vector<Widget*> homeWidgets = homeZone_->GetWidgets();
         
         for(auto zone : activeZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeSelectedTrackSendsZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeSelectedTrackReceivesZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeSelectedTrackFXZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeSelectedTrackFXMenuZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeSelectedTrackFXMenuFXZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         for(auto zone : activeFocusedFXZones_)
-        {
-            //usedWidgets.insert(usedWidgets.end(), zone->GetWidgets().begin(), zone->GetWidgets().end());
-            zone->RequestUpdate();
-        }
+            zone->RequestUpdate(homeWidgets);
         
         if(homeZone_ != nullptr)
         {
-            homeZone_->RequestUpdate();
+            for(auto widget : homeWidgets)
+                homeZone_->RequestUpdateWidget(widget);
             
             /*
             vector<Widget*> homeWidgetsCopy = homeZone_->GetWidgets();

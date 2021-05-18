@@ -236,6 +236,89 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
     modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
 }
 
+static void PreProcessZoneFile(string filePath, ControlSurface* surface)
+{
+    string zoneName = "";
+    string navigatorName = "";
+    int lineNumber = 0;
+    
+    try
+    {
+        ifstream file(filePath);
+        
+        for (string line; getline(file, line) ; )
+        {
+            line = regex_replace(line, regex(TabChars), " ");
+            line = regex_replace(line, regex(CRLFChars), "");
+            
+            line = line.substr(0, line.find("//")); // remove trailing commewnts
+            
+            lineNumber++;
+            
+            // Trim leading and trailing spaces
+            line = regex_replace(line, regex("^\\s+|\\s+$"), "", regex_constants::format_default);
+            
+            if(line == "" || (line.size() > 0 && line[0] == '/')) // ignore blank lines and comment lines
+                continue;
+            
+            vector<string> tokens(GetTokens(line));
+            
+            if(tokens.size() > 0)
+            {
+                if(tokens[0] == "Zone")
+                {
+                    zoneName = tokens.size() > 1 ? tokens[1] : "";
+                }
+                else if(tokens[0] == "ZoneEnd" && zoneName != "")
+                {
+                    int numNavigators = 0;
+                    
+                    if(navigatorName == "")
+                        numNavigators = 1;
+                    if(navigatorName == "SelectedTrackNavigator")
+                        numNavigators = 1;
+                    else if(navigatorName == "FocusedFXNavigator")
+                        numNavigators = 1;
+                    else if(navigatorName == "MasterTrackNavigator")
+                        numNavigators = 1;
+                    else if(navigatorName == "TrackNavigator")
+                        numNavigators = surface->GetNumChannels();
+                    else if(navigatorName == "SendNavigator")
+                        numNavigators = surface->GetNumSends();
+                    else if(navigatorName == "ReceiveNavigator")
+                        numNavigators = surface->GetNumReceives();
+                    else if(navigatorName == "FXMenuNavigator")
+                        numNavigators = surface->GetNumFXSlots();
+    
+                    for(int i = 0; i < numNavigators; i++)
+                    {
+                        string numStr = to_string(i + 1);
+                        
+                        string newZoneName = zoneName;
+                        
+                        if((zoneName == "Channel" && numNavigators > 1) || zoneName == "Send" || zoneName == "Receive" || zoneName == "FXMenu")
+                            newZoneName += numStr;
+                        
+                        surface->AddZoneFilename(newZoneName, filePath);
+                    }
+                }
+                
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
+                    navigatorName = tokens[0];
+            }
+                
+            else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
+                    navigatorName = tokens[0];
+        }
+    }
+    catch (exception &e)
+    {
+        char buffer[250];
+        snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", filePath.c_str(), lineNumber);
+        DAW::ShowConsoleMsg(buffer);
+    }
+}
+
 static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
     vector<string> includedZones;
@@ -327,20 +410,20 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         for(auto includedZoneName : includedZones)
                         {
+                            surface->LoadZone(includedZoneName);
+                            
                             if(includedZoneName == "Channel" && surface->GetNumChannels() > 1)
                                 for(int j = 0; j < surface->GetNumChannels(); j++)
-                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                                    surface->LoadZone(includedZoneName + to_string(j + 1));
                             else if(includedZoneName == "Send" && surface->GetNumSends() > 1)
                                 for(int j = 0; j < surface->GetNumSends(); j++)
-                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                                    surface->LoadZone(includedZoneName + to_string(j + 1));
                             else if(includedZoneName == "Receive" && surface->GetNumReceives() > 1)
                                 for(int j = 0; j < surface->GetNumReceives(); j++)
-                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
+                                    surface->LoadZone(includedZoneName + to_string(j + 1));
                             else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
                                 for(int j = 0; j < surface->GetNumFXSlots(); j++)
-                                    zone->AddIncludedZoneName(includedZoneName + to_string(j + 1));
-                            else
-                                zone->AddIncludedZoneName(includedZoneName);
+                                    surface->LoadZone(includedZoneName + to_string(j + 1));
                         }
                         
                         for(auto [widgetName, modifierActions] : widgetActions)
@@ -1609,19 +1692,6 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Zone
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Zone::ResolveIncludedZones()
-{
-    Zone* includedZone = nullptr;
-    
-    for(auto name : includedZoneNames_)
-    {
-        includedZone = surface_->GetZone(name);
-    
-        if(includedZone != nullptr)
-            includedZones_.push_back(includedZone);
-    }
-}
-
 void Zone::Activate()
 {
     for(auto widget : widgets_)
@@ -1880,9 +1950,7 @@ void ControlSurface::InitZones(string zoneFolder)
         listZoneFiles(DAW::GetResourcePath() + string("/CSI/Zones/") + zoneFolder + "/", zoneFilesToProcess); // recursively find all the .zon files, starting at zoneFolder
         
         for(auto zoneFilename : zoneFilesToProcess)
-            ProcessZoneFile(zoneFilename, this);
-        
-        ResolveIncludedZones();
+            PreProcessZoneFile(zoneFilename, this);
     }
     catch (exception &e)
     {
@@ -2066,6 +2134,69 @@ void ControlSurface::OnTrackSelection()
             widgetsByName_["OnTrackSelection"]->DoAction(1.0);
         else
             widgetsByName_["OnTrackSelection"]->DoAction(0.0);
+    }
+}
+
+void ControlSurface::LoadZone(string zoneName)
+{
+    if(zonesByName_.count(zoneName) == 0)
+    {
+        if(zoneFilenames_.count(zoneName) > 0)
+            ProcessZoneFile(zoneFilenames_[zoneName], this);
+    }
+}
+
+Zone* ControlSurface::GetZone(string zoneName)
+{
+    LoadZone(zoneName);
+    
+    if(zonesByName_.count(zoneName) > 0)
+        return zonesByName_[zoneName];
+    else
+        return nullptr;
+}
+
+void ControlSurface::GoZone(string zoneName, double value)
+{
+    if(zoneName == "Home")
+    {
+        DeactivateZones(activeZones_);
+        DeactivateZones(activeSelectedTrackSendsZones_);
+        DeactivateZones(activeSelectedTrackReceivesZones_);
+        DeactivateZones(activeSelectedTrackFXZones_);
+        DeactivateZones(activeSelectedTrackFXMenuZones_);
+        DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+        DeactivateZones(activeFocusedFXZones_);
+        
+        if(homeZone_ != nullptr)
+            homeZone_->Activate();
+    }
+    else
+    {
+        LoadZone(zoneName);
+
+        if(zonesByName_.count(zoneName) > 0)
+        {
+            Zone* zone = zonesByName_[zoneName];
+            
+            if(value == 1) // adding
+            {
+                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
+                
+                if ( it == activeZones_.end() )
+                {
+                    zone->Activate();
+                    activeZones_.push_back(zone);
+                }
+            }
+            else // removing
+            {
+                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
+                
+                if ( it != activeZones_.end() )
+                    activeZones_.erase(it);
+            }
+        }
     }
 }
 
