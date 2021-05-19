@@ -269,8 +269,11 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
                 {
                     zoneName = tokens.size() > 1 ? tokens[1] : "";
                 }
-                else if(tokens[0] == "ZoneEnd" && zoneName != "")
+                
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
                 {
+                    navigatorName = tokens[0];
+                    
                     int numNavigators = 0;
                     
                     if(navigatorName == "")
@@ -289,7 +292,7 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
                         numNavigators = surface->GetNumReceives();
                     else if(navigatorName == "FXMenuNavigator")
                         numNavigators = surface->GetNumFXSlots();
-    
+                    
                     for(int i = 0; i < numNavigators; i++)
                     {
                         string numStr = to_string(i + 1);
@@ -301,10 +304,15 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         surface->AddZoneFilename(newZoneName, filePath);
                     }
+                    
+                    break;
+                    
                 }
-                
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
-                    navigatorName = tokens[0];
+                else
+                {
+                    surface->AddZoneFilename(zoneName, filePath);
+                    break;
+                }
             }
         }
     }
