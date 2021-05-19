@@ -567,13 +567,20 @@ public:
         actionContextDictionary_[widget][modifier].push_back(actionContext);
     }
     
-    virtual void RequestUpdate(vector<Widget*> &homeWidgets)
+    virtual void RequestUpdate(vector<Widget*> &usedWidgets)
     {
         for(auto widget : widgets_)
-            RequestUpdateWidget(widget);
+        {
+            if(find(usedWidgets.begin(), usedWidgets.end(), widget) == usedWidgets.end())
+            {
+                usedWidgets.push_back(widget);
+
+                RequestUpdateWidget(widget);
+            }
+        }
         
         for(auto zone : includedZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
     }
     
     virtual void RequestUpdateWidget(Widget* widget)
@@ -639,7 +646,7 @@ public:
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
     virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
-    virtual void RequestUpdate(vector<Widget*> &homeWidgets) override { zone_->RequestUpdate(homeWidgets); }
+    virtual void RequestUpdate(vector<Widget*> &usedWidgets) override { zone_->RequestUpdate(usedWidgets); }
     virtual void RequestUpdateWidget(Widget* widget) override { zone_->RequestUpdateWidget(widget); }
     virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
     virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
@@ -701,10 +708,10 @@ public:
 
     void RequestUpdate()
     {
-        vector<Widget*> homeWidgets; // dummy list to satisfy the protocol
+        vector<Widget*> usedWidgets;
         
         if(currentZone_ != nullptr)
-            currentZone_->RequestUpdate(homeWidgets);
+            currentZone_->RequestUpdate(usedWidgets);
     }
  
     void DoAction(double value)
@@ -1095,40 +1102,34 @@ public:
         zonesByName_[zone->GetName()] = zone;
         zones_.push_back(zone);
     }
-       
+   
     virtual void RequestUpdate()
     {
-        // GAW TBD make this way hipper -- use a class to store the zones with associated widgets, the active Zones delete the widgets they update so that at end we can just update what's left of the whole tree
-        // aka thst's what's left of Home that needs to be updated -- the other Home widgets have already been updated by other Zones, that's why the other active Zones deleted them --
-        // to avoid being clobbered by the Home zone update :)
-        vector<Widget*> homeWidgets = homeZone_->GetWidgets();
+        vector<Widget*> usedWidgets;
         
         for(auto zone : activeZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackSendsZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackReceivesZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackFXZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackFXMenuZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackFXMenuFXZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeFocusedFXZones_)
-            zone->RequestUpdate(homeWidgets);
+            zone->RequestUpdate(usedWidgets);
         
         if(homeZone_ != nullptr)
-        {
-            for(auto widget : homeWidgets)
-                homeZone_->RequestUpdateWidget(widget);
-        }
+            homeZone_->RequestUpdate(usedWidgets);
     }
 
     virtual void ForceClearAllWidgets()
