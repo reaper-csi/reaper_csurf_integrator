@@ -1107,7 +1107,16 @@ public:
     {
         vector<Widget*> usedWidgets;
         
-        for(auto zone : activeZones_)
+        for(auto zone : activeFocusedFXZones_)
+            zone->RequestUpdate(usedWidgets);
+        
+        for(auto zone : activeSelectedTrackFXZones_)
+            zone->RequestUpdate(usedWidgets);
+        
+        for(auto zone : activeSelectedTrackFXMenuFXZones_)
+            zone->RequestUpdate(usedWidgets);
+        
+        for(auto zone : activeSelectedTrackFXMenuZones_)
             zone->RequestUpdate(usedWidgets);
         
         for(auto zone : activeSelectedTrackSendsZones_)
@@ -1116,16 +1125,7 @@ public:
         for(auto zone : activeSelectedTrackReceivesZones_)
             zone->RequestUpdate(usedWidgets);
         
-        for(auto zone : activeSelectedTrackFXZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackFXMenuZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackFXMenuFXZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeFocusedFXZones_)
+        for(auto zone : activeZones_)
             zone->RequestUpdate(usedWidgets);
         
         if(homeZone_ != nullptr)
