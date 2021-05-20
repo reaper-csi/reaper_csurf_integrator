@@ -2009,9 +2009,9 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
                 GetZone(menuName)->Deactivate();
             else
             {
-                Zone* fxZone = new ZoneContext(GetZone(menuName), i);
+                Zone* sendZone = new ZoneContext(GetZone(menuName), i);
                 
-                fxZone->Activate(activeSelectedTrackSendsZones_);
+                sendZone->Activate(activeSelectedTrackSendsZones_);
             }
         }
     }
@@ -2033,9 +2033,9 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
                 GetZone(menuName)->Deactivate();
             else
             {
-                Zone* fxZone = new ZoneContext(GetZone(menuName), i);
+                Zone* receiveZone = new ZoneContext(GetZone(menuName), i);
                 
-                fxZone->Activate(activeSelectedTrackReceivesZones_);
+                receiveZone->Activate(activeSelectedTrackReceivesZones_);
             }
         }
     }

@@ -634,6 +634,7 @@ public:
     virtual string GetClass() override { return "ZoneContext"; }
     
     virtual void Activate() override;
+    virtual void Activate(vector<Zone*> &activeZones) override { zone_->Activate(activeZones); }
     
     virtual int GetSlotIndex() override { return slotNumber_; }
     
@@ -1097,16 +1098,16 @@ public:
         }
     }
     
-    void MoveToFirst(vector<Zone*> zones)
+    void MoveToFirst(vector<Zone*> &zones)
     {
-        /*
-        auto it = find(allActiveZones_.begin(), allActiveZones_.end(), zones);
+        auto result = find(allActiveZones_.begin(), allActiveZones_.end(), &zones);
         
-        if ( it != activeZones_.end() )
+        if(result != allActiveZones_.end())
         {
-            int blah = 0;
+            auto resultValue = *result;
+            allActiveZones_.erase(result);
+            allActiveZones_.insert(allActiveZones_.begin(), resultValue);
         }
-         */
     }
     
     void DeactivateZones(vector<Zone*> &zones)
