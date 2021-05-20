@@ -37,7 +37,7 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetSurface()->MapSelectedTrackFXSlotToWidgets(context->GetSlotIndex());
+            context->GetSurface()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSlotIndex());
     }
 };
 
