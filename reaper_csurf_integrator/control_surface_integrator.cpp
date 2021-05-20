@@ -1715,13 +1715,27 @@ void Zone::Activate(vector<Zone*> &activeZones)
     surface_->MoveToFirst(activeZones);
 }
 
-void Zone::Deactivate()
+bool Zone::TryActivate(Widget* widget)
+{
+    for(auto zoneWidget : widgets_)
+    {
+        if(zoneWidget == widget)
+        {
+            zoneWidget->SetZone(this);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+void Zone::Deactivate(vector<Zone*> activeZones)
 {
     for(auto widget : widgets_)
-        surface_->SendWidgetHome(widget);
+        surface_->PopWidget(activeZones, widget);
     
     for(auto zone : includedZones_)
-        zone->Deactivate();
+        zone->Deactivate(activeZones);
 }
 
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
@@ -2006,7 +2020,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
             string menuName = "Send" + to_string(i + 1);
             
             if(i >= trackSendCount)
-                GetZone(menuName)->Deactivate();
+                GetZone(menuName)->Deactivate(activeSelectedTrackSendsZones_);
             else
             {
                 Zone* sendZone = new ZoneContext(GetZone(menuName), i);
@@ -2030,7 +2044,7 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
             string menuName = "Receive" + to_string(i + 1);
             
             if(i >= trackReceiveCount)
-                GetZone(menuName)->Deactivate();
+                GetZone(menuName)->Deactivate(activeSelectedTrackReceivesZones_);
             else
             {
                 Zone* receiveZone = new ZoneContext(GetZone(menuName), i);
@@ -2057,13 +2071,17 @@ void ControlSurface::MapSelectedTrackFXToMenu()
             Zone* zone = GetZone(menuName);
             
             if(i >= trackFXCount)
-                zone->Deactivate();
+                zone->Deactivate(activeSelectedTrackFXMenuZones_);
             else
             {
                 zone->Activate(activeSelectedTrackFXMenuZones_);
             }
         }
     }
+}
+void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
+{
+    MapSlotsToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
@@ -2073,11 +2091,6 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
     if(MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
             MapSlotsToWidgets(activeSelectedTrackFXZones_, i);
-}
-
-void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
-{
-    MapSlotsToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
 void ControlSurface::MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot)

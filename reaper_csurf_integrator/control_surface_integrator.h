@@ -532,9 +532,11 @@ public:
     virtual ~Zone() {}
     virtual string GetClass() { return "Zone"; }
     
+    
     virtual void Activate();
     virtual void Activate(vector<Zone*> &activeZones);
-    virtual void Deactivate();
+    virtual bool TryActivate(Widget* widget);
+    virtual void Deactivate(vector<Zone*> activeZones);
 
     virtual int GetSlotIndex() { return slotIndex_; }
     
@@ -635,7 +637,9 @@ public:
     
     virtual void Activate() override;
     virtual void Activate(vector<Zone*> &activeZones) override { zone_->Activate(activeZones); }
-    
+    virtual bool TryActivate(Widget* widget) override { return zone_->TryActivate(widget); }
+    virtual void Deactivate(vector<Zone*> activeZones) override { zone_->Deactivate(activeZones); }
+
     virtual int GetSlotIndex() override { return slotNumber_; }
     
     virtual vector<ActionContext>& GetActionContexts(Widget* widget) override { return zone_->GetActionContexts(widget); }
@@ -643,7 +647,6 @@ public:
     virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
     virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
     virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
-    virtual void Deactivate() override { zone_->Deactivate(); }
     virtual string GetName() override { return zone_->GetName(); }
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
@@ -998,8 +1001,9 @@ protected:
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
     
+    void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
     void MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot);
-
+    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1073,8 +1077,14 @@ public:
             homeZone_->Activate();
     }
     
-    void SendWidgetHome(Widget* widget)
+    void PopWidget(vector<Zone*> &activeZones, Widget* widget)
     {
+        for(auto zones : allActiveZones_)
+            if(*zones != activeZones)
+                for(auto zone : *zones)
+                    if(zone->TryActivate(widget))
+                        return;
+        
         bool wentHome = false;
         
         if(homeZone_ != nullptr)
@@ -1114,7 +1124,7 @@ public:
     {
         for(auto zone : zones)
         {
-            zone->Deactivate();
+            zone->Deactivate(zones);
             
             if(zone->GetClass() == "ZoneContext")
                 delete zone;
