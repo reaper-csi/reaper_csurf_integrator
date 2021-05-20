@@ -533,6 +533,7 @@ public:
     virtual string GetClass() { return "Zone"; }
     
     virtual void Activate();
+    virtual void Activate(vector<Zone*> &activeZones);
     virtual void Deactivate();
 
     virtual int GetSlotIndex() { return slotIndex_; }
@@ -962,6 +963,21 @@ protected:
     vector<Zone*> activeSelectedTrackFXMenuFXZones_;
     vector<Zone*> activeFocusedFXZones_;
     
+    vector<vector<Zone*> *> allActiveZones_;
+    
+    void LoadDefaultZoneOrder()
+    {
+        allActiveZones_.clear();
+        
+        allActiveZones_.push_back(&activeFocusedFXZones_);
+        allActiveZones_.push_back(&activeSelectedTrackFXZones_);
+        allActiveZones_.push_back(&activeSelectedTrackFXMenuFXZones_);
+        allActiveZones_.push_back(&activeSelectedTrackFXMenuZones_);
+        allActiveZones_.push_back(&activeSelectedTrackSendsZones_);
+        allActiveZones_.push_back(&activeSelectedTrackReceivesZones_);
+        allActiveZones_.push_back(&activeZones_);
+    }
+    
     string zoneFolder_ = "";
     int numChannels_ = 0;
     int numSends_ = 0;
@@ -1079,6 +1095,18 @@ public:
         }
     }
     
+    void MoveToFirst(vector<Zone*> zones)
+    {
+        /*
+        auto it = find(allActiveZones_.begin(), allActiveZones_.end(), zones);
+        
+        if ( it != activeZones_.end() )
+        {
+            int blah = 0;
+        }
+         */
+    }
+    
     void DeactivateZones(vector<Zone*> &zones)
     {
         for(auto zone : zones)
@@ -1106,27 +1134,10 @@ public:
     virtual void RequestUpdate()
     {
         vector<Widget*> usedWidgets;
-        
-        for(auto zone : activeFocusedFXZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackFXZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackFXMenuFXZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackFXMenuZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackSendsZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeSelectedTrackReceivesZones_)
-            zone->RequestUpdate(usedWidgets);
-        
-        for(auto zone : activeZones_)
-            zone->RequestUpdate(usedWidgets);
+
+        for(auto activeZones : allActiveZones_)
+            for(auto zone : *activeZones)
+                zone->RequestUpdate(usedWidgets);
         
         if(homeZone_ != nullptr)
             homeZone_->RequestUpdate(usedWidgets);
