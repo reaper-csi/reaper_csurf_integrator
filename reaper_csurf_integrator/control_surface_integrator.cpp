@@ -1708,6 +1708,13 @@ void Zone::Activate()
         zone->Activate();
 }
 
+void Zone::Activate(vector<Zone*> &activeZones)
+{
+    Activate();
+    activeZones.push_back(this);
+    surface_->MoveToFirst(activeZones);
+}
+
 void Zone::Deactivate()
 {
     for(auto widget : widgets_)
@@ -1947,6 +1954,8 @@ ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, con
 {
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
+    
+    LoadDefaultZoneOrder();
 }
 
 void ControlSurface::InitZones(string zoneFolder)
@@ -2002,9 +2011,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
             {
                 Zone* fxZone = new ZoneContext(GetZone(menuName), i);
                 
-                fxZone->Activate();
-
-                activeSelectedTrackSendsZones_.push_back(fxZone);
+                fxZone->Activate(activeSelectedTrackSendsZones_);
             }
         }
     }
@@ -2028,9 +2035,7 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
             {
                 Zone* fxZone = new ZoneContext(GetZone(menuName), i);
                 
-                fxZone->Activate();
-                
-                activeSelectedTrackReceivesZones_.push_back(fxZone);
+                fxZone->Activate(activeSelectedTrackReceivesZones_);
             }
         }
     }
@@ -2055,9 +2060,7 @@ void ControlSurface::MapSelectedTrackFXToMenu()
                 zone->Deactivate();
             else
             {
-                zone->Activate();
-                
-                activeSelectedTrackFXMenuZones_.push_back(zone);
+                zone->Activate(activeSelectedTrackFXMenuZones_);
             }
         }
     }
@@ -2089,9 +2092,7 @@ void ControlSurface::MapSelectedTrackFXSlotToWidgets(int fxSlot)
         {
             Zone* fxZone = new ZoneContext(zone, fxSlot);
             
-            fxZone->Activate();
-            
-            activeSelectedTrackFXZones_.push_back(fxZone);
+            fxZone->Activate(activeSelectedTrackFXZones_);
         }
     }
 }
@@ -2120,9 +2121,7 @@ void ControlSurface::MapFocusedFXToWidgets()
             {
                 Zone* fxZone = new ZoneContext(zone, fxSlot);
                 
-                fxZone->Activate();
-                
-                activeFocusedFXZones_.push_back(fxZone);
+                fxZone->Activate(activeFocusedFXZones_);
             }
         }
     }
@@ -2175,6 +2174,8 @@ void ControlSurface::GoZone(string zoneName, double value)
         DeactivateZones(activeSelectedTrackFXMenuFXZones_);
         DeactivateZones(activeFocusedFXZones_);
         
+        LoadDefaultZoneOrder();
+        
         if(homeZone_ != nullptr)
             homeZone_->Activate();
     }
@@ -2192,8 +2193,7 @@ void ControlSurface::GoZone(string zoneName, double value)
                 
                 if ( it == activeZones_.end() )
                 {
-                    zone->Activate();
-                    activeZones_.push_back(zone);
+                    zone->Activate(activeZones_);
                 }
             }
             else // removing
