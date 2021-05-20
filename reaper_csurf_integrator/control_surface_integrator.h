@@ -996,6 +996,8 @@ protected:
     map<string, string> zoneFilenames_;
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
+    
+    void MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot);
 
     virtual void InitHardwiredWidgets()
     {
@@ -1036,7 +1038,7 @@ public:
     int  GetNumFXSlots() { return numFXSlots_; }
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXSlotToWidgets(int slot);
+    void MapSelectedTrackFXMenuSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     void TrackFXListChanged();
     
