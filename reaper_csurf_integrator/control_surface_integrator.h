@@ -545,7 +545,7 @@ public:
     virtual vector<Widget*> &GetWidgets() { return widgets_; }
     virtual vector<Zone*> &GetIncludedZones() { return includedZones_; }
     virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
-    virtual void AddIncludedZone(Zone* zone) { includedZones_.push_back(zone); }
+    virtual void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     
     virtual string GetName()
     {
@@ -646,7 +646,7 @@ public:
     virtual Navigator* GetNavigator() override { return zone_->GetNavigator(); }
     virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
     virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
-    virtual void AddIncludedZone(Zone* zone) override { zone_->AddIncludedZone(zone); }
+    virtual void AddIncludedZone(Zone* &zone) override { zone_->AddIncludedZone(zone); }
     virtual string GetName() override { return zone_->GetName(); }
     virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
     virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
