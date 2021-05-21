@@ -516,6 +516,8 @@ private:
     string const alias_ = "";
     string const sourceFilePath_ = "";
     
+    int slotIndex_ = 0;
+    
     vector<Widget*> widgets_;
     
     vector<string> includedZoneNames_;
@@ -537,7 +539,8 @@ public:
     virtual void Deactivate(vector<Zone*> activeZones);
     virtual void BlankWidgets();
     
-    virtual int GetSlotIndex() { return 0; }
+    virtual int GetSlotIndex() { return slotIndex_; }
+    virtual void SetSlotIndex(int index) { slotIndex_ = index; }
     
     virtual vector<ActionContext>& GetActionContexts(Widget* widget);
     virtual Navigator* GetNavigator() { return navigator_; }
@@ -1001,7 +1004,6 @@ protected:
     vector<Zone*> zones_;
     
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
-    void MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot);
     
     virtual void InitHardwiredWidgets()
     {
