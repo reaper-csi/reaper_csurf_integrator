@@ -50,9 +50,9 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0)
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
             context->GetSurface()->UnmapSelectedTrackSendsFromWidgets();
-        else
+        else if(value)
             context->GetSurface()->MapSelectedTrackSendsToWidgets();
     }
 };
@@ -66,9 +66,9 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0)
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
             context->GetSurface()->UnmapSelectedTrackReceivesFromWidgets();
-        else
+        else if(value)
             context->GetSurface()->MapSelectedTrackReceivesToWidgets();
     }
 };
@@ -82,9 +82,9 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0)
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
             context->GetSurface()->UnmapSelectedTrackFXFromWidgets();
-        else
+        else if(value)
             context->GetSurface()->MapSelectedTrackFXToWidgets();
     }
 };
@@ -98,9 +98,9 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0)
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
             context->GetSurface()->UnmapSelectedTrackFXFromMenu();
-        else
+        else if(value)
             context->GetSurface()->MapSelectedTrackFXToMenu();
     }
 };
@@ -114,9 +114,9 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0)
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
             context->GetSurface()->UnmapFocusedFXFromWidgets();
-        else
+        else if(value)
             context->GetSurface()->MapFocusedFXToWidgets();
     }
 };
