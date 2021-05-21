@@ -415,20 +415,29 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         for(auto includedZoneName : includedZones)
                         {
-                            surface->LoadZone(includedZoneName);
+                            int numItems = 1;
                             
                             if(includedZoneName == "Channel" && surface->GetNumChannels() > 1)
-                                for(int j = 0; j < surface->GetNumChannels(); j++)
-                                    surface->LoadZone(includedZoneName + to_string(j + 1));
+                                numItems = surface->GetNumChannels();
                             else if(includedZoneName == "Send" && surface->GetNumSends() > 1)
-                                for(int j = 0; j < surface->GetNumSends(); j++)
-                                    surface->LoadZone(includedZoneName + to_string(j + 1));
+                                numItems = surface->GetNumSends();
                             else if(includedZoneName == "Receive" && surface->GetNumReceives() > 1)
-                                for(int j = 0; j < surface->GetNumReceives(); j++)
-                                    surface->LoadZone(includedZoneName + to_string(j + 1));
+                                numItems = surface->GetNumReceives();
                             else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
-                                for(int j = 0; j < surface->GetNumFXSlots(); j++)
-                                    surface->LoadZone(includedZoneName + to_string(j + 1));
+                                numItems = surface->GetNumFXSlots();
+                           
+                            for(int j = 0; j < numItems; j++)
+                            {
+                                string expandedName = includedZoneName;
+                                
+                                if(numItems > 1)
+                                    expandedName = includedZoneName + to_string(j + 1);
+                                
+                                Zone* includedZone = surface->GetZone(expandedName);
+                                
+                                if(includedZone)
+                                    zone->AddIncludedZone(includedZone);
+                            }
                         }
                         
                         for(auto [widgetName, modifierActions] : widgetActions)
@@ -2172,10 +2181,18 @@ void ControlSurface::LoadZone(string zoneName)
 
 Zone* ControlSurface::GetZone(string zoneName)
 {
-    LoadZone(zoneName);
-    
     if(zonesByName_.count(zoneName) > 0)
         return zonesByName_[zoneName];
+
+    if(zoneFilenames_.count(zoneName) > 0)
+    {
+        LoadZone(zoneName);
+        
+        if(zonesByName_.count(zoneName) > 0)
+            return zonesByName_[zoneName];
+        else
+            return nullptr;
+    }
     else
         return nullptr;
 }
