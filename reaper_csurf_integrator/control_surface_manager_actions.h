@@ -50,9 +50,10 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->MapSelectedTrackSendsToWidgets();
+        if(value == 0)
+            context->GetSurface()->UnmapSelectedTrackSendsFromWidgets();
+        else
+            context->GetSurface()->MapSelectedTrackSendsToWidgets();
     }
 };
 
@@ -65,9 +66,10 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->MapSelectedTrackReceivesToWidgets();
+        if(value == 0)
+            context->GetSurface()->UnmapSelectedTrackReceivesFromWidgets();
+        else
+            context->GetSurface()->MapSelectedTrackReceivesToWidgets();
     }
 };
 
@@ -80,9 +82,10 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->MapSelectedTrackFXToWidgets();
+        if(value == 0)
+            context->GetSurface()->UnmapSelectedTrackFXFromWidgets();
+        else
+            context->GetSurface()->MapSelectedTrackFXToWidgets();
     }
 };
 
@@ -95,9 +98,10 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->MapSelectedTrackFXToMenu();
+        if(value == 0)
+            context->GetSurface()->UnmapSelectedTrackFXFromMenu();
+        else
+            context->GetSurface()->MapSelectedTrackFXToMenu();
     }
 };
 
@@ -110,9 +114,10 @@ public:
 
     void Do(ActionContext* context, double value) override
     {
-        if(value == 0.0) return; // ignore button releases
-        
-        context->GetSurface()->MapFocusedFXToWidgets();
+        if(value == 0)
+            context->GetSurface()->UnmapFocusedFXFromWidgets();
+        else
+            context->GetSurface()->MapFocusedFXToWidgets();
     }
 };
 
