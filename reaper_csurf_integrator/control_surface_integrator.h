@@ -541,7 +541,7 @@ public:
     virtual int GetSlotIndex() { return slotIndex_; }
     virtual void SetSlotIndex(int index) { slotIndex_ = index; }
     
-    virtual vector<ActionContext>& GetActionContexts(Widget* widget);
+    virtual vector<ActionContext> &GetActionContexts(Widget* widget);
     virtual Navigator* GetNavigator() { return navigator_; }
     virtual vector<Widget*> &GetWidgets() { return widgets_; }
     virtual vector<Zone*> &GetIncludedZones() { return includedZones_; }
@@ -957,16 +957,16 @@ protected:
     
     map<string, CSIMessageGenerator*> CSIMessageGeneratorsByMessage_;
     
-    vector<Zone*> activeZones_;
+    vector<Zone*> activeFocusedFXZones_;
+    vector<Zone*> activeSelectedTrackFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
+    vector<Zone*> activeSelectedTrackFXMenuZones_;
     
     vector<Zone*> activeSelectedTrackSendsZones_;
     vector<Zone*> activeSelectedTrackReceivesZones_;
-    
-    vector<Zone*> activeSelectedTrackFXZones_;
-    vector<Zone*> activeSelectedTrackFXMenuZones_;
-    vector<Zone*> activeSelectedTrackFXMenuFXZones_;
-    vector<Zone*> activeFocusedFXZones_;
-    
+
+    vector<Zone*> activeZones_;
+
     vector<vector<Zone*> *> allActiveZones_;
     
     void LoadDefaultZoneOrder()
@@ -1002,6 +1002,7 @@ protected:
     vector<Zone*> zones_;
     
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
+    void MapSelectedTrackItemsToWidgets(string baseName, int numberOfItems, vector<Zone*> &activeZones);
     
     virtual void InitHardwiredWidgets()
     {
@@ -1047,6 +1048,10 @@ public:
     void UnmapSelectedTrackFXFromWidgets();
     void UnmapSelectedTrackFXFromMenu();
     void UnmapFocusedFXFromWidgets();
+    void MapSelectedTrackSendsToWidgets();
+    void MapSelectedTrackReceivesToWidgets();
+    void UnmapSelectedTrackSendsFromWidgets();
+    void UnmapSelectedTrackReceivesFromWidgets();
     void TrackFXListChanged();
     
     void OnTrackSelection();
@@ -1064,10 +1069,6 @@ public:
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
     virtual void UpdateTimeDisplay() {}
-    void MapSelectedTrackSendsToWidgets();
-    void MapSelectedTrackReceivesToWidgets();
-    void UnmapSelectedTrackSendsFromWidgets();
-    void UnmapSelectedTrackReceivesFromWidgets();
 
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
