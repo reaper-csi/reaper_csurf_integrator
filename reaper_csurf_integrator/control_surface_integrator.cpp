@@ -1985,7 +1985,7 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
 
 void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
 {
-    
+    DeactivateZones(activeSelectedTrackSendsZones_);
 }
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
@@ -1994,19 +1994,16 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int trackSendCount = DAW::GetTrackNumSends(track, 0);
-        
         for(int i = 0; i < GetNumSends(); i++)
         {
-            string menuName = "Send" + to_string(i + 1);
+            string sendName = "Send" + to_string(i + 1);
             
-            if(i >= trackSendCount)
-                GetZone(menuName)->Deactivate(activeSelectedTrackSendsZones_);
-            else
+            Zone* zone = GetZone(sendName);
+            
+            if(zone)
             {
-                Zone* sendZone = new ZoneContext(GetZone(menuName), i);
-                
-                sendZone->Activate(activeSelectedTrackSendsZones_);
+                zone->SetSlotIndex(i);
+                zone->Activate(activeSelectedTrackSendsZones_);
             }
         }
     }
@@ -2014,7 +2011,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 {
-    
+    DeactivateZones(activeSelectedTrackReceivesZones_);
 }
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
@@ -2023,19 +2020,16 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int trackReceiveCount = DAW::GetTrackNumSends(track, -1);
-
         for(int i = 0; i < GetNumReceives(); i++)
         {
-            string menuName = "Receive" + to_string(i + 1);
+            string receiveName = "Receive" + to_string(i + 1);
             
-            if(i >= trackReceiveCount)
-                GetZone(menuName)->Deactivate(activeSelectedTrackReceivesZones_);
-            else
+            Zone* zone = GetZone(receiveName);
+            
+            if(zone)
             {
-                Zone* receiveZone = new ZoneContext(GetZone(menuName), i);
-                
-                receiveZone->Activate(activeSelectedTrackReceivesZones_);
+                zone->SetSlotIndex(i);
+                zone->Activate(activeSelectedTrackReceivesZones_);
             }
         }
     }
@@ -2054,18 +2048,15 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        int trackFXCount = DAW::TrackFX_GetCount(track);
-        
         for(int i = 0; i < GetNumFXSlots(); i++)
         {
             string menuName = "FXMenu" + to_string(i + 1);
             
             Zone* zone = GetZone(menuName);
             
-            if(i >= trackFXCount)
-                zone->BlankWidgets();
-            else
+            if(zone)
             {
+                zone->SetSlotIndex(i);
                 zone->Activate(activeSelectedTrackFXMenuZones_);
             }
         }
@@ -2074,7 +2065,7 @@ void ControlSurface::MapSelectedTrackFXToMenu()
 
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 {
-    MapSlotsToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
+    MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
 void ControlSurface::UnmapSelectedTrackFXFromWidgets()
@@ -2088,10 +2079,10 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
     
     if(MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
-            MapSlotsToWidgets(activeSelectedTrackFXZones_, i);
+            MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXZones_, i);
 }
 
-void ControlSurface::MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot)
+void ControlSurface::MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot)
 {
     MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
     
