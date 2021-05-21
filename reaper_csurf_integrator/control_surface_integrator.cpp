@@ -1979,25 +1979,31 @@ void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
     DeactivateZones(activeSelectedTrackSendsZones_);
 }
 
-void ControlSurface::MapSelectedTrackSendsToWidgets()
+void ControlSurface::MapSelectedTrackItemsToWidgets(string baseName, int numberOfItems, vector<Zone*> &activeZones)
 {
-    DeactivateZones(activeSelectedTrackSendsZones_);
-    
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
-        for(int i = 0; i < GetNumSends(); i++)
+        for(int i = 0; i < numberOfItems; i++)
         {
-            string sendName = "Send" + to_string(i + 1);
+            string name = baseName + to_string(i + 1);
             
-            Zone* zone = GetZone(sendName);
+            Zone* zone = GetZone(name);
             
             if(zone)
             {
                 zone->SetSlotIndex(i);
-                zone->Activate(activeSelectedTrackSendsZones_);
+                zone->Activate(activeZones);
             }
         }
     }
+}
+
+void ControlSurface::MapSelectedTrackSendsToWidgets()
+{
+    DeactivateZones(activeSelectedTrackSendsZones_);
+    
+    MapSelectedTrackItemsToWidgets("Send", GetNumSends(), activeSelectedTrackSendsZones_);
+    
 }
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
@@ -2009,21 +2015,7 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
 {
     DeactivateZones(activeSelectedTrackReceivesZones_);
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-    {
-        for(int i = 0; i < GetNumReceives(); i++)
-        {
-            string receiveName = "Receive" + to_string(i + 1);
-            
-            Zone* zone = GetZone(receiveName);
-            
-            if(zone)
-            {
-                zone->SetSlotIndex(i);
-                zone->Activate(activeSelectedTrackReceivesZones_);
-            }
-        }
-    }
+    MapSelectedTrackItemsToWidgets("Receive", GetNumReceives(), activeSelectedTrackReceivesZones_);
 }
 
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
@@ -2037,21 +2029,7 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     DeactivateZones(activeSelectedTrackFXMenuZones_);
     DeactivateZones(activeSelectedTrackFXMenuFXZones_);
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-    {
-        for(int i = 0; i < GetNumFXSlots(); i++)
-        {
-            string menuName = "FXMenu" + to_string(i + 1);
-            
-            Zone* zone = GetZone(menuName);
-            
-            if(zone)
-            {
-                zone->SetSlotIndex(i);
-                zone->Activate(activeSelectedTrackFXMenuZones_);
-            }
-        }
-    }
+    MapSelectedTrackItemsToWidgets("FXMenu", GetNumFXSlots(), activeSelectedTrackFXMenuZones_);
 }
 
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
