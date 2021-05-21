@@ -537,7 +537,6 @@ public:
     virtual void Activate(vector<Zone*> &activeZones);
     virtual bool TryActivate(Widget* widget);
     virtual void Deactivate(vector<Zone*> activeZones);
-    virtual void BlankWidgets();
     
     virtual int GetSlotIndex() { return slotIndex_; }
     virtual void SetSlotIndex(int index) { slotIndex_ = index; }
@@ -641,7 +640,6 @@ public:
     virtual void Activate(vector<Zone*> &activeZones) override { zone_->Activate(activeZones); }
     virtual bool TryActivate(Widget* widget) override { return zone_->TryActivate(widget); }
     virtual void Deactivate(vector<Zone*> activeZones) override { zone_->Deactivate(activeZones); }
-    virtual void BlankWidgets() override { zone_->BlankWidgets(); }
     virtual int GetSlotIndex() override { return slotIndex_; }
     
     virtual vector<ActionContext>& GetActionContexts(Widget* widget) override { return zone_->GetActionContexts(widget); }

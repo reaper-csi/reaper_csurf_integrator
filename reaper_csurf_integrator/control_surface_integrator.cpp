@@ -1705,15 +1705,6 @@ void Zone::Deactivate(vector<Zone*> activeZones)
         zone->Deactivate(activeZones);
 }
 
-void Zone::BlankWidgets()
-{
-    for(auto widget : widgets_)
-        widget->ForceClear();
-    
-    for(auto zone : includedZones_)
-        zone->BlankWidgets();
-}
-
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
 {
     string modifier = "";
