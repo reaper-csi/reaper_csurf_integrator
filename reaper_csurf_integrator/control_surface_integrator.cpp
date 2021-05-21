@@ -1705,6 +1705,15 @@ void Zone::Deactivate(vector<Zone*> activeZones)
         zone->Deactivate(activeZones);
 }
 
+void Zone::BlankWidgets()
+{
+    for(auto widget : widgets_)
+        widget->ForceClear();
+    
+    for(auto zone : includedZones_)
+        zone->BlankWidgets();
+}
+
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
 {
     string modifier = "";
@@ -1974,6 +1983,11 @@ Navigator* ControlSurface::GetNavigatorForChannel(int channelNum)
         return nullptr;
 }
 
+void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
+{
+    
+}
+
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
     DeactivateZones(activeSelectedTrackSendsZones_);
@@ -1996,6 +2010,11 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
             }
         }
     }
+}
+
+void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
+{
+    
 }
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
@@ -2022,6 +2041,12 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
     }
 }
 
+void ControlSurface::UnmapSelectedTrackFXFromMenu()
+{
+    DeactivateZones(activeSelectedTrackFXMenuZones_);
+    DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+}
+
 void ControlSurface::MapSelectedTrackFXToMenu()
 {
     DeactivateZones(activeSelectedTrackFXMenuZones_);
@@ -2038,7 +2063,7 @@ void ControlSurface::MapSelectedTrackFXToMenu()
             Zone* zone = GetZone(menuName);
             
             if(i >= trackFXCount)
-                zone->Deactivate(activeSelectedTrackFXMenuZones_);
+                zone->BlankWidgets();
             else
             {
                 zone->Activate(activeSelectedTrackFXMenuZones_);
@@ -2046,9 +2071,15 @@ void ControlSurface::MapSelectedTrackFXToMenu()
         }
     }
 }
+
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 {
     MapSlotsToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
+}
+
+void ControlSurface::UnmapSelectedTrackFXFromWidgets()
+{
+    DeactivateZones(activeSelectedTrackFXZones_);
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
@@ -2080,6 +2111,11 @@ void ControlSurface::MapSlotsToWidgets(vector<Zone*> &activeZones, int fxSlot)
             fxZone->Activate(activeZones);
         }
     }
+}
+
+void ControlSurface::UnmapFocusedFXFromWidgets()
+{
+    DeactivateZones(activeFocusedFXZones_);
 }
 
 void ControlSurface::MapFocusedFXToWidgets()
