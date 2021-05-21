@@ -268,48 +268,6 @@ static void PreProcessZoneFile(string filePath, ControlSurface* surface)
                 if(tokens[0] == "Zone")
                 {
                     zoneName = tokens.size() > 1 ? tokens[1] : "";
-                }
-                
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
-                {
-                    navigatorName = tokens[0];
-                    
-                    int numNavigators = 0;
-                    
-                    if(navigatorName == "")
-                        numNavigators = 1;
-                    if(navigatorName == "SelectedTrackNavigator")
-                        numNavigators = 1;
-                    else if(navigatorName == "FocusedFXNavigator")
-                        numNavigators = 1;
-                    else if(navigatorName == "MasterTrackNavigator")
-                        numNavigators = 1;
-                    else if(navigatorName == "TrackNavigator")
-                        numNavigators = surface->GetNumChannels();
-                    else if(navigatorName == "SendNavigator")
-                        numNavigators = surface->GetNumSends();
-                    else if(navigatorName == "ReceiveNavigator")
-                        numNavigators = surface->GetNumReceives();
-                    else if(navigatorName == "FXMenuNavigator")
-                        numNavigators = surface->GetNumFXSlots();
-                    
-                    for(int i = 0; i < numNavigators; i++)
-                    {
-                        string numStr = to_string(i + 1);
-                        
-                        string newZoneName = zoneName;
-                        
-                        if((zoneName == "Channel" && numNavigators > 1) || zoneName == "Send" || zoneName == "Receive" || zoneName == "FXMenu")
-                            newZoneName += numStr;
-                        
-                        surface->AddZoneFilename(newZoneName, filePath);
-                    }
-                    
-                    break;
-                    
-                }
-                else
-                {
                     surface->AddZoneFilename(zoneName, filePath);
                     break;
                 }
@@ -2190,11 +2148,24 @@ Zone* ControlSurface::GetZone(string zoneName)
         
         if(zonesByName_.count(zoneName) > 0)
             return zonesByName_[zoneName];
-        else
-            return nullptr;
     }
-    else
-        return nullptr;
+    else if(isdigit(zoneName.back())) // e.g Channel14 -- the base Zone is Channel
+    {
+        string baseName = zoneName;
+        
+        while(isdigit(baseName.back()))
+             baseName = baseName.substr(0, baseName.length() - 1);
+        
+        if(zoneFilenames_.count(baseName) > 0)
+        {
+            LoadZone(baseName);
+            
+            if(zonesByName_.count(zoneName) > 0)
+                return zonesByName_[zoneName];
+        }
+    }
+
+    return nullptr;
 }
 
 void ControlSurface::GoZone(string zoneName, double value)
