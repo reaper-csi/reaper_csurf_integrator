@@ -523,8 +523,6 @@ private:
     
     map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
     vector<ActionContext> defaultContexts_;
-
-    int slotIndex_ = 0;
     
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
@@ -537,8 +535,9 @@ public:
     virtual void Activate(vector<Zone*> &activeZones);
     virtual bool TryActivate(Widget* widget);
     virtual void Deactivate(vector<Zone*> activeZones);
-
-    virtual int GetSlotIndex() { return slotIndex_; }
+    virtual void BlankWidgets();
+    
+    virtual int GetSlotIndex() { return 0; }
     
     virtual vector<ActionContext>& GetActionContexts(Widget* widget);
     virtual Navigator* GetNavigator() { return navigator_; }
@@ -628,10 +627,10 @@ class ZoneContext : public Zone
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     Zone* const zone_ = nullptr;
-    int const slotNumber_ = 0;
+    int const slotIndex_ = 0;
     
 public:
-    ZoneContext(Zone* zone, int slotNumber) : Zone(), zone_(zone), slotNumber_(slotNumber) {}
+    ZoneContext(Zone* zone, int slotIndex) : Zone(), zone_(zone), slotIndex_(slotIndex) {}
     virtual ~ZoneContext() {}
     virtual string GetClass() override { return "ZoneContext"; }
     
@@ -639,8 +638,8 @@ public:
     virtual void Activate(vector<Zone*> &activeZones) override { zone_->Activate(activeZones); }
     virtual bool TryActivate(Widget* widget) override { return zone_->TryActivate(widget); }
     virtual void Deactivate(vector<Zone*> activeZones) override { zone_->Deactivate(activeZones); }
-
-    virtual int GetSlotIndex() override { return slotNumber_; }
+    virtual void BlankWidgets() override { zone_->BlankWidgets(); }
+    virtual int GetSlotIndex() override { return slotIndex_; }
     
     virtual vector<ActionContext>& GetActionContexts(Widget* widget) override { return zone_->GetActionContexts(widget); }
     virtual Navigator* GetNavigator() override { return zone_->GetNavigator(); }
@@ -1045,6 +1044,9 @@ public:
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
+    void UnmapSelectedTrackFXFromWidgets();
+    void UnmapSelectedTrackFXFromMenu();
+    void UnmapFocusedFXFromWidgets();
     void TrackFXListChanged();
     
     void OnTrackSelection();
@@ -1064,6 +1066,8 @@ public:
     virtual void UpdateTimeDisplay() {}
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackReceivesToWidgets();
+    void UnmapSelectedTrackSendsFromWidgets();
+    void UnmapSelectedTrackReceivesFromWidgets();
 
     virtual bool GetIsEuConFXAreaFocused() { return false; }
 
