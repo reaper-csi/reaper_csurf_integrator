@@ -1002,7 +1002,7 @@ protected:
     vector<Zone*> zones_;
     
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
-    void MapSelectedTrackItemsToWidgets(string baseName, int numberOfItems, vector<Zone*> &activeZones);
+    void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfItems, int numberOfZones, vector<Zone*> &activeZones);
     
     virtual void InitHardwiredWidgets()
     {
@@ -1037,8 +1037,8 @@ public:
     vector<Widget*> &GetWidgets() { return widgets_; }
     
     int GetNumChannels() { return numChannels_; }
-    int GetNumSends() { return numSends_; }
-    int GetNumReceives() { return numSends_; }
+    int GetNumSendSlots() { return numSends_; }
+    int GetNumReceiveSlots() { return numSends_; }
     
     int  GetNumFXSlots() { return numFXSlots_; }
     void MapSelectedTrackFXToWidgets();
