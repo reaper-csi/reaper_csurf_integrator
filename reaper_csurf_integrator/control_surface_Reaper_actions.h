@@ -1159,7 +1159,7 @@ public:
     virtual void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, normalizedToVol(value), 0);
+            DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), normalizedToVol(value), 0);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -1170,9 +1170,9 @@ public:
             DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
             
             if(value == 0)
-                DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, vol, 1);
+                DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), vol, 1);
             else
-                DAW::SetTrackSendUIVol(track, context->GetSlotIndex() * -1, vol, 0);
+                DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), vol, 0);
         }
     }
 };
@@ -1201,7 +1201,7 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, DB2VAL(value), 0);
+            DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), DB2VAL(value), 0);
         }
     }
     
@@ -1213,9 +1213,9 @@ public:
             DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
             
             if(value == 0)
-                DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, vol, 1);
+                DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), vol, 1);
             else
-                DAW::SetTrackSendUIVol(track, context->GetParamIndex() * -1, vol, 0);
+                DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), vol, 0);
         }
     }
 };
@@ -1250,7 +1250,7 @@ public:
     virtual void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, normalizedToPan(value), 0);
+            DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), normalizedToPan(value), 0);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -1261,9 +1261,9 @@ public:
             DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
             
             if(value == 0)
-                DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, pan, 1);
+                DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), pan, 1);
             else
-                DAW::SetTrackSendUIPan(track, context->GetSlotIndex() * -1, pan, 0);
+                DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), pan, 0);
         }
     }
 };
@@ -1290,7 +1290,7 @@ public:
     virtual void Do(ActionContext* context, double value) override
     {
         if(MediaTrack* track = context->GetTrack())
-            DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, value / 100.0, 0);
+            DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), value / 100.0, 0);
     }
     
     virtual void Touch(ActionContext* context, double value) override
@@ -1301,9 +1301,9 @@ public:
             DAW::GetTrackReceiveUIVolPan(track, context->GetParamIndex(), &vol, &pan);
             
             if(value == 0)
-                DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, pan, 1);
+                DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), pan, 1);
             else
-                DAW::SetTrackSendUIPan(track, context->GetParamIndex() * -1, pan, 0);
+                DAW::SetTrackSendUIPan(track, -(context->GetSlotIndex() + 1), pan, 0);
         }
     }
 };
