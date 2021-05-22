@@ -1195,9 +1195,6 @@ MediaTrack* FocusedFXNavigator::GetTrack()
     int itemNumber = 0;
     int fxIndex = 0;
     
-    if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
-        return nullptr;
-    
     if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
         return page_->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
     else

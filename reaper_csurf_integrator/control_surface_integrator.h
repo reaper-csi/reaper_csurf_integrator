@@ -529,31 +529,28 @@ private:
 public:   
     Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
-    virtual ~Zone() {}
-    virtual string GetClass() { return "Zone"; }
     
+    void Activate();
+    void Activate(vector<Zone*> &activeZones);
+    bool TryActivate(Widget* widget);
+    void Deactivate(vector<Zone*> activeZones);
     
-    virtual void Activate();
-    virtual void Activate(vector<Zone*> &activeZones);
-    virtual bool TryActivate(Widget* widget);
-    virtual void Deactivate(vector<Zone*> activeZones);
+    int GetSlotIndex() { return slotIndex_; }
+    void SetSlotIndex(int index) { slotIndex_ = index; }
     
-    virtual int GetSlotIndex() { return slotIndex_; }
-    virtual void SetSlotIndex(int index) { slotIndex_ = index; }
+    vector<ActionContext> &GetActionContexts(Widget* widget);
+    Navigator* GetNavigator() { return navigator_; }
+    vector<Widget*> &GetWidgets() { return widgets_; }
+    vector<Zone*> &GetIncludedZones() { return includedZones_; }
+    void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
+    void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     
-    virtual vector<ActionContext> &GetActionContexts(Widget* widget);
-    virtual Navigator* GetNavigator() { return navigator_; }
-    virtual vector<Widget*> &GetWidgets() { return widgets_; }
-    virtual vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    virtual void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
-    virtual void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
-    
-    virtual string GetName()
+    string GetName()
     {
         return name_;
     }
     
-    virtual string GetNameOrAlias()
+    string GetNameOrAlias()
     {
         if(alias_ != "")
             return alias_;
@@ -561,17 +558,17 @@ public:
             return name_;
     }
     
-    virtual void AddWidget(Widget* widget)
+    void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
     }
     
-    virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
+    void AddActionContext(Widget* widget, string modifier, ActionContext actionContext)
     {
         actionContextDictionary_[widget][modifier].push_back(actionContext);
     }
     
-    virtual void RequestUpdate(vector<Widget*> &usedWidgets)
+    void RequestUpdate(vector<Widget*> &usedWidgets)
     {
         for(auto widget : widgets_)
         {
@@ -587,7 +584,7 @@ public:
             zone->RequestUpdate(usedWidgets);
     }
     
-    virtual void RequestUpdateWidget(Widget* widget)
+    void RequestUpdateWidget(Widget* widget)
     {
         for(auto &context : GetActionContexts(widget))
             context.RunDeferredActions();
@@ -599,25 +596,25 @@ public:
         }
     }
     
-    virtual void DoAction(Widget* widget, double value)
+    void DoAction(Widget* widget, double value)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoAction(value);
     }
     
-    virtual void DoTouch(Widget* widget, double value)
+    void DoTouch(Widget* widget, double value)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoTouch(value);
     }
     
-    virtual void DoRelativeAction(Widget* widget, double delta)
+    void DoRelativeAction(Widget* widget, double delta)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(delta);
     }
     
-    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
+    void DoRelativeAction(Widget* widget, int accelerationIndex, double delta)
     {
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(accelerationIndex, delta);
@@ -1093,12 +1090,7 @@ public:
     void DeactivateZones(vector<Zone*> &zones)
     {
         for(auto zone : zones)
-        {
             zone->Deactivate(zones);
-            
-            if(zone->GetClass() == "ZoneContext")
-                delete zone;
-        }
         
         zones.clear();
     }
@@ -1114,8 +1106,31 @@ public:
         zones_.push_back(zone);
     }
    
+    void CheckFocusedFXState()
+    {
+        int trackNumber = 0;
+        int itemNumber = 0;
+        int fxIndex = 0;
+        
+        if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
+            UnmapFocusedFXFromWidgets();
+        
+        /*
+        if(activeFocusedFXZones_.size() > 0)
+        {
+            Zone* activeZone = activeFocusedFXZones_[0];
+            
+            if(activeZone->GetNavigator()->GetTrack() != nullptr)
+                if(DAW::TrackFX_GetFloatingWindow(activeZone->GetNavigator()->GetTrack(), activeZone->GetSlotIndex()) == nullptr)
+                    UnmapFocusedFXFromWidgets();
+        }
+         */
+    }
+    
     virtual void RequestUpdate()
     {
+        CheckFocusedFXState();
+        
         vector<Widget*> usedWidgets;
 
         for(auto activeZones : allActiveZones_)
