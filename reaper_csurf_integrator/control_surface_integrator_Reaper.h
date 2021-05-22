@@ -104,6 +104,8 @@ public:
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
 
     static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
+
+    static int GetFocusedFX2(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX2(tracknumberOut, itemnumberOut, fxnumberOut); }
     
     static bool GetLastTouchedFX(int* tracknumberOut, int* fxnumberOut, int* paramnumberOut) {  return ::GetLastTouchedFX(tracknumberOut, fxnumberOut, paramnumberOut); }
 
