@@ -1579,16 +1579,21 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            char fxName[BUFSZ];
-            
-            DAW::TrackFX_GetFXName(track, context->GetSlotIndex(), fxName, sizeof(fxName));
-            
             string name = "NoMap";
             
-            if(Zone* zone = context->GetSurface()->GetZone(fxName))
-                name = zone->GetNameOrAlias();
+            if(context->GetSlotIndex() >= DAW::TrackFX_GetCount(track))
+                name= "";
+            else
+            {
+                char fxName[BUFSZ];
+                
+                DAW::TrackFX_GetFXName(track, context->GetSlotIndex(), fxName, sizeof(fxName));
+                
+                if(Zone* zone = context->GetSurface()->GetZone(fxName))
+                    name = zone->GetNameOrAlias();
 
-            context->UpdateWidgetValue(name);
+                context->UpdateWidgetValue(name);
+            }
         }
         else
             context->GetWidget()->Clear();
