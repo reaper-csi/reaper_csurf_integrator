@@ -935,6 +935,11 @@ void Manager::InitActionsDictionary()
     actions_["MapSelectedTrackFXToWidgets"] =       new MapSelectedTrackFXToWidgets();
     actions_["MapSelectedTrackFXToMenu"] =          new MapSelectedTrackFXToMenu();
     actions_["MapFocusedFXToWidgets"] =             new MapFocusedFXToWidgets();
+    actions_["UnmapSelectedTrackSendsFromWidgets"] =    new UnmapSelectedTrackSendsFromWidgets();
+    actions_["UnmapSelectedTrackReceivesFromWidgets"] = new UnmapSelectedTrackReceivesFromWidgets();
+    actions_["UnmapSelectedTrackFXFromWidgets"] =       new UnmapSelectedTrackFXFromWidgets();
+    actions_["UnmapSelectedTrackFXFromMenu"] =          new UnmapSelectedTrackFXFromMenu();
+    actions_["UnmapFocusedFXFromWidgets"] =             new UnmapFocusedFXFromWidgets();
     actions_["GoFXSlot"] =                          new GoFXSlot();
     actions_["CycleTrackAutoMode"] =                new CycleTrackAutoMode();
     actions_["FocusedFXParam"] =                    new FocusedFXParam();
