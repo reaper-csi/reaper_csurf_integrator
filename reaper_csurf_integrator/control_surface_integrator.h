@@ -1115,16 +1115,13 @@ public:
         if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
             UnmapFocusedFXFromWidgets();
         
-        /*
         if(activeFocusedFXZones_.size() > 0)
         {
             Zone* activeZone = activeFocusedFXZones_[0];
             
-            if(activeZone->GetNavigator()->GetTrack() != nullptr)
-                if(DAW::TrackFX_GetFloatingWindow(activeZone->GetNavigator()->GetTrack(), activeZone->GetSlotIndex()) == nullptr)
-                    UnmapFocusedFXFromWidgets();
+            if(activeZone->GetNavigator()->GetTrack() == nullptr)
+                UnmapFocusedFXFromWidgets();
         }
-         */
     }
     
     virtual void RequestUpdate()
