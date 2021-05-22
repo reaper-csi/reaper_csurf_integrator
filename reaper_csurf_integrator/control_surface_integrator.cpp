@@ -346,12 +346,12 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     }
                     else if(navigatorName == "SendNavigator")
                     {
-                        for(int i = 0; i < surface->GetNumSends(); i++)
+                        for(int i = 0; i < surface->GetNumSendSlots(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
                     else if(navigatorName == "ReceiveNavigator")
                     {
-                        for(int i = 0; i < surface->GetNumReceives(); i++)
+                        for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
                     else if(navigatorName == "FXMenuNavigator")
@@ -377,10 +377,10 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             
                             if(includedZoneName == "Channel" && surface->GetNumChannels() > 1)
                                 numItems = surface->GetNumChannels();
-                            else if(includedZoneName == "Send" && surface->GetNumSends() > 1)
-                                numItems = surface->GetNumSends();
-                            else if(includedZoneName == "Receive" && surface->GetNumReceives() > 1)
-                                numItems = surface->GetNumReceives();
+                            else if(includedZoneName == "Send" && surface->GetNumSendSlots() > 1)
+                                numItems = surface->GetNumSendSlots();
+                            else if(includedZoneName == "Receive" && surface->GetNumReceiveSlots() > 1)
+                                numItems = surface->GetNumReceiveSlots();
                             else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
                                 numItems = surface->GetNumFXSlots();
                            
@@ -447,7 +447,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     break;
                 }
                 
-                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "FXMenuNavigator")
+                else if(tokens[0] == "TrackNavigator" || tokens[0] == "MasterTrackNavigator" || tokens[0] == "SelectedTrackNavigator" || tokens[0] == "FocusedFXNavigator" || tokens[0] == "SendNavigator" || tokens[0] == "ReceiveNavigator" || tokens[0] == "FXMenuNavigator")
                     navigatorName = tokens[0];
                 
                 else if(tokens[0] == "IncludedZones")
@@ -1984,21 +1984,16 @@ void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
     DeactivateZones(activeSelectedTrackSendsZones_);
 }
 
-void ControlSurface::MapSelectedTrackItemsToWidgets(string baseName, int numberOfItems, vector<Zone*> &activeZones)
+void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfItems, int numberOfSlots, vector<Zone*> &activeZones)
 {
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    for(int i = 0; i < numberOfSlots; i++)
     {
-        for(int i = 0; i < numberOfItems; i++)
+        string name = baseName + to_string(i + 1);
+        
+        if(Zone* zone = GetZone(name))
         {
-            string name = baseName + to_string(i + 1);
-            
-            Zone* zone = GetZone(name);
-            
-            if(zone)
-            {
-                zone->SetSlotIndex(i);
-                zone->Activate(activeZones);
-            }
+            zone->SetSlotIndex(i);
+            zone->Activate(activeZones);
         }
     }
 }
@@ -2007,8 +2002,11 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
     DeactivateZones(activeSelectedTrackSendsZones_);
     
-    MapSelectedTrackItemsToWidgets("Send", GetNumSends(), activeSelectedTrackSendsZones_);
-    
+    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    {
+        int numSends = DAW::GetTrackNumSends(track, 0);
+        MapSelectedTrackItemsToWidgets(track, "Send", numSends, GetNumSendSlots(), activeSelectedTrackSendsZones_);
+    }
 }
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
@@ -2020,7 +2018,11 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
 {
     DeactivateZones(activeSelectedTrackReceivesZones_);
     
-    MapSelectedTrackItemsToWidgets("Receive", GetNumReceives(), activeSelectedTrackReceivesZones_);
+    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    {
+        int numReceives = DAW::GetTrackNumSends(track, -1);
+        MapSelectedTrackItemsToWidgets(track, "Receive", numReceives, GetNumSendSlots(), activeSelectedTrackReceivesZones_);
+    }
 }
 
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
@@ -2034,7 +2036,11 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     DeactivateZones(activeSelectedTrackFXMenuZones_);
     DeactivateZones(activeSelectedTrackFXMenuFXZones_);
     
-    MapSelectedTrackItemsToWidgets("FXMenu", GetNumFXSlots(), activeSelectedTrackFXMenuZones_);
+    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    {
+        int numFX = DAW::TrackFX_GetCount(track);
+        MapSelectedTrackItemsToWidgets(track, "FXMenu", numFX, GetNumFXSlots(), activeSelectedTrackFXMenuZones_);
+    }
 }
 
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
