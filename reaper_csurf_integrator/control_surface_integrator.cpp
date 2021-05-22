@@ -369,7 +369,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         if((zoneName == "Channel" && navigators.size() > 1) || zoneName == "Send" || zoneName == "Receive" || zoneName == "FXMenu")
                             newZoneName += numStr;
                                                
-                        Zone* zone = new Zone(surface, navigators[i], newZoneName, zoneAlias, filePath);
+                        Zone* zone = new Zone(surface, navigators[i], i, newZoneName, zoneAlias, filePath);
                         
                         for(auto includedZoneName : includedZones)
                         {
@@ -1991,10 +1991,7 @@ void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string ba
         string name = baseName + to_string(i + 1);
         
         if(Zone* zone = GetZone(name))
-        {
-            zone->SetSlotIndex(i);
             zone->Activate(activeZones);
-        }
     }
 }
 

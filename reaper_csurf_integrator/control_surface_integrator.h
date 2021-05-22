@@ -512,11 +512,10 @@ class Zone
 private:
     ControlSurface* const surface_ = nullptr;
     Navigator* const navigator_= nullptr;
+    int const slotIndex_ = 0;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
-    
-    int slotIndex_ = 0;
     
     vector<Widget*> widgets_;
     
@@ -527,7 +526,7 @@ private:
     vector<ActionContext> defaultContexts_;
     
 public:   
-    Zone(ControlSurface* surface, Navigator* navigator, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
     virtual ~Zone() {}
     virtual string GetClass() { return "Zone"; }
@@ -539,7 +538,6 @@ public:
     virtual void Deactivate(vector<Zone*> activeZones);
     
     virtual int GetSlotIndex() { return slotIndex_; }
-    virtual void SetSlotIndex(int index) { slotIndex_ = index; }
     
     virtual vector<ActionContext> &GetActionContexts(Widget* widget);
     virtual Navigator* GetNavigator() { return navigator_; }
