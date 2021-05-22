@@ -512,11 +512,12 @@ class Zone
 private:
     ControlSurface* const surface_ = nullptr;
     Navigator* const navigator_= nullptr;
-    int const slotIndex_ = 0;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
     
+    int slotIndex_ = 0;
+
     vector<Widget*> widgets_;
     
     vector<string> includedZoneNames_;
@@ -538,6 +539,7 @@ public:
     virtual void Deactivate(vector<Zone*> activeZones);
     
     virtual int GetSlotIndex() { return slotIndex_; }
+    virtual void SetSlotIndex(int index) { slotIndex_ = index; }
     
     virtual vector<ActionContext> &GetActionContexts(Widget* widget);
     virtual Navigator* GetNavigator() { return navigator_; }
@@ -620,41 +622,6 @@ public:
         for(auto &context : GetActionContexts(widget))
             context.DoRelativeAction(accelerationIndex, delta);
     }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class ZoneContext : public Zone
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-    Zone* const zone_ = nullptr;
-    int const slotIndex_ = 0;
-    
-public:
-    ZoneContext(Zone* zone, int slotIndex) : Zone(), zone_(zone), slotIndex_(slotIndex) {}
-    virtual ~ZoneContext() {}
-    virtual string GetClass() override { return "ZoneContext"; }
-    
-    virtual void Activate() override;
-    virtual void Activate(vector<Zone*> &activeZones) override { zone_->Activate(activeZones); }
-    virtual bool TryActivate(Widget* widget) override { return zone_->TryActivate(widget); }
-    virtual void Deactivate(vector<Zone*> activeZones) override { zone_->Deactivate(activeZones); }
-    virtual int GetSlotIndex() override { return slotIndex_; }
-    
-    virtual vector<ActionContext>& GetActionContexts(Widget* widget) override { return zone_->GetActionContexts(widget); }
-    virtual Navigator* GetNavigator() override { return zone_->GetNavigator(); }
-    virtual vector<Widget*> &GetWidgets() override { return zone_->GetWidgets(); }
-    virtual void AddIncludedZoneName(string name) override { zone_->AddIncludedZoneName(name); }
-    virtual void AddIncludedZone(Zone* &zone) override { zone_->AddIncludedZone(zone); }
-    virtual string GetName() override { return zone_->GetName(); }
-    virtual string GetNameOrAlias() override { return zone_->GetNameOrAlias(); }
-    virtual void AddWidget(Widget* widget) override { zone_->AddWidget(widget); }
-    virtual void AddActionContext(Widget* widget, string modifier, ActionContext actionContext) override { zone_->AddActionContext(widget, modifier, actionContext); }
-    virtual void RequestUpdate(vector<Widget*> &usedWidgets) override { zone_->RequestUpdate(usedWidgets); }
-    virtual void RequestUpdateWidget(Widget* widget) override { zone_->RequestUpdateWidget(widget); }
-    virtual void DoAction(Widget* widget, double value) override { zone_->DoAction(widget, value); }
-    virtual void DoTouch(Widget* widget, double value) override { zone_->DoTouch(widget, value); }
-    virtual void DoRelativeAction(Widget* widget, double delta) override { zone_->DoRelativeAction(widget, delta); }
-    virtual void DoRelativeAction(Widget* widget, int accelerationIndex, double delta) override { zone_->DoRelativeAction(widget, accelerationIndex, delta); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
