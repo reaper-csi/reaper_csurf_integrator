@@ -2076,6 +2076,8 @@ void ControlSurface::UnmapFocusedFXFromWidgets()
 
 void ControlSurface::MapFocusedFXToWidgets()
 {
+    UnmapFocusedFXFromWidgets();
+    
     int trackNumber = 0;
     int itemNumber = 0;
     int fxSlot = 0;
@@ -2087,8 +2089,6 @@ void ControlSurface::MapFocusedFXToWidgets()
     
     if(focusedTrack)
     {
-        UnmapFocusedFXFromWidgets();
-        
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
         
