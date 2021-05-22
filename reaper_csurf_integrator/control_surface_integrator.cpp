@@ -1974,7 +1974,7 @@ void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
-    DeactivateZones(activeSelectedTrackSendsZones_);
+    UnmapSelectedTrackSendsFromWidgets();
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
@@ -1990,7 +1990,7 @@ void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
 {
-    DeactivateZones(activeSelectedTrackReceivesZones_);
+    UnmapSelectedTrackReceivesFromWidgets();
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
@@ -2007,8 +2007,7 @@ void ControlSurface::UnmapSelectedTrackFXFromMenu()
 
 void ControlSurface::MapSelectedTrackFXToMenu()
 {
-    DeactivateZones(activeSelectedTrackFXMenuZones_);
-    DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+    UnmapSelectedTrackFXFromMenu();
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
     {
@@ -2035,7 +2034,7 @@ void ControlSurface::UnmapSelectedTrackFXFromWidgets()
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
 {
-    DeactivateZones(activeSelectedTrackFXZones_);
+    UnmapSelectedTrackFXFromWidgets();
     
     if(MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
@@ -2088,7 +2087,7 @@ void ControlSurface::MapFocusedFXToWidgets()
     
     if(focusedTrack)
     {
-        DeactivateZones(activeFocusedFXZones_);
+        UnmapFocusedFXFromWidgets();
         
         char FXName[BUFSZ];
         DAW::TrackFX_GetFXName(focusedTrack, fxSlot, FXName, sizeof(FXName));
