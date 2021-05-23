@@ -1673,6 +1673,8 @@ void ActionContext::DoAcceleratedDeltaValueAction(int accelerationIndex, double 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Zone::Activate()
 {
+    surface_->LoadingZone(GetName());
+    
     for(auto widget : widgets_)
         widget->SetZone(this);
     
