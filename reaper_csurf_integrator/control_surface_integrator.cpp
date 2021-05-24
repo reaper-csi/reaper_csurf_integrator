@@ -286,7 +286,9 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
 {
     vector<string> includedZones;
     bool isInIncludedZonesSection = false;
-    
+    vector<string> subZones;
+    bool isInSubZonesSection = false;
+
     map<string, map<string, vector<ActionTemplate*>>> widgetActions;
     
     string zoneName = "";
@@ -383,7 +385,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                 numItems = surface->GetNumReceiveSlots();
                             else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
                                 numItems = surface->GetNumFXSlots();
-                           
+                            
                             for(int j = 0; j < numItems; j++)
                             {
                                 string expandedName = includedZoneName;
@@ -396,6 +398,14 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                 if(includedZone)
                                     zone->AddIncludedZone(includedZone);
                             }
+                        }
+                        
+                        for(auto subZoneName : subZones)
+                        {
+                            Zone* subZone = surface->GetZone(subZoneName);
+                            
+                            if(subZone)
+                                zone->AddSubZone(subZone);
                         }
                         
                         for(auto [widgetName, modifierActions] : widgetActions)
@@ -442,6 +452,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     }
                     
                     includedZones.clear();
+                    subZones.clear();
                     widgetActions.clear();
                     
                     break;
@@ -458,6 +469,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 
                 else if(tokens.size() == 1 && isInIncludedZonesSection)
                     includedZones.push_back(tokens[0]);
+                
+                else if(tokens[0] == "SubZones")
+                    isInSubZonesSection = true;
+                
+                else if(tokens[0] == "SubZonesEnd")
+                    isInSubZonesSection = false;
+                
+                else if(tokens.size() == 1 && isInSubZonesSection)
+                    subZones.push_back(tokens[0]);
                 
                 else if(tokens.size() > 1)
                 {
