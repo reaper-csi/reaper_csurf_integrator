@@ -98,8 +98,6 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
     
     if(call == CSURF_EXT_SETFOCUSEDFX)
     {
-        // GAW TBD -- need to implement take FX and clear focus
-        
         // Track FX focused
         if(parm2 == nullptr)
         {
@@ -284,12 +282,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                     CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_CHECKED);
                 else
                     CheckDlgButton(hwndDlg, IDC_CHECK_ScrollLink, BST_UNCHECKED);
-                /*
-                if(trackColouring)
-                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_CHECKED);
-                else
-                    CheckDlgButton(hwndDlg, IDC_CHECK_ColourTracks, BST_UNCHECKED);
-                 */
             }
             else
             {
@@ -302,22 +294,6 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
         {
             switch(LOWORD(wParam))
             {
-                case IDCHOOSECOLOUR:
-                {
-                    /*
-                    int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-
-                    if (index >= 0)
-                    {
-                        int colorOut = DAW::ColorToNative(pages[index]->startingChannel, pages[index]->green, pages[index]->blue);
-                        
-                        if(DAW::GR_SelectColor(hwndDlg, &colorOut))
-                            DAW::ColorFromNative(colorOut, &pages[index]->startingChannel, &pages[index]->green, &pages[index]->blue);
-                    }
-                    */
-                }
-                    break;
-
                 case IDC_RADIO_MCP:
                     CheckDlgButton(hwndDlg, IDC_RADIO_TCP, BST_UNCHECKED);
                     break;
@@ -345,12 +321,7 @@ static WDL_DLGRET dlgProcPage(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                             useScrollLink = true;
                         else
                             useScrollLink = false;
-                        /*
-                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ColourTracks))
-                            trackColouring = true;
-                        else
-                            trackColouring = false;
-                        */
+
                         dlgResult = IDOK;
                         EndDialog(hwndDlg, 0);
                     }
