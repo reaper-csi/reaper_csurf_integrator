@@ -38,6 +38,10 @@
 #define IDC_EDIT_NumSends               1086
 #define IDC_EDIT_NumFX                  1087
 #define IDC_EDIT_ChannelOffset          1088
+#define IDC_CHECK_BroadcastGoZone       1089
+#define IDC_CHECK_ReceiveGoZone         1090
+#define IDC_CHECK_BroadcastGoFXSlot     1091
+#define IDC_CHECK_ReceiveGoFXSlot       1092
 
 // Next default values for new objects
 // 
@@ -45,7 +49,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1089
+#define _APS_NEXT_CONTROL_VALUE         1090
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
