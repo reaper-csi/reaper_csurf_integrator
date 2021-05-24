@@ -511,7 +511,7 @@ class Zone
 {
 private:
     ControlSurface* const surface_ = nullptr;
-    Navigator* const navigator_= nullptr;
+    Navigator* navigator_= nullptr;
     string const name_ = "";
     string const alias_ = "";
     string const sourceFilePath_ = "";
@@ -520,9 +520,9 @@ private:
 
     vector<Widget*> widgets_;
     
-    vector<string> includedZoneNames_;
     vector<Zone*> includedZones_;
-    
+    vector<Zone*> subZones_;
+
     map<Widget*, map<string, vector<ActionContext>>> actionContextDictionary_;
     vector<ActionContext> defaultContexts_;
     
@@ -540,11 +540,18 @@ public:
     
     vector<ActionContext> &GetActionContexts(Widget* widget);
     Navigator* GetNavigator() { return navigator_; }
+    void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    void AddIncludedZoneName(string name) { includedZoneNames_.push_back(name); }
+    vector<Zone*> &GetSubZones() { return subZones_; }
     void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     
+    void AddSubZone(Zone* &subZone)
+    {
+        subZone->SetNavigator(GetNavigator());
+        subZones_.push_back(subZone);
+    }
+
     string GetName()
     {
         return name_;
