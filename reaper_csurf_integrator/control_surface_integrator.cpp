@@ -2094,6 +2094,11 @@ void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
     if(shouldBroadcastGoFXSlot_)
         page_->GoFXSlot(this, fxSlot);
     
+    MapSelectedTrackFXMenuSlotToWidgetsImplementation(fxSlot);
+}
+
+void ControlSurface::MapSelectedTrackFXMenuSlotToWidgetsImplementation(int fxSlot)
+{
     DeactivateZones(activeSelectedTrackFXMenuFXZones_);
     
     MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
@@ -2215,6 +2220,11 @@ void ControlSurface::GoZone(string zoneName, double value)
     if(shouldBroadcastGoZone_)
         page_->GoZone(this, zoneName, value);
     
+    GoZoneImplementation(zoneName, value);
+}
+
+void ControlSurface::GoZoneImplementation(string zoneName, double value)
+{
     if(zoneName == "Home")
     {
         DeactivateZones(activeZones_);
