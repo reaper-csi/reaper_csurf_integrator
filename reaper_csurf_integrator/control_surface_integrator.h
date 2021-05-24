@@ -1024,6 +1024,7 @@ public:
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
+    void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
     void MapFocusedFXToWidgets();
     void UnmapSelectedTrackFXFromWidgets();
     void UnmapSelectedTrackFXFromMenu();
@@ -1045,6 +1046,7 @@ public:
     void LoadZone(string zoneName);
     Zone* GetZone(string zoneName);
     void GoZone(string zoneName, double value);
+    void GoZoneImplementation(string zoneName, double value);
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1057,13 +1059,13 @@ public:
     void AcceptGoZone(string zoneName, double value)
     {
         if(shouldReceiveGoZone_)
-            GoZone(zoneName, value);
+            GoZoneImplementation(zoneName, value);
     }
     
     void AcceptGoFXSlot(int slot)
     {
         if(shouldReceiveGoFXSlot_)
-            MapSelectedTrackFXMenuSlotToWidgets(slot);
+            MapSelectedTrackFXMenuSlotToWidgetsImplementation(slot);
     }
     
     void MakeHomeDefault()
