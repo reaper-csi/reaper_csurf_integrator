@@ -536,7 +536,6 @@ public:
     void Deactivate(vector<Zone*> activeZones);
     
     int GetSlotIndex() { return slotIndex_; }
-    void SetSlotIndex(int index) { slotIndex_ = index; }
     
     vector<ActionContext> &GetActionContexts(Widget* widget);
     Navigator* GetNavigator() { return navigator_; }
@@ -546,6 +545,14 @@ public:
     vector<Zone*> &GetSubZones() { return subZones_; }
     void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     
+    void SetSlotIndex(int index)
+    {
+        slotIndex_ = index;
+        
+        for(auto subZone : subZones_)
+            subZone->SetSlotIndex(index);
+    }
+
     void AddSubZone(Zone* &subZone)
     {
         subZone->SetNavigator(GetNavigator());
