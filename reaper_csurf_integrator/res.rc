@@ -103,15 +103,20 @@ BEGIN
     GROUPBOX        "Templates",IDC_STATIC,8,137,206,56,WS_GROUP
     COMBOBOX        IDC_COMBO_ZoneTemplates,48,172,163,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     LTEXT           "Zone Folder",IDC_STATIC,9,174,38,8
-    LTEXT           "Number of Channels",IDC_STATIC,47,33,75,8
-    EDITTEXT        IDC_EDIT_NumChannels,21,31,19,12,ES_AUTOHSCROLL
-    LTEXT           "Number of Sends",IDC_STATIC,47,65,78,8
-    EDITTEXT        IDC_EDIT_NumSends,21,63,19,12,ES_AUTOHSCROLL
-    LTEXT           "Number of FX Menu Items",IDC_STATIC,47,81,78,8
-    EDITTEXT        IDC_EDIT_NumFX,21,79,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of Channels",IDC_STATIC,39,33,67,8
+    EDITTEXT        IDC_EDIT_NumChannels,13,31,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of Sends",IDC_STATIC,39,65,69,8
+    EDITTEXT        IDC_EDIT_NumSends,13,63,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of FX Menu Items",IDC_STATIC,39,81,67,8
+    EDITTEXT        IDC_EDIT_NumFX,13,79,19,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,107,200,50,14
-    LTEXT           "CSI Channel Start Postion  - 0 is default",IDC_STATIC,47,49,146,8
-    EDITTEXT        IDC_EDIT_ChannelOffset,21,47,19,12,ES_AUTOHSCROLL
+    LTEXT           "Channel Start Postion",IDC_STATIC,39,49,69,8
+    EDITTEXT        IDC_EDIT_ChannelOffset,13,47,19,12,ES_AUTOHSCROLL
+    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,33,75,10
+    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,49,75,10
+    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,65,79,10
+    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,81,79,10
 END
 
 IDD_DIALOG_MidiSurface1 DIALOGEX 0, 0, 219, 225
@@ -134,14 +139,19 @@ BEGIN
     LTEXT           "CSI sends on port",IDC_STATIC,13,125,66,8
     EDITTEXT        IDC_EDIT_OSCOutPort,80,122,63,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_OSCInPort,80,105,62,12,ES_AUTOHSCROLL
-    LTEXT           "Number of Channels",IDC_STATIC,48,30,75,8
-    EDITTEXT        IDC_EDIT_NumChannels,22,28,19,12,ES_AUTOHSCROLL
-    LTEXT           "Number of Sends",IDC_STATIC,48,59,78,8
-    EDITTEXT        IDC_EDIT_NumSends,22,58,19,12,ES_AUTOHSCROLL
-    LTEXT           "Number of FX Menu Items",IDC_STATIC,48,75,78,8
-    EDITTEXT        IDC_EDIT_NumFX,22,73,19,12,ES_AUTOHSCROLL
-    LTEXT           "CSI Channel Start Postion  - 0 is default",IDC_STATIC,48,44,167,8
-    EDITTEXT        IDC_EDIT_ChannelOffset,22,43,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of Channels",IDC_STATIC,40,30,69,8
+    EDITTEXT        IDC_EDIT_NumChannels,14,28,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of Sends",IDC_STATIC,40,59,67,8
+    EDITTEXT        IDC_EDIT_NumSends,14,58,19,12,ES_AUTOHSCROLL
+    LTEXT           "Number of FX Menu Items",IDC_STATIC,40,75,66,8
+    EDITTEXT        IDC_EDIT_NumFX,14,73,19,12,ES_AUTOHSCROLL
+    LTEXT           "Channel Start Postion",IDC_STATIC,40,44,72,8
+    EDITTEXT        IDC_EDIT_ChannelOffset,14,43,19,12,ES_AUTOHSCROLL
+    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,29,75,10
+    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,44,75,10
+    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,60,79,10
+    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,75,79,10
 END
 
 IDD_DIALOG_MidiSurface2 DIALOGEX 0, 0, 219, 150
@@ -151,18 +161,23 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,98,131,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,152,131,50,14
-    LTEXT           "Number of Channels",IDC_STATIC,41,67,75,8
+    LTEXT           "Number of Channels",IDC_STATIC,41,67,69,8
     LTEXT           "Name",IDC_STATIC,17,8,19,8
     EDITTEXT        IDC_EDIT_EuConSurfaceName,41,4,170,14,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_ZoneTemplates,12,38,198,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_EDIT_NumChannels,16,65,19,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_NumChannels,16,66,19,12,ES_AUTOHSCROLL
     GROUPBOX        "Folder containing EuCon Zone files",IDC_STATIC,9,24,206,35,WS_GROUP
-    LTEXT           "Number of Sends",IDC_STATIC,41,99,105,8
+    LTEXT           "Number of Sends",IDC_STATIC,41,99,65,8
     EDITTEXT        IDC_EDIT_NumSends,16,97,19,12,ES_AUTOHSCROLL
-    LTEXT           "Number of FX Pages",IDC_STATIC,41,115,107,8
+    LTEXT           "Number of FX Pages",IDC_STATIC,41,115,67,8
     EDITTEXT        IDC_EDIT_NumFX,16,113,19,12,ES_AUTOHSCROLL
-    LTEXT           "CSI Channel Start Postion  - 0 is default",IDC_STATIC,41,83,142,8
+    LTEXT           "Channel Start Postion",IDC_STATIC,41,83,73,8
     EDITTEXT        IDC_EDIT_ChannelOffset,16,81,19,12,ES_AUTOHSCROLL
+    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,67,75,10
+    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,83,75,10
+    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,99,79,10
+    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,115,79,10
 END
 
 
