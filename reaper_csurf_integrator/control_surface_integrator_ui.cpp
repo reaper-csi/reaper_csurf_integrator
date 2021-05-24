@@ -197,6 +197,10 @@ struct SurfaceLine
     int channelOffset = 0;
     int numSends = 0;
     int numFX = 0;
+    bool broadcastGoZone = false;
+    bool receiveGoZone = false;
+    bool broadcastGoFXSlot = false;
+    bool receiveGoFXSlot = false;
     
     // for OSC
     string remoteDeviceIP = "";
@@ -210,7 +214,6 @@ struct PageLine
     bool synchPages = false;
     bool useScrollLink = false;
     //bool trackColouring = false;
-    int numChannels = 0;
     //int green = 0;
     //int blue = 0;
     vector<SurfaceLine*> surfaces;
@@ -229,11 +232,15 @@ static int outPort = 0;
 static char remoteDeviceIP[BUFSZ];
 static char templateFilename[BUFSZ];
 static char zoneTemplateFolder[BUFSZ];
-// for EuCon
+
 int numChannels = 0;
 int channelOffset = 0;
 int numSends = 0;
 int numFX = 0;
+bool broadcastGoZone = false;
+bool receiveGoZone = false;
+bool broadcastGoFXSlot = false;
+bool receiveGoFXSlot = false;
 
 static bool followMCP = true;
 static bool synchPages = false;
@@ -420,6 +427,26 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
 
+                if(broadcastGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_UNCHECKED);
+                
+                if(receiveGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_UNCHECKED);
+
+                if(broadcastGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_UNCHECKED);
+                
+                if(receiveGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_UNCHECKED);
+
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRINGEXACT, -1, (LPARAM)templateFilename);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_SETCURSEL, index, 0);
@@ -496,6 +523,26 @@ static WDL_DLGRET dlgProcMidiSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
                         numFX = atoi(buf);
                         
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoZone))
+                            broadcastGoZone = true;
+                        else
+                            broadcastGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoZone))
+                            receiveGoZone = true;
+                        else
+                            receiveGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoFXSlot))
+                            broadcastGoFXSlot = true;
+                        else
+                            broadcastGoFXSlot = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoFXSlot))
+                            receiveGoFXSlot = true;
+                        else
+                            receiveGoFXSlot = false;
+                        
                         GetDlgItemText(hwndDlg, IDC_EDIT_MidiSurfaceName, name, sizeof(name));
                         
                         int currentSelection = SendDlgItemMessage(hwndDlg, IDC_COMBO_MidiIn, CB_GETCURSEL, 0, 0);
@@ -563,6 +610,27 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP);
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCInPort, to_string(inPort).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_OSCOutPort, to_string(outPort).c_str());
+                
+                if(broadcastGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_UNCHECKED);
+                
+                if(receiveGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_UNCHECKED);
+                
+                if(broadcastGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_UNCHECKED);
+                
+                if(receiveGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_UNCHECKED);
+
                 
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_SurfaceTemplate), CB_FINDSTRINGEXACT, -1, (LPARAM)templateFilename);
                 if(index >= 0)
@@ -641,6 +709,26 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
                         numFX = atoi(buf);
                         
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoZone))
+                            broadcastGoZone = true;
+                        else
+                            broadcastGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoZone))
+                            receiveGoZone = true;
+                        else
+                            receiveGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoFXSlot))
+                            broadcastGoFXSlot = true;
+                        else
+                            broadcastGoFXSlot = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoFXSlot))
+                            receiveGoFXSlot = true;
+                        else
+                            receiveGoFXSlot = false;
+                        
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCSurfaceName, name, sizeof(name));
                         GetDlgItemText(hwndDlg, IDC_EDIT_OSCRemoteDeviceIP, remoteDeviceIP, sizeof(remoteDeviceIP));
                         
@@ -697,6 +785,27 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
                 SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
 
+                if(broadcastGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoZone, BST_UNCHECKED);
+                
+                if(receiveGoZone)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoZone, BST_UNCHECKED);
+                
+                if(broadcastGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_BroadcastGoFXSlot, BST_UNCHECKED);
+                
+                if(receiveGoFXSlot)
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_CHECKED);
+                else
+                    CheckDlgButton(hwndDlg, IDC_CHECK_ReceiveGoFXSlot, BST_UNCHECKED);
+
+                
                 int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)zoneTemplateFolder);
                 if(index >= 0)
                     SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
@@ -738,6 +847,26 @@ static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                         
                         GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
                         numFX = atoi(buf);
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoZone))
+                            broadcastGoZone = true;
+                        else
+                            broadcastGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoZone))
+                            receiveGoZone = true;
+                        else
+                            receiveGoZone = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_BroadcastGoFXSlot))
+                            broadcastGoFXSlot = true;
+                        else
+                            broadcastGoFXSlot = false;
+                        
+                        if (IsDlgButtonChecked(hwndDlg, IDC_CHECK_ReceiveGoFXSlot))
+                            receiveGoFXSlot = true;
+                        else
+                            receiveGoFXSlot = false;
                         
                         GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
 
@@ -853,6 +982,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->channelOffset = channelOffset;
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
+                                    surface->broadcastGoZone = broadcastGoZone;
+                                    surface->receiveGoZone = receiveGoZone;
+                                    surface->broadcastGoFXSlot = broadcastGoFXSlot;
+                                    surface->receiveGoFXSlot = receiveGoFXSlot;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
@@ -885,7 +1018,11 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->channelOffset = channelOffset;
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
-                                    
+                                    surface->broadcastGoZone = broadcastGoZone;
+                                    surface->receiveGoZone = receiveGoZone;
+                                    surface->broadcastGoFXSlot = broadcastGoFXSlot;
+                                    surface->receiveGoFXSlot = receiveGoFXSlot;
+
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
                                     AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
@@ -913,6 +1050,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     surface->channelOffset = channelOffset;
                                     surface->numSends = numSends;
                                     surface->numFX = numFX;
+                                    surface->broadcastGoZone = broadcastGoZone;
+                                    surface->receiveGoZone = receiveGoZone;
+                                    surface->broadcastGoFXSlot = broadcastGoFXSlot;
+                                    surface->receiveGoFXSlot = receiveGoFXSlot;
 
                                     pages[pageIndex]->surfaces.push_back(surface);
                                     
@@ -971,7 +1112,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 channelOffset = pages[pageIndex]->surfaces[index]->channelOffset;
                                 numSends = pages[pageIndex]->surfaces[index]->numSends;
                                 numFX = pages[pageIndex]->surfaces[index]->numFX;
- 
+                                broadcastGoZone = pages[pageIndex]->surfaces[index]->broadcastGoZone;
+                                receiveGoZone = pages[pageIndex]->surfaces[index]->receiveGoZone;
+                                broadcastGoFXSlot = pages[pageIndex]->surfaces[index]->broadcastGoFXSlot;
+                                receiveGoFXSlot = pages[pageIndex]->surfaces[index]->receiveGoFXSlot;
 
                                 dlgResult = false;
                                 editMode = true;
@@ -995,6 +1139,10 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     pages[pageIndex]->surfaces[index]->channelOffset = channelOffset;
                                     pages[pageIndex]->surfaces[index]->numSends = numSends;
                                     pages[pageIndex]->surfaces[index]->numFX = numFX;
+                                    pages[pageIndex]->surfaces[index]->broadcastGoZone = broadcastGoZone;
+                                    pages[pageIndex]->surfaces[index]->receiveGoZone = receiveGoZone;
+                                    pages[pageIndex]->surfaces[index]->broadcastGoFXSlot = broadcastGoFXSlot;
+                                    pages[pageIndex]->surfaces[index]->receiveGoFXSlot = receiveGoFXSlot;
                                 }
                                 
                                 editMode = false;
@@ -1055,17 +1203,17 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 
                 if(tokens.size() > 4) // ignore comment lines and blank lines
                 {
-                    if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
+                    if(tokens[0] == MidiSurfaceToken && tokens.size() == 14)
                     {
                         if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                             numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                     }
-                    else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                    else if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
                     {
                         if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                             numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                     }
-                    else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
+                    else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
                     {
                         if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
                             numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
@@ -1092,7 +1240,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                     
                     if(tokens[0] == PageToken)
                     {
-                        if( ! (tokens.size() == 11 || tokens.size() == 5))
+                        if(tokens.size() != 5)
                             continue;
  
                         PageLine* page = new PageLine();
@@ -1112,8 +1260,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             page->useScrollLink = true;
                         else
                             page->useScrollLink = false;
-                       
-                        page->numChannels = numChannels;
                         
                         pages.push_back(page);
                         
@@ -1125,7 +1271,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         surface->type = tokens[0];
                         surface->name = tokens[1];
                         
-                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 10 || tokens.size() == 11))
+                        if((surface->type == MidiSurfaceToken || surface->type == OSCSurfaceToken) && (tokens.size() == 14 || tokens.size() == 15))
                         {
                             surface->inPort = atoi(tokens[2].c_str());
                             surface->outPort = atoi(tokens[3].c_str());
@@ -1136,16 +1282,61 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             surface->numFX = atoi(tokens[8].c_str());
                             surface->channelOffset = atoi(tokens[9].c_str());
 
-                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                            int offset = 0;
+                            
+                            if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
+                            {
+                                offset = 1;
                                 surface->remoteDeviceIP = tokens[10];
+                            }
+
+                            if(tokens[10 + offset] == "BroadcastGoZone")
+                                surface->broadcastGoZone = true;
+                            else
+                                surface->broadcastGoZone = false;
+                            
+                            if(tokens[11 + offset] == "ReceiveGoZone")
+                                surface->receiveGoZone = true;
+                            else
+                                surface->receiveGoZone = false;
+                            
+                            if(tokens[12 + offset] == "BroadcastGoFXSlot")
+                                surface->broadcastGoFXSlot = true;
+                            else
+                                surface->broadcastGoFXSlot = false;
+                            
+                            if(tokens[13 + offset] == "ReceiveGoFXSlot")
+                                surface->receiveGoFXSlot = true;
+                            else
+                                surface->receiveGoFXSlot = false;
                         }
-                        else if(surface->type == EuConSurfaceToken && tokens.size() == 7 )
+                        else if(surface->type == EuConSurfaceToken && tokens.size() == 11 )
                         {
                             surface->zoneTemplateFolder = tokens[2];
                             surface->numChannels = atoi(tokens[3].c_str());
                             surface->numSends = atoi(tokens[4].c_str());
                             surface->numFX = atoi(tokens[5].c_str());
                             surface->channelOffset = atoi(tokens[6].c_str());
+                            
+                            if(tokens[7] == "BroadcastGoZone")
+                                surface->broadcastGoZone = true;
+                            else
+                                surface->broadcastGoZone = false;
+                            
+                            if(tokens[8] == "ReceiveGoZone")
+                                surface->receiveGoZone = true;
+                            else
+                                surface->receiveGoZone = false;
+                            
+                            if(tokens[9] == "BroadcastGoFXSlot")
+                                surface->broadcastGoFXSlot = true;
+                            else
+                                surface->broadcastGoFXSlot = false;
+                            
+                            if(tokens[10] == "ReceiveGoFXSlot")
+                                surface->receiveGoFXSlot = true;
+                            else
+                                surface->receiveGoFXSlot = false;
                          }
                         
                         if(pages.size() > 0)
@@ -1174,6 +1365,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                 {
                     line = PageToken + " ";
                     line += "\"" + page->name + "\" ";
+                    
                     if(page->followMCP)
                         line += "FollowMCP ";
                     else
@@ -1211,7 +1403,27 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                             
                             if(surface->type == OSCSurfaceToken)
-                                line += " " + surface->remoteDeviceIP;
+                                line += " " + surface->remoteDeviceIP + " ";
+                            
+                            if(surface->broadcastGoZone)
+                                line += "BroadcastGoZone ";
+                            else
+                                line += "NoBroadcastGoZone ";
+                            
+                            if(surface->receiveGoZone)
+                                line += "ReceiveGoZone ";
+                            else
+                                line += "NoReceiveGoZone ";
+                            
+                            if(surface->broadcastGoFXSlot)
+                                line += "BroadcastGoFXSlot ";
+                            else
+                                line += "NoBroadcastGoFXSlot ";
+                            
+                            if(surface->receiveGoFXSlot)
+                                line += "ReceiveGoFXSlot ";
+                            else
+                                line += "NoReceiveGoFXSlot ";
                         }
                         else if(surface->type == EuConSurfaceToken)
                         {
@@ -1220,6 +1432,26 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             line += to_string(surface->numSends) + " " ;
                             line += to_string(surface->numFX) + " " ;
                             line += to_string(surface->channelOffset) + " " ;
+                            
+                            if(surface->broadcastGoZone)
+                                line += "BroadcastGoZone ";
+                            else
+                                line += "NoBroadcastGoZone ";
+                            
+                            if(surface->receiveGoZone)
+                                line += "ReceiveGoZone ";
+                            else
+                                line += "NoReceiveGoZone ";
+                            
+                            if(surface->broadcastGoFXSlot)
+                                line += "BroadcastGoFXSlot ";
+                            else
+                                line += "NoBroadcastGoFXSlot ";
+                            
+                            if(surface->receiveGoFXSlot)
+                                line += "ReceiveGoFXSlot ";
+                            else
+                                line += "NoReceiveGoFXSlot ";
                         }
 
                         line += GetLineEnding();
