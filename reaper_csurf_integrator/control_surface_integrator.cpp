@@ -2321,8 +2321,21 @@ void Midi_ControlSurface::SendMidiMessage(MIDI_event_ex_t* midiMessage)
     if(midiOutput_)
         midiOutput_->SendMsg(midiMessage, -1);
     
+    string output = "OUT->" + name_ + " ";
+    
+    for(int i = 0; i < midiMessage->size; i++)
+    {
+        char buffer[32];
+        
+        snprintf(buffer, sizeof(buffer), "%02x ", midiMessage->midi_message[i]);
+        
+        output += buffer;
+    }
+    
+    output += "\n";
+
     if(TheManager->GetSurfaceOutDisplay())
-        DAW::ShowConsoleMsg(("OUT->" + name_ + " SysEx\n").c_str());
+        DAW::ShowConsoleMsg(output.c_str());
 }
 
 void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
