@@ -1127,6 +1127,8 @@ public:
                 itemNumber_ = stoi(property[1]);
                 text_ = property[2];
                 value_ = text_.length();
+                
+                ForceValue(1.0);
             }
         }
     }
