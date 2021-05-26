@@ -1122,11 +1122,27 @@ public:
                 textBackgroundOff_.g = stoi(property[2]) / 2;
                 textBackgroundOff_.b = stoi(property[3]) / 2;
             }
-            else if(property[0] == "Text" && property.size() > 2)
+            else if(property[0] == "Text" && property.size() == 15)
             {
                 itemNumber_ = stoi(property[1]);
                 text_ = property[2];
                 value_ = text_.length();
+                
+                textColor_.r = stoi(property[3]) / 2;
+                textColor_.g = stoi(property[4]) / 2;
+                textColor_.b = stoi(property[5]) / 2;
+
+                textBackground_.r = stoi(property[6]) / 2;
+                textBackground_.g = stoi(property[7]) / 2;
+                textBackground_.b = stoi(property[8]) / 2;
+
+                textColorOff_.r = stoi(property[9]) / 2;
+                textColorOff_.g = stoi(property[10]) / 2;
+                textColorOff_.b = stoi(property[11]) / 2;
+
+                textBackgroundOff_.r = stoi(property[12]) / 2;
+                textBackgroundOff_.g = stoi(property[13]) / 2;
+                textBackgroundOff_.b = stoi(property[14]) / 2;
                 
                 ForceValue(1.0);
             }
