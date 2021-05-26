@@ -941,6 +941,7 @@ void Manager::InitActionsDictionary()
     actions_["GoPage"] =                            new GoPage();
     actions_["PageNameDisplay"] =                   new PageNameDisplay();
     actions_["GoZone"] =                            new GoZone();
+    actions_["GoSubZone"] =                         new GoSubZone();
     actions_["TrackBank"] =                         new TrackBank();
     actions_["SendSlotBank"] =                      new SendSlotBank();
     actions_["ReceiveSlotBank"] =                   new ReceiveSlotBank();
@@ -1726,7 +1727,14 @@ void Zone::Activate()
 void Zone::Activate(vector<Zone*> &activeZones)
 {
     Activate();
-    activeZones.push_back(this);
+    
+    auto it = find(activeZones.begin(), activeZones.end(), this);
+    
+    if ( it != activeZones.end() )
+        activeZones.erase(it);
+
+    activeZones.insert(activeZones.begin(), 1, this);
+    
     surface_->MoveToFirst(activeZones);
 }
 
@@ -2220,10 +2228,26 @@ void ControlSurface::GoZone(string zoneName, double value)
     if(shouldBroadcastGoZone_)
         page_->GoZone(this, zoneName, value);
     
-    GoZoneImplementation(zoneName, value);
+    GoZoneImplementation(activeZones_, zoneName, value);
 }
 
-void ControlSurface::GoZoneImplementation(string zoneName, double value)
+void ControlSurface::GoSubZone(Zone* enclosingZone, string zoneName, double value)
+{
+    for(auto activeZones : allActiveZones_)
+    {
+        for(auto zone : *activeZones)
+        {
+            if(zone == enclosingZone)
+            {
+                GoZoneImplementation(*activeZones, zoneName, value);
+                if(zonesByName_.count(zoneName) > 0)
+                    zonesByName_[zoneName]->SetSlotIndex(enclosingZone->GetSlotIndex());
+            }
+        }
+    }
+}
+
+void ControlSurface::GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value)
 {
     if(zoneName == "Home")
     {
@@ -2250,19 +2274,14 @@ void ControlSurface::GoZoneImplementation(string zoneName, double value)
             
             if(value == 1) // adding
             {
-                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
-                
-                if ( it == activeZones_.end() )
-                {
-                    zone->Activate(activeZones_);
-                }
+                zone->Activate(activeZones);
             }
             else // removing
             {
-                auto it = find(activeZones_.begin(),activeZones_.end(), zone);
+                auto it = find(activeZones.begin(),activeZones.end(), zone);
                 
-                if ( it != activeZones_.end() )
-                    activeZones_.erase(it);
+                if ( it != activeZones.end() )
+                    activeZones.erase(it);
             }
         }
     }
