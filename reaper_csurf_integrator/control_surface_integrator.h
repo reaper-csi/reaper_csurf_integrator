@@ -984,6 +984,9 @@ protected:
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
     void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfItems, int numberOfZones, vector<Zone*> &activeZones);
     
+    void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
+    void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
+    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1024,7 +1027,6 @@ public:
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
-    void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
     void MapFocusedFXToWidgets();
     void UnmapSelectedTrackFXFromWidgets();
     void UnmapSelectedTrackFXFromMenu();
@@ -1046,7 +1048,6 @@ public:
     void LoadZone(string zoneName);
     Zone* GetZone(string zoneName);
     void GoZone(string zoneName, double value);
-    void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
     void GoSubZone(Zone* enclosingZone, string zoneName, double value);
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
