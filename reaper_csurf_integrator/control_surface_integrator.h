@@ -1046,7 +1046,8 @@ public:
     void LoadZone(string zoneName);
     Zone* GetZone(string zoneName);
     void GoZone(string zoneName, double value);
-    void GoZoneImplementation(string zoneName, double value);
+    void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
+    void GoSubZone(Zone* enclosingZone, string zoneName, double value);
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
     virtual void InitializeEuCon() {}
@@ -1059,7 +1060,7 @@ public:
     void AcceptGoZone(string zoneName, double value)
     {
         if(shouldReceiveGoZone_)
-            GoZoneImplementation(zoneName, value);
+            GoZoneImplementation(activeZones_, zoneName, value);
     }
     
     void AcceptGoFXSlot(int slot)

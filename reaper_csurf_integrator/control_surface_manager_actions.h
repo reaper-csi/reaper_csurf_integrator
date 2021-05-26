@@ -320,13 +320,29 @@ class GoZone : public Action
 {
 public:
     virtual string GetName() override { return "GoZone"; }
-
+    
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0 && context->GetWidget()->GetName() != "OnTrackSelection")
             return; // ignore button releases except for OnTrackSelection -- 0 means Track deselection
         
         context->GetSurface()->GoZone(context->GetStringParam(), value);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class GoSubZone : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "GoZone"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0)
+            return; // ignore button releases
+        
+        context->GetSurface()->GoSubZone(context->GetZone(), context->GetStringParam(), value);
     }
 };
 
