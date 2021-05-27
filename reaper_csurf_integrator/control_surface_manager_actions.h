@@ -387,6 +387,35 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SelectedTrackBank : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "SelectedTrackBank"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+        {
+            int trackNum = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetIdFromTrack(selectedTrack);
+            
+            trackNum += context->GetIntParam();
+            
+            if(trackNum < 1)
+                trackNum = 1;
+            
+            if(trackNum > context->GetPage()->GetTrackNavigationManager()->GetNumTracks())
+                trackNum = context->GetPage()->GetTrackNavigationManager()->GetNumTracks();
+            
+            if(MediaTrack* trackToSelect = context->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+               DAW::SetOnlyTrackSelected(trackToSelect);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SendSlotBank : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {

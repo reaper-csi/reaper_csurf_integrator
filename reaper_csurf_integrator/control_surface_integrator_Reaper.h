@@ -242,6 +242,14 @@ public:
         }
     }
     
+    static int CSurf_TrackToID(MediaTrack* track, bool mcpView)
+    {
+        if(ValidatePtr(track, "MediaTrack*"))
+            return ::CSurf_TrackToID(track, mcpView);
+        else
+            return 1;
+    }
+    
     static double GetMediaTrackInfo_Value(MediaTrack* track, const char* parmname)
     {
         if(ValidatePtr(track, "MediaTrack*"))
