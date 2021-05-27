@@ -2643,6 +2643,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackInvertPolarity : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackInvertPolarity"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetMediaTrackInfo_Value(track, "B_PHASE");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool reversed = ! DAW::GetMediaTrackInfo_Value(track, "B_PHASE");
+            
+            DAW::GetSetMediaTrackInfo(track, "B_PHASE", &reversed);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class GlobalAutoMode : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
