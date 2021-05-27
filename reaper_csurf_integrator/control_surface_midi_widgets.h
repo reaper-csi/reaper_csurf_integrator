@@ -1084,7 +1084,7 @@ private:
 
 public:
     virtual ~SCE24_OLEDButton_Midi_FeedbackProcessor() {}
-    SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int displayType) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), displayType_(displayType) { }
+    SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), itemNumber_(itemNumber) {}
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
@@ -1124,7 +1124,7 @@ public:
             }
             else if(property[0] == "Text" && property.size() == 15)
             {
-                itemNumber_ = stoi(property[1]);
+                displayType_ = stoi(property[1]);
                 text_ = property[2];
                 value_ = text_.length();
                 
