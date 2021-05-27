@@ -1680,6 +1680,11 @@ public:
             return nullptr;
     }
 
+    int GetIdFromTrack(MediaTrack* track)
+    {
+        return DAW::CSurf_TrackToID(track, followMCP_);
+    }
+    
     void OnTrackSelection()
     {
         if(scrollLink_)
