@@ -943,6 +943,7 @@ void Manager::InitActionsDictionary()
     actions_["GoZone"] =                            new GoZone();
     actions_["GoSubZone"] =                         new GoSubZone();
     actions_["TrackBank"] =                         new TrackBank();
+    actions_["SelectedTrackBank"] =                 new SelectedTrackBank();
     actions_["SendSlotBank"] =                      new SendSlotBank();
     actions_["ReceiveSlotBank"] =                   new ReceiveSlotBank();
     actions_["FXMenuSlotBank"] =                    new FXMenuSlotBank();
