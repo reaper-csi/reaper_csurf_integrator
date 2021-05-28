@@ -816,6 +816,117 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_MaxCharactersDictionary
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<int, map<int, int>> maxCharacters;
+    
+public:
+    SCE24_MaxCharactersDictionary()
+    {
+        maxCharacters[0][0] = 16;
+        maxCharacters[0][1] = 16;
+        maxCharacters[0][2] = 16;
+        maxCharacters[0][3] = 9;
+        maxCharacters[0][4] = 0;
+        maxCharacters[0][5] = 0;
+        maxCharacters[0][6] = 0;
+        maxCharacters[0][7] = 0;
+        maxCharacters[0][8] = 0;
+        maxCharacters[0][9] = 0;
+        
+        maxCharacters[1][0] = 16;
+        maxCharacters[1][1] = 16;
+        maxCharacters[1][2] = 7;
+        maxCharacters[1][3] = 0;
+        maxCharacters[1][4] = 3;
+        maxCharacters[1][5] = 0;
+        maxCharacters[1][6] = 3;
+        maxCharacters[1][7] = 19;
+        maxCharacters[1][8] = 19;
+        maxCharacters[1][9] = 0;
+        
+        maxCharacters[2][0] = 16;
+        maxCharacters[2][1] = 16;
+        maxCharacters[2][2] = 7;
+        maxCharacters[2][3] = 5;
+        maxCharacters[2][4] = 5;
+        maxCharacters[2][5] = 5;
+        maxCharacters[2][6] = 0;
+        maxCharacters[2][7] = 10;
+        maxCharacters[2][8] = 0;
+        maxCharacters[2][9] = 0;
+        
+        maxCharacters[3][0] = 16;
+        maxCharacters[3][1] = 16;
+        maxCharacters[3][2] = 2;
+        maxCharacters[3][3] = 2;
+        maxCharacters[3][4] = 7;
+        maxCharacters[3][5] = 16;
+        maxCharacters[3][6] = 0;
+        maxCharacters[3][7] = 0;
+        maxCharacters[3][8] = 0;
+        maxCharacters[3][9] = 0;
+        
+        maxCharacters[4][0] = 16;
+        maxCharacters[4][1] = 16;
+        maxCharacters[4][2] = 2;
+        maxCharacters[4][3] = 14;
+        maxCharacters[4][4] = 14;
+        maxCharacters[4][5] = 0;
+        maxCharacters[4][6] = 0;
+        maxCharacters[4][7] = 0;
+        maxCharacters[4][8] = 0;
+        maxCharacters[4][9] = 0;
+        
+        maxCharacters[5][0] = 16;
+        maxCharacters[5][1] = 2;
+        maxCharacters[5][2] = 14;
+        maxCharacters[5][3] = 14;
+        maxCharacters[5][4] = 14;
+        maxCharacters[5][5] = 0;
+        maxCharacters[5][6] = 0;
+        maxCharacters[5][7] = 0;
+        maxCharacters[5][8] = 0;
+        maxCharacters[5][9] = 0;
+        
+        maxCharacters[6][0] = 16;
+        maxCharacters[6][1] = 2;
+        maxCharacters[6][2] = 14;
+        maxCharacters[6][3] = 14;
+        maxCharacters[6][4] = 14;
+        maxCharacters[6][5] = 14;
+        maxCharacters[6][6] = 0;
+        maxCharacters[6][7] = 0;
+        maxCharacters[6][8] = 0;
+        maxCharacters[6][9] = 0;
+        
+        maxCharacters[7][0] = 16;
+        maxCharacters[7][1] = 11;
+        maxCharacters[7][2] = 7;
+        maxCharacters[7][3] = 11;
+        maxCharacters[7][4] = 7;
+        maxCharacters[7][5] = 11;
+        maxCharacters[7][6] = 7;
+        maxCharacters[7][7] = 11;
+        maxCharacters[7][8] = 7;
+        maxCharacters[7][9] = 0;
+    }
+    
+    int GetMaxCharacters(int displayType, int itemNumber)
+    {
+        displayType--;
+        displayType = displayType < 0 ? 0 : displayType;
+        
+        itemNumber--;
+        itemNumber = itemNumber < 0 ? 0 : itemNumber;
+        
+        return maxCharacters[displayType][itemNumber];
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SCE24_Text_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -830,6 +941,8 @@ private:
     rgb_color textColorOff_ = { 0x7f, 0x7f, 0x7f };
     rgb_color textBackgroundOff_ { 0, 0, 0 };
 
+    SCE24_MaxCharactersDictionary maxChars;
+    
 public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
     SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber),  itemNumber_(itemNumber) { }
@@ -858,7 +971,7 @@ public:
             {
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
-                maxCharacters_ = text_.length();
+                maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
                 
                 textColor_.r = stoi(property[3]) / 2;
                 textColor_.g = stoi(property[4]) / 2;
@@ -1101,13 +1214,14 @@ private:
     int displayType_ = 01;
     int itemNumber_ = 01;
     int itemStyle_ = 01;
-    int value_ = 0;
     string text_ = "";
     int maxCharacters_ = 19;
     rgb_color textColor_ = { 0x7f, 0x7f, 0x7f };
     rgb_color textBackground_ { 0, 0, 0 };
     rgb_color textColorOff_ = { 0x7f, 0x7f, 0x7f };
     rgb_color textBackgroundOff_ { 0, 0, 0 };
+    
+    SCE24_MaxCharactersDictionary maxChars;
 
 public:
     virtual ~SCE24_OLEDButton_Midi_FeedbackProcessor() {}
@@ -1153,8 +1267,8 @@ public:
             {
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
-                value_ = text_.length();
-                
+                maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
+
                 textColor_.r = stoi(property[3]) / 2;
                 textColor_.g = stoi(property[4]) / 2;
                 textColor_.b = stoi(property[5]) / 2;
@@ -1210,7 +1324,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // ItemType
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = value_;          // value
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  
         
         rgb_color currentTextColor = value == 0 ? textColorOff_ : textColor_;
         
