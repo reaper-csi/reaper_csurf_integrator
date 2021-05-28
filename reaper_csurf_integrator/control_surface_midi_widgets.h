@@ -821,15 +821,18 @@ class SCE24_Text_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 {
 private:
     int cellNumber_ = 0;
-    int screenNumber_ = 0;
+    int displayType_ = 0;
     int itemNumber_ = 0;
     int maxCharacters_ = 0;
+    string text_ = "";
     rgb_color textColor_ = { 0x7f, 0x7f, 0x7f };
     rgb_color textBackground_ { 0, 0, 0 };
+    rgb_color textColorOff_ = { 0x7f, 0x7f, 0x7f };
+    rgb_color textBackgroundOff_ { 0, 0, 0 };
 
 public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
-    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int screenNumber, int itemNumber, int maxCharacters) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), screenNumber_(screenNumber), itemNumber_(itemNumber), maxCharacters_(maxCharacters) { }
+    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber),  itemNumber_(itemNumber) { }
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
@@ -850,6 +853,30 @@ public:
                 textBackground_.r = stoi(property[1]) / 2;
                 textBackground_.g = stoi(property[2]) / 2;
                 textBackground_.b = stoi(property[3]) / 2;
+            }
+            else if(property[0] == "Text" && property.size() == 15)
+            {
+                displayType_ = stoi(property[1]);
+                text_ = property[2];
+                maxCharacters_ = text_.length();
+                
+                textColor_.r = stoi(property[3]) / 2;
+                textColor_.g = stoi(property[4]) / 2;
+                textColor_.b = stoi(property[5]) / 2;
+                
+                textBackground_.r = stoi(property[6]) / 2;
+                textBackground_.g = stoi(property[7]) / 2;
+                textBackground_.b = stoi(property[8]) / 2;
+                
+                textColorOff_.r = stoi(property[9]) / 2;
+                textColorOff_.g = stoi(property[10]) / 2;
+                textColorOff_.b = stoi(property[11]) / 2;
+                
+                textBackgroundOff_.r = stoi(property[12]) / 2;
+                textBackgroundOff_.g = stoi(property[13]) / 2;
+                textBackgroundOff_.b = stoi(property[14]) / 2;
+                
+                ForceValue(text_);
             }
         }
     }
@@ -896,12 +923,12 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = screenNumber_;   // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .mst
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Text
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // Style
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .zon
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor.r;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = textColor.g;
