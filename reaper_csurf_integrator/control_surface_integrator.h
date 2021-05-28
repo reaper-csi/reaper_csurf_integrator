@@ -41,6 +41,69 @@
 #include "oscpkt.hh"
 #include "udp.hh"
 #endif
+/*
+static void GenMST()
+{
+    //Widget CellA1_Text1
+    //FB_SCE24_Text 41 01
+    //WidgetEnd
+    
+    vector<string> lines;
+    
+    for(int i = 1; i < 25; i++)
+    {
+        for(int j = 1; j < 11; j++)
+        {
+            string line = "Widget Cell";
+            
+            if(i < 9)
+            {
+                line += "A";
+                line += to_string(i);
+            }
+            else if(i < 17)
+            {
+                line += "B";
+                line += to_string(i - 8);
+            }
+            else
+            {
+                line += "C";
+                line += to_string(i - 16);
+            }
+            
+            line += "_Text";
+            
+            line += to_string(j);
+            
+            line += "\n";
+            
+            line += "\tFB_SCE24_Text ";
+            
+            line += to_string(i);
+            
+            line += " ";
+            
+            if(j < 10)
+                line += "0";
+            
+            line += to_string(j);
+            
+            line += "\n";
+            
+            line += "WidgetEnd\n\n";
+            
+            lines.push_back(line);
+            
+            DAW::ShowConsoleMsg(line.c_str());
+        }
+        
+        string separator = "\n\n";
+        DAW::ShowConsoleMsg(separator.c_str());
+    }
+}
+*/
+
 
 extern string GetLineEnding();
 

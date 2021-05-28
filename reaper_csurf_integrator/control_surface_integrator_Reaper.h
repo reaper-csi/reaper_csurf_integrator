@@ -103,8 +103,6 @@ public:
 
     static void SetGlobalAutomationOverride(int mode) { ::SetGlobalAutomationOverride(mode); }
 
-    static int GetFocusedFX(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX(tracknumberOut, itemnumberOut, fxnumberOut); }
-
     static int GetFocusedFX2(int* tracknumberOut, int* itemnumberOut, int* fxnumberOut) { return ::GetFocusedFX2(tracknumberOut, itemnumberOut, fxnumberOut); }
     
     static bool GetLastTouchedFX(int* tracknumberOut, int* fxnumberOut, int* paramnumberOut) {  return ::GetLastTouchedFX(tracknumberOut, fxnumberOut, paramnumberOut); }
@@ -141,6 +139,16 @@ public:
     static int ColorToNative(int r, int g, int b) { return ::ColorToNative(r, g, b); }
 
     static bool ValidateTrackPtr(MediaTrack* track) { return ValidatePtr(track, "MediaTrack*"); }
+    
+    static MediaTrack* GetTrack(int trackidx)
+    {
+        trackidx--;
+        
+        if(trackidx < 0)
+            trackidx = 0;
+        
+        return ::GetTrack(NULL, trackidx) ;
+    }
     
     static int TrackFX_GetCount(MediaTrack* track)
     {
