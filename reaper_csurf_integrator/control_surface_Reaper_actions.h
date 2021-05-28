@@ -87,7 +87,7 @@ public:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = DAW::GetTrack(trackNum))
             {
                 double min = 0.0;
                 double max = 0.0;
@@ -105,7 +105,7 @@ public:
         int fxParamNum = 0;
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if(context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(DAW::GetTrack(trackNum))
                 context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
     }
     
@@ -116,7 +116,7 @@ public:
         int fxParamNum = 0;
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
-            if(MediaTrack* track = context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = DAW::GetTrack(trackNum))
                 DAW::TrackFX_SetParam(track, fxSlotNum, fxParamNum, value);
     }
 };
@@ -1646,7 +1646,7 @@ public:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = DAW::GetTrack(trackNum))
             {
                 char fxParamName[128];
                 DAW::TrackFX_GetParamName(track, fxSlotNum, fxParamNum, fxParamName, sizeof(fxParamName));
@@ -1673,7 +1673,7 @@ public:
         
         if(DAW::GetLastTouchedFX(&trackNum, &fxSlotNum, &fxParamNum))
         {
-            if(MediaTrack* track = context->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* track = DAW::GetTrack(trackNum))
             {
                 char fxParamValue[128];
                 DAW::TrackFX_GetFormattedParamValue(track, fxSlotNum, fxParamNum, fxParamValue, sizeof(fxParamValue));
