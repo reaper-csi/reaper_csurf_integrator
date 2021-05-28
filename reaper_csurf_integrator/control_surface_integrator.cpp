@@ -1245,8 +1245,8 @@ MediaTrack* FocusedFXNavigator::GetTrack()
     int itemNumber = 0;
     int fxIndex = 0;
     
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
-        return page_->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
+    if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) == 1) // Track FX
+        return DAW::GetTrack(trackNumber);
     else
         return nullptr;
 }
@@ -2155,9 +2155,9 @@ void ControlSurface::MapFocusedFXToWidgets()
     int fxSlot = 0;
     MediaTrack* focusedTrack = nullptr;
     
-    if(DAW::GetFocusedFX(&trackNumber, &itemNumber, &fxSlot) == 1)
+    if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxSlot) == 1)
         if(trackNumber > 0)
-            focusedTrack = GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNumber);
+            focusedTrack = DAW::GetTrack(trackNumber);
     
     if(focusedTrack)
     {
