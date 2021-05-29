@@ -1020,6 +1020,10 @@ public:
     {
         lastStringValue_ = displayText;
         
+        if(displayText == " ")
+            for(int i = 0; i < maxCharacters_; i++)
+                displayText += " ";
+                
         const char* text = displayText.c_str();
         
         struct
