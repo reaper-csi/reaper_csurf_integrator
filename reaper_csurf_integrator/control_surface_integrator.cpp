@@ -1079,17 +1079,17 @@ void Manager::Init()
             
             if(tokens.size() > 4) // ignore comment lines and blank lines
             {
-                if(tokens[0] == MidiSurfaceToken && tokens.size() == 14)
+                if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
                 {
                     if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                         numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                 }
-                else if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
+                else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
                 {
                     if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                         numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                 }
-                else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
+                else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
                 {
                     if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
                         numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
@@ -1128,38 +1128,16 @@ void Manager::Init()
                         outPort = atoi(tokens[3].c_str());
                     }
                     
-                    int offset = 0;
-                    
-                    if(tokens[0] == OSCSurfaceToken)
-                        offset = 1;
-                    
-                    bool broadcastGoZone = false;
-                    bool receiveGoZone = false;
-                    bool broadcastGoFXSlot = false;
-                    bool receiveGoFXSlot = false;
-                    
-                    if(tokens[10 + offset] == "BroadcastGoZone")
-                        broadcastGoZone = true;
-                    
-                    if(tokens[11 + offset] == "ReceiveGoZone")
-                        receiveGoZone = true;
-                    
-                    if(tokens[12 + offset] == "BroadcastGoFXSlot")
-                        broadcastGoFXSlot = true;
-                    
-                    if(tokens[13 + offset] == "ReceiveGoFXSlot")
-                        receiveGoFXSlot = true;
-
                     if(currentPage)
                     {
                         ControlSurface* surface = nullptr;
                         
-                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 14)
-                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort), broadcastGoZone, receiveGoZone, broadcastGoFXSlot, receiveGoFXSlot);
-                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 15)
-                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[10], outPort), broadcastGoZone, receiveGoZone, broadcastGoFXSlot, receiveGoFXSlot);
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()), broadcastGoZone, receiveGoZone, broadcastGoFXSlot, receiveGoFXSlot);
+                        if(tokens[0] == MidiSurfaceToken && tokens.size() == 10)
+                            surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
+                        else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
+                            surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[10], outPort));
+                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
+                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
 
                         currentPage->AddSurface(surface);
                     }
@@ -1986,8 +1964,7 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset,
-               bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX), shouldBroadcastGoZone_(shouldBroadcastGoZone), shouldReceiveGoZone_(shouldReceiveGoZone), shouldBroadcastGoFXSlot_(shouldBroadcastGoFXSlot), shouldReceiveGoFXSlot_(shouldReceiveGoFXSlot)
+ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
 {
     for(int i = 0; i < numChannels; i++)
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
@@ -2496,8 +2473,8 @@ void HandleEuConGetFormattedFXParamValue(EuCon_ControlSurface* surface, const ch
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot)
-: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset, shouldBroadcastGoZone, shouldReceiveGoZone, shouldBroadcastGoFXSlot, shouldReceiveGoFXSlot)
+EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset)
+: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset)
 {
     if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
         LOG::InitializationFailure("EuConRequestsInitialization failed to register");

@@ -986,8 +986,7 @@ class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 protected:
-    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset,
-                   bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot);
+    ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset);
 
     CSurfIntegrator* const CSurfIntegrator_ ;
     Page* const page_;
@@ -1334,8 +1333,8 @@ private:
     }
 
 public:
-    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, midi_Input* midiInput, midi_Output* midiOutput, bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot)
-    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset, shouldBroadcastGoZone, shouldReceiveGoZone, shouldBroadcastGoFXSlot, shouldReceiveGoFXSlot), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
+    Midi_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, midi_Input* midiInput, midi_Output* midiOutput)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset), templateFilename_(templateFilename), midiInput_(midiInput), midiOutput_(midiOutput)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1387,8 +1386,8 @@ private:
     void ProcessOSCMessage(string message, double value);
 
 public:
-    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket, bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot)
-    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset, shouldBroadcastGoZone, shouldReceiveGoZone, shouldBroadcastGoFXSlot, shouldReceiveGoFXSlot), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
+    OSC_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string templateFilename, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, oscpkt::UdpSocket* inSocket, oscpkt::UdpSocket* outSocket)
+    : ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset), templateFilename_(templateFilename), inSocket_(inSocket), outSocket_(outSocket)
     {
         InitWidgets(templateFilename, zoneFolder);
     }
@@ -1531,7 +1530,7 @@ protected:
     }
     
 public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset, bool shouldBroadcastGoZone, bool shouldReceiveGoZone, bool shouldBroadcastGoFXSlot, bool shouldReceiveGoFXSlot);
+    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset);
     
     virtual ~EuCon_ControlSurface()
     {
