@@ -774,6 +774,9 @@ public:
     {
         lastStringSent_ = displayText;
         
+        if(displayText == "")
+            displayText = "       ";
+
         int pad = 7;
         const char* text = displayText.c_str();
         
@@ -1508,6 +1511,9 @@ public:
     {
         lastStringSent_ = displayText;
 
+        if(displayText == "")
+            displayText = "                            ";
+        
         const char* text = displayText.c_str();
     
         struct
@@ -1579,6 +1585,9 @@ public:
     virtual void ForceValue(string displayText) override
     {
         lastStringSent_ = displayText;
+        
+        if(displayText == "")
+            displayText = "       ";
         
         int pad = 7;
         const char* text = displayText.c_str();
