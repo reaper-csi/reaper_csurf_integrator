@@ -38,10 +38,7 @@
 #define IDC_EDIT_NumSends               1086
 #define IDC_EDIT_NumFX                  1087
 #define IDC_EDIT_ChannelOffset          1088
-#define IDC_CHECK_BroadcastGoZone       1089
-#define IDC_CHECK_ReceiveGoZone         1090
-#define IDC_CHECK_BroadcastGoFXSlot     1091
-#define IDC_CHECK_ReceiveGoFXSlot       1092
+
 
 // Next default values for new objects
 // 

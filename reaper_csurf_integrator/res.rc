@@ -112,11 +112,6 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,200,50,14
     LTEXT           "Channel Start Postion",IDC_STATIC,39,49,69,8
     EDITTEXT        IDC_EDIT_ChannelOffset,13,47,19,12,ES_AUTOHSCROLL
-    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,33,75,10
-    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,49,75,10
-    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,65,79,10
-    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,125,81,79,10
 END
 
 IDD_DIALOG_MidiSurface1 DIALOGEX 0, 0, 219, 225
@@ -147,11 +142,6 @@ BEGIN
     EDITTEXT        IDC_EDIT_NumFX,14,73,19,12,ES_AUTOHSCROLL
     LTEXT           "Channel Start Postion",IDC_STATIC,40,44,72,8
     EDITTEXT        IDC_EDIT_ChannelOffset,14,43,19,12,ES_AUTOHSCROLL
-    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,29,75,10
-    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,44,75,10
-    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,60,79,10
-    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,123,75,79,10
 END
 
 IDD_DIALOG_MidiSurface2 DIALOGEX 0, 0, 219, 150
@@ -173,11 +163,6 @@ BEGIN
     EDITTEXT        IDC_EDIT_NumFX,16,113,19,12,ES_AUTOHSCROLL
     LTEXT           "Channel Start Postion",IDC_STATIC,41,83,73,8
     EDITTEXT        IDC_EDIT_ChannelOffset,16,81,19,12,ES_AUTOHSCROLL
-    CONTROL         "Broadcast Go Zone",IDC_CHECK_BroadcastGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,67,75,10
-    CONTROL         "Receive Go Zone",IDC_CHECK_ReceiveGoZone,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,83,75,10
-    CONTROL         "Broadcast Go FX Slot",IDC_CHECK_BroadcastGoFXSlot,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,99,79,10
-    CONTROL         "Receive Go FX Slot",IDC_CHECK_ReceiveGoFXSlot,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,115,79,10
 END
 
 
