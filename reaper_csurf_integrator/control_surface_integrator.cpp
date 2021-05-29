@@ -948,6 +948,10 @@ void Manager::InitActionsDictionary()
     actions_["PageNameDisplay"] =                   new PageNameDisplay();
     actions_["GoZone"] =                            new GoZone();
     actions_["GoSubZone"] =                         new GoSubZone();
+    actions_["SetBroadcastGoZone"] =                new SetBroadcastGoZone();
+    actions_["SetReceiveGoZone"] =                  new SetReceiveGoZone();
+    actions_["SetBroadcastGoFXSlot"] =              new SetBroadcastGoFXSlot();
+    actions_["SetReceiveGoFXSlot"] =                new SetReceiveGoFXSlot();
     actions_["TrackBank"] =                         new TrackBank();
     actions_["SelectedTrackBank"] =                 new SelectedTrackBank();
     actions_["SendSlotBank"] =                      new SendSlotBank();

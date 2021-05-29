@@ -1026,10 +1026,10 @@ protected:
     int const numChannels_ = 0;
     int const numSends_ = 0;
     int const numFXSlots_ = 0;
-    bool const shouldBroadcastGoZone_ = false;
-    bool const shouldReceiveGoZone_ = false;
-    bool const shouldBroadcastGoFXSlot_ = false;
-    bool const shouldReceiveGoFXSlot_ = false;
+    bool shouldBroadcastGoZone_ = false;
+    bool shouldReceiveGoZone_ = false;
+    bool shouldBroadcastGoFXSlot_ = false;
+    bool shouldReceiveGoFXSlot_ = false;
 
     map<int, Navigator*> navigators_;
     
@@ -1121,6 +1121,11 @@ public:
 
     virtual void ForceRefreshTimeDisplay() {}
    
+    virtual void SetBroadcastGoZone() { shouldBroadcastGoZone_ = true; }
+    virtual void SetReceiveGoZone() { shouldReceiveGoZone_ = true; }
+    virtual void SetBroadcastGoFXSlot() { shouldBroadcastGoFXSlot_ = true; }
+    virtual void SetReceiveGoFXSlot() { shouldReceiveGoFXSlot_ = true; }
+    
     void AcceptGoZone(string zoneName, double value)
     {
         if(shouldReceiveGoZone_)
