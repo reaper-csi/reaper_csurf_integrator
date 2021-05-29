@@ -1020,9 +1020,13 @@ public:
     {
         lastStringValue_ = displayText;
         
-        if(displayText == " ")
-            for(int i = 1; i < maxCharacters_; i++)
+        if(displayText == " " || displayText == "")
+        {
+            displayText = "";
+            
+            for(int i = 0; i < maxCharacters_; i++)
                 displayText += " ";
+        }
                 
         const char* text = displayText.c_str();
         
