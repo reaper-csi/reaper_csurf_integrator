@@ -1102,6 +1102,10 @@ protected:
     void MapSelectedTrackReceivesToWidgetsImplementation();
     void MapSelectedTrackFXToWidgetsImplementation();
     void MapSelectedTrackFXToMenuImplementation();
+    void UnmapSelectedTrackSendsFromWidgetsImplementation();
+    void UnmapSelectedTrackReceivesFromWidgetsImplementation();
+    void UnmapSelectedTrackFXFromWidgetsImplementation();
+    void UnmapSelectedTrackFXFromMenuImplementation();
 
     virtual void InitHardwiredWidgets()
     {
@@ -1221,10 +1225,34 @@ public:
             MapSelectedTrackFXToWidgetsImplementation();
     }
     
-    void AcceptReceiveMapSelectedTrackFXToMenu()
+    void AcceptMapSelectedTrackFXToMenu()
     {
         if(shouldReceiveMapSelectedTrackFXToMenu_)
             MapSelectedTrackFXToMenuImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackSendsFromWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackSendsToWidgets_)
+            UnmapSelectedTrackSendsFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackReceivesFromWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackReceivesToWidgets_)
+            UnmapSelectedTrackReceivesFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackFXFromWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackFXToWidgets_)
+            UnmapSelectedTrackFXFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackFXFromMenu()
+    {
+        if(shouldReceiveMapSelectedTrackFXToMenu_)
+            UnmapSelectedTrackFXFromMenuImplementation();
     }
     
     void MakeHomeDefault()
@@ -2110,28 +2138,56 @@ public:
     {
         for(auto surface : surfaces_)
             if(surface != originator)
-                surface->MapSelectedTrackSendsToWidgets();
+                surface->AcceptMapSelectedTrackSendsToWidgets();
     }
     
     void MapSelectedTrackReceivesToWidgets(ControlSurface* originator)
     {
         for(auto surface : surfaces_)
             if(surface != originator)
-                surface->MapSelectedTrackReceivesToWidgets();
+                surface->AcceptMapSelectedTrackReceivesToWidgets();
     }
     
     void MapSelectedTrackFXToWidgets(ControlSurface* originator)
     {
         for(auto surface : surfaces_)
             if(surface != originator)
-                surface->MapSelectedTrackFXToWidgets();
+                surface->AcceptMapSelectedTrackFXToWidgets();
     }
     
     void MapSelectedTrackFXToMenu(ControlSurface* originator)
     {
         for(auto surface : surfaces_)
             if(surface != originator)
-                surface->MapSelectedTrackFXToMenu();
+                surface->AcceptMapSelectedTrackFXToMenu();
+    }
+    
+    void UnmapSelectedTrackSendsFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackSendsFromWidgets();
+    }
+    
+    void UnmapSelectedTrackReceivesFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackReceivesFromWidgets();
+    }
+    
+    void UnmapSelectedTrackFXFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackFXFromWidgets();
+    }
+    
+    void UnmapSelectedTrackFXFromMenu(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackFXFromMenu();
     }
     
     /*
