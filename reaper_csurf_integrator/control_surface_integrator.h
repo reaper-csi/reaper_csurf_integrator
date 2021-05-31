@@ -1066,11 +1066,20 @@ protected:
     int const numChannels_ = 0;
     int const numSends_ = 0;
     int const numFXSlots_ = 0;
+    
     bool shouldBroadcastGoZone_ = false;
     bool shouldReceiveGoZone_ = false;
     bool shouldBroadcastGoFXSlot_ = false;
     bool shouldReceiveGoFXSlot_ = false;
-
+    bool shouldBroadcastMapSelectedTrackSendsToWidgets_ = false;
+    bool shouldReceiveMapSelectedTrackSendsToWidgets_ = false;
+    bool shouldBroadcastMapSelectedTrackReceivesToWidgets_ = false;
+    bool shouldReceiveMapSelectedTrackReceivesToWidgets_ = false;
+    bool shouldBroadcastMapSelectedTrackFXToWidgets_ = false;
+    bool shouldReceiveMapSelectedTrackFXToWidgets_ = false;
+    bool shouldBroadcastMapSelectedTrackFXToMenu_ = false;
+    bool shouldReceiveMapSelectedTrackFXToMenu_ = false;
+    
     map<int, Navigator*> navigators_;
     
     vector<Widget*> widgets_;
@@ -1165,6 +1174,14 @@ public:
     virtual void SetReceiveGoZone() { shouldReceiveGoZone_ = true; }
     virtual void SetBroadcastGoFXSlot() { shouldBroadcastGoFXSlot_ = true; }
     virtual void SetReceiveGoFXSlot() { shouldReceiveGoFXSlot_ = true; }
+    virtual void SetBroadcastMapSelectedTrackSendsToWidgets() { shouldBroadcastMapSelectedTrackSendsToWidgets_ = true; }
+    virtual void SetReceiveMapSelectedTrackSendsToWidgets() { shouldReceiveMapSelectedTrackSendsToWidgets_ = true; }
+    virtual void SetBroadcastMapSelectedTrackReceivesToWidgets() { shouldBroadcastMapSelectedTrackReceivesToWidgets_ = true; }
+    virtual void SetReceiveMapSelectedTrackReceivesToWidgets() { shouldReceiveMapSelectedTrackReceivesToWidgets_ = true; }
+    virtual void SetBroadcastMapSelectedTrackFXToWidgets() { shouldBroadcastMapSelectedTrackFXToWidgets_ = true; }
+    virtual void SetReceiveMapSelectedTrackFXToWidgets() { shouldReceiveMapSelectedTrackFXToWidgets_ = true; }
+    virtual void SetBroadcastMapSelectedTrackFXToMenu() { shouldBroadcastMapSelectedTrackFXToMenu_ = true; }
+    virtual void SetReceiveMapSelectedTrackFXToMenu() { shouldReceiveMapSelectedTrackFXToMenu_ = true; }
     
     void AcceptGoZone(string zoneName, double value)
     {
@@ -1177,6 +1194,8 @@ public:
         if(shouldReceiveGoFXSlot_)
             MapSelectedTrackFXMenuSlotToWidgetsImplementation(slot);
     }
+    
+    
     
     void MakeHomeDefault()
     {
