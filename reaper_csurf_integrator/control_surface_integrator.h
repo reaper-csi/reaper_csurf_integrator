@@ -731,12 +731,10 @@ public:
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
-    void UpdateValueAndColors(string value, rgb_color textColor, rgb_color textBackground);
     void UpdateRGBValue(int r, int g, int b);
     void ForceValue(double value);
     void ForceValue(int mode, double value);
     void ForceValue(string value);
-    void ForceValueAndColors(string value, rgb_color textColor, rgb_color textBackground);
     void ForceRGBValue(int r, int g, int b);
     void ClearCache();
     void Clear();
@@ -850,19 +848,62 @@ protected:
 
     Widget* const widget_ = nullptr;
     
+    rgb_color foregroundColor_ = { 0x7f, 0x7f, 0x7f };
+    rgb_color backgroundColor_ { 0, 0, 0 };
+    
+    rgb_color currentColor_ = { 0, 0, 0 } ;
+
+    
 public:
     FeedbackProcessor(Widget* widget) : widget_(widget) {}
     virtual ~FeedbackProcessor() {}
     Widget* GetWidget() { return widget_; }
-    virtual void SetProperties(vector<vector<string>> properties) {}
     virtual void SetRGBValue(int r, int g, int b) {}
+    virtual void ForceValue() {}
     virtual void ForceValue(double value) {}
     virtual void ForceValue(int param, double value) {}
     virtual void ForceRGBValue(int r, int g, int b) {}
     virtual void ForceValue(string value) {}
-    virtual void SetValueAndColors(string value, rgb_color textColor, rgb_color textBackground) {}
-    virtual void ForceValueAndColors(string value, rgb_color textColor, rgb_color textBackground) {}
+    
+    virtual void SetColors(rgb_color textColor, rgb_color textBackground) {}
 
+
+    virtual void SetCurrentColor(double value)
+    {
+        currentColor_ = value == 0 ? backgroundColor_ : foregroundColor_;
+        
+        ForceValue();
+    }
+    
+    virtual void SetProperties(vector<vector<string>> properties)
+    {
+        for(auto property : properties)
+        {
+            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 3)
+            {
+                foregroundColor_.r = stoi(property[1]);
+                foregroundColor_.g = stoi(property[2]);
+                foregroundColor_.b = stoi(property[3]);
+            }
+            else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 3)
+            {
+                backgroundColor_.r = stoi(property[1]);
+                backgroundColor_.g = stoi(property[2]);
+                backgroundColor_.b = stoi(property[3]);
+            }
+            else if(property[0] == "Text" && property.size() == 15)
+            {
+                foregroundColor_.r = stoi(property[3]);
+                foregroundColor_.g = stoi(property[4]);
+                foregroundColor_.b = stoi(property[5]);
+                
+                backgroundColor_.r = stoi(property[6]);
+                backgroundColor_.g = stoi(property[7]);
+                backgroundColor_.b = stoi(property[8]);
+            }
+        }
+    }
+    
     virtual void SetValue(double value)
     {
         if(lastDoubleValue_ != value)

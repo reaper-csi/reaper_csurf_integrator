@@ -773,6 +773,10 @@ static void ProcessMidiWidget(int &lineNumber, ifstream &surfaceTemplateFile, ve
         {
             feedbackProcessor = new SCE24_LEDButton_Midi_FeedbackProcessor(surface, widget, strToHex(tokenLines[i][1]));
         }
+        else if(widgetClass == "FB_SCE24_Background" && size == 2)
+        {
+            feedbackProcessor = new SCE24_Background_Midi_FeedbackProcessor(surface, widget, strToHex(tokenLines[i][1]));
+        }
         else if(widgetClass == "FB_SCE24_Ring" && size == 2)
         {
             feedbackProcessor = new SCE24_Ring_Midi_FeedbackProcessor(surface, widget, strToHex(tokenLines[i][1]));
@@ -1504,30 +1508,7 @@ void ActionContext::UpdateWidgetValue(int param, double value)
 
 void ActionContext::UpdateWidgetValue(string value)
 {
-    if(supportsRGB_ && RGBValues_.size() == 2 )
-        widget_->UpdateValueAndColors(value, RGBValues_[0], RGBValues_[1]);
-    else
-        widget_->UpdateValue(value);
-    /*
-    if(supportsRGB_)
-    {
-        currentRGBIndex_ = 1;
-        widget_->UpdateRGBValue(RGBValues_[currentRGBIndex_].r, RGBValues_[currentRGBIndex_].g, RGBValues_[currentRGBIndex_].b);
-    }
-    else if(supportsTrackColor_)
-    {
-        if(MediaTrack* track = zone_->GetNavigator()->GetTrack())
-        {
-            unsigned int* rgb_colour = (unsigned int*)DAW::GetSetMediaTrackInfo(track, "I_CUSTOMCOLOR", NULL);
-            
-            int r = (*rgb_colour >> 0) & 0xff;
-            int g = (*rgb_colour >> 8) & 0xff;
-            int b = (*rgb_colour >> 16) & 0xff;
-            
-            widget_->UpdateRGBValue(r, g, b);
-        }
-    }
-     */
+    widget_->UpdateValue(value);
 }
 
 void ActionContext::ForceWidgetValue(double value)
@@ -1804,12 +1785,6 @@ void  Widget::UpdateValue(string value)
         processor->SetValue(value);
 }
 
-void Widget::UpdateValueAndColors(string value, rgb_color textColor, rgb_color textBackground)
-{
-    for(auto processor : feedbackProcessors_)
-        processor->SetValueAndColors(value, textColor, textBackground);
-}
-
 void  Widget::UpdateRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
@@ -1832,12 +1807,6 @@ void  Widget::ForceValue(string value)
 {
     for(auto processor : feedbackProcessors_)
         processor->ForceValue(value);
-}
-
-void Widget::ForceValueAndColors(string value, rgb_color textColor, rgb_color textBackground)
-{
-    for(auto processor : feedbackProcessors_)
-        processor->ForceValueAndColors(value, textColor, textBackground);
 }
 
 void  Widget::ForceRGBValue(int r, int g, int b)
