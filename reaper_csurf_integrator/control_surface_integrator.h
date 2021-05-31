@@ -891,7 +891,7 @@ public:
                 backgroundColor_.g = stoi(property[2]);
                 backgroundColor_.b = stoi(property[3]);
             }
-            else if(property[0] == "Text" && property.size() == 15)
+            else if(property[0] == "Text" && property.size() > 8)
             {
                 foregroundColor_.r = stoi(property[3]);
                 foregroundColor_.g = stoi(property[4]);

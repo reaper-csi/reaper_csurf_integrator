@@ -957,13 +957,13 @@ public:
             if(property.size() == 0)
                 continue;
 
-            else if(property[0] == "Text" && property.size() == 15)
+            else if(property[0] == "Text" && property.size() > 2)
             {
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
                 maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
 
-                ForceValue(text_);
+                ForceValue();
             }
         }
     }
@@ -1241,13 +1241,13 @@ public:
             {
                 itemStyle_ = 02;
             }
-            else if(property[0] == "Text" && property.size() == 15)
+            else if(property[0] == "Text" && property.size() > 2)
             {
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
                 maxCharacters_ = maxChars.GetMaxCharacters(displayType_);
 
-                ForceValue(1.0);
+                ForceValue();
             }
         }
     }
@@ -1373,7 +1373,7 @@ public:
             }
         }
         
-        ForceValue(lastDoubleValue_);
+        ForceValue();
     }
     
     virtual void ClearCache() override
@@ -1455,7 +1455,7 @@ public:
     {
         FeedbackProcessor::SetProperties(properties);
         
-        ForceValue(lastDoubleValue_);
+        ForceValue();
     }
     
     virtual void ClearCache() override
