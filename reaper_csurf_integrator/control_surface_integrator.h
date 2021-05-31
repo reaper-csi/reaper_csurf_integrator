@@ -1098,7 +1098,11 @@ protected:
     
     void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
     void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
-    
+    void MapSelectedTrackSendsToWidgetsImplementation();
+    void MapSelectedTrackReceivesToWidgetsImplementation();
+    void MapSelectedTrackFXToWidgetsImplementation();
+    void MapSelectedTrackFXToMenuImplementation();
+
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1136,17 +1140,21 @@ public:
     int GetNumReceiveSlots() { return numSends_; }
     
     int  GetNumFXSlots() { return numFXSlots_; }
-    void MapSelectedTrackFXToWidgets();
-    void MapSelectedTrackFXToMenu();
-    void MapSelectedTrackFXMenuSlotToWidgets(int slot);
-    void MapFocusedFXToWidgets();
-    void UnmapSelectedTrackFXFromWidgets();
-    void UnmapSelectedTrackFXFromMenu();
-    void UnmapFocusedFXFromWidgets();
+    
     void MapSelectedTrackSendsToWidgets();
     void MapSelectedTrackReceivesToWidgets();
+    void MapSelectedTrackFXToWidgets();
+    void MapSelectedTrackFXToMenu();
+    
     void UnmapSelectedTrackSendsFromWidgets();
     void UnmapSelectedTrackReceivesFromWidgets();
+    void UnmapSelectedTrackFXFromWidgets();
+    void UnmapSelectedTrackFXFromMenu();
+    
+    void MapSelectedTrackFXMenuSlotToWidgets(int slot);
+    void MapFocusedFXToWidgets();
+    void UnmapFocusedFXFromWidgets();
+
     void TrackFXListChanged();
     
     void OnTrackSelection();
@@ -1195,7 +1203,29 @@ public:
             MapSelectedTrackFXMenuSlotToWidgetsImplementation(slot);
     }
     
+    void AcceptMapSelectedTrackSendsToWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackSendsToWidgets_)
+            MapSelectedTrackSendsToWidgetsImplementation();
+    }
     
+    void AcceptMapSelectedTrackReceivesToWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackReceivesToWidgets_)
+            MapSelectedTrackReceivesToWidgetsImplementation();
+    }
+    
+    void AcceptMapSelectedTrackFXToWidgets()
+    {
+        if(shouldReceiveMapSelectedTrackFXToWidgets_)
+            MapSelectedTrackFXToWidgetsImplementation();
+    }
+    
+    void AcceptReceiveMapSelectedTrackFXToMenu()
+    {
+        if(shouldReceiveMapSelectedTrackFXToMenu_)
+            MapSelectedTrackFXToMenuImplementation();
+    }
     
     void MakeHomeDefault()
     {
@@ -2074,6 +2104,34 @@ public:
         for(auto surface : surfaces_)
             if(surface != originator)
                 surface->AcceptGoFXSlot(slot);
+    }
+    
+    void MapSelectedTrackSendsToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->MapSelectedTrackSendsToWidgets();
+    }
+    
+    void MapSelectedTrackReceivesToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->MapSelectedTrackReceivesToWidgets();
+    }
+    
+    void MapSelectedTrackFXToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->MapSelectedTrackFXToWidgets();
+    }
+    
+    void MapSelectedTrackFXToMenu(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->MapSelectedTrackFXToMenu();
     }
     
     /*

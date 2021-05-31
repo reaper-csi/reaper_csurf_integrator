@@ -1992,6 +1992,14 @@ void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
+    if(shouldBroadcastMapSelectedTrackSendsToWidgets_)
+        page_->MapSelectedTrackSendsToWidgets(this);
+    
+    MapSelectedTrackSendsToWidgetsImplementation();
+}
+
+void ControlSurface::MapSelectedTrackSendsToWidgetsImplementation()
+{
     UnmapSelectedTrackSendsFromWidgets();
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
@@ -2001,13 +2009,20 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
     }
 }
 
-
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 {
     DeactivateZones(activeSelectedTrackReceivesZones_);
 }
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
+{
+    if(shouldBroadcastMapSelectedTrackReceivesToWidgets_)
+        page_->MapSelectedTrackReceivesToWidgets(this);
+    
+    MapSelectedTrackReceivesToWidgetsImplementation();
+}
+
+void ControlSurface::MapSelectedTrackReceivesToWidgetsImplementation()
 {
     UnmapSelectedTrackReceivesFromWidgets();
     
@@ -2018,7 +2033,6 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
     }
 }
 
-
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
 {
     DeactivateZones(activeSelectedTrackFXMenuZones_);
@@ -2026,6 +2040,14 @@ void ControlSurface::UnmapSelectedTrackFXFromMenu()
 }
 
 void ControlSurface::MapSelectedTrackFXToMenu()
+{
+    if(shouldBroadcastMapSelectedTrackFXToMenu_)
+        page_->MapSelectedTrackFXToMenu(this);
+    
+    MapSelectedTrackFXToMenuImplementation();
+}
+
+void ControlSurface::MapSelectedTrackFXToMenuImplementation()
 {
     UnmapSelectedTrackFXFromMenu();
     
@@ -2035,7 +2057,6 @@ void ControlSurface::MapSelectedTrackFXToMenu()
         MapSelectedTrackItemsToWidgets(track, "FXMenu", numFX, GetNumFXSlots(), activeSelectedTrackFXMenuZones_);
     }
 }
-
 
 void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfItems, int numberOfSlots, vector<Zone*> &activeZones)
 {
@@ -2048,13 +2069,20 @@ void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string ba
     }
 }
 
-
 void ControlSurface::UnmapSelectedTrackFXFromWidgets()
 {
     DeactivateZones(activeSelectedTrackFXZones_);
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
+{
+    if(shouldBroadcastMapSelectedTrackFXToWidgets_)
+        page_->MapSelectedTrackFXToWidgets(this);
+    
+    MapSelectedTrackFXToWidgetsImplementation();
+}
+
+void ControlSurface::MapSelectedTrackFXToWidgetsImplementation()
 {
     UnmapSelectedTrackFXFromWidgets();
     
