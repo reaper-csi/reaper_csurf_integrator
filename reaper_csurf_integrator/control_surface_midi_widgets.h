@@ -965,17 +965,19 @@ protected:
             if(property.size() == 0)
                 continue;
 
-            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 3)
+            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 4)
             {
-                foregroundColor_.r = stoi(property[1]);
-                foregroundColor_.g = stoi(property[2]);
-                foregroundColor_.b = stoi(property[3]);
+                displayType_ = stoi(property[1]);
+                foregroundColor_.r = stoi(property[2]);
+                foregroundColor_.g = stoi(property[3]);
+                foregroundColor_.b = stoi(property[4]);
             }
-            else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 3)
+            else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 4)
             {
-                backgroundColor_.r = stoi(property[1]);
-                backgroundColor_.g = stoi(property[2]);
-                backgroundColor_.b = stoi(property[3]);
+                displayType_ = stoi(property[1]);
+                backgroundColor_.r = stoi(property[2]);
+                backgroundColor_.g = stoi(property[3]);
+                backgroundColor_.b = stoi(property[4]);
             }
             else if(property[0] == "Text" && property.size() > 8)
             {
@@ -1511,7 +1513,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // indicates background colour
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
