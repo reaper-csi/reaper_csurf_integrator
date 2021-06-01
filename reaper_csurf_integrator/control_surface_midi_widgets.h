@@ -1312,13 +1312,13 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
