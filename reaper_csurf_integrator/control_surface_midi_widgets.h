@@ -932,26 +932,91 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_Text_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+class SCE24_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    int cellNumber_ = 01;
+    int displayType_ = 0;
+    int itemNumber_ = 00;
+    int itemStyle_ = 01;
+    
+    rgb_color foregroundColor_ = { 0x7f, 0x7f, 0x7f };
+    rgb_color backgroundColor_ { 0, 0, 0 };
+    
+    rgb_color currentColor_ = { 0, 0, 0 } ;
+
+    SCE24_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber) {}
+    
+    SCE24_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), itemNumber_(itemNumber) {}
+
+    
+    virtual void SetCurrentColor(double value) override
+    {
+        currentColor_ = value == 0 ? backgroundColor_ : foregroundColor_;
+        
+        ForceValue();
+    }
+    
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property.size() == 0)
+                continue;
+
+            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 3)
+            {
+                foregroundColor_.r = stoi(property[1]);
+                foregroundColor_.g = stoi(property[2]);
+                foregroundColor_.b = stoi(property[3]);
+            }
+            else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 3)
+            {
+                backgroundColor_.r = stoi(property[1]);
+                backgroundColor_.g = stoi(property[2]);
+                backgroundColor_.b = stoi(property[3]);
+            }
+            else if(property[0] == "Text" && property.size() > 8)
+            {
+                foregroundColor_.r = stoi(property[3]);
+                foregroundColor_.g = stoi(property[4]);
+                foregroundColor_.b = stoi(property[5]);
+                
+                backgroundColor_.r = stoi(property[6]);
+                backgroundColor_.g = stoi(property[7]);
+                backgroundColor_.b = stoi(property[8]);
+            }
+            else if(property[0] == "NoBlink" && property.size() == 1)
+            {
+                itemStyle_ = 01;
+            }
+            else if(property[0] == "Blink" && property.size() == 1)
+            {
+                itemStyle_ = 02;
+            }
+        }
+        
+        ForceValue();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Text_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int cellNumber_ = 0;
-    int displayType_ = 0;
-    int itemNumber_ = 0;
-    int maxCharacters_ = 0;
     string text_ = "";
-    
+    int maxCharacters_ = 0;
+
     SCE24_Text_MaxCharactersDictionary maxChars;
     
 public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
-    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber),  itemNumber_(itemNumber) { }
+    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) { }
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
-        FeedbackProcessor::SetProperties(properties);
-        
         for(auto property : properties)
         {
             if(property.size() == 0)
@@ -962,10 +1027,10 @@ public:
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
                 maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
-
-                ForceValue();
             }
         }
+        
+        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
     }
     
     virtual void ClearCache() override
@@ -1058,13 +1123,10 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_Ring_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+class SCE24_Ring_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int cellNumber_ = 0;
-    int itemNumber_ = 0;
-    int itemStyle_ = 01;
     rgb_color color_ = { 0x7f, 0x7f, 0x7f };
     int secondColorStart_ = 4;
     rgb_color secondColor_ = { 0x7f, 0x7f, 0x7f };
@@ -1074,7 +1136,7 @@ private:
 
 public:
     virtual ~SCE24_Ring_Midi_FeedbackProcessor() {}
-    SCE24_Ring_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber) { }
+    SCE24_Ring_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
@@ -1121,6 +1183,8 @@ public:
                 backgroundColor_.b = stoi(property[3]);
             }
         }
+        
+        ForceValue(lastDoubleValue_);
     }
     
     virtual void ClearCache() override
@@ -1210,46 +1274,32 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_OLEDButton_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+class SCE24_OLEDButton_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    int cellNumber_ = 1;
-    int displayType_ = 01;
-    int itemNumber_ = 01;
-    int itemStyle_ = 01;
     string text_ = "";
-    int maxCharacters_ = 19;
+    int maxCharacters_ = 0;
     
     SCE24_OLEDButtonText_MaxCharactersDictionary maxChars;
 
 public:
     virtual ~SCE24_OLEDButton_Midi_FeedbackProcessor() {}
-    SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), itemNumber_(itemNumber) {}
+    SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) {}
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
-        FeedbackProcessor::SetProperties(properties);
-
         for(auto property : properties)
         {
-            if(property[0] == "NoBlink" && property.size() == 1)
-            {
-                itemStyle_ = 01;
-            }
-            else if(property[0] == "Blink" && property.size() == 1)
-            {
-                itemStyle_ = 02;
-            }
-            else if(property[0] == "Text" && property.size() > 2)
+            if(property[0] == "Text" && property.size() > 2)
             {
                 displayType_ = stoi(property[1]);
                 text_ = property[2];
                 maxCharacters_ = maxChars.GetMaxCharacters(displayType_);
-
-                ForceValue();
             }
         }
+        
+        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
     }
     
     virtual void ClearCache() override
@@ -1350,35 +1400,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_LEDButton_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+class SCE24_LEDButton_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int cellNumber_ = 01;
-    int itemStyle_ = 01;
-    
 public:
     virtual ~SCE24_LEDButton_Midi_FeedbackProcessor() {}
-    SCE24_LEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber) { }
-    
-    virtual void SetProperties(vector<vector<string>> properties) override
-    {
-        FeedbackProcessor::SetProperties(properties);
-        
-        for(auto property : properties)
-        {
-            if(property[0] == "NoBlink" && property.size() == 1)
-            {
-                itemStyle_ = 01;
-            }
-            else if(property[0] == "Blink" && property.size() == 1)
-            {
-                itemStyle_ = 02;
-            }
-        }
-        
-        ForceValue();
-    }
+    SCE24_LEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
     
     virtual void ClearCache() override
     {
@@ -1397,7 +1424,6 @@ public:
         SetCurrentColor(value);
         ForceValue();
     }
-    
     
     virtual void ForceValue() override
     {
@@ -1445,22 +1471,12 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_Background_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+class SCE24_Background_Midi_FeedbackProcessor : public  SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
-private:
-    int cellNumber_ = 01;
-    
 public:
     virtual ~SCE24_Background_Midi_FeedbackProcessor() {}
-    SCE24_Background_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber) { }
-    
-    virtual void SetProperties(vector<vector<string>> properties) override
-    {
-        FeedbackProcessor::SetProperties(properties);
-        
-        ForceValue();
-    }
+    SCE24_Background_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
     
     virtual void ClearCache() override
     {
