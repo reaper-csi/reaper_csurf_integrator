@@ -1423,8 +1423,7 @@ public:
     virtual void ForceValue(double value) override
     {
         lastDoubleValue_ = value;
-        SetCurrentColor(value);
-        ForceValue();
+        SetCurrentColor(value);  // This will cause a Force()
     }
     
     virtual void ForceValue() override
