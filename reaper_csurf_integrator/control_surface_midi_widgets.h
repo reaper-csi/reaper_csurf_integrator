@@ -1258,6 +1258,11 @@ public:
         lastStringValue_ = "";
     }
     
+    virtual void ForceClear() override
+    {
+        ForceValue(0.0);
+    }
+    
     virtual void SetValue(double value) override
     {
         if(value != lastDoubleValue_) // changes since last send
