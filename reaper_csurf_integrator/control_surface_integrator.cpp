@@ -1180,6 +1180,18 @@ void Manager::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Action
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void Action::Touch(ActionContext* context, double value)
+{
+    string suffix = context->GetZone()->GetNavigator()->GetChannelNumString();
+    
+    if(suffix != "")
+        context->GetSurface()->OnChannelTouch("OnChannelTouch" + suffix, value);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigator::PinChannel()
@@ -1944,7 +1956,10 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
 {
     for(int i = 0; i < numChannels; i++)
+    {
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
+        AddWidget(new Widget(this, "OnChannelTouch" + navigators_[i]->GetChannelNumString()));
+    }
     
     LoadDefaultZoneOrder();
 }
