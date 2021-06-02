@@ -24,6 +24,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             double min, max = 0;
@@ -60,6 +62,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             double min, max = 0;
@@ -156,8 +160,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
-        
-        // DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE")) == 2 for Touch
+        Action::Touch(context, value);
         
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
         if(MediaTrack* track = context->GetTrack())
@@ -187,6 +190,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
     }
 };
@@ -213,6 +217,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
     }
 };
@@ -252,6 +257,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, DB2VAL(GetCurrentDBValue(context)), false), NULL);
@@ -332,6 +339,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
         context->GetZone()->GetNavigator()->SetIsPanTouched(value);
     }
 };
@@ -377,6 +385,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanTouched(value);
         if(MediaTrack* track = context->GetTrack())
         {
@@ -417,6 +427,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanTouched(value);
         if(MediaTrack* track = context->GetTrack())
         {
@@ -465,6 +477,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanWidthTouched(value);
         if(MediaTrack* track = context->GetTrack())
             if(GetPanMode(track) != 6)
@@ -499,6 +513,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanWidthTouched(value);
         if(MediaTrack* track = context->GetTrack())
         {
@@ -548,6 +564,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
         context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value);
     }
 };
@@ -584,6 +601,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanLeftTouched(value);
         if(MediaTrack* track = context->GetTrack())
         {
@@ -636,6 +655,7 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
         context->GetZone()->GetNavigator()->SetIsPanRightTouched(value);
     }
 };
@@ -672,6 +692,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         context->GetZone()->GetNavigator()->SetIsPanRightTouched(value);
         if(MediaTrack* track = context->GetTrack())
         {
@@ -723,6 +745,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             int numHardwareSends = DAW::GetTrackNumSends(track, 1);
@@ -769,6 +793,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             int numHardwareSends = DAW::GetTrackNumSends(track, 1);
@@ -822,6 +848,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             int numHardwareSends = DAW::GetTrackNumSends(track, 1);
@@ -867,6 +895,8 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        Action::Touch(context, value);
+        
         if(MediaTrack* track = context->GetTrack())
         {
             int numHardwareSends = DAW::GetTrackNumSends(track, 1);

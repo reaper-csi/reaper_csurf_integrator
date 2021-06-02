@@ -186,10 +186,10 @@ class Action
 public:
     virtual ~Action() {}
     
+    virtual void Touch(ActionContext* context, double value);
     virtual string GetName() { return "Action"; }
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
-    virtual void Touch(ActionContext* context, double value) {}
     virtual double GetCurrentNormalizedValue(ActionContext* context) { return 0.0; }
     virtual double GetCurrentDBValue(ActionContext* context) { return 0.0; }
 
@@ -1373,6 +1373,12 @@ public:
     {
         if(widgetsByName_.count("OnInitialization") > 0)
             widgetsByName_["OnInitialization"]->DoAction(1.0);
+    }
+    
+    void OnChannelTouch(string widgeName, double value)
+    {
+        if(widgetsByName_.count(widgeName) > 0)
+            widgetsByName_[widgeName]->DoAction(value);
     }
 };
 
