@@ -1163,9 +1163,9 @@ void Manager::Init()
         snprintf(buffer, sizeof(buffer), "Trouble in %s, around line %d\n", iniFilePath.c_str(), lineNumber);
         DAW::ShowConsoleMsg(buffer);
     }
-    
-    if(pages_.size() > 0)
-        pages_[currentPageIndex_]->OnInitialization();
+      
+    for(auto page : pages_)
+        page->OnInitialization();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Parsing end

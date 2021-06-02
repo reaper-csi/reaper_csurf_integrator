@@ -156,6 +156,9 @@ public:
     
     virtual void Touch(ActionContext* context, double value) override
     {
+        
+        // DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE")) == 2 for Touch
+        
         context->GetZone()->GetNavigator()->SetIsVolumeTouched(value);
         if(MediaTrack* track = context->GetTrack())
             DAW::CSurf_SetSurfaceVolume(track, DAW::CSurf_OnVolumeChange(track, normalizedToVol(GetCurrentNormalizedValue(context)), false), NULL);
