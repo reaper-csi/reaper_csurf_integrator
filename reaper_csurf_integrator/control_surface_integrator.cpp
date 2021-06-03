@@ -203,7 +203,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
-    vector<string> modifierSlots = { "", "", "", ""};
+    vector<string> modifierSlots = { "", "", "", "", ""};
     string modifier_token;
     
     while (getline(modified_role, modifier_token, '+'))
@@ -213,7 +213,9 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
     {
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
-            if(modifier_tokens[i] == Shift)
+            if(modifier_tokens[i] == FaderTouch)
+                modifierSlots[3] = FaderTouch + "+";
+            else if(modifier_tokens[i] == Shift)
                 modifierSlots[0] = Shift + "+";
             else if(modifier_tokens[i] == Option)
                 modifierSlots[1] = Option + "+";
@@ -1182,13 +1184,9 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Action
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 void Action::Touch(ActionContext* context, double value)
 {
-    string suffix = context->GetZone()->GetNavigator()->GetChannelNumString();
-    
-    if(suffix != "")
-        context->GetSurface()->OnChannelTouch("OnChannelTouch" + suffix, value);
+    context->GetZone()->GetNavigator()->SetIsNavigatorTouched(value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1759,6 +1757,9 @@ vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
     if( ! widget->GetIsModifier())
         modifier = surface_->GetPage()->GetModifier();
     
+    if(GetNavigator()->GetIsNavigatorTouched())
+        modifier = FaderTouch + "+" + modifier;
+    
     if(actionContextDictionary_[widget].count(modifier) > 0)
         return actionContextDictionary_[widget][modifier];
     else if(actionContextDictionary_[widget].count("") > 0)
@@ -1956,11 +1957,8 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
 {
     for(int i = 0; i < numChannels; i++)
-    {
         navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
-        AddWidget(new Widget(this, "OnChannelTouch" + navigators_[i]->GetChannelNumString()));
-    }
-    
+   
     LoadDefaultZoneOrder();
 }
 
