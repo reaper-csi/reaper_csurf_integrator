@@ -121,6 +121,7 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
+const string FaderTouch = "FaderTouch";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
@@ -208,6 +209,7 @@ class Navigator
 {
 protected:
     Page* const page_ = nullptr;
+    bool isNavigatorTouched_ = false;
     bool isVolumeTouched_ = false;
     bool isPanTouched_ = false;
     bool isPanWidthTouched_ = false;
@@ -218,6 +220,9 @@ public:
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
+    void SetIsNavigatorTouched(bool isNavigatorTouched) { isNavigatorTouched_ = isNavigatorTouched;  }
+    bool GetIsNavigatorTouched() { return isNavigatorTouched_;  }
+
     void SetIsVolumeTouched(bool isVolumeTouched) { isVolumeTouched_ = isVolumeTouched;  }
     bool GetIsVolumeTouched() { return isVolumeTouched_;  }
     
@@ -1373,12 +1378,6 @@ public:
     {
         if(widgetsByName_.count("OnInitialization") > 0)
             widgetsByName_["OnInitialization"]->DoAction(1.0);
-    }
-    
-    void OnChannelTouch(string widgeName, double value)
-    {
-        if(widgetsByName_.count(widgeName) > 0)
-            widgetsByName_[widgeName]->DoAction(value);
     }
 };
 
