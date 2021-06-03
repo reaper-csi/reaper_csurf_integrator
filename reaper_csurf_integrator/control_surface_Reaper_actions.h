@@ -2159,8 +2159,11 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
+            double vol, pan = 0.0;
+            DAW::GetTrackUIVolPan(track, &vol, &pan);
+
             char trackVolume[128];
-            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetMediaTrackInfo_Value(track, "D_VOL")));
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(vol));
             context->UpdateWidgetValue(string(trackVolume));
         }
         else
@@ -2179,9 +2182,10 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            double panVal = DAW::GetMediaTrackInfo_Value(track, "D_PAN");
-            
-            context->UpdateWidgetValue(context->GetPanValueString(panVal));
+            double vol, pan = 0.0;
+            DAW::GetTrackUIVolPan(track, &vol, &pan);
+
+            context->UpdateWidgetValue(context->GetPanValueString(pan));
         }
         else
             context->ClearWidget();
