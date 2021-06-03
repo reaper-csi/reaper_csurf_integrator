@@ -1757,10 +1757,9 @@ vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
     if( ! widget->GetIsModifier())
         modifier = surface_->GetPage()->GetModifier();
     
-    if(GetNavigator()->GetIsNavigatorTouched())
-        modifier = FaderTouch + "+" + modifier;
-    
-    if(actionContextDictionary_[widget].count(modifier) > 0)
+    if(GetNavigator()->GetIsNavigatorTouched() && actionContextDictionary_[widget].count(FaderTouch + "+" + modifier) > 0)
+        return actionContextDictionary_[widget][FaderTouch + "+" + modifier];
+    else if(actionContextDictionary_[widget].count(modifier) > 0)
         return actionContextDictionary_[widget][modifier];
     else if(actionContextDictionary_[widget].count("") > 0)
         return actionContextDictionary_[widget][""];
