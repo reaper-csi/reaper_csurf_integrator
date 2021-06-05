@@ -41,69 +41,6 @@
 #include "oscpkt.hh"
 #include "udp.hh"
 #endif
-/*
-static void GenMST()
-{
-    //Widget CellA1_Text1
-    //FB_SCE24_Text 41 01
-    //WidgetEnd
-    
-    vector<string> lines;
-    
-    for(int i = 1; i < 25; i++)
-    {
-        for(int j = 1; j < 11; j++)
-        {
-            string line = "Widget Cell";
-            
-            if(i < 9)
-            {
-                line += "A";
-                line += to_string(i);
-            }
-            else if(i < 17)
-            {
-                line += "B";
-                line += to_string(i - 8);
-            }
-            else
-            {
-                line += "C";
-                line += to_string(i - 16);
-            }
-            
-            line += "_Text";
-            
-            line += to_string(j);
-            
-            line += "\n";
-            
-            line += "\tFB_SCE24_Text ";
-            
-            line += to_string(i);
-            
-            line += " ";
-            
-            if(j < 10)
-                line += "0";
-            
-            line += to_string(j);
-            
-            line += "\n";
-            
-            line += "WidgetEnd\n\n";
-            
-            lines.push_back(line);
-            
-            DAW::ShowConsoleMsg(line.c_str());
-        }
-        
-        string separator = "\n\n";
-        DAW::ShowConsoleMsg(separator.c_str());
-    }
-}
-*/
-
 
 extern string GetLineEnding();
 
@@ -128,6 +65,14 @@ const string CRLFChars = "[\r\n]";
 const string TabChars = "[\t]";
 
 const int TempDisplayTime = 1250;
+
+enum NavigationStyle
+{
+    Standard,
+    Send,
+    Receive,
+    FXMenu,
+};
 
 class Manager;
 extern Manager* TheManager;
@@ -584,6 +529,8 @@ private:
     string const alias_ = "";
     string const sourceFilePath_ = "";
     
+    NavigationStyle navigationStyle_ = Standard;
+    
     int slotIndex_ = 0;
 
     vector<Widget*> widgets_;
@@ -602,12 +549,13 @@ public:
     void Activate(vector<Zone*> &activeZones);
     bool TryActivate(Widget* widget);
     void Deactivate(vector<Zone*> activeZones);
-    
-    int GetSlotIndex() { return slotIndex_; }
-    
+    int GetSlotIndex();
     vector<ActionContext> &GetActionContexts(Widget* widget);
+    
+    
     Navigator* GetNavigator() { return navigator_; }
     void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
+    void SetNavigationStyle(NavigationStyle navigationStyle) { navigationStyle_ = navigationStyle; }
     vector<Widget*> &GetWidgets() { return widgets_; }
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     vector<Zone*> &GetSubZones() { return subZones_; }
@@ -1034,6 +982,7 @@ protected:
     bool shouldReceiveGoZone_ = false;
     bool shouldBroadcastGoFXSlot_ = false;
     bool shouldReceiveGoFXSlot_ = false;
+    
     bool shouldBroadcastMapSelectedTrackSendsToWidgets_ = false;
     bool shouldReceiveMapSelectedTrackSendsToWidgets_ = false;
     bool shouldBroadcastMapSelectedTrackReceivesToWidgets_ = false;
@@ -1043,6 +992,13 @@ protected:
     bool shouldBroadcastMapSelectedTrackFXToMenu_ = false;
     bool shouldReceiveMapSelectedTrackFXToMenu_ = false;
     
+    bool shouldBroadcastMapTrackSendsSlotToWidgets_ = false;
+    bool shouldReceiveMapTrackSendsSlotToWidgets_ = false;
+    bool shouldBroadcastMapTrackReceivesSlotToWidgets_ = false;
+    bool shouldReceiveMapTrackReceivesSlotToWidgets_ = false;
+    bool shouldBroadcastMapTrackFXMenusSlotToWidgets_ = false;
+    bool shouldReceiveMapTrackFXMenusSlotToWidgets_ = false;
+
     map<int, Navigator*> navigators_;
     
     vector<Widget*> widgets_;
@@ -1061,14 +1017,24 @@ protected:
     
     void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
     void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
+    
     void MapSelectedTrackSendsToWidgetsImplementation();
     void MapSelectedTrackReceivesToWidgetsImplementation();
     void MapSelectedTrackFXToWidgetsImplementation();
     void MapSelectedTrackFXToMenuImplementation();
+    
+    void MapTrackSendsSlotToWidgetsImplementation();
+    void MapTrackReceivesSlotToWidgetsImplementation();
+    void MapTrackFXMenusSlotToWidgetsImplementation();
+
     void UnmapSelectedTrackSendsFromWidgetsImplementation();
     void UnmapSelectedTrackReceivesFromWidgetsImplementation();
     void UnmapSelectedTrackFXFromWidgetsImplementation();
     void UnmapSelectedTrackFXFromMenuImplementation();
+    
+    void UnmapTrackSendsSlotFromWidgetsImplementation();
+    void UnmapTrackReceivesSlotFromWidgetsImplementation();
+    void UnmapTrackFXMenusSlotFromWidgetsImplementation();
 
     virtual void InitHardwiredWidgets()
     {
@@ -1113,11 +1079,19 @@ public:
     void MapSelectedTrackFXToWidgets();
     void MapSelectedTrackFXToMenu();
     
+    void MapTrackSendsSlotToWidgets();
+    void MapTrackReceivesSlotToWidgets();
+    void MapTrackFXMenusSlotToWidgets();
+
     void UnmapSelectedTrackSendsFromWidgets();
     void UnmapSelectedTrackReceivesFromWidgets();
     void UnmapSelectedTrackFXFromWidgets();
     void UnmapSelectedTrackFXFromMenu();
     
+    void UnmapTrackSendsSlotFromWidgets();
+    void UnmapTrackReceivesSlotFromWidgets();
+    void UnmapTrackFXMenusSlotFromWidgets();
+
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     void UnmapFocusedFXFromWidgets();
@@ -1149,6 +1123,7 @@ public:
     virtual void SetReceiveGoZone() { shouldReceiveGoZone_ = true; }
     virtual void SetBroadcastGoFXSlot() { shouldBroadcastGoFXSlot_ = true; }
     virtual void SetReceiveGoFXSlot() { shouldReceiveGoFXSlot_ = true; }
+    
     virtual void SetBroadcastMapSelectedTrackSendsToWidgets() { shouldBroadcastMapSelectedTrackSendsToWidgets_ = true; }
     virtual void SetReceiveMapSelectedTrackSendsToWidgets() { shouldReceiveMapSelectedTrackSendsToWidgets_ = true; }
     virtual void SetBroadcastMapSelectedTrackReceivesToWidgets() { shouldBroadcastMapSelectedTrackReceivesToWidgets_ = true; }
@@ -1157,6 +1132,13 @@ public:
     virtual void SetReceiveMapSelectedTrackFXToWidgets() { shouldReceiveMapSelectedTrackFXToWidgets_ = true; }
     virtual void SetBroadcastMapSelectedTrackFXToMenu() { shouldBroadcastMapSelectedTrackFXToMenu_ = true; }
     virtual void SetReceiveMapSelectedTrackFXToMenu() { shouldReceiveMapSelectedTrackFXToMenu_ = true; }
+   
+    virtual void SetBroadcastMapTrackSendsSlotToWidgets() { shouldBroadcastMapTrackSendsSlotToWidgets_ = true; }
+    virtual void SetReceiveMapTrackSendsSlotToWidgets() { shouldReceiveMapTrackSendsSlotToWidgets_ = true; }
+    virtual void SetBroadcastMapTrackReceivesSlotToWidgets() { shouldBroadcastMapTrackReceivesSlotToWidgets_ = true; }
+    virtual void SetReceiveMapTrackReceivesSlotToWidgets() { shouldReceiveMapTrackReceivesSlotToWidgets_ = true; }
+    virtual void SetBroadcastMapTrackFXMenusSlotToWidgets() { shouldBroadcastMapTrackFXMenusSlotToWidgets_ = true; }
+    virtual void SetReceiveMapTrackFXMenusSlotToWidgets() { shouldReceiveMapTrackFXMenusSlotToWidgets_ = true; }
     
     void AcceptGoZone(string zoneName, double value)
     {
@@ -1194,6 +1176,24 @@ public:
             MapSelectedTrackFXToMenuImplementation();
     }
     
+    void AcceptMapTrackSendsSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackSendsSlotToWidgets_)
+            MapTrackSendsSlotToWidgetsImplementation();
+    }
+    
+    void AcceptMapTrackReceivesSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackReceivesSlotToWidgets_)
+            MapTrackReceivesSlotToWidgetsImplementation();
+    }
+    
+    void AcceptMapTrackFXMenusSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackFXMenusSlotToWidgets_)
+            MapTrackFXMenusSlotToWidgetsImplementation();
+    }
+    
     void AcceptUnmapSelectedTrackSendsFromWidgets()
     {
         if(shouldReceiveMapSelectedTrackSendsToWidgets_)
@@ -1218,6 +1218,24 @@ public:
             UnmapSelectedTrackFXFromMenuImplementation();
     }
     
+    void AcceptUnmapTrackSendsSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackSendsSlotToWidgets_)
+            UnmapTrackSendsSlotFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapTrackReceivesSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackReceivesSlotToWidgets_)
+            UnmapTrackReceivesSlotFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapTrackFXMenusSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackFXMenusSlotToWidgets_)
+            UnmapTrackFXMenusSlotFromWidgetsImplementation();
+    }
+
     void MakeHomeDefault()
     {
         homeZone_ = GetZone("Home");
@@ -1687,7 +1705,10 @@ private:
     
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
-    masterTrackNavigator_(new MasterTrackNavigator(page_)), selectedTrackNavigator_(new SelectedTrackNavigator(page_)), focusedFXNavigator_(new FocusedFXNavigator(page_)), defaultNavigator_(new Navigator(page_))
+    masterTrackNavigator_(new MasterTrackNavigator(page_)),
+    selectedTrackNavigator_(new SelectedTrackNavigator(page_)),
+    focusedFXNavigator_(new FocusedFXNavigator(page_)),
+    defaultNavigator_(new Navigator(page_))
     {
         for(int i = 0; i < numChannels; i++)
             navigators_.push_back(new TrackNavigator(page_, this, i));
@@ -1724,7 +1745,7 @@ public:
     int GetSendSlot() { return sendSlot_; }
     int GetReceiveSlot() { return receiveSlot_; }
     int GetFXMenuSlot() { return fxMenuSlot_; }
-
+    
     void AdjustSendSlotBank(int amount)
     {
         sendSlot_ += amount;
@@ -1886,14 +1907,23 @@ public:
                 int maxSendSlot = DAW::GetTrackNumSends(track, 0) - 1;
                 if(maxSendSlot > maxSendSlot_)
                     maxSendSlot_ = maxSendSlot;
+
+                //if(sendSlot_ > maxSendSlot_)
+                    //sendSlot_ = maxSendSlot_;
                 
                 int maxReceiveSlot = DAW::GetTrackNumSends(track, -1) - 1;
                 if(maxReceiveSlot > maxReceiveSlot_)
                     maxReceiveSlot_ = maxReceiveSlot;
                 
+                //if(receiveSlot_ > maxReceiveSlot_)
+                    //receiveSlot_ = maxReceiveSlot_;
+
                 int maxFXMenuSlot = DAW::TrackFX_GetCount(track) - 1;
                 if(maxFXMenuSlot > maxFXMenuSlot_)
                     maxFXMenuSlot_ = maxFXMenuSlot;
+                
+                //if(fxMenuSlot_ > maxFXMenuSlot)
+                    //fxMenuSlot_ = maxFXMenuSlot;
                 
                 if(vcaMode_)
                 {
@@ -2125,6 +2155,27 @@ public:
                 surface->AcceptMapSelectedTrackFXToMenu();
     }
     
+    void MapTrackSendsSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapTrackSendsSlotToWidgets();
+    }
+    
+    void MapTrackReceivesSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapTrackReceivesSlotToWidgets();
+    }
+    
+    void MapTrackFXMenusSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapTrackFXMenusSlotToWidgets();
+    }
+    
     void UnmapSelectedTrackSendsFromWidgets(ControlSurface* originator)
     {
         for(auto surface : surfaces_)
@@ -2151,6 +2202,27 @@ public:
         for(auto surface : surfaces_)
             if(surface != originator)
                 surface->AcceptUnmapSelectedTrackFXFromMenu();
+    }
+    
+    void UnmapTrackSendsSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapTrackSendsSlotFromWidgets();
+    }
+    
+    void UnmapTrackReceivesSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapTrackReceivesSlotFromWidgets();
+    }
+    
+    void UnmapTrackFXMenusSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapTrackFXMenusSlotFromWidgets();
     }
     
     /*
