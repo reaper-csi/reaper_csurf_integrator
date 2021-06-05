@@ -999,6 +999,12 @@ void Manager::InitActionsDictionary()
     actions_["SetReceiveMapSelectedTrackFXToWidgets"] =         new SetReceiveMapSelectedTrackFXToWidgets();
     actions_["SetBroadcastMapSelectedTrackFXToMenu"] =          new SetBroadcastMapSelectedTrackFXToMenu();
     actions_["SetReceiveMapSelectedTrackFXToMenu"] =            new SetReceiveMapSelectedTrackFXToMenu();
+    actions_["SetBroadcastMapTrackSendsSlotToWidgets"] =        new SetBroadcastMapTrackSendsSlotToWidgets();
+    actions_["SetReceiveMapTrackSendsSlotToWidgets"] =          new SetReceiveMapTrackSendsSlotToWidgets();
+    actions_["SetBroadcastMapTrackReceivesSlotToWidgets"] =     new SetBroadcastMapTrackReceivesSlotToWidgets();
+    actions_["SetReceiveMapTrackReceivesSlotToWidgets"] =       new SetReceiveMapTrackReceivesSlotToWidgets();
+    actions_["SetBroadcastMapTrackFXMenusSlotToWidgets"] =      new SetBroadcastMapTrackFXMenusSlotToWidgets();
+    actions_["SetReceiveMapTrackFXMenusSlotToWidgets"] =        new SetReceiveMapTrackFXMenusSlotToWidgets();
     actions_["TrackBank"] =                             new TrackBank();
     actions_["SelectedTrackBank"] =                     new SelectedTrackBank();
     actions_["SlotBank"] =                              new SendSlotBank();
