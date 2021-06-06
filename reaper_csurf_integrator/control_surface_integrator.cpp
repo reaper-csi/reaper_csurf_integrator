@@ -386,6 +386,21 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         navigationStyle = FXMenu;
                     }
+                    else if(navigatorName == "SelectedTrackSendSlotNavigator")
+                    {
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                        navigationStyle = Send;
+                    }
+                    else if(navigatorName == "SelectedTrackReceiveSlotNavigator")
+                    {
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                        navigationStyle = Receive;
+                    }
+                    else if(navigatorName == "SelectedTrackFXMenuSlotNavigator")
+                    {
+                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                        navigationStyle = FXMenu;
+                    }
 
                     for(int i = 0; i < navigators.size(); i++)
                     {
@@ -393,7 +408,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         string newZoneName = zoneName;
                         
-                        if(navigators.size() > 1 && (zoneName == "Channel" || zoneName == "Send" || zoneName == "Receive" || zoneName == "FXMenu" || zoneName == "SendSlot" || zoneName == "ReceiveSlot" || zoneName == "FXMenuSlot"))
+                        if(navigators.size() > 1)
                             newZoneName += numStr;
                                                
                         Zone* zone = new Zone(surface, navigators[i], i, newZoneName, zoneAlias, filePath);
@@ -403,14 +418,14 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         {
                             int numItems = 1;
                             
-                            if((includedZoneName == "Channel" || includedZoneName == "SendSlot" || includedZoneName == "ReceiveSlot" || includedZoneName == "FXMenuSlot") && surface->GetNumChannels() > 1)
-                                numItems = surface->GetNumChannels();
-                            else if(includedZoneName == "Send" && surface->GetNumSendSlots() > 1)
+                            if(includedZoneName == "Send" && surface->GetNumSendSlots() > 1)
                                 numItems = surface->GetNumSendSlots();
                             else if(includedZoneName == "Receive" && surface->GetNumReceiveSlots() > 1)
                                 numItems = surface->GetNumReceiveSlots();
                             else if(includedZoneName == "FXMenu" && surface->GetNumFXSlots() > 1)
                                 numItems = surface->GetNumFXSlots();
+                            else if(surface->GetNumChannels() > 1)
+                                numItems = surface->GetNumChannels();
                             
                             for(int j = 0; j < numItems; j++)
                             {
