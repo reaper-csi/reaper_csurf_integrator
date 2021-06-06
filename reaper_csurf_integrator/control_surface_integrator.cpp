@@ -396,7 +396,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                         navigationStyle = Receive;
                     }
-                    else if(navigatorName == "SelectedTrackFXMenuSlotNavigator")
+                    else if(navigatorName == "SelectedTrackFXSlotNavigator")
                     {
                         navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                         navigationStyle = FXMenu;
