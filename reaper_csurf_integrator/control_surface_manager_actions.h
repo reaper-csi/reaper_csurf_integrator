@@ -131,7 +131,6 @@ public:
     }
 };
 
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class MapSelectedTrackFXToMenu  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,12 +242,102 @@ class UnmapTrackFXMenusSlotFromWidgets  : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual string GetName() override { return "UnmapSelectedTrackFXFromWidgets"; }
+    virtual string GetName() override { return "UnmapTrackFXMenusSlotFromWidgets"; }
     
     void Do(ActionContext* context, double value) override
     {
         if(value)
             context->GetSurface()->UnmapTrackFXMenusSlotFromWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapSelectedTrackSendsSlotToWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "MapSelectedTrackSendsSlotToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
+            context->GetSurface()->UnmapSelectedTrackSendsSlotFromWidgets();
+        else if(value)
+            context->GetSurface()->MapSelectedTrackSendsSlotToWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class UnmapSelectedTrackSendsSlotFromWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "UnmapSelectedTrackSendsSlotFromWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value)
+            context->GetSurface()->UnmapSelectedTrackSendsSlotFromWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapSelectedTrackReceivesSlotToWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "MapSelectedTrackReceivesSlotToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
+            context->GetSurface()->UnmapSelectedTrackReceivesSlotFromWidgets();
+        else if(value)
+            context->GetSurface()->MapSelectedTrackReceivesSlotToWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class UnmapSelectedTrackReceivesSlotFromWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "UnmapSelectedTrackReceivesSlotFromWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value)
+            context->GetSurface()->UnmapSelectedTrackReceivesSlotFromWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class MapSelectedTrackFXSlotToWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "MapSelectedTrackFXSlotToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
+            context->GetSurface()->UnmapSelectedTrackFXSlotFromWidgets();
+        else if(value)
+            context->GetSurface()->MapSelectedTrackFXSlotToWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class UnmapSelectedTrackFXSlotFromWidgets  : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "UnmapSelectedTrackFXSlotFromWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        if(value)
+            context->GetSurface()->UnmapSelectedTrackFXSlotFromWidgets();
     }
 };
 
