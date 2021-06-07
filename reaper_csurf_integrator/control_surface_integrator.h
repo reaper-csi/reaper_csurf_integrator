@@ -1013,7 +1013,7 @@ protected:
     vector<Zone*> zones_;
     
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
-    void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfItems, int numberOfZones, vector<Zone*> &activeZones);
+    void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfZones, vector<Zone*> &activeZones);
     
     void MapSelectedTrackFXMenuSlotToWidgetsImplementation(int slot);
     void GoZoneImplementation(vector<Zone*> &activeZones, string zoneName, double value);
@@ -1026,7 +1026,11 @@ protected:
     void MapTrackSendsSlotToWidgetsImplementation();
     void MapTrackReceivesSlotToWidgetsImplementation();
     void MapTrackFXMenusSlotToWidgetsImplementation();
-
+    
+    void MapSelectedTrackSendsSlotToWidgetsImplementation();
+    void MapSelectedTrackReceivesSlotToWidgetsImplementation();
+    void MapSelectedTrackFXSlotToWidgetsImplementation();
+    
     void UnmapSelectedTrackSendsFromWidgetsImplementation();
     void UnmapSelectedTrackReceivesFromWidgetsImplementation();
     void UnmapSelectedTrackFXFromWidgetsImplementation();
@@ -1035,7 +1039,11 @@ protected:
     void UnmapTrackSendsSlotFromWidgetsImplementation();
     void UnmapTrackReceivesSlotFromWidgetsImplementation();
     void UnmapTrackFXMenusSlotFromWidgetsImplementation();
-
+    
+    void UnmapSelectedTrackSendsSlotFromWidgetsImplementation();
+    void UnmapSelectedTrackReceivesSlotFromWidgetsImplementation();
+    void UnmapSelectedTrackFXSlotFromWidgetsImplementation();
+    
     virtual void InitHardwiredWidgets()
     {
         // Add the "hardwired" widgets
@@ -1082,7 +1090,11 @@ public:
     void MapTrackSendsSlotToWidgets();
     void MapTrackReceivesSlotToWidgets();
     void MapTrackFXMenusSlotToWidgets();
-
+    
+    void MapSelectedTrackSendsSlotToWidgets();
+    void MapSelectedTrackReceivesSlotToWidgets();
+    void MapSelectedTrackFXSlotToWidgets();
+    
     void UnmapSelectedTrackSendsFromWidgets();
     void UnmapSelectedTrackReceivesFromWidgets();
     void UnmapSelectedTrackFXFromWidgets();
@@ -1091,7 +1103,11 @@ public:
     void UnmapTrackSendsSlotFromWidgets();
     void UnmapTrackReceivesSlotFromWidgets();
     void UnmapTrackFXMenusSlotFromWidgets();
-
+    
+    void UnmapSelectedTrackSendsSlotFromWidgets();
+    void UnmapSelectedTrackReceivesSlotFromWidgets();
+    void UnmapSelectedTrackFXSlotFromWidgets();
+    
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
     void MapFocusedFXToWidgets();
     void UnmapFocusedFXFromWidgets();
@@ -1194,6 +1210,24 @@ public:
             MapTrackFXMenusSlotToWidgetsImplementation();
     }
     
+    void AcceptMapSelectedTrackSendsSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackSendsSlotToWidgets_)
+            MapSelectedTrackSendsSlotToWidgetsImplementation();
+    }
+    
+    void AcceptMapSelectedTrackReceivesSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackReceivesSlotToWidgets_)
+            MapSelectedTrackReceivesSlotToWidgetsImplementation();
+    }
+    
+    void AcceptMapSelectedTrackFXSlotToWidgets()
+    {
+        if(shouldReceiveMapTrackFXMenusSlotToWidgets_)
+            MapSelectedTrackFXSlotToWidgetsImplementation();
+    }
+    
     void AcceptUnmapSelectedTrackSendsFromWidgets()
     {
         if(shouldReceiveMapSelectedTrackSendsToWidgets_)
@@ -1235,7 +1269,25 @@ public:
         if(shouldReceiveMapTrackFXMenusSlotToWidgets_)
             UnmapTrackFXMenusSlotFromWidgetsImplementation();
     }
-
+    
+    void AcceptUnmapSelectedTrackSendsSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackSendsSlotToWidgets_)
+            UnmapSelectedTrackSendsSlotFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackReceivesSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackReceivesSlotToWidgets_)
+            UnmapSelectedTrackReceivesSlotFromWidgetsImplementation();
+    }
+    
+    void AcceptUnmapSelectedTrackFXSlotFromWidgets()
+    {
+        if(shouldReceiveMapTrackFXMenusSlotToWidgets_)
+            UnmapSelectedTrackFXSlotFromWidgetsImplementation();
+    }
+    
     void MakeHomeDefault()
     {
         homeZone_ = GetZone("Home");
@@ -2176,6 +2228,27 @@ public:
                 surface->AcceptMapTrackFXMenusSlotToWidgets();
     }
     
+    void MapSelectedTrackSendsSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapSelectedTrackSendsSlotToWidgets();
+    }
+    
+    void MapSelectedTrackReceivesSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapSelectedTrackReceivesSlotToWidgets();
+    }
+    
+    void MapSelectedTrackFXSlotToWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptMapSelectedTrackFXSlotToWidgets();
+    }
+    
     void UnmapSelectedTrackSendsFromWidgets(ControlSurface* originator)
     {
         for(auto surface : surfaces_)
@@ -2223,6 +2296,27 @@ public:
         for(auto surface : surfaces_)
             if(surface != originator)
                 surface->AcceptUnmapTrackFXMenusSlotFromWidgets();
+    }
+    
+    void UnmapSelectedTrackSendsSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackSendsSlotFromWidgets();
+    }
+    
+    void UnmapSelectedTrackReceivesSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackReceivesSlotFromWidgets();
+    }
+    
+    void UnmapSelectedTrackFXSlotFromWidgets(ControlSurface* originator)
+    {
+        for(auto surface : surfaces_)
+            if(surface != originator)
+                surface->AcceptUnmapSelectedTrackFXSlotFromWidgets();
     }
     
     /*
