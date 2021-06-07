@@ -37,7 +37,7 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetSurface()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSlotIndex());
+            context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetSlotIndex());
     }
 };
 
@@ -51,9 +51,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackSendsFromWidgets();
+            context->GetPage()->UnmapSelectedTrackSendsFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackSendsToWidgets();
+            context->GetPage()->MapSelectedTrackSendsToWidgets(context->GetSurface());
     }
 };
 
@@ -67,7 +67,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackSendsFromWidgets();
+            context->GetPage()->UnmapSelectedTrackSendsFromWidgets(context->GetSurface());
     }
 };
 
@@ -81,9 +81,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackReceivesFromWidgets();
+            context->GetPage()->UnmapSelectedTrackReceivesFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackReceivesToWidgets();
+            context->GetPage()->MapSelectedTrackReceivesToWidgets(context->GetSurface());
     }
 };
 
@@ -97,7 +97,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackReceivesFromWidgets();
+            context->GetPage()->UnmapSelectedTrackReceivesFromWidgets(context->GetSurface());
     }
 };
 
@@ -111,9 +111,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackFXFromWidgets();
+            context->GetPage()->UnmapSelectedTrackFXFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackFXToWidgets();
+            context->GetPage()->MapSelectedTrackFXToWidgets(context->GetSurface());
     }
 };
 
@@ -127,7 +127,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackFXFromWidgets();
+            context->GetPage()->UnmapSelectedTrackFXFromWidgets(context->GetSurface());
     }
 };
 
@@ -141,9 +141,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackFXFromMenu();
+            context->GetPage()->UnmapSelectedTrackFXFromMenu(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackFXToMenu();
+            context->GetPage()->MapSelectedTrackFXToMenu(context->GetSurface());
     }
 };
 
@@ -157,7 +157,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackFXFromMenu();
+            context->GetPage()->UnmapSelectedTrackFXFromMenu(context->GetSurface());
     }
 };
 
@@ -171,9 +171,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapTrackSendsSlotFromWidgets();
+            context->GetPage()->UnmapTrackSendsSlotFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapTrackSendsSlotToWidgets();
+            context->GetPage()->MapTrackSendsSlotToWidgets(context->GetSurface());
     }
 };
 
@@ -187,7 +187,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapTrackSendsSlotFromWidgets();
+            context->GetPage()->UnmapTrackSendsSlotFromWidgets(context->GetSurface());
     }
 };
 
@@ -201,9 +201,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapTrackReceivesSlotFromWidgets();
+            context->GetPage()->UnmapTrackReceivesSlotFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapTrackReceivesSlotToWidgets();
+            context->GetPage()->MapTrackReceivesSlotToWidgets(context->GetSurface());
     }
 };
 
@@ -217,7 +217,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapTrackReceivesSlotFromWidgets();
+            context->GetPage()->UnmapTrackReceivesSlotFromWidgets(context->GetSurface());
     }
 };
 
@@ -231,9 +231,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapTrackFXMenusSlotFromWidgets();
+            context->GetPage()->UnmapTrackFXMenusSlotFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapTrackFXMenusSlotToWidgets();
+            context->GetPage()->MapTrackFXMenusSlotToWidgets(context->GetSurface());
     }
 };
 
@@ -247,7 +247,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapTrackFXMenusSlotFromWidgets();
+            context->GetPage()->UnmapTrackFXMenusSlotFromWidgets(context->GetSurface());
     }
 };
 
@@ -261,9 +261,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackSendsSlotFromWidgets();
+            context->GetPage()->UnmapSelectedTrackSendsSlotFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackSendsSlotToWidgets();
+            context->GetPage()->MapSelectedTrackSendsSlotToWidgets(context->GetSurface());
     }
 };
 
@@ -277,7 +277,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackSendsSlotFromWidgets();
+            context->GetPage()->UnmapSelectedTrackSendsSlotFromWidgets(context->GetSurface());
     }
 };
 
@@ -291,9 +291,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackReceivesSlotFromWidgets();
+            context->GetPage()->UnmapSelectedTrackReceivesSlotFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapSelectedTrackReceivesSlotToWidgets();
+            context->GetPage()->MapSelectedTrackReceivesSlotToWidgets(context->GetSurface());
     }
 };
 
@@ -307,37 +307,7 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapSelectedTrackReceivesSlotFromWidgets();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class MapSelectedTrackFXSlotToWidgets  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "MapSelectedTrackFXSlotToWidgets"; }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value == 0 && context->GetWidget()->GetName() == "OnTrackSelection")
-            context->GetSurface()->UnmapSelectedTrackFXSlotFromWidgets();
-        else if(value)
-            context->GetSurface()->MapSelectedTrackFXSlotToWidgets();
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class UnmapSelectedTrackFXSlotFromWidgets  : public Action
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    virtual string GetName() override { return "UnmapSelectedTrackFXSlotFromWidgets"; }
-    
-    void Do(ActionContext* context, double value) override
-    {
-        if(value)
-            context->GetSurface()->UnmapSelectedTrackFXSlotFromWidgets();
+            context->GetPage()->UnmapSelectedTrackReceivesSlotFromWidgets(context->GetSurface());
     }
 };
 
@@ -506,7 +476,7 @@ public:
         if(value == 0.0 && context->GetWidget()->GetName() != "OnTrackSelection")
             return; // ignore button releases except for OnTrackSelection -- 0 means Track deselection
         
-        context->GetSurface()->GoZone(context->GetStringParam(), value);
+        context->GetPage()->GoZone(context->GetSurface(), context->GetStringParam(), value);
     }
 };
 
