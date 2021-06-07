@@ -932,6 +932,45 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_OLEDButtonText_MaxCharactersDictionary
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    map<int, int> maxCharacters;
+    
+public:
+    SCE24_OLEDButtonText_MaxCharactersDictionary()
+    {
+        maxCharacters[0] = 6;
+        maxCharacters[1] = 7;
+        maxCharacters[2] = 7;
+        maxCharacters[3] = 9;
+    };
+    
+    int GetMaxCharacters(int displayType)
+    {
+        displayType--;
+        displayType = displayType < 0 ? 0 : displayType;
+        displayType = displayType > 3 ? 3 : displayType;
+        
+        return maxCharacters[displayType];
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SCE24_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -940,6 +979,9 @@ protected:
     int displayType_ = 0;
     int itemNumber_ = 00;
     int itemStyle_ = 01;
+    
+    string text_ = "";
+    int maxCharacters_ = 0;
     
     rgb_color foregroundColor_ = { 0x7f, 0x7f, 0x7f };
     rgb_color backgroundColor_ { 0, 0, 0 };
@@ -974,6 +1016,8 @@ protected:
             }
             else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 4)
             {
+                
+                
                 displayType_ = stoi(property[1]);
                 backgroundColor_.r = stoi(property[2]);
                 backgroundColor_.g = stoi(property[3]);
@@ -1008,9 +1052,6 @@ class SCE24_Text_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string text_ = "";
-    int maxCharacters_ = 0;
-
     SCE24_Text_MaxCharactersDictionary maxChars;
     
 public:
@@ -1057,15 +1098,11 @@ public:
     {
         string displayText = text_;
 
-        if(displayText == " " || displayText == "")
+        if(displayText == "")
         {
-            displayText = "";
-            
             for(int i = 0; i < maxCharacters_; i++)
                 displayText += " ";
         }
-                
-        const char* text = displayText.c_str();
         
         struct
         {
@@ -1083,15 +1120,25 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .mst
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Text
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // Style
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Text Type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // not used
+        //midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .zon, 00 == background, no text will be sent
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
+        if(maxCharacters_ != 0)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
+        }
+        else
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
+        }
         
+        /*
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
@@ -1104,20 +1151,25 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
-        
-        int textLength = strlen(text);
-        
-        if(textLength > maxCharacters_)
-            textLength = maxCharacters_;
-        
-        int cnt = 0;
-        
-        while (cnt < textLength)
+        */
+        if(maxCharacters_ != 0)
         {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
+            const char* text = displayText.c_str();
+            
+            int textLength = strlen(text);
+            
+            if(textLength > maxCharacters_)
+                textLength = maxCharacters_;
+            
+            int cnt = 0;
+            
+            while (cnt < textLength)
+            {
+                midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+                cnt++;
+            }
         }
-        
+
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
         SendMidiMessage(&midiSysExData.evt);
@@ -1250,39 +1302,10 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class SCE24_OLEDButtonText_MaxCharactersDictionary
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    map<int, int> maxCharacters;
-    
-public:
-    SCE24_OLEDButtonText_MaxCharactersDictionary()
-    {
-        maxCharacters[0] = 6;
-        maxCharacters[1] = 7;
-        maxCharacters[2] = 7;
-        maxCharacters[3] = 9;
-    };
-    
-    int GetMaxCharacters(int displayType)
-    {
-        displayType--;
-        displayType = displayType < 0 ? 0 : displayType;
-        displayType = displayType > 3 ? 3 : displayType;
-
-        return maxCharacters[displayType];
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SCE24_OLEDButton_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 private:
-    string text_ = "";
-    int maxCharacters_ = 0;
-    
     SCE24_OLEDButtonText_MaxCharactersDictionary maxChars;
 
 public:
@@ -1360,13 +1383,22 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // ItemType
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  
+        //midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .zon, 00 == background, no text will be sent
         
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
-        
+        if(maxCharacters_ != 0)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
+        }
+        else
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
+        }
+        /*
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
@@ -1379,20 +1411,24 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        */
         
-        const char* text = text_.c_str();
-        
-        int textLength = strlen(text);
-        
-        if(textLength > maxCharacters_)
-            textLength = maxCharacters_;
-        
-        int cnt = 0;
-        
-        while (cnt < textLength)
+        if(maxCharacters_ != 0)
         {
-            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
-            cnt++;
+            const char* text = text_.c_str();
+            
+            int textLength = strlen(text);
+            
+            if(textLength > maxCharacters_)
+                textLength = maxCharacters_;
+            
+            int cnt = 0;
+            
+            while (cnt < textLength)
+            {
+                midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+                cnt++;
+            }
         }
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
@@ -1447,12 +1483,12 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        //midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
-        
+        /*
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
@@ -1464,7 +1500,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
-        
+        */
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
         SendMidiMessage(&midiSysExData.evt);
@@ -1517,12 +1553,12 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        //midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
-        
+        /*
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
@@ -1534,12 +1570,24 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
-        
+        */
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
         
         SendMidiMessage(&midiSysExData.evt);
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class FPDisplay_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
@@ -2072,3 +2120,595 @@ public:
 };
 
 #endif /* control_surface_midi_widgets_h */
+
+
+
+
+/*
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Midi_FeedbackProcessor : public Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+protected:
+    int cellNumber_ = 01;
+    int displayType_ = 0;
+    int itemNumber_ = 00;
+    int itemStyle_ = 01;
+    
+    rgb_color foregroundColor_ = { 0x7f, 0x7f, 0x7f };
+    rgb_color backgroundColor_ { 0, 0, 0 };
+    
+    rgb_color currentColor_ = { 0, 0, 0 } ;
+    
+    SCE24_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber) {}
+    
+    SCE24_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), itemNumber_(itemNumber) {}
+    
+    
+    virtual void SetCurrentColor(double value) override
+    {
+        currentColor_ = value == 0 ? backgroundColor_ : foregroundColor_;
+        
+        ForceValue();
+    }
+    
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property.size() == 0)
+                continue;
+            
+            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 4)
+            {
+                displayType_ = stoi(property[1]);
+                foregroundColor_.r = stoi(property[2]);
+                foregroundColor_.g = stoi(property[3]);
+                foregroundColor_.b = stoi(property[4]);
+            }
+            else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 4)
+            {
+                displayType_ = stoi(property[1]);
+                backgroundColor_.r = stoi(property[2]);
+                backgroundColor_.g = stoi(property[3]);
+                backgroundColor_.b = stoi(property[4]);
+            }
+            else if(property[0] == "Text" && property.size() > 8)
+            {
+                foregroundColor_.r = stoi(property[3]);
+                foregroundColor_.g = stoi(property[4]);
+                foregroundColor_.b = stoi(property[5]);
+                
+                backgroundColor_.r = stoi(property[6]);
+                backgroundColor_.g = stoi(property[7]);
+                backgroundColor_.b = stoi(property[8]);
+            }
+            else if(property[0] == "NoBlink" && property.size() == 1)
+            {
+                itemStyle_ = 01;
+            }
+            else if(property[0] == "Blink" && property.size() == 1)
+            {
+                itemStyle_ = 02;
+            }
+        }
+        
+        ForceValue();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Text_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string text_ = "";
+    int maxCharacters_ = 0;
+    
+    SCE24_Text_MaxCharactersDictionary maxChars;
+    
+public:
+    virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
+    SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) { }
+    
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property.size() == 0)
+                continue;
+            
+            else if(property[0] == "Text" && property.size() > 2)
+            {
+                displayType_ = stoi(property[1]);
+                text_ = property[2];
+                maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
+            }
+        }
+        
+        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
+    }
+    
+    virtual void ClearCache() override
+    {
+        lastStringValue_ = " ";
+    }
+    
+    virtual void SetValue(string displayText) override
+    {
+        if(displayText != lastStringValue_) // changes since last send
+            ForceValue(displayText);
+    }
+    
+    virtual void ForceValue(string value) override
+    {
+        lastStringValue_ = value;
+        text_ = value;
+        ForceValue();
+    }
+    
+    virtual void ForceValue() override
+    {
+        string displayText = text_;
+        
+        if(displayText == " " || displayText == "")
+        {
+            displayText = "";
+            
+            for(int i = 0; i < maxCharacters_; i++)
+                displayText += " ";
+        }
+        
+        const char* text = displayText.c_str();
+        
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Text
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // Style
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;  // from .zon
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        
+        int textLength = strlen(text);
+        
+        if(textLength > maxCharacters_)
+            textLength = maxCharacters_;
+        
+        int cnt = 0;
+        
+        while (cnt < textLength)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+            cnt++;
+        }
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Ring_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    rgb_color color_ = { 0x7f, 0x7f, 0x7f };
+    int secondColorStart_ = 4;
+    rgb_color secondColor_ = { 0x7f, 0x7f, 0x7f };
+    int thirdColorStart_ = 5;
+    rgb_color thirdColor_ = { 0x7f, 0x7f, 0x7f };
+    rgb_color backgroundColor_ { 0, 0, 0 };
+    
+public:
+    virtual ~SCE24_Ring_Midi_FeedbackProcessor() {}
+    SCE24_Ring_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
+    
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property[0] == "ItemNumber" && property.size() > 1)
+            {
+                itemNumber_ = stoi(property[1]);
+            }
+            else if(property[0] == "ItemStyle" && property.size() > 1)
+            {
+                itemStyle_ = stoi(property[1]);
+            }
+            else if(property[0] == "Color" && property.size() > 3)
+            {
+                color_.r = stoi(property[1]);
+                color_.g = stoi(property[2]);
+                color_.b = stoi(property[3]);
+            }
+            else if(property[0] == "SecondColorStart" && property.size() > 1)
+            {
+                secondColorStart_ = stoi(property[1]) < 4 ? 4 : stoi(property[1]);
+            }
+            else if(property[0] == "SecondColor" && property.size() > 3)
+            {
+                secondColor_.r = stoi(property[1]);
+                secondColor_.g = stoi(property[2]);
+                secondColor_.b = stoi(property[3]);
+            }
+            else if(property[0] == "ThirdColorStart" && property.size() > 1)
+            {
+                thirdColorStart_ = stoi(property[1]) < 5 ? 5 : stoi(property[1]);
+            }
+            else if(property[0] == "ThirdColor" && property.size() > 3)
+            {
+                thirdColor_.r = stoi(property[1]);
+                thirdColor_.g = stoi(property[2]);
+                thirdColor_.b = stoi(property[3]);
+            }
+            else if(property[0] == "BackgroundColor" && property.size() > 3)
+            {
+                backgroundColor_.r = stoi(property[1]);
+                backgroundColor_.g = stoi(property[2]);
+                backgroundColor_.b = stoi(property[3]);
+            }
+        }
+        
+        ForceValue(lastDoubleValue_);
+    }
+    
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0.0;
+    }
+    
+    virtual void SetValue(double value) override
+    {
+        if(value != lastDoubleValue_) // changes since last send
+            ForceValue(value);
+    }
+    
+    virtual void ForceValue(double value) override
+    {
+        lastDoubleValue_ = value;
+        
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f;            // Ring
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;            // Bar
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // Value +/-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = value * 127.0;   // value
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = color_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = secondColorStart_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = secondColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = secondColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = secondColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = thirdColorStart_;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = thirdColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = thirdColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = thirdColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_OLEDButton_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+private:
+    string text_ = "";
+    int maxCharacters_ = 0;
+    
+    SCE24_OLEDButtonText_MaxCharactersDictionary maxChars;
+    
+public:
+    virtual ~SCE24_OLEDButton_Midi_FeedbackProcessor() {}
+    SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) {}
+    
+    virtual void SetProperties(vector<vector<string>> properties) override
+    {
+        for(auto property : properties)
+        {
+            if(property[0] == "Text" && property.size() > 2)
+            {
+                displayType_ = stoi(property[1]);
+                text_ = property[2];
+                maxCharacters_ = maxChars.GetMaxCharacters(displayType_);
+            }
+        }
+        
+        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
+    }
+    
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0;
+        lastStringValue_ = "";
+    }
+    
+    virtual void ForceClear() override
+    {
+        ForceValue(0.0);
+    }
+    
+    virtual void SetValue(double value) override
+    {
+        if(value != lastDoubleValue_) // changes since last send
+            ForceValue(value);
+    }
+    
+    void ForceValue(double value) override
+    {
+        lastDoubleValue_ = value;
+        SetCurrentColor(value); // This will cause a Force()
+    }
+    
+    virtual void SetValue(string value) override
+    {
+        if(value != lastStringValue_) // changes since last send
+            ForceValue(value);
+    }
+    
+    void ForceValue(string value) override
+    {
+        lastStringValue_ = value;
+        text_ = value;
+        ForceValue();
+    }
+    
+    void ForceValue() override
+    {
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // ItemType
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // ItmVal +/-
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = maxCharacters_;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = backgroundColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        
+        const char* text = text_.c_str();
+        
+        int textLength = strlen(text);
+        
+        if(textLength > maxCharacters_)
+            textLength = maxCharacters_;
+        
+        int cnt = 0;
+        
+        while (cnt < textLength)
+        {
+            midiSysExData.evt.midi_message[midiSysExData.evt.size++] = *text++;
+            cnt++;
+        }
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_LEDButton_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~SCE24_LEDButton_Midi_FeedbackProcessor() {}
+    SCE24_LEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
+    
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0.0;
+    }
+    
+    virtual void SetValue(double value) override
+    {
+        if(value != lastDoubleValue_) // changes since last send
+            ForceValue(value);
+    }
+    
+    virtual void ForceValue(double value) override
+    {
+        lastDoubleValue_ = value;
+        SetCurrentColor(value);  // This will cause a Force()
+    }
+    
+    virtual void ForceValue() override
+    {
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Background_Midi_FeedbackProcessor : public  SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~SCE24_Background_Midi_FeedbackProcessor() {}
+    SCE24_Background_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber) { }
+    
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0.0;
+    }
+    
+    virtual void SetValue(double value) override
+    {
+        if(value != lastDoubleValue_) // changes since last send
+            ForceValue(value);
+    }
+    
+    virtual void ForceValue(double value) override
+    {
+        lastDoubleValue_ = value;
+        SetCurrentColor(value);  // This will cause a Force()
+    }
+    
+    virtual void ForceValue() override
+    {
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from .zon
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // indicates background colour
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.r / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.g / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = currentColor_.b / 2;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00; // reserved
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+*/
+
+
