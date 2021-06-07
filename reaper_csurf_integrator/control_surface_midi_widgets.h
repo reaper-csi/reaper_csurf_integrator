@@ -992,7 +992,6 @@ protected:
     
     SCE24_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : Midi_FeedbackProcessor(surface, widget), cellNumber_(cellNumber), itemNumber_(itemNumber) {}
 
-    
     virtual void SetCurrentColor(double value) override
     {
         currentColor_ = value == 0 ? backgroundColor_ : foregroundColor_;
@@ -1016,22 +1015,33 @@ protected:
             }
             else if((property[0] == "BackgroundColor" || property[0] == "ColorOff") && property.size() > 4)
             {
-                
-                
                 displayType_ = stoi(property[1]);
                 backgroundColor_.r = stoi(property[2]);
                 backgroundColor_.g = stoi(property[3]);
                 backgroundColor_.b = stoi(property[4]);
+                
+                int oldMaxCharacters = maxCharacters_;
+                maxCharacters_ = 0;
+                ForceValue();
+                maxCharacters_ = oldMaxCharacters;
             }
             else if(property[0] == "Text" && property.size() > 8)
             {
-                foregroundColor_.r = stoi(property[3]);
-                foregroundColor_.g = stoi(property[4]);
-                foregroundColor_.b = stoi(property[5]);
+                displayType_ = stoi(property[1]);
+                text_ = property[2];
                 
                 backgroundColor_.r = stoi(property[6]);
                 backgroundColor_.g = stoi(property[7]);
                 backgroundColor_.b = stoi(property[8]);
+
+                maxCharacters_ = 0;
+                ForceValue();
+                
+                foregroundColor_.r = stoi(property[3]);
+                foregroundColor_.g = stoi(property[4]);
+                foregroundColor_.b = stoi(property[5]);
+                
+                maxCharacters_ = GetMaxCharacters();
             }
             else if(property[0] == "NoBlink" && property.size() == 1)
             {
@@ -1058,24 +1068,11 @@ public:
     virtual ~SCE24_Text_Midi_FeedbackProcessor() {}
     SCE24_Text_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) { }
     
-    virtual void SetProperties(vector<vector<string>> properties) override
+    virtual int GetMaxCharacters() override
     {
-        for(auto property : properties)
-        {
-            if(property.size() == 0)
-                continue;
-
-            else if(property[0] == "Text" && property.size() > 2)
-            {
-                displayType_ = stoi(property[1]);
-                text_ = property[2];
-                maxCharacters_ = maxChars.GetMaxCharacters(displayType_, itemNumber_);
-            }
-        }
-        
-        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
+        return maxChars.GetMaxCharacters(displayType_, itemNumber_);
     }
-    
+   
     virtual void ClearCache() override
     {
         lastStringValue_ = " ";
@@ -1312,19 +1309,9 @@ public:
     virtual ~SCE24_OLEDButton_Midi_FeedbackProcessor() {}
     SCE24_OLEDButton_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) {}
     
-    virtual void SetProperties(vector<vector<string>> properties) override
+    virtual int GetMaxCharacters() override
     {
-        for(auto property : properties)
-        {
-            if(property[0] == "Text" && property.size() > 2)
-            {
-                displayType_ = stoi(property[1]);
-                text_ = property[2];
-                maxCharacters_ = maxChars.GetMaxCharacters(displayType_);
-            }
-        }
-        
-        SCE24_Midi_FeedbackProcessor::SetProperties(properties);
+        return maxChars.GetMaxCharacters(displayType_);
     }
     
     virtual void ClearCache() override

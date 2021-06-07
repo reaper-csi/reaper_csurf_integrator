@@ -815,6 +815,8 @@ public:
     virtual void SetCurrentColor(double value) {}
     virtual void SetProperties(vector<vector<string>> properties) {}
     
+    virtual int GetMaxCharacters() { return 0; }
+    
     virtual void SetValue(double value)
     {
         if(lastDoubleValue_ != value)
