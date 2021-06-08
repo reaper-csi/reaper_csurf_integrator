@@ -2052,9 +2052,9 @@ public:
     {
         originator->MapSelectedTrackFXMenuSlotToWidgets(fxSlot);
         
-        if(originator->GetBroadcastMapTrackFXMenusSlotToWidgets())
+        if(originator->GetBroadcastGoFXSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackFXMenusSlotToWidgets())
+                if(surface != originator && surface->GetReceiveGoFXSlot())
                     surface->MapSelectedTrackFXMenuSlotToWidgets(fxSlot);
     }
 
