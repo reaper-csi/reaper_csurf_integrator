@@ -1667,9 +1667,13 @@ public:
     void OnTrackSelectionBySurface(MediaTrack* track);
     void AdjustTrackBank(int amount);
     
+    void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount);
+    
     int GetSendSlot() { return sendSlot_; }
     int GetReceiveSlot() { return receiveSlot_; }
     int GetFXMenuSlot() { return fxMenuSlot_; }
+    
+    void SetFXMenuSlot(int fxMenuSlot) { fxMenuSlot_ = fxMenuSlot; }
     
     void AdjustSendSlotBank(int amount)
     {
@@ -1691,17 +1695,6 @@ public:
         
         if(receiveSlot_ > maxReceiveSlot_)
             receiveSlot_ = maxReceiveSlot_;
-    }
-    
-    void AdjustFXMenuSlotBank(int amount)
-    {
-        fxMenuSlot_ += amount;
-        
-        if(fxMenuSlot_ < 0)
-            fxMenuSlot_ = 0;
-        
-        if(fxMenuSlot_ > maxFXMenuSlot_)
-            fxMenuSlot_ = maxFXMenuSlot_;
     }
     
     void IncChannelBias(MediaTrack* track, int channelNum)
@@ -2050,6 +2043,8 @@ public:
     
     void MapSelectedTrackFXMenuSlotToWidgets(ControlSurface* originator, int fxSlot)
     {
+        trackNavigationManager_->SetFXMenuSlot(fxSlot);
+        
         originator->MapSelectedTrackFXMenuSlotToWidgets(fxSlot);
         
         if(originator->GetBroadcastGoFXSlot())
@@ -2653,14 +2648,14 @@ public:
                     page->GetTrackNavigationManager()->AdjustReceiveSlotBank(amount);
     }
     
-    void AdjustFXMenuSlotBank(Page* sendingPage, int amount)
+    void AdjustFXMenuSlotBank(Page* sendingPage, ControlSurface* originatingSurface, int amount)
     {
         if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
-            sendingPage->GetTrackNavigationManager()->AdjustFXMenuSlotBank(amount);
+            sendingPage->GetTrackNavigationManager()->AdjustFXMenuSlotBank(originatingSurface, amount);
         else
             for(auto page: pages_)
                 if(page->GetTrackNavigationManager()->GetSynchPages())
-                    page->GetTrackNavigationManager()->AdjustFXMenuSlotBank(amount);
+                    page->GetTrackNavigationManager()->AdjustFXMenuSlotBank(originatingSurface, amount);
     }
     
     void NextPage()
