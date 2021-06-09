@@ -578,7 +578,7 @@ public:
         
         TheManager->AdjustSendSlotBank(context->GetPage(), context->GetIntParam());
         TheManager->AdjustReceiveSlotBank(context->GetPage(), context->GetIntParam());
-        TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetIntParam());
+        TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetSurface(), context->GetIntParam());
     }
 };
 
@@ -623,7 +623,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetIntParam());
+        TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetSurface(), context->GetIntParam());
     }
 };
 
