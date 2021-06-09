@@ -1387,6 +1387,19 @@ void TrackNavigationManager::AdjustTrackBank(int amount)
         trackOffset_ = top;
 }
 
+void TrackNavigationManager::AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount)
+{
+    fxMenuSlot_ += amount;
+    
+    if(fxMenuSlot_ < 0)
+        fxMenuSlot_ = 0;
+    
+    if(fxMenuSlot_ > maxFXMenuSlot_)
+        fxMenuSlot_ = maxFXMenuSlot_;
+    
+    page_->MapSelectedTrackFXMenuSlotToWidgets(originatingSurface, fxMenuSlot_);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
