@@ -1059,6 +1059,7 @@ void Manager::InitActionsDictionary()
     actions_["UnmapSelectedTrackSendsSlotFromWidgets"] =    new UnmapSelectedTrackSendsSlotFromWidgets();
     actions_["UnmapSelectedTrackReceivesSlotFromWidgets"] = new UnmapSelectedTrackReceivesSlotFromWidgets();
     actions_["GoFXSlot"] =                          new GoFXSlot();
+    actions_["GoCurrentFXSlot"] =                   new GoCurrentFXSlot();
     actions_["CycleTrackAutoMode"] =                new CycleTrackAutoMode();
     actions_["FocusedFXParam"] =                    new FocusedFXParam();
     actions_["FocusedFXParamNameDisplay"] =         new FocusedFXParamNameDisplay();
