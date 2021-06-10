@@ -1001,8 +1001,6 @@ protected:
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
-        FeedbackProcessor::SetProperties(properties);
-        
         for(auto property : properties)
         {
             if(property.size() == 0)
@@ -1193,8 +1191,6 @@ public:
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
-        FeedbackProcessor::SetProperties(properties);
-
         for(auto property : properties)
         {
             if(property.size() == 0)
