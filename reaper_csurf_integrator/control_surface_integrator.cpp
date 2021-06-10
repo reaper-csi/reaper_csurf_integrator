@@ -1405,7 +1405,16 @@ void TrackNavigationManager::AdjustFXMenuSlotBank(ControlSurface* originatingSur
 // ActionContext
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ActionContext::ActionContext(Action* action, Widget* widget, Zone* zone, vector<string> params, vector<vector<string>> properties): action_(action), widget_(widget), zone_(zone), properties_(properties)
-{
+{   
+    for(auto property : properties)
+    {
+        if(property.size() == 0)
+            continue;
+
+        if(property[0] == "NoFeedback")
+            noFeedback_ = true;
+    }
+    
     widget->SetProperties(properties);
     
     string actionName = "";
@@ -1541,7 +1550,10 @@ void ActionContext::RunDeferredActions()
 }
 
 void ActionContext::RequestUpdate()
-{   
+{
+    if(noFeedback_)
+        return;
+    
     action_->RequestUpdate(this);
 }
 
@@ -1976,9 +1988,6 @@ CSIMessageGenerator::CSIMessageGenerator(ControlSurface* surface, Widget* widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
-    if(noFeedback_)
-        return;
-
     surface_->SendMidiMessage(midiMessage);
 }
 
@@ -1990,9 +1999,6 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 
 void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 {
-    if(noFeedback_)
-        return;
-    
     lastMessageSent_->midi_message[0] = first;
     lastMessageSent_->midi_message[1] = second;
     lastMessageSent_->midi_message[2] = third;
@@ -2004,27 +2010,18 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_FeedbackProcessor::ForceValue(double value)
 {
-    if(noFeedback_)
-        return;
-
     lastDoubleValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(int param, double value)
 {
-    if(noFeedback_)
-        return;
-
     lastDoubleValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(string value)
 {
-    if(noFeedback_)
-        return;
-
     lastStringValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
@@ -2034,27 +2031,18 @@ void OSC_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void EuCon_FeedbackProcessor::ForceValue(double value)
 {
-    if(noFeedback_)
-        return;
-
     lastDoubleValue_ = value;
     surface_->SendEuConMessage(this, address_, value);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(int param, double value)
 {
-    if(noFeedback_)
-        return;
-
     lastDoubleValue_ = value;
     surface_->SendEuConMessage(this, address_, value, param);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(string value)
 {
-    if(noFeedback_)
-        return;
-
     lastStringValue_ = value;
     surface_->SendEuConMessage(this, address_, value);
 }

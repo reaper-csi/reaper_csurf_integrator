@@ -319,6 +319,8 @@ private:
     vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
     int autoModeIndex_ = 0;
     
+    bool noFeedback_ = false;
+    
     vector<vector<string>> properties_;
     
 public:
@@ -798,9 +800,7 @@ class FeedbackProcessor
 protected:
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
-
-    bool noFeedback_ = false;
-    
+   
     Widget* const widget_ = nullptr;
     
 public:
@@ -815,19 +815,8 @@ public:
     virtual void ForceValue(string value) {}
     virtual void SetColors(rgb_color textColor, rgb_color textBackground) {}
     virtual void SetCurrentColor(double value) {}
-    
-    virtual void SetProperties(vector<vector<string>> properties)
-    {
-        for(auto property : properties)
-        {
-            if(property.size() == 0)
-                continue;
+    virtual void SetProperties(vector<vector<string>> properties) {}
 
-            if(property[0] == "NoFeedback")
-                noFeedback_ = true;
-        }
-    }
-    
     virtual int GetMaxCharacters() { return 0; }
     
     virtual void SetValue(double value)
