@@ -1976,6 +1976,9 @@ CSIMessageGenerator::CSIMessageGenerator(ControlSurface* surface, Widget* widget
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Midi_FeedbackProcessor::SendMidiMessage(MIDI_event_ex_t* midiMessage)
 {
+    if(noFeedback_)
+        return;
+
     surface_->SendMidiMessage(midiMessage);
 }
 
@@ -1987,6 +1990,9 @@ void Midi_FeedbackProcessor::SendMidiMessage(int first, int second, int third)
 
 void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 {
+    if(noFeedback_)
+        return;
+    
     lastMessageSent_->midi_message[0] = first;
     lastMessageSent_->midi_message[1] = second;
     lastMessageSent_->midi_message[2] = third;
@@ -1998,18 +2004,27 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void OSC_FeedbackProcessor::ForceValue(double value)
 {
+    if(noFeedback_)
+        return;
+
     lastDoubleValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(int param, double value)
 {
+    if(noFeedback_)
+        return;
+
     lastDoubleValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
 
 void OSC_FeedbackProcessor::ForceValue(string value)
 {
+    if(noFeedback_)
+        return;
+
     lastStringValue_ = value;
     surface_->SendOSCMessage(this, oscAddress_, value);
 }
@@ -2019,18 +2034,27 @@ void OSC_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void EuCon_FeedbackProcessor::ForceValue(double value)
 {
+    if(noFeedback_)
+        return;
+
     lastDoubleValue_ = value;
     surface_->SendEuConMessage(this, address_, value);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(int param, double value)
 {
+    if(noFeedback_)
+        return;
+
     lastDoubleValue_ = value;
     surface_->SendEuConMessage(this, address_, value, param);
 }
 
 void EuCon_FeedbackProcessor::ForceValue(string value)
 {
+    if(noFeedback_)
+        return;
+
     lastStringValue_ = value;
     surface_->SendEuConMessage(this, address_, value);
 }

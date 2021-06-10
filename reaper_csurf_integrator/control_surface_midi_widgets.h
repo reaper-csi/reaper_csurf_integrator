@@ -1001,6 +1001,8 @@ protected:
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
+        FeedbackProcessor::SetProperties(properties);
+        
         for(auto property : properties)
         {
             if(property.size() == 0)
@@ -1191,8 +1193,13 @@ public:
     
     virtual void SetProperties(vector<vector<string>> properties) override
     {
+        FeedbackProcessor::SetProperties(properties);
+
         for(auto property : properties)
         {
+            if(property.size() == 0)
+                continue;
+            
             if(property[0] == "ItemNumber" && property.size() > 1)
             {
                 itemNumber_ = stoi(property[1]);

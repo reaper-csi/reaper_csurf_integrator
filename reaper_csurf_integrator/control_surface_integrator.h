@@ -799,6 +799,8 @@ protected:
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
 
+    bool noFeedback_ = false;
+    
     Widget* const widget_ = nullptr;
     
 public:
@@ -813,7 +815,18 @@ public:
     virtual void ForceValue(string value) {}
     virtual void SetColors(rgb_color textColor, rgb_color textBackground) {}
     virtual void SetCurrentColor(double value) {}
-    virtual void SetProperties(vector<vector<string>> properties) {}
+    
+    virtual void SetProperties(vector<vector<string>> properties)
+    {
+        for(auto property : properties)
+        {
+            if(property.size() == 0)
+                continue;
+
+            if(property[0] == "NoFeedback")
+                noFeedback_ = true;
+        }
+    }
     
     virtual int GetMaxCharacters() { return 0; }
     
