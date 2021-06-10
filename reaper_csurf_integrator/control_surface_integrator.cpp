@@ -399,7 +399,6 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
 
                     for(int i = 0; i < navigators.size(); i++)
                     {
-                        
                         string numStr = to_string(i + 1);
                         
                         string newZoneName = zoneName;
