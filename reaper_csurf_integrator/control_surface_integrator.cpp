@@ -404,13 +404,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         string newZoneName = zoneName;
                         
-                        if(navigators.size() > 1 && (   zoneName == "Channel"
-                                                     || zoneName == "Send"
-                                                     || zoneName == "Receive"
-                                                     || zoneName == "FXMenu"
-                                                     || zoneName == "SendSlot"
-                                                     || zoneName == "ReceiveSlot"
-                                                     || zoneName == "FXMenuSlot"))
+                        if(navigators.size() > 1)
                             newZoneName += numStr;
                         
                         Zone* zone = new Zone(surface, navigators[i], i, newZoneName, zoneAlias, filePath);
