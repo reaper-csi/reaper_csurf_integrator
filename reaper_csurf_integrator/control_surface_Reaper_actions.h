@@ -1779,11 +1779,20 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator")
+            {
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
+                if(destTrack)
+                {
+                    char trackVolume[128];
+                    snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex(), "D_VOL")));
+                    context->UpdateWidgetValue(string(trackVolume));
+                }
+            }
+            else
             {
                 char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex(), "D_VOL")));
+                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "D_VOL")));
                 context->UpdateWidgetValue(string(trackVolume));
             }
         }
