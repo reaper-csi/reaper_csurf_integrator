@@ -350,36 +350,36 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                     }
-                    else if(navigatorName == "SendNavigator")
+                    else if(navigatorName == "SelectedTrackSendNavigator")
                     {
                         for(int i = 0; i < surface->GetNumSendSlots(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
-                    else if(navigatorName == "ReceiveNavigator")
+                    else if(navigatorName == "SelectedTrackReceiveNavigator")
                     {
                         for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
-                    else if(navigatorName == "FXMenuNavigator")
+                    else if(navigatorName == "SelectedTrackFXMenuNavigator")
                     {
                         for(int i = 0; i < surface->GetNumFXSlots(); i++)
                             navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
                     }
-                    else if(navigatorName == "SendSlotNavigator")
+                    else if(navigatorName == "TrackSendSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
                         navigationStyle = Send;
                     }
-                    else if(navigatorName == "ReceiveSlotNavigator")
+                    else if(navigatorName == "TrackReceiveSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
                         navigationStyle = Receive;
                     }
-                    else if(navigatorName == "FXMenuSlotNavigator")
+                    else if(navigatorName == "TrackFXMenuSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
@@ -498,15 +498,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                 }
                 
                 else if(   tokens[0] == "TrackNavigator"
+                        || tokens[0] == "TrackSendSlotNavigator"
+                        || tokens[0] == "TrackReceiveSlotNavigator"
+                        || tokens[0] == "TrackFXMenuSlotNavigator"
                         || tokens[0] == "MasterTrackNavigator"
-                        || tokens[0] == "SelectedTrackNavigator"
                         || tokens[0] == "FocusedFXNavigator"
-                        || tokens[0] == "SendNavigator"
-                        || tokens[0] == "ReceiveNavigator"
-                        || tokens[0] == "FXMenuNavigator"
-                        || tokens[0] == "SendSlotNavigator"
-                        || tokens[0] == "ReceiveSlotNavigator"
-                        || tokens[0] == "FXMenuSlotNavigator"
+                        || tokens[0] == "SelectedTrackNavigator"
+                        || tokens[0] == "SelectedTrackSendNavigator"
+                        || tokens[0] == "SelectedTrackReceiveNavigator"
+                        || tokens[0] == "SelectedTrackFXMenuNavigator"
                         || tokens[0] == "SelectedTrackSendSlotNavigator"
                         || tokens[0] == "SelectedTrackReceiveSlotNavigator")
                     navigatorName = tokens[0];
