@@ -36,8 +36,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetSlotIndex());
+        context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetSlotIndex());
     }
 };
 
@@ -52,8 +51,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
-            context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot());
+        context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot());
     }
 };
 
