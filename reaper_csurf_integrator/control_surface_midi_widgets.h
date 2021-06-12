@@ -774,7 +774,7 @@ public:
     {
         lastStringSent_ = displayText;
         
-        if(displayText == "")
+        if(displayText == "" || displayText == "-150.00")
             displayText = "       ";
 
         int pad = 7;
