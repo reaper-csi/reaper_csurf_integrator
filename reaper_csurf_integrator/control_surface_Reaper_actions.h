@@ -1736,7 +1736,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             string sendTrackName = "";
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "P_DESTTRACK", 0);;
+            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
             if(destTrack)
                 sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
             context->UpdateWidgetValue(sendTrackName);
@@ -1758,7 +1758,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             string sendTrackName = "";
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
+            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
             if(destTrack)
                 sendTrackName = (char *)DAW::GetSetMediaTrackInfo(destTrack, "P_NAME", NULL);
             context->UpdateWidgetValue(sendTrackName);
@@ -1779,22 +1779,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator")
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
                 if(destTrack)
-                {
-                    char trackVolume[128];
-                    snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex(), "D_VOL")));
-                    context->UpdateWidgetValue(string(trackVolume));
-                }
+                    track = destTrack;
             }
-            else
-            {
-                char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "D_VOL")));
-                context->UpdateWidgetValue(string(trackVolume));
-            }
+            
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
         }
         else
             context->ClearWidget();
@@ -1812,13 +1806,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetParamIndex(), "D_VOL")));
-                context->UpdateWidgetValue(string(trackVolume));
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+                if(destTrack)
+                    track = destTrack;
             }
+
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
         }
         else
             context->ClearWidget();
@@ -1836,13 +1833,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                double panVal = DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex(), "D_PAN");
-                
-                context->UpdateWidgetValue(context->GetPanValueString(panVal));
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+                if(destTrack)
+                    track = destTrack;
             }
+
+            double panVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -1860,13 +1860,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                double panVal = DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetParamIndex(), "D_PAN");
-                
-                context->UpdateWidgetValue(context->GetPanValueString(panVal));
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+                if(destTrack)
+                    track = destTrack;
             }
+
+            double panVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -1884,24 +1887,27 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-                
-                double prePostVal = DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex(), "I_SENDMODE");
-                
-                string prePostValueString = "";
-                
-                if(prePostVal == 0)
-                    prePostValueString = "PostFader";
-                else if(prePostVal == 1)
-                    prePostValueString = "PreFX";
-                else if(prePostVal == 2 || prePostVal == 3)
-                    prePostValueString = "PostFX";
-                
-                context->UpdateWidgetValue(prePostValueString);
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+                if(destTrack)
+                    track = destTrack;
             }
+
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
         }
         else
             context->ClearWidget();
@@ -1919,24 +1925,27 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex(), "P_DESTTRACK", 0);;
-            if(destTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1) == DAW::GetTrackNumSends(track, 0))
             {
-                // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-                
-                double prePostVal = DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetParamIndex(), "I_SENDMODE");
-                
-                string prePostValueString = "";
-                
-                if(prePostVal == 0)
-                    prePostValueString = "PostFader";
-                else if(prePostVal == 1)
-                    prePostValueString = "PreFX";
-                else if(prePostVal == 2 || prePostVal == 3)
-                    prePostValueString = "PostFX";
-                
-                context->UpdateWidgetValue(prePostValueString);
+                MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+                if(destTrack)
+                    track = destTrack;
             }
+
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
         }
         else
             context->ClearWidget();
@@ -1955,9 +1964,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             string receiveTrackName = "";
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
-                receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(srcTrack, "P_NAME", NULL);
+            receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
             context->UpdateWidgetValue(receiveTrackName);
         }
         else
@@ -1977,9 +1984,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             string receiveTrackName = "";
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
-                receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(srcTrack, "P_NAME", NULL);
+            receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
             context->UpdateWidgetValue(receiveTrackName);
         }
         else
@@ -1998,13 +2003,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "D_VOL")));
-                context->UpdateWidgetValue(string(trackVolume));
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+            
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
         }
         else
             context->ClearWidget();
@@ -2022,13 +2030,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetParamIndex(), "D_VOL")));
-                context->UpdateWidgetValue(string(trackVolume));
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+
+            char trackVolume[128];
+            snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "D_VOL")));
+            context->UpdateWidgetValue(string(trackVolume));
         }
         else
             context->ClearWidget();
@@ -2046,13 +2057,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                double panVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "D_PAN");
-                
-                context->UpdateWidgetValue(context->GetPanValueString(panVal));
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+
+            double panVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -2070,13 +2084,16 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                double panVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetParamIndex(), "D_PAN");
-                
-                context->UpdateWidgetValue(context->GetPanValueString(panVal));
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+
+            double panVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "D_PAN");
+            
+            context->UpdateWidgetValue(context->GetPanValueString(panVal));
         }
         else
             context->ClearWidget();
@@ -2094,24 +2111,27 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-                
-                double prePostVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "I_SENDMODE");
-                
-                string prePostValueString = "";
-                
-                if(prePostVal == 0)
-                    prePostValueString = "PostFader";
-                else if(prePostVal == 1)
-                    prePostValueString = "PreFX";
-                else if(prePostVal == 2 || prePostVal == 3)
-                    prePostValueString = "PostFX";
-                
-                context->UpdateWidgetValue(prePostValueString);
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
         }
         else
             context->ClearWidget();
@@ -2129,24 +2149,27 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
-            if(srcTrack)
+            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
             {
-                // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
-                
-                double prePostVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetParamIndex(), "I_SENDMODE");
-                
-                string prePostValueString = "";
-                
-                if(prePostVal == 0)
-                    prePostValueString = "PostFader";
-                else if(prePostVal == 1)
-                    prePostValueString = "PreFX";
-                else if(prePostVal == 2 || prePostVal == 3)
-                    prePostValueString = "PostFX";
-                
-                context->UpdateWidgetValue(prePostValueString);
+                MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
+                if(srcTrack)
+                    track = srcTrack;
             }
+
+            // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
+            
+            double prePostVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetParamIndex(), "I_SENDMODE");
+            
+            string prePostValueString = "";
+            
+            if(prePostVal == 0)
+                prePostValueString = "PostFader";
+            else if(prePostVal == 1)
+                prePostValueString = "PreFX";
+            else if(prePostVal == 2 || prePostVal == 3)
+                prePostValueString = "PostFX";
+            
+            context->UpdateWidgetValue(prePostValueString);
         }
         else
             context->ClearWidget();
