@@ -2203,7 +2203,7 @@ void ControlSurface::MapTrackFXMenusSlotToWidgets()
     {
         string trackNum = to_string(i + 1);
         
-        GoZone(activeSelectedTrackFXMenuZones_, "SelectedTrackFXMenuSlot" + trackNum, 1);
+        GoZone(activeSelectedTrackFXMenuZones_, "TrackFXMenuSlot" + trackNum, 1);
     }
 }
 
