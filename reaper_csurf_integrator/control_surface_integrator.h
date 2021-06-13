@@ -618,6 +618,8 @@ public:
     
     void RequestUpdateWidget(Widget* widget)
     {
+        // GAW TBD -- This is where we might cut loose multiple feedback if we can individually control it
+        
         for(auto &context : GetActionContexts(widget))
             context.RunDeferredActions();
         
@@ -1240,15 +1242,22 @@ public:
         int fxIndex = 0;
         
         if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
-            UnmapFocusedFXFromWidgets();
+            UnmapFocusedFXZones();
         
         if(activeFocusedFXZones_.size() > 0)
         {
             Zone* activeZone = activeFocusedFXZones_[0];
             
             if(activeZone->GetNavigator()->GetTrack() == nullptr)
-                UnmapFocusedFXFromWidgets();
+                UnmapFocusedFXZones();
         }
+    }
+    
+    void UnmapFocusedFXZones()
+    {
+        UnmapFocusedFXFromWidgets();
+        
+        activeFocusedFXZones_.clear();
     }
     
     virtual void RequestUpdate()
