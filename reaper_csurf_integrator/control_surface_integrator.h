@@ -1220,8 +1220,6 @@ public:
     {
         for(auto zone : zones)
             zone->Deactivate(zones);
-        
-        zones.clear();
     }
 
     void AddZoneFilename(string name, string filename)
