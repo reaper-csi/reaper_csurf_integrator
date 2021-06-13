@@ -2134,6 +2134,7 @@ void ControlSurface::MapSelectedTrackSendsSlotToWidgets()
 void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
 {    
     DeactivateZones(activeSelectedTrackSendsZones_);
+    activeSelectedTrackSendsZones_.clear();
 }
 
 void ControlSurface::MapSelectedTrackSendsToWidgets()
@@ -2177,6 +2178,7 @@ void ControlSurface::MapSelectedTrackReceivesSlotToWidgets()
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 {
     DeactivateZones(activeSelectedTrackReceivesZones_);
+    activeSelectedTrackReceivesZones_.clear();
 }
 
 void ControlSurface::MapSelectedTrackReceivesToWidgets()
@@ -2208,7 +2210,9 @@ void ControlSurface::MapTrackFXMenusSlotToWidgets()
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
 {
     DeactivateZones(activeSelectedTrackFXMenuZones_);
+    activeSelectedTrackFXMenuZones_.clear();
     DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+    activeSelectedTrackFXMenuFXZones_.clear();
 }
 
 void ControlSurface::MapSelectedTrackFXToMenu()
@@ -2236,6 +2240,7 @@ void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string ba
 void ControlSurface::UnmapSelectedTrackFXFromWidgets()
 {
     DeactivateZones(activeSelectedTrackFXZones_);
+    activeSelectedTrackFXZones_.clear();
 }
 
 void ControlSurface::MapSelectedTrackFXToWidgets()
@@ -2250,7 +2255,7 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 {
     DeactivateZones(activeSelectedTrackFXMenuFXZones_);
-    
+    activeSelectedTrackFXMenuFXZones_.clear();
     MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
@@ -2395,12 +2400,19 @@ void ControlSurface::GoZone(vector<Zone*> &activeZones, string zoneName, double 
     if(zoneName == "Home")
     {
         DeactivateZones(activeZones_);
+        activeZones_.clear();
         DeactivateZones(activeSelectedTrackSendsZones_);
+        activeSelectedTrackSendsZones_.clear();
         DeactivateZones(activeSelectedTrackReceivesZones_);
+        activeSelectedTrackReceivesZones_.clear();
         DeactivateZones(activeSelectedTrackFXZones_);
+        activeSelectedTrackFXMenuZones_.clear();
         DeactivateZones(activeSelectedTrackFXMenuZones_);
+        activeSelectedTrackFXMenuZones_.clear();
         DeactivateZones(activeSelectedTrackFXMenuFXZones_);
+        activeSelectedTrackFXMenuFXZones_.clear();
         DeactivateZones(activeFocusedFXZones_);
+        activeFocusedFXZones_.clear();
         
         LoadDefaultZoneOrder();
         
