@@ -550,7 +550,6 @@ public:
     void Activate();
     void Activate(vector<Zone*> &activeZones);
     bool TryActivate(Widget* widget);
-    void Deactivate(vector<Zone*> activeZones);
     int GetSlotIndex();
     vector<ActionContext> &GetActionContexts(Widget* widget);
     
@@ -562,7 +561,8 @@ public:
     vector<Zone*> &GetIncludedZones() { return includedZones_; }
     vector<Zone*> &GetSubZones() { return subZones_; }
     void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
-    
+    void RequestUpdateWidget(Widget* widget);
+
     void SetSlotIndex(int index)
     {
         slotIndex_ = index;
@@ -615,21 +615,7 @@ public:
         for(auto zone : includedZones_)
             zone->RequestUpdate(usedWidgets);
     }
-    
-    void RequestUpdateWidget(Widget* widget)
-    {
-        // GAW TBD -- This is where we might cut loose multiple feedback if we can individually control it
         
-        for(auto &context : GetActionContexts(widget))
-            context.RunDeferredActions();
-        
-        if(GetActionContexts(widget).size() > 0)
-        {
-            ActionContext& context = GetActionContexts(widget)[0];
-            context.RequestUpdate();
-        }
-    }
-    
     void DoAction(Widget* widget, double value)
     {
         for(auto &context : GetActionContexts(widget))
@@ -666,9 +652,7 @@ private:
     
     bool isModifier_ = false;
     bool isToggled_ = false;
-    
-    Zone* currentZone_ = nullptr;
-    
+      
     void LogInput(double value);
     
 public:
@@ -696,53 +680,70 @@ public:
     void ClearCache();
     void Clear();
     void ForceClear();
-
-    Zone* GetCurrentZone() { return currentZone_;  }
-    void SetZone(Zone* zone) { currentZone_ = zone; }
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
-
-    void RequestUpdate()
-    {
-        vector<Widget*> usedWidgets;
-        
-        if(currentZone_ != nullptr)
-            currentZone_->RequestUpdate(usedWidgets);
-    }
  
-    void DoAction(double value)
+    struct QueuedAcceleratedRelativeAction
+    {
+        QueuedAcceleratedRelativeAction(double val, int idx) : delta(val), index(idx) {}
+        
+        double delta = 0.0;
+        int index = 0;
+    };
+    
+    vector<double> queuedActionValues_;
+    vector<double> queuedRelativeActionValues_;
+    vector<QueuedAcceleratedRelativeAction> queuedAcceleratedRelativeActionValues_;
+    vector<double> queuedTouchActionValues_;
+
+    void HandleQueuedActions(Zone* zone)
+    {
+        for(auto value : queuedActionValues_)
+            zone->DoAction(this, value);
+        queuedActionValues_.clear();
+            
+        for(auto delta : queuedRelativeActionValues_)
+            zone->DoRelativeAction(this, delta);
+        queuedRelativeActionValues_.clear();
+         
+        for(auto acceleratedRelativeAction : queuedAcceleratedRelativeActionValues_)
+            zone->DoRelativeAction(this, acceleratedRelativeAction.index, acceleratedRelativeAction.delta);
+        queuedAcceleratedRelativeActionValues_.clear();
+
+        for(auto value : queuedTouchActionValues_)
+            zone->DoTouch(this, value);
+        queuedTouchActionValues_.clear();
+    }
+    
+    void QueueAction(double value)
     {
         LogInput(value);
         
-        if(currentZone_ != nullptr)
-            currentZone_->DoAction(this, value);
+        queuedActionValues_.push_back(value);
     }
     
-    void DoRelativeAction(double delta)
+    void QueueRelativeAction(double delta)
     {
         LogInput(delta);
         
-        if(currentZone_ != nullptr)
-            currentZone_->DoRelativeAction(this, delta);
+        queuedRelativeActionValues_.push_back(delta);
     }
     
-    void DoRelativeAction(int accelerationIndex, double delta)
+    void QueueRelativeAction(int accelerationIndex, double delta)
     {
         LogInput(accelerationIndex);
         
-        if(currentZone_ != nullptr)
-            currentZone_->DoRelativeAction(this, accelerationIndex, delta);
+        queuedAcceleratedRelativeActionValues_.push_back(QueuedAcceleratedRelativeAction(accelerationIndex, delta));
     }
    
-    void DoTouch(double value)
+    void QueueTouch(double value)
     {
         LogInput(value);
         
-        if(currentZone_ != nullptr)
-            currentZone_->DoTouch(this, value);
+        queuedTouchActionValues_.push_back(value);
     }
 
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
@@ -765,7 +766,7 @@ public:
     
     virtual void ProcessMessage(double value)
     {
-        widget_->DoAction(value);
+        widget_->QueueAction(value);
     }
 };
 
@@ -779,7 +780,7 @@ public:
     
     virtual void ProcessMessage(double value) override
     {
-        widget_->DoTouch(value);
+        widget_->QueueTouch(value);
     }
 };
 
@@ -1172,38 +1173,7 @@ public:
         if(homeZone_ != nullptr)
             homeZone_->Activate();
     }
-    
-    void PopWidget(vector<Zone*> &activeZones, Widget* widget)
-    {
-        for(auto zones : allActiveZones_)
-            if(*zones != activeZones)
-                for(auto zone : *zones)
-                    if(zone->TryActivate(widget))
-                        return;
         
-        bool wentHome = false;
-        
-        if(homeZone_ != nullptr)
-        {
-            for(auto homeZoneWidget : homeZone_->GetWidgets())
-            {
-                if(widget == homeZoneWidget)
-                {
-                    widget->SetZone(homeZone_);
-                    
-                    wentHome = true;
-                    break;
-                }
-            }
-        }
-        
-        if(! wentHome)
-        {
-            widget->Clear();
-            widget->SetZone(nullptr);
-        }
-    }
-    
     void MoveToFirst(vector<Zone*> &zones)
     {
         auto result = find(allActiveZones_.begin(), allActiveZones_.end(), &zones);
@@ -1216,12 +1186,6 @@ public:
         }
     }
     
-    void DeactivateZones(vector<Zone*> &zones)
-    {
-        for(auto zone : zones)
-            zone->Deactivate(zones);
-    }
-
     void AddZoneFilename(string name, string filename)
     {
         zoneFilenames_[name] = filename;
@@ -1241,14 +1205,6 @@ public:
         
         if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
             UnmapFocusedFXFromWidgets();
-        
-        if(activeFocusedFXZones_.size() > 0)
-        {
-            Zone* activeZone = activeFocusedFXZones_[0];
-            
-            if(activeZone->GetNavigator()->GetTrack() == nullptr)
-                UnmapFocusedFXFromWidgets();
-        }
     }
     
     virtual void RequestUpdate()
@@ -1304,25 +1260,25 @@ public:
     void OnFXFocus(MediaTrack* track, int fxIndex)
     {
         if(widgetsByName_.count("OnFXFocus") > 0)
-            widgetsByName_["OnFXFocus"]->DoAction(1.0);
+            widgetsByName_["OnFXFocus"]->QueueAction(1.0);
     }
     
     void OnPageEnter()
     {
         if(widgetsByName_.count("OnPageEnter") > 0)
-            widgetsByName_["OnPageEnter"]->DoAction(1.0);
+            widgetsByName_["OnPageEnter"]->QueueAction(1.0);
     }
     
     void OnPageLeave()
     {
         if(widgetsByName_.count("OnPageLeave") > 0)
-            widgetsByName_["OnPageLeave"]->DoAction(1.0);
+            widgetsByName_["OnPageLeave"]->QueueAction(1.0);
     }
     
     void OnInitialization()
     {
         if(widgetsByName_.count("OnInitialization") > 0)
-            widgetsByName_["OnInitialization"]->DoAction(1.0);
+            widgetsByName_["OnInitialization"]->QueueAction(1.0);
     }
 };
 
@@ -1497,19 +1453,7 @@ public:
         if(subGroups_.count(subgroupName) > 0)
            subGroups_[subgroupName]->SetIsVisible(isVisible);
     }
-    
-    void RequestUpdate()
-    {
-        if(isVisible_)
-        {
-            for(auto widget : widgets_)
-                widget->RequestUpdate();
-            
-            for(auto [name, group] : subGroups_)
-                group->RequestUpdate();
-        }
-    }
-    
+
     void AddWidget(Widget* widget)
     {
         widgets_.push_back(widget);
@@ -1582,17 +1526,6 @@ public:
     void HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip);
     void HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
     virtual void UpdateTimeDisplay() override;
-    
-    virtual void RequestUpdate() override
-    {
-        for(auto widget : generalWidgets_)
-            widget->RequestUpdate();
-        
-        for(auto [channel, group] : channelGroups_)
-            group->RequestUpdate();
-        
-        SendEuConMessage("RequestUpdateMeters", "Update");
-    }
 
     virtual void ForceRefreshTimeDisplay() override
     {
@@ -1827,23 +1760,14 @@ public:
                 int maxSendSlot = DAW::GetTrackNumSends(track, 0) - 1;
                 if(maxSendSlot > maxSendSlot_)
                     maxSendSlot_ = maxSendSlot;
-
-                //if(sendSlot_ > maxSendSlot_)
-                    //sendSlot_ = maxSendSlot_;
-                
+             
                 int maxReceiveSlot = DAW::GetTrackNumSends(track, -1) - 1;
                 if(maxReceiveSlot > maxReceiveSlot_)
                     maxReceiveSlot_ = maxReceiveSlot;
-                
-                //if(receiveSlot_ > maxReceiveSlot_)
-                    //receiveSlot_ = maxReceiveSlot_;
 
                 int maxFXMenuSlot = DAW::TrackFX_GetCount(track) - 1;
                 if(maxFXMenuSlot > maxFXMenuSlot_)
                     maxFXMenuSlot_ = maxFXMenuSlot;
-                
-                //if(fxMenuSlot_ > maxFXMenuSlot)
-                    //fxMenuSlot_ = maxFXMenuSlot;
                 
                 if(vcaMode_)
                 {
