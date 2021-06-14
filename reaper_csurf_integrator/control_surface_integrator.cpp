@@ -1520,10 +1520,7 @@ MediaTrack* ActionContext::GetTrack()
 
 int ActionContext::GetSlotIndex()
 {
-    if(widget_->GetCurrentZone() != nullptr)
-        return widget_->GetCurrentZone()->GetSlotIndex();
-    else
-        return 0;
+    return zone_->GetSlotIndex();
 }
 
 string ActionContext::GetName()
@@ -1797,9 +1794,6 @@ void Zone::Activate()
 {
     surface_->LoadingZone(GetName());
     
-    for(auto widget : widgets_)
-        widget->SetZone(this);
-    
     for(auto zone : includedZones_)
         zone->Activate();
 }
@@ -1816,29 +1810,6 @@ void Zone::Activate(vector<Zone*> &activeZones)
     activeZones.insert(activeZones.begin(), 1, this);
     
     surface_->MoveToFirst(activeZones);
-}
-
-bool Zone::TryActivate(Widget* widget)
-{
-    for(auto zoneWidget : widgets_)
-    {
-        if(zoneWidget == widget)
-        {
-            zoneWidget->SetZone(this);
-            return true;
-        }
-    }
-    
-    return false;
-}
-
-void Zone::Deactivate(vector<Zone*> activeZones)
-{
-    for(auto widget : widgets_)
-        surface_->PopWidget(activeZones, widget);
-    
-    for(auto zone : includedZones_)
-        zone->Deactivate(activeZones);
 }
 
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
@@ -1870,6 +1841,22 @@ int Zone::GetSlotIndex()
         return surface_->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot();
     else
         return 0;
+}
+
+void Zone::RequestUpdateWidget(Widget* widget)
+{
+    widget->HandleQueuedActions(this);
+    
+    // GAW TBD -- This is where we might cut loose multiple feedback if we can individually control it
+    
+    for(auto &context : GetActionContexts(widget))
+        context.RunDeferredActions();
+    
+    if(GetActionContexts(widget).size() > 0)
+    {
+        ActionContext& context = GetActionContexts(widget)[0];
+        context.RequestUpdate();
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2133,7 +2120,6 @@ void ControlSurface::MapSelectedTrackSendsSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
 {    
-    DeactivateZones(activeSelectedTrackSendsZones_);
     activeSelectedTrackSendsZones_.clear();
 }
 
@@ -2177,7 +2163,6 @@ void ControlSurface::MapSelectedTrackReceivesSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 {
-    DeactivateZones(activeSelectedTrackReceivesZones_);
     activeSelectedTrackReceivesZones_.clear();
 }
 
@@ -2209,9 +2194,7 @@ void ControlSurface::MapTrackFXMenusSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
 {
-    DeactivateZones(activeSelectedTrackFXMenuZones_);
     activeSelectedTrackFXMenuZones_.clear();
-    DeactivateZones(activeSelectedTrackFXMenuFXZones_);
     activeSelectedTrackFXMenuFXZones_.clear();
 }
 
@@ -2239,7 +2222,6 @@ void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string ba
 
 void ControlSurface::UnmapSelectedTrackFXFromWidgets()
 {
-    DeactivateZones(activeSelectedTrackFXZones_);
     activeSelectedTrackFXZones_.clear();
 }
 
@@ -2254,7 +2236,6 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
 
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 {
-    DeactivateZones(activeSelectedTrackFXMenuFXZones_);
     activeSelectedTrackFXMenuFXZones_.clear();
     MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
@@ -2282,7 +2263,6 @@ void ControlSurface::MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones,
 
 void ControlSurface::UnmapFocusedFXFromWidgets()
 {
-    DeactivateZones(activeFocusedFXZones_);
     activeFocusedFXZones_.clear();
 }
 
@@ -2325,9 +2305,9 @@ void ControlSurface::OnTrackSelection()
     if(widgetsByName_.count("OnTrackSelection") > 0)
     {
         if(page_->GetTrackNavigationManager()->GetSelectedTrack())
-            widgetsByName_["OnTrackSelection"]->DoAction(1.0);
+            widgetsByName_["OnTrackSelection"]->QueueAction(1.0);
         else
-            widgetsByName_["OnTrackSelection"]->DoAction(0.0);
+            widgetsByName_["OnTrackSelection"]->QueueAction(0.0);
     }
 }
 
@@ -2399,19 +2379,12 @@ void ControlSurface::GoZone(vector<Zone*> &activeZones, string zoneName, double 
 {
     if(zoneName == "Home")
     {
-        DeactivateZones(activeZones_);
         activeZones_.clear();
-        DeactivateZones(activeSelectedTrackSendsZones_);
         activeSelectedTrackSendsZones_.clear();
-        DeactivateZones(activeSelectedTrackReceivesZones_);
         activeSelectedTrackReceivesZones_.clear();
-        DeactivateZones(activeSelectedTrackFXZones_);
         activeSelectedTrackFXMenuZones_.clear();
-        DeactivateZones(activeSelectedTrackFXMenuZones_);
         activeSelectedTrackFXMenuZones_.clear();
-        DeactivateZones(activeSelectedTrackFXMenuFXZones_);
         activeSelectedTrackFXMenuFXZones_.clear();
-        DeactivateZones(activeFocusedFXZones_);
         activeFocusedFXZones_.clear();
         
         LoadDefaultZoneOrder();
@@ -2478,7 +2451,6 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
         isMapped = true;
         for( auto generator : Midi_CSIMessageGeneratorsByMessage_[evt->midi_message[0] * 0x10000])
             generator->ProcessMidiMessage(evt);
-        
     }
     
     if( ! isMapped && TheManager->GetSurfaceInDisplay())
@@ -2486,7 +2458,6 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);
         DAW::ShowConsoleMsg(buffer);
-        
     }
 }
 
@@ -2854,13 +2825,13 @@ void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, in
         if(isVisible && widgetsByName_.count("OnEuConFXAreaGainedFocus") > 0)
         {
             isEuConFXAreaFocused_ = true;
-            widgetsByName_["OnEuConFXAreaGainedFocus"]->DoAction(1.0);
+            widgetsByName_["OnEuConFXAreaGainedFocus"]->QueueAction(1.0);
         }
         
         if( ! isVisible && widgetsByName_.count("OnEuConFXAreaLostFocus") > 0)
         {
             isEuConFXAreaFocused_ = false;
-            widgetsByName_["OnEuConFXAreaLostFocus"]->DoAction(1.0);
+            widgetsByName_["OnEuConFXAreaLostFocus"]->QueueAction(1.0);
         }
     }
     
