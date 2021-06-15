@@ -1219,6 +1219,14 @@ public:
         
         if(homeZone_ != nullptr)
             homeZone_->RequestUpdate(usedWidgets);
+        
+        for(auto widget : widgets_)
+        {
+            auto it = find(usedWidgets.begin(), usedWidgets.end(), widget);
+            
+            if ( it == widgets_.end() )
+                widget->Clear();
+        }
     }
 
     virtual void ForceClearAllWidgets()
