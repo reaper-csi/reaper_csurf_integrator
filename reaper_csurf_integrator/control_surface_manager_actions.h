@@ -486,10 +486,7 @@ public:
     virtual string GetName() override { return "GoZone"; }
     
     void Do(ActionContext* context, double value) override
-    {
-        if(value == 0.0 && context->GetWidget()->GetName() != "OnTrackSelection")
-            return; // ignore button releases except for OnTrackSelection -- 0 means Track deselection
-        
+    {      
         context->GetPage()->GoZone(context->GetSurface(), context->GetStringParam(), value);
     }
 };
