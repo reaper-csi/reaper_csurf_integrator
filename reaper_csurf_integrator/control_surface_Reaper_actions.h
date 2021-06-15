@@ -1625,9 +1625,9 @@ public:
                 
                 if(Zone* zone = context->GetSurface()->GetZone(fxName))
                     name = zone->GetNameOrAlias();
-
-                context->UpdateWidgetValue(name);
             }
+            
+            context->UpdateWidgetValue(name);
         }
         else
             context->GetWidget()->Clear();
