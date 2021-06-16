@@ -688,7 +688,7 @@ public:
  
     struct QueuedAcceleratedRelativeAction
     {
-        QueuedAcceleratedRelativeAction(double val, int idx) : delta(val), index(idx) {}
+        QueuedAcceleratedRelativeAction(int idx, double val) : index(idx), delta(val) {}
         
         double delta = 0.0;
         int index = 0;
