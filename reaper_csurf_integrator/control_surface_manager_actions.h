@@ -499,7 +499,7 @@ class GoSubZone : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
 public:
-    virtual string GetName() override { return "GoZone"; }
+    virtual string GetName() override { return "GoSubZone"; }
     
     void Do(ActionContext* context, double value) override
     {
