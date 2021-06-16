@@ -1963,12 +1963,12 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
-            {
+            //if(context->GetZone()->GetNavigator()->GetName() == "SelectedTrackNavigator" && context->GetSlotIndex() == DAW::GetTrackNumSends(track, -1))
+            //{
                 MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetParamIndex(), "P_SRCTRACK", 0);;
                 if(srcTrack)
                     track = srcTrack;
-            }
+            //}
 
             string receiveTrackName = "";
             receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
