@@ -1965,11 +1965,13 @@ public:
         {
             MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);;
             if(srcTrack)
-                track = srcTrack;
-
-            string receiveTrackName = "";
-            receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(track, "P_NAME", NULL);
-            context->UpdateWidgetValue(receiveTrackName);
+            {
+                string receiveTrackName = "";
+                receiveTrackName = (char *)DAW::GetSetMediaTrackInfo(srcTrack, "P_NAME", NULL);
+                context->UpdateWidgetValue(receiveTrackName);
+            }
+            else
+                context->ClearWidget();
         }
         else
             context->ClearWidget();
