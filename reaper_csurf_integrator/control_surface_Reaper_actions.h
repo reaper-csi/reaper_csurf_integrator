@@ -1512,12 +1512,15 @@ public:
     {
         if(MediaTrack* track = context->GetTrack())
         {
-            
-            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetParamIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
+            MediaTrack* destTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "P_DESTTRACK", 0);;
             if(destTrack)
             {
+                int numHardwareSends = DAW::GetTrackNumSends(track, 1);
+                double vol, pan = 0.0;
+                DAW::GetTrackSendUIVolPan(track, context->GetSlotIndex() + numHardwareSends, &vol, &pan);
+
                 char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(destTrack, 0, context->GetSlotIndex() + DAW::GetTrackNumSends(track, 1), "D_VOL")));
+                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(vol));
                 context->UpdateWidgetValue(string(trackVolume));
             }
             else
