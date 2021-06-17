@@ -1078,7 +1078,7 @@ public:
         if(MediaTrack* track = context->GetTrack())
         {
             double vol, pan = 0.0;
-            DAW::GetTrackReceiveUIVolPan(track, context->GetSlotIndex(), &vol, &pan);
+            DAW::GetTrackReceiveUIVolPan(track, -(context->GetSlotIndex() + 1), &vol, &pan);
             
             if(value == 0)
                 DAW::SetTrackSendUIVol(track, -(context->GetSlotIndex() + 1), vol, 1);
