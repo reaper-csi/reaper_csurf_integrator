@@ -1372,10 +1372,10 @@ void TrackNavigationManager::AdjustFXMenuSlotBank(ControlSurface* originatingSur
     fxMenuSlot_ += amount;
     
     if(fxMenuSlot_ < 0)
-        fxMenuSlot_ = 0;
+        fxMenuSlot_ = maxFXMenuSlot_;
     
     if(fxMenuSlot_ > maxFXMenuSlot_)
-        fxMenuSlot_ = maxFXMenuSlot_;
+        fxMenuSlot_ = 0;
     
     page_->MapSelectedTrackFXMenuSlotToWidgets(originatingSurface, fxMenuSlot_);
 }
