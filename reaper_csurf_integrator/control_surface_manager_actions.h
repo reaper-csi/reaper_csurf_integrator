@@ -574,7 +574,10 @@ public:
                 trackNum = context->GetPage()->GetTrackNavigationManager()->GetNumTracks();
             
             if(MediaTrack* trackToSelect = context->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
-               DAW::SetOnlyTrackSelected(trackToSelect);
+            {
+                DAW::SetOnlyTrackSelected(trackToSelect);
+                context->GetSurface()->OnTrackSelection();
+            }
         }
     }
 };
