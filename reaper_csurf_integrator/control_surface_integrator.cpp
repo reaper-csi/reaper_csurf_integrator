@@ -1800,7 +1800,7 @@ void Zone::Activate(vector<Zone*> &activeZones)
 
 void Zone::Deactivate()
 {
-    for(auto widget : GetWidgets())
+    for(auto widget : widgets_)
         widget->Clear();
 }
 
@@ -2102,6 +2102,9 @@ void ControlSurface::MapTrackSendsSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackSendsSlotFromWidgets()
 {
+    for(auto zone : activeSelectedTrackSendsZones_)
+        zone->Deactivate();
+
     GoZone(activeSelectedTrackSendsZones_, "SelectedTrackSendSlot", 0);
 }
 
@@ -2111,7 +2114,10 @@ void ControlSurface::MapSelectedTrackSendsSlotToWidgets()
 }
 
 void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
-{    
+{
+    for(auto zone : activeSelectedTrackSendsZones_)
+        zone->Deactivate();
+
     activeSelectedTrackSendsZones_.clear();
 }
 
@@ -2145,6 +2151,9 @@ void ControlSurface::MapTrackReceivesSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackReceivesSlotFromWidgets()
 {
+    for(auto zone : activeSelectedTrackReceivesZones_)
+        zone->Deactivate();
+
     GoZone(activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot", 0);
 }
 
@@ -2155,6 +2164,8 @@ void ControlSurface::MapSelectedTrackReceivesSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
 {
+    for(auto zone : activeSelectedTrackReceivesZones_)
+        zone->Deactivate();
     activeSelectedTrackReceivesZones_.clear();
 }
 
@@ -2186,7 +2197,12 @@ void ControlSurface::MapTrackFXMenusSlotToWidgets()
 
 void ControlSurface::UnmapSelectedTrackFXFromMenu()
 {
+    for(auto zone : activeSelectedTrackFXMenuZones_)
+        zone->Deactivate();
     activeSelectedTrackFXMenuZones_.clear();
+    
+    for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        zone->Deactivate();
     activeSelectedTrackFXMenuFXZones_.clear();
 }
 
@@ -2214,6 +2230,8 @@ void ControlSurface::MapSelectedTrackItemsToWidgets(MediaTrack* track, string ba
 
 void ControlSurface::UnmapSelectedTrackFXFromWidgets()
 {
+    for(auto zone : activeSelectedTrackFXZones_)
+        zone->Deactivate();
     activeSelectedTrackFXZones_.clear();
 }
 
@@ -2401,6 +2419,8 @@ void ControlSurface::GoZone(vector<Zone*> &activeZones, string zoneName, double 
             }
             else // removing
             {
+                zone->Deactivate();
+                
                 auto it = find(activeZones.begin(),activeZones.end(), zone);
                 
                 if ( it != activeZones.end() )
