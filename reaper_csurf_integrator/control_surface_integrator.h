@@ -1624,10 +1624,10 @@ public:
         sendSlot_ += amount;
         
         if(sendSlot_ < 0)
-            sendSlot_ = 0;
+            sendSlot_ = maxSendSlot_;
         
         if(sendSlot_ > maxSendSlot_)
-            sendSlot_ = maxSendSlot_;
+            sendSlot_ = 0;
     }
     
     void AdjustReceiveSlotBank(int amount)
@@ -1635,10 +1635,10 @@ public:
         receiveSlot_ += amount;
         
         if(receiveSlot_ < 0)
-            receiveSlot_ = 0;
+            receiveSlot_ = maxReceiveSlot_;
         
         if(receiveSlot_ > maxReceiveSlot_)
-            receiveSlot_ = maxReceiveSlot_;
+            receiveSlot_ = 0;
     }
     
     void IncChannelBias(MediaTrack* track, int channelNum)
