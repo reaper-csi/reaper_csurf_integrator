@@ -1635,7 +1635,7 @@ public:
             if(srcTrack)
             {
                 char trackVolume[128];
-                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "D_VOL")));
+                snprintf(trackVolume, sizeof(trackVolume), "%7.2lf", VAL2DB(DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_VOL")));
                 context->UpdateWidgetValue(string(trackVolume));
             }
             else
@@ -1660,7 +1660,7 @@ public:
             MediaTrack* srcTrack = (MediaTrack *)DAW::GetSetTrackSendInfo(track, -1, context->GetSlotIndex(), "P_SRCTRACK", 0);
             if(srcTrack)
             {
-                double panVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "D_PAN");
+                double panVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "D_PAN");
                 
                 context->UpdateWidgetValue(context->GetPanValueString(panVal));
             }
@@ -1688,7 +1688,7 @@ public:
             {
                 // I_SENDMODE : returns int *, 0=post-fader, 1=pre-fx, 2=post-fx (deprecated), 3=post-fx
                 
-                double prePostVal = DAW::GetTrackSendInfo_Value(srcTrack, -1, context->GetSlotIndex(), "I_SENDMODE");
+                double prePostVal = DAW::GetTrackSendInfo_Value(track, -1, context->GetSlotIndex(), "I_SENDMODE");
                 
                 string prePostValueString = "";
                 
