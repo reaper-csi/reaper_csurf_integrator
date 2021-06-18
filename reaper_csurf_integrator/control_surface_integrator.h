@@ -549,6 +549,7 @@ public:
     
     void Activate();
     void Activate(vector<Zone*> &activeZones);
+    void Deactivate();
     bool TryActivate(Widget* widget);
     int GetSlotIndex();
     vector<ActionContext> &GetActionContexts(Widget* widget);

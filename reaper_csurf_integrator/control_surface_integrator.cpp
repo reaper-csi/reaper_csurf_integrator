@@ -1798,6 +1798,12 @@ void Zone::Activate(vector<Zone*> &activeZones)
     surface_->MoveToFirst(activeZones);
 }
 
+void Zone::Deactivate()
+{
+    for(auto widget : GetWidgets())
+        widget->Clear();
+}
+
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
 {
     string modifier = "";
@@ -2222,7 +2228,10 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
 
 void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 {
+    for(auto zone : activeSelectedTrackFXMenuFXZones_)
+        zone->Deactivate();
     activeSelectedTrackFXMenuFXZones_.clear();
+    
     MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
