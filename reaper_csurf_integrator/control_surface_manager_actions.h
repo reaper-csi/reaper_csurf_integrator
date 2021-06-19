@@ -576,7 +576,7 @@ public:
             if(MediaTrack* trackToSelect = context->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
             {
                 DAW::SetOnlyTrackSelected(trackToSelect);
-                context->GetSurface()->RemapSelectedTrackFXMenuSlotToWidgets();
+                context->GetSurface()->UnmapSelectedTrackFXFromWidgets();
             }
         }
     }

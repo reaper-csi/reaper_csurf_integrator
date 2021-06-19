@@ -1087,7 +1087,6 @@ public:
     void UnmapSelectedTrackReceivesSlotFromWidgets();
     
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
-    void RemapSelectedTrackFXMenuSlotToWidgets();
     void MapFocusedFXToWidgets();
     void UnmapFocusedFXFromWidgets();
 
