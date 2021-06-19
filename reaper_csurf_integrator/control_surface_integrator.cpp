@@ -2318,8 +2318,8 @@ void ControlSurface::TrackFXListChanged()
 
 void ControlSurface::OnTrackSelection()
 {
-    if(activeSelectedTrackFXMenuFXZones_.size() > 0)
-        MapSelectedTrackFXMenuSlotToWidgets(page_->GetTrackNavigationManager()->GetFXMenuSlot());
+    //if(activeSelectedTrackFXMenuFXZones_.size() > 0)
+        //MapSelectedTrackFXMenuSlotToWidgets(page_->GetTrackNavigationManager()->GetFXMenuSlot());
     
     if(widgetsByName_.count("OnTrackSelection") > 0)
     {
