@@ -2276,6 +2276,9 @@ void ControlSurface::MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones,
 
 void ControlSurface::UnmapFocusedFXFromWidgets()
 {
+    for(auto zone : activeFocusedFXZones_)
+        zone->Deactivate();
+
     activeFocusedFXZones_.clear();
 }
 
