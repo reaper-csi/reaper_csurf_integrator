@@ -2253,6 +2253,12 @@ void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
     MapSelectedTrackFXSlotToWidgets(activeSelectedTrackFXMenuFXZones_, fxSlot);
 }
 
+void ControlSurface::RemapSelectedTrackFXMenuSlotToWidgets()
+{
+    if(activeSelectedTrackFXMenuFXZones_.size() > 0)
+        MapSelectedTrackFXMenuSlotToWidgets(page_->GetTrackNavigationManager()->GetFXMenuSlot());
+}
+
 void ControlSurface::MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot)
 {
     MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
@@ -2318,9 +2324,6 @@ void ControlSurface::TrackFXListChanged()
 
 void ControlSurface::OnTrackSelection()
 {
-    //if(activeSelectedTrackFXMenuFXZones_.size() > 0)
-        //MapSelectedTrackFXMenuSlotToWidgets(page_->GetTrackNavigationManager()->GetFXMenuSlot());
-    
     if(widgetsByName_.count("OnTrackSelection") > 0)
     {
         if(page_->GetTrackNavigationManager()->GetSelectedTrack())
