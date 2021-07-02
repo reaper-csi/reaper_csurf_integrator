@@ -214,15 +214,15 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
             if(modifier_tokens[i] == FaderTouch)
-                modifierSlots[3] = FaderTouch + "+";
+                modifierSlots[0] = FaderTouch + "+";
             else if(modifier_tokens[i] == Shift)
-                modifierSlots[0] = Shift + "+";
+                modifierSlots[1] = Shift + "+";
             else if(modifier_tokens[i] == Option)
-                modifierSlots[1] = Option + "+";
+                modifierSlots[2] = Option + "+";
             else if(modifier_tokens[i] == Control)
-                modifierSlots[2] = Control + "+";
+                modifierSlots[3] = Control + "+";
             else if(modifier_tokens[i] == Alt)
-                modifierSlots[3] = Alt + "+";
+                modifierSlots[4] = Alt + "+";
 
             else if(modifier_tokens[i] == "InvertFB")
                 isFeedbackInverted = true;
