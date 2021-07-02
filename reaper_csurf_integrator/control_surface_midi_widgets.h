@@ -969,7 +969,7 @@ protected:
     
     string text_ = "";
     int maxCharacters_ = 0;
-    int LEDNumber_ = 0;
+    int colorBreakpoint_ = 0;
     
     rgb_color foregroundColor_ = { 0x7f, 0x7f, 0x7f };
     rgb_color backgroundColor_ { 0, 0, 0 };
@@ -1002,9 +1002,9 @@ protected:
                 foregroundColor_.b = stoi(property[4]);
                 ForceValue();
             }
-            if((property[0] == "Ring") && property.size() > 4)
+            if((property[0] == "Ring" || property[0] == "Bar") && property.size() > 4)
             {
-                LEDNumber_ = stoi(property[1]);
+                colorBreakpoint_ = stoi(property[1]);
                 foregroundColor_.r = stoi(property[2]);
                 foregroundColor_.g = stoi(property[3]);
                 foregroundColor_.b = stoi(property[4]);
@@ -1170,14 +1170,15 @@ public:
     
     virtual void SetValue(double value) override
     {
-        if(value != lastDoubleValue_) // changes since last send
-            ForceValue(value);
+        if(int(value * 100.00) != (int)lastDoubleValue_) // changes since last send
+        {
+            lastDoubleValue_ = int(value * 100.00);
+            SendMidiMessage(0xD0, cellNumber_, lastDoubleValue_);
+        }
     }
     
-    virtual void ForceValue(double value) override
+    virtual void ForceValue() override
     {
-        lastDoubleValue_ = value;
-        
         struct
         {
             MIDI_event_ex_t evt;
@@ -1196,7 +1197,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;            // Bar
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = LEDNumber_;      // from app
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorBreakpoint_;// from app
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;    // from app
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;    // from app
