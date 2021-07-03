@@ -994,17 +994,28 @@ protected:
             if(property.size() == 0)
                 continue;
 
-            if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 4)
+            if(property[0] == "RingStyle" && property.size() > 1)
+            {
+                itemStyle_ = stoi(property[1]);
+                ForceValue();
+            }
+            else if(property[0] == "BarStyle" && property.size() > 2)
             {
                 displayType_ = stoi(property[1]);
+                itemStyle_ = stoi(property[2]);
+                ForceValue();
+            }
+            else if((property[0] == "RingColor" || property[0] == "BarColor") && property.size() > 4)
+            {
+                colorBreakpoint_ = stoi(property[1]);
                 foregroundColor_.r = stoi(property[2]);
                 foregroundColor_.g = stoi(property[3]);
                 foregroundColor_.b = stoi(property[4]);
                 ForceValue();
             }
-            if((property[0] == "Ring" || property[0] == "Bar") && property.size() > 4)
+            else if((property[0] == "Color" || property[0] == "ColorOn") && property.size() > 4)
             {
-                colorBreakpoint_ = stoi(property[1]);
+                displayType_ = stoi(property[1]);
                 foregroundColor_.r = stoi(property[2]);
                 foregroundColor_.g = stoi(property[3]);
                 foregroundColor_.b = stoi(property[4]);
@@ -1156,6 +1167,60 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SCE24_Bar_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual ~SCE24_Bar_Midi_FeedbackProcessor() {}
+    SCE24_Bar_Midi_FeedbackProcessor(Midi_ControlSurface* surface, Widget* widget, int cellNumber, int itemNumber) : SCE24_Midi_FeedbackProcessor(surface, widget, cellNumber, itemNumber) { }
+       
+    virtual void ClearCache() override
+    {
+        lastDoubleValue_ = 0.0;
+    }
+    
+    virtual void SetValue(double value) override
+    {
+        if(int(value * 100.00) != (int)lastDoubleValue_) // changes since last send
+        {
+            lastDoubleValue_ = int(value * 100.00);
+            SendMidiMessage(0xB0 | itemNumber_, cellNumber_, lastDoubleValue_);
+        }
+    }
+    
+    virtual void ForceValue() override
+    {
+        struct
+        {
+            MIDI_event_ex_t evt;
+            char data[512];
+        } midiSysExData;
+        
+        midiSysExData.evt.frame_offset=0;
+        midiSysExData.evt.size=0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF0;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x02;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x38;
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = displayType_;    // from app
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemNumber_;     // from .mst
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;            // Bar
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from app
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorBreakpoint_;// from app
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;    // from app
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.g / 2;    // from app
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.b / 2;    // from app
+        
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0xF7;
+        
+        SendMidiMessage(&midiSysExData.evt);
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SCE24_Ring_Midi_FeedbackProcessor : public SCE24_Midi_FeedbackProcessor
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1173,7 +1238,7 @@ public:
         if(int(value * 100.00) != (int)lastDoubleValue_) // changes since last send
         {
             lastDoubleValue_ = int(value * 100.00);
-            SendMidiMessage(0xD0, cellNumber_, lastDoubleValue_);
+            SendMidiMessage(0xB0, cellNumber_, lastDoubleValue_);
         }
     }
     
@@ -1196,7 +1261,7 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f;            // Ring
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;            // Bar
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
+        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from app
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorBreakpoint_;// from app
         
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = foregroundColor_.r / 2;    // from app
