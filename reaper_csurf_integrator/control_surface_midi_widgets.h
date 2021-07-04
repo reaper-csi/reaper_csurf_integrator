@@ -1259,8 +1259,6 @@ public:
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x01;            // Controller type
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = cellNumber_;     // from .mst
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x7f;            // Ring
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x00;            // unused
-        midiSysExData.evt.midi_message[midiSysExData.evt.size++] = 0x03;            // Bar
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = itemStyle_;      // from app
         midiSysExData.evt.midi_message[midiSysExData.evt.size++] = colorBreakpoint_;// from app
         
