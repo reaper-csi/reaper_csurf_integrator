@@ -558,9 +558,6 @@ public:
     Navigator* GetNavigator() { return navigator_; }
     void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
     void SetNavigationStyle(NavigationStyle navigationStyle) { navigationStyle_ = navigationStyle; }
-    //vector<Widget*> &GetWidgets() { return widgets_; }
-    //vector<Zone*> &GetIncludedZones() { return includedZones_; }
-    //vector<Zone*> &GetSubZones() { return subZones_; }
     void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     void RequestUpdateWidget(Widget* widget);
 
