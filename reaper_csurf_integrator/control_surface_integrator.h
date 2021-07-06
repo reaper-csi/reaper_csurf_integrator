@@ -1176,6 +1176,9 @@ public:
     {
         auto result = find(allActiveZones_.begin(), allActiveZones_.end(), &zones);
         
+        if(result == allActiveZones_.begin()) // already first
+            return;
+        
         if(result != allActiveZones_.end())
         {
             auto resultValue = *result;
