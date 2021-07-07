@@ -548,7 +548,7 @@ public:
     Zone() {}
     
     void Activate();
-    void Activate(vector<Zone*> &activeZones);
+    void Activate(vector<Zone*> *activeZones);
     void Deactivate();
     bool TryActivate(Widget* widget);
     int GetSlotIndex();
@@ -1017,10 +1017,10 @@ protected:
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
     
-    void MapSelectedTrackFXSlotToWidgets(vector<Zone*> &activeZones, int fxSlot);
-    void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfZones, vector<Zone*> &activeZones);
+    void MapSelectedTrackFXSlotToWidgets(vector<Zone*> *activeZones, int fxSlot);
+    void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfZones, vector<Zone*> *activeZones);
     
-    void GoZone(vector<Zone*> &activeZones, string zoneName, double value);
+    void GoZone(vector<Zone*> *activeZones, string zoneName, double value);
     
     virtual void InitHardwiredWidgets()
     {
@@ -1172,9 +1172,9 @@ public:
             homeZone_->Activate();
     }
         
-    void MoveToFirst(vector<Zone*> &zones)
+    void MoveToFirst(vector<Zone*> *zones)
     {
-        auto result = find(allActiveZones_.begin(), allActiveZones_.end(), &zones);
+        auto result = find(allActiveZones_.begin(), allActiveZones_.end(), zones);
         
         if(result == allActiveZones_.begin()) // already first
             return;
