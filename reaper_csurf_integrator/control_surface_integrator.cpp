@@ -235,7 +235,7 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
 
     widgetName = modifier_tokens[modifier_tokens.size() - 1];
     
-    modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3];
+    modifier = modifierSlots[0] + modifierSlots[1] + modifierSlots[2] + modifierSlots[3] + modifier[4];
 }
 
 static void PreProcessZoneFile(string filePath, ControlSurface* surface)
