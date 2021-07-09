@@ -2406,6 +2406,13 @@ void ControlSurface::GoZone(vector<Zone*> *activeZones, string zoneName, double 
         activeSelectedTrackFXMenuFXZones_.clear();
         activeFocusedFXZones_.clear();
         
+        // GAW TBD -- this should really be cleaned up after each pass
+        // but for now we will clean it up here
+        
+        for(auto widget : widgets_)
+            widget->ClearAllQueues();
+
+        
         LoadDefaultZoneOrder();
         
         if(homeZone_ != nullptr)
