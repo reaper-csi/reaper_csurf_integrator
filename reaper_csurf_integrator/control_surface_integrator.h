@@ -643,6 +643,14 @@ public:
 class Widget
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
+    struct QueuedAcceleratedRelativeAction
+    {
+        QueuedAcceleratedRelativeAction(int idx, double val) : index(idx), delta(val) {}
+        
+        double delta = 0.0;
+        int index = 0;
+    };
+    
 private:
     ControlSurface* const surface_;
     string const name_;
@@ -650,9 +658,14 @@ private:
     
     bool isModifier_ = false;
     bool isToggled_ = false;
-      
-    void LogInput(double value);
     
+    vector<double> queuedActionValues_;
+    vector<double> queuedRelativeActionValues_;
+    vector<QueuedAcceleratedRelativeAction> queuedAcceleratedRelativeActionValues_;
+    vector<double> queuedTouchActionValues_;
+  
+    void LogInput(double value);
+   
 public:
     Widget(ControlSurface* surface, string name);
     ~Widget();
@@ -683,20 +696,15 @@ public:
     {
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
     }
- 
-    struct QueuedAcceleratedRelativeAction
-    {
-        QueuedAcceleratedRelativeAction(int idx, double val) : index(idx), delta(val) {}
-        
-        double delta = 0.0;
-        int index = 0;
-    };
-    
-    vector<double> queuedActionValues_;
-    vector<double> queuedRelativeActionValues_;
-    vector<QueuedAcceleratedRelativeAction> queuedAcceleratedRelativeActionValues_;
-    vector<double> queuedTouchActionValues_;
 
+    void ClearAllQueues()
+    {
+        queuedActionValues_.clear();
+        queuedRelativeActionValues_.clear();
+        queuedAcceleratedRelativeActionValues_.clear();
+        queuedTouchActionValues_.clear();
+    }
+    
     void HandleQueuedActions(Zone* zone)
     {
         for(auto value : queuedActionValues_)
@@ -1228,6 +1236,14 @@ public:
             if ( it == widgets_.end() )
                 widget->Clear();
         }
+        
+        // GAW TBD -- this is necessary to prevent unmapped message builup
+        // Unfortunately, for now this actually helps us with the SubZone crash
+        // This whole thing reeks of memory corruption -- probably caused by me :)
+        // See ControlSurface::GoZone()
+        
+        //for(auto widget : widgets_)
+            //widget->ClearAllQueues();
     }
 
     virtual void ForceClearAllWidgets()
