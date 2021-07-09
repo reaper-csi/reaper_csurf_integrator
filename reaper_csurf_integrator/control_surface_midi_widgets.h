@@ -1181,10 +1181,10 @@ public:
     
     virtual void SetValue(double value) override
     {
-        if(int(value * 100.00) != (int)lastDoubleValue_) // changes since last send
+        if(int(value * 127.00) != (int)lastDoubleValue_) // changes since last send
         {
-            lastDoubleValue_ = int(value * 100.00);
-            SendMidiMessage(0xB0 | itemNumber_, cellNumber_, lastDoubleValue_);
+            lastDoubleValue_ = int(value * 127.00);
+            SendMidiMessage(0xB0 | itemNumber_, cellNumber_, (int)lastDoubleValue_);
         }
     }
     
@@ -1235,10 +1235,10 @@ public:
     
     virtual void SetValue(double value) override
     {
-        if(int(value * 100.00) != (int)lastDoubleValue_) // changes since last send
+        if(int(value * 127.00) != (int)lastDoubleValue_) // changes since last send
         {
-            lastDoubleValue_ = int(value * 100.00);
-            SendMidiMessage(0xB0, cellNumber_, lastDoubleValue_);
+            lastDoubleValue_ = int(value * 127.00);
+            SendMidiMessage(0xB0, cellNumber_, (int)lastDoubleValue_);
         }
     }
     
