@@ -1797,7 +1797,7 @@ void Zone::Activate(vector<Zone*> *activeZones)
     if ( it != activeZones->end() )
         activeZones->erase(it);
 
-    activeZones->insert(activeZones->begin(), 1, this);
+    activeZones->insert(activeZones->begin(), this);
     
     surface_->MoveToFirst(activeZones);
 }
@@ -2530,7 +2530,6 @@ void Midi_ControlSurface::SendMidiMessage(int first, int second, int third)
 void OSC_ControlSurface::InitWidgets(string templateFilename, string zoneFolder)
 {
     ProcessWidgetFile(string(DAW::GetResourcePath()) + "/CSI/Surfaces/OSC/" + templateFilename, this);
-    
     InitHardwiredWidgets();
     InitZones(zoneFolder);
     MakeHomeDefault();
