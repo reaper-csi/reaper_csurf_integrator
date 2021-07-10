@@ -1026,7 +1026,7 @@ void Manager::InitActionsDictionary()
     actions_["SetReceiveMapTrackFXMenusSlotToWidgets"] =        new SetReceiveMapTrackFXMenusSlotToWidgets();
     actions_["TrackBank"] =                             new TrackBank();
     actions_["SelectedTrackBank"] =                     new SelectedTrackBank();
-    actions_["SlotBank"] =                              new SendSlotBank();
+    actions_["SlotBank"] =                              new SlotBank();
     actions_["SendSlotBank"] =                          new SendSlotBank();
     actions_["ReceiveSlotBank"] =                       new ReceiveSlotBank();
     actions_["FXMenuSlotBank"] =                        new FXMenuSlotBank();
