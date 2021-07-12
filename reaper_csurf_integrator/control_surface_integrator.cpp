@@ -199,7 +199,7 @@ static void listZoneFiles(const string &path, vector<string> &results)
     }
 }
 
-static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, bool &isFeedbackInverted, double &holdDelayAmount, bool &isProperty)
+static void GetWidgetNameAndProperties(string line, string &widgetName, string &modifier, string &touchId, bool &isFeedbackInverted, double &holdDelayAmount, bool &isProperty)
 {
     istringstream modified_role(line);
     vector<string> modifier_tokens;
@@ -213,8 +213,11 @@ static void GetWidgetNameAndProperties(string line, string &widgetName, string &
     {
         for(int i = 0; i < modifier_tokens.size() - 1; i++)
         {
-            if(modifier_tokens[i] == FaderTouch)
-                modifierSlots[0] = FaderTouch + "+";
+            if(modifier_tokens[i].find("Touch") != string::npos)
+            {
+                touchId = modifier_tokens[i];
+                modifierSlots[0] = modifier_tokens[i] + "+";
+            }
             else if(modifier_tokens[i] == Shift)
                 modifierSlots[1] = Shift + "+";
             else if(modifier_tokens[i] == Option)
@@ -291,6 +294,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
     vector<string> subZones;
     bool isInSubZonesSection = false;
 
+    map<string, string> touchIds;
+    
     map<string, map<string, vector<ActionTemplate*>>> widgetActions;
     
     string zoneName = "";
@@ -403,10 +408,26 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         
                         string newZoneName = zoneName;
                         
+                        map<string, string> expandedTouchIds;
+                        
                         if(navigators.size() > 1)
+                        {
                             newZoneName += numStr;
                         
-                        Zone* zone = new Zone(surface, navigators[i], i, newZoneName, zoneAlias, filePath);
+                            for(auto [key, value] : touchIds)
+                            {
+                                string expandedKey = regex_replace(key, regex("[|]"), numStr);
+                                string expandedValue = regex_replace(value, regex("[|]"), numStr);
+
+                                expandedTouchIds[expandedKey] = expandedValue;
+                            }
+                        }
+                        else
+                        {
+                            expandedTouchIds = touchIds;
+                        }
+                        
+                        Zone* zone = new Zone(surface, navigators[i], i, expandedTouchIds, newZoneName, zoneAlias, filePath);
                         zone->SetNavigationStyle(navigationStyle);
                         
                         for(auto includedZoneName : includedZones)
@@ -481,8 +502,9 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                     if(action->holdDelayAmount != 0.0)
                                         context.SetHoldDelayAmount(action->holdDelayAmount);
                                     
+                                    string expandedModifier = regex_replace(modifier, regex("[|]"), numStr);
                                     
-                                    zone->AddActionContext(widget, modifier, context);
+                                    zone->AddActionContext(widget, expandedModifier, context);
                                 }
                             }
                         }
@@ -493,6 +515,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     includedZones.clear();
                     subZones.clear();
                     widgetActions.clear();
+                    touchIds.clear();
                     
                     break;
                 }
@@ -535,11 +558,15 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     
                     string widgetName = "";
                     string modifier = "";
+                    string touchId = "";
                     bool isFeedbackInverted = false;
                     double holdDelayAmount = 0.0;
                     bool isProperty = false;
                     
-                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, isFeedbackInverted, holdDelayAmount, isProperty);
+                    GetWidgetNameAndProperties(tokens[0], widgetName, modifier, touchId, isFeedbackInverted, holdDelayAmount, isProperty);
+                    
+                    if(touchId != "")
+                        touchIds[widgetName] = touchId;
                     
                     vector<string> params;
                     for(int i = 1; i < tokens.size(); i++)
@@ -1238,14 +1265,6 @@ void Manager::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Action
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Action::Touch(ActionContext* context, double value)
-{
-    context->GetZone()->GetNavigator()->SetIsNavigatorTouched(value);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TrackNavigator
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigator::PinChannel()
@@ -1539,7 +1558,7 @@ void ActionContext::RequestUpdate()
 
 void ActionContext::ClearWidget()
 {
-    widget_->Clear();
+    widget_->ForceClear();
 }
 
 void ActionContext::UpdateWidgetValue(double value)
@@ -1805,18 +1824,19 @@ void Zone::Activate(vector<Zone*> *activeZones)
 void Zone::Deactivate()
 {
     for(auto widget : widgets_)
-        widget->Clear();
+        widget->ForceClear();
 }
 
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
 {
+    string widgetName = widget->GetName();
     string modifier = "";
     
     if( ! widget->GetIsModifier())
         modifier = surface_->GetPage()->GetModifier();
     
-    if(GetNavigator()->GetIsNavigatorTouched() && actionContextDictionary_[widget].count(FaderTouch + "+" + modifier) > 0)
-        return actionContextDictionary_[widget][FaderTouch + "+" + modifier];
+    if(touchIds_.count(widgetName) > 0 && activeTouchIds_.count(touchIds_[widgetName]) > 0 && activeTouchIds_[touchIds_[widgetName]] == true && actionContextDictionary_[widget].count(touchIds_[widgetName] + "+" + modifier) > 0)
+        return actionContextDictionary_[widget][touchIds_[widgetName] + "+" + modifier];
     else if(actionContextDictionary_[widget].count(modifier) > 0)
         return actionContextDictionary_[widget][modifier];
     else if(actionContextDictionary_[widget].count("") > 0)
@@ -1905,28 +1925,10 @@ void  Widget::ForceValue(double value)
         processor->ForceValue(value);
 }
 
-void  Widget::ForceValue(int mode, double value)
-{
-    for(auto processor : feedbackProcessors_)
-        processor->ForceValue(mode, value);
-}
-
-void  Widget::ForceValue(string value)
-{
-    for(auto processor : feedbackProcessors_)
-        processor->ForceValue(value);
-}
-
 void  Widget::ForceRGBValue(int r, int g, int b)
 {
     for(auto processor : feedbackProcessors_)
         processor->ForceRGBValue(r, g, b);
-}
-
-void  Widget::Clear()
-{
-    for(auto processor : feedbackProcessors_)
-        processor->Clear();
 }
 
 void  Widget::ForceClear()
@@ -2026,12 +2028,6 @@ void EuCon_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessorDB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessorDB::Clear()
-{
-    if(lastDoubleValue_ != -100.0)
-        ForceClear();
-}
-
 void EuCon_FeedbackProcessorDB::ForceClear()
 {
     lastDoubleValue_ = -100.0;
