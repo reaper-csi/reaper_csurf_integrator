@@ -58,7 +58,6 @@ const string Shift = "Shift";
 const string Option = "Option";
 const string Control = "Control";
 const string Alt = "Alt";
-const string FaderTouch = "FaderTouch";
 
 const string BadFileChars = "[ \\:*?<>|.,()/]";
 const string CRLFChars = "[\r\n]";
@@ -132,7 +131,7 @@ class Action
 public:
     virtual ~Action() {}
     
-    virtual void Touch(ActionContext* context, double value);
+    virtual void Touch(ActionContext* context, double value) {}
     virtual string GetName() { return "Action"; }
     virtual void RequestUpdate(ActionContext* context) {}
     virtual void Do(ActionContext* context, double value) {}
@@ -154,7 +153,6 @@ class Navigator
 {
 protected:
     Page* const page_ = nullptr;
-    bool isNavigatorTouched_ = false;
     bool isVolumeTouched_ = false;
     bool isPanTouched_ = false;
     bool isPanWidthTouched_ = false;
@@ -165,9 +163,6 @@ public:
     Navigator(Page*  page) : page_(page) {}
     virtual ~Navigator() {}
     
-    void SetIsNavigatorTouched(bool isNavigatorTouched) { isNavigatorTouched_ = isNavigatorTouched;  }
-    bool GetIsNavigatorTouched() { return isNavigatorTouched_;  }
-
     void SetIsVolumeTouched(bool isVolumeTouched) { isVolumeTouched_ = isVolumeTouched;  }
     bool GetIsVolumeTouched() { return isVolumeTouched_;  }
     
@@ -531,6 +526,10 @@ private:
     string const alias_ = "";
     string const sourceFilePath_ = "";
     
+    map<string, string> touchIds_;
+        
+    map<string, bool> activeTouchIds_;
+    
     NavigationStyle navigationStyle_ = Standard;
     
     int slotIndex_ = 0;
@@ -544,7 +543,7 @@ private:
     vector<ActionContext> defaultContexts_;
     
 public:   
-    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, map<string, string> touchIds, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), touchIds_(touchIds), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
     
     void Activate();
@@ -553,8 +552,7 @@ public:
     bool TryActivate(Widget* widget);
     int GetSlotIndex();
     vector<ActionContext> &GetActionContexts(Widget* widget);
-    
-    
+
     Navigator* GetNavigator() { return navigator_; }
     void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
     void SetNavigationStyle(NavigationStyle navigationStyle) { navigationStyle_ = navigationStyle; }
@@ -620,8 +618,12 @@ public:
             context.DoAction(value);
     }
     
-    void DoTouch(Widget* widget, double value)
+    void DoTouch(Widget* widget, string widgetName, double value)
     {
+        activeTouchIds_[widgetName + "Touch"] = value;
+        activeTouchIds_[widgetName + "TouchPress"] = value;
+        activeTouchIds_[widgetName + "TouchRelease"] = ! value;
+
         for(auto &context : GetActionContexts(widget))
             context.DoTouch(value);
     }
@@ -663,7 +665,7 @@ private:
     vector<double> queuedRelativeActionValues_;
     vector<QueuedAcceleratedRelativeAction> queuedAcceleratedRelativeActionValues_;
     vector<double> queuedTouchActionValues_;
-  
+     
     void LogInput(double value);
    
 public:
@@ -674,22 +676,18 @@ public:
     string GetName() { return name_; }
     bool GetIsModifier() { return isModifier_; }
     void SetIsModifier() { isModifier_ = true; }
-    void SilentSetValue(string displayText);
     
     void Toggle() { isToggled_ = ! isToggled_; }
     bool GetIsToggled() { return isToggled_; }
-    
+
     void SetProperties(vector<vector<string>> properties);
     void UpdateValue(double value);
     void UpdateValue(int mode, double value);
     void UpdateValue(string value);
     void UpdateRGBValue(int r, int g, int b);
     void ForceValue(double value);
-    void ForceValue(int mode, double value);
-    void ForceValue(string value);
     void ForceRGBValue(int r, int g, int b);
     void ClearCache();
-    void Clear();
     void ForceClear();
     
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
@@ -720,7 +718,7 @@ public:
         queuedAcceleratedRelativeActionValues_.clear();
 
         for(auto value : queuedTouchActionValues_)
-            zone->DoTouch(this, value);
+            zone->DoTouch(this, name_, value);
         queuedTouchActionValues_.clear();
     }
     
@@ -942,7 +940,6 @@ public:
     EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, Widget* widget, string address) : EuCon_FeedbackProcessor(surface, widget, address) {}
     ~EuCon_FeedbackProcessorDB() {}
     
-    virtual void Clear() override;
     virtual void ForceClear() override;
 };
 
@@ -1234,7 +1231,7 @@ public:
             auto it = find(usedWidgets.begin(), usedWidgets.end(), widget);
             
             if ( it == widgets_.end() )
-                widget->Clear();
+                widget->ForceClear();
         }
         
         // GAW TBD -- this is necessary to prevent unmapped message builup
