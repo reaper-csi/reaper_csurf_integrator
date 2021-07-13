@@ -688,8 +688,9 @@ public:
     void ForceValue(double value);
     void ForceRGBValue(int r, int g, int b);
     void ClearCache();
+    void Clear();
     void ForceClear();
-    
+
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
@@ -940,6 +941,7 @@ public:
     EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, Widget* widget, string address) : EuCon_FeedbackProcessor(surface, widget, address) {}
     ~EuCon_FeedbackProcessorDB() {}
     
+    virtual void Clear() override;
     virtual void ForceClear() override;
 };
 
@@ -1231,7 +1233,7 @@ public:
             auto it = find(usedWidgets.begin(), usedWidgets.end(), widget);
             
             if ( it == widgets_.end() )
-                widget->ForceClear();
+                widget->Clear();
         }
         
         // GAW TBD -- this is necessary to prevent unmapped message builup
