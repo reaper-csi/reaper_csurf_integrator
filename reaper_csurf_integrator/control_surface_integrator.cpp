@@ -1558,7 +1558,7 @@ void ActionContext::RequestUpdate()
 
 void ActionContext::ClearWidget()
 {
-    widget_->ForceClear();
+    widget_->Clear();
 }
 
 void ActionContext::UpdateWidgetValue(double value)
@@ -1824,7 +1824,7 @@ void Zone::Activate(vector<Zone*> *activeZones)
 void Zone::Deactivate()
 {
     for(auto widget : widgets_)
-        widget->ForceClear();
+        widget->Clear();
 }
 
 vector<ActionContext>& Zone::GetActionContexts(Widget* widget)
@@ -1931,6 +1931,12 @@ void  Widget::ForceRGBValue(int r, int g, int b)
         processor->ForceRGBValue(r, g, b);
 }
 
+void  Widget::Clear()
+{
+    for(auto processor : feedbackProcessors_)
+        processor->Clear();
+}
+
 void  Widget::ForceClear()
 {
     for(auto processor : feedbackProcessors_)
@@ -2028,6 +2034,12 @@ void EuCon_FeedbackProcessor::ForceValue(string value)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // EuCon_FeedbackProcessorDB
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void EuCon_FeedbackProcessorDB::Clear()
+{
+    if(lastDoubleValue_ != -100.0)
+        ForceClear();
+}
+
 void EuCon_FeedbackProcessorDB::ForceClear()
 {
     lastDoubleValue_ = -100.0;
