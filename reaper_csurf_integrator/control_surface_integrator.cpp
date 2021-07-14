@@ -375,31 +375,37 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = Send;
+                        navigationStyle = SendSlot;
                     }
                     else if(navigatorName == "TrackReceiveSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = Receive;
+                        navigationStyle = ReceiveSlot;
                     }
                     else if(navigatorName == "TrackFXMenuSlotNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
                             navigators.push_back(surface->GetNavigatorForChannel(i));
                         
-                        navigationStyle = FXMenu;
+                        navigationStyle = FXMenuSlot;
                     }
                     else if(navigatorName == "SelectedTrackSendSlotNavigator")
                     {
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
-                        navigationStyle = Send;
+                        for(int i = 0; i < surface->GetNumSendSlots(); i++)
+                        {
+                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigationStyle = SelectedTrackSendSlot;
+                        }
                     }
                     else if(navigatorName == "SelectedTrackReceiveSlotNavigator")
                     {
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
-                        navigationStyle = Receive;
+                        for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
+                        {
+                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigationStyle = SelectedTrackReceiveSlot;
+                        }
                     }
 
                     for(int i = 0; i < navigators.size(); i++)
@@ -427,8 +433,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             expandedTouchIds = touchIds;
                         }
                         
-                        Zone* zone = new Zone(surface, navigators[i], i, expandedTouchIds, newZoneName, zoneAlias, filePath);
-                        zone->SetNavigationStyle(navigationStyle);
+                        Zone* zone = new Zone(surface, navigators[i], navigationStyle, i, expandedTouchIds, newZoneName, zoneAlias, filePath);
                         
                         for(auto includedZoneName : includedZones)
                         {
@@ -1849,12 +1854,16 @@ int Zone::GetSlotIndex()
 {
     if(navigationStyle_ == Standard)
         return slotIndex_;
-    else if(navigationStyle_ == Send)
+    else if(navigationStyle_ == SendSlot)
         return surface_->GetPage()->GetTrackNavigationManager()->GetSendSlot();
-    else if(navigationStyle_ == Receive)
+    else if(navigationStyle_ == ReceiveSlot)
         return surface_->GetPage()->GetTrackNavigationManager()->GetReceiveSlot();
-    else if(navigationStyle_ == FXMenu)
+    else if(navigationStyle_ == FXMenuSlot)
         return surface_->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot();
+    else if(navigationStyle_ == SelectedTrackSendSlot)
+        return slotIndex_ + surface_->GetPage()->GetTrackNavigationManager()->GetSendSlot();
+    else if(navigationStyle_ == SelectedTrackReceiveSlot)
+        return slotIndex_ + surface_->GetPage()->GetTrackNavigationManager()->GetReceiveSlot();
     else
         return 0;
 }
@@ -2122,7 +2131,12 @@ void ControlSurface::UnmapSelectedTrackSendsSlotFromWidgets()
 
 void ControlSurface::MapSelectedTrackSendsSlotToWidgets()
 {
-    GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot", 1);
+    for(int i = 0; i < numChannels_; i ++)
+    {
+        string trackNum = to_string(i + 1);
+        
+        GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot" + trackNum, 1);
+    }
 }
 
 void ControlSurface::UnmapSelectedTrackSendsFromWidgets()
@@ -2171,7 +2185,12 @@ void ControlSurface::UnmapSelectedTrackReceivesSlotFromWidgets()
 
 void ControlSurface::MapSelectedTrackReceivesSlotToWidgets()
 {
-    GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot", 1);
+    for(int i = 0; i < numChannels_; i ++)
+    {
+        string trackNum = to_string(i + 1);
+        
+        GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot" + trackNum, 1);
+    }
 }
 
 void ControlSurface::UnmapSelectedTrackReceivesFromWidgets()
