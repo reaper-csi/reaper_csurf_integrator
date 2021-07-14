@@ -68,9 +68,11 @@ const int TempDisplayTime = 1250;
 enum NavigationStyle
 {
     Standard,
-    Send,
-    Receive,
-    FXMenu,
+    SendSlot,
+    ReceiveSlot,
+    FXMenuSlot,
+    SelectedTrackSendSlot,
+    SelectedTrackReceiveSlot,
 };
 
 class Manager;
@@ -530,7 +532,7 @@ private:
         
     map<string, bool> activeTouchIds_;
     
-    NavigationStyle navigationStyle_ = Standard;
+    NavigationStyle const navigationStyle_ = Standard;
     
     int slotIndex_ = 0;
 
@@ -543,7 +545,7 @@ private:
     vector<ActionContext> defaultContexts_;
     
 public:   
-    Zone(ControlSurface* surface, Navigator* navigator, int slotIndex, map<string, string> touchIds, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), slotIndex_(slotIndex), touchIds_(touchIds), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
+    Zone(ControlSurface* surface, Navigator* navigator, NavigationStyle navigationStyle, int slotIndex, map<string, string> touchIds, string name, string alias, string sourceFilePath): surface_(surface), navigator_(navigator), navigationStyle_(navigationStyle), slotIndex_(slotIndex), touchIds_(touchIds), name_(name), alias_(alias), sourceFilePath_(sourceFilePath) {}
     Zone() {}
     
     void Activate();
@@ -555,7 +557,6 @@ public:
 
     Navigator* GetNavigator() { return navigator_; }
     void SetNavigator(Navigator* navigator) { navigator_ = navigator; }
-    void SetNavigationStyle(NavigationStyle navigationStyle) { navigationStyle_ = navigationStyle; }
     void AddIncludedZone(Zone* &zone) { includedZones_.push_back(zone); }
     void RequestUpdateWidget(Widget* widget);
 
