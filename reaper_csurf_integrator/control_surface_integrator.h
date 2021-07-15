@@ -1236,14 +1236,6 @@ public:
             if ( it == widgets_.end() )
                 widget->Clear();
         }
-        
-        // GAW TBD -- this is necessary to prevent unmapped message builup
-        // Unfortunately, for now this actually helps us with the SubZone crash
-        // This whole thing reeks of memory corruption -- probably caused by me :)
-        // See ControlSurface::GoZone()
-        
-        //for(auto widget : widgets_)
-            //widget->ClearAllQueues();
     }
 
     virtual void ForceClearAllWidgets()
