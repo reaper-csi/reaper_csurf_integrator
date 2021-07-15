@@ -295,7 +295,7 @@ public:
         
         TheManager->AdjustSendSlotBank(context->GetPage(), context->GetIntParam());
         TheManager->AdjustReceiveSlotBank(context->GetPage(), context->GetIntParam());
-        TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetSurface(), context->GetIntParam());
+        //TheManager->AdjustFXMenuSlotBank(context->GetPage(), context->GetSurface(), context->GetIntParam());
     }
 };
 
