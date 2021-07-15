@@ -501,6 +501,14 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                     
                                     ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
                                     
+                                    // GAW HACK -- this somehow prevents Zone pointer vector issues WTF???
+                                    if(actionName == "GoSubZone")
+                                    {
+                                        for(int i = 0; i < 250; i++)
+                                            widget->QueueAction(1.0);
+                                    }
+                                    // -------------------------------------------------------------------
+
                                     if(action->isFeedbackInverted)
                                         context.SetIsFeedbackInverted();
                                     
@@ -2471,12 +2479,8 @@ void ControlSurface::GoZone(vector<Zone*> *activeZones, string zoneName, double 
         activeSelectedTrackFXMenuFXZones_.clear();
         activeFocusedFXZones_.clear();
         
-        // GAW TBD -- this should really be cleaned up after each pass
-        // but for now we will clean it up here
-        
         for(auto widget : widgets_)
             widget->ClearAllQueues();
-
         
         LoadDefaultZoneOrder();
         
