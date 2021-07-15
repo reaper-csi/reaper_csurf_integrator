@@ -2126,21 +2126,21 @@ void ControlSurface::UnmapSelectedTrackSendsSlotFromWidgets()
     for(auto zone : activeSelectedTrackSendsZones_)
         zone->Deactivate();
 
-    for(int i = 0; i < numChannels_; i ++)
+    for(int i = 0; i < numSends_; i ++)
     {
-        string trackNum = to_string(i + 1);
+        string sendNum = to_string(i + 1);
         
-        GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot" + trackNum, 0);
+        GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot" + sendNum, 0);
     }
 }
 
 void ControlSurface::MapSelectedTrackSendsSlotToWidgets()
 {
-    for(int i = 0; i < numChannels_; i ++)
+    for(int i = 0; i < numSends_; i ++)
     {
-        string trackNum = to_string(i + 1);
+        string sendNum = to_string(i + 1);
         
-        GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot" + trackNum, 1);
+        GoZone(&activeSelectedTrackSendsZones_, "SelectedTrackSendSlot" + sendNum, 1);
     }
 }
 
@@ -2185,21 +2185,21 @@ void ControlSurface::UnmapSelectedTrackReceivesSlotFromWidgets()
     for(auto zone : activeSelectedTrackReceivesZones_)
         zone->Deactivate();
 
-    for(int i = 0; i < numChannels_; i ++)
+    for(int i = 0; i < numSends_; i ++)
     {
-        string trackNum = to_string(i + 1);
+        string receiveNum = to_string(i + 1);
         
-        GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot" + trackNum, 0);
+        GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot" + receiveNum, 0);
     }
 }
 
 void ControlSurface::MapSelectedTrackReceivesSlotToWidgets()
 {
-    for(int i = 0; i < numChannels_; i ++)
+    for(int i = 0; i < numSends_; i ++)
     {
-        string trackNum = to_string(i + 1);
+        string receiveNum = to_string(i + 1);
         
-        GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot" + trackNum, 1);
+        GoZone(&activeSelectedTrackReceivesZones_, "SelectedTrackReceiveSlot" + receiveNum, 1);
     }
 }
 
