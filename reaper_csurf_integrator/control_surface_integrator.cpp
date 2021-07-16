@@ -504,7 +504,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                     // GAW HACK -- this somehow prevents Zone pointer vector issues WTF???
                                     if(actionName == "GoSubZone")
                                     {
-                                        for(int i = 0; i < 250; i++)
+                                        for(int i = 0; i < 25; i++)
                                             widget->QueueAction(1.0);
                                     }
                                     // -------------------------------------------------------------------
