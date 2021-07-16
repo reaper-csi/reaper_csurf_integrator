@@ -1632,10 +1632,10 @@ public:
         sendSlot_ += amount;
         
         if(sendSlot_ < 0)
-            sendSlot_ = maxSendSlot_;
+            sendSlot_ = 0;
         
         if(sendSlot_ > maxSendSlot_)
-            sendSlot_ = 0;
+            sendSlot_ = maxSendSlot_;
     }
     
     void AdjustReceiveSlotBank(int amount)
@@ -1643,10 +1643,10 @@ public:
         receiveSlot_ += amount;
         
         if(receiveSlot_ < 0)
-            receiveSlot_ = maxReceiveSlot_;
+            receiveSlot_ = 0;
         
         if(receiveSlot_ > maxReceiveSlot_)
-            receiveSlot_ = 0;
+            receiveSlot_ = maxReceiveSlot_;
     }
     
     void IncChannelBias(MediaTrack* track, int channelNum)
@@ -1776,11 +1776,17 @@ public:
             {
                 int maxSendSlot = DAW::GetTrackNumSends(track, 0) - 1;
                 if(maxSendSlot > maxSendSlot_)
+                {
                     maxSendSlot_ = maxSendSlot;
+                    AdjustSendSlotBank(0);
+                }
              
                 int maxReceiveSlot = DAW::GetTrackNumSends(track, -1) - 1;
                 if(maxReceiveSlot > maxReceiveSlot_)
+                {
                     maxReceiveSlot_ = maxReceiveSlot;
+                    AdjustReceiveSlotBank(0);
+                }
 
                 int maxFXMenuSlot = DAW::TrackFX_GetCount(track) - 1;
                 if(maxFXMenuSlot > maxFXMenuSlot_)
