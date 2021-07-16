@@ -501,6 +501,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                     
                                     ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
                                     
+                                    
                                     // GAW HACK -- this somehow prevents Zone pointer vector issues WTF???
                                     if(actionName == "GoSubZone")
                                     {
@@ -509,6 +510,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                     }
                                     // -------------------------------------------------------------------
 
+                                    
                                     if(action->isFeedbackInverted)
                                         context.SetIsFeedbackInverted();
                                     
