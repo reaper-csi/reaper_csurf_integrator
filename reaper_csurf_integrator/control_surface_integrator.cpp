@@ -494,6 +494,10 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             {
                                 for(auto action : actions)
                                 {
+                                    // GAW HACK to ensure only SubZone1, SubZone2, SubZone3, etc. get used to trigger GoSubZone
+                                    if(action->actionName == "GoSubZone" && widget->GetName().find("SubZone") == string::npos)
+                                        continue;
+                                    
                                     string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
                                     vector<string> memberParams;
                                     for(int j = 0; j < action->params.size(); j++)
@@ -2279,36 +2283,16 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     UnmapSelectedTrackFXFromMenu();
     
     // GAW TOTAL Hack to prevent crash
-    if(Widget* widget = GetWidgetByName("SubZone1"))
+    for(int i = 0; i < 100; i++)
     {
-        for(int i = 0; i < 10; i++)
-            widget->QueueAction(1.0);
+        string numStr = to_string(i + 1);
+        
+        if(Widget* widget = GetWidgetByName("SubZone" + numStr))
+        {
+            for(int i = 0; i < 10; i++)
+                widget->QueueAction(1.0);
+        }
     }
-
-    if(Widget* widget = GetWidgetByName("SubZone2"))
-    {
-        for(int i = 0; i < 10; i++)
-            widget->QueueAction(1.0);
-    }
-    
-    if(Widget* widget = GetWidgetByName("SubZone3"))
-    {
-        for(int i = 0; i < 10; i++)
-            widget->QueueAction(1.0);
-    }
-
-    if(Widget* widget = GetWidgetByName("SubZone4"))
-    {
-        for(int i = 0; i < 10; i++)
-            widget->QueueAction(1.0);
-    }
-    
-    if(Widget* widget = GetWidgetByName("SubZone5"))
-    {
-        for(int i = 0; i < 10; i++)
-            widget->QueueAction(1.0);
-    }
-    
 
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackFXMenu", GetNumFXSlots(), &activeSelectedTrackFXMenuZones_);
