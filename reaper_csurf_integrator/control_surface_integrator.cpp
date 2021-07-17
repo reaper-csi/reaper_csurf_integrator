@@ -2279,19 +2279,37 @@ void ControlSurface::MapSelectedTrackFXToMenu()
     UnmapSelectedTrackFXFromMenu();
     
     // GAW TOTAL Hack to prevent crash
-    if(Widget* widget = GetWidgetByName("ChannelLeft"))
+    if(Widget* widget = GetWidgetByName("SubZone1"))
     {
-        for(int i = 0; i < 25; i++)
+        for(int i = 0; i < 10; i++)
             widget->QueueAction(1.0);
     }
 
-    if(Widget* widget = GetWidgetByName("ChannelRight"))
+    if(Widget* widget = GetWidgetByName("SubZone2"))
     {
-        for(int i = 0; i < 25; i++)
+        for(int i = 0; i < 10; i++)
             widget->QueueAction(1.0);
     }
     
+    if(Widget* widget = GetWidgetByName("SubZone3"))
+    {
+        for(int i = 0; i < 10; i++)
+            widget->QueueAction(1.0);
+    }
+
+    if(Widget* widget = GetWidgetByName("SubZone4"))
+    {
+        for(int i = 0; i < 10; i++)
+            widget->QueueAction(1.0);
+    }
     
+    if(Widget* widget = GetWidgetByName("SubZone5"))
+    {
+        for(int i = 0; i < 10; i++)
+            widget->QueueAction(1.0);
+    }
+    
+
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackFXMenu", GetNumFXSlots(), &activeSelectedTrackFXMenuZones_);
 }
