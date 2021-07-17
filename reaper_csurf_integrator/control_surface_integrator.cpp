@@ -500,17 +500,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                         memberParams.push_back(regex_replace(action->params[j], regex("[|]"), numStr));
                                     
                                     ActionContext context = TheManager->GetActionContext(actionName, widget, zone, memberParams, action->properties);
-                                    
-                                    
-                                    // GAW HACK -- this somehow prevents Zone pointer vector issues WTF???
-                                    if(actionName == "GoSubZone")
-                                    {
-                                        for(int i = 0; i < 25; i++)
-                                            widget->QueueAction(1.0);
-                                    }
-                                    // -------------------------------------------------------------------
-
-                                    
+                                                                        
                                     if(action->isFeedbackInverted)
                                         context.SetIsFeedbackInverted();
                                     
@@ -2287,6 +2277,20 @@ void ControlSurface::UnmapSelectedTrackFXFromMenu()
 void ControlSurface::MapSelectedTrackFXToMenu()
 {
     UnmapSelectedTrackFXFromMenu();
+    
+    // GAW TOTAL Hack to prevent crash
+    if(Widget* widget = GetWidgetByName("ChannelLeft"))
+    {
+        for(int i = 0; i < 25; i++)
+            widget->QueueAction(1.0);
+    }
+
+    if(Widget* widget = GetWidgetByName("ChannelRight"))
+    {
+        for(int i = 0; i < 25; i++)
+            widget->QueueAction(1.0);
+    }
+    
     
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackFXMenu", GetNumFXSlots(), &activeSelectedTrackFXMenuZones_);
