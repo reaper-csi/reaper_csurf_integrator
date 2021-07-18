@@ -494,9 +494,16 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                             {
                                 for(auto action : actions)
                                 {
+                                    
+                                    
+                                    
+                                    #ifdef _WIN32
+                                    // GAW -- This hack is only needed for Mac OS
+                                    #else
                                     // GAW HACK to ensure only SubZone1, SubZone2, SubZone3, etc. get used to trigger GoSubZone
                                     if(action->actionName == "GoSubZone" && widget->GetName().find("SubZone") == string::npos)
                                         continue;
+                                    #endif
                                     
                                     string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
                                     vector<string> memberParams;
@@ -2282,6 +2289,11 @@ void ControlSurface::MapSelectedTrackFXToMenu()
 {
     UnmapSelectedTrackFXFromMenu();
     
+    
+    
+#ifdef _WIN32
+// GAW -- This hack is only needed for Mac OS
+#else
     // GAW TOTAL Hack to prevent crash
     for(int i = 0; i < 100; i++)
     {
@@ -2293,7 +2305,10 @@ void ControlSurface::MapSelectedTrackFXToMenu()
                 widget->QueueAction(1.0);
         }
     }
+#endif
 
+    
+    
     if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackFXMenu", GetNumFXSlots(), &activeSelectedTrackFXMenuZones_);
 }
