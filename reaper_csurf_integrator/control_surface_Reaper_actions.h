@@ -1715,7 +1715,7 @@ public:
             
             if(context->GetSurface()->GetIsEuConFXAreaFocused())
             {
-                if(track == context->GetTrackNavigationManager()->GetSelectedTrack())
+                if(track == context->GetPage()->GetSelectedTrack())
                     DAW::GetTrackName(track, buf, sizeof(buf));
                 else
                     buf[0] = 0;
@@ -2007,7 +2007,7 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         if(MediaTrack* track = context->GetTrack())
-            context->GetTrackNavigationManager()->ToggleVCASpill(track);
+            context->GetPage()->ToggleVCASpill(track);
     }
 };
 
@@ -2115,9 +2115,9 @@ public:
         int trackIndex = 0;
         
        
-        for(int i = 1; i <= context->GetTrackNavigationManager()->GetNumTracks(); i++)
+        for(int i = 1; i <= context->GetPage()->GetNumTracks(); i++)
         {
-            MediaTrack* currentTrack = context->GetTrackNavigationManager()->GetTrackFromId(i);
+            MediaTrack* currentTrack = context->GetPage()->GetTrackFromId(i);
            
             if(currentTrack == nullptr)
                 continue;
@@ -2140,7 +2140,7 @@ public:
 
         for(int i = lowerBound; i <= upperBound; i++)
         {
-            MediaTrack* currentTrack = context->GetTrackNavigationManager()->GetTrackFromId(i);
+            MediaTrack* currentTrack = context->GetPage()->GetTrackFromId(i);
             
             if(currentTrack == nullptr)
                 continue;
@@ -2148,7 +2148,7 @@ public:
             DAW::CSurf_SetSurfaceSelected(currentTrack, DAW::CSurf_OnSelectedChange(currentTrack, 1), NULL);
         }
         
-        MediaTrack* lowestTrack = context->GetTrackNavigationManager()->GetTrackFromId(lowerBound);
+        MediaTrack* lowestTrack = context->GetPage()->GetTrackFromId(lowerBound);
         
         if(lowestTrack != nullptr)
             context->GetPage()->OnTrackSelectionBySurface(lowestTrack);
