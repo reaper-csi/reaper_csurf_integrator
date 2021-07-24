@@ -343,13 +343,13 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     NavigationStyle navigationStyle = Standard;
                     
                     if(navigatorName == "")
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetDefaultNavigator());
+                        navigators.push_back(surface->GetPage()->GetDefaultNavigator());
                     if(navigatorName == "SelectedTrackNavigator")
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                        navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                     else if(navigatorName == "FocusedFXNavigator")
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetFocusedFXNavigator());
+                        navigators.push_back(surface->GetPage()->GetFocusedFXNavigator());
                     else if(navigatorName == "MasterTrackNavigator")
-                        navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetMasterTrackNavigator());
+                        navigators.push_back(surface->GetPage()->GetMasterTrackNavigator());
                     else if(navigatorName == "TrackNavigator")
                     {
                         for(int i = 0; i < surface->GetNumChannels(); i++)
@@ -358,17 +358,17 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     else if(navigatorName == "SelectedTrackSendNavigator")
                     {
                         for(int i = 0; i < surface->GetNumSendSlots(); i++)
-                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                     }
                     else if(navigatorName == "SelectedTrackReceiveNavigator")
                     {
                         for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
-                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                     }
                     else if(navigatorName == "SelectedTrackFXMenuNavigator")
                     {
                         for(int i = 0; i < surface->GetNumFXSlots(); i++)
-                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                     }
                     else if(navigatorName == "TrackSendSlotNavigator")
                     {
@@ -395,7 +395,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     {
                         for(int i = 0; i < surface->GetNumSendSlots(); i++)
                         {
-                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                             navigationStyle = SelectedTrackSendSlot;
                         }
                     }
@@ -403,7 +403,7 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                     {
                         for(int i = 0; i < surface->GetNumReceiveSlots(); i++)
                         {
-                            navigators.push_back(surface->GetPage()->GetTrackNavigationManager()->GetSelectedTrackNavigator());
+                            navigators.push_back(surface->GetPage()->GetSelectedTrackNavigator());
                             navigationStyle = SelectedTrackReceiveSlot;
                         }
                     }
@@ -1327,7 +1327,7 @@ MediaTrack* MasterTrackNavigator::GetTrack()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 MediaTrack* SelectedTrackNavigator::GetTrack()
 {
-    return page_->GetTrackNavigationManager()->GetSelectedTrack();
+    return page_->GetSelectedTrack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1343,79 +1343,6 @@ MediaTrack* FocusedFXNavigator::GetTrack()
         return DAW::GetTrack(trackNumber);
     else
         return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TrackNavigationManager
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TrackNavigationManager::ForceScrollLink()
-{
-    // Make sure selected track is visble on the control surface
-    MediaTrack* selectedTrack = GetSelectedTrack();
-    
-    if(selectedTrack != nullptr)
-    {
-        for(auto navigator : navigators_)
-            if(selectedTrack == navigator->GetTrack())
-                return;
-        
-        for(int i = 0; i < tracks_.size(); i++)
-            if(selectedTrack == tracks_[i])
-                trackOffset_ = i;
-        
-        trackOffset_ -= targetScrollLinkChannel_;
-        
-        if(trackOffset_ <  0)
-            trackOffset_ =  0;
-        
-        int top = GetNumTracks() - navigators_.size();
-        
-        if(trackOffset_ >  top)
-            trackOffset_ = top;
-    }
-}
-
-void TrackNavigationManager::OnTrackSelectionBySurface(MediaTrack* track)
-{
-    if(scrollLink_)
-    {
-        if(DAW::IsTrackVisible(track, true))
-            DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
-        
-        if(DAW::IsTrackVisible(track, false))
-            DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
-    }
-}
-
-void TrackNavigationManager::AdjustTrackBank(int amount)
-{
-    int numTracks = GetNumTracks();
-    
-    if(numTracks <= navigators_.size())
-        return;
-   
-    trackOffset_ += amount;
-    
-    if(trackOffset_ <  0)
-        trackOffset_ =  0;
-    
-    int top = numTracks - navigators_.size();
-    
-    if(trackOffset_ >  top)
-        trackOffset_ = top;
-}
-
-void TrackNavigationManager::AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount)
-{
-    fxMenuSlot_ += amount;
-    
-    if(fxMenuSlot_ < 0)
-        fxMenuSlot_ = maxFXMenuSlot_;
-    
-    if(fxMenuSlot_ > maxFXMenuSlot_)
-        fxMenuSlot_ = 0;
-    
-    page_->MapSelectedTrackFXMenuSlotToWidgets(originatingSurface, fxMenuSlot_);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1530,11 +1457,6 @@ Page* ActionContext::GetPage()
 ControlSurface* ActionContext::GetSurface()
 {
     return widget_->GetSurface();
-}
-
-TrackNavigationManager* ActionContext::GetTrackNavigationManager()
-{
-    return GetPage()->GetTrackNavigationManager();
 }
 
 MediaTrack* ActionContext::GetTrack()
@@ -1865,15 +1787,15 @@ int Zone::GetSlotIndex()
     if(navigationStyle_ == Standard)
         return slotIndex_;
     else if(navigationStyle_ == SendSlot)
-        return surface_->GetPage()->GetTrackNavigationManager()->GetSendSlot();
+        return surface_->GetPage()->GetSendSlot();
     else if(navigationStyle_ == ReceiveSlot)
-        return surface_->GetPage()->GetTrackNavigationManager()->GetReceiveSlot();
+        return surface_->GetPage()->GetReceiveSlot();
     else if(navigationStyle_ == FXMenuSlot)
-        return surface_->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot();
+        return surface_->GetPage()->GetFXMenuSlot();
     else if(navigationStyle_ == SelectedTrackSendSlot)
-        return slotIndex_ + surface_->GetPage()->GetTrackNavigationManager()->GetSendSlot();
+        return slotIndex_ + surface_->GetPage()->GetSendSlot();
     else if(navigationStyle_ == SelectedTrackReceiveSlot)
-        return slotIndex_ + surface_->GetPage()->GetTrackNavigationManager()->GetReceiveSlot();
+        return slotIndex_ + surface_->GetPage()->GetReceiveSlot();
     else
         return 0;
 }
@@ -2071,7 +1993,7 @@ void EuCon_FeedbackProcessorDB::ForceClear()
 ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
 {
     for(int i = 0; i < numChannels; i++)
-        navigators_[i] = GetPage()->GetTrackNavigationManager()->GetNavigatorForChannel(i + channelOffset);
+        navigators_[i] = GetPage()->GetNavigatorForChannel(i + channelOffset);
    
     LoadDefaultZoneOrder();
 }
@@ -2180,7 +2102,7 @@ void ControlSurface::MapSelectedTrackSendsToWidgets()
 {
     UnmapSelectedTrackSendsFromWidgets();
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    if(MediaTrack* track = GetPage()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackSend", GetNumSendSlots(), &activeSelectedTrackSendsZones_);
 }
 
@@ -2252,7 +2174,7 @@ void ControlSurface::MapSelectedTrackReceivesToWidgets()
 {
     UnmapSelectedTrackReceivesFromWidgets();
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    if(MediaTrack* track = GetPage()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackReceive", GetNumSendSlots(), &activeSelectedTrackReceivesZones_);
 }
 
@@ -2260,7 +2182,7 @@ void ControlSurface::UnmapTrackFXMenusSlotFromWidgets()
 {
     UnmapSelectedTrackReceivesFromWidgets();
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    if(MediaTrack* track = GetPage()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackReceive", GetNumSendSlots(), &activeSelectedTrackReceivesZones_);
 }
 
@@ -2309,7 +2231,7 @@ void ControlSurface::MapSelectedTrackFXToMenu()
 
     
     
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    if(MediaTrack* track = GetPage()->GetSelectedTrack())
         MapSelectedTrackItemsToWidgets(track, "SelectedTrackFXMenu", GetNumFXSlots(), &activeSelectedTrackFXMenuZones_);
 }
 
@@ -2338,7 +2260,7 @@ void ControlSurface::MapSelectedTrackFXToWidgets()
 {
     UnmapSelectedTrackFXFromWidgets();
     
-    if(MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+    if(MediaTrack* selectedTrack = GetPage()->GetSelectedTrack())
         for(int i = 0; i < DAW::TrackFX_GetCount(selectedTrack); i++)
             MapSelectedTrackFXSlotToWidgets(&activeSelectedTrackFXZones_, i);
 }
@@ -2354,7 +2276,7 @@ void ControlSurface::MapSelectedTrackFXMenuSlotToWidgets(int fxSlot)
 
 void ControlSurface::MapSelectedTrackFXSlotToWidgets(vector<Zone*> *activeZones, int fxSlot)
 {
-    MediaTrack* selectedTrack = GetPage()->GetTrackNavigationManager()->GetSelectedTrack();
+    MediaTrack* selectedTrack = GetPage()->GetSelectedTrack();
     
     if(selectedTrack == nullptr)
         return;
@@ -2419,7 +2341,7 @@ void ControlSurface::OnTrackSelection()
 {
     if(widgetsByName_.count("OnTrackSelection") > 0)
     {
-        if(page_->GetTrackNavigationManager()->GetSelectedTrack())
+        if(page_->GetSelectedTrack())
             widgetsByName_["OnTrackSelection"]->QueueAction(1.0);
         else
             widgetsByName_["OnTrackSelection"]->QueueAction(0.0);
@@ -2886,7 +2808,7 @@ void EuCon_ControlSurface::SendEuConMessage(string address, string value)
 
 void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip)
 {
-    if(MediaTrack* track = GetPage()->GetTrackNavigationManager()->GetTrackFromChannel(id))
+    if(MediaTrack* track = GetPage()->GetTrackFromChannel(id))
     {
         float left = VAL2DB(DAW::Track_GetPeakInfo(track, 0));
         float right = VAL2DB(DAW::Track_GetPeakInfo(track, 1));
