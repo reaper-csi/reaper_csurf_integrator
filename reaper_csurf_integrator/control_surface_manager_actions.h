@@ -21,7 +21,7 @@ public:
         if(value == 0.0) return; // ignore button releases
         
         if(MediaTrack* track = context->GetTrack())
-            context->GetTrackNavigationManager()->TogglePin(track);
+            context->GetPage()->TogglePin(track);
     }
 };
 
@@ -51,7 +51,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetPage()->GetTrackNavigationManager()->GetFXMenuSlot());
+        context->GetPage()->MapSelectedTrackFXMenuSlotToWidgets(context->GetSurface(), context->GetPage()->GetFXMenuSlot());
     }
 };
 
@@ -64,7 +64,7 @@ public:
 
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        return context->GetTrackNavigationManager()->GetScrollLink();
+        return context->GetPage()->GetScrollLink();
     }
     
     void RequestUpdate(ActionContext* context) override
@@ -76,7 +76,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetTrackNavigationManager()->ToggleScrollLink(context->GetIntParam());
+        context->GetPage()->ToggleScrollLink(context->GetIntParam());
     }
 };
 
@@ -91,7 +91,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetTrackNavigationManager()->ForceScrollLink();
+        context->GetPage()->ForceScrollLink();
     }
 };
 
@@ -104,7 +104,7 @@ public:
 
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        return context->GetTrackNavigationManager()->GetVCAMode();
+        return context->GetPage()->GetVCAMode();
     }
 
     void RequestUpdate(ActionContext* context) override
@@ -116,7 +116,7 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        context->GetTrackNavigationManager()->ToggleVCAMode();
+        context->GetPage()->ToggleVCAMode();
     }
 };
 
@@ -261,19 +261,19 @@ public:
     {
         if(value == 0.0) return; // ignore button releases
         
-        if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetSelectedTrack())
+        if(MediaTrack* selectedTrack = context->GetSurface()->GetPage()->GetSelectedTrack())
         {
-            int trackNum = context->GetSurface()->GetPage()->GetTrackNavigationManager()->GetIdFromTrack(selectedTrack);
+            int trackNum = context->GetSurface()->GetPage()->GetIdFromTrack(selectedTrack);
             
             trackNum += context->GetIntParam();
             
             if(trackNum < 1)
                 trackNum = 1;
             
-            if(trackNum > context->GetPage()->GetTrackNavigationManager()->GetNumTracks())
-                trackNum = context->GetPage()->GetTrackNavigationManager()->GetNumTracks();
+            if(trackNum > context->GetPage()->GetNumTracks())
+                trackNum = context->GetPage()->GetNumTracks();
             
-            if(MediaTrack* trackToSelect = context->GetPage()->GetTrackNavigationManager()->GetTrackFromId(trackNum))
+            if(MediaTrack* trackToSelect = context->GetPage()->GetTrackFromId(trackNum))
             {
                 DAW::SetOnlyTrackSelected(trackToSelect);
                 context->GetSurface()->OnTrackSelection();

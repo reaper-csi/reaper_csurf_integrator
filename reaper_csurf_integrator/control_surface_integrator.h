@@ -347,7 +347,6 @@ public:
     
     Page* GetPage();
     ControlSurface* GetSurface();
-    TrackNavigationManager* GetTrackNavigationManager();
     int GetParamIndex() { return paramIndex_; }
     
     bool GetSupportsRGB() { return supportsRGB_; }
@@ -1605,7 +1604,6 @@ public:
         delete defaultNavigator_;
     }
     
-    Page* GetPage() { return page_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     bool GetVCAMode() { return vcaMode_; }
@@ -1614,18 +1612,65 @@ public:
     Navigator* GetSelectedTrackNavigator() { return selectedTrackNavigator_; }
     Navigator* GetFocusedFXNavigator() { return focusedFXNavigator_; }
     Navigator* GetDefaultNavigator() { return defaultNavigator_; }
-
-    void ForceScrollLink();
-    void OnTrackSelectionBySurface(MediaTrack* track);
-    void AdjustTrackBank(int amount);
-    
-    void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount);
-    
     int GetSendSlot() { return sendSlot_; }
     int GetReceiveSlot() { return receiveSlot_; }
     int GetFXMenuSlot() { return fxMenuSlot_; }
+ 
+    void ForceScrollLink()
+    {
+        // Make sure selected track is visble on the control surface
+        MediaTrack* selectedTrack = GetSelectedTrack();
+        
+        if(selectedTrack != nullptr)
+        {
+            for(auto navigator : navigators_)
+                if(selectedTrack == navigator->GetTrack())
+                    return;
+            
+            for(int i = 0; i < tracks_.size(); i++)
+                if(selectedTrack == tracks_[i])
+                    trackOffset_ = i;
+            
+            trackOffset_ -= targetScrollLinkChannel_;
+            
+            if(trackOffset_ <  0)
+                trackOffset_ =  0;
+            
+            int top = GetNumTracks() - navigators_.size();
+            
+            if(trackOffset_ >  top)
+                trackOffset_ = top;
+        }
+    }
     
-    void SetFXMenuSlot(int fxMenuSlot) { fxMenuSlot_ = fxMenuSlot; }
+    void AdjustTrackBank(int amount)
+    {
+        int numTracks = GetNumTracks();
+        
+        if(numTracks <= navigators_.size())
+            return;
+       
+        trackOffset_ += amount;
+        
+        if(trackOffset_ <  0)
+            trackOffset_ =  0;
+        
+        int top = numTracks - navigators_.size();
+        
+        if(trackOffset_ >  top)
+            trackOffset_ = top;
+    }
+    
+    void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount)
+    {
+        fxMenuSlot_ += amount;
+        
+        if(fxMenuSlot_ < 0)
+            fxMenuSlot_ = maxFXMenuSlot_;
+        
+        if(fxMenuSlot_ > maxFXMenuSlot_)
+            fxMenuSlot_ = 0;
+    }
     
     void AdjustSendSlotBank(int amount)
     {
@@ -1637,7 +1682,7 @@ public:
         if(sendSlot_ > maxSendSlot_)
             sendSlot_ = maxSendSlot_;
     }
-    
+
     void AdjustReceiveSlotBank(int amount)
     {
         receiveSlot_ += amount;
@@ -1647,18 +1692,6 @@ public:
         
         if(receiveSlot_ > maxReceiveSlot_)
             receiveSlot_ = maxReceiveSlot_;
-    }
-    
-    void IncChannelBias(MediaTrack* track, int channelNum)
-    {
-        for(int i = channelNum + 1; i < navigators_.size(); i++)
-            navigators_[i]->IncBias();
-    }
-    
-    void DecChannelBias(MediaTrack* track, int channelNum)
-    {
-        for(int i = channelNum + 1; i < navigators_.size(); i++)
-            navigators_[i]->DecBias();
     }
     
     void TogglePin(MediaTrack* track)
@@ -1692,7 +1725,7 @@ public:
             vcaMode_ = true;
         }
     }
- 
+    
     Navigator* GetNavigatorForChannel(int channelNum)
     {
         if(channelNum < navigators_.size())
@@ -1718,11 +1751,53 @@ public:
         else
             return nullptr;
     }
-
+    
     int GetIdFromTrack(MediaTrack* track)
     {
         return DAW::CSurf_TrackToID(track, followMCP_);
     }
+    
+    void ToggleVCASpill(MediaTrack* track)
+    {
+        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) == vcaSpillTracks_.end())
+            vcaSpillTracks_.push_back(track);
+        else
+            vcaSpillTracks_.erase(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track));
+    }
+   
+    void ToggleScrollLink(int targetChannel)
+    {
+        targetScrollLinkChannel_ = targetChannel - 1 < 0 ? 0 : targetChannel - 1;
+        
+        scrollLink_ = ! scrollLink_;
+        
+        OnTrackSelection();
+    }
+    
+    MediaTrack* GetSelectedTrack()
+    {
+        if(DAW::CountSelectedTracks(NULL) != 1)
+            return nullptr;
+        
+        MediaTrack* track = nullptr;
+        
+        for(int i = 0; i <= GetNumTracks(); i++)
+        {
+            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
+            {
+                track = GetTrackFromId(i);
+                break;
+            }
+        }
+        
+        return track;
+    }
+    
+ 
+    
+//  Page only uses the following:
+    
+    void SetFXMenuSlot(int fxMenuSlot) { fxMenuSlot_ = fxMenuSlot; }
     
     void OnTrackSelection()
     {
@@ -1735,13 +1810,67 @@ public:
         if(scrollLink_)
             ForceScrollLink();
     }
-
-    void ToggleVCASpill(MediaTrack* track)
+    
+    void IncChannelBias(MediaTrack* track, int channelNum)
     {
-        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) == vcaSpillTracks_.end())
-            vcaSpillTracks_.push_back(track);
-        else
-            vcaSpillTracks_.erase(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track));
+        for(int i = channelNum + 1; i < navigators_.size(); i++)
+            navigators_[i]->IncBias();
+    }
+    
+    void DecChannelBias(MediaTrack* track, int channelNum)
+    {
+        for(int i = channelNum + 1; i < navigators_.size(); i++)
+            navigators_[i]->DecBias();
+    }
+
+    void OnTrackSelectionBySurface(MediaTrack* track)
+    {
+        if(scrollLink_)
+        {
+            if(DAW::IsTrackVisible(track, true))
+                DAW::SetMixerScroll(track); // scroll selected MCP tracks into view
+            
+            if(DAW::IsTrackVisible(track, false))
+                DAW::SendCommandMessage(40913); // scroll selected TCP tracks into view
+        }
+    }
+
+    bool GetIsControlTouched(MediaTrack* track, int touchedControl)
+    {
+        if(track == GetMasterTrackNavigator()->GetTrack())
+            return GetIsNavigatorTouched(GetMasterTrackNavigator(), touchedControl);
+        
+        for(auto navigator : navigators_)
+            if(track == navigator->GetTrack())
+                return GetIsNavigatorTouched(navigator, touchedControl);
+ 
+        if(MediaTrack* selectedTrack = GetSelectedTrack())
+             if(track == selectedTrack)
+                return GetIsNavigatorTouched(GetSelectedTrackNavigator(), touchedControl);
+        
+        if(MediaTrack* focusedFXTrack = GetFocusedFXNavigator()->GetTrack())
+            if(track == focusedFXTrack)
+                return GetIsNavigatorTouched(GetFocusedFXNavigator(), touchedControl);
+
+        return false;
+    }
+    
+    bool GetIsNavigatorTouched(Navigator* navigator,  int touchedControl)
+    {
+        if(touchedControl == 0)
+            return navigator->GetIsVolumeTouched();
+        else if(touchedControl == 1)
+        {
+            if(navigator->GetIsPanTouched() || navigator->GetIsPanLeftTouched())
+                return true;
+        }
+        else if(touchedControl == 2)
+        {
+            if(navigator->GetIsPanWidthTouched() || navigator->GetIsPanRightTouched())
+                return true;
+        }
+
+        return false;
     }
     
     // For vcaSpillTracks_.erase -- see Clean up vcaSpillTracks below
@@ -1749,7 +1878,7 @@ public:
     {
         return ! DAW::ValidateTrackPtr(track);
     }
-    
+
     void RebuildTrackList()
     {
         int top = GetNumTracks() - navigators_.size();
@@ -1832,44 +1961,6 @@ public:
         }
     }
     
-    bool GetIsControlTouched(MediaTrack* track, int touchedControl)
-    {
-        if(track == GetMasterTrackNavigator()->GetTrack())
-            return GetIsNavigatorTouched(GetMasterTrackNavigator(), touchedControl);
-        
-        for(auto navigator : navigators_)
-            if(track == navigator->GetTrack())
-                return GetIsNavigatorTouched(navigator, touchedControl);
- 
-        if(MediaTrack* selectedTrack = GetSelectedTrack())
-             if(track == selectedTrack)
-                return GetIsNavigatorTouched(GetSelectedTrackNavigator(), touchedControl);
-        
-        if(MediaTrack* focusedFXTrack = GetFocusedFXNavigator()->GetTrack())
-            if(track == focusedFXTrack)
-                return GetIsNavigatorTouched(GetFocusedFXNavigator(), touchedControl);
-
-        return false;
-    }
-    
-    bool GetIsNavigatorTouched(Navigator* navigator,  int touchedControl)
-    {
-        if(touchedControl == 0)
-            return navigator->GetIsVolumeTouched();
-        else if(touchedControl == 1)
-        {
-            if(navigator->GetIsPanTouched() || navigator->GetIsPanLeftTouched())
-                return true;
-        }
-        else if(touchedControl == 2)
-        {
-            if(navigator->GetIsPanWidthTouched() || navigator->GetIsPanRightTouched())
-                return true;
-        }
-
-        return false;
-    }
-    
     void EnterPage()
     {
         /*
@@ -1898,34 +1989,6 @@ public:
          }
          */
     }
-    
-    void ToggleScrollLink(int targetChannel)
-    {
-        targetScrollLinkChannel_ = targetChannel - 1 < 0 ? 0 : targetChannel - 1;
-        
-        scrollLink_ = ! scrollLink_;
-        
-        OnTrackSelection();
-    }
-    
-    MediaTrack* GetSelectedTrack()
-    {
-        if(DAW::CountSelectedTracks(NULL) != 1)
-            return nullptr;
-        
-        MediaTrack* track = nullptr;
-        
-        for(int i = 0; i <= GetNumTracks(); i++)
-        {
-            if(DAW::GetMediaTrackInfo_Value(GetTrackFromId(i), "I_SELECTED"))
-            {
-                track = GetTrackFromId(i);
-                break;
-            }
-        }
-        
-        return track;
-    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1946,11 +2009,9 @@ private:
     double altPressedTime_ = 0;
     
     TrackNavigationManager* const trackNavigationManager_ = nullptr;
-
-    Navigator* defaultNavigator_ = nullptr;
     
 public:
-    Page(string name, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : name_(name),  trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages, scrollLink, numChannels)), defaultNavigator_(new Navigator(this)) { }
+    Page(string name, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : name_(name),  trackNavigationManager_(new TrackNavigationManager(this, followMCP, synchPages, scrollLink, numChannels)) {}
     
     ~Page()
     {
@@ -1961,19 +2022,15 @@ public:
         }
         
         delete trackNavigationManager_;
-        delete defaultNavigator_;
     }
     
     string GetName() { return name_; }
-    TrackNavigationManager* GetTrackNavigationManager() { return trackNavigationManager_; }
     
     bool GetShift() { return isShift_; }
     bool GetOption() { return isOption_; }
     bool GetControl() { return isControl_; }
     bool GetAlt() { return isAlt_; }
-
-    Navigator* GetDefaultNavigator() { return defaultNavigator_; }
-    
+   
     void InitializeEuCon()
     {
         for(auto surface : surfaces_)
@@ -2403,6 +2460,35 @@ public:
         for(auto surface : surfaces_)
             surface->OnInitialization();
     }
+    
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Page facade for TrackNavigationManager
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    bool GetSynchPages() { return trackNavigationManager_->GetSynchPages(); }
+    bool GetScrollLink() { return trackNavigationManager_->GetScrollLink(); }
+    bool GetVCAMode() { return trackNavigationManager_->GetVCAMode(); }
+    int  GetNumTracks() { return trackNavigationManager_->GetNumTracks(); }
+    Navigator* GetMasterTrackNavigator() { return trackNavigationManager_->GetMasterTrackNavigator(); }
+    Navigator* GetSelectedTrackNavigator() { return trackNavigationManager_->GetSelectedTrackNavigator(); }
+    Navigator* GetFocusedFXNavigator() { return trackNavigationManager_->GetFocusedFXNavigator(); }
+    Navigator* GetDefaultNavigator() { return trackNavigationManager_->GetDefaultNavigator(); }
+    int GetSendSlot() { return trackNavigationManager_->GetSendSlot(); }
+    int GetReceiveSlot() { return trackNavigationManager_->GetReceiveSlot(); }
+    int GetFXMenuSlot() { return trackNavigationManager_->GetFXMenuSlot(); }
+    void ForceScrollLink() { trackNavigationManager_->ForceScrollLink(); }
+    void AdjustTrackBank(int amount) { trackNavigationManager_->AdjustTrackBank(amount); }
+    void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount) { trackNavigationManager_->AdjustFXMenuSlotBank(originatingSurface, amount); }
+    void AdjustSendSlotBank(int amount) { trackNavigationManager_->AdjustSendSlotBank(amount); }
+    void AdjustReceiveSlotBank(int amount) { trackNavigationManager_->AdjustReceiveSlotBank(amount); }
+    void TogglePin(MediaTrack* track) { trackNavigationManager_->TogglePin(track); }
+    void ToggleVCAMode() { trackNavigationManager_->ToggleVCAMode(); }
+    Navigator* GetNavigatorForChannel(int channelNum) { return trackNavigationManager_->GetNavigatorForChannel(channelNum); }
+    MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
+    MediaTrack* GetTrackFromId(int trackNumber) { return trackNavigationManager_->GetTrackFromId(trackNumber); }
+    int GetIdFromTrack(MediaTrack* track) { return trackNavigationManager_->GetIdFromTrack(track); }
+    void ToggleVCASpill(MediaTrack* track) { trackNavigationManager_->ToggleVCASpill(track); }
+    void ToggleScrollLink(int targetChannel) { trackNavigationManager_->ToggleScrollLink(targetChannel); }
+    MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2569,42 +2655,42 @@ public:
     
     void AdjustTrackBank(Page* sendingPage, int amount)
     {
-        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
-            sendingPage->GetTrackNavigationManager()->AdjustTrackBank(amount);
+        if(! sendingPage->GetSynchPages())
+            sendingPage->AdjustTrackBank(amount);
         else
             for(auto page: pages_)
-                if(page->GetTrackNavigationManager()->GetSynchPages())
-                    page->GetTrackNavigationManager()->AdjustTrackBank(amount);
+                if(page->GetSynchPages())
+                    page->AdjustTrackBank(amount);
     }
     
     void AdjustSendSlotBank(Page* sendingPage, int amount)
     {
-        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
-            sendingPage->GetTrackNavigationManager()->AdjustSendSlotBank(amount);
+        if(! sendingPage->GetSynchPages())
+            sendingPage->AdjustSendSlotBank(amount);
         else
             for(auto page: pages_)
-                if(page->GetTrackNavigationManager()->GetSynchPages())
-                    page->GetTrackNavigationManager()->AdjustSendSlotBank(amount);
+                if(page->GetSynchPages())
+                    page->AdjustSendSlotBank(amount);
     }
     
     void AdjustReceiveSlotBank(Page* sendingPage, int amount)
     {
-        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
-            sendingPage->GetTrackNavigationManager()->AdjustReceiveSlotBank(amount);
+        if(! sendingPage->GetSynchPages())
+            sendingPage->AdjustReceiveSlotBank(amount);
         else
             for(auto page: pages_)
-                if(page->GetTrackNavigationManager()->GetSynchPages())
-                    page->GetTrackNavigationManager()->AdjustReceiveSlotBank(amount);
+                if(page->GetSynchPages())
+                    page->AdjustReceiveSlotBank(amount);
     }
     
     void AdjustFXMenuSlotBank(Page* sendingPage, ControlSurface* originatingSurface, int amount)
     {
-        if(! sendingPage->GetTrackNavigationManager()->GetSynchPages())
-            sendingPage->GetTrackNavigationManager()->AdjustFXMenuSlotBank(originatingSurface, amount);
+        if(! sendingPage->GetSynchPages())
+            sendingPage->AdjustFXMenuSlotBank(originatingSurface, amount);
         else
             for(auto page: pages_)
-                if(page->GetTrackNavigationManager()->GetSynchPages())
-                    page->GetTrackNavigationManager()->AdjustFXMenuSlotBank(originatingSurface, amount);
+                if(page->GetSynchPages())
+                    page->AdjustFXMenuSlotBank(originatingSurface, amount);
     }
     
     void NextPage()
