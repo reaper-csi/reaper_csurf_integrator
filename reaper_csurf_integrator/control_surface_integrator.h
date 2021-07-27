@@ -51,7 +51,6 @@ const string ControlSurfaceIntegrator = "ControlSurfaceIntegrator";
 const string FollowMCPToken = "FollowMCP";
 const string MidiSurfaceToken = "MidiSurface";
 const string OSCSurfaceToken = "OSCSurface";
-const string EuConSurfaceToken = "EuConSurface";
 const string PageToken = "Page";
 
 const string Shift = "Shift";
@@ -90,35 +89,12 @@ static vector<string> GetTokens(string line)
     return tokens;
 }
 
-struct CSIWidgetInfo
-{
-    std::string group = "General";
-    int channelNumber = 0;
-    int sendNumber = 0;
-    bool isVisible = true;
-    std::string name = "";
-    std::string control = "";
-    std::string FB_Processor = "";
-    std::string touch = "";
-    
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor) : CSIWidgetInfo(aName, aControl, aFB_Processor, "General", 0, 0, true) {}
-    
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aGroup, aChannelNumber, 0, isVisible) {}
-    
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aTouchName, std::string aGroup, int aChannelNumber, bool isVisible) :  CSIWidgetInfo(aName, aControl, aFB_Processor, aTouchName, aGroup, aChannelNumber, 0, isVisible) {}
-    
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
-    
-    CSIWidgetInfo(std::string aName, std::string aControl, std::string aFB_Processor, std::string aTouchName, std::string aGroup, int aChannelNumber, int aSendNumber, bool itemIsVisible) :  name(aName), control(aControl), FB_Processor(aFB_Processor), touch(aTouchName), group(aGroup), channelNumber(aChannelNumber), sendNumber(aSendNumber), isVisible(itemIsVisible) {}
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSurfIntegrator;
 class Page;
 class ControlSurface;
 class Midi_ControlSurface;
 class OSC_ControlSurface;
-class EuCon_ControlSurface;
 class Widget;
 class TrackNavigationManager;
 class FeedbackProcessor;
@@ -915,37 +891,6 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EuCon_FeedbackProcessor : public FeedbackProcessor
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-protected:
-    EuCon_ControlSurface* const surface_ = nullptr;
-    string address_ = "";
-    
-public:
-    
-    EuCon_FeedbackProcessor(EuCon_ControlSurface* surface, Widget* widget, string address) : FeedbackProcessor(widget), surface_(surface), address_(address) {}
-    ~EuCon_FeedbackProcessor() {}
-
-    virtual void ForceValue(double value) override;
-    virtual void ForceValue(int param, double value) override;
-    virtual void ForceValue(string value) override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EuCon_FeedbackProcessorDB : public EuCon_FeedbackProcessor
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-public:
-    
-    EuCon_FeedbackProcessorDB(EuCon_ControlSurface* surface, Widget* widget, string address) : EuCon_FeedbackProcessor(surface, widget, address) {}
-    ~EuCon_FeedbackProcessorDB() {}
-    
-    virtual void Clear() override;
-    virtual void ForceClear() override;
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class ControlSurface
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
@@ -1110,7 +1055,7 @@ public:
     void GoSubZone(Zone* enclosingZone, string zoneName, double value);
     virtual void LoadingZone(string zoneName) {}
     virtual void HandleExternalInput() {}
-    virtual void InitializeEuCon() {}
+
     virtual void UpdateTimeDisplay() {}
 
     virtual bool GetIsEuConFXAreaFocused() { return false; }
@@ -1425,127 +1370,6 @@ public:
                 }
             }
         }
-    }
-};
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// For EuCon_ControlSurface
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class WidgetGroup
-{
-private:
-    bool isVisible_ = false;
-    
-    vector<Widget*> widgets_;
-    map<string, WidgetGroup*> subGroups_;
-    
-public:
-    ~WidgetGroup()
-    {
-        for(auto [key, group] : subGroups_)
-        {
-            delete group;
-            group = nullptr;
-        }
-    }
-    
-    void SetIsVisible(bool isVisible)
-    {
-        isVisible_ = isVisible;
-    }
-    
-    void SetIsVisible(string subgroupName, bool isVisible)
-    {
-        if(subGroups_.count(subgroupName) > 0)
-           subGroups_[subgroupName]->SetIsVisible(isVisible);
-    }
-
-    void AddWidget(Widget* widget)
-    {
-        widgets_.push_back(widget);
-    }
-    
-    void AddWidgetToSubgroup(string subgroupName, Widget* widget)
-    {
-        if(subGroups_.count(subgroupName) < 1)
-            subGroups_[subgroupName] = new WidgetGroup();
-        
-        subGroups_[subgroupName]->AddWidget(widget);
-    }
-};
-
-typedef struct PeakInfoStruct
-{
-    double timePeakSet;
-    float peakValue;
-    bool isClipping;
-} PeakInfo;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class EuCon_ControlSurface : public ControlSurface
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-{
-private:
-    bool isEuConFXAreaFocused_ = false;
-    double previousPP = 0.0;
-    
-    vector<Widget*> generalWidgets_;
-    map<int, WidgetGroup*> channelGroups_;
-    
-    Widget* InitializeEuConWidget(CSIWidgetInfo &widgetInfo);
-    
-    map<int, PeakInfo> peakInfo_;
-    
-protected:
-    virtual void InitHardwiredWidgets() override
-    {
-        ControlSurface::InitHardwiredWidgets();
-        // Add the "hardwired" widgets
-        AddWidget(new Widget(this, "OnEuConFXAreaGainedFocus"));
-        AddWidget(new Widget(this, "OnEuConFXAreaLostFocus"));
-    }
-    
-public:
-    EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset);
-    
-    virtual ~EuCon_ControlSurface()
-    {
-        for(auto [key, group] : channelGroups_)
-        {
-            delete group;
-            group = nullptr;
-        }
-    }
-    
-    virtual string GetSourceFileName() override { return "EuCon"; }
-    
-    virtual bool GetIsEuConFXAreaFocused() override { return isEuConFXAreaFocused_; }
-
-    virtual void InitializeEuCon() override;
-    virtual void InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems);
-    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value);
-    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value, int param);
-    void SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value);
-    void SendEuConMessage(string address, string value);
-    void HandleEuConMessage(string address, double value);
-    void HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible);
-    void HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip);
-    void HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize);
-    virtual void UpdateTimeDisplay() override;
-
-    virtual void ForceRefreshTimeDisplay() override
-    {
-        previousPP = 0.5;
     }
 };
 
@@ -2030,13 +1854,7 @@ public:
     bool GetOption() { return isOption_; }
     bool GetControl() { return isControl_; }
     bool GetAlt() { return isAlt_; }
-   
-    void InitializeEuCon()
-    {
-        for(auto surface : surfaces_)
-            surface->InitializeEuCon();
-    }
-    
+
     void GoZone(ControlSurface* originator, string zoneName, double value)
     {
         originator->GoZone(zoneName, value);
@@ -2793,12 +2611,6 @@ public:
                 }
             }
         }
-    }
-
-    void InitializeEuCon()
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->InitializeEuCon();
     }
     
     //int repeats = 0;
