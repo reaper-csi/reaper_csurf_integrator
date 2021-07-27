@@ -648,94 +648,6 @@ static WDL_DLGRET dlgProcOSCSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
     return 0 ;
 }
 
-static WDL_DLGRET dlgProcEuConSurface(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-        case WM_INITDIALOG:
-        {
-            string resourcePath(DAW::GetResourcePath());
-            for(auto foldername : FileSystem::GetDirectoryFolderNames(resourcePath + "/CSI/Zones/"))
-                if(foldername[0] != '.')
-                    AddComboEntry(hwndDlg, 0, (char *)foldername.c_str(), IDC_COMBO_ZoneTemplates);
-            
-            if(editMode)
-            {
-                SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name);
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, to_string(numChannels).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_ChannelOffset, to_string(channelOffset).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, to_string(numSends).c_str());
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, to_string(numFX).c_str());
-                
-                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)zoneTemplateFolder);
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-            }
-            else
-            {
-                SetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, "EuCon");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, "8");
-                SetDlgItemText(hwndDlg, IDC_EDIT_ChannelOffset, "0");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumSends, "8");
-                SetDlgItemText(hwndDlg, IDC_EDIT_NumFX, "8");
-
-                int index = SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_FINDSTRINGEXACT, -1, (LPARAM)"EuCon");
-                if(index >= 0)
-                    SendMessage(GetDlgItem(hwndDlg, IDC_COMBO_ZoneTemplates), CB_SETCURSEL, index, 0);
-            }
-        }
-            break;
-        
-        case WM_COMMAND:
-        {
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                    {
-                        GetDlgItemText(hwndDlg, IDC_EDIT_EuConSurfaceName, name, sizeof(name));
-
-                        char buf[BUFSZ];
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumChannels, buf, sizeof(buf));
-                        numChannels = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumSends, buf, sizeof(buf));
-                        numSends = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_ChannelOffset, buf, sizeof(buf));
-                        channelOffset = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_EDIT_NumFX, buf, sizeof(buf));
-                        numFX = atoi(buf);
-                        
-                        GetDlgItemText(hwndDlg, IDC_COMBO_ZoneTemplates, zoneTemplateFolder, sizeof(zoneTemplateFolder));
-
-                        dlgResult = IDOK;
-                        EndDialog(hwndDlg, 0);
-                    }
-                    break ;
-                    
-                case IDCANCEL:
-                    if (HIWORD(wParam) == BN_CLICKED)
-                        EndDialog(hwndDlg, 0);
-                    break ;
-            }
-        }
-            break ;
-
-        case WM_CLOSE:
-            DestroyWindow(hwndDlg) ;
-            break ;
-            
-        case WM_DESTROY:
-            EndDialog(hwndDlg, 0);
-            break;
-    }
-    
-    return 0 ;
-}
-
 static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
@@ -865,34 +777,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         }
                         break ;
                         
-                    case IDC_BUTTON_AddEuConSurface:
-                        if (HIWORD(wParam) == BN_CLICKED)
-                        {
-                            int index = SendDlgItemMessage(hwndDlg, IDC_LIST_Pages, LB_GETCURSEL, 0, 0);
-                            if (index >= 0)
-                            {
-                                dlgResult = false;
-                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface2), hwndDlg, dlgProcEuConSurface);
-                                if(dlgResult == IDOK)
-                                {
-                                    SurfaceLine* surface = new SurfaceLine();
-                                    surface->type = EuConSurfaceToken;
-                                    surface->name = name;
-                                    surface->zoneTemplateFolder = zoneTemplateFolder;
-                                    surface->numChannels = numChannels;
-                                    surface->channelOffset = channelOffset;
-                                    surface->numSends = numSends;
-                                    surface->numFX = numFX;
-
-                                    pages[pageIndex]->surfaces.push_back(surface);
-                                    
-                                    AddListEntry(hwndDlg, name, IDC_LIST_Surfaces);
-                                    SendMessage(GetDlgItem(hwndDlg, IDC_LIST_Surfaces), LB_SETCURSEL,  pages[pageIndex]->surfaces.size() - 1, 0);
-                                }
-                            }
-                        }
-                        break ;
-                        
                     case IDC_BUTTON_EditPage:
                         if (HIWORD(wParam) == BN_CLICKED)
                         {
@@ -949,9 +833,7 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                     DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface), hwndDlg, dlgProcMidiSurface);
                                 else if(pages[pageIndex]->surfaces[index]->type == OSCSurfaceToken)
                                     DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface1), hwndDlg, dlgProcOSCSurface);
-                                else if(pages[pageIndex]->surfaces[index]->type == EuConSurfaceToken)
-                                    DialogBox(g_hInst, MAKEINTRESOURCE(IDD_DIALOG_MidiSurface2), hwndDlg, dlgProcEuConSurface);
-                                
+                                                               
                                 if(dlgResult == IDOK)
                                 {
                                     pages[pageIndex]->surfaces[index]->name = name;
@@ -1034,11 +916,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                             numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                     }
-                    else if(tokens[0] == EuConSurfaceToken && tokens.size() == 11)
-                    {
-                        if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
-                            numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
-                    }
                 }
             }
             
@@ -1086,7 +963,8 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                         
                         AddListEntry(hwndDlg, page->name, IDC_LIST_Pages);
                     }
-                    else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
+                    
+                    else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                     {
                         SurfaceLine* surface = new SurfaceLine();
                         surface->type = tokens[0];
@@ -1108,14 +986,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                                 surface->remoteDeviceIP = tokens[10];
 
                         }
-                        else if(surface->type == EuConSurfaceToken && tokens.size() == 7 )
-                        {
-                            surface->zoneTemplateFolder = tokens[2];
-                            surface->numChannels = atoi(tokens[3].c_str());
-                            surface->numSends = atoi(tokens[4].c_str());
-                            surface->numFX = atoi(tokens[5].c_str());
-                            surface->channelOffset = atoi(tokens[6].c_str());
-                         }
                         
                         if(pages.size() > 0)
                             pages[pages.size() - 1]->surfaces.push_back(surface);
@@ -1182,14 +1052,6 @@ static WDL_DLGRET dlgProcMainConfig(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
                             
                             if(surface->type == OSCSurfaceToken)
                                 line += " " + surface->remoteDeviceIP + " ";
-                        }
-                        else if(surface->type == EuConSurfaceToken)
-                        {
-                            line += "\"" + surface->zoneTemplateFolder + "\" ";
-                            line += to_string(surface->numChannels) + " " ;
-                            line += to_string(surface->numSends) + " " ;
-                            line += to_string(surface->numFX) + " " ;
-                            line += to_string(surface->channelOffset) + " " ;
                         }
 
                         line += GetLineEnding();
