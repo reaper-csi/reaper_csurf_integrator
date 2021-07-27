@@ -7,7 +7,6 @@
 #define IDD_SURFACEEDIT_CSI             265
 #define IDD_DIALOG_MidiSurface          268
 #define IDD_DIALOG_MidiSurface1         269
-#define IDD_DIALOG_MidiSurface2         270
 #define IDC_EDIT_PageName               1003
 #define IDC_CHECK_ColourTracks          1008
 #define IDC_CHECK_SynchPages            1009
@@ -27,18 +26,15 @@
 #define IDC_RADIO_MCP                   1036
 #define IDC_BUTTON_AddOSCSurface        1036
 #define IDC_RADIO_TCP                   1037
-#define IDC_BUTTON_AddEuConSurface      1037
 #define IDC_EDIT_OSCSurfaceName         1039
 #define IDC_CHECK_ScrollLink            1040
 #define IDC_EDIT_OSCRemoteDeviceIP      1041
 #define IDC_EDIT_OSCOutPort             1043
 #define IDC_EDIT_OSCInPort              1045
-#define IDC_EDIT_EuConSurfaceName       1084
 #define IDC_EDIT_NumChannels            1085
 #define IDC_EDIT_NumSends               1086
 #define IDC_EDIT_NumFX                  1087
 #define IDC_EDIT_ChannelOffset          1088
-
 
 // Next default values for new objects
 // 
