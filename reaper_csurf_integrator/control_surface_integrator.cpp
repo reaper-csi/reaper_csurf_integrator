@@ -505,6 +505,8 @@ static void ProcessZoneFile(string filePath, ControlSurface* surface)
                                         continue;
                                     #endif
                                     
+                                    
+                                    
                                     string actionName = regex_replace(action->actionName, regex("[|]"), numStr);
                                     vector<string> memberParams;
                                     for(int j = 0; j < action->params.size(); j++)
@@ -1201,11 +1203,6 @@ void Manager::Init()
                     if(atoi(tokens[6].c_str()) + atoi(tokens[9].c_str()) > numChannels )
                         numChannels = atoi(tokens[6].c_str()) + atoi(tokens[9].c_str());
                 }
-                else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
-                {
-                    if(atoi(tokens[3].c_str()) + atoi(tokens[6].c_str()) > numChannels )
-                        numChannels = atoi(tokens[3].c_str()) + atoi(tokens[6].c_str());
-                }
             }
         }
         
@@ -1229,16 +1226,13 @@ void Manager::Init()
                     currentPage = new Page(tokens[1], tokens[2] == "FollowMCP" ? true : false, tokens[3] == "SynchPages" ? true : false, tokens[4] == "UseScrollLink" ? true : false, numChannels);
                     pages_.push_back(currentPage);
                 }
-                else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken || tokens[0] == EuConSurfaceToken)
+                else if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
                 {
                     int inPort = 0;
                     int outPort = 0;
                     
-                    if(tokens[0] == MidiSurfaceToken || tokens[0] == OSCSurfaceToken)
-                    {
-                        inPort = atoi(tokens[2].c_str());
-                        outPort = atoi(tokens[3].c_str());
-                    }
+                    inPort = atoi(tokens[2].c_str());
+                    outPort = atoi(tokens[3].c_str());
                     
                     if(currentPage)
                     {
@@ -1248,8 +1242,6 @@ void Manager::Init()
                             surface = new Midi_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetMidiInputForPort(inPort), GetMidiOutputForPort(outPort));
                         else if(tokens[0] == OSCSurfaceToken && tokens.size() == 11)
                             surface = new OSC_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[4], tokens[5], atoi(tokens[6].c_str()), atoi(tokens[7].c_str()), atoi(tokens[8].c_str()), atoi(tokens[9].c_str()), GetInputSocketForPort(tokens[1], inPort), GetOutputSocketForAddressAndPort(tokens[1], tokens[10], outPort));
-                        else if(tokens[0] == EuConSurfaceToken && tokens.size() == 7)
-                            surface = new EuCon_ControlSurface(CSurfIntegrator_, currentPage, tokens[1], tokens[2], atoi(tokens[3].c_str()), atoi(tokens[4].c_str()), atoi(tokens[5].c_str()), atoi(tokens[6].c_str()));
 
                         currentPage->AddSurface(surface);
                     }
@@ -1952,42 +1944,6 @@ void OSC_FeedbackProcessor::ForceValue(string value)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// EuCon_FeedbackProcessor
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessor::ForceValue(double value)
-{
-    lastDoubleValue_ = value;
-    surface_->SendEuConMessage(this, address_, value);
-}
-
-void EuCon_FeedbackProcessor::ForceValue(int param, double value)
-{
-    lastDoubleValue_ = value;
-    surface_->SendEuConMessage(this, address_, value, param);
-}
-
-void EuCon_FeedbackProcessor::ForceValue(string value)
-{
-    lastStringValue_ = value;
-    surface_->SendEuConMessage(this, address_, value);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// EuCon_FeedbackProcessorDB
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void EuCon_FeedbackProcessorDB::Clear()
-{
-    if(lastDoubleValue_ != -100.0)
-        ForceClear();
-}
-
-void EuCon_FeedbackProcessorDB::ForceClear()
-{
-    lastDoubleValue_ = -100.0;
-    surface_->SendEuConMessage(this, address_, -100.0);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ControlSurface
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 ControlSurface::ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset):  CSurfIntegrator_(CSurfIntegrator), page_(page), name_(name), zoneFolder_(zoneFolder), numChannels_(numChannels), numSends_(numSends), numFXSlots_(numFX)
@@ -2610,380 +2566,6 @@ void OSC_ControlSurface::SendOSCMessage(OSC_FeedbackProcessor* feedbackProcessor
     
     SurfaceOutMonitor(feedbackProcessor->GetWidget(), oscAddress, value);
     
-}
-
-/////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-// For EuCon
-
-void EuConRequestsInitialization()
-{
-    if(TheManager)
-        TheManager->InitializeEuCon();
-}
-
-void InitializeEuConWidgets(EuCon_ControlSurface* surface, vector<CSIWidgetInfo> *assemblyInfoItems)
-{
-    surface->InitializeEuConWidgets(assemblyInfoItems);
-}
-
-void HandleEuConMessageWithDouble(EuCon_ControlSurface* surface, const char *address, double value)
-{
-    surface->HandleEuConMessage(string(address), value);
-}
-
-void HandleEuConGroupVisibilityChange(EuCon_ControlSurface* surface, const char *groupName, int channelNumber, bool isVisible)
-{
-    surface->HandleEuConGroupVisibilityChange(string(groupName), channelNumber, isVisible);
-}
-
-void HandleEuConGetMeterValues(EuCon_ControlSurface* surface, int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip)
-{
-    surface->HandleEuConGetMeterValues(id, iLeg, oLevel, oPeak, oLegClip);
-}
-
-void HandleEuConGetFormattedFXParamValue(EuCon_ControlSurface* surface, const char* address, char *buffer, int bufferSize)
-{
-    surface->HandleEuConGetFormattedFXParamValue(address, buffer, bufferSize);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// EuCon_ControlSurface
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-EuCon_ControlSurface::EuCon_ControlSurface(CSurfIntegrator* CSurfIntegrator, Page* page, const string name, string zoneFolder, int numChannels, int numSends, int numFX, int channelOffset)
-: ControlSurface(CSurfIntegrator, page, name, zoneFolder, numChannels, numSends, numFX, channelOffset)
-{
-    if( ! plugin_register("API_EuConRequestsInitialization", (void *)::EuConRequestsInitialization))
-        LOG::InitializationFailure("EuConRequestsInitialization failed to register");
-
-    if( ! plugin_register("API_InitializeEuConWidgets", (void *)::InitializeEuConWidgets))
-        LOG::InitializationFailure("InitializeEuConWidgets failed to register");
-   
-    if( ! plugin_register("API_HandleEuConMessageWithDouble", (void *)::HandleEuConMessageWithDouble))
-        LOG::InitializationFailure("HandleEuConMessageWithDouble failed to register");
-    
-    if( ! plugin_register("API_HandleEuConGroupVisibilityChange", (void *)::HandleEuConGroupVisibilityChange))
-        LOG::InitializationFailure("HandleEuConGroupVisibilityChange failed to register");
-    
-    if( ! plugin_register("API_HandleEuConGetMeterValues", (void *)::HandleEuConGetMeterValues))
-        LOG::InitializationFailure("HandleEuConGetMeterValues failed to register");
-    
-    if( ! plugin_register("API_HandleEuConGetFormattedFXParamValue", (void *)::HandleEuConGetFormattedFXParamValue))
-        LOG::InitializationFailure("HandleEuConGetFormattedFXParamValue failed to register");
-    
-    InitializeEuCon();
-}
-
-void EuCon_ControlSurface::InitializeEuCon()
-{
-    static void (*InitializeEuConWithParameters)(EuCon_ControlSurface* surface, int numChannels, int numSends, int numFX, int panOptions) = nullptr;
-
-    if(g_reaper_plugin_info && InitializeEuConWithParameters == nullptr)
-        InitializeEuConWithParameters = (void (*)(EuCon_ControlSurface*, int, int, int, int))g_reaper_plugin_info->GetFunc("InitializeEuConWithParameters");
-
-    int panOptions = TheManager->GetProjectPanMode() == 6 ? 2 : 1;
-    
-    if(InitializeEuConWithParameters)
-        InitializeEuConWithParameters(this, numChannels_, numSends_, GetNumFXSlots(), panOptions);
-}
-
-Widget*  EuCon_ControlSurface::InitializeEuConWidget(CSIWidgetInfo &widgetInfo)
-{
-    if(widgetInfo.name != "")
-    {
-        Widget* widget = new Widget(this, widgetInfo.name);
-        
-        if(!widget)
-            return nullptr;
-        
-        if(widgetInfo.control != "")
-            new CSIMessageGenerator(this, widget, widgetInfo.control);
-        
-        if(widgetInfo.touch != "")
-            new Touch_CSIMessageGenerator(this, widget, widgetInfo.touch);
-        
-        if(widgetInfo.FB_Processor != "")
-        {
-            if(widgetInfo.FB_Processor.find("FaderDB") != string::npos)
-                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessorDB(this, widget, widgetInfo.FB_Processor));
-            else
-                widget->AddFeedbackProcessor(new EuCon_FeedbackProcessor(this, widget, widgetInfo.FB_Processor));
-        }
-        
-        return widget;
-    }
-    
-    return nullptr;
-}
-
-void EuCon_ControlSurface::InitializeEuConWidgets(vector<CSIWidgetInfo> *widgetInfoItems)
-{
-    for(auto item : *widgetInfoItems)
-    {
-        if(Widget* widget = InitializeEuConWidget(item))
-        {
-            AddWidget(widget);
-            
-            if(item.channelNumber > 0 && channelGroups_.count(item.channelNumber) < 1 )
-                channelGroups_[item.channelNumber] = new WidgetGroup();
-
-            if(item.group == "General")
-                generalWidgets_.push_back(widget);
-            
-            if(channelGroups_.count(item.channelNumber) > 0)
-            {
-                if(item.group == "Channel")
-                    channelGroups_[item.channelNumber]->AddWidget(widget);
-                else
-                    channelGroups_[item.channelNumber]->AddWidgetToSubgroup(item.group, widget);
-            }
-        }
-    }
-    
-    InitHardwiredWidgets();
-    InitZones(zoneFolder_);
-    MakeHomeDefault();
-    ForceClearAllWidgets();
-    GetPage()->ForceRefreshTimeDisplay();
-}
-
-void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value)
-{
-    static void (*HandleReaperMessageWthDouble)(const char *, double) = nullptr;
-    
-    if(g_reaper_plugin_info && HandleReaperMessageWthDouble == nullptr)
-        HandleReaperMessageWthDouble = (void (*)(const char *, double))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthDouble");
-    
-    if(HandleReaperMessageWthDouble)
-        HandleReaperMessageWthDouble(address.c_str(), value);
-    
-    SurfaceOutMonitor(feedbackProcessor->GetWidget(), address, to_string(value));
-}
-
-void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, double value, int param)
-{
-    static void (*HandleReaperMessageWthParam)(const char *, double, int) = nullptr;
-    
-    if(g_reaper_plugin_info && HandleReaperMessageWthParam == nullptr)
-        HandleReaperMessageWthParam = (void (*)(const char *, double, int))g_reaper_plugin_info->GetFunc("HandleReaperMessageWthParam");
-    
-    if(HandleReaperMessageWthParam)
-        HandleReaperMessageWthParam(address.c_str(), value, param);
-    
-    SurfaceOutMonitor(feedbackProcessor->GetWidget(), address, to_string(value));
-}
-
-void EuCon_ControlSurface::SendEuConMessage(EuCon_FeedbackProcessor* feedbackProcessor, string address, string value)
-{
-    if(address.find("Pan_Display") != string::npos
-       || address.find("Width_Display") != string::npos
-       || address.find("PanL_Display") != string::npos
-       || address.find("PanR_Display") != string::npos)
-    {
-        return; // GAW -- Hack to prevent overwrite of Pan, Width, etc. labels
-    }
-    
-    static void (*HandleReaperMessageWthString)(const char *, const char *) = nullptr;
-    
-    if(g_reaper_plugin_info && HandleReaperMessageWthString == nullptr)
-        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
-    
-    if(HandleReaperMessageWthString)
-        HandleReaperMessageWthString(address.c_str(), value.c_str());
-    
-    if(TheManager->GetSurfaceOutDisplay())
-        DAW::ShowConsoleMsg(("OUT-> " + name_ + " " + address + " " + value + "\n").c_str());
-}
-
-void EuCon_ControlSurface::SendEuConMessage(string address, string value)
-{
-    static void (*HandleReaperMessageWthString)(const char *, const char *) = nullptr;
-    
-    if(g_reaper_plugin_info && HandleReaperMessageWthString == nullptr)
-        HandleReaperMessageWthString = (void (*)(const char *, const char *))g_reaper_plugin_info->GetFunc("HandleReaperMessageWithString");
-    
-    if(HandleReaperMessageWthString)
-        HandleReaperMessageWthString(address.c_str(), value.c_str());
-}
-
-void EuCon_ControlSurface::HandleEuConGetMeterValues(int id, int iLeg, float* oLevel, float* oPeak, bool* oLegClip)
-{
-    if(MediaTrack* track = GetPage()->GetTrackFromChannel(id))
-    {
-        float left = VAL2DB(DAW::Track_GetPeakInfo(track, 0));
-        float right = VAL2DB(DAW::Track_GetPeakInfo(track, 1));
-        
-        *oLevel = (left + right) / 2.0;
-       
-        float max = left > right ? left : right;
-        
-        if(peakInfo_.count(id) > 0 && peakInfo_[id].peakValue < max)
-        {
-            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
-            peakInfo_[id].peakValue = max;
-            if(max > 0.0)
-                peakInfo_[id].isClipping = true;
-        }
-        
-        if(peakInfo_.count(id) < 1)
-        {
-            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
-            peakInfo_[id].peakValue = max;
-            if(max > 0.0)
-                peakInfo_[id].isClipping = true;
-        }
-        
-        if(peakInfo_.count(id) > 0 && (DAW::GetCurrentNumberOfMilliseconds() - peakInfo_[id].timePeakSet > 2000))
-        {
-            peakInfo_[id].timePeakSet  = DAW::GetCurrentNumberOfMilliseconds();
-            peakInfo_[id].peakValue = max;
-            peakInfo_[id].isClipping = false;
-        }
-        
-        *oPeak = peakInfo_[id].peakValue;
-        *oLegClip = peakInfo_[id].isClipping;
-    }
-    else
-    {
-        *oLevel = -144.0;
-        *oPeak = -144.0;
-        *oLegClip = false;
-    }
-}
-
-void EuCon_ControlSurface::HandleEuConGetFormattedFXParamValue(const char* address, char *buffer, int bufferSize)
-{
-    if(widgetsByName_.count(address) > 0)
-        widgetsByName_[address]->GetFormattedFXParamValue(buffer, bufferSize);
-}
-
-void EuCon_ControlSurface::HandleEuConGroupVisibilityChange(string groupName, int channelNumber, bool isVisible)
-{
-    if(groupName == "FX")
-    {
-        
-        if(isVisible && widgetsByName_.count("OnEuConFXAreaGainedFocus") > 0)
-        {
-            isEuConFXAreaFocused_ = true;
-            widgetsByName_["OnEuConFXAreaGainedFocus"]->QueueAction(1.0);
-        }
-        
-        if( ! isVisible && widgetsByName_.count("OnEuConFXAreaLostFocus") > 0)
-        {
-            isEuConFXAreaFocused_ = false;
-            widgetsByName_["OnEuConFXAreaLostFocus"]->QueueAction(1.0);
-        }
-    }
-    
-    if(groupName == "FX")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("FX", isVisible);
-    
-    if(groupName == "Pan")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("Pan", isVisible);
-    
-    else if(groupName == "Send")
-        for(auto [channel, group] : channelGroups_)
-            group->SetIsVisible("Send", isVisible);
-    
-    else if(groupName == "Channel" && channelGroups_.count(channelNumber) > 0)
-        channelGroups_[channelNumber]->SetIsVisible(isVisible);
-}
-
-void EuCon_ControlSurface::HandleEuConMessage(string address, double value)
-{
-    if(address == "PostMessage" && g_hwnd != nullptr)
-        PostMessage(g_hwnd, WM_COMMAND, (int)value, 0);
-    else if(address == "LayoutChanged")
-        DAW::MarkProjectDirty(nullptr);
-    else if(CSIMessageGeneratorsByMessage_.count(address) > 0)
-        CSIMessageGeneratorsByMessage_[address]->ProcessMessage(value);
-        
-    if(TheManager->GetSurfaceInDisplay())
-    {
-        char buffer[250];
-        snprintf(buffer, sizeof(buffer), "IN <- %s %s  %f  \n", name_.c_str(), address.c_str(), value);
-        DAW::ShowConsoleMsg(buffer);
-    }
-}
-
-void EuCon_ControlSurface::UpdateTimeDisplay()
-{
-    double playPosition = (GetPlayState() & 1 ) ? GetPlayPosition() : GetCursorPosition();
-    
-    if(previousPP != playPosition) // GAW :) Yeah I know shouldn't compare FP values, but the worst you get is an extra update or two, meh.
-    {
-        previousPP = playPosition;
-
-        int *timeModePtr = TheManager->GetTimeMode2Ptr(); // transport
-        
-        int timeMode = 0;
-        
-        if (timeModePtr && (*timeModePtr) >= 0)
-            timeMode = *timeModePtr;
-        else
-        {
-            timeModePtr = TheManager->GetTimeModePtr(); // ruler
-            
-            if (timeModePtr)
-                timeMode = *timeModePtr;
-        }
-        
-        char samplesBuf[64];
-        memset(samplesBuf, 0, sizeof(samplesBuf));
-        char measuresBuf[64];
-        memset(measuresBuf, 0, sizeof(measuresBuf));
-        char chronoBuf[64];
-        memset(chronoBuf, 0, sizeof(chronoBuf));
-
-        if(timeMode == 4)  // Samples
-        {
-            format_timestr_pos(playPosition, samplesBuf, sizeof(samplesBuf), timeMode);
-        }
-        
-        if(timeMode == 1 || timeMode == 2)  // Bars/Beats/Ticks
-        {
-            int num_measures = 0;
-            double beats = TimeMap2_timeToBeats(NULL, playPosition, &num_measures, NULL, NULL, NULL) + 0.000000000001;
-            double nbeats = floor(beats);
-            beats -= nbeats;
-            format_timestr_pos(playPosition, measuresBuf, sizeof(measuresBuf), 2);
-        }
-        
-        if(timeMode == 0 || timeMode == 1 || timeMode == 3  ||  timeMode == 5)  // Hours/Minutes/Seconds/Frames
-        {
-            double *timeOffsetPtr = TheManager->GetTimeOffsPtr();
-            if (timeOffsetPtr)
-                playPosition += (*timeOffsetPtr);
-            format_timestr_pos(playPosition, chronoBuf, sizeof(chronoBuf), timeMode == 1 ? 0 : timeMode);
-        }
-        
-        switch(timeMode)
-        {
-            case 0: // Hours/Minutes/Seconds
-            case 3: // Seconds
-            case 5: // Hours/Minutes/Seconds/Frames
-                SendEuConMessage("PrimaryTimeDisplay", chronoBuf);
-                SendEuConMessage("SecondaryTimeDisplay", "");
-                break;
-                
-            case 1:
-                SendEuConMessage("PrimaryTimeDisplay", measuresBuf);
-                SendEuConMessage("SecondaryTimeDisplay", chronoBuf);
-                break;
-                
-            case 2:
-                SendEuConMessage("PrimaryTimeDisplay", measuresBuf);
-                SendEuConMessage("SecondaryTimeDisplay", "");
-                break;
-                
-            case 4:
-                SendEuConMessage("PrimaryTimeDisplay", samplesBuf);
-                SendEuConMessage("SecondaryTimeDisplay", "");
-                break;
-        }
-    }
 }
 
 void Midi_ControlSurface::InitializeMCU()
