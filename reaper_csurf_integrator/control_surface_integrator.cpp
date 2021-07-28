@@ -13,6 +13,8 @@
 
 extern reaper_plugin_info_t *g_reaper_plugin_info;
 
+WDL_Mutex WDL_mutex;
+
 string GetLineEnding()
 {
 #ifdef WIN32
@@ -1821,6 +1823,84 @@ Widget::~Widget()
         feedbackProcessor = nullptr;
     }
 };
+
+
+void Widget::HandleQueuedActions(Zone* zone)
+{
+    vector<double> queuedActionValues;
+    vector<double> queuedRelativeActionValues;
+    vector<QueuedAcceleratedRelativeAction> queuedAcceleratedRelativeActionValues;
+    vector<double> queuedTouchActionValues;
+
+    WDL_mutex.Enter();
+    
+    for(auto value : queuedActionValues_)
+        queuedActionValues.push_back(value);
+    queuedActionValues_.clear();
+
+    for(auto delta : queuedRelativeActionValues_)
+        queuedRelativeActionValues.push_back(delta);
+    queuedRelativeActionValues_.clear();
+
+    for(auto acceleratedRelativeAction : queuedAcceleratedRelativeActionValues_)
+        queuedAcceleratedRelativeActionValues.push_back(acceleratedRelativeAction);
+    queuedAcceleratedRelativeActionValues_.clear();
+
+    for(auto value : queuedTouchActionValues_)
+        queuedTouchActionValues.push_back(value);
+    queuedTouchActionValues_.clear();
+
+    WDL_mutex.Leave();
+    
+
+    for(auto value : queuedActionValues)
+        zone->DoAction(this, value);
+        
+    for(auto delta : queuedRelativeActionValues)
+        zone->DoRelativeAction(this, delta);
+     
+    for(auto acceleratedRelativeAction : queuedAcceleratedRelativeActionValues)
+        zone->DoRelativeAction(this, acceleratedRelativeAction.index, acceleratedRelativeAction.delta);
+
+    for(auto value : queuedTouchActionValues)
+        zone->DoTouch(this, name_, value);
+}
+
+void Widget::QueueAction(double value)
+{
+    LogInput(value);
+    
+    WDL_mutex.Enter();
+    queuedActionValues_.push_back(value);
+    WDL_mutex.Leave();
+}
+
+void Widget::QueueRelativeAction(double delta)
+{
+    LogInput(delta);
+    
+    WDL_mutex.Enter();
+    queuedRelativeActionValues_.push_back(delta);
+    WDL_mutex.Leave();
+}
+
+void Widget::QueueRelativeAction(int accelerationIndex, double delta)
+{
+    LogInput(accelerationIndex);
+    
+    WDL_mutex.Enter();
+    queuedAcceleratedRelativeActionValues_.push_back(QueuedAcceleratedRelativeAction(accelerationIndex, delta));
+    WDL_mutex.Leave();
+}
+
+void Widget::QueueTouch(double value)
+{
+    LogInput(value);
+    
+    WDL_mutex.Enter();
+    queuedTouchActionValues_.push_back(value);
+    WDL_mutex.Leave();
+}
 
 void Widget::SetProperties(vector<vector<string>> properties)
 {
