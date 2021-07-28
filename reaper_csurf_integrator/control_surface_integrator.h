@@ -667,6 +667,12 @@ public:
     void Clear();
     void ForceClear();
 
+    void HandleQueuedActions(Zone* zone);
+    void QueueAction(double value);
+    void QueueRelativeAction(double delta);
+    void QueueRelativeAction(int accelerationIndex, double delta);
+    void QueueTouch(double value);
+
     void GetFormattedFXParamValue(char *buffer, int bufferSize)
     {
         //currentWidgetContext_.GetFormattedFXParamValue(buffer, bufferSize);
@@ -680,53 +686,6 @@ public:
         queuedTouchActionValues_.clear();
     }
     
-    void HandleQueuedActions(Zone* zone)
-    {
-        for(auto value : queuedActionValues_)
-            zone->DoAction(this, value);
-        queuedActionValues_.clear();
-            
-        for(auto delta : queuedRelativeActionValues_)
-            zone->DoRelativeAction(this, delta);
-        queuedRelativeActionValues_.clear();
-         
-        for(auto acceleratedRelativeAction : queuedAcceleratedRelativeActionValues_)
-            zone->DoRelativeAction(this, acceleratedRelativeAction.index, acceleratedRelativeAction.delta);
-        queuedAcceleratedRelativeActionValues_.clear();
-
-        for(auto value : queuedTouchActionValues_)
-            zone->DoTouch(this, name_, value);
-        queuedTouchActionValues_.clear();
-    }
-    
-    void QueueAction(double value)
-    {
-        LogInput(value);
-        
-        queuedActionValues_.push_back(value);
-    }
-    
-    void QueueRelativeAction(double delta)
-    {
-        LogInput(delta);
-        
-        queuedRelativeActionValues_.push_back(delta);
-    }
-    
-    void QueueRelativeAction(int accelerationIndex, double delta)
-    {
-        LogInput(accelerationIndex);
-        
-        queuedAcceleratedRelativeActionValues_.push_back(QueuedAcceleratedRelativeAction(accelerationIndex, delta));
-    }
-   
-    void QueueTouch(double value)
-    {
-        LogInput(value);
-        
-        queuedTouchActionValues_.push_back(value);
-    }
-
     void AddFeedbackProcessor(FeedbackProcessor* feedbackProcessor)
     {
         feedbackProcessors_.push_back(feedbackProcessor);
