@@ -1312,6 +1312,7 @@ private:
     int savedTrackOffset_ = 0;
     int savedVCAOffset_ = 0;
     vector<MediaTrack*> tracks_;
+    vector<MediaTrack*> selectedTracks_;
     vector<MediaTrack*> vcaSpillTracks_;
     vector<Navigator*> navigators_;
     Navigator* const masterTrackNavigator_ = nullptr;
@@ -1355,6 +1356,7 @@ public:
         delete defaultNavigator_;
     }
     
+    vector<MediaTrack*> &GetSelectedTracks() { return selectedTracks_; }
     bool GetSynchPages() { return synchPages_; }
     bool GetScrollLink() { return scrollLink_; }
     bool GetVCAMode() { return vcaMode_; }
@@ -1672,6 +1674,7 @@ public:
             trackOffset_ = top;
 
         tracks_.clear();
+        selectedTracks_.clear();
         maxSendSlot_ = 0;
         maxReceiveSlot_ = 0;
         maxFXMenuSlot_ = 0;
@@ -1703,6 +1706,9 @@ public:
                 int maxFXMenuSlot = DAW::TrackFX_GetCount(track) - 1;
                 if(maxFXMenuSlot > maxFXMenuSlot_)
                     maxFXMenuSlot_ = maxFXMenuSlot;
+                
+                if(DAW::GetMediaTrackInfo_Value(track, "I_SELECTED"))
+                    selectedTracks_.push_back(track);
                 
                 if(vcaMode_)
                 {
@@ -2266,9 +2272,10 @@ public:
     void ToggleVCASpill(MediaTrack* track) { trackNavigationManager_->ToggleVCASpill(track); }
     void ToggleScrollLink(int targetChannel) { trackNavigationManager_->ToggleScrollLink(targetChannel); }
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
-    void SetAutoModeIndex() { trackNavigationManager_->SetAutoModeIndex();   }
-    void NextAutoMode() { trackNavigationManager_->NextAutoMode();   }
-    string GetAutoModeDisplayName() { return trackNavigationManager_->GetAutoModeDisplayName();   }
+    void SetAutoModeIndex() { trackNavigationManager_->SetAutoModeIndex(); }
+    void NextAutoMode() { trackNavigationManager_->NextAutoMode(); }
+    string GetAutoModeDisplayName() { return trackNavigationManager_->GetAutoModeDisplayName(); }
+    vector<MediaTrack*> &GetSelectedTracks() { return trackNavigationManager_->GetSelectedTracks(); }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
