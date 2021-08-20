@@ -2336,15 +2336,18 @@ public:
 
     virtual double GetCurrentNormalizedValue(ActionContext* context) override
     {
-        if(MediaTrack* track = context->GetTrack())
+        double retVal = 0.0;
+        
+        for(auto selectedTrack : context->GetPage()->GetSelectedTracks())
         {
-            if(context->GetIntParam() == DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE"))
-                return 1.0;
-            else
-                return 0.0;
+            if(context->GetIntParam() == DAW::GetMediaTrackInfo_Value(selectedTrack, "I_AUTOMODE"))
+            {
+                retVal = 1.0;
+                break;
+            }
         }
-        else
-            return 0.0;
+
+        return retVal;
     }
 
     virtual void RequestUpdate(ActionContext* context) override
@@ -2357,14 +2360,10 @@ public:
         if(value == 0.0)
             return; // ignore button releases
         
-        
-        
         int mode = context->GetIntParam();
         
-        if(MediaTrack* track = context->GetTrack())
-            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &mode);
-        
-        
+        for(auto selectedTrack : context->GetPage()->GetSelectedTracks())
+            DAW::GetSetMediaTrackInfo(selectedTrack, "I_AUTOMODE", &mode);
     }
 };
 
