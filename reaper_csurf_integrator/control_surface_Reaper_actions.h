@@ -2357,10 +2357,14 @@ public:
         if(value == 0.0)
             return; // ignore button releases
         
+        
+        
         int mode = context->GetIntParam();
         
         if(MediaTrack* track = context->GetTrack())
             DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &mode);
+        
+        
     }
 };
 
@@ -2373,9 +2377,9 @@ public:
 
     virtual void RequestUpdate(ActionContext* context) override
     {
-        context->SetAutoModeIndex();
+        context->GetPage()->SetAutoModeIndex();
      
-        context->UpdateWidgetValue(context->GetAutoModeDisplayName());
+        context->UpdateWidgetValue(context->GetPage()->GetAutoModeDisplayName());
     }
     
     virtual void Do(ActionContext* context, double value) override
@@ -2383,7 +2387,7 @@ public:
         if(value == 0.0)
             return;
         
-        context->NextAutoMode();
+        context->GetPage()->NextAutoMode();
     }
 };
 
@@ -2396,9 +2400,9 @@ public:
     
     virtual void RequestUpdate(ActionContext* context) override
     {
-        context->SetAutoModeIndex();
+        context->GetPage()->SetAutoModeIndex();
         
-        context->UpdateWidgetValue(context->GetAutoModeDisplayName());
+        context->UpdateWidgetValue(context->GetPage()->GetAutoModeDisplayName());
     }
 };
 

@@ -288,10 +288,7 @@ private:
     int currentRGBIndex_ = 0;
     
     bool supportsTrackColor_ = false;
-    
-    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
-    int autoModeIndex_ = 0;
-    
+        
     bool noFeedback_ = false;
     
     vector<vector<string>> properties_;
@@ -341,38 +338,6 @@ public:
     void UpdateWidgetValue(int param, double value);
     void UpdateWidgetValue(string value);
     void ForceWidgetValue(double value);
-
-    void SetAutoModeIndex()
-    {
-        if(MediaTrack* track = GetTrack())
-            autoModeIndex_ = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
-    }
-    
-    void NextAutoMode()
-    {
-        if(MediaTrack* track = GetTrack())
-        {
-            if(autoModeIndex_ == 2) // skip over write mode when cycling
-                autoModeIndex_ += 2;
-            else
-                autoModeIndex_++;
-            
-            if(autoModeIndex_ > autoModeDisplayNames__.size() - 1)
-                autoModeIndex_ = 0;
-    
-            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoModeIndex_);
-        }
-    }
-    
-    string GetAutoModeDisplayName()
-    {
-        int globalOverride = DAW::GetGlobalAutomationOverride();
-
-        if(globalOverride > -1) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
-            return autoModeDisplayNames__[globalOverride];
-        else
-            return autoModeDisplayNames__[autoModeIndex_];
-    }
     
     void DoTouch(double value)
     {
@@ -1362,6 +1327,9 @@ private:
     int maxReceiveSlot_ = 0;
     int maxFXMenuSlot_ = 0;
     
+    vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
+    int autoModeIndex_ = 0;
+    
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
     masterTrackNavigator_(new MasterTrackNavigator(page_)),
@@ -1398,7 +1366,39 @@ public:
     int GetSendSlot() { return sendSlot_; }
     int GetReceiveSlot() { return receiveSlot_; }
     int GetFXMenuSlot() { return fxMenuSlot_; }
- 
+    
+    void SetAutoModeIndex()
+    {
+        if(MediaTrack* track =  GetSelectedTrackNavigator()->GetTrack())
+            autoModeIndex_ = DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE");
+    }
+    
+    void NextAutoMode()
+    {
+        if(MediaTrack* track = GetSelectedTrackNavigator()->GetTrack())
+        {
+            if(autoModeIndex_ == 2) // skip over write mode when cycling
+                autoModeIndex_ += 2;
+            else
+                autoModeIndex_++;
+            
+            if(autoModeIndex_ > autoModeDisplayNames__.size() - 1)
+                autoModeIndex_ = 0;
+    
+            DAW::GetSetMediaTrackInfo(track, "I_AUTOMODE", &autoModeIndex_);
+        }
+    }
+    
+    string GetAutoModeDisplayName()
+    {
+        int globalOverride = DAW::GetGlobalAutomationOverride();
+
+        if(globalOverride > -1) // -1=no override, 0=trim/read, 1=read, 2=touch, 3=write, 4=latch, 5=bypass
+            return autoModeDisplayNames__[globalOverride];
+        else
+            return autoModeDisplayNames__[autoModeIndex_];
+    }
+
     void ForceScrollLink()
     {
         // Make sure selected track is visble on the control surface
@@ -2266,6 +2266,9 @@ public:
     void ToggleVCASpill(MediaTrack* track) { trackNavigationManager_->ToggleVCASpill(track); }
     void ToggleScrollLink(int targetChannel) { trackNavigationManager_->ToggleScrollLink(targetChannel); }
     MediaTrack* GetSelectedTrack() { return trackNavigationManager_->GetSelectedTrack(); }
+    void SetAutoModeIndex() { trackNavigationManager_->SetAutoModeIndex();   }
+    void NextAutoMode() { trackNavigationManager_->NextAutoMode();   }
+    string GetAutoModeDisplayName() { return trackNavigationManager_->GetAutoModeDisplayName();   }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
