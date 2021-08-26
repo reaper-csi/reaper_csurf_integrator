@@ -1401,6 +1401,11 @@ public:
             return autoModeDisplayNames__[autoModeIndex_];
     }
 
+    string GetAutoModeDisplayName(int modeIndex)
+    {
+        return autoModeDisplayNames__[modeIndex];
+    }
+
     void ForceScrollLink()
     {
         // Make sure selected track is visble on the control surface
@@ -2275,6 +2280,7 @@ public:
     void SetAutoModeIndex() { trackNavigationManager_->SetAutoModeIndex(); }
     void NextAutoMode() { trackNavigationManager_->NextAutoMode(); }
     string GetAutoModeDisplayName() { return trackNavigationManager_->GetAutoModeDisplayName(); }
+    string GetAutoModeDisplayName(int modeIndex) { return trackNavigationManager_->GetAutoModeDisplayName(modeIndex); }
     vector<MediaTrack*> &GetSelectedTracks() { return trackNavigationManager_->GetSelectedTracks(); }
 };
 
