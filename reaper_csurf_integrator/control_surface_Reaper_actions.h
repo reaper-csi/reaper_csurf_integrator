@@ -2399,9 +2399,8 @@ public:
     
     virtual void RequestUpdate(ActionContext* context) override
     {
-        context->GetPage()->SetAutoModeIndex();
-        
-        context->UpdateWidgetValue(context->GetPage()->GetAutoModeDisplayName());
+        if(MediaTrack* track = context->GetTrack())
+            context->UpdateWidgetValue(context->GetPage()->GetAutoModeDisplayName(DAW::GetMediaTrackInfo_Value(track, "I_AUTOMODE")));
     }
 };
 
