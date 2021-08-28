@@ -960,6 +960,42 @@ public:
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class TrackSendStereoMonoToggle : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "TrackSendStereoMonoToggle"; }
+    
+    virtual double GetCurrentNormalizedValue(ActionContext* context) override
+    {
+        if(MediaTrack* track = context->GetTrack())
+            return DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "B_MONO");
+        else
+            return 0.0;
+    }
+    
+    virtual void RequestUpdate(ActionContext* context) override
+    {
+        if(context->GetTrack())
+            context->UpdateWidgetValue(GetCurrentNormalizedValue(context));
+        else
+            context->ClearWidget();
+    }
+    
+    virtual void Do(ActionContext* context, double value) override
+    {
+        if(value == 0.0) return; // ignore button releases
+        
+        if(MediaTrack* track = context->GetTrack())
+        {
+            bool reversed = ! DAW::GetTrackSendInfo_Value(track, 0, context->GetSlotIndex(), "B_MONO");
+            
+            DAW::GetSetTrackSendInfo(track, 0, context->GetSlotIndex(), "B_MONO", &reversed);
+        }
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TrackSendPrePost : public Action
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
