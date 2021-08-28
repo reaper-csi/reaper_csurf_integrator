@@ -1071,6 +1071,8 @@ void Manager::InitActionsDictionary()
     actions_["SetReceiveMapTrackReceivesSlotToWidgets"] =       new SetReceiveMapTrackReceivesSlotToWidgets();
     actions_["SetBroadcastMapTrackFXMenusSlotToWidgets"] =      new SetBroadcastMapTrackFXMenusSlotToWidgets();
     actions_["SetReceiveMapTrackFXMenusSlotToWidgets"] =        new SetReceiveMapTrackFXMenusSlotToWidgets();
+    actions_["SetBroadcastMapFocusedFXToWidgets"] =             new SetBroadcastMapFocusedFXToWidgets();
+    actions_["SetReceiveMapFocusedFXToWidgets"] =               new SetReceiveMapFocusedFXToWidgets();
     actions_["TrackBank"] =                             new TrackBank();
     actions_["SelectedTrackBank"] =                     new SelectedTrackBank();
     actions_["SendSlotBank"] =                          new SendSlotBank();
@@ -1152,6 +1154,7 @@ void Manager::InitActionsDictionary()
     actions_["TrackSendPanPercent"] =               new TrackSendPanPercent();
     actions_["TrackSendMute"] =                     new TrackSendMute();
     actions_["TrackSendInvertPolarity"] =           new TrackSendInvertPolarity();
+    actions_["TrackSendStereoMonoToggle"] =         new TrackSendStereoMonoToggle();
     actions_["TrackSendPrePost"] =                  new TrackSendPrePost();
     actions_["TrackSendNameDisplay"] =              new TrackSendNameDisplay();
     actions_["TrackSendVolumeDisplay"] =            new TrackSendVolumeDisplay();

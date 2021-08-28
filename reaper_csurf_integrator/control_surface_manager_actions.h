@@ -699,9 +699,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value == 0 && context->GetWidget()->GetName() == "OnFXFocus")
-            context->GetSurface()->UnmapFocusedFXFromWidgets();
+            context->GetPage()->UnmapFocusedFXFromWidgets(context->GetSurface());
         else if(value)
-            context->GetSurface()->MapFocusedFXToWidgets();
+            context->GetPage()->MapFocusedFXToWidgets(context->GetSurface());
     }
 };
 
@@ -715,10 +715,9 @@ public:
     void Do(ActionContext* context, double value) override
     {
         if(value)
-            context->GetSurface()->UnmapFocusedFXFromWidgets();
+            context->GetPage()->UnmapFocusedFXFromWidgets(context->GetSurface());
     }
 };
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class SetBroadcastGoZone : public Action
@@ -954,5 +953,30 @@ public:
     }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetBroadcastMapFocusedFXToWidgets : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "SetBroadcastMapFocusedFXToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        context->GetSurface()->SetBroadcastMapFocusedFXToWidgets();
+    }
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class SetReceiveMapFocusedFXToWidgets : public Action
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+{
+public:
+    virtual string GetName() override { return "SetReceiveMapFocusedFXToWidgets"; }
+    
+    void Do(ActionContext* context, double value) override
+    {
+        context->GetSurface()->SetReceiveMapFocusedFXToWidgets();
+    }
+};
 
 #endif /* control_surface_manager_actions_h */

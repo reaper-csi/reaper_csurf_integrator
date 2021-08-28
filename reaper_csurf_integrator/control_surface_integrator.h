@@ -879,6 +879,8 @@ protected:
     bool shouldReceiveMapTrackReceivesSlotToWidgets_ = false;
     bool shouldBroadcastMapTrackFXMenusSlotToWidgets_ = false;
     bool shouldReceiveMapTrackFXMenusSlotToWidgets_ = false;
+    bool shouldBroadcastMapFocusedFXToWidgets_ = false;
+    bool shouldReceiveMapFocusedFXToWidgets_ = false;
 
     map<int, Navigator*> navigators_;
     
@@ -1040,6 +1042,12 @@ public:
     virtual void SetReceiveMapTrackFXMenusSlotToWidgets() { shouldReceiveMapTrackFXMenusSlotToWidgets_ = true; }
     virtual bool GetReceiveMapTrackFXMenusSlotToWidgets() { return shouldReceiveMapTrackFXMenusSlotToWidgets_; }
    
+    virtual void SetBroadcastMapFocusedFXToWidgets() { shouldBroadcastMapFocusedFXToWidgets_ = true; }
+    virtual bool GetBroadcastMapFocusedFXToWidgets() { return shouldBroadcastMapFocusedFXToWidgets_; }
+
+    virtual void SetReceiveMapFocusedFXToWidgets() { shouldReceiveMapFocusedFXToWidgets_ = true; }
+    virtual bool GetReceiveMapFocusedFXToWidgets() { return shouldReceiveMapFocusedFXToWidgets_; }
+    
     void MakeHomeDefault()
     {
         homeZone_ = GetZone("Home");
@@ -1937,6 +1945,16 @@ public:
                     surface->MapSelectedTrackReceivesSlotToWidgets();
     }
     
+    void MapFocusedFXToWidgets(ControlSurface* originator)
+    {
+        originator->MapFocusedFXToWidgets();
+        
+        if(originator->GetBroadcastMapFocusedFXToWidgets())
+            for(auto surface : surfaces_)
+                if(surface != originator && surface->GetReceiveMapFocusedFXToWidgets())
+                    surface->MapFocusedFXToWidgets();
+    }
+        
     void UnmapSelectedTrackSendsFromWidgets(ControlSurface* originator)
     {
         originator->UnmapSelectedTrackSendsFromWidgets();
@@ -2026,8 +2044,17 @@ public:
                 if(surface != originator && surface->GetReceiveMapTrackReceivesSlotToWidgets())
                     surface->UnmapSelectedTrackReceivesSlotFromWidgets();
     }
-
     
+    void UnmapFocusedFXFromWidgets(ControlSurface* originator)
+    {
+        originator->UnmapFocusedFXFromWidgets();
+        
+        if(originator->GetBroadcastMapFocusedFXToWidgets())
+            for(auto surface : surfaces_)
+                if(surface != originator && surface->GetReceiveMapFocusedFXToWidgets())
+                    surface->UnmapFocusedFXFromWidgets();
+    }
+           
     /*
     int repeats = 0;
     
