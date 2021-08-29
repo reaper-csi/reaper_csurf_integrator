@@ -780,7 +780,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapSelectedTrackSendsToWidgets();
+        context->GetSurface()->SetBroadcastMapSelectedTrackSends();
     }
 };
 
@@ -793,7 +793,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapSelectedTrackSendsToWidgets();
+        context->GetSurface()->SetReceiveMapSelectedTrackSends();
     }
 };
 
@@ -806,7 +806,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapSelectedTrackReceivesToWidgets();
+        context->GetSurface()->SetBroadcastMapSelectedTrackReceives();
     }
 };
 
@@ -819,7 +819,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapSelectedTrackReceivesToWidgets();
+        context->GetSurface()->SetReceiveMapSelectedTrackReceives();
     }
 };
 
@@ -832,7 +832,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapSelectedTrackFXToWidgets();
+        context->GetSurface()->SetBroadcastMapSelectedTrackFX();
     }
 };
 
@@ -845,7 +845,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapSelectedTrackFXToWidgets();
+        context->GetSurface()->SetReceiveMapSelectedTrackFX();
     }
 };
 
@@ -858,7 +858,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapSelectedTrackFXToMenu();
+        context->GetSurface()->SetBroadcastMapSelectedTrackFXMenu();
     }
 };
 
@@ -871,7 +871,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapSelectedTrackFXToMenu();
+        context->GetSurface()->SetReceiveMapSelectedTrackFXMenu();
     }
 };
 
@@ -884,7 +884,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapTrackSendsSlotToWidgets();
+        context->GetSurface()->SetBroadcastMapTrackSendsSlot();
     }
 };
 
@@ -897,7 +897,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapTrackSendsSlotToWidgets();
+        context->GetSurface()->SetReceiveMapTrackSendsSlot();
     }
 };
 
@@ -910,7 +910,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapTrackReceivesSlotToWidgets();
+        context->GetSurface()->SetBroadcastMapTrackReceivesSlot();
     }
 };
 
@@ -923,7 +923,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapTrackReceivesSlotToWidgets();
+        context->GetSurface()->SetReceiveMapTrackReceivesSlot();
     }
 };
 
@@ -936,7 +936,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapTrackFXMenusSlotToWidgets();
+        context->GetSurface()->SetBroadcastMapTrackFXMenusSlot();
     }
 };
 
@@ -949,7 +949,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapTrackFXMenusSlotToWidgets();
+        context->GetSurface()->SetReceiveMapTrackFXMenusSlot();
     }
 };
 
@@ -962,7 +962,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetBroadcastMapFocusedFXToWidgets();
+        context->GetSurface()->SetBroadcastMapFocusedFX();
     }
 };
 
@@ -975,7 +975,7 @@ public:
     
     void Do(ActionContext* context, double value) override
     {
-        context->GetSurface()->SetReceiveMapFocusedFXToWidgets();
+        context->GetSurface()->SetReceiveMapFocusedFX();
     }
 };
 

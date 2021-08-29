@@ -864,23 +864,23 @@ protected:
     bool shouldBroadcastGoFXSlot_ = false;
     bool shouldReceiveGoFXSlot_ = false;
     
-    bool shouldBroadcastMapSelectedTrackSendsToWidgets_ = false;
-    bool shouldReceiveMapSelectedTrackSendsToWidgets_ = false;
-    bool shouldBroadcastMapSelectedTrackReceivesToWidgets_ = false;
-    bool shouldReceiveMapSelectedTrackReceivesToWidgets_ = false;
-    bool shouldBroadcastMapSelectedTrackFXToWidgets_ = false;
-    bool shouldReceiveMapSelectedTrackFXToWidgets_ = false;
-    bool shouldBroadcastMapSelectedTrackFXToMenu_ = false;
-    bool shouldReceiveMapSelectedTrackFXToMenu_ = false;
+    bool shouldBroadcastMapSelectedTrackSends_ = false;
+    bool shouldReceiveMapSelectedTrackSends_ = false;
+    bool shouldBroadcastMapSelectedTrackReceives_ = false;
+    bool shouldReceiveMapSelectedTrackReceives_ = false;
+    bool shouldBroadcastMapSelectedTrackFX_ = false;
+    bool shouldReceiveMapSelectedTrackFX_ = false;
+    bool shouldBroadcastMapSelectedTrackFXMenu_ = false;
+    bool shouldReceiveMapSelectedTrackFXMenu_ = false;
     
-    bool shouldBroadcastMapTrackSendsSlotToWidgets_ = false;
-    bool shouldReceiveMapTrackSendsSlotToWidgets_ = false;
-    bool shouldBroadcastMapTrackReceivesSlotToWidgets_ = false;
-    bool shouldReceiveMapTrackReceivesSlotToWidgets_ = false;
-    bool shouldBroadcastMapTrackFXMenusSlotToWidgets_ = false;
-    bool shouldReceiveMapTrackFXMenusSlotToWidgets_ = false;
-    bool shouldBroadcastMapFocusedFXToWidgets_ = false;
-    bool shouldReceiveMapFocusedFXToWidgets_ = false;
+    bool shouldBroadcastMapTrackSendsSlot_ = false;
+    bool shouldReceiveMapTrackSendsSlot_ = false;
+    bool shouldBroadcastMapTrackReceivesSlot_ = false;
+    bool shouldReceiveMapTrackReceivesSlot_ = false;
+    bool shouldBroadcastMapTrackFXMenusSlot_ = false;
+    bool shouldReceiveMapTrackFXMenusSlot_ = false;
+    bool shouldBroadcastMapFocusedFX_ = false;
+    bool shouldReceiveMapFocusedFX_ = false;
 
     map<int, Navigator*> navigators_;
     
@@ -1000,53 +1000,53 @@ public:
     virtual void SetReceiveGoFXSlot() { shouldReceiveGoFXSlot_ = true; }  // GAW -- Unused as of Jun 7, 2021
     virtual bool GetReceiveGoFXSlot() { return shouldReceiveGoFXSlot_; }
 
-    virtual void SetBroadcastMapSelectedTrackSendsToWidgets() { shouldBroadcastMapSelectedTrackSendsToWidgets_ = true; }
-    virtual bool GetBroadcastMapSelectedTrackSendsToWidgets() { return shouldBroadcastMapSelectedTrackSendsToWidgets_; }
+    virtual void SetBroadcastMapSelectedTrackSends() { shouldBroadcastMapSelectedTrackSends_ = true; }
+    virtual bool GetBroadcastMapSelectedTrackSends() { return shouldBroadcastMapSelectedTrackSends_; }
     
-    virtual void SetReceiveMapSelectedTrackSendsToWidgets() { shouldReceiveMapSelectedTrackSendsToWidgets_ = true; }
-    virtual bool GetReceiveMapSelectedTrackSendsToWidgets() { return shouldReceiveMapSelectedTrackSendsToWidgets_; }
+    virtual void SetReceiveMapSelectedTrackSends() { shouldReceiveMapSelectedTrackSends_ = true; }
+    virtual bool GetReceiveMapSelectedTrackSends() { return shouldReceiveMapSelectedTrackSends_; }
     
-    virtual void SetBroadcastMapSelectedTrackReceivesToWidgets() { shouldBroadcastMapSelectedTrackReceivesToWidgets_ = true; }
-    virtual bool GetBroadcastMapSelectedTrackReceivesToWidgets() { return shouldBroadcastMapSelectedTrackReceivesToWidgets_; }
+    virtual void SetBroadcastMapSelectedTrackReceives() { shouldBroadcastMapSelectedTrackReceives_ = true; }
+    virtual bool GetBroadcastMapSelectedTrackReceives() { return shouldBroadcastMapSelectedTrackReceives_; }
     
-    virtual void SetReceiveMapSelectedTrackReceivesToWidgets() { shouldReceiveMapSelectedTrackReceivesToWidgets_ = true; }
-    virtual bool GetReceiveMapSelectedTrackReceivesToWidgets() { return shouldReceiveMapSelectedTrackReceivesToWidgets_; }
+    virtual void SetReceiveMapSelectedTrackReceives() { shouldReceiveMapSelectedTrackReceives_ = true; }
+    virtual bool GetReceiveMapSelectedTrackReceives() { return shouldReceiveMapSelectedTrackReceives_; }
     
-    virtual void SetBroadcastMapSelectedTrackFXToWidgets() { shouldBroadcastMapSelectedTrackFXToWidgets_ = true; }
-    virtual bool GetBroadcastMapSelectedTrackFXToWidgets() { return shouldBroadcastMapSelectedTrackFXToWidgets_; }
+    virtual void SetBroadcastMapSelectedTrackFX() { shouldBroadcastMapSelectedTrackFX_ = true; }
+    virtual bool GetBroadcastMapSelectedTrackFX() { return shouldBroadcastMapSelectedTrackFX_; }
     
-    virtual void SetReceiveMapSelectedTrackFXToWidgets() { shouldReceiveMapSelectedTrackFXToWidgets_ = true; }
-    virtual bool GetReceiveMapSelectedTrackFXToWidgets() { return shouldReceiveMapSelectedTrackFXToWidgets_; }
+    virtual void SetReceiveMapSelectedTrackFX() { shouldReceiveMapSelectedTrackFX_ = true; }
+    virtual bool GetReceiveMapSelectedTrackFX() { return shouldReceiveMapSelectedTrackFX_; }
     
-    virtual void SetBroadcastMapSelectedTrackFXToMenu() { shouldBroadcastMapSelectedTrackFXToMenu_ = true; }
-    virtual bool GetBroadcastMapSelectedTrackFXToMenu() { return shouldBroadcastMapSelectedTrackFXToMenu_; }
+    virtual void SetBroadcastMapSelectedTrackFXMenu() { shouldBroadcastMapSelectedTrackFXMenu_ = true; }
+    virtual bool GetBroadcastMapSelectedTrackFXMenu() { return shouldBroadcastMapSelectedTrackFXMenu_; }
     
-    virtual void SetReceiveMapSelectedTrackFXToMenu() { shouldReceiveMapSelectedTrackFXToMenu_ = true; }
-    virtual bool GetReceiveMapSelectedTrackFXToMenu() { return shouldReceiveMapSelectedTrackFXToMenu_; }
+    virtual void SetReceiveMapSelectedTrackFXMenu() { shouldReceiveMapSelectedTrackFXMenu_ = true; }
+    virtual bool GetReceiveMapSelectedTrackFXMenu() { return shouldReceiveMapSelectedTrackFXMenu_; }
 
-    virtual void SetBroadcastMapTrackSendsSlotToWidgets() { shouldBroadcastMapTrackSendsSlotToWidgets_ = true; }
-    virtual bool GetBroadcastMapTrackSendsSlotToWidgets() { return shouldBroadcastMapTrackSendsSlotToWidgets_; }
+    virtual void SetBroadcastMapTrackSendsSlot() { shouldBroadcastMapTrackSendsSlot_ = true; }
+    virtual bool GetBroadcastMapTrackSendsSlot() { return shouldBroadcastMapTrackSendsSlot_; }
     
-    virtual void SetReceiveMapTrackSendsSlotToWidgets() { shouldReceiveMapTrackSendsSlotToWidgets_ = true; }
-    virtual bool GetReceiveMapTrackSendsSlotToWidgets() { return shouldReceiveMapTrackSendsSlotToWidgets_; }
+    virtual void SetReceiveMapTrackSendsSlot() { shouldReceiveMapTrackSendsSlot_ = true; }
+    virtual bool GetReceiveMapTrackSendsSlot() { return shouldReceiveMapTrackSendsSlot_; }
     
-    virtual void SetBroadcastMapTrackReceivesSlotToWidgets() { shouldBroadcastMapTrackReceivesSlotToWidgets_ = true; }
-    virtual bool GetBroadcastMapTrackReceivesSlotToWidgets() { return shouldBroadcastMapTrackReceivesSlotToWidgets_; }
+    virtual void SetBroadcastMapTrackReceivesSlot() { shouldBroadcastMapTrackReceivesSlot_ = true; }
+    virtual bool GetBroadcastMapTrackReceivesSlot() { return shouldBroadcastMapTrackReceivesSlot_; }
     
-    virtual void SetReceiveMapTrackReceivesSlotToWidgets() { shouldReceiveMapTrackReceivesSlotToWidgets_ = true; }
-    virtual bool GetReceiveMapTrackReceivesSlotToWidgets() { return shouldReceiveMapTrackReceivesSlotToWidgets_; }
+    virtual void SetReceiveMapTrackReceivesSlot() { shouldReceiveMapTrackReceivesSlot_ = true; }
+    virtual bool GetReceiveMapTrackReceivesSlot() { return shouldReceiveMapTrackReceivesSlot_; }
     
-    virtual void SetBroadcastMapTrackFXMenusSlotToWidgets() { shouldBroadcastMapTrackFXMenusSlotToWidgets_ = true; }
-    virtual bool GetBroadcastMapTrackFXMenusSlotToWidgets() { return shouldBroadcastMapTrackFXMenusSlotToWidgets_; }
+    virtual void SetBroadcastMapTrackFXMenusSlot() { shouldBroadcastMapTrackFXMenusSlot_ = true; }
+    virtual bool GetBroadcastMapTrackFXMenusSlot() { return shouldBroadcastMapTrackFXMenusSlot_; }
     
-    virtual void SetReceiveMapTrackFXMenusSlotToWidgets() { shouldReceiveMapTrackFXMenusSlotToWidgets_ = true; }
-    virtual bool GetReceiveMapTrackFXMenusSlotToWidgets() { return shouldReceiveMapTrackFXMenusSlotToWidgets_; }
+    virtual void SetReceiveMapTrackFXMenusSlot() { shouldReceiveMapTrackFXMenusSlot_ = true; }
+    virtual bool GetReceiveMapTrackFXMenusSlot() { return shouldReceiveMapTrackFXMenusSlot_; }
    
-    virtual void SetBroadcastMapFocusedFXToWidgets() { shouldBroadcastMapFocusedFXToWidgets_ = true; }
-    virtual bool GetBroadcastMapFocusedFXToWidgets() { return shouldBroadcastMapFocusedFXToWidgets_; }
+    virtual void SetBroadcastMapFocusedFX() { shouldBroadcastMapFocusedFX_ = true; }
+    virtual bool GetBroadcastMapFocusedFX() { return shouldBroadcastMapFocusedFX_; }
 
-    virtual void SetReceiveMapFocusedFXToWidgets() { shouldReceiveMapFocusedFXToWidgets_ = true; }
-    virtual bool GetReceiveMapFocusedFXToWidgets() { return shouldReceiveMapFocusedFXToWidgets_; }
+    virtual void SetReceiveMapFocusedFX() { shouldReceiveMapFocusedFX_ = true; }
+    virtual bool GetReceiveMapFocusedFX() { return shouldReceiveMapFocusedFX_; }
     
     void MakeHomeDefault()
     {
@@ -1859,9 +1859,9 @@ public:
     {
         originator->MapSelectedTrackSendsToWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackSendsToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackSends())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackSendsToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackSends())
                     surface->MapSelectedTrackSendsToWidgets();
     }
     
@@ -1869,9 +1869,9 @@ public:
     {
         originator->MapSelectedTrackReceivesToWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackReceivesToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackReceives())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackReceivesToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackReceives())
                     surface->MapSelectedTrackReceivesToWidgets();
     }
     
@@ -1879,9 +1879,9 @@ public:
     {
         originator->MapSelectedTrackFXToWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackFXToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackFX())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackFXToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackFX())
                     surface->MapSelectedTrackFXToWidgets();
     }
     
@@ -1889,9 +1889,9 @@ public:
     {
         originator->MapSelectedTrackFXToMenu();
         
-        if(originator->GetBroadcastMapSelectedTrackFXToMenu())
+        if(originator->GetBroadcastMapSelectedTrackFXMenu())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackFXToMenu())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackFXMenu())
                     surface->MapSelectedTrackFXToMenu();
     }
     
@@ -1899,9 +1899,9 @@ public:
     {
         originator->MapTrackSendsSlotToWidgets();
         
-        if(originator->GetBroadcastMapTrackSendsSlotToWidgets())
+        if(originator->GetBroadcastMapTrackSendsSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackSendsSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackSendsSlot())
                     surface->MapTrackSendsSlotToWidgets();
     }
     
@@ -1909,9 +1909,9 @@ public:
     {
         originator->MapTrackReceivesSlotToWidgets();
         
-        if(originator->GetBroadcastMapTrackReceivesSlotToWidgets())
+        if(originator->GetBroadcastMapTrackReceivesSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackReceivesSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->MapTrackReceivesSlotToWidgets();
     }
     
@@ -1919,9 +1919,9 @@ public:
     {
         originator->MapTrackFXMenusSlotToWidgets();
         
-        if(originator->GetBroadcastMapTrackFXMenusSlotToWidgets())
+        if(originator->GetBroadcastMapTrackFXMenusSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackFXMenusSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackFXMenusSlot())
                     surface->MapTrackFXMenusSlotToWidgets();
     }
     
@@ -1929,9 +1929,9 @@ public:
     {
         originator->MapSelectedTrackSendsSlotToWidgets();
         
-        if(originator->GetBroadcastMapTrackSendsSlotToWidgets())
+        if(originator->GetBroadcastMapTrackSendsSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackSendsSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackSendsSlot())
                     surface->MapSelectedTrackSendsSlotToWidgets();
     }
     
@@ -1939,9 +1939,9 @@ public:
     {
         originator->MapSelectedTrackReceivesSlotToWidgets();
         
-        if(originator->GetBroadcastMapTrackReceivesSlotToWidgets())
+        if(originator->GetBroadcastMapTrackReceivesSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackReceivesSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->MapSelectedTrackReceivesSlotToWidgets();
     }
     
@@ -1949,9 +1949,9 @@ public:
     {
         originator->MapFocusedFXToWidgets();
         
-        if(originator->GetBroadcastMapFocusedFXToWidgets())
+        if(originator->GetBroadcastMapFocusedFX())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapFocusedFXToWidgets())
+                if(surface != originator && surface->GetReceiveMapFocusedFX())
                     surface->MapFocusedFXToWidgets();
     }
         
@@ -1959,9 +1959,9 @@ public:
     {
         originator->UnmapSelectedTrackSendsFromWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackSendsToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackSends())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackSendsToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackSends())
                     surface->UnmapSelectedTrackSendsFromWidgets();
     }
     
@@ -1969,9 +1969,9 @@ public:
     {
         originator->UnmapSelectedTrackReceivesFromWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackReceivesToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackReceives())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackReceivesToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackReceives())
                     surface->UnmapSelectedTrackReceivesFromWidgets();
     }
     
@@ -1979,9 +1979,9 @@ public:
     {
         originator->UnmapSelectedTrackFXFromWidgets();
         
-        if(originator->GetBroadcastMapSelectedTrackFXToWidgets())
+        if(originator->GetBroadcastMapSelectedTrackFX())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackFXToWidgets())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackFX())
                     surface->UnmapSelectedTrackFXFromWidgets();
     }
     
@@ -1989,9 +1989,9 @@ public:
     {
         originator->UnmapSelectedTrackFXFromMenu();
         
-        if(originator->GetBroadcastMapSelectedTrackFXToMenu())
+        if(originator->GetBroadcastMapSelectedTrackFXMenu())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapSelectedTrackFXToMenu())
+                if(surface != originator && surface->GetReceiveMapSelectedTrackFXMenu())
                     surface->UnmapSelectedTrackFXFromMenu();
     }
     
@@ -1999,9 +1999,9 @@ public:
     {
         originator->UnmapTrackSendsSlotFromWidgets();
         
-        if(originator->GetBroadcastMapTrackSendsSlotToWidgets())
+        if(originator->GetBroadcastMapTrackSendsSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackSendsSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackSendsSlot())
                     surface->UnmapTrackSendsSlotFromWidgets();
     }
     
@@ -2009,9 +2009,9 @@ public:
     {
         originator->UnmapTrackReceivesSlotFromWidgets();
         
-        if(originator->GetBroadcastMapTrackReceivesSlotToWidgets())
+        if(originator->GetBroadcastMapTrackReceivesSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackReceivesSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->UnmapTrackReceivesSlotFromWidgets();
     }
     
@@ -2019,9 +2019,9 @@ public:
     {
         originator->UnmapTrackFXMenusSlotFromWidgets();
         
-        if(originator->GetBroadcastMapTrackFXMenusSlotToWidgets())
+        if(originator->GetBroadcastMapTrackFXMenusSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackFXMenusSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackFXMenusSlot())
                     surface->UnmapTrackFXMenusSlotFromWidgets();
     }
     
@@ -2029,9 +2029,9 @@ public:
     {
         originator->UnmapSelectedTrackSendsSlotFromWidgets();
         
-        if(originator->GetBroadcastMapTrackSendsSlotToWidgets())
+        if(originator->GetBroadcastMapTrackSendsSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackSendsSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackSendsSlot())
                     surface->UnmapSelectedTrackSendsSlotFromWidgets();
     }
     
@@ -2039,9 +2039,9 @@ public:
     {
         originator->UnmapSelectedTrackReceivesSlotFromWidgets();
         
-        if(originator->GetBroadcastMapTrackReceivesSlotToWidgets())
+        if(originator->GetBroadcastMapTrackReceivesSlot())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapTrackReceivesSlotToWidgets())
+                if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->UnmapSelectedTrackReceivesSlotFromWidgets();
     }
     
@@ -2049,9 +2049,9 @@ public:
     {
         originator->UnmapFocusedFXFromWidgets();
         
-        if(originator->GetBroadcastMapFocusedFXToWidgets())
+        if(originator->GetBroadcastMapFocusedFX())
             for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapFocusedFXToWidgets())
+                if(surface != originator && surface->GetReceiveMapFocusedFX())
                     surface->UnmapFocusedFXFromWidgets();
     }
            
