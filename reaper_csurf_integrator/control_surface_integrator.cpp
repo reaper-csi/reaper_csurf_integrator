@@ -1253,6 +1253,30 @@ void Manager::Init()
                 }
             }
         }
+        
+        // Restore the PageIndex
+        currentPageIndex_ = 0;
+        
+        char buf[512];
+        
+        int result = DAW::GetProjExtState(0, "CSI", "PageIndex", buf, sizeof(buf));
+        
+        if(result > 0)
+        {
+            currentPageIndex_ = atoi(buf);
+ 
+            if(currentPageIndex_ > pages_.size() - 1)
+                currentPageIndex_ = 0;
+        }
+        
+        // Restore the BankIndex
+        result = DAW::GetProjExtState(0, "CSI", "BankIndex", buf, sizeof(buf));
+        
+        if(result > 0)
+            pages_[currentPageIndex_]->AdjustTrackBank(atoi(buf));
+        
+        // Restore the Pinned Tracks
+        pages_[currentPageIndex_]->RestorePinnedTracks();
     }
     catch (exception &e)
     {
@@ -1281,23 +1305,19 @@ void Manager::Init()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TrackNavigator::PinChannel()
 {
-    if( ! isChannelPinned_)
+    if(pinnedTrack_ == nullptr)
     {
         pinnedTrack_ = GetTrack();
         
-        isChannelPinned_ = true;
-        
-        manager_->IncChannelBias(pinnedTrack_, channelNum_);
+        manager_->IncChannelBias(channelNum_);
     }
 }
 
 void TrackNavigator::UnpinChannel()
 {
-    if(isChannelPinned_)
+    if(pinnedTrack_ != nullptr)
     {
-        manager_->DecChannelBias(pinnedTrack_, channelNum_);
-        
-        isChannelPinned_ = false;
+        manager_->DecChannelBias(channelNum_);
         
         pinnedTrack_ = nullptr;
     }
@@ -1305,7 +1325,7 @@ void TrackNavigator::UnpinChannel()
 
 MediaTrack* TrackNavigator::GetTrack()
 {
-    if(isChannelPinned_)
+    if(pinnedTrack_ != nullptr)
         return pinnedTrack_;
     else
         return manager_->GetTrackFromChannel(channelNum_ - bias_);
