@@ -1343,7 +1343,19 @@ private:
     
     void SavePinnedTracks()
     {
+        string pinnedTracks = "";
         
+        for(int i = 0; i < navigators_.size(); i++)
+        {
+            if(navigators_[i]->GetIsChannelPinned())
+            {
+                int trackNum = CSurf_TrackToID(navigators_[i]->GetTrack(), followMCP_);
+                
+                pinnedTracks += to_string(i + 1) + "-" + to_string(trackNum) + "_";
+            }
+        }
+        
+        DAW:: SetProjExtState(0, "CSI", "PinnedTracks", pinnedTracks.c_str());
     }
     
 public:
@@ -1512,6 +1524,8 @@ public:
                 else
                     navigator->PinChannel();
                 
+                SavePinnedTracks();
+                
                 break;
             }
         }
@@ -1541,13 +1555,13 @@ public:
                 if(tokens.size() == 2)
                 {
                     int channelNum = atoi(tokens[0].c_str());
+                    channelNum--;
+                    
+                    channelNum = channelNum < 0 ? 0 : channelNum;
+                                        
                     int trackNum = atoi(tokens[1].c_str());
-
-                    trackNum--;
-                    
-                    trackNum = trackNum < 0 ? 0 : trackNum;
-                    
-                    if(MediaTrack* track = DAW::GetTrack(trackNum - 1))
+                   
+                    if(MediaTrack* track =  CSurf_TrackFromID(trackNum, followMCP_))
                         if(navigators_.size() > channelNum)
                             navigators_[channelNum]->SetPinnedTrack(track);
                 }
