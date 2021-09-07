@@ -79,6 +79,15 @@ public:
 
     static DWORD GetPrivateProfileString(const char *appname, const char *keyname, const char *def, char *ret, int retsize, const char *fn) { return ::GetPrivateProfileString(appname, keyname, def, ret, retsize, fn); }
 
+    static int SetProjExtState(ReaProject* proj, const char* extname, const char* key, const char* value)
+    {
+        int retval = ::SetProjExtState(proj, extname, key, value);
+        MarkProjectDirty(0);
+        return retval;
+    }
+
+    static int GetProjExtState(ReaProject* proj, const char* extname, const char* key, char* valOutNeedBig, int valOutNeedBig_sz) { return ::GetProjExtState(proj, extname, key, valOutNeedBig, valOutNeedBig_sz); }
+    
     static const char* GetResourcePath() { return ::GetResourcePath(); }
     
     static int NamedCommandLookup(const char* command_name) { return ::NamedCommandLookup(command_name);  }

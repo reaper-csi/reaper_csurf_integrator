@@ -163,6 +163,7 @@ public:
     virtual void IncBias() {}
     virtual void DecBias() {}
     virtual void PinChannel() {}
+    virtual void SetPinnedTrack(MediaTrack* track) { }
     virtual void UnpinChannel() {}
     virtual bool GetIsFocusedFXNavigator() { return false; }
 };
@@ -175,7 +176,6 @@ private:
     int const channelNum_ = 0;
     int bias_ = 0;
     MediaTrack* pinnedTrack_ = nullptr;
-    bool isChannelPinned_ = false;
     
 protected:
     TrackNavigationManager* const manager_;
@@ -185,13 +185,15 @@ public:
     TrackNavigator(Page*  page, TrackNavigationManager* manager) : Navigator(page), manager_(manager) {}
     virtual ~TrackNavigator() {}
     
-    virtual bool GetIsChannelPinned() override { return isChannelPinned_; }
+    virtual bool GetIsChannelPinned() override { return pinnedTrack_ != nullptr; }
     virtual void IncBias() override { bias_++; }
     virtual void DecBias() override { bias_--; }
     
     virtual void PinChannel() override;
     virtual void UnpinChannel() override;
     
+    virtual void SetPinnedTrack(MediaTrack* track) override { pinnedTrack_ = track; }
+
     virtual string GetName() override { return "TrackNavigator"; }
     
     virtual string GetChannelNumString() override { return to_string(channelNum_ + 1); }
@@ -1339,6 +1341,11 @@ private:
     vector<string> autoModeDisplayNames__ = { "Trim", "Read", "Touch", "Write", "Latch", "LtchPre" };
     int autoModeIndex_ = 0;
     
+    void SavePinnedTracks()
+    {
+        
+    }
+    
 public:
     TrackNavigationManager(Page* page, bool followMCP, bool synchPages, bool scrollLink, int numChannels) : page_(page), followMCP_(followMCP), synchPages_(synchPages), scrollLink_(scrollLink),
     masterTrackNavigator_(new MasterTrackNavigator(page_)),
@@ -1457,6 +1464,8 @@ public:
         
         if(trackOffset_ >  top)
             trackOffset_ = top;
+        
+        DAW:: SetProjExtState(0, "CSI", "BankIndex", to_string(trackOffset_).c_str());
     }
     
     void AdjustFXMenuSlotBank(ControlSurface* originatingSurface, int amount)
@@ -1504,6 +1513,44 @@ public:
                     navigator->PinChannel();
                 
                 break;
+            }
+        }
+    }
+    
+    void RestorePinnedTracks()
+    {
+        char buf[8192];
+        
+        int result = DAW::GetProjExtState(0, "CSI", "PinnedTracks", buf, sizeof(buf));
+        
+        if(result > 0)
+        {
+            istringstream kvpTokens(buf);
+            string kvp;
+            
+            while(getline(kvpTokens, kvp, '_'))
+            {
+                vector<string> tokens;
+                
+                istringstream iss(kvp);
+                string token;
+                
+                while(getline(iss, token, '-'))
+                    tokens.push_back(token);
+
+                if(tokens.size() == 2)
+                {
+                    int channelNum = atoi(tokens[0].c_str());
+                    int trackNum = atoi(tokens[1].c_str());
+
+                    trackNum--;
+                    
+                    trackNum = trackNum < 0 ? 0 : trackNum;
+                    
+                    if(MediaTrack* track = DAW::GetTrack(trackNum - 1))
+                        if(navigators_.size() > channelNum)
+                            navigators_[channelNum]->SetPinnedTrack(track);
+                }
             }
         }
     }
@@ -1609,13 +1656,13 @@ public:
             ForceScrollLink();
     }
     
-    void IncChannelBias(MediaTrack* track, int channelNum)
+    void IncChannelBias(int channelNum)
     {
         for(int i = channelNum + 1; i < navigators_.size(); i++)
             navigators_[i]->IncBias();
     }
     
-    void DecChannelBias(MediaTrack* track, int channelNum)
+    void DecChannelBias(int channelNum)
     {
         for(int i = channelNum + 1; i < navigators_.size(); i++)
             navigators_[i]->DecBias();
@@ -2296,6 +2343,7 @@ public:
     void AdjustSendSlotBank(int amount) { trackNavigationManager_->AdjustSendSlotBank(amount); }
     void AdjustReceiveSlotBank(int amount) { trackNavigationManager_->AdjustReceiveSlotBank(amount); }
     void TogglePin(MediaTrack* track) { trackNavigationManager_->TogglePin(track); }
+    void RestorePinnedTracks() { trackNavigationManager_->RestorePinnedTracks(); }
     void ToggleVCAMode() { trackNavigationManager_->ToggleVCAMode(); }
     Navigator* GetNavigatorForChannel(int channelNum) { return trackNavigationManager_->GetNavigatorForChannel(channelNum); }
     MediaTrack* GetTrackFromChannel(int channelNumber) { return trackNavigationManager_->GetTrackFromChannel(channelNumber); }
@@ -2394,7 +2442,7 @@ public:
         surfaceOutDisplay_ = false;
        
         // GAW -- IMPORTANT
-        // We want to stop polling and zero out all Widgets before shutting down
+        // We want to stop polling, save state, and and zero out all Widgets before shutting down
         shouldRun_ = false;
         
         if(pages_.size() > 0)
@@ -2519,6 +2567,7 @@ public:
         {
             pages_[currentPageIndex_]->LeavePage();
             currentPageIndex_ = currentPageIndex_ == pages_.size() - 1 ? 0 : ++currentPageIndex_;
+            DAW::SetProjExtState(0, "CSI", "PageIndex", to_string(currentPageIndex_).c_str());
             pages_[currentPageIndex_]->EnterPage();
         }
     }
@@ -2531,8 +2580,8 @@ public:
             {
                 pages_[currentPageIndex_]->LeavePage();
                 currentPageIndex_ = i;
+                DAW::SetProjExtState(0, "CSI", "PageIndex", to_string(currentPageIndex_).c_str());
                 pages_[currentPageIndex_]->EnterPage();
-                
                 break;
             }
         }
