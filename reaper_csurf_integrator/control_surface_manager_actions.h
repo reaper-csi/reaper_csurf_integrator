@@ -16,6 +16,11 @@ class TogglePin  : public Action
 public:
     virtual string GetName() override { return "TogglePin"; }
 
+    void RequestUpdate(ActionContext* context) override
+    {
+        context->UpdateWidgetValue(context->GetZone()->GetNavigator()->GetIsChannelPinned());
+    }
+    
     void Do(ActionContext* context, double value) override
     {
         if(value == 0.0) return; // ignore button releases
