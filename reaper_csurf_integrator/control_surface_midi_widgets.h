@@ -915,6 +915,28 @@ public:
         maxCharacters[7][7] = 11;
         maxCharacters[7][8] = 7;
         maxCharacters[7][9] = 0;
+        
+        maxCharacters[8][0] = 12;
+        maxCharacters[8][1] = 0;
+        maxCharacters[8][2] = 0;
+        maxCharacters[8][3] = 0;
+        maxCharacters[8][4] = 0;
+        maxCharacters[8][5] = 0;
+        maxCharacters[8][6] = 0;
+        maxCharacters[8][7] = 0;
+        maxCharacters[8][8] = 0;
+        maxCharacters[8][9] = 0;
+        
+        maxCharacters[9][0] = 14;
+        maxCharacters[9][1] = 14;
+        maxCharacters[9][2] = 0;
+        maxCharacters[9][3] = 0;
+        maxCharacters[9][4] = 0;
+        maxCharacters[9][5] = 0;
+        maxCharacters[9][6] = 0;
+        maxCharacters[9][7] = 0;
+        maxCharacters[9][8] = 0;
+        maxCharacters[9][9] = 0;
     }
     
     int GetMaxCharacters(int displayType, int itemNumber)
