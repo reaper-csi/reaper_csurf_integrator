@@ -1992,7 +1992,7 @@ void Widget::ClearCache()
 
 void Widget::LogInput(double value)
 {
-    if( TheManager->GetSurfaceInDisplay())
+    if(TheManager->GetSurfaceInDisplay())
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %s %f\n", GetSurface()->GetName().c_str(), GetName().c_str(), value);
@@ -2558,7 +2558,7 @@ void Midi_ControlSurface::ProcessMidiMessage(const MIDI_event_ex_t* evt)
             generator->ProcessMidiMessage(evt);
     }
     
-    if( ! isMapped && TheManager->GetSurfaceInDisplay())
+    if(TheManager->GetSurfaceRawInDisplay() || (! isMapped && TheManager->GetSurfaceInDisplay()))
     {
         char buffer[250];
         snprintf(buffer, sizeof(buffer), "IN <- %s %02x  %02x  %02x \n", name_.c_str(), evt->midi_message[0], evt->midi_message[1], evt->midi_message[2]);

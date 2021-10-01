@@ -2388,6 +2388,7 @@ private:
     
     int currentPageIndex_ = 0;
     bool surfaceInDisplay_ = false;
+    bool surfaceRawInDisplay_ = false;
     bool surfaceOutDisplay_ = false;
     bool fxParamsDisplay_ = false;
     bool fxParamsWrite_ = false;
@@ -2466,11 +2467,13 @@ public:
     void Init();
 
     void ToggleSurfaceInDisplay() { surfaceInDisplay_ = ! surfaceInDisplay_;  }
+    void ToggleSurfaceRawInDisplay() { surfaceRawInDisplay_ = ! surfaceRawInDisplay_;  }
     void ToggleSurfaceOutDisplay() { surfaceOutDisplay_ = ! surfaceOutDisplay_;  }
     void ToggleFXParamsDisplay() { fxParamsDisplay_ = ! fxParamsDisplay_;  }
     void ToggleFXParamsWrite() { fxParamsWrite_ = ! fxParamsWrite_;  }
 
     bool GetSurfaceInDisplay() { return surfaceInDisplay_;  }
+    bool GetSurfaceRawInDisplay() { return surfaceRawInDisplay_;  }
     bool GetSurfaceOutDisplay() { return surfaceOutDisplay_;  }
     
     double GetFaderMaxDB() { return GetPrivateProfileDouble("slidermaxv"); }
