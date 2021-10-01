@@ -4,6 +4,14 @@
 #include "reaper_plugin_functions.h"
 #include "resource.h"
 
+gaccel_register_t acreg_show_raw_input =
+{
+    {FCONTROL|FALT|FVIRTKEY, '0', 0},
+    "CSI Toggle Show Raw Input from Surfaces"
+};
+
+int g_registered_command_toggle_show_raw_surface_input = 0;
+
 gaccel_register_t acreg_show_input =
 {
     {FCONTROL|FALT|FVIRTKEY, '1', 0},
@@ -75,6 +83,13 @@ REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hI
       
         reaper_plugin_info->Register("csurf",&csurf_integrator_reg);
  
+        acreg_show_raw_input.accel.cmd = g_registered_command_toggle_show_raw_surface_input = reaper_plugin_info->Register("command_id", (void*)"CSI Toggle Show Raw Input from Surfaces");
+        
+        if (!g_registered_command_toggle_show_raw_surface_input)
+            return 0; // failed getting a command id, fail!
+        
+        reaper_plugin_info->Register("gaccel", &acreg_show_raw_input);
+        
         
         acreg_show_input.accel.cmd = g_registered_command_toggle_show_surface_input = reaper_plugin_info->Register("command_id", (void*)"CSI Toggle Show Input from Surfaces");
         
