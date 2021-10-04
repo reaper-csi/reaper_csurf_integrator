@@ -101,18 +101,7 @@ int CSurfIntegrator::Extended(int call, void *parm1, void *parm2, void *parm3)
         if(TheManager)
             TheManager->TrackFXListChanged((MediaTrack*)parm1);
     }
-    
-    if(call == CSURF_EXT_SETFOCUSEDFX)
-    {
-        // Track FX focused
-        if(parm2 == nullptr)
-        {
-            MediaTrack* track = (MediaTrack*)parm1;
-            int fxIndex = parm3 == nullptr ? 0 : *(int*)parm3;
-            TheManager->OnFXFocus(track, fxIndex);
-        }
-    }
-    
+        
     return 1;
 }
 

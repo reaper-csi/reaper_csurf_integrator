@@ -1083,15 +1083,38 @@ public:
         zonesByName_[zone->GetName()] = zone;
         zones_.push_back(zone);
     }
-   
+       
+    map<int, map<int, int>> focusedFXDictionary;
+    
     void CheckFocusedFXState()
     {
         int trackNumber = 0;
         int itemNumber = 0;
         int fxIndex = 0;
         
-        if(DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex) & 0x04) // 4 set if FX is no longer focused but still open
-            UnmapFocusedFXFromWidgets();
+        int retval = DAW::GetFocusedFX2(&trackNumber, &itemNumber, &fxIndex);
+        
+        if((retval & 1) && (fxIndex > -1))
+        {
+            int lastRetval = -1;
+
+            if(focusedFXDictionary.count(trackNumber) > 0 && focusedFXDictionary[trackNumber].count(fxIndex) > 0)
+                lastRetval = focusedFXDictionary[trackNumber][fxIndex];
+            
+            if(lastRetval != retval)
+            {
+                if(retval == 1 && widgetsByName_.count("OnFXFocus") > 0)
+                        widgetsByName_["OnFXFocus"]->QueueAction(1.0);
+                
+                else if(retval & 4)
+                    UnmapFocusedFXFromWidgets();
+                
+                if(focusedFXDictionary[trackNumber].count(trackNumber) < 1)
+                    focusedFXDictionary[trackNumber] = map<int, int>();
+                                   
+                focusedFXDictionary[trackNumber][fxIndex] = retval;;
+            }
+        }
     }
     
     virtual void RequestUpdate()
@@ -1150,12 +1173,6 @@ public:
             return widgetsByName_[name];
         else
             return nullptr;
-    }
-    
-    void OnFXFocus(MediaTrack* track, int fxIndex)
-    {
-        if(widgetsByName_.count("OnFXFocus") > 0)
-            widgetsByName_["OnFXFocus"]->QueueAction(1.0);
     }
     
     void OnPageEnter()
@@ -2296,12 +2313,6 @@ public:
         for(auto surface : surfaces_)
             surface->OnTrackSelection();
     }
-    
-    void OnFXFocus(MediaTrack *track, int fxIndex)
-    {
-        for(auto surface : surfaces_)
-            surface->OnFXFocus(track, fxIndex);
-    }
 
     void TrackFXListChanged(MediaTrack* track)
     {
@@ -2505,12 +2516,6 @@ public:
     {
         if(pages_.size() > 0)
             pages_[currentPageIndex_]->OnTrackListChange();
-    }
-    
-    void OnFXFocus(MediaTrack *track, int fxIndex)
-    {
-        if(pages_.size() > 0)
-            pages_[currentPageIndex_]->OnFXFocus(track, fxIndex);
     }
     
     void NextTimeDisplayMode()
