@@ -881,8 +881,6 @@ protected:
     bool shouldReceiveMapTrackReceivesSlot_ = false;
     bool shouldBroadcastMapTrackFXMenusSlot_ = false;
     bool shouldReceiveMapTrackFXMenusSlot_ = false;
-    bool shouldBroadcastMapFocusedFX_ = false;
-    bool shouldReceiveMapFocusedFX_ = false;
 
     map<int, Navigator*> navigators_;
     
@@ -897,6 +895,9 @@ protected:
     map<string, Zone*> zonesByName_;
     vector<Zone*> zones_;
     
+    void MapFocusedFXToWidgets();
+    void UnmapFocusedFXFromWidgets();
+
     void MapSelectedTrackFXSlotToWidgets(vector<Zone*> *activeZones, int fxSlot);
     void MapSelectedTrackItemsToWidgets(MediaTrack* track, string baseName, int numberOfZones, vector<Zone*> *activeZones);
     
@@ -906,7 +907,6 @@ protected:
     {
         // Add the "hardwired" widgets
         AddWidget(new Widget(this, "OnTrackSelection"));
-        AddWidget(new Widget(this, "OnFXFocus"));
         AddWidget(new Widget(this, "OnPageEnter"));
         AddWidget(new Widget(this, "OnPageLeave"));
         AddWidget(new Widget(this, "OnInitialization"));
@@ -964,8 +964,6 @@ public:
     void UnmapSelectedTrackReceivesSlotFromWidgets();
     
     void MapSelectedTrackFXMenuSlotToWidgets(int slot);
-    void MapFocusedFXToWidgets();
-    void UnmapFocusedFXFromWidgets();
 
     void TrackFXListChanged();
     
@@ -1044,12 +1042,6 @@ public:
     virtual void SetReceiveMapTrackFXMenusSlot() { shouldReceiveMapTrackFXMenusSlot_ = true; }
     virtual bool GetReceiveMapTrackFXMenusSlot() { return shouldReceiveMapTrackFXMenusSlot_; }
    
-    virtual void SetBroadcastMapFocusedFX() { shouldBroadcastMapFocusedFX_ = true; }
-    virtual bool GetBroadcastMapFocusedFX() { return shouldBroadcastMapFocusedFX_; }
-
-    virtual void SetReceiveMapFocusedFX() { shouldReceiveMapFocusedFX_ = true; }
-    virtual bool GetReceiveMapFocusedFX() { return shouldReceiveMapFocusedFX_; }
-    
     void MakeHomeDefault()
     {
         homeZone_ = GetZone("Home");
@@ -1103,8 +1095,8 @@ public:
             
             if(lastRetval != retval)
             {
-                if(retval == 1 && widgetsByName_.count("OnFXFocus") > 0)
-                        widgetsByName_["OnFXFocus"]->QueueAction(1.0);
+                if(retval == 1)
+                    MapFocusedFXToWidgets();
                 
                 else if(retval & 4)
                     UnmapFocusedFXFromWidgets();
@@ -2022,16 +2014,6 @@ public:
                 if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->MapSelectedTrackReceivesSlotToWidgets();
     }
-    
-    void MapFocusedFXToWidgets(ControlSurface* originator)
-    {
-        originator->MapFocusedFXToWidgets();
-        
-        if(originator->GetBroadcastMapFocusedFX())
-            for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapFocusedFX())
-                    surface->MapFocusedFXToWidgets();
-    }
         
     void UnmapSelectedTrackSendsFromWidgets(ControlSurface* originator)
     {
@@ -2122,17 +2104,7 @@ public:
                 if(surface != originator && surface->GetReceiveMapTrackReceivesSlot())
                     surface->UnmapSelectedTrackReceivesSlotFromWidgets();
     }
-    
-    void UnmapFocusedFXFromWidgets(ControlSurface* originator)
-    {
-        originator->UnmapFocusedFXFromWidgets();
-        
-        if(originator->GetBroadcastMapFocusedFX())
-            for(auto surface : surfaces_)
-                if(surface != originator && surface->GetReceiveMapFocusedFX())
-                    surface->UnmapFocusedFXFromWidgets();
-    }
-           
+               
     /*
     int repeats = 0;
     

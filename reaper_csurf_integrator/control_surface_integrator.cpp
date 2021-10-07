@@ -1071,8 +1071,6 @@ void Manager::InitActionsDictionary()
     actions_["SetReceiveMapTrackReceivesSlotToWidgets"] =       new SetReceiveMapTrackReceivesSlotToWidgets();
     actions_["SetBroadcastMapTrackFXMenusSlotToWidgets"] =      new SetBroadcastMapTrackFXMenusSlotToWidgets();
     actions_["SetReceiveMapTrackFXMenusSlotToWidgets"] =        new SetReceiveMapTrackFXMenusSlotToWidgets();
-    actions_["SetBroadcastMapFocusedFXToWidgets"] =             new SetBroadcastMapFocusedFXToWidgets();
-    actions_["SetReceiveMapFocusedFXToWidgets"] =               new SetReceiveMapFocusedFXToWidgets();
     actions_["TrackBank"] =                             new TrackBank();
     actions_["SelectedTrackBank"] =                     new SelectedTrackBank();
     actions_["SendSlotBank"] =                          new SendSlotBank();
@@ -1087,7 +1085,6 @@ void Manager::InitActionsDictionary()
     actions_["MapSelectedTrackReceivesToWidgets"] =     new MapSelectedTrackReceivesToWidgets();
     actions_["MapSelectedTrackFXToWidgets"] =           new MapSelectedTrackFXToWidgets();
     actions_["MapSelectedTrackFXToMenu"] =              new MapSelectedTrackFXToMenu();
-    actions_["MapFocusedFXToWidgets"] =                 new MapFocusedFXToWidgets();
     actions_["MapTrackSendsSlotToWidgets"] =            new MapTrackSendsSlotToWidgets();
     actions_["MapTrackReceivesSlotToWidgets"] =         new MapTrackReceivesSlotToWidgets();
     actions_["MapTrackFXMenusSlotToWidgets"] =          new MapTrackFXMenusSlotToWidgets();
@@ -1097,7 +1094,6 @@ void Manager::InitActionsDictionary()
     actions_["UnmapSelectedTrackReceivesFromWidgets"] = new UnmapSelectedTrackReceivesFromWidgets();
     actions_["UnmapSelectedTrackFXFromWidgets"] =       new UnmapSelectedTrackFXFromWidgets();
     actions_["UnmapSelectedTrackFXFromMenu"] =          new UnmapSelectedTrackFXFromMenu();
-    actions_["UnmapFocusedFXFromWidgets"] =             new UnmapFocusedFXFromWidgets();
     actions_["UnmapTrackSendsSlotFromWidgets"] =        new UnmapTrackSendsSlotFromWidgets();
     actions_["UnmapTrackReceivesSlotFromWidgets"] =     new UnmapTrackReceivesSlotFromWidgets();
     actions_["UnmapTrackFXMenusSlotFromWidgets"] =      new UnmapTrackFXMenusSlotFromWidgets();
