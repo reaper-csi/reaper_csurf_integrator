@@ -1268,7 +1268,7 @@ void Manager::Init()
         // Restore the BankIndex
         result = DAW::GetProjExtState(0, "CSI", "BankIndex", buf, sizeof(buf));
         
-        if(result > 0)
+        if(result > 0 && pages_.size() > 0)
         {
             if(MediaTrack* leftmosttrack = DAW::GetTrack(atoi(buf) + 1))
                 DAW::SetMixerScroll(leftmosttrack);
@@ -1277,7 +1277,8 @@ void Manager::Init()
         }
         
         // Restore the Pinned Tracks
-        pages_[currentPageIndex_]->RestorePinnedTracks();
+        if(pages_.size() > 0)
+            pages_[currentPageIndex_]->RestorePinnedTracks();
     }
     catch (exception &e)
     {
