@@ -281,7 +281,8 @@ public:
             if(MediaTrack* trackToSelect = context->GetPage()->GetTrackFromId(trackNum))
             {
                 DAW::SetOnlyTrackSelected(trackToSelect);
-                DAW::SetMixerScroll(trackToSelect);
+                if(context->GetPage()->GetScrollLink())
+                    DAW::SetMixerScroll(trackToSelect);
                 context->GetSurface()->OnTrackSelection();
             }
         }
