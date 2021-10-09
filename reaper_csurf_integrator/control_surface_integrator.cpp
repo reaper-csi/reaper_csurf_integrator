@@ -2030,6 +2030,20 @@ void Midi_FeedbackProcessor::ForceMidiMessage(int first, int second, int third)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // OSC_FeedbackProcessor
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+void OSC_FeedbackProcessor::SetRGBValue(int r, int g, int b)
+{
+    if(lastRValue != r || lastGValue != g || lastBValue != b)
+    {
+        lastRValue = r;
+        lastGValue = g;
+        lastBValue = b;
+        
+        surface_->SendOSCMessage(this, oscAddress_ + "/rColor", r);
+        surface_->SendOSCMessage(this, oscAddress_ + "/gColor", g);
+        surface_->SendOSCMessage(this, oscAddress_ + "/bColor", b);
+    }
+}
+
 void OSC_FeedbackProcessor::ForceValue(double value)
 {
     lastDoubleValue_ = value;
