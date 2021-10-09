@@ -710,7 +710,10 @@ class FeedbackProcessor
 protected:
     double lastDoubleValue_ = 0.0;
     string lastStringValue_ = "";
-   
+    int lastRValue = 0;
+    int lastGValue = 0;
+    int lastBValue = 0;
+
     Widget* const widget_ = nullptr;
     
 public:
@@ -811,6 +814,7 @@ public:
     OSC_FeedbackProcessor(OSC_ControlSurface* surface, Widget* widget, string oscAddress) : FeedbackProcessor(widget), surface_(surface), oscAddress_(oscAddress) {}
     ~OSC_FeedbackProcessor() {}
 
+    virtual void SetRGBValue(int r, int g, int b) override;
     virtual void ForceValue(double value) override;
     virtual void ForceValue(int param, double value) override;
     virtual void ForceValue(string value) override;
@@ -1795,15 +1799,15 @@ public:
                 
                 if(vcaMode_)
                 {
-                    int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_MASTER", 0, 0);
+                    int vcaMasterGroup = DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_LEAD", 0, 0);
 
-                    if(vcaMasterGroup != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_SLAVE", 0, 0) == 0) // Only top level Masters for now
+                    if(vcaMasterGroup != 0 && DAW::GetSetTrackGroupMembership(track, "VOLUME_VCA_FOLLOW", 0, 0) == 0) // Only top level Leads for now
                     {
                         tracks_.push_back(track);
                         
-                        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) != vcaSpillTracks_.end()) // should spill slaves for this master
+                        if(find(vcaSpillTracks_.begin(), vcaSpillTracks_.end(), track) != vcaSpillTracks_.end()) // should spill followers for this lead
                             for (int j = 1; j <= GetNumTracks(); j++)
-                                if(vcaMasterGroup == DAW::GetSetTrackGroupMembership(DAW::CSurf_TrackFromID(j, followMCP_), "VOLUME_VCA_SLAVE", 0, 0)) // if this track is slave of master
+                                if(vcaMasterGroup == DAW::GetSetTrackGroupMembership(DAW::CSurf_TrackFromID(j, followMCP_), "VOLUME_VCA_FOLLOW", 0, 0)) // if this track is follower of lead
                                     tracks_.push_back(DAW::CSurf_TrackFromID(j, followMCP_));
                     }
                 }
